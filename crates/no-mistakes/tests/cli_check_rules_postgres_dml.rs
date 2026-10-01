@@ -141,6 +141,56 @@ fn postgres_explicit_columns_flags_embedded_sql() {
 }
 
 #[test]
+fn postgres_generated_column_predicates_json_has_rule_id() {
+    let root = fixture("postgres-generated-column-predicates", "fail");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(
+        body.contains("postgres-generated-column-predicates"),
+        "{body}"
+    );
+    assert!(
+        body.contains(
+            "WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id)"
+        ),
+        "{body}"
+    );
+    assert!(
+        body.contains("ORDER BY orders.created_at sorts by a column generated from id"),
+        "{body}"
+    );
+    assert!(!out.status.success());
+}
+
+#[test]
+fn postgres_generated_column_predicates_passes_primary_key_predicates() {
+    let root = fixture("postgres-generated-column-predicates", "pass");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_generated_column_predicates_passes_suppressed_predicates() {
+    let root = fixture("postgres-generated-column-predicates", "pass-suppressed");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_generated_column_predicates_flags_embedded_sql() {
+    let root = fixture("postgres-generated-column-predicates", "embedded");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(
+        body.contains(
+            "WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id)"
+        ),
+        "{body}"
+    );
+    assert!(!out.status.success());
+}
+
+#[test]
 fn postgres_idempotent_insert_json_has_rule_id() {
     let root = fixture("postgres-idempotent-insert", "fail");
     let out = check_json(&root);

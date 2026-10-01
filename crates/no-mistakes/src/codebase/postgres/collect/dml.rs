@@ -61,6 +61,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
         for star in &mut select.star_projections {
             star.line = star.line.saturating_add(shift);
         }
+        for column in &mut select.column_uses {
+            column.line = column.line.saturating_add(shift);
+        }
     }
     for star in &mut facts.returning_stars {
         star.line = star.line.saturating_add(shift);

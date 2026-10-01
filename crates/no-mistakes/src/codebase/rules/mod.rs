@@ -53,6 +53,7 @@ pub mod postgres_duplicate_function_body;
 pub mod postgres_explicit_columns;
 pub mod postgres_finite_text_columns;
 pub mod postgres_fk_index;
+pub mod postgres_generated_column_predicates;
 pub mod postgres_idempotent_insert;
 pub mod postgres_identifier_length;
 pub mod postgres_lock_ordering;
