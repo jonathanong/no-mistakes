@@ -1,8 +1,11 @@
-pub(super) fn split_body(definition: &str) -> (String, Option<String>) {
-    if let Some((header, body)) = dollar_body(definition) {
-        return (header, Some(body));
+pub(super) fn split_body(definition: &str) -> (String, Option<String>, Option<(usize, usize)>) {
+    if let Some((header, body, span)) = dollar_body(definition) {
+        return (header, Some(body), Some(span));
     }
-    atomic_body(definition).unwrap_or_else(|| (definition.to_string(), None))
+    if let Some((header, body, span)) = atomic_body(definition) {
+        return (header, Some(body), Some(span));
+    }
+    (definition.to_string(), None, None)
 }
 
 pub(super) fn skip_dollar_body(definition: &str, index: usize) -> Option<usize> {
@@ -12,7 +15,7 @@ pub(super) fn skip_dollar_body(definition: &str, index: usize) -> Option<usize> 
     Some(open_end + relative + close.len())
 }
 
-fn dollar_body(definition: &str) -> Option<(String, String)> {
+fn dollar_body(definition: &str) -> Option<(String, String, (usize, usize))> {
     let mut index = 0;
     while index < definition.len() {
         if let Some(next) = skip_ignored(definition, index) {
@@ -21,8 +24,10 @@ fn dollar_body(definition: &str) -> Option<(String, String)> {
         }
         if is_word_at(definition, index, "as") {
             let cursor = skip_as_gap(definition, index + 2);
-            if let Some(body) = super::function_quote::body_after_as(definition, cursor) {
-                return Some((definition[..index].to_string(), body));
+            if let Some((body, start, end)) =
+                super::function_quote::body_after_as(definition, cursor)
+            {
+                return Some((definition[..index].to_string(), body, (start, end)));
             }
         }
         index += definition[index..].chars().next()?.len_utf8();
@@ -30,7 +35,7 @@ fn dollar_body(definition: &str) -> Option<(String, String)> {
     None
 }
 
-fn atomic_body(definition: &str) -> Option<(String, Option<String>)> {
+fn atomic_body(definition: &str) -> Option<(String, String, (usize, usize))> {
     let mut index = 0;
     while index < definition.len() {
         if let Some(next) = skip_ignored(definition, index) {
@@ -51,7 +56,8 @@ fn atomic_body(definition: &str) -> Option<(String, Option<String>)> {
                 let end = matching_end(definition, body_start)?;
                 return Some((
                     definition[..index].to_string(),
-                    Some(definition[body_start..end].to_string()),
+                    definition[body_start..end].to_string(),
+                    (body_start, end),
                 ));
             }
         }

@@ -8,6 +8,7 @@ struct GroupKey {
     language: String,
     search_path: String,
     security: String,
+    null_input: String,
     kind: &'static str,
     tokens: Vec<String>,
 }
@@ -33,11 +34,13 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
             continue;
         }
         let kind = function_kind(function.returns_trigger, function.returns_event_trigger);
+        let outside = outside_body(&function.definition, function.body_span);
         groups
             .entry(GroupKey {
                 language,
-                search_path: search_path(&function.definition, Some(body)),
-                security: security_mode(&function.definition, Some(body)),
+                search_path: search_path(&outside),
+                security: security_mode(&outside),
+                null_input: function.null_input.clone(),
                 kind,
                 tokens,
             })
@@ -83,8 +86,7 @@ fn other_names(members: &[String], index: usize) -> Vec<&str> {
     names
 }
 
-fn security_mode(definition: &str, body: Option<&str>) -> String {
-    let header = header_before_body(definition, body);
+fn security_mode(header: &str) -> String {
     if phrase(header, "security", "definer") {
         "definer".to_string()
     } else {
@@ -92,9 +94,18 @@ fn security_mode(definition: &str, body: Option<&str>) -> String {
     }
 }
 
-fn header_before_body<'a>(definition: &'a str, body: Option<&str>) -> &'a str {
-    body.and_then(|body| definition.find(body).map(|index| &definition[..index]))
-        .unwrap_or(definition)
+fn outside_body(definition: &str, span: Option<(usize, usize)>) -> String {
+    let Some((start, end)) = span else {
+        return definition.to_string();
+    };
+    if start > end || end > definition.len() {
+        return definition.to_string();
+    }
+    let mut text = String::with_capacity(definition.len());
+    text.push_str(&definition[..start]);
+    text.push(' ');
+    text.push_str(&definition[end..]);
+    text
 }
 
 fn phrase(header: &str, first: &str, second: &str) -> bool {
@@ -120,10 +131,7 @@ fn function_kind(returns_trigger: bool, returns_event_trigger: bool) -> &'static
     }
 }
 
-fn search_path(definition: &str, body: Option<&str>) -> String {
-    let header = body
-        .and_then(|body| definition.find(body).map(|index| &definition[..index]))
-        .unwrap_or(definition);
+fn search_path(header: &str) -> String {
     let lower = header.to_ascii_lowercase();
     let Some(start) = lower.find("set search_path") else {
         return String::new();

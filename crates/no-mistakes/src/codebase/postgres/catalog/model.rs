@@ -152,6 +152,8 @@ pub struct CatalogFunction {
     pub returns_event_trigger: bool,
     pub definition: String,
     pub body: Option<String>,
+    pub body_span: Option<(usize, usize)>,
+    pub null_input: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

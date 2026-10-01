@@ -351,6 +351,28 @@ fn a_default_string_does_not_make_an_event_trigger() {
 }
 
 #[test]
+fn a_body_that_repeats_the_language_name_keeps_security_definer() {
+    let joined = messages("schemaCatalogPath: security-body.json\n").join("\n");
+    assert!(joined.contains("function:fn_definer_sql:"), "{joined}");
+    assert!(joined.contains("function:fn_definer_sql_copy:"));
+    assert!(!joined.contains("function:fn_invoker_sql:"));
+}
+
+#[test]
+fn strict_functions_are_not_the_same_copy_as_called_on_null() {
+    let joined = messages("schemaCatalogPath: strict.json\n").join("\n");
+    let strict = joined
+        .lines()
+        .find(|line| line.contains("function:fn_strict:"))
+        .unwrap_or("");
+    assert!(strict.contains("fn_strict_long"), "{joined}");
+    assert!(!strict.contains("fn_called"), "{joined}");
+    assert!(!strict.contains("fn_default_word"), "{joined}");
+    assert!(joined.contains("function:fn_called:"));
+    assert!(joined.contains("function:fn_default_word:"));
+}
+
+#[test]
 fn security_definer_is_not_the_same_copy_as_invoker() {
     let joined = messages("schemaCatalogPath: security.json\n").join("\n");
     assert!(joined.contains("function:fn_definer:"), "{joined}");

@@ -1,8 +1,9 @@
-pub(super) fn body_after_as(definition: &str, cursor: usize) -> Option<String> {
+pub(super) fn body_after_as(definition: &str, cursor: usize) -> Option<(String, usize, usize)> {
     if let Some((tag, open_end)) = opening_dollar(definition, cursor) {
         let close = format!("${tag}$");
         let relative = definition[open_end..].find(&close)?;
-        return Some(definition[open_end..open_end + relative].to_string());
+        let end = open_end + relative;
+        return Some((definition[open_end..end].to_string(), open_end, end));
     }
     quoted_sql_body(definition, cursor)
 }
@@ -13,7 +14,7 @@ pub(super) fn opening_dollar(definition: &str, index: usize) -> Option<(String, 
     Some((rest[..end].to_string(), index + end + 2))
 }
 
-fn quoted_sql_body(definition: &str, cursor: usize) -> Option<String> {
+fn quoted_sql_body(definition: &str, cursor: usize) -> Option<(String, usize, usize)> {
     if !definition[cursor..].starts_with('\'') {
         return None;
     }
@@ -21,7 +22,12 @@ fn quoted_sql_body(definition: &str, cursor: usize) -> Option<String> {
     if end <= cursor + 1 || definition.as_bytes().get(end - 1) != Some(&b'\'') {
         return None;
     }
-    Some(unescape_sql_string(&definition[cursor + 1..end - 1]))
+    let start = cursor + 1;
+    Some((
+        unescape_sql_string(&definition[start..end - 1]),
+        start,
+        end - 1,
+    ))
 }
 
 fn unescape_sql_string(inner: &str) -> String {

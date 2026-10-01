@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_definer_sql": {
+      "definition": "CREATE FUNCTION fn_definer_sql() RETURNS int LANGUAGE sql SECURITY DEFINER AS $$sql$$"
+    },
+    "fn_definer_sql_copy": {
+      "definition": "CREATE FUNCTION fn_definer_sql_copy() RETURNS int LANGUAGE sql SECURITY DEFINER AS $$sql$$"
+    },
+    "fn_invoker_sql": {
+      "definition": "CREATE FUNCTION fn_invoker_sql() RETURNS int LANGUAGE sql AS $$sql$$"
+    }
+  }
+}

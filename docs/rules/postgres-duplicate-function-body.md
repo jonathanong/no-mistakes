@@ -69,7 +69,9 @@ with other bodies that also omit it. Unquoted call names fold;
 quoted call names and schema qualifiers stay distinct. Other identifiers
 become stable placeholders, so a consistent rename still matches and a swapped
 use does not. Different `SET search_path` clauses and `SECURITY DEFINER` versus invoker do
-not match. Trigger functions, event
+not match. The body is located by its delimiter, so an earlier copy of the
+body text does not hide those clauses. `STRICT` and `RETURNS NULL ON NULL INPUT`
+are a separate group from `CALLED ON NULL INPUT` and the default. Trigger functions, event
 triggers, and ordinary functions are separate groups. Bare `RAISE;` stays
 distinct from `RAISE EXCEPTION`. A top-level `message` replaces the generated
 finding text.
