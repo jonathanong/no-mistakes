@@ -20,6 +20,14 @@ fn missing_facts_use_the_file_checkers() {
     let config = NoMistakesConfig::default();
     let files: &[PathBuf] = &[];
     for rule_id in [
+        POSTGRES_CONSTRAINT_VALIDATE,
+        POSTGRES_NO_ADD_COLUMN,
+        POSTGRES_FK_INDEX,
+        POSTGRES_REDUNDANT_INDEX,
+        POSTGRES_IDENTIFIER_LENGTH,
+        POSTGRES_REQUIRE_FK_ON_DELETE,
+        POSTGRES_REQUIRE_NAMED_CONSTRAINTS,
+        POSTGRES_SQL_STATEMENT_POLICY,
         DUPLICATE_RULE,
         COMMENTS_RULE,
         COLUMN_RULE,
@@ -45,6 +53,14 @@ fn prepared_facts_use_the_fact_checkers() {
     let files: &[PathBuf] = &[];
     let facts = CheckFactMap::default();
     for rule_id in [
+        POSTGRES_CONSTRAINT_VALIDATE,
+        POSTGRES_NO_ADD_COLUMN,
+        POSTGRES_FK_INDEX,
+        POSTGRES_REDUNDANT_INDEX,
+        POSTGRES_IDENTIFIER_LENGTH,
+        POSTGRES_REQUIRE_FK_ON_DELETE,
+        POSTGRES_REQUIRE_NAMED_CONSTRAINTS,
+        POSTGRES_SQL_STATEMENT_POLICY,
         NAMING_RULE,
         COLUMN_NAMING_RULE,
         FINITE_TEXT_RULE,

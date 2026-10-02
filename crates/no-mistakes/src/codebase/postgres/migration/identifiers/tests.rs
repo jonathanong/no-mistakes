@@ -88,7 +88,7 @@ fn procedure_names_drop_the_schema_and_unescape_quotes() {
 fn procedure_scan_skips_a_name_it_cannot_read() {
     let names =
         super::Locations::new("CREATE PROCEDURE (\nCREATE PROCEDURE \"open\nCREATE PROCEDURE   ")
-            .procedures();
+            .unparsed_declarations();
     assert!(names.is_empty());
 }
 
@@ -131,10 +131,14 @@ fn statements_without_declared_names_are_ignored() {
 
 #[test]
 fn unterminated_comments_and_quotes_do_not_hide_a_later_name() {
-    assert!(super::Locations::new("-- comment").procedures().is_empty());
-    assert!(super::Locations::new("/* comment").procedures().is_empty());
+    assert!(super::Locations::new("-- comment")
+        .unparsed_declarations()
+        .is_empty());
+    assert!(super::Locations::new("/* comment")
+        .unparsed_declarations()
+        .is_empty());
     assert!(super::Locations::new("'unterminated")
-        .procedures()
+        .unparsed_declarations()
         .is_empty());
 }
 
@@ -177,7 +181,7 @@ fn invalid_identifier_tokens_fail_closed_without_inventing_names() {
         );
     }
     assert!(super::Locations::new(&fixture_sql("unknown-kind.sql"))
-        .procedures()
+        .unparsed_declarations()
         .is_empty());
     let sql = fixture_sql("modifiers.sql");
     let facts = super::super::extract_migration_facts(&sql);
@@ -199,4 +203,28 @@ fn fixture_tokens(name: &str) -> Vec<sqlparser::tokenizer::TokenWithSpan> {
         .into_iter()
         .filter(|token| !matches!(token.token, sqlparser::tokenizer::Token::Whitespace(_)))
         .collect()
+}
+
+#[test]
+fn recursive_views_and_language_prefixed_do_keep_declaration_locations() {
+    let facts = super::super::extract_migration_facts(&fixture_sql("recursive-do.sql"));
+    for (name, line) in [
+        ("recursive_items", 1),
+        ("recursive_column", 1),
+        ("second_column", 1),
+        ("recovered_items", 3),
+        ("recovered_column", 3),
+        ("recovered_proc", 4),
+        ("view_without_columns", 7),
+        ("malformed_columns", 8),
+    ] {
+        assert!(
+            facts
+                .declared_identifiers
+                .iter()
+                .any(|identifier| { identifier.name == name && identifier.line == line }),
+            "missing {name}:{line}: {:?}",
+            facts.declared_identifiers
+        );
+    }
 }

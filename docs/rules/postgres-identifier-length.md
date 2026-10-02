@@ -43,7 +43,9 @@ A name that is only referenced is not a finding (`REFERENCES some_long_name`).
 Length is measured on the unquoted identifier, including decoded PostgreSQL
 Unicode identifiers (`U&"..."` with optional `UESCAPE`). Declaration modifiers,
 nested comments, and recovered static `EXECUTE` statements retain their source
-locations. Routine-body declarations do not consume an outer declaration's line.
+locations. `RECURSIVE VIEW` names and explicit columns are retained even when the SQL
+parser cannot construct that view AST. `DO LANGUAGE` bodies use their original
+source lines. Routine-body declarations do not consume an outer declaration's line.
 At the default 63-byte limit, the finding shows PostgreSQL's truncated prefix
 on a character boundary. A smaller `maxBytes` reports the configured naming
 policy without claiming that PostgreSQL truncates at that smaller limit.

@@ -37,7 +37,7 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
     let mut identifier_locations = identifiers::Locations::new(sql);
     facts
         .declared_identifiers
-        .extend(identifier_locations.procedures());
+        .extend(identifier_locations.unparsed_declarations());
     for statement in statements {
         facts
             .declared_identifiers

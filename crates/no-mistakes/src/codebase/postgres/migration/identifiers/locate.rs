@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, VecDeque};
 #[derive(Default)]
 pub(in crate::codebase::postgres::migration) struct Locations {
     lines: BTreeMap<(String, String), VecDeque<usize>>,
+    recursive_views: Vec<SqlDeclaredIdentifier>,
 }
 
 impl Locations {
@@ -23,7 +24,7 @@ impl Locations {
             .pop_front()
     }
 
-    pub(in crate::codebase::postgres::migration) fn procedures(
+    pub(in crate::codebase::postgres::migration) fn unparsed_declarations(
         &self,
     ) -> Vec<SqlDeclaredIdentifier> {
         let mut names = self
@@ -37,6 +38,7 @@ impl Locations {
                 })
             })
             .collect::<Vec<_>>();
+        names.extend(self.recursive_views.iter().cloned());
         names.sort_by_key(|name| name.line);
         names
     }
@@ -47,55 +49,18 @@ impl Locations {
             .filter(|token| !matches!(token.token, Token::Whitespace(_)))
             .collect::<Vec<_>>();
         for (at, token) in tokens.iter().enumerate() {
-            if word(Some(token), "DO") {
-                if let Some(TokenWithSpan {
-                    token: Token::DollarQuotedString(body),
-                    span,
-                }) = tokens.get(at + 1)
-                {
-                    // Lenient parsing already recovers direct DO DDL, unlike routine bodies.
-                    self.index(&body.value, base_line + span.start.line as usize - 1);
+            self.index_do_body(&tokens, at, base_line);
+            if let Some((kind, name, next)) = declaration(&tokens, at) {
+                if kind == "view" && recursive_view(&tokens, at) {
+                    // sqlparser does not support RECURSIVE VIEW; retain its declared names.
+                    self.recursive_views.extend(super::views::names(
+                        &tokens,
+                        name,
+                        next,
+                        base_line + token.span.start.line as usize,
+                    ));
+                    continue;
                 }
-            }
-            if !word(Some(token), "CREATE") && !word(Some(token), "ALTER") {
-                continue;
-            }
-            let mut object = at + 1;
-            while is_modifier(tokens.get(object)) {
-                object += 1;
-            }
-            let Some(TokenWithSpan {
-                token: Token::Word(kind),
-                ..
-            }) = tokens.get(object)
-            else {
-                continue;
-            };
-            let kind = kind.value.to_ascii_lowercase();
-            if kind == "procedure" && word(Some(token), "ALTER") {
-                continue;
-            }
-            if ![
-                "table",
-                "index",
-                "view",
-                "trigger",
-                "function",
-                "procedure",
-                "type",
-            ]
-            .contains(&kind.as_str())
-            {
-                continue;
-            }
-            let mut name_at = object + 1;
-            while ["IF", "NOT", "EXISTS", "ONLY", "CONCURRENTLY"]
-                .iter()
-                .any(|keyword| word(tokens.get(name_at), keyword))
-            {
-                name_at += 1;
-            }
-            if let Some((name, _)) = super::procedures::identifier(&tokens, name_at) {
                 self.lines
                     .entry((kind, name))
                     .or_default()
@@ -103,6 +68,73 @@ impl Locations {
             }
         }
     }
+
+    fn index_do_body(&mut self, tokens: &[TokenWithSpan], at: usize, base_line: usize) {
+        if !word(tokens.get(at), "DO") {
+            return;
+        }
+        let body_at = at
+            + if word(tokens.get(at + 1), "LANGUAGE") {
+                3
+            } else {
+                1
+            };
+        if let Some(TokenWithSpan {
+            token: Token::DollarQuotedString(body),
+            span,
+        }) = tokens.get(body_at)
+        {
+            // Lenient parsing recovers direct DO DDL, unlike routine bodies.
+            self.index(&body.value, base_line + span.start.line as usize - 1);
+        }
+    }
+}
+
+fn declaration(tokens: &[TokenWithSpan], at: usize) -> Option<(String, String, usize)> {
+    let token = tokens.get(at);
+    if !word(token, "CREATE") && !word(token, "ALTER") {
+        return None;
+    }
+    let mut object = at + 1;
+    while is_modifier(tokens.get(object)) {
+        object += 1;
+    }
+    let Token::Word(kind) = &tokens.get(object)?.token else {
+        return None;
+    };
+    let kind = kind.value.to_ascii_lowercase();
+    if kind == "procedure" && word(token, "ALTER") {
+        return None;
+    }
+    if ![
+        "table",
+        "index",
+        "view",
+        "trigger",
+        "function",
+        "procedure",
+        "type",
+    ]
+    .contains(&kind.as_str())
+    {
+        return None;
+    }
+    let mut name_at = object + 1;
+    while ["IF", "NOT", "EXISTS", "ONLY", "CONCURRENTLY"]
+        .iter()
+        .any(|keyword| word(tokens.get(name_at), keyword))
+    {
+        name_at += 1;
+    }
+    super::procedures::identifier(tokens, name_at).map(|(name, next)| (kind, name, next))
+}
+
+fn recursive_view(tokens: &[TokenWithSpan], at: usize) -> bool {
+    tokens
+        .iter()
+        .skip(at + 1)
+        .take_while(|token| is_modifier(Some(token)))
+        .any(|token| word(Some(token), "RECURSIVE"))
 }
 
 fn is_modifier(token: Option<&TokenWithSpan>) -> bool {
@@ -115,6 +147,7 @@ fn is_modifier(token: Option<&TokenWithSpan>) -> bool {
         "CONSTRAINT",
         "UNIQUE",
         "MATERIALIZED",
+        "RECURSIVE",
         "LOCAL",
         "GLOBAL",
     ]

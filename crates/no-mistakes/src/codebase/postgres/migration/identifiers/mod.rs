@@ -7,6 +7,7 @@ use sqlparser::ast::{
 
 mod locate;
 mod procedures;
+mod views;
 
 pub(super) use locate::Locations;
 
