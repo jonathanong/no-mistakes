@@ -7,6 +7,7 @@ pub(super) struct Compiled {
     pub(super) allow_types: Vec<String>,
     pub(super) allow_enums: bool,
     pub(super) allow: AllowList,
+    pub(super) message: Option<String>,
 }
 
 impl Compiled {
@@ -17,7 +18,7 @@ impl Compiled {
     }
 }
 
-pub(super) fn compile(options: &Options) -> Result<Compiled> {
+pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, options.schema_catalog_path.trim())?;
     let overlap: Vec<&str> = options
         .allow_element_types
@@ -37,5 +38,6 @@ pub(super) fn compile(options: &Options) -> Result<Compiled> {
         allow_types: options.allow_element_types.clone(),
         allow_enums: options.allow_enum_elements,
         allow: AllowList::compile(super::RULE_ID, options.allow.clone())?,
+        message,
     })
 }

@@ -41,8 +41,10 @@ allow:
         "{messages:#?}"
     );
     assert!(
-        messages.iter().any(|message| message
-            .contains("allow entry column:orders.coupon_ids cannot excuse a uuid[] column")),
+        messages.iter().any(|message| {
+            message
+                == "schema.json: column:orders.coupon_ids: allow entry column:orders.coupon_ids cannot excuse a uuid[] column"
+        }),
         "{messages:#?}"
     );
     assert!(
@@ -65,6 +67,14 @@ allow:
         "enums": { "Weekday": { "values": ["mon", "tue"] } },
         "tables": { "shipments": { "columns": { "weekdays": { "dataType": "weekday[]" } } } }
     });
+    let qualified = serde_json::json!({
+        "enums": { "public.report_types": { "values": ["a"] } },
+        "tables": { "reports": { "columns": { "kinds": { "dataType": "report_types[]" } } } }
+    });
+    expect_none(
+        "schemaCatalogPath: schema.json\nallowEnumElements: true\n",
+        qualified,
+    );
     expect_none(
         "schemaCatalogPath: schema.json\nallowEnumElements: true\n",
         weekdays.clone(),
