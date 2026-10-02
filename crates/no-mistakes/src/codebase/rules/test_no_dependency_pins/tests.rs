@@ -190,7 +190,7 @@ fn fail_fixture_reports_each_runtime_pin() {
         // host with a port or a bracketed IPv6 address, or a `..` segment.
         ("src/action-ref.test.mts", "exact action ref", 16),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
-        ("src/container-image.test.mts", "container image tag", 24),
+        ("src/container-image.test.mts", "container image tag", 23),
         ("src/container-image.test.mts", "container image digest", 2),
         ("src/setup-version.test.mts", "setup action version", 6),
         (
