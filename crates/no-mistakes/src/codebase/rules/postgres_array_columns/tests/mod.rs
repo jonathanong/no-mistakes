@@ -32,6 +32,35 @@ fn check_with_files_reads_a_prepared_catalog() {
 }
 
 #[test]
+fn custom_message_and_include_filter_the_catalog() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-array-columns/fixture/fail");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: super::RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        message: Some("store the values in a child table".to_string()),
+        options: serde_yaml::from_str("schemaCatalogPath: schema.json").unwrap(),
+        ..RuleDef::default()
+    });
+    let messages = super::check_with_files(&root, &config, &[root.join("schema.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        messages,
+        vec!["schema.json: column:orders.tag_names: store the values in a child table".to_string()]
+    );
+    config.rules[0].include = vec!["missing.json".to_string()];
+    assert!(
+        super::check_with_files(&root, &config, &[root.join("schema.json")])
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
 fn missing_catalog_file_is_an_error() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres/array-columns/pass");
