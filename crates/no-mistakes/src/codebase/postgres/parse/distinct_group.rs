@@ -4,8 +4,11 @@
 
 use std::borrow::Cow;
 
+mod opaque;
 #[cfg(test)]
 mod tests;
+
+use opaque::{skip_comment, skip_opaque};
 
 pub(super) fn separate_distinct_grouping(sql: &str) -> Cow<'_, str> {
     let edits = distinct_grouping_edits(sql);
@@ -56,9 +59,16 @@ fn distinct_grouping_at(sql: &str, index: usize) -> Option<(Edit, usize)> {
             at: break_at,
             replace: 1,
         },
-        None => Edit {
-            at: gap_start,
-            replace: 0,
+        // Blank the first comment instead of inserting, so columns stay put.
+        None => match first_comment(sql, gap_start, at) {
+            Some((start, end)) => Edit {
+                at: start,
+                replace: end - start,
+            },
+            None => Edit {
+                at: gap_start,
+                replace: 0,
+            },
         },
     };
     Some((edit, next))
@@ -68,7 +78,14 @@ fn apply_edits(sql: &str, edits: &[Edit]) -> String {
     let mut out = sql.to_string();
     for edit in edits.iter().rev() {
         let end = edit.at + edit.replace;
-        out.replace_range(edit.at..end, ",");
+        // The comma takes the first byte; the rest of a blanked comment becomes
+        // spaces, keeping its line breaks.
+        let blanked: String = sql[edit.at..end]
+            .chars()
+            .skip(1)
+            .map(|c| if matches!(c, '\n' | '\r') { c } else { ' ' })
+            .collect();
+        out.replace_range(edit.at..end, &format!(",{blanked}"));
     }
     out
 }
@@ -76,7 +93,7 @@ fn apply_edits(sql: &str, edits: &[Edit]) -> String {
 fn word_boundary_before(sql: &str, index: usize) -> bool {
     index == 0
         || !sql[..index]
-            .ends_with(|character: char| character.is_ascii_alphanumeric() || character == '_')
+            .ends_with(|character: char| character.is_alphanumeric() || character == '_')
 }
 
 fn match_word(sql: &str, index: usize, word: &str) -> Option<usize> {
@@ -85,12 +102,14 @@ fn match_word(sql: &str, index: usize, word: &str) -> Option<usize> {
     if !slice.eq_ignore_ascii_case(word) {
         return None;
     }
-    if sql[end..]
-        .starts_with(|character: char| character.is_ascii_alphanumeric() || character == '_')
-    {
+    if sql[end..].starts_with(|character: char| character.is_alphanumeric() || character == '_') {
         return None;
     }
     Some(end)
+}
+
+fn first_comment(sql: &str, start: usize, end: usize) -> Option<(usize, usize)> {
+    (start..end).find_map(|index| skip_comment(sql, index).map(|next| (index, next)))
 }
 
 fn skip_required_ws(sql: &str, index: usize) -> Option<usize> {
@@ -116,102 +135,4 @@ fn skip_grouping_gap(sql: &str, mut index: usize) -> Option<(usize, Option<usize
         }
     }
     (index > start).then_some((index, last_break))
-}
-
-fn skip_comment(sql: &str, index: usize) -> Option<usize> {
-    match sql.as_bytes().get(index..index + 2)? {
-        b"--" => Some(skip_line_comment(sql, index)),
-        b"/*" => Some(skip_block_comment(sql, index)),
-        _ => None,
-    }
-}
-
-fn skip_opaque(sql: &str, index: usize) -> Option<usize> {
-    let bytes = sql.as_bytes();
-    match bytes.get(index)? {
-        b'-' if bytes.get(index + 1) == Some(&b'-') => Some(skip_line_comment(sql, index)),
-        b'/' if bytes.get(index + 1) == Some(&b'*') => Some(skip_block_comment(sql, index)),
-        b'\'' => Some(skip_quoted(sql, index, b'\'', is_escape_string(sql, index))),
-        b'"' => Some(skip_quoted(sql, index, b'"', false)),
-        // `foo$tag$` is an identifier, not a dollar-quote opener.
-        b'$' if word_boundary_before(sql, index) => skip_dollar(sql, index),
-        _ => None,
-    }
-}
-
-fn skip_line_comment(sql: &str, index: usize) -> usize {
-    sql[index..]
-        .find('\n')
-        .map(|offset| index + offset)
-        .unwrap_or(sql.len())
-}
-
-/// PostgreSQL block comments nest.
-fn skip_block_comment(sql: &str, index: usize) -> usize {
-    let bytes = sql.as_bytes();
-    let mut depth = 1;
-    let mut at = index + 2;
-    while at < bytes.len() {
-        match bytes.get(at..at + 2) {
-            Some(b"/*") => {
-                depth += 1;
-                at += 2;
-            }
-            Some(b"*/") => {
-                depth -= 1;
-                at += 2;
-                if depth == 0 {
-                    return at;
-                }
-            }
-            _ => at += 1,
-        }
-    }
-    sql.len()
-}
-
-/// `E'...'` strings treat a backslash as an escape, so `\'` does not close them.
-fn is_escape_string(sql: &str, quote_at: usize) -> bool {
-    quote_at > 0
-        && matches!(sql.as_bytes()[quote_at - 1], b'e' | b'E')
-        && word_boundary_before(sql, quote_at - 1)
-}
-
-fn skip_quoted(sql: &str, mut index: usize, quote: u8, backslash_escapes: bool) -> usize {
-    let bytes = sql.as_bytes();
-    index += 1;
-    while index < bytes.len() {
-        if backslash_escapes && bytes[index] == b'\\' {
-            index += 2;
-            continue;
-        }
-        if bytes[index] == quote {
-            if bytes.get(index + 1) == Some(&quote) {
-                index += 2;
-                continue;
-            }
-            return index + 1;
-        }
-        index += 1;
-    }
-    index
-}
-
-fn skip_dollar(sql: &str, start: usize) -> Option<usize> {
-    let bytes = sql.as_bytes();
-    let mut index = start + 1;
-    while index < bytes.len() && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_') {
-        index += 1;
-    }
-    if bytes.get(index) != Some(&b'$') {
-        return None;
-    }
-    let tag = &sql[start..=index];
-    let rest = index + 1;
-    Some(
-        sql[rest..]
-            .find(tag)
-            .map(|offset| rest + offset + tag.len())
-            .unwrap_or(sql.len()),
-    )
 }

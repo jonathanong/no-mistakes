@@ -94,3 +94,24 @@ fn nested_block_comments_in_the_gap_are_skipped() {
     let open = "SELECT 1 GROUP BY DISTINCT /* /* */ ROLLUP (())";
     assert_eq!(separate_distinct_grouping(open), open);
 }
+
+#[test]
+fn comment_only_gaps_keep_every_later_column() {
+    let sql = "SELECT 1 GROUP BY DISTINCT/* a\nb */ROLLUP (()) HAVING COUNT(*) > 0";
+    let rewritten = separate_distinct_grouping(sql);
+    assert_ne!(rewritten, sql);
+    assert_eq!(rewritten.len(), sql.len());
+    assert_eq!(rewritten.find("ROLLUP"), sql.find("ROLLUP"));
+    assert_eq!(rewritten.find('\n'), sql.find('\n'));
+    let line = "SELECT 1 GROUP BY DISTINCT--x\nROLLUP (())";
+    assert_eq!(
+        separate_distinct_grouping(line).find("ROLLUP"),
+        line.find("ROLLUP")
+    );
+}
+
+#[test]
+fn unicode_identifiers_do_not_open_dollar_quotes() {
+    let sql = "SELECT é$tag$ FROM t GROUP BY DISTINCT ROLLUP (())";
+    assert_ne!(separate_distinct_grouping(sql), sql);
+}
