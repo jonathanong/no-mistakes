@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "subscriptions": {
+      "columns": {
+        "since": {
+          "dataType": "date"
+        }
+      }
+    }
+  }
+}

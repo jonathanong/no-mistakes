@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "sessions": {
+      "columns": {
+        "user_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

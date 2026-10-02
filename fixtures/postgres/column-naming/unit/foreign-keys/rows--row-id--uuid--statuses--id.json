@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "rows": {
+      "columns": {
+        "row_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "row_id"
+          ],
+          "referencedTable": "statuses",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

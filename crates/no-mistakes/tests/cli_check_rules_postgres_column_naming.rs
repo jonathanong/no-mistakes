@@ -16,6 +16,8 @@ fn fixture(scenario: &str) -> PathBuf {
 fn check(root: &PathBuf, json: bool) -> Output {
     let mut command = Command::new(bin());
     command
+        // Use Cargo's temporary process-isolated lock path in sandboxed CLI tests.
+        .env("CARGO_BIN_EXE_no-mistakes", bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
@@ -73,4 +75,27 @@ fn postgres_column_naming_json_has_rule_id() {
     assert!(!out.status.success());
     let again = check(&root, true);
     assert_eq!(stdout(&out), stdout(&again));
+}
+
+#[test]
+fn postgres_column_naming_jsonc_suppression_uses_column_lines() {
+    for (scenario, expected_status) in [
+        ("line-disable", false),
+        ("next-line-disable", false),
+        ("file-disable", true),
+    ] {
+        let root = fixture(scenario);
+        let out = check(&root, false);
+        let body = stdout(&out);
+        assert_eq!(out.status.success(), expected_status, "{scenario}: {body}");
+        if scenario == "file-disable" {
+            assert!(body.is_empty(), "{scenario}: {body}");
+        } else {
+            assert!(
+                body.contains("column:invoices.expires"),
+                "{scenario}: {body}"
+            );
+            assert!(!body.contains("column:invoices.due"), "{scenario}: {body}");
+        }
+    }
 }

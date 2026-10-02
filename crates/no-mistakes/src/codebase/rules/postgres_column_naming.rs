@@ -1,4 +1,3 @@
-use crate::codebase::postgres::AllowEntry;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -28,7 +27,14 @@ pub(crate) struct Options {
     pub(crate) ignore_table_patterns: Vec<String>,
     pub(crate) forbidden_column_names: Vec<ForbiddenName>,
     pub(crate) foreign_keys: ForeignKeyOptions,
-    pub(crate) allow: Vec<AllowEntry>,
+    pub(crate) allow: Vec<ColumnAllowEntry>,
+}
+
+#[derive(Deserialize, Default, Clone)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ColumnAllowEntry {
+    pub(crate) object: String,
+    pub(crate) reason: String,
 }
 
 #[derive(Deserialize, Default, Clone)]

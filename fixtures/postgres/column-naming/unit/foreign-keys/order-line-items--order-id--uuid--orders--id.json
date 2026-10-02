@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "order_line_items": {
+      "columns": {
+        "order_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "order_id"
+          ],
+          "referencedTable": "orders",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

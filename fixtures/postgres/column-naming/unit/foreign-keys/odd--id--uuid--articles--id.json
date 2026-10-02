@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "odd": {
+      "columns": {
+        "_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "_id"
+          ],
+          "referencedTable": "articles",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

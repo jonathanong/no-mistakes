@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "daily_totals": {
+      "columns": {
+        "day": {
+          "dataType": "date"
+        }
+      }
+    }
+  }
+}

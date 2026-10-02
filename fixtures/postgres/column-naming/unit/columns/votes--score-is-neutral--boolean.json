@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "votes": {
+      "columns": {
+        "score_is_neutral": {
+          "dataType": "boolean"
+        }
+      }
+    }
+  }
+}

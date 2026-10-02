@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "linked_accounts": {
+      "columns": {
+        "github_user_id": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

@@ -98,7 +98,17 @@ fn assemble(
         singular: foreign.singular,
         follow: foreign.follow,
         require: foreign.require,
-        allow: AllowList::compile(super::RULE_ID, options.allow.clone())?,
+        allow: AllowList::compile(
+            super::RULE_ID,
+            options
+                .allow
+                .iter()
+                .map(|entry| crate::codebase::postgres::AllowEntry {
+                    object: entry.object.clone(),
+                    reason: entry.reason.clone(),
+                })
+                .collect(),
+        )?,
         message,
     })
 }
@@ -175,6 +185,9 @@ fn compile_ignores(patterns: &[String]) -> Result<Vec<Regex>> {
 }
 
 pub(super) fn regex(option: &str, pattern: &str) -> Result<Regex> {
+    if pattern.trim().is_empty() {
+        bail!("postgres-column-naming option {option}: empty pattern");
+    }
     Regex::new(pattern).map_err(|error| {
         anyhow::anyhow!("postgres-column-naming option {option}: invalid regex: {error}")
     })

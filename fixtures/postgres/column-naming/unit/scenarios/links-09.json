@@ -1,0 +1,22 @@
+{
+  "tables": {
+    "sync_cursors": {
+      "columns": {
+        "cursor_id": {
+          "dataType": "uuid"
+        },
+        "cursor_order_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "login_events": {
+      "columns": {
+        "session_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

@@ -32,6 +32,12 @@ fn walk(
                     .iter()
                     .any(|target| target == &foreign_key.referenced_table);
             }
+            if targets
+                .iter()
+                .any(|target| target == &foreign_key.referenced_table)
+            {
+                return true;
+            }
             foreign_key
                 .referenced_columns
                 .get(position)

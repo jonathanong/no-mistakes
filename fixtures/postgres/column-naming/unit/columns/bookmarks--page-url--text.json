@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "bookmarks": {
+      "columns": {
+        "page_url": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

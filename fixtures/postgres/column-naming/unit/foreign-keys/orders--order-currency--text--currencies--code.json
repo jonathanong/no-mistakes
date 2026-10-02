@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "order_currency": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "order_currency"
+          ],
+          "referencedTable": "currencies",
+          "referencedColumns": [
+            "code"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        // no-mistakes-disable-next-line postgres-column-naming: legacy billing name
+        "due": {
+          "dataType": "timestamp with time zone"
+        },
+        "expires": { "dataType": "timestamp with time zone" }
+      }
+    }
+  }
+}

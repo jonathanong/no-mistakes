@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "account_members": {
+      "columns": {
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "user_id"
+          ],
+          "referencedTable": "users",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

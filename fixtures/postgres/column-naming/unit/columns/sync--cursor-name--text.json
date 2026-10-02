@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "sync": {
+      "columns": {
+        "cursor_name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

@@ -25,4 +25,5 @@ fn relation_uses_exact_names_then_a_unique_tail() {
     );
     assert!(catalog.relation("schema.events").is_none());
     assert!(catalog.relation("missing").is_none());
+    assert_eq!(catalog.column_line("public.orders", "id"), 1);
 }

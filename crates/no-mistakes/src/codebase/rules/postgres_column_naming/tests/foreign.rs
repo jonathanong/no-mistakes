@@ -251,14 +251,29 @@ fn descriptive_keys_id_columns_and_self_references() {
     );
     expect_none(
         LAST_WORD,
-        serde_json::json!({
-            "tables": {
-                "orders": {
-                    "columns": { "currency_id": { "dataType": "text" } },
-                    "foreignKeys": { "fk": { "columns": ["currency_id"], "referencedTable": "currencies", "referencedColumns": [] } }
-                }
-            }
-        }),
+        super::support::fixture_body("scenarios/foreign-00.json"),
+    );
+}
+
+#[test]
+fn schema_qualified_targets_natural_keys_and_composite_targets_are_resolved() {
+    let yaml = r#"
+schemaCatalogPath: schema.json
+foreignKeys:
+  targetMatch: last-word
+  reservedSuffixes:
+    - suffix: '_user_id'
+      types: [uuid]
+      tables: [users]
+  followCompositeForeignKeys: true
+"#;
+    assert_eq!(
+        super::support::fixture_messages(yaml, "qualified-composite-and-natural-keys.json"),
+        vec![at(
+            "payments",
+            "external_id",
+            "foreign key to orders must end in order_external_id (for example external_id_order_external_id)"
+        )]
     );
 }
 

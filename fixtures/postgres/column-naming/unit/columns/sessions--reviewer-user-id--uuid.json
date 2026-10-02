@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "sessions": {
+      "columns": {
+        "reviewer_user_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

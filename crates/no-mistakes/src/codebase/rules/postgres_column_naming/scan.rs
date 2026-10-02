@@ -8,26 +8,38 @@ use crate::codebase::postgres::{
     catalog_finding, CatalogColumn, CatalogObjectRef, CatalogTable, SchemaCatalog,
 };
 use crate::codebase::rules::RuleFinding;
+use rayon::prelude::*;
 
 pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    for table in catalog.tables() {
-        if ignored(&table.name, compiled) {
-            continue;
-        }
-        for column in &table.columns {
-            if compiled.skip_generated && column.generated.is_some() {
-                continue;
+    let mut findings = catalog
+        .tables()
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .flat_map_iter(|table| {
+            if ignored(&table.name, compiled) {
+                return Vec::new().into_iter();
             }
-            let object = CatalogObjectRef::Column {
-                table: table.name.clone(),
-                column: column.name.clone(),
-            };
-            for text in column_texts(column, table, catalog, compiled) {
-                findings.push(catalog_finding(RULE_ID, path, &object, &text));
-            }
-        }
-    }
+            table
+                .columns
+                .iter()
+                .filter(|column| !compiled.skip_generated || column.generated.is_none())
+                .flat_map(|column| {
+                    let object = CatalogObjectRef::Column {
+                        table: table.name.clone(),
+                        column: column.name.clone(),
+                    };
+                    column_texts(column, table, catalog, compiled)
+                        .into_iter()
+                        .map(move |text| {
+                            let mut finding = catalog_finding(RULE_ID, path, &object, &text);
+                            finding.line = catalog.column_line(&table.name, &column.name);
+                            finding
+                        })
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+        })
+        .collect::<Vec<_>>();
     super::super::sort_findings(&mut findings);
     apply_message(compiled, &mut findings);
     let mut findings = compiled.allow.clone().apply(path, findings);

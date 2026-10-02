@@ -63,14 +63,7 @@ fn reserved_suffixes_name_the_reason_the_column_fails() {
             "_user_id is reserved for foreign keys to users; this text column has no foreign key",
         ),
     );
-    let wrong = serde_json::json!({
-        "tables": {
-            "tasks": {
-                "columns": { "assignee_user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["assignee_user_id"], "referencedTable": "teams", "referencedColumns": ["id"] } }
-            }
-        }
-    });
+    let wrong = super::support::fixture_body("scenarios/links-00.json");
     expect(
         RESERVED,
         wrong,
@@ -93,14 +86,7 @@ foreignKeys:
       types: [uuid]
       tables: [users, deleted_user_identities]
 "#;
-    let body = serde_json::json!({
-        "tables": {
-            "tasks": {
-                "columns": { "assignee_user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["assignee_user_id"], "referencedTable": "teams", "referencedColumns": ["id"] } }
-            }
-        }
-    });
+    let body = super::support::fixture_body("scenarios/links-01.json");
     assert_eq!(
         messages(yaml, body),
         vec![
@@ -120,23 +106,7 @@ foreignKeys:
 
 #[test]
 fn composite_foreign_keys_follow_only_when_asked() {
-    let line = serde_json::json!({
-        "tables": {
-            "line_grants": {
-                "columns": {
-                    "account_id": { "dataType": "uuid" },
-                    "user_id": { "dataType": "uuid" }
-                },
-                "foreignKeys": {
-                    "fk": {
-                        "columns": ["account_id", "user_id"],
-                        "referencedTable": "account_members",
-                        "referencedColumns": ["account_id", "user_id"]
-                    }
-                }
-            }
-        }
-    });
+    let line = super::support::fixture_body("scenarios/links-02.json");
     expect(
         RESERVED,
         line.clone(),
@@ -146,31 +116,9 @@ fn composite_foreign_keys_follow_only_when_asked() {
             &format!("{RESERVED_USERS}; this column is only part of a composite foreign key to account_members"),
         ),
     );
-    let leading = serde_json::json!({
-        "tables": {
-            "line_grants": line["tables"]["line_grants"].clone(),
-            "account_members": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "user_fk": { "columns": ["user_id"], "referencedTable": "users", "referencedColumns": ["id"] } }
-            }
-        }
-    });
+    let leading = super::support::fixture_body("scenarios/composite-leading-targets.json");
     expect_none(&follow(true), leading);
-    let dead = serde_json::json!({
-        "tables": {
-            "seat_grants": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": {
-                    "fk": {
-                        "columns": ["account_id", "user_id"],
-                        "referencedTable": "account_seats",
-                        "referencedColumns": ["account_id", "seat_id"]
-                    }
-                }
-            },
-            "account_seats": { "columns": { "account_id": { "dataType": "uuid" }, "seat_id": { "dataType": "uuid" } } }
-        }
-    });
+    let dead = super::support::fixture_body("scenarios/links-04.json");
     expect(
         &follow(true),
         dead,
@@ -184,65 +132,13 @@ fn composite_foreign_keys_follow_only_when_asked() {
 
 #[test]
 fn follow_walks_two_hops_renames_and_stops_on_cycles() {
-    let chain = serde_json::json!({
-        "tables": {
-            "grant_uses": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["account_id", "user_id"], "referencedTable": "line_grants", "referencedColumns": ["account_id", "user_id"] } }
-            },
-            "line_grants": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["account_id", "user_id"], "referencedTable": "account_members", "referencedColumns": ["account_id", "user_id"] } }
-            },
-            "account_members": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "user_fk": { "columns": ["user_id"], "referencedTable": "users", "referencedColumns": ["id"] } }
-            }
-        }
-    });
+    let chain = super::support::fixture_body("scenarios/links-05.json");
     expect_none(&follow(true), chain);
-    let renamed = serde_json::json!({
-        "tables": {
-            "grants": {
-                "columns": { "account_id": { "dataType": "uuid" }, "member_user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["account_id", "member_user_id"], "referencedTable": "account_members", "referencedColumns": ["account_id", "user_id"] } }
-            },
-            "account_members": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "user_fk": { "columns": ["user_id"], "referencedTable": "users", "referencedColumns": ["id"] } }
-            }
-        }
-    });
+    let renamed = super::support::fixture_body("scenarios/links-06.json");
     expect_none(&follow(true), renamed);
-    let either = serde_json::json!({
-        "tables": {
-            "grants": {
-                "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": {
-                    "a": { "columns": ["account_id", "user_id"], "referencedTable": "account_seats", "referencedColumns": ["account_id", "seat_id"] },
-                    "b": { "columns": ["team_id", "user_id"], "referencedTable": "account_members", "referencedColumns": ["account_id", "user_id"] }
-                }
-            },
-            "account_seats": { "columns": { "seat_id": { "dataType": "uuid" } } },
-            "account_members": {
-                "columns": { "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "user_fk": { "columns": ["user_id"], "referencedTable": "users", "referencedColumns": ["id"] } }
-            }
-        }
-    });
+    let either = super::support::fixture_body("scenarios/links-07.json");
     expect_none(&follow(true), either);
-    let cycle = serde_json::json!({
-        "tables": {
-            "a": {
-                "columns": { "k": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["k", "user_id"], "referencedTable": "b", "referencedColumns": ["k", "user_id"] } }
-            },
-            "b": {
-                "columns": { "k": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                "foreignKeys": { "fk": { "columns": ["k", "user_id"], "referencedTable": "a", "referencedColumns": ["k", "user_id"] } }
-            }
-        }
-    });
+    let cycle = super::support::fixture_body("scenarios/links-08.json");
     let text = |table: &str| {
         format!("{RESERVED_USERS}; this column is part of a composite foreign key to {table}, which does not lead to users or deleted_user_identities")
     };
@@ -284,52 +180,24 @@ foreignKeys:
 "#;
     expect_none(
         exempt,
-        serde_json::json!({
-            "tables": {
-                "sync_cursors": { "columns": { "cursor_id": { "dataType": "uuid" }, "cursor_order_id": { "dataType": "uuid" } } },
-                "login_events": { "columns": { "session_id": { "dataType": "uuid" } } }
-            }
-        }),
+        super::support::fixture_body("scenarios/links-09.json"),
     );
     expect_none(REQUIRE, column("ids", "thing_id", "uuid[]"));
     expect_none(
         REQUIRE,
-        serde_json::json!({
-            "tables": { "entities": { "columns": { "entity_id": { "dataType": "uuid", "generated": "stored" } } } }
-        }),
+        super::support::fixture_body("scenarios/links-10.json"),
     );
     expect_none(
         REQUIRE,
-        serde_json::json!({
-            "tables": {
-                "projects": {
-                    "columns": { "owner_id": { "dataType": "uuid" } },
-                    "foreignKeys": { "fk": { "columns": ["owner_id"], "referencedTable": "users", "referencedColumns": ["id"] } }
-                }
-            }
-        }),
+        super::support::fixture_body("scenarios/links-11.json"),
     );
     expect_none(
         REQUIRE,
-        serde_json::json!({
-            "tables": {
-                "line_grants": {
-                    "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
-                    "foreignKeys": { "fk": { "columns": ["account_id", "user_id"], "referencedTable": "account_members", "referencedColumns": ["account_id", "user_id"] } }
-                }
-            }
-        }),
+        super::support::fixture_body("scenarios/links-12.json"),
     );
     expect_none(
         REQUIRE,
-        serde_json::json!({
-            "tables": {
-                "categories": {
-                    "columns": { "parent_id": { "dataType": "uuid" } },
-                    "foreignKeys": { "fk": { "columns": ["parent_id"], "referencedTable": "categories", "referencedColumns": ["id"] } }
-                }
-            }
-        }),
+        super::support::fixture_body("scenarios/links-13.json"),
     );
     let cursor = r#"
 schemaCatalogPath: schema.json
@@ -346,25 +214,12 @@ foreignKeys:
     expect(cursor, column("sync", "cursor_name", "text"), stale);
     expect(
         cursor,
-        serde_json::json!({
-            "tables": {
-                "sync": {
-                    "columns": { "cursor_order_id": { "dataType": "uuid" } },
-                    "foreignKeys": {
-                        "fk": {
-                            "columns": ["cursor_order_id"],
-                            "referencedTable": "orders",
-                            "referencedColumns": ["id"]
-                        }
-                    }
-                }
-            }
-        }),
+        super::support::fixture_body("scenarios/links-14.json"),
         stale,
     );
     expect(
         "schemaCatalogPath: schema.json\nforeignKeys:\n  requireForeignKey:\n    types: [uuid]\n    namePattern: _id$\n    exempt:\n      - namePattern: '^never$'\n        reason: unused\n",
-        serde_json::json!({ "tables": {} }),
+        super::support::fixture_body("scenarios/links-15.json"),
         "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^never$",
     );
     let both = r#"
@@ -405,16 +260,7 @@ foreignKeys:
 "#;
     expect(
         yaml,
-        serde_json::json!({
-            "tables": {
-                "link__accounts": {
-                    "columns": {
-                        "only_on_link": { "dataType": "uuid" },
-                        "reviewer_user_id": { "dataType": "uuid" }
-                    }
-                }
-            }
-        }),
+        super::support::fixture_body("scenarios/links-16.json"),
         "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^only_on_link",
     );
 }

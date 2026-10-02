@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "snapshot_notes": {
+      "columns": {
+        "order_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "order_id"
+          ],
+          "referencedTable": "archived_order_snapshots",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

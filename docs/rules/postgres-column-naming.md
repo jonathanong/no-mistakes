@@ -39,7 +39,7 @@ named `item_id` that points at `articles`, and a `uuid` column named
 `typeRules` require a column whose `data_type` is one of `types` to match
 `namePattern`. `nameTypeRules` are the reverse: a matching name must use one
 of the listed types. Comparison is case-insensitive. A parenthetical length
-or precision, such as `character varying(2048)` or `timestamp(6) with time
+or precision, such as `character varying(2048)`, `numeric(2,-3)`, or `timestamp(6) with time
 zone`, matches the base type `character varying` or `timestamp with time
 zone`. An array type such as `boolean[]` does not match `boolean`. Every
 matching entry reports. `forbiddenColumnNames` reports the first matching
@@ -49,12 +49,15 @@ A single-column foreign key, other than a column named `id`, must end with a
 configured `targetSuffixes` suffix when the referenced table is listed.
 Otherwise, when `targetMatch` is `last-word` or `full-name`, the name must end
 with the referenced column and the remaining word or words must match the
-singular target name. Repeating a referenced column of more than one word,
+singular target name. Schema-qualified references derive the default target
+name from the relation after the final dot; configured `targetNames` still
+match the full relation name. Repeating a referenced column of more than one word,
 such as `external_id`, skips that check only when that column itself names
 the target, such as `github_account_id` on `github_accounts`. `targetNames`
 can replace that singular name using `$1`
-through `$9`. Composite foreign keys and self-references are skipped unless
-`checkSelfReferences` is set.
+through `$9`. This check always skips composite foreign keys. It skips
+self-references unless `checkSelfReferences` is set; that option does not
+enable composite-key checks.
 
 `reservedSuffixes` require the column to be the sole column of a foreign key
 to one of `tables`. With `followCompositeForeignKeys`, a composite foreign key
@@ -108,7 +111,27 @@ entry when it no longer matches a finding or a column.
 
 ## Suppression
 
-Snapshot JSON cannot hold comments. Suppress a finding with `allow`:
+Schema snapshots accept strict JSON plus JSONC comments. Column findings use
+the line where that column is declared, so line and next-line directives can
+be placed beside the column entry. A file directive disables this rule for
+the whole catalog. For example:
+
+```jsonc
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "shipped_at": { // no-mistakes-disable-line postgres-column-naming: this is a calendar day
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}
+```
+
+Suppress a finding with `allow` when comments are not appropriate:
 
 ```yaml
 allow:
@@ -119,9 +142,7 @@ allow:
 One allow entry covers every finding on that object. An unused entry reports
 `stale postgres-column-naming allow entry`. An unused
 `requireForeignKey.exempt` pattern reports `stale postgres-column-naming
-requireForeignKey exempt entry`. `no-mistakes-disable-line`,
-`no-mistakes-disable-next-line`, and `no-mistakes-disable-file` do not apply
-to snapshot findings.
+requireForeignKey exempt entry`.
 
 ## Related rules
 

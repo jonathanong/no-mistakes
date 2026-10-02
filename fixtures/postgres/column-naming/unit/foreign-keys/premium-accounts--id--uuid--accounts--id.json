@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "premium_accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "id"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

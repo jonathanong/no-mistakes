@@ -80,9 +80,20 @@ fn names_target(referenced: &str, target: &str, mode: &TargetMode) -> bool {
     let stem = referenced.strip_suffix("_id").unwrap_or(referenced);
     match mode {
         TargetMode::Off => false,
-        TargetMode::LastWord => last_token(stem) == last_token(target),
-        TargetMode::FullName => stem == target || stem.ends_with(&format!("_{target}")),
+        TargetMode::LastWord => {
+            last_token(stem) == last_token(target) || target_prefix(stem, target)
+        }
+        TargetMode::FullName => {
+            stem == target || stem.ends_with(&format!("_{target}")) || target_prefix(stem, target)
+        }
     }
+}
+
+fn target_prefix(stem: &str, target: &str) -> bool {
+    let mut stem_words = stem.split('_');
+    target
+        .split('_')
+        .all(|target_word| stem_words.next() == Some(target_word))
 }
 
 pub(super) fn suggestion(
@@ -125,7 +136,10 @@ fn target_name(table: &str, compiled: &Compiled) -> String {
             return substitute(&entry.name, &captures);
         }
     }
-    singular_name(table, &compiled.singular)
+    singular_name(
+        table.rsplit('.').next().unwrap_or(table),
+        &compiled.singular,
+    )
 }
 
 fn substitute(template: &str, captures: &Captures<'_>) -> String {

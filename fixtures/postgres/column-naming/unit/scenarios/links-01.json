@@ -1,0 +1,23 @@
+{
+  "tables": {
+    "tasks": {
+      "columns": {
+        "assignee_user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "assignee_user_id"
+          ],
+          "referencedTable": "teams",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

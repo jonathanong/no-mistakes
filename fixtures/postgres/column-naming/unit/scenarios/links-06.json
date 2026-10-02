@@ -1,0 +1,49 @@
+{
+  "tables": {
+    "grants": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "member_user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "account_id",
+            "member_user_id"
+          ],
+          "referencedTable": "account_members",
+          "referencedColumns": [
+            "account_id",
+            "user_id"
+          ]
+        }
+      }
+    },
+    "account_members": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "user_fk": {
+          "columns": [
+            "user_id"
+          ],
+          "referencedTable": "users",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

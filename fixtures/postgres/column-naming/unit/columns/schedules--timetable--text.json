@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "schedules": {
+      "columns": {
+        "timetable": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "sync_jobs": {
+      "columns": {
+        "cursor_order_id": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "tables": {
+    "seat_grants": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "account_id",
+            "user_id"
+          ],
+          "referencedTable": "account_seats",
+          "referencedColumns": [
+            "account_id",
+            "seat_id"
+          ]
+        }
+      }
+    },
+    "account_seats": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "seat_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

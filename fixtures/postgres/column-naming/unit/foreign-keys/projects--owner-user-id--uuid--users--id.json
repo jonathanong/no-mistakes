@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "projects": {
+      "columns": {
+        "owner_user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "owner_user_id"
+          ],
+          "referencedTable": "users",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

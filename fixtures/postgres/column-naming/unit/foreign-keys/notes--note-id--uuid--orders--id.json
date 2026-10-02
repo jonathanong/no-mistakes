@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "notes": {
+      "columns": {
+        "note_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "note_id"
+          ],
+          "referencedTable": "orders",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}
