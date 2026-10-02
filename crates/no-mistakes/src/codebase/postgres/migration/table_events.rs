@@ -1,15 +1,25 @@
-use crate::codebase::postgres::idents::{ident_key, object_name_key, unwrap_expr};
+use crate::codebase::postgres::idents::{
+    ident_key, object_name_key, unwrap_expr, visit_function_args,
+};
 use crate::codebase::postgres::schema::{column_metadata, table_metadata};
 use crate::codebase::postgres::types::SqlTableSchemaEvent;
 use sqlparser::ast::{
-    AlterTableOperation, ColumnDef, ColumnOption, Expr, FunctionArg, FunctionArgExpr,
-    FunctionArguments, ObjectType, Statement,
+    AlterTableOperation, ColumnDef, ColumnOption, Expr, FunctionArguments, ObjectType, Statement,
 };
 
-pub(super) fn record(statement: &Statement, out: &mut Vec<SqlTableSchemaEvent>) {
+mod positions;
+pub(super) use positions::Positions;
+
+pub(super) fn record(
+    statement: &Statement,
+    positions: &mut Positions,
+    out: &mut Vec<SqlTableSchemaEvent>,
+) {
     match statement {
         Statement::CreateTable(table) => out.push(SqlTableSchemaEvent::Create {
+            source_order: positions.take("CREATE", &object_name_key(&table.name)),
             table: object_name_key(&table.name),
+            unqualified_table: super::relation(&table.name),
             columns: table
                 .columns
                 .iter()
@@ -22,10 +32,13 @@ pub(super) fn record(statement: &Statement, out: &mut Vec<SqlTableSchemaEvent>) 
                 .collect(),
         }),
         Statement::AlterTable(alter) => {
+            let source_order = positions.take("ALTER", &object_name_key(&alter.name));
             for operation in &alter.operations {
                 if let AlterTableOperation::AddColumn { column_def, .. } = operation {
                     out.push(SqlTableSchemaEvent::AddColumn {
+                        source_order: source_order.clone(),
                         table: object_name_key(&alter.name),
+                        unqualified_table: super::relation(&alter.name),
                         column: event_column(column_def),
                     });
                 }
@@ -38,7 +51,9 @@ pub(super) fn record(statement: &Statement, out: &mut Vec<SqlTableSchemaEvent>) 
         } => {
             for name in names {
                 out.push(SqlTableSchemaEvent::Drop {
+                    source_order: positions.take("DROP", &object_name_key(name)),
                     table: object_name_key(name),
+                    unqualified_table: super::relation(name),
                 });
             }
         }
@@ -57,32 +72,21 @@ fn event_column(column: &ColumnDef) -> crate::codebase::postgres::SqlColumnMetad
         {
             if let Expr::Function(function) = unwrap_expr(expr) {
                 if let FunctionArguments::List(list) = &function.args {
-                    metadata.generated_function_arg_columns = list
-                        .args
-                        .iter()
-                        .filter_map(|arg| {
-                            let expr = match arg {
-                                FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
-                                | FunctionArg::Named {
-                                    arg: FunctionArgExpr::Expr(expr),
-                                    ..
-                                }
-                                | FunctionArg::ExprNamed {
-                                    arg: FunctionArgExpr::Expr(expr),
-                                    ..
-                                } => expr,
-                                _ => return None,
-                            };
-                            match unwrap_expr(expr) {
-                                Expr::Identifier(name) => Some(ident_key(name)),
-                                Expr::CompoundIdentifier(parts) => parts.last().map(ident_key),
-                                _ => None,
-                            }
-                        })
-                        .collect();
+                    metadata.generated_function_arg_columns.clear();
+                    visit_function_args(&list.args, &mut |expr| {
+                        let name = match unwrap_expr(expr) {
+                            Expr::Identifier(name) => Some(ident_key(name)),
+                            Expr::CompoundIdentifier(parts) => parts.last().map(ident_key),
+                            _ => None,
+                        };
+                        metadata.generated_function_arg_columns.extend(name);
+                    });
                 }
             }
         }
     }
     metadata
 }
+
+#[cfg(test)]
+mod tests;

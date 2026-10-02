@@ -1,0 +1,4 @@
+DROP TABLE;
+ALTER TABLE foo.;
+DROP TABLE 'not an identifier';
+CREATE VIEW v AS SELECT 1;

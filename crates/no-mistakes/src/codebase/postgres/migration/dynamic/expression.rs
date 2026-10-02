@@ -13,14 +13,20 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
     let all = tokenize(&body.sql);
     let mut variables = HashMap::<String, Option<DynamicSql>>::new();
     let mut result = Vec::new();
-    for statement in statements(&all) {
+    for (ordinal, statement) in statements(&all).into_iter().enumerate() {
         let code = significant(statement);
         if code.is_empty() {
             continue;
         }
         if let Some(at) = code.iter().position(|token| word(token, "EXECUTE")) {
             let line = body_line(body, code[at]);
-            if let Some(sql) = executed_expression(&code[at + 1..], &variables, line) {
+            if let Some(mut sql) = executed_expression(&code[at + 1..], &variables, line) {
+                sql.source_order = body
+                    .source_order
+                    .iter()
+                    .copied()
+                    .chain(std::iter::once(ordinal))
+                    .collect();
                 result.push(sql);
             }
             continue;

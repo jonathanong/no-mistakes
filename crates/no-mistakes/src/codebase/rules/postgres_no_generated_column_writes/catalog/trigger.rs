@@ -1,59 +1,33 @@
-use super::{schema_generated, GeneratedTable, GeneratedTableColumns, SqlSchemaFileFacts};
-use std::collections::BTreeMap;
+use super::{GeneratedTable, GeneratedTableColumns, LiveTables};
 
-pub(crate) fn trigger_catalog_from_facts(
-    schema: &[SqlSchemaFileFacts],
+pub(crate) fn trigger_catalog_from_tables(
+    tables: &LiveTables<'_>,
     columns: &[String],
 ) -> GeneratedTableColumns {
-    let generated = schema_generated(schema);
-    let known: std::collections::BTreeSet<_> = schema
-        .iter()
-        .flat_map(|file| &file.tables)
-        .map(|table| table.table_name.to_ascii_lowercase())
-        .collect();
-    let mut tables: BTreeMap<String, (String, Vec<String>)> = BTreeMap::new();
-    for file in schema {
-        for table in &file.tables {
-            let order = tables
-                .entry(table.table_name.to_ascii_lowercase())
-                .or_insert_with(|| (table.table_name.clone(), Vec::new()));
-            let order = &mut order.1;
-            for column in &table.columns {
-                let name = column.name.to_ascii_lowercase();
-                if !order.contains(&name) {
-                    order.push(name);
-                }
-            }
-        }
-        for column in &file.add_columns {
-            let table = column.unqualified_table_name.as_str();
-            let order = tables
-                .entry(table.to_ascii_lowercase())
-                .or_insert_with(|| (table.to_string(), Vec::new()));
-            let order = &mut order.1;
-            let name = column.column_name.to_ascii_lowercase();
-            if !order.contains(&name) {
-                order.push(name);
-            }
-        }
-    }
     let mut catalog = GeneratedTableColumns::default();
-    for (key, (table, order)) in tables {
-        let maintained = order
+    for table in tables.values() {
+        let maintained = table
+            .columns
             .iter()
-            .filter(|name| {
-                columns
-                    .iter()
-                    .any(|column| column.eq_ignore_ascii_case(name))
-                    && !generated.contains(&(key.clone(), (*name).clone()))
+            .filter(|column| {
+                !column.generated
+                    && columns
+                        .iter()
+                        .any(|name| name.eq_ignore_ascii_case(column.name))
             })
-            .cloned()
+            .map(|column| column.name.to_ascii_lowercase())
             .collect::<std::collections::BTreeSet<_>>();
         if !maintained.is_empty() {
             catalog.insert_table(GeneratedTable {
-                name: table,
+                name: table.name.to_string(),
                 generated: maintained,
-                column_order: known.contains(&key).then_some(order),
+                column_order: table.complete.then(|| {
+                    table
+                        .columns
+                        .iter()
+                        .map(|column| column.name.to_ascii_lowercase())
+                        .collect()
+                }),
             });
         }
     }

@@ -33,15 +33,16 @@ pub(super) fn scan_with_sources(
         &opts.embedded,
     )
     .with_context(|| format!("{} failed to collect PostgreSQL facts", super::RULE_ID))?;
-    let catalog = super::catalog::catalog_from_facts(&facts.schema, &opts.extra_generated_columns);
+    let tables = super::catalog::live_tables(&facts.schema);
+    let catalog = super::catalog::catalog_from_tables(&tables, &opts.extra_generated_columns);
     let trigger =
-        super::catalog::trigger_catalog_from_facts(&facts.schema, &opts.trigger_maintained_columns);
+        super::catalog::trigger_catalog_from_tables(&tables, &opts.trigger_maintained_columns);
     let mut combined = trigger.clone();
     combined.extend_from(&catalog);
     let mut findings =
-        super::catalog::stale_extra_findings(&facts.schema, &opts.extra_generated_columns);
+        super::catalog::stale_extra_findings_from_tables(&tables, &opts.extra_generated_columns);
     findings.extend(super::catalog::stale_trigger_findings(
-        &facts.schema,
+        &tables,
         &opts.trigger_maintained_columns,
     ));
     if catalog.is_empty() && trigger.is_empty() {

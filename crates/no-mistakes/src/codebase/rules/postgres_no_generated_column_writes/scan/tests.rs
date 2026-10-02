@@ -9,9 +9,10 @@ fn combined_catalog_reports_both_column_kinds() {
     let sources = crate::codebase::rules::source_store_for_files(&paths);
     let schema =
         crate::codebase::postgres::extract_schema_facts(&root, &sources, &paths[..1]).unwrap();
-    let generated = super::super::catalog::catalog_from_facts(&schema, &[]);
+    let tables = super::super::catalog::live_tables(&schema);
+    let generated = super::super::catalog::catalog_from_tables(&tables, &[]);
     let trigger =
-        super::super::catalog::trigger_catalog_from_facts(&schema, &["updated_at".into()]);
+        super::super::catalog::trigger_catalog_from_tables(&tables, &["updated_at".into()]);
     let mut combined = trigger.clone();
     combined.extend_from(&generated);
     let findings = scan_sql_file(&paths[1], "writes.sql", &sources, &combined, &generated);

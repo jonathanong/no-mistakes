@@ -7,6 +7,7 @@ pub(super) struct RoutineBody {
     pub(super) line: usize,
     pub(super) source_bytes: Vec<usize>,
     direct_facts_already_recovered: bool,
+    pub(super) source_order: Vec<usize>,
 }
 
 /// Executable PL/pgSQL DO/function/procedure bodies, including dollar, plain,
@@ -15,7 +16,8 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
     let all = tokenize(sql);
     statements(&all)
         .into_iter()
-        .filter_map(|statement| {
+        .enumerate()
+        .filter_map(|(ordinal, statement)| {
             let code = significant(statement);
             let first = code.first()?;
             let do_block = word(first, "DO");
@@ -41,6 +43,7 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 sql: decoded.sql,
                 source_bytes: decoded.source_bytes,
                 direct_facts_already_recovered: do_block && decoded.dollar_quoted,
+                source_order: vec![ordinal],
             })
         })
         .collect()
@@ -62,16 +65,18 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
     let tokens = tokenize(&body.sql);
     let mut result = Vec::new();
     let mut start = 0usize;
+    let mut ordinal = 0usize;
     for token in &tokens {
         if !matches!(token.token, Token::SemiColon) {
             continue;
         }
         let end = location_offset(&body.sql, token.span.start.line, token.span.start.column)
             .map_or(body.sql.len(), |offset| offset + 1);
-        push_schema_statement(body, start, end, &mut result);
+        push_schema_statement(body, start, end, ordinal, &mut result);
         start = end;
+        ordinal += 1;
     }
-    push_schema_statement(body, start, body.sql.len(), &mut result);
+    push_schema_statement(body, start, body.sql.len(), ordinal, &mut result);
     result
 }
 
@@ -79,6 +84,7 @@ fn push_schema_statement(
     body: &RoutineBody,
     start: usize,
     end: usize,
+    ordinal: usize,
     result: &mut Vec<DynamicSql>,
 ) {
     let Some(sql) = body.sql.get(start..end) else {
@@ -93,5 +99,11 @@ fn push_schema_statement(
         sql: sql.to_owned(),
         line: source_lines.first().copied().unwrap_or(body.line),
         source_lines,
+        source_order: body
+            .source_order
+            .iter()
+            .copied()
+            .chain(std::iter::once(ordinal))
+            .collect(),
     });
 }

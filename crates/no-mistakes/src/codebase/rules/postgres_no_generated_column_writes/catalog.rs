@@ -1,70 +1,34 @@
 use super::ExtraGeneratedColumn;
 use crate::codebase::postgres::dml::{GeneratedTable, GeneratedTableColumns};
-use crate::codebase::postgres::SqlSchemaFileFacts;
 
-pub(super) fn catalog_from_facts(
-    schema: &[SqlSchemaFileFacts],
+mod live;
+pub(super) use live::{live_tables, LiveTables};
+
+pub(super) fn catalog_from_tables(
+    tables: &LiveTables<'_>,
     extra: &[ExtraGeneratedColumn],
 ) -> GeneratedTableColumns {
     let mut catalog = GeneratedTableColumns::default();
-    for file in schema {
-        for table in &file.tables {
-            let generated: Vec<String> = table
-                .columns
-                .iter()
-                .filter(|column| column.is_generated)
-                .map(|column| column.name.to_ascii_lowercase())
-                .collect();
-            if generated.is_empty() {
-                continue;
-            }
-            catalog.insert_table(GeneratedTable {
-                name: table.table_name.clone(),
-                generated: generated.into_iter().collect(),
-                column_order: Some(
-                    table
-                        .columns
-                        .iter()
-                        .map(|column| column.name.to_ascii_lowercase())
-                        .collect(),
-                ),
-            });
-        }
-    }
-    for column in schema
-        .iter()
-        .flat_map(|file| &file.add_columns)
-        .filter(|column| column.is_generated)
-    {
-        let name = column.unqualified_table_name.as_str();
-        let order = schema
+    for table in tables.values() {
+        let generated = table
+            .columns
             .iter()
-            .flat_map(|file| &file.tables)
-            .find(|table| table.table_name.eq_ignore_ascii_case(name))
-            .map(|table| {
-                let mut order = table
+            .filter(|column| column.generated)
+            .map(|column| column.name.to_ascii_lowercase())
+            .collect::<std::collections::BTreeSet<_>>();
+        if generated.is_empty() {
+            continue;
+        }
+        catalog.insert_table(GeneratedTable {
+            name: table.name.to_string(),
+            generated,
+            column_order: table.complete.then(|| {
+                table
                     .columns
                     .iter()
                     .map(|column| column.name.to_ascii_lowercase())
-                    .collect::<Vec<_>>();
-                for added in schema
-                    .iter()
-                    .flat_map(|file| &file.add_columns)
-                    .filter(|added| added.unqualified_table_name.eq_ignore_ascii_case(name))
-                {
-                    let column = added.column_name.to_ascii_lowercase();
-                    if !order.contains(&column) {
-                        order.push(column);
-                    }
-                }
-                order
-            });
-        catalog.insert_table(GeneratedTable {
-            name: name.to_string(),
-            generated: [column.column_name.to_ascii_lowercase()]
-                .into_iter()
-                .collect(),
-            column_order: order,
+                    .collect()
+            }),
         });
     }
     for extra in extra {
@@ -81,15 +45,15 @@ pub(super) fn catalog_from_facts(
 }
 
 mod trigger;
-pub(super) use trigger::trigger_catalog_from_facts;
+pub(super) use trigger::trigger_catalog_from_tables;
 
 pub(super) fn stale_trigger_findings(
-    schema: &[SqlSchemaFileFacts],
+    tables: &LiveTables<'_>,
     columns: &[String],
 ) -> Vec<crate::codebase::rules::RuleFinding> {
     columns
         .iter()
-        .filter(|column| !schema_has_column(schema, column))
+        .filter(|column| !schema_has_column(tables, column))
         .map(|column| crate::codebase::rules::RuleFinding {
             rule: super::RULE_ID.to_string(),
             file: ".no-mistakes.yml".to_string(),
@@ -103,12 +67,8 @@ pub(super) fn stale_trigger_findings(
         .collect()
 }
 
-fn schema_has_column(schema: &[SqlSchemaFileFacts], name: &str) -> bool {
-    schema.iter().any(|file| {
-        file.add_columns
-            .iter()
-            .any(|column| column.column_name.eq_ignore_ascii_case(name))
-    }) || schema.iter().flat_map(|file| &file.tables).any(|table| {
+fn schema_has_column(tables: &LiveTables<'_>, name: &str) -> bool {
+    tables.values().any(|table| {
         table
             .columns
             .iter()
@@ -116,11 +76,11 @@ fn schema_has_column(schema: &[SqlSchemaFileFacts], name: &str) -> bool {
     })
 }
 
-pub(super) fn stale_extra_findings(
-    schema: &[SqlSchemaFileFacts],
+pub(super) fn stale_extra_findings_from_tables(
+    tables: &LiveTables<'_>,
     extras: &[ExtraGeneratedColumn],
 ) -> Vec<crate::codebase::rules::RuleFinding> {
-    let in_schema = schema_generated(schema);
+    let in_schema = schema_generated(tables);
     extras
         .iter()
         .filter(|extra| !extra.table.is_empty() && !extra.column.is_empty())
@@ -144,36 +104,17 @@ pub(super) fn stale_extra_findings(
         .collect()
 }
 
-fn schema_generated(schema: &[SqlSchemaFileFacts]) -> std::collections::BTreeSet<(String, String)> {
-    let mut generated: std::collections::BTreeSet<_> = schema
+fn schema_generated(tables: &LiveTables<'_>) -> std::collections::BTreeSet<(String, String)> {
+    tables
         .iter()
-        .flat_map(|file| &file.tables)
-        .flat_map(|table| {
+        .flat_map(|(key, table)| {
             table
                 .columns
                 .iter()
-                .filter(|column| column.is_generated)
-                .map(|column| {
-                    (
-                        table.table_name.to_ascii_lowercase(),
-                        column.name.to_ascii_lowercase(),
-                    )
-                })
+                .filter(|column| column.generated)
+                .map(move |column| (key.clone(), column.name.to_ascii_lowercase()))
         })
-        .collect();
-    generated.extend(
-        schema
-            .iter()
-            .flat_map(|file| &file.add_columns)
-            .filter(|column| column.is_generated)
-            .map(|column| {
-                (
-                    column.unqualified_table_name.to_ascii_lowercase(),
-                    column.column_name.to_ascii_lowercase(),
-                )
-            }),
-    );
-    generated
+        .collect()
 }
 
 #[cfg(test)]

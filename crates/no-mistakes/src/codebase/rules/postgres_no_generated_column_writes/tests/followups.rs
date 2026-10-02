@@ -68,6 +68,48 @@ fn generated_definition_wins_across_migrations() {
 }
 
 #[test]
+fn final_ordinary_definition_replaces_generated_state_and_column_order() {
+    let (_, _, findings) = scan("recreated-trigger", &["schema.sql", "writes.sql"]);
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings.iter().all(|finding| finding
+        .message
+        .contains("do not write trigger-maintained column")));
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 2]
+    );
+    let (_, _, findings) = scan("dynamic-recreation", &["schema.sql", "writes.sql"]);
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings.iter().all(|finding| finding
+        .message
+        .contains("do not write trigger-maintained column")));
+}
+
+#[test]
+fn dollar_sign_identifiers_do_not_absorb_later_writes_or_suppressions() {
+    let (root, paths, mut findings) = scan("dollar-identifiers", &["schema.sql", "writes.sql"]);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [2, 4, 6]
+    );
+    let sources = crate::codebase::rules::source_store_for_files(&paths);
+    crate::codebase::rules::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [2, 6]
+    );
+}
+
+#[test]
 fn raw_sql_occurrences_keep_locations_and_suppress_independently() {
     let (root, paths, mut findings) = scan("write-occurrences", &["schema.sql", "writes.sql"]);
     assert_eq!(

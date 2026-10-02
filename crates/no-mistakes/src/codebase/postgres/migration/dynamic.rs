@@ -15,6 +15,7 @@ pub(super) struct DynamicSql {
     pub(super) sql: String,
     pub(super) line: usize,
     source_lines: Vec<usize>,
+    pub(super) source_order: Vec<usize>,
 }
 
 impl DynamicSql {
@@ -24,6 +25,7 @@ impl DynamicSql {
             sql,
             line,
             source_lines: vec![line; line_count],
+            source_order: Vec::new(),
         }
     }
 

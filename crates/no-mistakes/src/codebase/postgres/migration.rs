@@ -38,12 +38,13 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
     facts
         .declared_identifiers
         .extend(identifier_locations.unparsed_declarations());
+    let mut table_positions = table_events::Positions::new(sql);
     for statement in statements {
         facts
             .declared_identifiers
             .extend(identifiers::collect(&mut identifier_locations, statement));
         statements::record(sql, statement, &mut facts);
-        table_events::record(statement, &mut facts.table_events);
+        table_events::record(statement, &mut table_positions, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {
                 create_index_n += 1;
@@ -104,9 +105,17 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
         merge_dynamic_facts(&mut facts, dynamic_facts);
     }
     facts
+        .table_events
+        .sort_by(|left, right| left.source_order().cmp(right.source_order()));
+    facts
 }
 
 fn remap_dynamic_fact_lines(facts: &mut SqlSchemaFileFacts, dynamic: &dynamic::DynamicSql) {
+    for event in &mut facts.table_events {
+        let mut order = dynamic.source_order.clone();
+        order.extend(event.source_order());
+        *event.source_order_mut() = order;
+    }
     for index in &mut facts.indexes {
         index.line = dynamic.source_line(index.line);
     }

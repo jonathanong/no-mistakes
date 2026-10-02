@@ -21,15 +21,15 @@ pub(super) fn live_columns(schema: &[&SqlSchemaFileFacts]) -> LiveColumns {
         }
         for event in &file.table_events {
             match event {
-                SqlTableSchemaEvent::Create { table, columns } => {
+                SqlTableSchemaEvent::Create { table, columns, .. } => {
                     live.insert(table.clone(), column_map(columns));
                 }
-                SqlTableSchemaEvent::AddColumn { table, column } => {
+                SqlTableSchemaEvent::AddColumn { table, column, .. } => {
                     live.entry(table.clone())
                         .or_default()
                         .insert(column.name.clone(), column.clone());
                 }
-                SqlTableSchemaEvent::Drop { table } => {
+                SqlTableSchemaEvent::Drop { table, .. } => {
                     live.remove(table);
                 }
             }

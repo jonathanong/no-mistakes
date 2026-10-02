@@ -92,6 +92,9 @@ looks like a no-op, but a `BEFORE UPDATE` trigger still fires and bumps the
 column. TypeScript executor calls and included SQL files are both analyzed
 where configured. A column that is both generated and listed uses the
 generated-column message.
+Catalogs use the final CREATE/ALTER/DROP table state in migration-file and
+statement order, including statically recovered routine DDL. Dropping and
+recreating a table replaces its generated status and positional column order.
 
 ## Options and defaults
 
@@ -141,6 +144,8 @@ from the INSERT/UPDATE”. An unknown configured name produces
 Columns introduced by `ALTER TABLE ADD COLUMN` count as schema columns.
 Raw SQL writes are reported separately at each statement's first code line,
 so line suppressions apply to the statement containing the write.
+Dollar signs inside unquoted identifiers do not start quoted SQL strings or
+absorb subsequent statements.
 
 ## Fix
 

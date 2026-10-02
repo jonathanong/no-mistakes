@@ -1,3 +1,6 @@
+mod table_events;
+pub use table_events::SqlTableSchemaEvent;
+
 use super::embedded::EmbeddedSqlFileFacts;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -204,18 +207,3 @@ impl fmt::Display for PostgresFactError {
 
 impl std::error::Error for PostgresFactError {}
 
-/// Ordered table catalog changes, retaining qualified relation identities.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SqlTableSchemaEvent {
-    Create {
-        table: String,
-        columns: Vec<SqlColumnMetadata>,
-    },
-    AddColumn {
-        table: String,
-        column: SqlColumnMetadata,
-    },
-    Drop {
-        table: String,
-    },
-}
