@@ -229,6 +229,10 @@ sqlparser AST:
   `allowWholeRowFunctions` without parsing SQL again.
   `returning_stars` on the file facts records `RETURNING *` / `RETURNING t.*`
   for INSERT, UPDATE, and DELETE.
+  `column_uses` records bare column references from comparisons in WHERE and
+  JOIN ON, and from ORDER BY. An empty `table` means the name was unqualified
+  across more than one base relation. `postgres-generated-column-predicates`
+  reads these facts together with migration schema facts.
 - `CREATE TRIGGER` table, function, period, row/statement, and events
 
 Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`

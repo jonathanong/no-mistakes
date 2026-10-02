@@ -46,6 +46,7 @@ pub use super::postgres_duplicate_function_body::RULE_ID as POSTGRES_DUPLICATE_F
 pub use super::postgres_explicit_columns::RULE_ID as POSTGRES_EXPLICIT_COLUMNS;
 pub use super::postgres_finite_text_columns::RULE_ID as POSTGRES_FINITE_TEXT_COLUMNS;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
+pub use super::postgres_generated_column_predicates::RULE_ID as POSTGRES_GENERATED_COLUMN_PREDICATES;
 pub use super::postgres_idempotent_insert::RULE_ID as POSTGRES_IDEMPOTENT_INSERT;
 pub use super::postgres_identifier_length::RULE_ID as POSTGRES_IDENTIFIER_LENGTH;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;

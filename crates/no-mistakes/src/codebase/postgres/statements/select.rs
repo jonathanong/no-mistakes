@@ -2,6 +2,7 @@ mod from;
 mod nested;
 mod shapes;
 mod stars;
+mod uses;
 
 pub(super) fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&sqlparser::ast::Expr> {
     from::join_expr(operator)
@@ -62,7 +63,23 @@ pub(super) fn collect_query(
             ctes.push(cte.alias.name.value.clone());
         }
     }
-    collect_set(sql, &query.body, &ctes, in_insert_select, in_exists, out);
+    let order = query_order(query);
+    collect_set(
+        sql,
+        &query.body,
+        &ctes,
+        in_insert_select,
+        in_exists,
+        order,
+        out,
+    );
+}
+
+fn query_order(query: &Query) -> &[sqlparser::ast::OrderByExpr] {
+    match query.order_by.as_ref().map(|order| &order.kind) {
+        Some(sqlparser::ast::OrderByKind::Expressions(exprs)) => exprs,
+        _ => &[],
+    }
 }
 
 fn collect_set(
@@ -71,14 +88,17 @@ fn collect_set(
     ctes: &[String],
     in_insert_select: bool,
     in_exists: bool,
+    order: &[sqlparser::ast::OrderByExpr],
     out: &mut Vec<SqlSelectFact>,
 ) {
     match expr {
-        SetExpr::Select(select) => push_select(sql, select, ctes, in_insert_select, in_exists, out),
+        SetExpr::Select(select) => {
+            push_select(sql, select, ctes, in_insert_select, in_exists, order, out);
+        }
         SetExpr::Query(query) => collect_query(sql, query, ctes, in_insert_select, in_exists, out),
         SetExpr::SetOperation { left, right, .. } => {
-            collect_set(sql, left, ctes, in_insert_select, in_exists, out);
-            collect_set(sql, right, ctes, in_insert_select, in_exists, out);
+            collect_set(sql, left, ctes, in_insert_select, in_exists, &[], out);
+            collect_set(sql, right, ctes, in_insert_select, in_exists, &[], out);
         }
         _ => {}
     }
@@ -90,6 +110,7 @@ fn push_select(
     ctes: &[String],
     in_insert_select: bool,
     in_exists: bool,
+    order: &[sqlparser::ast::OrderByExpr],
     out: &mut Vec<SqlSelectFact>,
 ) {
     let tables = from::table_names(&select.from, ctes);
@@ -108,12 +129,14 @@ fn push_select(
     } else {
         stars::collect(select, ctes, line)
     };
+    let column_uses = uses::collect(select, order, ctes, line);
     if tables.is_empty()
         && exists_set_operations.is_empty()
         && relations.is_empty()
         && shapes.not_in_subqueries.is_empty()
         && shapes.count_existence_checks.is_empty()
         && star_projections.is_empty()
+        && column_uses.is_empty()
     {
         return;
     }
@@ -127,6 +150,7 @@ fn push_select(
         not_in_subqueries: shapes.not_in_subqueries,
         count_existence_checks: shapes.count_existence_checks,
         star_projections,
+        column_uses,
     });
 }
 

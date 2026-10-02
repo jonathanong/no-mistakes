@@ -101,6 +101,28 @@ pub struct SqlSelectFact {
     pub count_existence_checks: Vec<usize>,
     /// `*` / `alias.*` projections over base FROM relations.
     pub star_projections: Vec<SqlStarProjectionFact>,
+    /// Bare column references in WHERE, JOIN ON, and ORDER BY.
+    pub column_uses: Vec<SqlColumnUseFact>,
+}
+
+/// Where a bare column reference was used.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SqlColumnClause {
+    Where,
+    Join,
+    OrderBy,
+}
+
+/// A bare column reference resolved to a base relation when possible.
+///
+/// `table` is empty when the name is unqualified and more than one base
+/// relation is in scope. The rule may still assign it from schema facts.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlColumnUseFact {
+    pub table: String,
+    pub column: String,
+    pub clause: SqlColumnClause,
+    pub line: usize,
 }
 
 /// A star projection resolved to one base relation.

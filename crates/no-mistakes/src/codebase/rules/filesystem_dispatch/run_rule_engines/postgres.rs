@@ -42,6 +42,11 @@ pub(super) fn run(
         POSTGRES_REDUNDANT_INDEX => {
             postgres_redundant_index::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_GENERATED_COLUMN_PREDICATES => {
+            postgres_generated_column_predicates::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         POSTGRES_NO_GENERATED_COLUMN_WRITES => {
             postgres_no_generated_column_writes::check_with_files_and_sources(
                 root, config, files, sources,
