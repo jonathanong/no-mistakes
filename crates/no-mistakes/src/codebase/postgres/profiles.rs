@@ -190,8 +190,7 @@ pub(crate) fn prepare_rule_sql_facts(
             &super::PostgresSchemaOptions {
                 sql_include: patterns.clone(),
             },
-        )
-        .unwrap_or_default()
+        )?
     } else {
         files.to_vec()
     };
