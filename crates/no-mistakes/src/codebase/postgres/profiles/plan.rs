@@ -10,10 +10,14 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-offset",
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
+        "postgres-sql-shape-policy",
     ];
     plan.postgres_dml |= dml_rules
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_fragments |= !config
+        .rule_applications("postgres-sql-shape-policy")
+        .is_empty();
     let schema_rules = [
         "postgres-generated-column-predicates",
         "postgres-identifier-length",

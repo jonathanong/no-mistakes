@@ -101,8 +101,10 @@ pub struct SqlSelectFact {
     pub in_insert_select: bool,
     /// Lines of `NOT IN (SELECT …)` and `NOT (… IN (SELECT …))`.
     pub not_in_subqueries: Vec<usize>,
+    /// Original SQL columns corresponding to `not_in_subqueries`.
+    pub not_in_columns: Vec<usize>,
     /// Lines of `COUNT(...)` compared with 0 or 1 to test existence.
-    pub count_existence_checks: Vec<usize>,
+    pub count_existence_checks: Vec<SqlCountExistenceFact>,
     /// `*` / `alias.*` projections over base FROM relations.
     pub star_projections: Vec<SqlStarProjectionFact>,
     /// Bare column references in WHERE, JOIN ON, and ORDER BY.
@@ -192,4 +194,14 @@ pub enum SqlTriggerEvent {
     Update { columns: Vec<String> },
     Delete,
     Truncate,
+}
+
+/// A scalar COUNT comparison testing presence or absence of matching rows.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlCountExistenceFact {
+    pub line: usize,
+    /// Original SQL column used to map embedded clauses to their source line.
+    pub column: usize,
+    /// True when the comparison tests zero matching rows (NOT EXISTS).
+    pub negated: bool,
 }

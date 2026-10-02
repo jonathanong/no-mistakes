@@ -36,8 +36,17 @@ pub(super) fn walk_expr(
     in_insert_select: bool,
     out: &mut Vec<SqlSelectFact>,
 ) {
-    use sqlparser::ast::Visit;
-    let _ = expr.visit(&mut Queries {
+    walk_node(sql, expr, ctes, in_insert_select, out);
+}
+
+pub(in crate::codebase::postgres::statements) fn walk_node<T: sqlparser::ast::Visit>(
+    sql: &str,
+    node: &T,
+    ctes: &[String],
+    in_insert_select: bool,
+    out: &mut Vec<SqlSelectFact>,
+) {
+    let _ = node.visit(&mut Queries {
         sql,
         ctes,
         in_insert_select,

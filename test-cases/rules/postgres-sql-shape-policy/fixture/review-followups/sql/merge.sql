@@ -1,0 +1,9 @@
+MERGE INTO items AS target
+USING (SELECT id FROM seed WHERE id NOT IN (SELECT id FROM bans)) AS source
+ON target.id NOT IN (SELECT id FROM bans)
+WHEN MATCHED AND (SELECT COUNT(*) FROM checks) > 0 THEN
+  UPDATE SET value = (SELECT value FROM updates WHERE id NOT IN (SELECT id FROM bans))
+WHEN MATCHED AND target.id NOT IN (SELECT id FROM bans) THEN DELETE
+WHEN NOT MATCHED THEN INSERT (id, value)
+  VALUES (source.id, (SELECT value FROM updates WHERE id NOT IN (SELECT id FROM bans)))
+WHEN NOT MATCHED BY SOURCE THEN DO NOTHING;

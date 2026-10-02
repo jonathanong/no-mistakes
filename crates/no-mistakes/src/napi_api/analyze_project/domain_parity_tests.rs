@@ -61,3 +61,5 @@ include!("domain_parity_tests/heterogeneous.rs");
 include!("domain_parity_tests/language_rules.rs");
 
 include!("domain_parity_tests/postgres_identifier.rs");
+
+include!("domain_parity_tests/postgres_shapes.rs");

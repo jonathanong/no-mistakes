@@ -1,3 +1,4 @@
+mod fragments;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
@@ -105,7 +106,6 @@ impl CheckFactMap {
     ) -> anyhow::Result<&[crate::codebase::postgres::SqlStatementFileFacts]> {
         self.postgres.statements(path, profile)
     }
-
     pub fn files(&self) -> &[PathBuf] {
         &self.files
     }

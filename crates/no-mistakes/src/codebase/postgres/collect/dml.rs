@@ -83,6 +83,16 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
         for relation in &mut select.relations {
             relation.line = source_line(relation.line, 1);
         }
+        for (line, column) in select
+            .not_in_subqueries
+            .iter_mut()
+            .zip(&select.not_in_columns)
+        {
+            *line = source_line(*line, *column);
+        }
+        for count in &mut select.count_existence_checks {
+            count.line = source_line(count.line, count.column);
+        }
         for exists in &mut select.exists_set_operations {
             exists.line = source_line(exists.line, 1);
         }

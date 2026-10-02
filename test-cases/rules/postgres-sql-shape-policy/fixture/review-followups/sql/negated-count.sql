@@ -1,0 +1,5 @@
+SELECT NOT ((SELECT COUNT(*) FROM orders) = 0);
+SELECT NOT (COUNT(*) > 0) FROM orders;
+SELECT NOT NOT ((SELECT COUNT(*) FROM orders) = 0);
+SELECT NOT (id > 0) FROM orders;
+SELECT 1 FROM orders HAVING COUNT(*) > 0;

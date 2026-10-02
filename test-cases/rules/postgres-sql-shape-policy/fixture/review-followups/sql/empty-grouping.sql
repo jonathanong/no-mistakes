@@ -1,0 +1,16 @@
+-- Empty ROLLUP/CUBE inputs can repeat the empty group; DISTINCT collapses it.
+SELECT 1 FROM orders GROUP BY () HAVING COUNT(*) > 0;
+SELECT 1 FROM orders GROUP BY GROUPING SETS (()) HAVING COUNT(*) > 0;
+SELECT 1 FROM orders GROUP BY ROLLUP (()) HAVING COUNT(*) > 0;
+SELECT 1 FROM orders GROUP BY CUBE (()) HAVING COUNT(*) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY ()) > 0;
+SELECT 1 FROM orders GROUP BY GROUPING SETS ((), (account_id)) HAVING COUNT(*) > 0;
+SELECT 1 FROM orders GROUP BY (account_id, id) HAVING COUNT(*) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY GROUPING SETS ((), ())) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT GROUPING SETS ((), ())) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT GROUPING SETS ((), (account_id))) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY ROLLUP ((), ())) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY CUBE ((), ())) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY ROLLUP (account_id)) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY CUBE (account_id)) > 0;
+SELECT (SELECT COUNT(*) FROM orders GROUP BY "distinct" GROUPING SETS ((), ())) > 0;

@@ -1,73 +1,53 @@
 use super::{BannedShapes, CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::{
-    collect_postgres_facts, statements::extract_sql_statement_facts, EmbeddedSqlKind,
-};
+use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::postgres::{postgres_sql_paths, EmbeddedSqlKind};
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            postgres_dml: true,
-            embedded_sql: true,
-            ..CheckFactPlan::default()
-        },
-        &opts.schema,
-        &opts.embedded,
-    )
-    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = Vec::new();
-    for file in &facts.embedded {
+    for path in files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+    {
+        let file = facts
+            .embedded_sql(path, &opts.embedded)
+            .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
-        let executed_sql: HashSet<&str> = file
-            .calls
-            .iter()
-            .filter(|call| call.kind != EmbeddedSqlKind::Dynamic)
-            .filter_map(|call| call.sql_text.as_deref())
-            .collect();
         for call in &file.calls {
             if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
                 findings.push(finding(
                     &rel,
                     call.line.max(1) as usize,
                     "executed SQL is not statically recoverable for shape policy",
-                    "correlated-exists-set-operation",
+                    opts.shapes.unanalyzable_target(),
                 ));
             }
         }
         for fragment in &file.fragments {
-            let Some(sql_text) = fragment.sql_text.as_deref() else {
-                if opts.fail_unanalyzable {
-                    findings.push(finding(
-                        &rel,
-                        fragment.line.max(1) as usize,
-                        "builder SQL is not statically recoverable for shape policy",
-                        "correlated-exists-set-operation",
-                    ));
-                }
-                continue;
-            };
-            if executed_sql.contains(sql_text) {
-                continue;
+            if fragment.sql_text.is_none() && opts.fail_unanalyzable {
+                findings.push(finding(
+                    &rel,
+                    fragment.line.max(1) as usize,
+                    "builder SQL is not statically recoverable for shape policy",
+                    opts.shapes.unanalyzable_target(),
+                ));
             }
-            let statements = fragment_statement_facts(sql_text);
+        }
+        for fragment in facts.postgres_fragments(path, &opts.embedded)? {
+            let statements = &fragment.statements;
             if opts.fail_unanalyzable && statements.parse_failed {
                 findings.push(finding(
                     &rel,
                     fragment.line.max(1) as usize,
                     "builder SQL is not statically recoverable for shape policy",
-                    "correlated-exists-set-operation",
+                    opts.shapes.unanalyzable_target(),
                 ));
                 continue;
             }
@@ -78,21 +58,30 @@ pub(super) fn scan(
             }
         }
     }
-    for file in &facts.statements {
-        let rel = relative_slash_path(root, &file.path);
-        if opts.fail_unanalyzable && file.parse_failed {
-            findings.push(finding(
-                &rel,
-                1,
-                "SQL could not be analyzed for shape policy",
-                "correlated-exists-set-operation",
-            ));
-            continue;
-        }
-        for select in &file.selects {
-            findings.extend(select_findings(&rel, select, &opts.shapes, |line| {
-                line.max(1)
-            }));
+    let sql_paths = postgres_sql_paths(root, files, &opts.schema)?;
+    let projections = sql_paths.iter().map(|path| (path, None)).chain(
+        files
+            .iter()
+            .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+            .map(|path| (path, Some(&opts.embedded))),
+    );
+    for (path, profile) in projections {
+        for file in facts.postgres_statements(path, profile)? {
+            let rel = relative_slash_path(root, &file.path);
+            if opts.fail_unanalyzable && file.parse_failed {
+                findings.push(finding(
+                    &rel,
+                    file.origin_line.max(1),
+                    "SQL could not be analyzed for shape policy",
+                    opts.shapes.unanalyzable_target(),
+                ));
+                continue;
+            }
+            for select in &file.selects {
+                findings.extend(select_findings(&rel, select, &opts.shapes, |line| {
+                    line.max(1)
+                }));
+            }
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);
@@ -104,22 +93,6 @@ pub(super) fn scan(
             && left.target == right.target
     });
     Ok(findings)
-}
-
-fn fragment_statement_facts(sql: &str) -> crate::codebase::postgres::SqlStatementFileFacts {
-    let direct = extract_sql_statement_facts(sql);
-    if !direct.selects.is_empty() {
-        return direct;
-    }
-    // Builder fragments commonly begin with `EXISTS` or `AND EXISTS`, which
-    // are valid predicate fragments but not top-level SQL statements.
-    let prefix = sql.trim_start();
-    let wrapper = if prefix.starts_with("AND ") || prefix.starts_with("OR ") {
-        format!("SELECT 1 WHERE true {sql}")
-    } else {
-        format!("SELECT 1 WHERE {sql}")
-    };
-    extract_sql_statement_facts(&wrapper)
 }
 
 fn select_findings(
@@ -152,11 +125,11 @@ fn select_findings(
         }
     }
     if shapes.count_for_existence {
-        for line in &select.count_existence_checks {
+        for count in &select.count_existence_checks {
             findings.push(finding(
                 file,
-                line_at(*line),
-                "COUNT(...) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+                line_at(count.line),
+                if count.negated { "COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)" } else { "COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)" },
                 "count-for-existence",
             ));
         }

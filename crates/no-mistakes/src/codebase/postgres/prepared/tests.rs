@@ -137,6 +137,7 @@ fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
         &sources,
         &CheckFactPlan {
             postgres_dml: true,
+            postgres_fragments: true,
             postgres_sql_include: vec!["**/*.sql".into()],
             embedded_sql_options: vec![EmbeddedSqlOptions::default()],
             ..Default::default()
@@ -144,6 +145,7 @@ fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
         &CheckFactMap::default(),
     );
     assert!(dml.schema.is_empty());
+    assert!(dml.fragments(&ts, &EmbeddedSqlOptions::default()).is_err());
     assert!(dml.statements(&sql, None).is_ok());
     assert!(dml
         .statements(&ts, Some(&EmbeddedSqlOptions::default()))

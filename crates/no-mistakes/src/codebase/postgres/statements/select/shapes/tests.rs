@@ -12,7 +12,13 @@ fn counts(sql: &str) -> Vec<usize> {
     extract_sql_statement_facts(sql)
         .selects
         .iter()
-        .flat_map(|select| select.count_existence_checks.clone())
+        .flat_map(|select| {
+            select
+                .count_existence_checks
+                .iter()
+                .map(|count| count.line)
+                .collect::<Vec<_>>()
+        })
         .collect()
 }
 
@@ -53,16 +59,13 @@ fn valid_examples_are_not_recorded() {
 }
 
 #[test]
-fn not_around_in_subquery_and_distinct_count_are_recorded() {
+fn not_around_in_subquery_is_recorded_but_nullable_counts_are_not() {
     assert_eq!(
         not_in("SELECT id FROM accounts WHERE NOT (id IN (SELECT account_id FROM bans))"),
         vec![1]
     );
     assert!(not_in("SELECT id FROM accounts WHERE id IN (SELECT account_id FROM bans)").is_empty());
-    assert_eq!(
-        counts("SELECT COUNT(DISTINCT account_id) > 0 AS has_orders FROM orders"),
-        vec![1]
-    );
+    assert!(counts("SELECT COUNT(DISTINCT account_id) > 0 AS has_orders FROM orders").is_empty());
     assert_eq!(
         counts("SELECT id FROM accounts WHERE 0 < (SELECT COUNT(*) FROM orders)"),
         vec![1]
@@ -75,10 +78,7 @@ fn not_around_in_subquery_and_distinct_count_are_recorded() {
         counts("SELECT id FROM accounts WHERE (SELECT COUNT(*) FROM orders) != 0"),
         vec![1]
     );
-    assert_eq!(
-        counts("SELECT id FROM accounts WHERE (SELECT COUNT(id) FROM orders) >= 1"),
-        vec![1]
-    );
+    assert!(counts("SELECT id FROM accounts WHERE (SELECT COUNT(id) FROM orders) >= 1").is_empty());
     assert_eq!(
         counts("SELECT id FROM accounts WHERE (SELECT COUNT(*) FROM orders) < 1"),
         vec![1]
@@ -106,7 +106,13 @@ fn count_inside_a_cte_is_recorded_on_the_cte_line() {
     let lines: Vec<_> = facts
         .selects
         .iter()
-        .flat_map(|select| select.count_existence_checks.clone())
+        .flat_map(|select| {
+            select
+                .count_existence_checks
+                .iter()
+                .map(|count| count.line)
+                .collect::<Vec<_>>()
+        })
         .collect();
     // Line 2 is the CTE body. The outer `SELECT id FROM recent` is not a count.
     assert_eq!(lines, vec![2], "{facts:#?}");

@@ -15,11 +15,14 @@ pub(crate) struct PreparationError {
     source_kind: Option<std::io::ErrorKind>,
 }
 type Entry<T> = Result<Arc<T>, Arc<PreparationError>>;
+mod fragments;
+pub(crate) use fragments::PreparedSqlFragment;
 #[derive(Clone, Default)]
 pub(crate) struct PreparedPostgresFacts {
     pub schema: BTreeMap<PathBuf, Entry<SqlSchemaFileFacts>>,
     pub statements: BTreeMap<PathBuf, Entry<Vec<SqlStatementFileFacts>>>,
     pub embedded: BTreeMap<(PathBuf, EmbeddedSqlOptions), Entry<Vec<SqlStatementFileFacts>>>,
+    pub fragments: BTreeMap<(PathBuf, EmbeddedSqlOptions), Entry<Vec<PreparedSqlFragment>>>,
 }
 
 pub(crate) fn prepare(
@@ -92,14 +95,31 @@ pub(crate) fn prepare(
             }
         }
     }
-    if plan.postgres_dml {
+    if plan.postgres_dml || plan.postgres_fragments {
         for path in files
             .iter()
             .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
         {
             for profile in &plan.embedded_sql_options {
-                let entry = facts
-                    .embedded_sql(path, profile)
+                let file = facts.embedded_sql(path, profile);
+                if plan.postgres_fragments {
+                    let entry = file
+                        .as_ref()
+                        .map(|file| Arc::new(fragments::collect(file)))
+                        .map_err(|error| {
+                            Arc::new(PreparationError {
+                                message: Arc::from(format!(
+                                    "failed to collect PostgreSQL facts: {error}"
+                                )),
+                                source_kind: None,
+                            })
+                        });
+                    out.fragments.insert((path.clone(), profile.clone()), entry);
+                }
+                if !plan.postgres_dml {
+                    continue;
+                }
+                let entry = file
                     .map(|file| Arc::new(super::collect::dml::embedded_call_facts(file)))
                     .map_err(|error| {
                         Arc::new(PreparationError {
@@ -122,6 +142,17 @@ impl PreparedPostgresFacts {
             if error.source_kind == Some(std::io::ErrorKind::NotFound))
     }
 
+    pub fn fragments(
+        &self,
+        path: &Path,
+        profile: &EmbeddedSqlOptions,
+    ) -> anyhow::Result<&[PreparedSqlFragment]> {
+        entry(
+            self.fragments.get(&(path.to_path_buf(), profile.clone())),
+            path,
+        )
+        .map(|value| value.as_slice())
+    }
     pub fn schema(&self, path: &Path) -> anyhow::Result<&SqlSchemaFileFacts> {
         let value = self.schema.get(path).or_else(|| {
             self.schema

@@ -64,6 +64,7 @@ fn consume_regex(
 
 fn consume_quote(
     ch: char,
+    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
     escaped: &mut bool,
     state: &mut LineCommentScanState,
     prev_significant: &mut Option<char>,
@@ -75,6 +76,10 @@ fn consume_quote(
         *escaped = false;
     } else if ch == '\\' {
         *escaped = true;
+    } else if current == '`' && ch == '$' && chars.peek().is_some_and(|(_, next)| *next == '{') {
+        chars.next();
+        state.quote = None;
+        state.template_braces.push(0);
     } else if ch == current {
         state.quote = None;
         *prev_significant = Some(current);
@@ -89,6 +94,18 @@ fn scan_code_char(
     next: Option<char>,
     mode: &mut CodeModeState<'_>,
 ) -> Option<CodeCharAction> {
+    if let Some(depth) = mode.line_state.template_braces.last_mut() {
+        if ch == '{' {
+            *depth += 1;
+        } else if ch == '}' {
+            if *depth == 0 {
+                mode.line_state.template_braces.pop();
+                mode.line_state.quote = Some('`');
+                return Some(CodeCharAction::Consumed);
+            }
+            *depth -= 1;
+        }
+    }
     if matches!(ch, '\'' | '"' | '`') {
         mode.line_state.quote = Some(ch);
         return Some(CodeCharAction::Consumed);
