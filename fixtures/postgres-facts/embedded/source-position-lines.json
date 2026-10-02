@@ -64,5 +64,11 @@
     "width": 12,
     "continuation": null,
     "extra": 0
+  },
+  {
+    "raw": "\\u{41}",
+    "width": 6,
+    "continuation": null,
+    "extra": 0
   }
 ]

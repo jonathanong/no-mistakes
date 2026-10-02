@@ -417,3 +417,13 @@ fn table_function_argument_exists_set_operations_are_collected() {
         .iter()
         .any(|select| !select.exists_set_operations.is_empty()));
 }
+
+#[test]
+fn conflict_assignment_exists_set_operations_are_collected() {
+    let sql = "INSERT INTO t (id, ok) VALUES (1, true) ON CONFLICT (id) DO UPDATE SET ok = EXISTS (SELECT 1 FROM a WHERE a.id = t.id UNION SELECT 1 FROM b WHERE b.id = t.id);";
+    let facts = extract_sql_statement_facts(sql);
+    assert!(facts
+        .selects
+        .iter()
+        .any(|select| !select.exists_set_operations.is_empty()));
+}

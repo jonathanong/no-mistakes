@@ -59,11 +59,9 @@ pub(super) fn extra_characters(raw: &str, width: usize, raw_mode: bool) -> usize
 }
 
 fn unicode_escape_unit(raw: &str, width: usize) -> Option<u32> {
-    if width == 6 {
-        return Some(u32::from_str_radix(&raw[2..6], 16).unwrap());
+    // A braced escape such as `\u{41}` can also be six bytes wide.
+    if raw.as_bytes().get(2) == Some(&b'{') {
+        return Some(u32::from_str_radix(&raw[3..width - 1], 16).unwrap());
     }
-    if raw.as_bytes().get(2) != Some(&b'{') {
-        return None;
-    }
-    Some(u32::from_str_radix(&raw[3..width - 1], 16).unwrap())
+    (width == 6).then(|| u32::from_str_radix(&raw[2..6], 16).unwrap())
 }
