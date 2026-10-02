@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "enums": {
+    "public.report_types": {
+      "values": [
+        "a"
+      ]
+    }
+  },
+  "tables": {
+    "reports": {
+      "columns": {
+        "kinds": {
+          "dataType": "audit.report_types[]"
+        }
+      }
+    }
+  }
+}

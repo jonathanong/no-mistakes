@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "columns": {
+        "display_name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

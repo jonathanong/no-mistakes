@@ -2,6 +2,7 @@ use super::super::compile::compile;
 use super::super::scan::scan;
 use super::super::Options;
 use crate::codebase::postgres::SchemaCatalog;
+use std::path::PathBuf;
 
 pub(super) const PATH: &str = "schemaCatalogPath: schema.json\n";
 
@@ -37,8 +38,11 @@ pub(super) fn expect_err(yaml: &str, snippet: &str) {
     assert!(error.contains(snippet), "{error}");
 }
 
-pub(super) fn column(table: &str, name: &str, data_type: &str) -> serde_json::Value {
-    serde_json::json!({
-        "tables": { table: { "columns": { name: { "dataType": data_type } } } }
-    })
+pub(super) fn catalog(name: &str) -> serde_json::Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/array-columns/catalogs")
+        .join(format!("{name}.json"));
+    let text = std::fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
+    serde_json::from_str(&text).unwrap_or_else(|error| panic!("parse {}: {error}", path.display()))
 }

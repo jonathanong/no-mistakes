@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "metrics": {
+      "columns": {
+        "buckets": {
+          "dataType": "integer[][]"
+        }
+      }
+    }
+  }
+}
