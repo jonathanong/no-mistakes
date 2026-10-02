@@ -1,3 +1,8 @@
+mod identity;
+pub(crate) use identity::{
+    object_name_identity, parse_relation_identity, relation_part_key, relation_suffix_key,
+    relation_suffix_name, resolve_relation_key,
+};
 use sqlparser::ast::Expr;
 use std::collections::HashSet;
 

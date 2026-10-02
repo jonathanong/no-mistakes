@@ -3,6 +3,10 @@
 /// Semicolons inside quotes, dollar quotes, and comments stay in the statement.
 /// A leading `--` comment is not the statement line, so a next-line suppression
 /// still points at the SQL.
+pub(crate) fn top_level_statements(sql: &str) -> Vec<(usize, String)> {
+    split_sql(sql, &mut Vec::new())
+}
+
 fn split_sql(sql: &str, data: &mut Vec<(usize, usize, usize)>) -> Vec<(usize, String)> {
     let bytes = sql.as_bytes();
     let mut index = 0usize;
@@ -138,7 +142,9 @@ fn skip_dollar(bytes: &[u8], index: usize, line: &mut usize) -> usize {
     let mut tag_end = index + 1;
     while tag_end < bytes.len()
         && bytes[tag_end] != b'$'
-        && (bytes[tag_end].is_ascii_alphanumeric() || bytes[tag_end] == b'_')
+        && (bytes[tag_end].is_ascii_alphanumeric()
+            || bytes[tag_end] == b'_'
+            || !bytes[tag_end].is_ascii())
     {
         tag_end += 1;
     }

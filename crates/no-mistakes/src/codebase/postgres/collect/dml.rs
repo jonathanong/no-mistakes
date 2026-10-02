@@ -39,10 +39,11 @@ pub(crate) fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStateme
             let sql = call.sql_text.as_deref()?;
             let mut facts = extract_sql_statement_facts(sql);
             if call.kind == EmbeddedSqlKind::Dynamic {
-                // Recovered interpolation text can prove OFFSET syntax, while
-                // other rules keep their existing dynamic-SQL failure policy.
+                // Recovered interpolation text can prove OFFSET syntax and write
+                // targets. Other rules keep their existing dynamic-SQL failure policy.
                 facts = SqlStatementFileFacts {
                     offset_uses: facts.offset_uses,
+                    writes: facts.writes,
                     ..Default::default()
                 };
             }
@@ -74,6 +75,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     };
     for offset in &mut facts.offset_uses {
         offset.line = source_line(offset.line, offset.column);
+    }
+    for write in &mut facts.writes {
+        write.line = call.line.max(1) as usize;
     }
     for insert in &mut facts.inserts {
         insert.line = source_line(insert.line, 1);

@@ -14,22 +14,30 @@ pub(super) type LiveColumns = BTreeMap<String, BTreeMap<String, SqlColumnMetadat
 pub(super) fn live_columns(schema: &[&SqlSchemaFileFacts]) -> LiveColumns {
     let mut live = LiveColumns::new();
     for file in schema {
-        if file.table_events.is_empty() {
+        if !file.table_events_collected {
             for table in &file.tables {
                 live.insert(table.table_name.clone(), column_map(&table.columns));
             }
         }
         for event in &file.table_events {
             match event {
-                SqlTableSchemaEvent::Create { table, columns } => {
+                SqlTableSchemaEvent::Create { table, columns, .. } => {
                     live.insert(table.clone(), column_map(columns));
                 }
-                SqlTableSchemaEvent::AddColumn { table, column } => {
+                SqlTableSchemaEvent::AddColumn {
+                    table,
+                    column,
+                    table_if_exists,
+                    ..
+                } => {
+                    if *table_if_exists && !live.contains_key(table) {
+                        continue;
+                    }
                     live.entry(table.clone())
                         .or_default()
                         .insert(column.name.clone(), column.clone());
                 }
-                SqlTableSchemaEvent::Drop { table } => {
+                SqlTableSchemaEvent::Drop { table, .. } => {
                     live.remove(table);
                 }
             }

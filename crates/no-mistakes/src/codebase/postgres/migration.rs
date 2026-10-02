@@ -22,6 +22,7 @@ pub(crate) fn extract_from_parsed(sql: &str, statements: &[Statement]) -> SqlSch
 
 fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
+        table_events_collected: true,
         tables: statements
             .iter()
             .filter_map(|statement| match statement {
@@ -38,12 +39,13 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
     facts
         .declared_identifiers
         .extend(identifier_locations.unparsed_declarations());
+    let mut table_positions = table_events::Positions::new(sql);
     for statement in statements {
         facts
             .declared_identifiers
             .extend(identifiers::collect(&mut identifier_locations, statement));
         statements::record(sql, statement, &mut facts);
-        table_events::record(statement, &mut facts.table_events);
+        table_events::record(statement, &mut table_positions, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {
                 create_index_n += 1;
@@ -100,43 +102,14 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
             &dynamic_sql.sql,
             &super::parse::parse_postgres_sql_lenient(&dynamic_sql.sql),
         );
-        remap_dynamic_fact_lines(&mut dynamic_facts, &dynamic_sql);
+        if !dynamic_sql.executed {
+            dynamic_facts.table_events.clear();
+        }
+        dynamic::remap_fact_lines(&mut dynamic_facts, &dynamic_sql);
         merge_dynamic_facts(&mut facts, dynamic_facts);
     }
+    table_positions.apply_transaction_projection(&mut facts.table_events);
     facts
-}
-
-fn remap_dynamic_fact_lines(facts: &mut SqlSchemaFileFacts, dynamic: &dynamic::DynamicSql) {
-    for index in &mut facts.indexes {
-        index.line = dynamic.source_line(index.line);
-    }
-    for index in &mut facts.dropped_indexes {
-        index.line = dynamic.source_line(index.line);
-    }
-    for table in &mut facts.dropped_tables {
-        table.line = dynamic.source_line(table.line);
-    }
-    for key in &mut facts.foreign_keys {
-        key.line = dynamic.source_line(key.line);
-    }
-    for column in &mut facts.add_columns {
-        column.line = dynamic.source_line(column.line);
-    }
-    for constraint in &mut facts.unnamed_constraints {
-        constraint.line = dynamic.source_line(constraint.line);
-    }
-    for statement in &mut facts.statement_kinds {
-        statement.line = dynamic.source_line(statement.line);
-    }
-    for constraint in &mut facts.not_valid_constraints {
-        constraint.line = dynamic.source_line(constraint.line);
-    }
-    for constraint in &mut facts.validated_constraints {
-        constraint.line = dynamic.source_line(constraint.line);
-    }
-    for identifier in &mut facts.declared_identifiers {
-        identifier.line = dynamic.source_line(identifier.line);
-    }
 }
 
 fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {

@@ -14,6 +14,7 @@ mod select;
 mod trigger;
 mod value;
 mod wrappers;
+mod writes;
 
 pub use crate::codebase::postgres::statement_facts::*;
 pub use fallback::{insert_keyword_count, mask_quoted_sql};
@@ -38,6 +39,7 @@ pub(crate) fn extract_from_parsed(
 ) -> SqlStatementFileFacts {
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
+    let mut writes = Vec::new();
     let mut inserts = Vec::new();
     let mut selects = Vec::new();
     let mut updates = Vec::new();
@@ -63,10 +65,12 @@ pub(crate) fn extract_from_parsed(
         mutation_column_uses: &mut mutation_column_uses,
     };
     for statement in executed {
+        writes::collect(statement, &mut writes);
         collect_one(sql, statement, &mut out);
     }
     SqlStatementFileFacts {
         path: Default::default(),
+        writes,
         inserts,
         selects,
         updates,

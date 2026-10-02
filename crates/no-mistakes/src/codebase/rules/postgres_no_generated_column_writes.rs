@@ -70,7 +70,23 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_with_files_sources_and_facts(root, config, all_files, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -88,7 +104,7 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan::scan_with_sources(root, &compiled, &files, sources)
+            scan::scan(root, &compiled, &files, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

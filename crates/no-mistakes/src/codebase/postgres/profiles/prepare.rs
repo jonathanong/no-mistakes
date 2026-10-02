@@ -36,6 +36,13 @@ pub(crate) fn prepare_rule_sql_facts(
                 postgres_dml: !dml_ids.is_empty(),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,
+                postgres_write_sql_include: if rule_ids
+                    .contains(&"postgres-no-generated-column-writes")
+                {
+                    super::plan::write_patterns(config)?
+                } else {
+                    Vec::new()
+                },
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,

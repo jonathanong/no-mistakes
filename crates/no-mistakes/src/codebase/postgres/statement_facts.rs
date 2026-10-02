@@ -1,9 +1,13 @@
+mod writes;
 use std::path::PathBuf;
+pub use writes::{SqlWriteColumns, SqlWriteFact};
 
 /// Statement facts for one SQL source (file or embedded call).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlStatementFileFacts {
     pub path: PathBuf,
+    /// Syntactic write targets; catalog resolution happens after preparation.
+    pub writes: Vec<SqlWriteFact>,
     pub inserts: Vec<SqlInsertFact>,
     pub selects: Vec<SqlSelectFact>,
     /// One entry per `UPDATE`. Each entry is that statement's relation instances.

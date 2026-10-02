@@ -3,7 +3,7 @@
 use regex::Regex;
 use std::sync::LazyLock;
 
-mod writes;
+pub(crate) mod writes;
 
 pub use writes::{
     find_generated_column_writes, GeneratedColumnWrite, GeneratedTable, GeneratedTableColumns,
@@ -12,13 +12,13 @@ pub use writes::{
 /// Matches `UPDATE`, `INSERT INTO`, and `MERGE INTO` table names.
 static WRITE_TARGET: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r#"(?is)\b(?:UPDATE|INSERT\s+INTO|MERGE\s+INTO)\s+(?:ONLY\s+)?((?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))*)"#,
+        r#"(?is)\b(?:UPDATE|INSERT\s+INTO|MERGE\s+INTO)\s+(?:ONLY\s+)?((?:"(?:[^"]|"")+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"(?:[^"]|"")+"|[A-Za-z_][\w$]*))*)"#,
     )
     .expect("dml write-target regex")
 });
 
 static IDENT: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?:"([^"]+)"|([A-Za-z_][\w$]*))"#).expect("dml identifier regex")
+    Regex::new(r#"(?:"((?:[^"]|"")+)"|([A-Za-z_][\w$]*))"#).expect("dml identifier regex")
 });
 
 /// Table names targeted by UPDATE / INSERT INTO / MERGE INTO.
@@ -45,7 +45,7 @@ fn last_relation_name(qualified: &str) -> String {
         .filter_map(|caps| {
             caps.get(1)
                 .or_else(|| caps.get(2))
-                .map(|part| part.as_str().to_string())
+                .map(|part| part.as_str().replace("\"\"", "\""))
         })
         .last()
         .unwrap_or_default()

@@ -1,6 +1,6 @@
 use sqlparser::ast::{Query, SelectItem, SetExpr};
 
-pub(super) fn query_value_width(query: &Query) -> Option<usize> {
+pub(crate) fn query_value_width(query: &Query) -> Option<usize> {
     set_expr_width(&query.body)
 }
 

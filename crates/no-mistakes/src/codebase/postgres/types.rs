@@ -1,3 +1,6 @@
+mod table_events;
+pub use table_events::SqlTableSchemaEvent;
+
 use super::embedded::EmbeddedSqlFileFacts;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -51,6 +54,8 @@ pub struct SqlSchemaFileFacts {
     pub tables: Vec<SqlCreateTableMetadata>,
     /// Qualified CREATE/ALTER/DROP operations in statement order for live-column catalogs.
     pub table_events: Vec<SqlTableSchemaEvent>,
+    /// Distinguishes an empty execution projection from legacy hand-built facts.
+    pub table_events_collected: bool,
     pub indexes: Vec<SqlCreateIndexMetadata>,
     pub dropped_indexes: Vec<SqlDropIndexMetadata>,
     pub dropped_tables: Vec<SqlDropIndexMetadata>,
@@ -118,10 +123,14 @@ impl Default for SqlCreateIndexMetadata {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlAddColumnMetadata {
     pub table_name: String,
+    /// Decoded last identifier component, preserving dots inside quoted names.
+    pub unqualified_table_name: String,
     pub column_name: String,
     pub data_type: String,
     pub nullable: bool,
     pub default: Option<String>,
+    /// Whether the column is computed by a GENERATED expression.
+    pub is_generated: bool,
     pub line: usize,
 }
 
@@ -199,19 +208,3 @@ impl fmt::Display for PostgresFactError {
 }
 
 impl std::error::Error for PostgresFactError {}
-
-/// Ordered table catalog changes, retaining qualified relation identities.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SqlTableSchemaEvent {
-    Create {
-        table: String,
-        columns: Vec<SqlColumnMetadata>,
-    },
-    AddColumn {
-        table: String,
-        column: SqlColumnMetadata,
-    },
-    Drop {
-        table: String,
-    },
-}

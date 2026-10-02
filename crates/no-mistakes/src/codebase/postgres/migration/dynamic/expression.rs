@@ -13,14 +13,24 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
     let all = tokenize(&body.sql);
     let mut variables = HashMap::<String, Option<DynamicSql>>::new();
     let mut result = Vec::new();
-    for statement in statements(&all) {
+    let mut scope = execution::Scope::default();
+    for (ordinal, statement) in statements(&all).into_iter().enumerate() {
         let code = significant(statement);
+        let definite = scope.advance(&code);
+        let executed = definite && body.executed;
         if code.is_empty() {
             continue;
         }
         if let Some(at) = code.iter().position(|token| word(token, "EXECUTE")) {
             let line = body_line(body, code[at]);
-            if let Some(sql) = executed_expression(&code[at + 1..], &variables, line) {
+            if let Some(mut sql) = executed_expression(&code[at + 1..], &variables, line) {
+                sql.executed &= executed;
+                sql.source_order = body
+                    .source_order
+                    .iter()
+                    .copied()
+                    .chain(std::iter::once(ordinal))
+                    .collect();
                 result.push(sql);
             }
             continue;
@@ -28,8 +38,12 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
         if let Some(at) = assignment_at(&code) {
             if let Some(name) = assignment_name(&code, at) {
                 let line = body_line(body, code[at]);
-                let value = expression_sql(&code[at + 1..], &variables)
-                    .map(|sql| DynamicSql::anchored(sql, line));
+                let mut value = executed_expression(&code[at + 1..], &variables, line);
+                if let Some(value) = &mut value {
+                    // Retain syntactic SQL for policy facts, but invalidate definite
+                    // execution when a conditional assignment can replace its value.
+                    value.executed &= definite;
+                }
                 variables.insert(name.to_ascii_lowercase(), value);
             }
         }
@@ -51,21 +65,10 @@ fn executed_expression(
             return Some(value.clone());
         }
     }
-    expression_sql(tokens, variables).map(|sql| DynamicSql::anchored(sql, line))
-}
-
-fn expression_sql(
-    tokens: &[&TokenWithSpan],
-    variables: &HashMap<String, Option<DynamicSql>>,
-) -> Option<String> {
-    let tokens = execution_tokens(tokens);
-    static_expression(tokens).or_else(|| {
-        (tokens.len() == 1)
-            .then(|| identifier(tokens[0]))
-            .flatten()
-            .and_then(|name| variables.get(&name.to_ascii_lowercase()))
-            .and_then(|value| value.as_ref())
-            .map(|value| value.sql.clone())
+    static_expression(expression).map(|(sql, concrete)| {
+        let mut value = DynamicSql::anchored(sql, line);
+        value.executed = concrete;
+        value
     })
 }
 
@@ -77,7 +80,7 @@ fn execution_tokens<'a>(tokens: &'a [&TokenWithSpan]) -> &'a [&'a TokenWithSpan]
     &tokens[..end]
 }
 
-fn static_expression(tokens: &[&TokenWithSpan]) -> Option<String> {
+fn static_expression(tokens: &[&TokenWithSpan]) -> Option<(String, bool)> {
     if tokens
         .iter()
         .any(|token| matches!(token.token, Token::StringConcat | Token::Plus))
@@ -85,15 +88,17 @@ fn static_expression(tokens: &[&TokenWithSpan]) -> Option<String> {
         return None;
     }
     if let Some(decoded) = string_expression(tokens, None) {
-        return Some(decoded.sql);
+        return Some((decoded.sql, true));
     }
     if let Some(argument_start) = format_argument_start(tokens) {
         let comma = tokens
             .iter()
             .position(|token| matches!(token.token, Token::Comma))
             .unwrap_or(tokens.len().saturating_sub(1));
-        return string_expression(&tokens[argument_start..comma], None)
-            .map(|decoded| normalize_format(&decoded.sql));
+        return string_expression(&tokens[argument_start..comma], None).map(|decoded| {
+            let normalized = normalize_format(&decoded.sql);
+            (normalized.sql, normalized.concrete)
+        });
     }
     None
 }
@@ -111,7 +116,7 @@ fn format_argument_start(tokens: &[&TokenWithSpan]) -> Option<usize> {
 }
 
 fn assignment_name<'a>(tokens: &'a [&TokenWithSpan], assignment: usize) -> Option<&'a str> {
-    let line = tokens.get(assignment)?.span.start.line;
+    let line = tokens[assignment].span.start.line;
     let identifiers = tokens[..assignment]
         .iter()
         .filter(|token| token.span.start.line == line)

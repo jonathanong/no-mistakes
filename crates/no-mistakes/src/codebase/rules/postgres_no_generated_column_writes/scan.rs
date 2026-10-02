@@ -1,161 +1,117 @@
 use super::{finding, trigger_finding, CompiledOptions};
-use crate::codebase::check_facts::CheckFactPlan;
+use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::is_indexable;
-use crate::codebase::postgres::dml::{find_generated_column_writes, GeneratedTableColumns};
-use crate::codebase::postgres::{collect_postgres_facts, EmbeddedSqlFileFacts};
+use crate::codebase::postgres::dml::writes::positional_insert_hits;
+use crate::codebase::postgres::dml::GeneratedTableColumns;
+use crate::codebase::postgres::{SqlStatementFileFacts, SqlWriteColumns};
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::ts_source::{relative_slash_path, SourceStore};
-use anyhow::Context;
-use std::collections::HashMap;
+use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
-pub(super) fn scan_with_sources(
+pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    sources: &SourceStore,
+    facts: &CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    let readable: Vec<PathBuf> = files
+    let schema_files = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "{} failed to collect PostgreSQL facts: {error}",
+                super::RULE_ID
+            )
+        })?;
+    let schema: Vec<_> = schema_files
         .iter()
-        .filter(|path| sources.read_path(path).is_ok())
-        .cloned()
+        .map(|path| facts.postgres_readable_schema(path))
+        .collect::<anyhow::Result<Vec<_>>>()?
+        .into_iter()
+        .flatten()
         .collect();
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        &readable,
-        &CheckFactPlan {
-            postgres_schema: true,
-            embedded_sql: true,
-            ..CheckFactPlan::default()
-        },
-        &opts.schema,
-        &opts.embedded,
-    )
-    .with_context(|| format!("{} failed to collect PostgreSQL facts", super::RULE_ID))?;
-    let catalog = super::catalog::catalog_from_facts(&facts.schema, &opts.extra_generated_columns);
+    let tables = super::catalog::live_tables(&schema);
+    let catalog = super::catalog::catalog_from_tables(&tables, &opts.extra_generated_columns);
     let trigger =
-        super::catalog::trigger_catalog_from_facts(&facts.schema, &opts.trigger_maintained_columns);
+        super::catalog::trigger_catalog_from_tables(&tables, &opts.trigger_maintained_columns);
+    let mut combined = trigger.clone();
+    combined.extend_from(&catalog);
     let mut findings =
-        super::catalog::stale_extra_findings(&facts.schema, &opts.extra_generated_columns);
+        super::catalog::stale_extra_findings_from_tables(&tables, &opts.extra_generated_columns);
     findings.extend(super::catalog::stale_trigger_findings(
-        &facts.schema,
+        &tables,
         &opts.trigger_maintained_columns,
     ));
-    if catalog.is_empty() && trigger.is_empty() {
-        crate::codebase::rules::sort_findings(&mut findings);
-        return Ok(findings);
-    }
-    let embedded_by_path: HashMap<&Path, &EmbeddedSqlFileFacts> = facts
-        .embedded
-        .iter()
-        .map(|file| (file.path.as_path(), file))
-        .collect();
-    for path in files {
-        if !opts.includes_dml(root, path) {
-            continue;
-        }
-        let rel = relative_slash_path(root, path);
-        if is_indexable(path) {
-            findings.extend(scan_embedded(
-                &rel,
-                embedded_by_path.get(path.as_path()).copied(),
+    if !combined.is_empty() {
+        for path in files {
+            if !opts.includes_dml(root, path) {
+                continue;
+            }
+            let profile = is_indexable(path).then_some(&opts.embedded);
+            if profile.is_none() && path.extension().and_then(|ext| ext.to_str()) != Some("sql") {
+                continue;
+            }
+            // Source/TS parse failures keep the rule's existing per-file tolerance.
+            let Some(statements) = facts.postgres_readable_statements(path, profile)? else {
+                continue;
+            };
+            extend_writes(
+                &mut findings,
+                &relative_slash_path(root, path),
+                statements,
+                &combined,
                 &catalog,
-                &trigger,
-            ));
-            continue;
-        }
-        if path.extension().and_then(|extension| extension.to_str()) == Some("sql") {
-            findings.extend(scan_sql_file(path, &rel, sources, &catalog, &trigger));
+            );
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
 }
 
-fn scan_embedded(
-    file: &str,
-    facts: Option<&EmbeddedSqlFileFacts>,
-    catalog: &GeneratedTableColumns,
-    trigger: &GeneratedTableColumns,
-) -> Vec<RuleFinding> {
-    let Some(facts) = facts else {
-        return Vec::new();
-    };
-    let mut findings = Vec::new();
-    for call in &facts.calls {
-        let Some(sql) = call.sql_text.as_deref() else {
-            continue;
-        };
-        let line = call.line.max(1) as usize;
-        extend_writes(&mut findings, file, sql, catalog, trigger, |_, _| line);
-    }
-    findings
-}
-
-fn scan_sql_file(
-    path: &Path,
-    file: &str,
-    sources: &SourceStore,
-    catalog: &GeneratedTableColumns,
-    trigger: &GeneratedTableColumns,
-) -> Vec<RuleFinding> {
-    let Some(source) = crate::codebase::rules::read_source(sources, path) else {
-        return Vec::new();
-    };
-    let mut findings = Vec::new();
-    extend_writes(
-        &mut findings,
-        file,
-        &source,
-        catalog,
-        trigger,
-        |table, column| line_for_write(&source, table, column),
-    );
-    findings
-}
-
 fn extend_writes(
     findings: &mut Vec<RuleFinding>,
     file: &str,
-    sql: &str,
+    statements: &[SqlStatementFileFacts],
     catalog: &GeneratedTableColumns,
-    trigger: &GeneratedTableColumns,
-    line_for: impl Fn(&str, &str) -> usize,
+    generated: &GeneratedTableColumns,
 ) {
-    for write in find_generated_column_writes(sql, catalog) {
-        findings.push(finding(
-            file,
-            line_for(&write.table, &write.column),
-            &write.table,
-            &write.column,
-        ));
+    for statement in statements {
+        let mut hits = Vec::new();
+        for write in &statement.writes {
+            let Some(meta) = catalog.get(&write.table) else {
+                continue;
+            };
+            let columns: Vec<String> = match &write.columns {
+                SqlWriteColumns::Named(columns) => columns
+                    .iter()
+                    .filter(|column| meta.generated.contains(&column.to_ascii_lowercase()))
+                    .cloned()
+                    .collect(),
+                SqlWriteColumns::Positional(width) => {
+                    positional_insert_hits(&write.table, meta, *width)
+                        .into_iter()
+                        .map(|hit| hit.column)
+                        .collect()
+                }
+                SqlWriteColumns::All => meta.generated.iter().cloned().collect(),
+            };
+            for column in columns {
+                hits.push((write.line, meta.name.as_str(), column));
+            }
+        }
+        hits.sort();
+        hits.dedup();
+        for (line, table, column) in hits {
+            let render = if generated
+                .get_exact(table)
+                .or_else(|| generated.get(table))
+                .is_some_and(|meta| meta.generated.contains(&column.to_ascii_lowercase()))
+            {
+                finding
+            } else {
+                trigger_finding
+            };
+            findings.push(render(file, line, table, &column));
+        }
     }
-    for write in find_generated_column_writes(sql, trigger) {
-        findings.push(trigger_finding(
-            file,
-            line_for(&write.table, &write.column),
-            &write.table,
-            &write.column,
-        ));
-    }
-}
-
-fn line_for_write(source: &str, table: &str, column: &str) -> usize {
-    source
-        .lines()
-        .enumerate()
-        .find(|(_, line)| {
-            contains_ignore_ascii_case(line, column) || contains_ignore_ascii_case(line, table)
-        })
-        .map(|(index, _)| index + 1)
-        .unwrap_or(1)
-}
-
-fn contains_ignore_ascii_case(haystack: &str, needle: &str) -> bool {
-    haystack
-        .to_ascii_lowercase()
-        .contains(&needle.to_ascii_lowercase())
 }
 
 #[cfg(test)]

@@ -1,0 +1,8 @@
+CREATE TABLE orders (id int, computed int GENERATED ALWAYS AS (id + 1) STORED);
+DO $$ BEGIN
+  PERFORM 1;
+EXCEPTION WHEN OTHERS THEN
+  DROP TABLE orders;
+  EXECUTE 'DROP TABLE orders';
+END $$;
+ALTER TABLE orders ADD COLUMN note text;

@@ -83,6 +83,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         postgres_schema_catalog_paths: Vec::new(),
         postgres_dml: false,
         postgres_fragments: false,
+        postgres_write_sql_include: Vec::new(),
         postgres_sql_include: Vec::new(),
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()

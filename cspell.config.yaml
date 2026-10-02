@@ -98,6 +98,8 @@ words:
   - redirections
   - regclass
   - rustfmt
+  - savepoint
+  - savepoints
   - serde
   - smallint
   - sqlparser

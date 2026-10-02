@@ -66,6 +66,7 @@ fn ident_helpers_cover_quoted_keys_rlike_and_non_list_function_args() {
         args: Vec::new(),
     })]);
     assert!(super::object_name_ident(&function_name).is_none());
+    assert!(super::object_name_identity(&function_name).is_empty());
 
     let rlike = Expr::RLike {
         negated: false,

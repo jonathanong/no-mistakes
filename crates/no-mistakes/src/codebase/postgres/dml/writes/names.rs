@@ -1,10 +1,11 @@
+use super::super::super::idents::object_name_identity;
 use super::super::super::schema::relation_name;
 use super::{GeneratedColumnWrite, GeneratedTable, GeneratedTableColumns};
 use sqlparser::ast::{
     Assignment, AssignmentTarget, ObjectName, TableFactor, TableObject, TableWithJoins,
 };
 
-pub(super) fn push_assignment_writes(
+pub(crate) fn push_assignment_writes(
     table: &str,
     assignments: &[Assignment],
     catalog: &GeneratedTableColumns,
@@ -20,7 +21,7 @@ pub(super) fn push_assignment_writes(
     }
 }
 
-pub(super) fn collect_named_or_positional(
+pub(crate) fn collect_named_or_positional(
     table: &str,
     meta: &GeneratedTable,
     columns: &[ObjectName],
@@ -36,7 +37,7 @@ pub(super) fn collect_named_or_positional(
     }
 }
 
-pub(super) fn push_if_generated(
+pub(crate) fn push_if_generated(
     meta: &GeneratedTable,
     column: &str,
     writes: &mut Vec<GeneratedColumnWrite>,
@@ -49,34 +50,34 @@ pub(super) fn push_if_generated(
     }
 }
 
-pub(super) fn push_all_generated(meta: &GeneratedTable, writes: &mut Vec<GeneratedColumnWrite>) {
+pub(crate) fn push_all_generated(meta: &GeneratedTable, writes: &mut Vec<GeneratedColumnWrite>) {
     writes.extend(meta.generated.iter().map(|column| GeneratedColumnWrite {
         table: meta.name.clone(),
         column: column.clone(),
     }));
 }
 
-fn assignment_column_names(target: &AssignmentTarget) -> Vec<String> {
+pub(crate) fn assignment_column_names(target: &AssignmentTarget) -> Vec<String> {
     match target {
         AssignmentTarget::ColumnName(name) => vec![relation_name(name)],
         AssignmentTarget::Tuple(names) => names.iter().map(relation_name).collect(),
     }
 }
 
-pub(super) fn table_object_name(table: &TableObject) -> Option<String> {
+pub(crate) fn table_object_name(table: &TableObject) -> Option<String> {
     match table {
-        TableObject::TableName(name) => Some(relation_name(name)),
+        TableObject::TableName(name) => Some(object_name_identity(name)),
         _ => None,
     }
 }
 
-pub(super) fn table_with_joins_name(table: &TableWithJoins) -> Option<String> {
+pub(crate) fn table_with_joins_name(table: &TableWithJoins) -> Option<String> {
     table_factor_name(&table.relation)
 }
 
-pub(super) fn table_factor_name(table: &TableFactor) -> Option<String> {
+pub(crate) fn table_factor_name(table: &TableFactor) -> Option<String> {
     match table {
-        TableFactor::Table { name, .. } => Some(relation_name(name)),
+        TableFactor::Table { name, .. } => Some(object_name_identity(name)),
         _ => None,
     }
 }
