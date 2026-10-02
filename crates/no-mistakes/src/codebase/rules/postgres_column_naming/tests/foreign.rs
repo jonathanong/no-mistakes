@@ -278,6 +278,11 @@ foreignKeys:
 }
 
 #[test]
+fn last_word_mode_accepts_a_repeated_natural_key() {
+    assert!(super::support::fixture_messages(LAST_WORD, "repeated-natural-key.json").is_empty());
+}
+
+#[test]
 fn target_name_substitution_uses_the_first_pattern() {
     let yaml = r#"
 schemaCatalogPath: schema.json

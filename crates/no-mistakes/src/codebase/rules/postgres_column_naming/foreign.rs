@@ -81,7 +81,8 @@ fn names_target(referenced: &str, target: &str, mode: &TargetMode) -> bool {
     match mode {
         TargetMode::Off => false,
         TargetMode::LastWord => {
-            last_token(stem) == last_token(target) || target_prefix(stem, target)
+            let target_word = last_token(target);
+            last_token(stem) == target_word || target_prefix(stem, target_word)
         }
         TargetMode::FullName => {
             stem == target || stem.ends_with(&format!("_{target}")) || target_prefix(stem, target)

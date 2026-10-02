@@ -31,7 +31,7 @@ fn is_typmod(inner: &str) -> bool {
     !inner.is_empty()
         && inner
             .chars()
-            .all(|ch| ch.is_ascii_digit() || matches!(ch, ',' | '-' | ' ' | '\t'))
+            .all(|ch| ch.is_ascii_digit() || matches!(ch, ',' | '-') || ch.is_ascii_whitespace())
 }
 
 fn collapse(value: &str) -> String {

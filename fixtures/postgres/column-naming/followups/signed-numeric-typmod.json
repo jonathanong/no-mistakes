@@ -3,7 +3,7 @@
   "tables": {
     "invoices": {
       "columns": {
-        "total_amount": { "dataType": "numeric(2,-3)" }
+        "total_amount": { "dataType": "numeric(2,\n-3)" }
       }
     }
   }

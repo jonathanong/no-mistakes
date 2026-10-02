@@ -13,6 +13,7 @@ mod function_comment;
 mod function_escape;
 mod function_outputs;
 mod function_quote;
+mod locations;
 mod model;
 mod names;
 mod order;
@@ -98,7 +99,7 @@ impl SchemaCatalog {
         let column_lines = parsed
             .value
             .as_ref()
-            .map(|value| column_lines(value, &source))
+            .map(|value| locations::column_lines(value, &source))
             .unwrap_or_default();
         let snapshot: Snapshot = serde_json::from_value(
             parsed
@@ -167,45 +168,6 @@ impl SchemaCatalog {
     pub fn views(&self) -> impl Iterator<Item = &CatalogView> {
         self.views.values()
     }
-}
-
-fn column_lines(
-    value: &jsonc_parser::ast::Value<'_>,
-    source: &str,
-) -> BTreeMap<(String, String), usize> {
-    let Some(tables) = value
-        .as_object()
-        .and_then(|snapshot| snapshot.get("tables"))
-        .and_then(|tables| tables.value.as_object())
-    else {
-        return BTreeMap::new();
-    };
-    let mut lines = BTreeMap::new();
-    for table in &tables.properties {
-        let Some(columns) = table
-            .value
-            .as_object()
-            .and_then(|value| value.get("columns"))
-            .and_then(|columns| columns.value.as_object())
-        else {
-            continue;
-        };
-        for column in &columns.properties {
-            let line = source[..column.range.start]
-                .bytes()
-                .filter(|byte| *byte == b'\n')
-                .count()
-                + 1;
-            lines.insert(
-                (
-                    table.name.as_str().to_string(),
-                    column.name.as_str().to_string(),
-                ),
-                line,
-            );
-        }
-    }
-    lines
 }
 
 pub(crate) fn normalize_catalog_path(raw_path: &str) -> Result<PathBuf> {
