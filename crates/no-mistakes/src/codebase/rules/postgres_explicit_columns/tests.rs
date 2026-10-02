@@ -8,7 +8,7 @@ use crate::config::v2::{
 use std::path::PathBuf;
 use std::sync::Arc;
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-explicit-columns/fixture")
@@ -16,7 +16,7 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
-fn config_yaml(yaml: &str) -> NoMistakesConfig {
+pub(super) fn config_yaml(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
@@ -170,7 +170,14 @@ fn prepared_catalog_is_preferred_when_present() {
     let sql = root.join("sql/qualified.sql");
     let sources = super::super::source_store_for_files(&[root.join("schema.json"), sql.clone()]);
     let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
-    let mut facts = CheckFactMap::default();
+    let mut facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        std::slice::from_ref(&sql),
+        Arc::clone(&sources),
+        &config_yaml(SQL),
+        &[RULE_ID],
+    )
+    .unwrap();
     facts
         .postgres_schema_catalogs
         .insert("missing/schema.json".to_string(), Ok(Arc::new(catalog)));
@@ -199,15 +206,17 @@ fn prepared_catalog_is_preferred_when_present() {
     .unwrap_err()
     .to_string();
     assert!(error.contains("catalog broke"), "{error}");
-    let fallback = check_with_files_sources_and_facts(
+    let missing = check_with_files_sources_and_facts(
         &root,
         &config_yaml(SQL),
         std::slice::from_ref(&sql),
         &sources,
         &CheckFactMap::default(),
     )
-    .unwrap();
-    assert!(fallback[0].message.contains("40 columns of public.orders"));
+    .unwrap_err();
+    assert!(missing
+        .to_string()
+        .contains("prepared schema catalog is missing"));
 }
 
 #[test]

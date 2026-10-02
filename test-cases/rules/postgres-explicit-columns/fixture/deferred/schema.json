@@ -1,0 +1,620 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "c00": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "c01": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "c02": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "c03": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        },
+        "c04": {
+          "dataType": "integer",
+          "ordinalPosition": 5
+        },
+        "c05": {
+          "dataType": "integer",
+          "ordinalPosition": 6
+        },
+        "c06": {
+          "dataType": "integer",
+          "ordinalPosition": 7
+        },
+        "c07": {
+          "dataType": "integer",
+          "ordinalPosition": 8
+        },
+        "c08": {
+          "dataType": "integer",
+          "ordinalPosition": 9
+        },
+        "c09": {
+          "dataType": "integer",
+          "ordinalPosition": 10
+        },
+        "c10": {
+          "dataType": "integer",
+          "ordinalPosition": 11
+        },
+        "c11": {
+          "dataType": "integer",
+          "ordinalPosition": 12
+        },
+        "c12": {
+          "dataType": "integer",
+          "ordinalPosition": 13
+        },
+        "c13": {
+          "dataType": "integer",
+          "ordinalPosition": 14
+        },
+        "c14": {
+          "dataType": "integer",
+          "ordinalPosition": 15
+        },
+        "c15": {
+          "dataType": "integer",
+          "ordinalPosition": 16
+        },
+        "c16": {
+          "dataType": "integer",
+          "ordinalPosition": 17
+        },
+        "c17": {
+          "dataType": "integer",
+          "ordinalPosition": 18
+        },
+        "c18": {
+          "dataType": "integer",
+          "ordinalPosition": 19
+        },
+        "c19": {
+          "dataType": "integer",
+          "ordinalPosition": 20
+        },
+        "c20": {
+          "dataType": "integer",
+          "ordinalPosition": 21
+        },
+        "c21": {
+          "dataType": "integer",
+          "ordinalPosition": 22
+        },
+        "c22": {
+          "dataType": "integer",
+          "ordinalPosition": 23
+        },
+        "c23": {
+          "dataType": "integer",
+          "ordinalPosition": 24
+        },
+        "c24": {
+          "dataType": "integer",
+          "ordinalPosition": 25
+        },
+        "c25": {
+          "dataType": "integer",
+          "ordinalPosition": 26
+        },
+        "c26": {
+          "dataType": "integer",
+          "ordinalPosition": 27
+        },
+        "c27": {
+          "dataType": "integer",
+          "ordinalPosition": 28
+        },
+        "c28": {
+          "dataType": "integer",
+          "ordinalPosition": 29
+        },
+        "c29": {
+          "dataType": "integer",
+          "ordinalPosition": 30
+        },
+        "c30": {
+          "dataType": "integer",
+          "ordinalPosition": 31
+        },
+        "c31": {
+          "dataType": "integer",
+          "ordinalPosition": 32
+        },
+        "c32": {
+          "dataType": "integer",
+          "ordinalPosition": 33
+        },
+        "c33": {
+          "dataType": "integer",
+          "ordinalPosition": 34
+        },
+        "c34": {
+          "dataType": "integer",
+          "ordinalPosition": 35
+        },
+        "c35": {
+          "dataType": "integer",
+          "ordinalPosition": 36
+        },
+        "c36": {
+          "dataType": "integer",
+          "ordinalPosition": 37
+        },
+        "c37": {
+          "dataType": "integer",
+          "ordinalPosition": 38
+        },
+        "c38": {
+          "dataType": "integer",
+          "ordinalPosition": 39
+        },
+        "c39": {
+          "dataType": "integer",
+          "ordinalPosition": 40
+        }
+      }
+    },
+    "tags": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "name": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "color": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "name": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        }
+      }
+    },
+    "shipments": {
+      "columns": {
+        "s00": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "s01": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "s02": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "s03": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        },
+        "s04": {
+          "dataType": "integer",
+          "ordinalPosition": 5
+        },
+        "s05": {
+          "dataType": "integer",
+          "ordinalPosition": 6
+        },
+        "s06": {
+          "dataType": "integer",
+          "ordinalPosition": 7
+        },
+        "s07": {
+          "dataType": "integer",
+          "ordinalPosition": 8
+        },
+        "s08": {
+          "dataType": "integer",
+          "ordinalPosition": 9
+        },
+        "s09": {
+          "dataType": "integer",
+          "ordinalPosition": 10
+        },
+        "s10": {
+          "dataType": "integer",
+          "ordinalPosition": 11
+        },
+        "s11": {
+          "dataType": "integer",
+          "ordinalPosition": 12
+        },
+        "s12": {
+          "dataType": "integer",
+          "ordinalPosition": 13
+        },
+        "s13": {
+          "dataType": "integer",
+          "ordinalPosition": 14
+        },
+        "s14": {
+          "dataType": "integer",
+          "ordinalPosition": 15
+        },
+        "s15": {
+          "dataType": "integer",
+          "ordinalPosition": 16
+        },
+        "s16": {
+          "dataType": "integer",
+          "ordinalPosition": 17
+        },
+        "s17": {
+          "dataType": "integer",
+          "ordinalPosition": 18
+        },
+        "s18": {
+          "dataType": "integer",
+          "ordinalPosition": 19
+        },
+        "s19": {
+          "dataType": "integer",
+          "ordinalPosition": 20
+        }
+      }
+    },
+    "public.orders": {
+      "columns": {
+        "c00": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "c01": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "c02": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "c03": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        },
+        "c04": {
+          "dataType": "integer",
+          "ordinalPosition": 5
+        },
+        "c05": {
+          "dataType": "integer",
+          "ordinalPosition": 6
+        },
+        "c06": {
+          "dataType": "integer",
+          "ordinalPosition": 7
+        },
+        "c07": {
+          "dataType": "integer",
+          "ordinalPosition": 8
+        },
+        "c08": {
+          "dataType": "integer",
+          "ordinalPosition": 9
+        },
+        "c09": {
+          "dataType": "integer",
+          "ordinalPosition": 10
+        },
+        "c10": {
+          "dataType": "integer",
+          "ordinalPosition": 11
+        },
+        "c11": {
+          "dataType": "integer",
+          "ordinalPosition": 12
+        },
+        "c12": {
+          "dataType": "integer",
+          "ordinalPosition": 13
+        },
+        "c13": {
+          "dataType": "integer",
+          "ordinalPosition": 14
+        },
+        "c14": {
+          "dataType": "integer",
+          "ordinalPosition": 15
+        },
+        "c15": {
+          "dataType": "integer",
+          "ordinalPosition": 16
+        },
+        "c16": {
+          "dataType": "integer",
+          "ordinalPosition": 17
+        },
+        "c17": {
+          "dataType": "integer",
+          "ordinalPosition": 18
+        },
+        "c18": {
+          "dataType": "integer",
+          "ordinalPosition": 19
+        },
+        "c19": {
+          "dataType": "integer",
+          "ordinalPosition": 20
+        },
+        "c20": {
+          "dataType": "integer",
+          "ordinalPosition": 21
+        },
+        "c21": {
+          "dataType": "integer",
+          "ordinalPosition": 22
+        },
+        "c22": {
+          "dataType": "integer",
+          "ordinalPosition": 23
+        },
+        "c23": {
+          "dataType": "integer",
+          "ordinalPosition": 24
+        },
+        "c24": {
+          "dataType": "integer",
+          "ordinalPosition": 25
+        },
+        "c25": {
+          "dataType": "integer",
+          "ordinalPosition": 26
+        },
+        "c26": {
+          "dataType": "integer",
+          "ordinalPosition": 27
+        },
+        "c27": {
+          "dataType": "integer",
+          "ordinalPosition": 28
+        },
+        "c28": {
+          "dataType": "integer",
+          "ordinalPosition": 29
+        },
+        "c29": {
+          "dataType": "integer",
+          "ordinalPosition": 30
+        },
+        "c30": {
+          "dataType": "integer",
+          "ordinalPosition": 31
+        },
+        "c31": {
+          "dataType": "integer",
+          "ordinalPosition": 32
+        },
+        "c32": {
+          "dataType": "integer",
+          "ordinalPosition": 33
+        },
+        "c33": {
+          "dataType": "integer",
+          "ordinalPosition": 34
+        },
+        "c34": {
+          "dataType": "integer",
+          "ordinalPosition": 35
+        },
+        "c35": {
+          "dataType": "integer",
+          "ordinalPosition": 36
+        },
+        "c36": {
+          "dataType": "integer",
+          "ordinalPosition": 37
+        },
+        "c37": {
+          "dataType": "integer",
+          "ordinalPosition": 38
+        },
+        "c38": {
+          "dataType": "integer",
+          "ordinalPosition": 39
+        },
+        "c39": {
+          "dataType": "integer",
+          "ordinalPosition": 40
+        }
+      }
+    },
+    "archive.orders": {
+      "columns": {
+        "c00": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "c01": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "c02": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "c03": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        },
+        "c04": {
+          "dataType": "integer",
+          "ordinalPosition": 5
+        },
+        "c05": {
+          "dataType": "integer",
+          "ordinalPosition": 6
+        },
+        "c06": {
+          "dataType": "integer",
+          "ordinalPosition": 7
+        },
+        "c07": {
+          "dataType": "integer",
+          "ordinalPosition": 8
+        },
+        "c08": {
+          "dataType": "integer",
+          "ordinalPosition": 9
+        },
+        "c09": {
+          "dataType": "integer",
+          "ordinalPosition": 10
+        },
+        "c10": {
+          "dataType": "integer",
+          "ordinalPosition": 11
+        },
+        "c11": {
+          "dataType": "integer",
+          "ordinalPosition": 12
+        },
+        "c12": {
+          "dataType": "integer",
+          "ordinalPosition": 13
+        },
+        "c13": {
+          "dataType": "integer",
+          "ordinalPosition": 14
+        },
+        "c14": {
+          "dataType": "integer",
+          "ordinalPosition": 15
+        },
+        "c15": {
+          "dataType": "integer",
+          "ordinalPosition": 16
+        },
+        "c16": {
+          "dataType": "integer",
+          "ordinalPosition": 17
+        },
+        "c17": {
+          "dataType": "integer",
+          "ordinalPosition": 18
+        },
+        "c18": {
+          "dataType": "integer",
+          "ordinalPosition": 19
+        },
+        "c19": {
+          "dataType": "integer",
+          "ordinalPosition": 20
+        },
+        "c20": {
+          "dataType": "integer",
+          "ordinalPosition": 21
+        },
+        "c21": {
+          "dataType": "integer",
+          "ordinalPosition": 22
+        },
+        "c22": {
+          "dataType": "integer",
+          "ordinalPosition": 23
+        },
+        "c23": {
+          "dataType": "integer",
+          "ordinalPosition": 24
+        },
+        "c24": {
+          "dataType": "integer",
+          "ordinalPosition": 25
+        },
+        "c25": {
+          "dataType": "integer",
+          "ordinalPosition": 26
+        },
+        "c26": {
+          "dataType": "integer",
+          "ordinalPosition": 27
+        },
+        "c27": {
+          "dataType": "integer",
+          "ordinalPosition": 28
+        },
+        "c28": {
+          "dataType": "integer",
+          "ordinalPosition": 29
+        },
+        "c29": {
+          "dataType": "integer",
+          "ordinalPosition": 30
+        },
+        "c30": {
+          "dataType": "integer",
+          "ordinalPosition": 31
+        },
+        "c31": {
+          "dataType": "integer",
+          "ordinalPosition": 32
+        },
+        "c32": {
+          "dataType": "integer",
+          "ordinalPosition": 33
+        },
+        "c33": {
+          "dataType": "integer",
+          "ordinalPosition": 34
+        },
+        "c34": {
+          "dataType": "integer",
+          "ordinalPosition": 35
+        },
+        "c35": {
+          "dataType": "integer",
+          "ordinalPosition": 36
+        },
+        "c36": {
+          "dataType": "integer",
+          "ordinalPosition": 37
+        },
+        "c37": {
+          "dataType": "integer",
+          "ordinalPosition": 38
+        },
+        "c38": {
+          "dataType": "integer",
+          "ordinalPosition": 39
+        },
+        "c39": {
+          "dataType": "integer",
+          "ordinalPosition": 40
+        }
+      }
+    }
+  },
+  "views": {
+    "view_public_tags": {
+      "definition": "SELECT id FROM tags",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        }
+      }
+    }
+  }
+}

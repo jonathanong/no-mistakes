@@ -277,5 +277,16 @@
         }
       }
     }
+  },
+  "views": {
+    "view_public_tags": {
+      "definition": "SELECT id FROM tags",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        }
+      }
+    }
   }
 }

@@ -2,11 +2,11 @@ mod dml;
 
 use super::super::predicates::base_table;
 use super::super::SqlStarProjectionFact;
-use crate::codebase::postgres::idents::visit_child_exprs;
+use crate::codebase::postgres::idents::{ident_key, object_name_key};
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
     Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, ObjectName, Select,
-    SelectItem, SelectItemQualifiedWildcardKind, TableFactor, TableWithJoins,
+    SelectItem, SelectItemQualifiedWildcardKind, Spanned, TableFactor, TableWithJoins,
 };
 
 pub(super) fn returning(
@@ -16,6 +16,7 @@ pub(super) fn returning(
     dml::returning(sql, statement)
 }
 
+#[derive(Clone)]
 struct BaseRel {
     table: String,
     alias: Option<String>,
@@ -28,21 +29,6 @@ pub(super) fn collect(select: &Select, ctes: &[String], line: usize) -> Vec<SqlS
     out
 }
 
-pub(super) fn collect_one(
-    table: &str,
-    alias: Option<&str>,
-    items: &[SelectItem],
-    line: usize,
-) -> Vec<SqlStarProjectionFact> {
-    let rels = vec![BaseRel {
-        table: table.to_ascii_lowercase(),
-        alias: alias.map(str::to_ascii_lowercase),
-    }];
-    let mut out = Vec::new();
-    collect_items(items, &rels, line, &mut out);
-    out
-}
-
 fn collect_items(
     items: &[SelectItem],
     rels: &[BaseRel],
@@ -50,6 +36,7 @@ fn collect_items(
     out: &mut Vec<SqlStarProjectionFact>,
 ) {
     for item in items {
+        let line = (item.span().start.line as usize).max(line.min(1));
         match item {
             SelectItem::Wildcard(_) => {
                 for rel in rels {
@@ -81,15 +68,18 @@ fn base_relations(from: &[TableWithJoins], ctes: &[String]) -> Vec<BaseRel> {
 
 fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<BaseRel>) {
     match factor {
-        TableFactor::Table { name, alias, .. } => {
+        TableFactor::Table {
+            name,
+            alias,
+            args: None,
+            ..
+        } => {
             let Some(table) = base_table(name, ctes) else {
                 return;
             };
             rels.push(BaseRel {
-                table: table.to_ascii_lowercase(),
-                alias: alias
-                    .as_ref()
-                    .map(|alias| alias.name.value.to_ascii_lowercase()),
+                table,
+                alias: alias.as_ref().map(|alias| ident_key(&alias.name)),
             });
         }
         TableFactor::NestedJoin {
@@ -102,11 +92,43 @@ fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<BaseRel>) {
 }
 
 fn walk_expr(expr: &Expr, rels: &[BaseRel], line: usize, out: &mut Vec<SqlStarProjectionFact>) {
-    if let Expr::Function(function) = expr {
-        walk_function(function, rels, line, out);
-        return;
+    use sqlparser::ast::{Visit, Visitor};
+    struct Functions<'a> {
+        rels: &'a [BaseRel],
+        line: usize,
+        out: &'a mut Vec<SqlStarProjectionFact>,
+        query_depth: usize,
     }
-    visit_child_exprs(expr, &mut |child| walk_expr(child, rels, line, out));
+    impl Visitor for Functions<'_> {
+        type Break = ();
+        fn pre_visit_expr(&mut self, expr: &Expr) -> std::ops::ControlFlow<()> {
+            if self.query_depth == 0 {
+                if let Expr::Function(function) = expr {
+                    walk_function(
+                        function,
+                        self.rels,
+                        (expr.span().start.line as usize).max(self.line.min(1)),
+                        self.out,
+                    );
+                }
+            }
+            std::ops::ControlFlow::Continue(())
+        }
+        fn pre_visit_query(&mut self, _: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
+            self.query_depth += 1;
+            std::ops::ControlFlow::Continue(())
+        }
+        fn post_visit_query(&mut self, _: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
+            self.query_depth -= 1;
+            std::ops::ControlFlow::Continue(())
+        }
+    }
+    let _ = expr.visit(&mut Functions {
+        rels,
+        line,
+        out,
+        query_depth: 0,
+    });
 }
 
 fn walk_function(
@@ -120,24 +142,22 @@ fn walk_function(
     };
     let name = relation_name(&function.name).to_ascii_lowercase();
     for arg in &list.args {
-        let Some(expr) = arg_expr(arg) else {
-            continue;
-        };
+        let expr = arg_expr(arg);
         match expr {
             FunctionArgExpr::QualifiedWildcard(object) => {
                 record_qualified(rels, object, Some(name.clone()), line, out);
             }
-            FunctionArgExpr::Expr(expr) => walk_expr(expr, rels, line, out),
+            FunctionArgExpr::Expr(_) => {}
             FunctionArgExpr::Wildcard | FunctionArgExpr::WildcardWithOptions(_) => {}
         }
     }
 }
 
-fn arg_expr(arg: &FunctionArg) -> Option<&FunctionArgExpr> {
+fn arg_expr(arg: &FunctionArg) -> &FunctionArgExpr {
     match arg {
         FunctionArg::Unnamed(expr)
         | FunctionArg::Named { arg: expr, .. }
-        | FunctionArg::ExprNamed { arg: expr, .. } => Some(expr),
+        | FunctionArg::ExprNamed { arg: expr, .. } => expr,
     }
 }
 
@@ -155,13 +175,18 @@ fn record_qualified(
 }
 
 fn resolve<'a>(rels: &'a [BaseRel], name: &ObjectName) -> Option<&'a BaseRel> {
-    let ident = relation_name(name).to_ascii_lowercase();
+    let ident = object_name_key(name);
     if ident.is_empty() {
         return None;
     }
     rels.iter()
         .find(|rel| rel.alias.as_deref() == Some(ident.as_str()))
-        .or_else(|| rels.iter().find(|rel| rel.table == ident))
+        .or_else(|| {
+            rels.iter().find(|rel| {
+                rel.alias.is_none()
+                    && (rel.table == ident || rel.table.rsplit('.').next() == Some(ident.as_str()))
+            })
+        })
 }
 
 fn push(
