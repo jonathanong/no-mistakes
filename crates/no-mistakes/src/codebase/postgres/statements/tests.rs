@@ -407,3 +407,13 @@ fn merge_action_exists_set_operations_are_collected_at_their_keyword() {
     assert_eq!(exists.len(), 1);
     assert_eq!((exists[0].line, exists[0].column), (2, 35));
 }
+
+#[test]
+fn table_function_argument_exists_set_operations_are_collected() {
+    let sql = "MERGE INTO t USING unnest(ARRAY[EXISTS (SELECT 1 FROM a WHERE a.id = t.id UNION SELECT 1 FROM b WHERE b.id = t.id)]) AS s(ok) ON t.id = 1 WHEN MATCHED THEN DELETE;";
+    let facts = extract_sql_statement_facts(sql);
+    assert!(facts
+        .selects
+        .iter()
+        .any(|select| !select.exists_set_operations.is_empty()));
+}

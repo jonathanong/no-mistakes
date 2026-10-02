@@ -146,11 +146,28 @@ fn skip_line_comment(sql: &str, index: usize) -> usize {
         .unwrap_or(sql.len())
 }
 
+/// PostgreSQL block comments nest.
 fn skip_block_comment(sql: &str, index: usize) -> usize {
-    sql[index + 2..]
-        .find("*/")
-        .map(|offset| index + 2 + offset + 2)
-        .unwrap_or(sql.len())
+    let bytes = sql.as_bytes();
+    let mut depth = 1;
+    let mut at = index + 2;
+    while at < bytes.len() {
+        match bytes.get(at..at + 2) {
+            Some(b"/*") => {
+                depth += 1;
+                at += 2;
+            }
+            Some(b"*/") => {
+                depth -= 1;
+                at += 2;
+                if depth == 0 {
+                    return at;
+                }
+            }
+            _ => at += 1,
+        }
+    }
+    sql.len()
 }
 
 /// `E'...'` strings treat a backslash as an escape, so `\'` does not close them.

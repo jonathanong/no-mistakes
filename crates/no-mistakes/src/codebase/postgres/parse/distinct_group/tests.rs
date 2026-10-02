@@ -86,3 +86,11 @@ fn escape_strings_and_dollar_identifiers_are_respected() {
     let identifier = "SELECT foo$tag$ FROM t GROUP BY DISTINCT ROLLUP (())";
     assert_ne!(separate_distinct_grouping(identifier), identifier);
 }
+
+#[test]
+fn nested_block_comments_in_the_gap_are_skipped() {
+    let sql = "SELECT 1 GROUP BY DISTINCT /* outer /* inner */ tail */ ROLLUP (())";
+    assert_ne!(separate_distinct_grouping(sql), sql);
+    let open = "SELECT 1 GROUP BY DISTINCT /* /* */ ROLLUP (())";
+    assert_eq!(separate_distinct_grouping(open), open);
+}
