@@ -1,9 +1,9 @@
+mod conflict;
 mod returning;
 use super::{SqlRelationPredicateFact, SqlSelectFact};
 use returning::walk_returning;
 use sqlparser::ast::{
-    Expr, FromTable, OnConflictAction, OnInsert, Statement, TableFactor, TableWithJoins,
-    UpdateTableFromKind,
+    Expr, FromTable, Statement, TableFactor, TableWithJoins, UpdateTableFromKind,
 };
 
 pub(super) fn collect(
@@ -65,14 +65,7 @@ fn collect_in_scope(
             if let Some(source) = insert.source.as_deref() {
                 collect_query(sql, source, ctes, updates, deletes, selects, column_uses);
             }
-            if let Some(OnInsert::OnConflict(conflict)) = &insert.on {
-                if let OnConflictAction::DoUpdate(update) = &conflict.action {
-                    walk_side_queries(sql, &[], update.selection.as_ref(), ctes, selects);
-                    for assignment in &update.assignments {
-                        super::select::walk_expr(sql, &assignment.value, ctes, false, selects);
-                    }
-                }
-            }
+            conflict::collect(sql, insert.on.as_ref(), ctes, selects);
             walk_returning(sql, insert.returning.as_deref(), ctes, selects);
         }
         _ => {}
