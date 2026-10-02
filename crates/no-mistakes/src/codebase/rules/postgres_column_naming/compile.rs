@@ -20,6 +20,7 @@ pub(super) struct Compiled {
     pub(super) follow: bool,
     pub(super) require: Option<RequireCheck>,
     pub(super) allow: AllowList,
+    pub(super) message: Option<String>,
 }
 
 pub(super) enum TargetMode {
@@ -72,13 +73,17 @@ pub(super) struct ExemptCheck {
     pub(super) raw: String,
 }
 
-pub(super) fn compile(options: &Options) -> Result<Compiled> {
+pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, &options.schema_catalog_path)?;
     let foreign = compile_foreign_keys(&options.foreign_keys)?;
-    assemble(options, foreign)
+    assemble(options, foreign, message)
 }
 
-fn assemble(options: &Options, foreign: ForeignCompiled) -> Result<Compiled> {
+fn assemble(
+    options: &Options,
+    foreign: ForeignCompiled,
+    message: Option<String>,
+) -> Result<Compiled> {
     Ok(Compiled {
         type_rules: compile_type_rules(&options.type_rules)?,
         name_type_rules: compile_name_types(&options.name_type_rules)?,
@@ -94,6 +99,7 @@ fn assemble(options: &Options, foreign: ForeignCompiled) -> Result<Compiled> {
         follow: foreign.follow,
         require: foreign.require,
         allow: AllowList::compile(super::RULE_ID, options.allow.clone())?,
+        message,
     })
 }
 
@@ -174,9 +180,7 @@ pub(super) fn regex(option: &str, pattern: &str) -> Result<Regex> {
     })
 }
 
-pub(super) fn lists_type(types: &[String], data_type: &str) -> bool {
-    types.iter().any(|ty| ty.eq_ignore_ascii_case(data_type))
-}
+pub(super) use super::types::lists_type;
 
 pub(super) fn optional_hint(option: &str, hint: Option<String>) -> Result<Option<String>> {
     match hint.as_deref() {

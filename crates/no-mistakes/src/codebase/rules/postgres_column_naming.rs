@@ -14,11 +14,12 @@ mod require;
 mod reserved;
 mod scan;
 mod singular;
+mod types;
 
 pub const RULE_ID: &str = "postgres-column-naming";
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Options {
     pub(crate) schema_catalog_path: String,
     pub(crate) type_rules: Vec<TypeRule>,
@@ -31,7 +32,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct TypeRule {
     pub(crate) types: Vec<String>,
     pub(crate) name_pattern: String,
@@ -39,7 +40,7 @@ pub(crate) struct TypeRule {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct NameTypeRule {
     pub(crate) name_pattern: String,
     pub(crate) types: Vec<String>,
@@ -47,14 +48,14 @@ pub(crate) struct NameTypeRule {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ForbiddenName {
     pub(crate) pattern: String,
     pub(crate) hint: String,
 }
 
 #[derive(Deserialize, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ForeignKeyOptions {
     pub(crate) target_suffixes: Vec<TargetSuffix>,
     pub(crate) reserved_suffixes: Vec<ReservedSuffix>,
@@ -87,14 +88,14 @@ fn default_target_match() -> String {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct TargetSuffix {
     pub(crate) tables: Vec<String>,
     pub(crate) suffixes: Vec<String>,
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ReservedSuffix {
     pub(crate) suffix: String,
     pub(crate) types: Vec<String>,
@@ -103,14 +104,14 @@ pub(crate) struct ReservedSuffix {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct TargetName {
     pub(crate) table_pattern: String,
     pub(crate) name: String,
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct RequireForeignKey {
     pub(crate) types: Vec<String>,
     pub(crate) name_pattern: String,
@@ -118,7 +119,7 @@ pub(crate) struct RequireForeignKey {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ExemptPattern {
     pub(crate) name_pattern: String,
     pub(crate) reason: String,
@@ -158,11 +159,14 @@ pub(crate) fn check_with_files_sources_and_facts(
     _sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let _ = root;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
-        let compiled = compile::compile(&options)?;
+        let compiled = compile::compile(&options, rule.message.clone())?;
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        if !filter.is_match(Path::new(&options.schema_catalog_path)) {
+            continue;
+        }
         let catalog = facts.postgres_schema_catalog(&options.schema_catalog_path)?;
         findings.extend(scan::scan(catalog, &compiled, &options.schema_catalog_path));
     }

@@ -29,6 +29,7 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
         }
     }
     super::super::sort_findings(&mut findings);
+    apply_message(compiled, &mut findings);
     let mut findings = compiled.allow.clone().apply(path, findings);
     findings.extend(stale_exempt(catalog, compiled, path));
     super::super::sort_findings(&mut findings);
@@ -110,6 +111,20 @@ fn forbidden_text(column: &CatalogColumn, compiled: &Compiled) -> Option<String>
                 rule.raw, rule.hint
             )
         })
+}
+
+fn apply_message(compiled: &Compiled, findings: &mut [RuleFinding]) {
+    let Some(message) = compiled
+        .message
+        .as_deref()
+        .filter(|message| !message.trim().is_empty())
+    else {
+        return;
+    };
+    for finding in findings {
+        let target = finding.target.as_deref().unwrap_or_default();
+        finding.message = format!("{}: {target}: {message}", finding.file);
+    }
 }
 
 fn ignored(name: &str, compiled: &Compiled) -> bool {

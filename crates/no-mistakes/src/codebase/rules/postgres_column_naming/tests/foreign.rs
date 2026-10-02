@@ -168,7 +168,7 @@ fn suggestions_and_singular_targets_are_verbatim() {
 
 #[test]
 fn descriptive_keys_id_columns_and_self_references() {
-    expect_none(
+    expect(
         LAST_WORD,
         sole_fk(
             "linked_accounts",
@@ -176,6 +176,50 @@ fn descriptive_keys_id_columns_and_self_references() {
             "text",
             "github_accounts",
             "github_user_id",
+        ),
+        &at(
+            "linked_accounts",
+            "github_user_id",
+            "foreign key to github_accounts must end in account_github_user_id (for example github_user_id_account_github_user_id)",
+        ),
+    );
+    expect_none(
+        LAST_WORD,
+        sole_fk(
+            "linked_accounts",
+            "github_account_id",
+            "text",
+            "github_accounts",
+            "github_account_id",
+        ),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\nforeignKeys:\n  targetMatch: full-name\n",
+        sole_fk(
+            "rows",
+            "import_batch_id",
+            "text",
+            "import_batches",
+            "import_batch_id",
+        ),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\nforeignKeys:\n  targetMatch: off\n",
+        sole_fk(
+            "linked_accounts",
+            "github_user_id",
+            "text",
+            "github_accounts",
+            "github_user_id",
+        ),
+    );
+    expect(
+        LAST_WORD,
+        sole_fk("payments", "external_id", "text", "orders", "external_id"),
+        &at(
+            "payments",
+            "external_id",
+            "foreign key to orders must end in order_external_id (for example external_id_order_external_id)",
         ),
     );
     expect_none(

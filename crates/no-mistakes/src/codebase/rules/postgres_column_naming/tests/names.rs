@@ -5,6 +5,63 @@ const BOOL_HINT: &str = "name boolean columns as a predicate: is_, has_, can_ or
 const FORBIDDEN: &str = "column name matches forbidden pattern (^|_)table(_name)?$; a column must not name a table; use one table per target, or an enum";
 
 #[test]
+fn typmod_matches_the_configured_base_type() {
+    let yaml = r#"
+schemaCatalogPath: schema.json
+typeRules:
+  - types: ['character varying']
+    namePattern: '(_name|_label)$'
+nameTypeRules:
+  - namePattern: '_label$'
+    types: ['character varying']
+"#;
+    expect_none(
+        yaml,
+        column("products", "title_name", "character varying(2048)"),
+    );
+    expect(
+        yaml,
+        column("products", "title", "character varying(2048)"),
+        &at(
+            "products",
+            "title",
+            "character varying(2048) column name does not match (_name|_label)$",
+        ),
+    );
+    expect_none(
+        yaml,
+        column("products", "title_label", "character varying(2048)"),
+    );
+    let timestamps = r#"
+schemaCatalogPath: schema.json
+typeRules:
+  - types: ['timestamp with time zone']
+    namePattern: '_at$'
+"#;
+    expect_none(
+        timestamps,
+        column("invoices", "due_at", "timestamp(6) with time zone"),
+    );
+    let keep = r#"
+schemaCatalogPath: schema.json
+typeRules:
+  - types: [weird]
+    namePattern: '_name$'
+"#;
+    expect_none(keep, column("products", "title", "weird(name)"));
+    expect_none(keep, column("products", "title", "character varying(2048"));
+    expect(
+        yaml,
+        column("products", "title_label", "text"),
+        &at(
+            "products",
+            "title_label",
+            "column name matches _label$ but its type is text; use character varying",
+        ),
+    );
+}
+
+#[test]
 fn type_and_name_rules_use_the_configured_text() {
     expect(
         TYPES,

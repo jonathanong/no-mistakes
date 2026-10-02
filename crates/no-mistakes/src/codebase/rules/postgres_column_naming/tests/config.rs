@@ -1,6 +1,18 @@
 use super::support::expect_err;
 
 #[test]
+fn unknown_option_keys_are_rejected() {
+    let parsed = serde_yaml::from_str::<super::super::Options>(
+        "schemaCatalogPath: schema.json\ntypeRule: []\n",
+    );
+    let Err(error) = parsed else {
+        panic!("expected unknown field");
+    };
+    let error = error.to_string();
+    assert!(error.contains("unknown field"), "{error}");
+}
+
+#[test]
 fn every_option_error_is_reported() {
     for (yaml, snippet) in [
         ("schemaCatalogPath: ''\n", "schemaCatalogPath: required"),

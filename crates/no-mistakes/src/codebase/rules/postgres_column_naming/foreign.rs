@@ -45,7 +45,7 @@ fn one_foreign_key(
     }
     let target = target_name(&foreign_key.referenced_table, compiled);
     let key = format!("_{referenced}");
-    if descriptive(&column.name, referenced) {
+    if descriptive(&column.name, referenced, &target, &compiled.target_mode) {
         return None;
     }
     let base = column.name.strip_suffix(&key).unwrap_or(&column.name);
@@ -64,7 +64,7 @@ fn one_foreign_key(
     ))
 }
 
-fn descriptive(column: &str, referenced: &str) -> bool {
+fn descriptive(column: &str, referenced: &str, target: &str, mode: &TargetMode) -> bool {
     if referenced == "id" {
         return false;
     }
@@ -72,7 +72,17 @@ fn descriptive(column: &str, referenced: &str) -> bool {
         .split('_')
         .filter(|part| !part.is_empty())
         .count();
-    tokens >= 2 && (column == referenced || column.ends_with(&format!("_{referenced}")))
+    let repeats = column == referenced || column.ends_with(&format!("_{referenced}"));
+    tokens >= 2 && repeats && names_target(referenced, target, mode)
+}
+
+fn names_target(referenced: &str, target: &str, mode: &TargetMode) -> bool {
+    let stem = referenced.strip_suffix("_id").unwrap_or(referenced);
+    match mode {
+        TargetMode::Off => false,
+        TargetMode::LastWord => last_token(stem) == last_token(target),
+        TargetMode::FullName => stem == target || stem.ends_with(&format!("_{target}")),
+    }
 }
 
 pub(super) fn suggestion(

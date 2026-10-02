@@ -46,7 +46,7 @@ pub(super) fn stale_exempt(
     require
         .exempt
         .iter()
-        .filter(|entry| !exempt_matches(catalog, compiled, &entry.pattern))
+        .filter(|entry| !exempt_matches(catalog, compiled, require, &entry.pattern))
         .map(|entry| RuleFinding {
             rule: super::RULE_ID.to_string(),
             file: path.clone(),
@@ -61,14 +61,29 @@ pub(super) fn stale_exempt(
         .collect()
 }
 
-fn exempt_matches(catalog: &SchemaCatalog, compiled: &Compiled, pattern: &regex::Regex) -> bool {
+fn exempt_matches(
+    catalog: &SchemaCatalog,
+    compiled: &Compiled,
+    require: &super::compile::RequireCheck,
+    pattern: &regex::Regex,
+) -> bool {
     catalog.tables().any(|table| {
         !ignored(&table.name, compiled)
-            && table
-                .columns
-                .iter()
-                .any(|column| pattern.is_match(&column.name))
+            && table.columns.iter().any(|column| {
+                column.generated.is_none()
+                    && lists_type(&require.types, &column.data_type)
+                    && require.pattern.is_match(&column.name)
+                    && pattern.is_match(&column.name)
+                    && !in_foreign_key(table, &column.name)
+            })
     })
+}
+
+fn in_foreign_key(table: &CatalogTable, column: &str) -> bool {
+    table
+        .foreign_keys
+        .iter()
+        .any(|foreign_key| foreign_key.columns.iter().any(|name| name == column))
 }
 
 fn ignored(name: &str, compiled: &Compiled) -> bool {
