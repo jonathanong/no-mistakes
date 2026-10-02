@@ -1,0 +1,5 @@
+SELECT $é1$first; COPY t FROM STDIN;
+PAYLOAD_ROW
+\.
+$é1$;
+SELECT id FROM posts OFFSET 8;

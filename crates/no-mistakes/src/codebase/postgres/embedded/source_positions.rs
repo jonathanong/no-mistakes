@@ -3,6 +3,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_span::GetSpan;
 
+mod compose;
 mod escapes;
 #[cfg(test)]
 mod tests;
@@ -57,7 +58,9 @@ pub(super) fn for_expression_with_offset(
                 tags::is_string_raw_tag_spelling(&tagged.tag),
             );
         }
-        _ => {}
+        _ => {
+            compose::try_append(expr, source, expr.span().start as usize, line, &mut out);
+        }
     }
     out.positions
 }

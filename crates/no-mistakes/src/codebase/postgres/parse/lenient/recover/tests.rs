@@ -129,3 +129,44 @@ fn parse_chunks_recovers_alter_when_begin_would_swallow_the_body() {
         sqlparser::ast::Statement::AlterTable(_)
     ));
 }
+
+#[test]
+fn recovered_bodies_without_a_dollar_span_stay_put() {
+    assert_eq!(
+        super::locations::align_do_body(" SELECT 1", None),
+        " SELECT 1"
+    );
+    assert_eq!(
+        super::locations::align_do_body(" SELECT 1", Some(&[])),
+        " SELECT 1"
+    );
+    assert_eq!(
+        super::locations::align_chr_sql("SELECT\r\n1", None),
+        "SELECT  1"
+    );
+}
+
+#[test]
+fn do_body_aligns_to_the_opening_dollar_quote() {
+    let sql = "\nDO $$\nSELECT 1 OFFSET 2\n$$";
+    let original = Tokenizer::new(&PostgreSqlDialect {}, sql)
+        .tokenize_with_location()
+        .unwrap();
+    let body = peel_do_body(
+        &original
+            .iter()
+            .map(|token| token.token.clone())
+            .collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let padded = super::locations::align_do_body(&body, Some(&original));
+    assert!(padded.contains("\nSELECT 1 OFFSET 2\n"), "{padded:?}");
+    let select = padded.find("SELECT").unwrap();
+    let prefix = &padded[..select];
+    assert_eq!(prefix.bytes().filter(|byte| *byte == b'\n').count(), 2);
+    assert!(prefix.ends_with('\n'));
+    assert_eq!(
+        super::locations::align_chr_sql("A\nB", Some(&original)),
+        "\nA B"
+    );
+}

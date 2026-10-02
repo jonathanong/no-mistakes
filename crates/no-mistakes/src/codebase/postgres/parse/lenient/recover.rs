@@ -27,14 +27,7 @@ pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>, original: &[TokenWithSpan]) 
 
 fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
     if let Some(body) = peel_do_body(&chunk) {
-        let shift = original
-            .and_then(|tokens| {
-                tokens
-                    .iter()
-                    .find(|token| matches!(token.token, Token::DollarQuotedString(_)))
-            })
-            .map_or(0, |token| token.span.start.line.saturating_sub(1) as usize);
-        let body = format!("{}{}", "\n".repeat(shift), body);
+        let body = locations::align_do_body(&body, original);
         return super::parse_postgres_sql_lenient(&body)
             .into_iter()
             .filter(|statement| !is_begin_or_end(statement))
@@ -48,7 +41,7 @@ fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Sta
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => vec![statement],
         _ => {
-            let recovered = recover_chr_encoded(&chunk);
+            let recovered = recover_chr_encoded(&chunk, original);
             if recovered.is_empty() {
                 recover_schema_ddl(&chunk, original).into_iter().collect()
             } else {
@@ -87,11 +80,11 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
     }
 }
 
-fn recover_chr_encoded(tokens: &[Token]) -> Vec<Statement> {
+fn recover_chr_encoded(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
     let mut rewritten = tokens.to_vec();
     super::rewrite_chr_tokens(&mut rewritten);
     concatenated_strings(&rewritten)
-        .map(|sql| super::parse_postgres_sql_lenient(&sql))
+        .map(|sql| super::parse_postgres_sql_lenient(&locations::align_chr_sql(&sql, original)))
         .unwrap_or_default()
 }
 

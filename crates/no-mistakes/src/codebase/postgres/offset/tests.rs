@@ -415,3 +415,59 @@ fn spanless_recovery_uses_offset_keyword_and_empty_source_is_safe() {
     let facts = super::offset_facts("", &statements);
     assert_eq!(facts[0].line, 1);
 }
+
+#[test]
+fn comment_separated_offset_keeps_the_keyword_column() {
+    for sql in [
+        "SELECT id\nOFFSET /* note */ 1",
+        "SELECT id OFFSET -- note\n1",
+        "SELECT id OFFSET /* outer /* inner */ x */ 1",
+    ] {
+        let statements = super::super::parse::parse_postgres_sql(sql).unwrap();
+        let facts = super::offset_facts(sql, &statements);
+        let keyword = sql
+            .lines()
+            .enumerate()
+            .find_map(|(index, line)| line.find("OFFSET").map(|column| (index + 1, column + 1)))
+            .unwrap();
+        assert_eq!(facts.len(), 1, "{sql}");
+        assert_eq!((facts[0].line, facts[0].column), keyword, "{sql}");
+        assert_eq!(facts[0].kind, OffsetUse::Other);
+    }
+}
+
+#[test]
+fn unclosed_separator_does_not_attach_an_earlier_keyword() {
+    let keyword = "SELECT id OFFSET".find("OFFSET").unwrap() + 1;
+    for sql in ["SELECT id OFFSET /* note", "SELECT id OFFSET -- note"] {
+        assert!(super::locate::resolve(sql, &[(1, keyword)], 0, 1, sql.len()).is_none());
+    }
+    assert!(super::locate::resolve("SELECT 1", &[], 0, 1, 0).is_none());
+}
+
+#[test]
+fn recovered_statements_keep_the_outer_offset_keyword() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-no-offset/fixture/review-followups/db/recovered-outer.sql",
+    );
+    let sql = std::fs::read_to_string(path).unwrap();
+    let facts = super::super::statements::extract_sql_statement_facts(&sql);
+    assert_eq!(
+        facts
+            .offset_uses
+            .iter()
+            .map(|fact| (fact.line, fact.kind))
+            .collect::<Vec<_>>(),
+        vec![
+            (2, OffsetUse::Other),
+            (4, OffsetUse::Other),
+            (6, OffsetUse::Other),
+            (7, OffsetUse::Other),
+        ]
+    );
+    for fact in facts.offset_uses.iter().take(3) {
+        let line = sql.lines().nth(fact.line - 1).unwrap();
+        assert_eq!(fact.column, line.find("OFFSET").unwrap() + 1);
+    }
+    assert!(facts.offset_uses[3].column >= 1);
+}
