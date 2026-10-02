@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      bannedShapes: [not-in-subquery]

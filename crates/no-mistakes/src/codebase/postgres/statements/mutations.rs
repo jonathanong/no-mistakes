@@ -1,10 +1,11 @@
 mod conflict;
+mod factor;
+mod merge;
 mod returning;
 use super::{SqlRelationPredicateFact, SqlSelectFact};
+use factor::walk_factor;
 use returning::walk_returning;
-use sqlparser::ast::{
-    Expr, FromTable, Statement, TableFactor, TableWithJoins, UpdateTableFromKind,
-};
+use sqlparser::ast::{Expr, FromTable, Statement, TableWithJoins, UpdateTableFromKind};
 
 pub(super) fn collect(
     sql: &str,
@@ -68,6 +69,7 @@ fn collect_in_scope(
             conflict::collect(sql, insert.on.as_ref(), ctes, selects);
             walk_returning(sql, insert.returning.as_deref(), ctes, selects);
         }
+        Statement::Merge(statement) => merge::collect(sql, statement, ctes, selects),
         _ => {}
     }
 }
@@ -124,7 +126,10 @@ fn collect_set(
 ) {
     use sqlparser::ast::SetExpr;
     match set {
-        SetExpr::Update(statement) | SetExpr::Delete(statement) | SetExpr::Insert(statement) => {
+        SetExpr::Update(statement)
+        | SetExpr::Delete(statement)
+        | SetExpr::Insert(statement)
+        | SetExpr::Merge(statement) => {
             collect_in_scope(sql, statement, ctes, updates, deletes, selects, column_uses)
         }
         SetExpr::Query(query) => {
@@ -183,23 +188,5 @@ fn walk_side_queries(
                 super::select::walk_expr(sql, expr, ctes, false, selects);
             }
         }
-    }
-}
-
-fn walk_factor(sql: &str, factor: &TableFactor, ctes: &[String], selects: &mut Vec<SqlSelectFact>) {
-    match factor {
-        TableFactor::Derived { subquery, .. } => {
-            super::select::collect_query(sql, subquery, ctes, false, false, selects);
-        }
-        TableFactor::NestedJoin {
-            table_with_joins, ..
-        } => walk_side_queries(
-            sql,
-            std::slice::from_ref(table_with_joins),
-            None,
-            ctes,
-            selects,
-        ),
-        _ => {}
     }
 }

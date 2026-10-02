@@ -32,8 +32,9 @@ pub(crate) fn prepare_rule_sql_facts(
             selected,
             Vec::new(),
             crate::codebase::check_facts::CheckFactPlan {
-                postgres_schema: true,
+                postgres_schema: rule_ids.iter().any(|id| *id != "postgres-sql-shape-policy"),
                 postgres_dml: !dml_ids.is_empty(),
+                postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,

@@ -77,7 +77,8 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-required-predicates",
             "postgres-generated-column-predicates",
             "postgres-explicit-columns",
-            "postgres-no-offset"
+            "postgres-no-offset",
+            "postgres-sql-shape-policy"
         ]
     );
     assert_eq!(
@@ -130,5 +131,26 @@ fn standalone_schema_preparation_rejects_invalid_options_before_reads() {
         .expect("invalid options must fail during preparation");
         assert!(error.to_string().contains(expected), "{error}");
         assert_eq!(sources.physical_read_count(), 0);
+    }
+}
+
+#[test]
+fn invalid_schema_and_statement_options_stop_request_planning() {
+    for rule in ["postgres-identifier-length", "postgres-sql-shape-policy"] {
+        let config = NoMistakesConfig {
+            rules: vec![RuleDef {
+                rule: rule.into(),
+                scope: Some(RuleScope::Repository),
+                options: serde_yaml::from_str("sqlInclude: false").unwrap(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        assert!(
+            configure_prepared_postgres_plan(&config, &mut Default::default())
+                .unwrap_err()
+                .to_string()
+                .contains("sqlInclude")
+        );
     }
 }

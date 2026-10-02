@@ -9,6 +9,7 @@ mod generated_predicates;
 mod naming;
 mod prepared_schema;
 mod schema;
+mod shapes;
 use schema::{
     column_requires_trigger, conflict_ordering, duplicate_function_body, lock_ordering,
     required_comments,
@@ -77,9 +78,7 @@ pub(super) fn run(
             )
         }
         POSTGRES_REQUIRED_PREDICATES => required_predicates(root, config, files, sources, facts),
-        POSTGRES_SQL_SHAPE_POLICY => {
-            postgres_sql_shape_policy::check_with_files_and_sources(root, config, files, sources)
-        }
+        POSTGRES_SQL_SHAPE_POLICY => shapes::shape_policy(root, config, files, sources, facts),
         POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => {
             status_lifecycle(root, config, files, sources, facts)
         }

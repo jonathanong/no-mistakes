@@ -16,10 +16,10 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-constraint-validate`, `postgres-no-add-column`,
 `postgres-column-naming`, `postgres-finite-text-columns`,
 `postgres-array-columns`, and
-`postgres-identifier-length`
+`postgres-identifier-length`, `postgres-required-predicates`, and
+`postgres-sql-shape-policy`
 consume the facts through `no-mistakes check`. Forthcoming DML rules
-(`postgres-required-predicates`, `postgres-sql-shape-policy`,
-`postgres-idempotent-insert`) will consume the same INSERT/SELECT facts
+(`postgres-idempotent-insert`) will consume the same INSERT/SELECT facts
 once registered.
 
 ## Schema facts
@@ -439,3 +439,10 @@ unmodeled: quoted mixed-case identifier quote semantics (`"Events"` versus
 `CREATE INDEX IF NOT EXISTS` no-ops, `ALTER INDEX ... RENAME TO`,
 `DROP INDEX` / `DROP TABLE` inside `DO $$` blocks, and `ALTER TABLE ...
 DROP COLUMN` invalidating indexes.
+
+The shape-policy request opts into `CheckFactPlan.postgres_fragments`. Its
+prepared projection parses each distinct unexecuted builder text once, retains
+each builder origin, and reuses the same statement facts for repeated consumers.
+Executed fragments use the prepared executor statements instead. Standalone
+and aggregate checks use this same request-owned preparation. Other rules do
+not opt into fragment parsing.

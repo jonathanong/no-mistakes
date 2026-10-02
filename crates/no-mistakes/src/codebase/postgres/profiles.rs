@@ -15,6 +15,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-generated-column-predicates",
     "postgres-explicit-columns",
     "postgres-no-offset",
+    "postgres-sql-shape-policy",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.

@@ -28,6 +28,8 @@ pub struct CheckFactPlan {
     /// Repository-relative schema snapshots loaded once at the request boundary.
     pub postgres_schema_catalog_paths: Vec<String>,
     pub postgres_dml: bool,
+    /// Opted-in builder-fragment statement facts for shape-policy consumers.
+    pub postgres_fragments: bool,
     /// Union of SQL globs resolved from configured rule defaults. Empty selects no SQL files.
     pub postgres_sql_include: Vec<String>,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
@@ -65,6 +67,7 @@ impl CheckFactPlan {
         self.postgres_schema_catalog_paths.sort();
         self.postgres_schema_catalog_paths.dedup();
         self.postgres_dml |= other.postgres_dml;
+        self.postgres_fragments |= other.postgres_fragments;
         self.postgres_sql_include.extend(other.postgres_sql_include);
         self.postgres_sql_include.sort();
         self.postgres_sql_include.dedup();

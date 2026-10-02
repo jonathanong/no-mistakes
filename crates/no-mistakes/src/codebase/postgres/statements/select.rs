@@ -3,6 +3,7 @@ mod nested;
 mod shapes;
 mod stars;
 mod uses;
+pub(super) use nested::walk_node;
 
 pub(super) fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&sqlparser::ast::Expr> {
     from::join_expr(operator)

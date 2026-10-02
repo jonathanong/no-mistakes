@@ -159,7 +159,9 @@ relation filters; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
 
 The opted-in `not-in-subquery` shape also checks `HAVING`, aggregate `FILTER`,
-and mutation predicates. Nested `NOT` operators are evaluated together so an
+and mutation predicates, including `MERGE ON` and `WHEN … AND` conditions.
+MERGE source queries and subqueries in its update/insert actions are also
+checked. Nested `NOT` operators are evaluated together so an
 even number of negations does not report an allowed `IN` predicate.
 
 `count-for-existence` recognizes transparent casts of scalar `COUNT(*)` values

@@ -76,7 +76,23 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_with_files_sources_and_facts(root, config, all_files, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -98,7 +114,7 @@ pub(crate) fn check_with_files_and_sources(
                 .into_iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
                 .collect();
-            scan::scan(root, &compiled, &files, sources)
+            scan::scan(root, &compiled, &files, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -109,7 +125,6 @@ pub(crate) fn check_with_files_and_sources(
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-    let defaults = EmbeddedSqlOptions::default();
     let shapes = banned_shapes(&opts.banned_shapes)?;
     Ok(CompiledOptions {
         include,
@@ -121,18 +136,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: EmbeddedSqlOptions {
-            import_specifier: if opts.import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                opts.import_specifier.clone()
-            },
-            executor_names: if opts.executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                opts.executor_names.clone()
-            },
-        },
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,
@@ -172,3 +176,9 @@ mod followup_tests;
 
 #[cfg(test)]
 mod review_fix_tests;
+
+#[cfg(test)]
+mod merge_tests;
+
+#[cfg(test)]
+mod prepared_tests;
