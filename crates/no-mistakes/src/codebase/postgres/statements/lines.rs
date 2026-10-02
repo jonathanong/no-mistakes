@@ -48,6 +48,20 @@ pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
         .unwrap_or(1)
 }
 
+/// Line and column (both 1-based) of the last `word` that starts before `end`,
+/// ignoring comments and quoted text.
+pub(super) fn last_word_position(sql: &str, word: &str, end: usize) -> Option<(usize, usize)> {
+    let prefix = sql.get(..end)?;
+    let found = words(prefix).into_iter().rfind(|found| eq(found, word))?;
+    let line_start = prefix[..found.start]
+        .rfind('\n')
+        .map_or(0, |index| index + 1);
+    Some((
+        found.line,
+        prefix[line_start..found.start].chars().count() + 1,
+    ))
+}
+
 #[derive(Clone)]
 struct Word {
     start: usize,

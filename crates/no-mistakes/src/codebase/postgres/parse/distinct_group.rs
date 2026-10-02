@@ -131,8 +131,10 @@ fn skip_opaque(sql: &str, index: usize) -> Option<usize> {
     match bytes.get(index)? {
         b'-' if bytes.get(index + 1) == Some(&b'-') => Some(skip_line_comment(sql, index)),
         b'/' if bytes.get(index + 1) == Some(&b'*') => Some(skip_block_comment(sql, index)),
-        b'\'' | b'"' => Some(skip_quoted(sql, index, bytes[index])),
-        b'$' => skip_dollar(sql, index),
+        b'\'' => Some(skip_quoted(sql, index, b'\'', is_escape_string(sql, index))),
+        b'"' => Some(skip_quoted(sql, index, b'"', false)),
+        // `foo$tag$` is an identifier, not a dollar-quote opener.
+        b'$' if word_boundary_before(sql, index) => skip_dollar(sql, index),
         _ => None,
     }
 }
@@ -151,10 +153,21 @@ fn skip_block_comment(sql: &str, index: usize) -> usize {
         .unwrap_or(sql.len())
 }
 
-fn skip_quoted(sql: &str, mut index: usize, quote: u8) -> usize {
+/// `E'...'` strings treat a backslash as an escape, so `\'` does not close them.
+fn is_escape_string(sql: &str, quote_at: usize) -> bool {
+    quote_at > 0
+        && matches!(sql.as_bytes()[quote_at - 1], b'e' | b'E')
+        && word_boundary_before(sql, quote_at - 1)
+}
+
+fn skip_quoted(sql: &str, mut index: usize, quote: u8, backslash_escapes: bool) -> usize {
     let bytes = sql.as_bytes();
     index += 1;
     while index < bytes.len() {
+        if backslash_escapes && bytes[index] == b'\\' {
+            index += 2;
+            continue;
+        }
         if bytes[index] == quote {
             if bytes.get(index + 1) == Some(&quote) {
                 index += 2;

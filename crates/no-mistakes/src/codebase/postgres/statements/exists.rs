@@ -71,16 +71,8 @@ fn exists_position(sql: &str, start: Location) -> (usize, usize) {
         .char_indices()
         .nth((start.column as usize).saturating_sub(1))
         .map_or(line_text.len(), |(index, _)| index);
-    let lower = sql[..line_offset + column_bytes].to_ascii_lowercase();
-    let Some(byte) = lower.rfind("exists") else {
-        return first_exists_position(sql);
-    };
-    let before = &lower[..byte];
-    let line_start = before.rfind('\n').map_or(0, |index| index + 1);
-    (
-        before.matches('\n').count() + 1,
-        before[line_start..].chars().count() + 1,
-    )
+    super::lines::last_word_position(sql, "exists", line_offset + column_bytes)
+        .unwrap_or_else(|| first_exists_position(sql))
 }
 
 fn first_exists_position(sql: &str) -> (usize, usize) {

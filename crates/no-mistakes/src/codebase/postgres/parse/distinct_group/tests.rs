@@ -75,3 +75,14 @@ fn lenient_parsing_rewrites_distinct_grouping() {
         1
     );
 }
+
+#[test]
+fn escape_strings_and_dollar_identifiers_are_respected() {
+    // `\'` does not close an E string; `foo$tag$` is an identifier.
+    let escaped = "SELECT E'\\' GROUP BY DISTINCT ROLLUP (())'";
+    assert_eq!(separate_distinct_grouping(escaped), escaped);
+    let plain = "SELECT 'x\\' GROUP BY DISTINCT ROLLUP (())";
+    assert_ne!(separate_distinct_grouping(plain), plain);
+    let identifier = "SELECT foo$tag$ FROM t GROUP BY DISTINCT ROLLUP (())";
+    assert_ne!(separate_distinct_grouping(identifier), identifier);
+}
