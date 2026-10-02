@@ -36,7 +36,7 @@ fn collect_items(
     out: &mut Vec<SqlStarProjectionFact>,
 ) {
     for item in items {
-        let line = (item.span().start.line as usize).max(line.min(1));
+        let line = span_line(item.span(), line);
         match item {
             SelectItem::Wildcard(_) => {
                 for rel in rels {
@@ -107,7 +107,7 @@ fn walk_expr(expr: &Expr, rels: &[BaseRel], line: usize, out: &mut Vec<SqlStarPr
                     walk_function(
                         function,
                         self.rels,
-                        (expr.span().start.line as usize).max(self.line.min(1)),
+                        span_line(expr.span(), self.line),
                         self.out,
                     );
                 }
@@ -145,11 +145,25 @@ fn walk_function(
         let expr = arg_expr(arg);
         match expr {
             FunctionArgExpr::QualifiedWildcard(object) => {
-                record_qualified(rels, object, Some(name.clone()), line, out);
+                record_qualified(
+                    rels,
+                    object,
+                    Some(name.clone()),
+                    span_line(object.span(), line),
+                    out,
+                );
             }
             FunctionArgExpr::Expr(_) => {}
             FunctionArgExpr::Wildcard | FunctionArgExpr::WildcardWithOptions(_) => {}
         }
+    }
+}
+
+fn span_line(span: sqlparser::tokenizer::Span, fallback: usize) -> usize {
+    if span.start == span.end || span.start.line == 0 {
+        fallback.max(1)
+    } else {
+        span.start.line as usize
     }
 }
 

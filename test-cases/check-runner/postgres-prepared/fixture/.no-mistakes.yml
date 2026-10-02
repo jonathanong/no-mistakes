@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      maxColumns: 0
+      sqlInclude: [queries.sql]
+      importSpecifier: '@db'

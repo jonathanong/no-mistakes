@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "ordinalPosition": 1
+        }
+      }
+    }
+  },
+  "views": {},
+  "functions": {}
+}
