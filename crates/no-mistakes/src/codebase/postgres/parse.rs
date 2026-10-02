@@ -4,6 +4,7 @@ use sqlparser::parser::{Parser, ParserError};
 use std::fmt;
 
 mod copy_data;
+mod distinct_group;
 mod lenient;
 mod sql_text;
 pub(super) use sql_text::normalize_copy_data;
@@ -44,8 +45,9 @@ impl From<ParserError> for PostgresParseError {
 
 /// Parse `sql` with the PostgreSQL dialect.
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
-    Parser::parse_sql(&PostgreSqlDialect {}, &normalize_copy_data(sql))
-        .map_err(PostgresParseError::from)
+    let normalized = normalize_copy_data(sql);
+    let separated = distinct_group::separate_distinct_grouping(&normalized);
+    Parser::parse_sql(&PostgreSqlDialect {}, &separated).map_err(PostgresParseError::from)
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.

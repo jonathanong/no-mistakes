@@ -41,41 +41,38 @@ fn has_distinct_group_by_modifier(exprs: &[Expr], modifiers: &[GroupByWithModifi
     if ident.quote_style.is_some() || !ident.value.eq_ignore_ascii_case("distinct") {
         return false;
     }
-    modifiers
-        .iter()
-        .any(|modifier| matches!(modifier, GroupByWithModifier::GroupingSets(_)))
+    exprs.iter().skip(1).any(is_rollup_or_cube)
+        || modifiers
+            .iter()
+            .any(|modifier| matches!(modifier, GroupByWithModifier::GroupingSets(_)))
+}
+
+fn is_rollup_or_cube(expr: &Expr) -> bool {
+    matches!(expr, Expr::Rollup(_) | Expr::Cube(_))
 }
 
 fn empty_grouping_set_multiplicity(expr: &Expr, distinct: bool) -> Option<usize> {
     match expr {
         Expr::Tuple(items) if items.is_empty() => Some(1),
         Expr::Tuple(_) => None,
-        Expr::GroupingSets(sets) => {
-            if sets.iter().any(|set| !set.is_empty()) {
-                None
-            } else if distinct {
-                Some(1)
-            } else {
-                Some(sets.len().max(1))
-            }
-        }
-        Expr::Rollup(sets) => {
-            if sets.iter().any(|set| !set.is_empty()) {
-                None
-            } else {
-                // ROLLUP yields every prefix, including the empty prefix.
-                Some(sets.len().saturating_add(1))
-            }
-        }
+        Expr::GroupingSets(sets) => empty_repeated_sets(sets, distinct, sets.len().max(1)),
+        // ROLLUP yields every prefix, including the empty prefix.
+        Expr::Rollup(sets) => empty_repeated_sets(sets, distinct, sets.len().saturating_add(1)),
+        // Every subset is a grouping set; two suffice to distinguish a scalar
+        // aggregate from a query that can return multiple rows.
         Expr::Cube(sets) => {
-            if sets.iter().any(|set| !set.is_empty()) {
-                None
-            } else {
-                // Every subset is a grouping set; two suffice to distinguish a
-                // scalar aggregate from a query that can return multiple rows.
-                Some(if sets.is_empty() { 1 } else { 2 })
-            }
+            empty_repeated_sets(sets, distinct, if sets.is_empty() { 1 } else { 2 })
         }
         _ => None,
+    }
+}
+
+fn empty_repeated_sets(sets: &[Vec<Expr>], distinct: bool, repeated: usize) -> Option<usize> {
+    if sets.iter().any(|set| !set.is_empty()) {
+        None
+    } else if distinct {
+        Some(1)
+    } else {
+        Some(repeated)
     }
 }

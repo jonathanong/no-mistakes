@@ -98,7 +98,7 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
             count.line = source_line(count.line, count.column);
         }
         for exists in &mut select.exists_set_operations {
-            exists.line = source_line(exists.line, 1);
+            exists.line = source_line(exists.line, exists.column);
         }
         for star in &mut select.star_projections {
             star.line = source_line(star.line, 1);

@@ -2,8 +2,9 @@ use super::SqlExistsSetOpFact;
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{
     BinaryOperator, Expr, GroupByExpr, JoinConstraint, JoinOperator, Query, Select, SelectItem,
-    SetExpr, Value, ValueWithSpan,
+    SetExpr, Spanned, Value, ValueWithSpan,
 };
+use sqlparser::tokenizer::Location;
 
 pub(super) fn collect_from_select(sql: &str, select: &Select, out: &mut Vec<SqlExistsSetOpFact>) {
     collect_exists(sql, select.selection.as_ref(), out);
@@ -37,10 +38,12 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
     match expr {
         Expr::Exists { subquery, .. } => {
             if set_expr_has_set_op(&subquery.body) {
+                let (line, column) = exists_position(sql, subquery.span().start);
                 out.push(SqlExistsSetOpFact {
                     restricted: set_expr_restricted(&subquery.body),
                     correlated: super::exists_correlation::query_is_correlated(subquery),
-                    line: exists_line(sql),
+                    line,
+                    column,
                 });
             }
             collect_query_exists(sql, subquery, out);
@@ -52,8 +55,36 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
     }
 }
 
-fn exists_line(sql: &str) -> usize {
-    super::lines::line_containing(sql, &["exists"])
+/// Locate the `EXISTS` keyword that opens the subquery starting at `start`,
+/// so several `EXISTS` expressions each keep their own physical position.
+fn exists_position(sql: &str, start: Location) -> (usize, usize) {
+    let Some(line_index) = (start.line as usize).checked_sub(1) else {
+        return first_exists_position(sql);
+    };
+    let line_offset: usize = sql
+        .split_inclusive('\n')
+        .take(line_index)
+        .map(str::len)
+        .sum();
+    let line_text = sql[line_offset..].lines().next().unwrap_or("");
+    let column_bytes = line_text
+        .char_indices()
+        .nth((start.column as usize).saturating_sub(1))
+        .map_or(line_text.len(), |(index, _)| index);
+    super::lines::last_word_position(sql, "exists", line_offset + column_bytes)
+        .unwrap_or_else(|| first_exists_position(sql))
+}
+
+fn first_exists_position(sql: &str) -> (usize, usize) {
+    let mut found = (1, 1);
+    for (index, line) in sql.lines().enumerate() {
+        let lower = line.to_ascii_lowercase();
+        if let Some(byte) = lower.find("exists") {
+            found = (index + 1, lower[..byte].chars().count() + 1);
+            break;
+        }
+    }
+    found
 }
 
 fn collect_query_exists(sql: &str, query: &Query, out: &mut Vec<SqlExistsSetOpFact>) {
@@ -144,3 +175,6 @@ fn is_const_or_placeholder(expr: &Expr) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests;

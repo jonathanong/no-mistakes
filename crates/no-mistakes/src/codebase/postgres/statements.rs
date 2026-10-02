@@ -1,6 +1,7 @@
 //! Typed INSERT, SELECT, and trigger facts from PostgreSQL SQL.
 
 mod conflict;
+mod dedupe;
 mod exists;
 mod exists_correlation;
 mod fallback;
@@ -68,6 +69,7 @@ pub(crate) fn extract_from_parsed(
         writes::collect(statement, &mut writes);
         collect_one(sql, statement, &mut out);
     }
+    dedupe::exists_set_operations(&mut selects);
     SqlStatementFileFacts {
         path: Default::default(),
         writes,

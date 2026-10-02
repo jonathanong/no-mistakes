@@ -67,6 +67,74 @@ fn empty_grouping_sets_remain_global_existence_probes() {
 }
 
 #[test]
+fn conflict_assignment_shapes_are_collected_before_nested_queries() {
+    let root = fixture("review-followups");
+    let findings = check_with_files(
+        &root,
+        &config_yaml(BANNED),
+        &[root.join("sql/conflict-assignment.sql")],
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.target.as_deref(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            (Some("not-in-subquery"), 3),
+            (Some("count-for-existence"), 4),
+        ],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn distinct_rollup_and_cube_keep_scalar_count_existence() {
+    let root = fixture("review-followups");
+    let findings = check_with_files(
+        &root,
+        &config_yaml(BANNED),
+        &[root.join("sql/distinct-grouping.sql")],
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.target.as_deref(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            (Some("count-for-existence"), 1),
+            (Some("count-for-existence"), 2),
+            (Some("count-for-existence"), 3),
+            (Some("count-for-existence"), 5),
+        ],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn correlated_exists_after_template_continuation_keeps_its_source_line() {
+    let root = fixture("review-followups");
+    let path = root.join("src/exists-continuation.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let exists_line = source
+        .lines()
+        .position(|line| line.contains("EXISTS"))
+        .unwrap()
+        + 1;
+    let findings =
+        check_with_files(&root, &config_yaml(BANNED), std::slice::from_ref(&path)).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [exists_line],
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn scalar_counts_that_can_return_no_rows_are_not_rewritten_as_exists() {
     let root = fixture("review-followups");
     let findings = check_with_files(

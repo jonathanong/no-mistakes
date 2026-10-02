@@ -229,7 +229,8 @@ sqlparser AST:
 - `INSERT…SELECT` guarded by a conjunctive `WHERE NOT EXISTS`
 - SELECT FROM/JOIN relation names, predicate SQL, and `EXISTS` set-operation
   facts (`restricted` when every arm has a placeholder or literal bound;
-  `correlated` when a qualified identifier is outside the subquery FROM/WITH)
+  `correlated` when a qualified identifier is outside the subquery FROM/WITH;
+  `column` is the `EXISTS` keyword in the original SQL)
 - one `SqlRelationPredicateFact` per base-table instance of each SELECT
   (`relations`), plus grouped `updates` and `deletes` (one group per
   statement). Each fact records the table, optional alias, source line,
@@ -241,9 +242,10 @@ sqlparser AST:
   constrains it. `in_insert_select` marks SELECT facts that belong to
   `INSERT … SELECT`, including selects nested in that query.
   `not_in_subqueries` records lines of `NOT IN (SELECT …)` and
-  `NOT (… IN (SELECT …))`. `count_existence_checks` records lines where
-  `COUNT(...)` is compared with 0 or 1 to test existence (`postgres-sql-shape-policy`
-  reads both when those shapes are banned).
+  `NOT (… IN (SELECT …))`. `count_existence_checks` records each `COUNT(*)`
+  compared with 0 or 1 as a `SqlCountExistenceFact`: the comparison's line,
+  its SQL column, and `negated` (true when the comparison tests zero rows).
+  `postgres-sql-shape-policy` reads both when those shapes are banned.
   `star_projections` records each bare `*` (one fact per base FROM relation) and
   each `alias.*` (that alias's base relation). Stars inside `EXISTS` / `NOT EXISTS`,
   `COUNT(*)`, CTEs, and derived-table aliases are omitted. A star passed to a

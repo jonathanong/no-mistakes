@@ -393,3 +393,37 @@ fn insert_source_covers_parens_union_alias_and_defaults() {
         ragged.inserts[0].assignments
     );
 }
+
+#[test]
+fn merge_action_exists_set_operations_are_collected_at_their_keyword() {
+    // The comment between EXISTS and the subquery contains the word "exists".
+    let sql = "MERGE INTO t USING s ON t.id = s.id\nWHEN MATCHED THEN UPDATE SET ok = EXISTS /* exists\n */ (SELECT 1 FROM a WHERE a.id = t.id UNION SELECT 1 FROM b WHERE b.id = t.id);";
+    let facts = extract_sql_statement_facts(sql);
+    let exists: Vec<_> = facts
+        .selects
+        .iter()
+        .flat_map(|select| &select.exists_set_operations)
+        .collect();
+    assert_eq!(exists.len(), 1);
+    assert_eq!((exists[0].line, exists[0].column), (2, 35));
+}
+
+#[test]
+fn table_function_argument_exists_set_operations_are_collected() {
+    let sql = "MERGE INTO t USING unnest(ARRAY[EXISTS (SELECT 1 FROM a WHERE a.id = t.id UNION SELECT 1 FROM b WHERE b.id = t.id)]) AS s(ok) ON t.id = 1 WHEN MATCHED THEN DELETE;";
+    let facts = extract_sql_statement_facts(sql);
+    assert!(facts
+        .selects
+        .iter()
+        .any(|select| !select.exists_set_operations.is_empty()));
+}
+
+#[test]
+fn conflict_assignment_exists_set_operations_are_collected() {
+    let sql = "INSERT INTO t (id, ok) VALUES (1, true) ON CONFLICT (id) DO UPDATE SET ok = EXISTS (SELECT 1 FROM a WHERE a.id = t.id UNION SELECT 1 FROM b WHERE b.id = t.id);";
+    let facts = extract_sql_statement_facts(sql);
+    assert!(facts
+        .selects
+        .iter()
+        .any(|select| !select.exists_set_operations.is_empty()));
+}

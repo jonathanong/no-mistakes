@@ -17,7 +17,9 @@ use rewrite::{
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, `CREATE [UNIQUE] INDEX`, and DML after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    let located = super::unicode::tokenize_with_location(&super::normalize_copy_data(sql), false);
+    let normalized = super::normalize_copy_data(sql);
+    let separated = super::distinct_group::separate_distinct_grouping(&normalized);
+    let located = super::unicode::tokenize_with_location(&separated, false);
     if located.is_empty() {
         let chunks = super::top_level_statements(sql);
         if chunks.len() <= 1 {

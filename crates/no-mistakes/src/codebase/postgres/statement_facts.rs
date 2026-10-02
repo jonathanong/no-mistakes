@@ -107,7 +107,10 @@ pub struct SqlSelectFact {
     pub not_in_subqueries: Vec<usize>,
     /// Original SQL columns corresponding to `not_in_subqueries`.
     pub not_in_columns: Vec<usize>,
-    /// Lines of `COUNT(...)` compared with 0 or 1 to test existence.
+    /// `COUNT(*)` compared with 0 or 1 to test existence.
+    ///
+    /// Each fact keeps the comparison's line, SQL column, and `negated`
+    /// (true when the comparison tests zero rows).
     pub count_existence_checks: Vec<SqlCountExistenceFact>,
     /// `*` / `alias.*` projections over base FROM relations.
     pub star_projections: Vec<SqlStarProjectionFact>,
@@ -171,6 +174,8 @@ pub struct SqlExistsSetOpFact {
     /// Qualified `table.column` whose qualifier is not a local FROM/WITH name.
     pub correlated: bool,
     pub line: usize,
+    /// SQL column of the `EXISTS` keyword. Embedded SQL rebases with this column.
+    pub column: usize,
 }
 
 /// One `CREATE TRIGGER`.
@@ -200,7 +205,9 @@ pub enum SqlTriggerEvent {
     Truncate,
 }
 
-/// A scalar COUNT comparison testing presence or absence of matching rows.
+/// A scalar `COUNT(*)` comparison testing presence or absence of matching rows.
+///
+/// `negated` is true when the comparison tests zero matching rows.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlCountExistenceFact {
     pub line: usize,
