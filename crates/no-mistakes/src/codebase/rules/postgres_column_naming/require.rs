@@ -46,7 +46,7 @@ pub(super) fn stale_exempt(
     require
         .exempt
         .iter()
-        .filter(|entry| !exempt_matches(catalog, compiled, &entry.pattern))
+        .filter(|entry| !exempt_matches(catalog, compiled, require, &entry.pattern))
         .map(|entry| RuleFinding {
             rule: super::RULE_ID.to_string(),
             file: path.clone(),
@@ -61,10 +61,12 @@ pub(super) fn stale_exempt(
         .collect()
 }
 
-fn exempt_matches(catalog: &SchemaCatalog, compiled: &Compiled, pattern: &regex::Regex) -> bool {
-    let Some(require) = &compiled.require else {
-        return false;
-    };
+fn exempt_matches(
+    catalog: &SchemaCatalog,
+    compiled: &Compiled,
+    require: &super::compile::RequireCheck,
+    pattern: &regex::Regex,
+) -> bool {
     catalog.tables().any(|table| {
         !ignored(&table.name, compiled)
             && table.columns.iter().any(|column| {

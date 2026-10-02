@@ -193,6 +193,26 @@ fn descriptive_keys_id_columns_and_self_references() {
             "github_account_id",
         ),
     );
+    expect_none(
+        "schemaCatalogPath: schema.json\nforeignKeys:\n  targetMatch: full-name\n",
+        sole_fk(
+            "rows",
+            "import_batch_id",
+            "text",
+            "import_batches",
+            "import_batch_id",
+        ),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\nforeignKeys:\n  targetMatch: off\n",
+        sole_fk(
+            "linked_accounts",
+            "github_user_id",
+            "text",
+            "github_accounts",
+            "github_user_id",
+        ),
+    );
     expect(
         LAST_WORD,
         sole_fk("payments", "external_id", "text", "orders", "external_id"),
