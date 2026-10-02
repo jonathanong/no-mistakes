@@ -128,3 +128,53 @@ fn quoted_lowercase_count_keeps_the_builtin_schema_and_case_restrictions() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn empty_grouping_sets_remain_global_existence_probes() {
+    let root = fixture("review-followups");
+    let findings = check_with_files(
+        &root,
+        &config_yaml(BANNED),
+        &[root.join("sql/empty-grouping.sql")],
+    )
+    .unwrap();
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [1, 2, 3, 4, 5],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn filter_facts_are_unique_and_lenient_spans_preserve_suppression() {
+    let root = fixture("review-followups");
+    let sql = std::fs::read_to_string(root.join("sql/filter-once.sql")).unwrap();
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
+    assert_eq!(
+        facts
+            .selects
+            .iter()
+            .map(|s| s.not_in_subqueries.len())
+            .sum::<usize>(),
+        1
+    );
+    assert_eq!(
+        facts
+            .selects
+            .iter()
+            .map(|s| s.count_existence_checks.len())
+            .sum::<usize>(),
+        1
+    );
+    let path = root.join("sql/lenient-locations.sql");
+    let config = config_yaml(&format!("{BANNED}\nunanalyzableSql: ignore"));
+    let mut findings = check_with_files(&root, &config, std::slice::from_ref(&path)).unwrap();
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [3, 4],
+        "{findings:#?}"
+    );
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(findings.iter().map(|f| f.line).collect::<Vec<_>>(), [4]);
+}

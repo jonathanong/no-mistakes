@@ -111,14 +111,6 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
             walk(left, place, bare, out);
             walk(right, place, bare, out);
         }
-        Expr::Function(function) => {
-            crate::codebase::postgres::idents::visit_child_exprs(expr, &mut |child| {
-                walk(child, place, bare, out);
-            });
-            if let Some(filter) = &function.filter {
-                walk(filter, place, false, out);
-            }
-        }
         other => crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
             walk(child, place, bare, out);
         }),
@@ -131,7 +123,13 @@ fn bare_allowed(place: Place, bare: bool) -> bool {
 
 fn has_group_by(select: &Select) -> bool {
     match &select.group_by {
-        GroupByExpr::Expressions(exprs, _) => !exprs.is_empty(),
+        GroupByExpr::Expressions(exprs, _) => exprs.iter().any(|expr| match expr {
+            Expr::Tuple(items) => !items.is_empty(),
+            Expr::GroupingSets(sets) | Expr::Rollup(sets) | Expr::Cube(sets) => {
+                sets.iter().any(|set| !set.is_empty())
+            }
+            _ => true,
+        }),
         GroupByExpr::All(_) => true,
     }
 }

@@ -177,3 +177,7 @@ Locations use parsed expression spans, including SQL comments, Unicode names,
 `!=` operator spelling, repeated statements, and embedded SQL declaration
 lines. Line-specific suppressions therefore apply at the reported expression.
 Unanalyzable SQL findings use a target from the enabled `bannedShapes`.
+
+Empty grouping sets (`GROUP BY ()`, including empty `GROUPING SETS`, `ROLLUP`,
+and `CUBE`) retain global aggregate semantics, so their count existence probes
+are checked. Aggregate FILTER predicates contribute one fact per occurrence.
