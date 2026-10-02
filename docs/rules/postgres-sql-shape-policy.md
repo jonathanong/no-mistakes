@@ -93,8 +93,10 @@ are not. When `count-for-existence` is banned, a `COUNT(*)` or `COUNT(expr)`
 (including `COUNT(DISTINCT …)`) compared with 0 or 1 to test existence is a
 finding: `> 0`, `>= 1`, `<> 0`, `!= 0`, `= 0`, `< 1`, `<= 0`, and the mirrored
 forms. The count may be a scalar subquery with no `GROUP BY`, or a bare
-`COUNT` in a SELECT list or WHERE of a query with no `GROUP BY`. `HAVING
-COUNT(*) > 0` and comparisons with any other number are not findings.
+`COUNT` in a SELECT list, WHERE, or HAVING of a query with no `GROUP BY`.
+Grouped `HAVING COUNT(*) > 0` and comparisons with any other number are not
+findings. Lowercase quoted built-ins (`"count"` or `pg_catalog."count"`) are
+recognized; quoted uppercase or custom-schema functions are excluded.
 
 Correlation is a syntax heuristic: only qualified references count, an
 aliased inner relation hides its base name, `schema.table.col` uses the table

@@ -74,10 +74,16 @@ fn is_count_function(expr: &Expr) -> bool {
     let Expr::Function(function) = unwrap_count(expr) else {
         return false;
     };
-    let name = function.name.to_string();
-    if function.over.is_some()
-        || !(name.eq_ignore_ascii_case("count") || name.eq_ignore_ascii_case("pg_catalog.count"))
-    {
+    use crate::codebase::postgres::idents::ident_key;
+    use sqlparser::ast::ObjectNamePart::Identifier;
+    let built_in = match function.name.0.as_slice() {
+        [Identifier(name)] => ident_key(name) == "count",
+        [Identifier(schema), Identifier(name)] => {
+            ident_key(schema) == "pg_catalog" && ident_key(name) == "count"
+        }
+        _ => false,
+    };
+    if function.over.is_some() || !built_in {
         return false;
     }
     matches!(function.args, FunctionArguments::List(_))

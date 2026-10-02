@@ -108,3 +108,23 @@ fn count_negation_and_ungrouped_having_preserve_existence_semantics() {
         );
     }
 }
+
+#[test]
+fn quoted_lowercase_count_keeps_the_builtin_schema_and_case_restrictions() {
+    let root = fixture("review-followups");
+    let paths = [root.join("sql/quoted-count.sql")];
+    let findings = check_with_files(
+        &root,
+        &config_yaml("sqlInclude: ['sql/**/*.sql']\nbannedShapes: [count-for-existence]\n"),
+        &paths,
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 2, 3],
+        "{findings:#?}"
+    );
+}
