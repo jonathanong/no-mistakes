@@ -36,3 +36,15 @@ END;
 $$;
 DO 'BEGIN IF false THEN DROP TABLE orders; END IF; CREATE TABLE immediate_quoted (id int); END;';
 ALTER TABLE orders ADD COLUMN actual_column int;
+
+DO $$ BEGIN
+  WHILE false LOOP
+    DROP TABLE orders;
+  END LOOP;
+  LOOP
+    EXIT;
+    DROP TABLE orders;
+  END LOOP;
+END; $$;
+-- Malformed PL/pgSQL remains tolerant and cannot invent a live table change.
+DO $$ END; $$;
