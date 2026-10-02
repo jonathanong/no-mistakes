@@ -185,3 +185,7 @@ can still supply a later qualified ALTER for that same unqualified table.
 Live table history excludes DDL inside dormant function/procedure definitions or
 conditional PL/pgSQL branches. Top-level DDL and unconditional immediate DO DDL
 remain visible; broad schema policy checks still inspect routine definitions.
+
+`ALTER TABLE IF EXISTS` leaves absent tables absent. Temporary declarations may
+use `GLOBAL` or `LOCAL` modifiers without changing lifecycle order. Dollar-quote
+tags accept Unicode identifier characters, including `$café$` and `$東京$`.

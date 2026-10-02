@@ -113,7 +113,7 @@ fn dollar_sign_identifiers_do_not_absorb_later_writes_or_suppressions() {
             .iter()
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [2, 4, 6]
+        [2, 4, 6, 7, 8]
     );
     let sources = crate::codebase::rules::source_store_for_files(&paths);
     crate::codebase::rules::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
@@ -122,7 +122,7 @@ fn dollar_sign_identifiers_do_not_absorb_later_writes_or_suppressions() {
             .iter()
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [2, 6]
+        [2, 6, 7, 8]
     );
 }
 

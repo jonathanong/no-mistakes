@@ -43,6 +43,7 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                     &column.column_name,
                     column.is_generated,
                     false,
+                    false,
                 );
             }
             continue;
@@ -69,6 +70,7 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                     unqualified_table,
                     column,
                     if_not_exists,
+                    table_if_exists,
                     ..
                 } => {
                     add(
@@ -78,6 +80,7 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                         &column.name,
                         column.is_generated,
                         *if_not_exists,
+                        *table_if_exists,
                     );
                 }
                 SqlTableSchemaEvent::Drop {
@@ -127,8 +130,12 @@ fn add<'a>(
     name: &'a str,
     generated: bool,
     if_not_exists: bool,
+    table_if_exists: bool,
 ) {
     let key = existing_key(tables, key, table).to_string();
+    if table_if_exists && !tables.contains_key(&key) {
+        return;
+    }
     let entry = tables.entry(key).or_insert_with(|| LiveTable {
         name: table,
         columns: Vec::new(),

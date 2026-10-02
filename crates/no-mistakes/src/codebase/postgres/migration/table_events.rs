@@ -51,6 +51,7 @@ pub(super) fn record(
                 } = operation
                 {
                     out.push(SqlTableSchemaEvent::AddColumn {
+                        table_if_exists: alter.if_exists,
                         if_not_exists: *if_not_exists,
                         source_order: source_order.clone(),
                         table: object_name_key(&alter.name),

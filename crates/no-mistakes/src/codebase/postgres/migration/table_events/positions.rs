@@ -70,7 +70,7 @@ impl Positions {
             };
             let mut cursor = at + 1;
             while tokens.get(cursor).is_some_and(|token| {
-                ["TEMP", "TEMPORARY", "UNLOGGED"]
+                ["GLOBAL", "LOCAL", "TEMP", "TEMPORARY", "UNLOGGED"]
                     .iter()
                     .any(|value| word(token, value))
             }) {

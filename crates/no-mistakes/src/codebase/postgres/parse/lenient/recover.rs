@@ -139,7 +139,13 @@ fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
         Some(Keyword::ALTER) => follows_keyword(tokens, index, Keyword::TABLE).then_some(index),
         Some(Keyword::CREATE) => create_ddl_start(tokens, index),
         Some(Keyword::DROP) => drop_ddl_start(tokens, index),
-        Some(Keyword::TRUNCATE) => Some(index),
+        Some(
+            Keyword::TRUNCATE
+            | Keyword::INSERT
+            | Keyword::UPDATE
+            | Keyword::DELETE
+            | Keyword::MERGE,
+        ) => Some(index),
         _ => None,
     }
 }

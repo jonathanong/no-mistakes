@@ -52,7 +52,8 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 ///
 /// Migration trees mix parseable `CREATE TABLE` with `DO $$` blocks and other
 /// statements sqlparser rejects. `DO $tag$` bodies are peeled and schema DDL
-/// inside them is recovered, including `ALTER TABLE` after PL/pgSQL `IF/THEN`.
+/// inside them is recovered, including schema and DML statements after PL/pgSQL
+/// `BEGIN` or `IF/THEN` prefixes.
 /// Other unparseable SQL is still skipped. PostgreSQL 18
 /// `GENERATED ALWAYS AS (...) VIRTUAL` is rewritten to `STORED` so those
 /// `CREATE TABLE` statements parse. Column lists on `ON DELETE SET NULL` /

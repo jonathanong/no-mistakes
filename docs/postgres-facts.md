@@ -467,3 +467,5 @@ identities and resolve unqualified DML only when the surviving relation is uniqu
 from legacy Rust facts supplied without events. Broad table/column policy facts
 still inspect routine bodies. Executed events retain top-level and immediate DO
 DDL, excluding dormant function/procedure definitions and conditional branches.
+
+ADD COLUMN events retain `table_if_exists` alongside column-level `if_not_exists`.

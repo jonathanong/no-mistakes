@@ -109,3 +109,34 @@ fn collected_empty_event_stream_does_not_fall_back_to_dormant_schema_metadata() 
         "Policy metadata must still include dormant DDL"
     );
 }
+
+#[test]
+fn conditional_alter_does_not_revive_dropped_or_absent_tables() {
+    let root = unit_fixture("conditional-alter");
+    let findings = check_with_files(
+        &root,
+        &config_with_options(""),
+        &[root.join("schema.sql"), root.join("writes.sql")],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 3);
+    assert_eq!(findings[0].import.as_deref(), Some("orders.computed"));
+}
+
+#[test]
+fn global_and_local_temporary_creates_keep_source_order() {
+    let root = unit_fixture("global-local");
+    let findings = check_with_files(
+        &root,
+        &config_with_options(""),
+        &[root.join("schema.sql"), root.join("writes.sql")],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 2);
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("reverse_orders.computed")
+    );
+}

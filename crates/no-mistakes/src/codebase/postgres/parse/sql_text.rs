@@ -142,7 +142,9 @@ fn skip_dollar(bytes: &[u8], index: usize, line: &mut usize) -> usize {
     let mut tag_end = index + 1;
     while tag_end < bytes.len()
         && bytes[tag_end] != b'$'
-        && (bytes[tag_end].is_ascii_alphanumeric() || bytes[tag_end] == b'_')
+        && (bytes[tag_end].is_ascii_alphanumeric()
+            || bytes[tag_end] == b'_'
+            || !bytes[tag_end].is_ascii())
     {
         tag_end += 1;
     }

@@ -11,6 +11,7 @@ pub enum SqlTableSchemaEvent {
         columns: Vec<SqlColumnMetadata>,
     },
     AddColumn {
+        table_if_exists: bool,
         if_not_exists: bool,
         source_order: Vec<usize>,
         table: String,

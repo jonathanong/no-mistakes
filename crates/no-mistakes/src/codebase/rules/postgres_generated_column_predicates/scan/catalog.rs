@@ -24,7 +24,15 @@ pub(super) fn live_columns(schema: &[&SqlSchemaFileFacts]) -> LiveColumns {
                 SqlTableSchemaEvent::Create { table, columns, .. } => {
                     live.insert(table.clone(), column_map(columns));
                 }
-                SqlTableSchemaEvent::AddColumn { table, column, .. } => {
+                SqlTableSchemaEvent::AddColumn {
+                    table,
+                    column,
+                    table_if_exists,
+                    ..
+                } => {
+                    if *table_if_exists && !live.contains_key(table) {
+                        continue;
+                    }
                     live.entry(table.clone())
                         .or_default()
                         .insert(column.name.clone(), column.clone());

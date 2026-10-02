@@ -154,7 +154,7 @@ fn lenient_parse_peels_language_tagged_do_and_ignores_function_bodies() {
     let dml = parse_postgres_sql_lenient("DO $$ BEGIN UPDATE items SET n = 1; END $$;");
     assert!(
         dml.iter()
-            .all(|statement| !matches!(statement, sqlparser::ast::Statement::Update(_))),
+            .any(|statement| matches!(statement, sqlparser::ast::Statement::Update(_))),
         "{dml:#?}"
     );
 }
