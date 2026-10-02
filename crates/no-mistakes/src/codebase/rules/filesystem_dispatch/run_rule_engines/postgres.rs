@@ -29,6 +29,18 @@ pub(super) fn run(
     sources: &Arc<SourceStore>,
     facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
+    run_schema_rules(rule_id, root, config, files, sources, facts)
+        .or_else(|| run_naming_and_query_rules(rule_id, root, config, files, sources, facts))
+}
+
+fn run_schema_rules(
+    rule_id: &str,
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
         POSTGRES_DUPLICATE_FUNCTION_BODY => {
             duplicate_function_body(root, config, files, sources, facts)
@@ -41,7 +53,6 @@ pub(super) fn run(
         POSTGRES_CONSTRAINT_VALIDATE => {
             prepared_schema::constraint_validate(root, config, files, sources, facts)
         }
-        POSTGRES_EXPLICIT_COLUMNS => explicit_columns(root, config, files, sources, facts),
         POSTGRES_NO_ADD_COLUMN => {
             prepared_schema::no_add_column(root, config, files, sources, facts)
         }
@@ -49,6 +60,33 @@ pub(super) fn run(
         POSTGRES_REDUNDANT_INDEX => {
             prepared_schema::redundant_index(root, config, files, sources, facts)
         }
+        POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
+        POSTGRES_IDENTIFIER_LENGTH => {
+            prepared_schema::identifier_length(root, config, files, sources, facts)
+        }
+        POSTGRES_REQUIRE_FK_ON_DELETE => {
+            prepared_schema::require_fk_on_delete(root, config, files, sources, facts)
+        }
+        POSTGRES_REQUIRE_NAMED_CONSTRAINTS => {
+            prepared_schema::require_named_constraints(root, config, files, sources, facts)
+        }
+        POSTGRES_SQL_STATEMENT_POLICY => {
+            prepared_schema::sql_statement_policy(root, config, files, sources, facts)
+        }
+        _ => return None,
+    })
+}
+
+fn run_naming_and_query_rules(
+    rule_id: &str,
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Option<Result<Vec<RuleFinding>>> {
+    Some(match rule_id {
+        POSTGRES_EXPLICIT_COLUMNS => explicit_columns(root, config, files, sources, facts),
         POSTGRES_GENERATED_COLUMN_PREDICATES => {
             generated_predicates::run(root, config, files, sources, facts)
         }
@@ -60,21 +98,11 @@ pub(super) fn run(
                 root, config, files, sources,
             ),
         },
-        POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
         POSTGRES_NO_OFFSET => no_offset::run(root, config, files, sources, facts),
-        POSTGRES_IDENTIFIER_LENGTH => {
-            prepared_schema::identifier_length(root, config, files, sources, facts)
-        }
         POSTGRES_ARRAY_COLUMNS => array_columns(root, config, files, sources, facts),
         POSTGRES_FINITE_TEXT_COLUMNS => finite_text(root, config, files, sources, facts),
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
         POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
-        POSTGRES_REQUIRE_FK_ON_DELETE => {
-            prepared_schema::require_fk_on_delete(root, config, files, sources, facts)
-        }
-        POSTGRES_REQUIRE_NAMED_CONSTRAINTS => {
-            prepared_schema::require_named_constraints(root, config, files, sources, facts)
-        }
         POSTGRES_REQUIRE_QUERY_ANNOTATION => {
             postgres_require_query_annotation::check_with_files_and_sources(
                 root, config, files, sources,
@@ -86,9 +114,6 @@ pub(super) fn run(
             status_lifecycle(root, config, files, sources, facts)
         }
         POSTGRES_TABLE_SHAPE => table_shape(root, config, files, sources, facts),
-        POSTGRES_SQL_STATEMENT_POLICY => {
-            prepared_schema::sql_statement_policy(root, config, files, sources, facts)
-        }
         POSTGRES_IDEMPOTENT_INSERT => {
             postgres_idempotent_insert::check_with_files_and_sources(root, config, files, sources)
         }
