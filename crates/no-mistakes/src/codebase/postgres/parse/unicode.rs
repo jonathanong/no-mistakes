@@ -42,7 +42,7 @@ pub(crate) fn tokenize_raw_unicode(sql: &str) -> Vec<TokenWithSpan> {
     tokenize_with_location(sql, true)
 }
 
-fn tokenize_with_location(sql: &str, raw_unicode: bool) -> Vec<TokenWithSpan> {
+pub(super) fn tokenize_with_location(sql: &str, raw_unicode: bool) -> Vec<TokenWithSpan> {
     let Some((masked, literals)) = mask_literals(sql) else {
         return Vec::new();
     };
