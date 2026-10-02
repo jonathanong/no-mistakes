@@ -2,10 +2,8 @@
 ///
 /// Tags may contain Unicode letters. A `$` after an identifier character is
 /// not a quote, and `$1` stays a placeholder.
-pub(super) fn skip(bytes: &[u8], index: usize, line: &mut usize) -> usize {
-    let Some(text) = std::str::from_utf8(bytes).ok() else {
-        return index + 1;
-    };
+pub(super) fn skip(text: &str, index: usize, line: &mut usize) -> usize {
+    let bytes = text.as_bytes();
     if !text.is_char_boundary(index) {
         return index + 1;
     }

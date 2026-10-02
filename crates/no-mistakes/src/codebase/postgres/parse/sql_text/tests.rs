@@ -40,28 +40,21 @@ fn unicode_dollar_tag_keeps_copy_payload_inside_the_literal() {
 fn dollar_tags_use_unicode_identifier_characters() {
     let mut line = 1usize;
     let quoted = "$é$\n$é$";
-    assert_eq!(
-        super::dollar::skip(quoted.as_bytes(), 0, &mut line),
-        quoted.len()
-    );
+    assert_eq!(super::dollar::skip(quoted, 0, &mut line), quoted.len());
     assert_eq!(line, 2);
-    assert_eq!(super::dollar::skip(b"$1$", 0, &mut line), 1);
-    assert_eq!(super::dollar::skip(b"$_a1_$x$_a1_$", 0, &mut line), 13);
+    assert_eq!(super::dollar::skip("$1$", 0, &mut line), 1);
+    assert_eq!(super::dollar::skip("$_a1_$x$_a1_$", 0, &mut line), 13);
     assert_eq!(
-        super::dollar::skip(b"$tag$unterminated", 0, &mut line),
-        b"$tag$unterminated".len()
+        super::dollar::skip("$tag$unterminated", 0, &mut line),
+        "$tag$unterminated".len()
     );
-    assert_eq!(super::dollar::skip(b"\xFF$", 0, &mut line), 1);
-    assert_eq!(super::dollar::skip(b"x", 0, &mut line), 1);
-    assert_eq!(super::dollar::skip(b"$", 0, &mut line), 1);
-    let mid = "é$tag$".as_bytes();
+    assert_eq!(super::dollar::skip("x", 0, &mut line), 1);
+    assert_eq!(super::dollar::skip("$", 0, &mut line), 1);
+    let mid = "é$tag$";
     assert_eq!(super::dollar::skip(mid, 1, &mut line), 2);
     assert_eq!(super::dollar::skip(mid, 2, &mut line), 3);
-    assert_eq!(super::dollar::skip(b"a_$tag$x$tag$", 2, &mut line), 3);
+    assert_eq!(super::dollar::skip("a_$tag$x$tag$", 2, &mut line), 3);
     let dash = "—$tag$x$tag$";
     let dollar = dash.find('$').unwrap();
-    assert_eq!(
-        super::dollar::skip(dash.as_bytes(), dollar, &mut line),
-        dash.len()
-    );
+    assert_eq!(super::dollar::skip(dash, dollar, &mut line), dash.len());
 }
