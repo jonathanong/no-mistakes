@@ -331,6 +331,37 @@ foreignKeys:
             }
         }),
     );
+    let cursor = r#"
+schemaCatalogPath: schema.json
+foreignKeys:
+  requireForeignKey:
+    types: [uuid]
+    namePattern: '_id$'
+    exempt:
+      - namePattern: '^cursor_'
+        reason: cursors
+"#;
+    let stale =
+        "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^cursor_";
+    expect(cursor, column("sync", "cursor_name", "text"), stale);
+    expect(
+        cursor,
+        serde_json::json!({
+            "tables": {
+                "sync": {
+                    "columns": { "cursor_order_id": { "dataType": "uuid" } },
+                    "foreignKeys": {
+                        "fk": {
+                            "columns": ["cursor_order_id"],
+                            "referencedTable": "orders",
+                            "referencedColumns": ["id"]
+                        }
+                    }
+                }
+            }
+        }),
+        stale,
+    );
     expect(
         "schemaCatalogPath: schema.json\nforeignKeys:\n  requireForeignKey:\n    types: [uuid]\n    namePattern: _id$\n    exempt:\n      - namePattern: '^never$'\n        reason: unused\n",
         serde_json::json!({ "tables": {} }),

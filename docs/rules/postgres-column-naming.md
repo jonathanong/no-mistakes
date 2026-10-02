@@ -38,15 +38,21 @@ named `item_id` that points at `articles`, and a `uuid` column named
 
 `typeRules` require a column whose `data_type` is one of `types` to match
 `namePattern`. `nameTypeRules` are the reverse: a matching name must use one
-of the listed types. Comparison is case-insensitive and exact, so `boolean[]`
-does not match `boolean`. Every matching entry reports. `forbiddenColumnNames`
-reports the first matching pattern.
+of the listed types. Comparison is case-insensitive. A parenthetical length
+or precision, such as `character varying(2048)` or `timestamp(6) with time
+zone`, matches the base type `character varying` or `timestamp with time
+zone`. An array type such as `boolean[]` does not match `boolean`. Every
+matching entry reports. `forbiddenColumnNames` reports the first matching
+pattern.
 
 A single-column foreign key, other than a column named `id`, must end with a
 configured `targetSuffixes` suffix when the referenced table is listed.
 Otherwise, when `targetMatch` is `last-word` or `full-name`, the name must end
 with the referenced column and the remaining word or words must match the
-singular target name. `targetNames` can replace that singular name using `$1`
+singular target name. Repeating a referenced column of more than one word,
+such as `external_id`, skips that check only when that column itself names
+the target, such as `github_account_id` on `github_accounts`. `targetNames`
+can replace that singular name using `$1`
 through `$9`. Composite foreign keys and self-references are skipped unless
 `checkSelfReferences` is set.
 
@@ -68,9 +74,11 @@ and `foreignKeys.followCompositeForeignKeys` default to `false`.
 `foreignKeys.requireForeignKey` defaults to unset, which turns the check off.
 
 Empty `types`, an empty or invalid pattern, an empty hint, a duplicate
-suffix, pattern, or allow object, an unknown `targetMatch`, and a `$n` past
-the pattern's groups fail configuration. An allow or exempt entry needs a
-non-empty reason.
+suffix, pattern, or allow object, an unknown `targetMatch`, an unknown option
+key, and a `$n` past the pattern's groups fail configuration. An allow or
+exempt entry needs a non-empty reason. An `include` or `exclude` list that
+does not select `schemaCatalogPath` skips that catalog. A rule `message`
+replaces the built-in finding text.
 
 ## Valid example
 
