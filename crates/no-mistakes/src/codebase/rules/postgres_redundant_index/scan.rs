@@ -25,9 +25,9 @@ pub(super) fn scan(
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let index_drops = named_drops(root, &facts.schema, |file| &file.dropped_indexes);
-    let table_drops = named_drops(root, &facts.schema, |file| &file.dropped_tables);
-    let indexes = live_indexes(root, &facts.schema, &index_drops, &table_drops);
+    let index_drops = named_drops(root, &facts, |file| &file.dropped_indexes);
+    let table_drops = named_drops(root, &facts, |file| &file.dropped_tables);
+    let indexes = live_indexes(root, &facts, &index_drops, &table_drops);
     let mut used = BTreeSet::new();
     let mut findings = Vec::new();
     for table_indexes in indexes.values() {
@@ -81,12 +81,12 @@ fn scan_table(
 
 fn live_indexes<'a>(
     root: &Path,
-    schema: &'a [SqlSchemaFileFacts],
+    schema: &[&'a SqlSchemaFileFacts],
     index_drops: &[LiveDrop],
     table_drops: &[LiveDrop],
 ) -> BTreeMap<String, Vec<LiveIndex<'a>>> {
     let mut indexes = BTreeMap::<String, Vec<LiveIndex<'a>>>::new();
-    for file in schema {
+    for &file in schema {
         let rel = sql_rel(root, &file.path);
         for index in &file.indexes {
             if dropped_later(index_drops, index.name.as_deref(), &rel, index.line)
@@ -114,7 +114,7 @@ fn live_indexes<'a>(
 
 fn named_drops(
     root: &Path,
-    schema: &[SqlSchemaFileFacts],
+    schema: &[&SqlSchemaFileFacts],
     names: impl Fn(&SqlSchemaFileFacts) -> &[SqlDropIndexMetadata],
 ) -> Vec<LiveDrop> {
     schema

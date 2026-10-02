@@ -14,7 +14,7 @@ pub(super) fn scan(
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = Vec::new();
-    for file in &facts.schema {
+    for file in &facts {
         let rel = sql_rel(root, &file.path);
         for constraint in &file.unnamed_constraints {
             findings.push(RuleFinding {

@@ -120,10 +120,19 @@ fn declaration(tokens: &[TokenWithSpan], at: usize) -> Option<(String, String, u
         return None;
     }
     let mut name_at = object + 1;
-    while ["IF", "NOT", "EXISTS", "ONLY", "CONCURRENTLY"]
-        .iter()
-        .any(|keyword| word(tokens.get(name_at), keyword))
-    {
+    if kind == "index" && word(tokens.get(name_at), "CONCURRENTLY") {
+        name_at += 1;
+    }
+    if word(tokens.get(name_at), "IF") {
+        name_at += 1;
+        if word(tokens.get(name_at), "NOT") {
+            name_at += 1;
+        }
+        if word(tokens.get(name_at), "EXISTS") {
+            name_at += 1;
+        }
+    }
+    if kind == "table" && word(token, "ALTER") && word(tokens.get(name_at), "ONLY") {
         name_at += 1;
     }
     super::procedures::identifier(tokens, name_at).map(|(name, next)| (kind, name, next))

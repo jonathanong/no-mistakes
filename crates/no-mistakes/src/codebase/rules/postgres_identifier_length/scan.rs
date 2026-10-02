@@ -15,7 +15,7 @@ pub(super) fn scan(
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .map_err(|error| anyhow::anyhow!("{RULE_ID} option sqlInclude: {error}"))?;
     let mut findings = Vec::new();
-    for file in &facts.schema {
+    for file in &facts {
         let rel = relative_slash_path(root, &file.path);
         for identifier in &file.declared_identifiers {
             if identifier.name.len() <= opts.max_bytes {

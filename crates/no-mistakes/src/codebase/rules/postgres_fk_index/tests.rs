@@ -185,7 +185,7 @@ fn schema_qualified_index_covers_unqualified_fk() {
         foreign_keys: facts.foreign_keys.clone(),
         ..Default::default()
     };
-    let indexes = scan::indexes_by_table(std::slice::from_ref(&file));
+    let indexes = scan::indexes_by_table(&[&file]);
     let findings = scan::scan_fk(
         "migrations/001.sql",
         sql,

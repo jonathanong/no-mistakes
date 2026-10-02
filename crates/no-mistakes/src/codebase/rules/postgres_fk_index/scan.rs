@@ -17,11 +17,11 @@ pub(super) fn scan(
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let indexes = indexes_by_table(&facts.schema);
+    let indexes = indexes_by_table(&facts);
     let mut used_columns = BTreeSet::new();
     let mut used_tables = BTreeSet::new();
     let mut findings = Vec::new();
-    for file in &facts.schema {
+    for file in &facts {
         let rel = sql_rel(root, &file.path);
         let source = sources
             .read_path(&file.path)
@@ -103,11 +103,11 @@ pub(super) fn covers(index: &SqlCreateIndexMetadata, column: &str) -> bool {
         .is_some_and(|name| name.eq_ignore_ascii_case(column))
 }
 
-pub(super) fn indexes_by_table(
-    schema: &[SqlSchemaFileFacts],
-) -> BTreeMap<String, Vec<&SqlCreateIndexMetadata>> {
+pub(super) fn indexes_by_table<'a>(
+    schema: &[&'a SqlSchemaFileFacts],
+) -> BTreeMap<String, Vec<&'a SqlCreateIndexMetadata>> {
     let mut indexes = BTreeMap::<String, Vec<&SqlCreateIndexMetadata>>::new();
-    for file in schema {
+    for &file in schema {
         for index in &file.indexes {
             indexes
                 .entry(index.table_name.clone())

@@ -14,7 +14,7 @@ pub(super) fn scan(
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = Vec::new();
-    for file in &facts.schema {
+    for file in &facts {
         let rel = sql_rel(root, &file.path);
         for fk in &file.foreign_keys {
             if !missing_explicit_on_delete(fk.delete_action.as_deref()) {

@@ -93,6 +93,9 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   `codebase::postgres` for Rust callers. A single token index accounts for
   declaration modifiers, nested comments, Unicode procedure names, and explicit
   view-column declarations; routine bodies have their own location context.
+  Schema-rule projections borrow these facts; enabling additional migration rules
+  does not clone their nested metadata. Standalone filesystem dispatch declares
+  schema, catalog, and embedded SQL demand before its shared fact pass.
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
 - `ALTER TABLE … VALIDATE CONSTRAINT` rows
 

@@ -8,6 +8,7 @@ pub fn configure_prepared_postgres_plan(
     let dml_rules = [
         "postgres-required-predicates",
         "postgres-generated-column-predicates",
+        "postgres-explicit-columns",
     ];
     plan.postgres_dml |= dml_rules
         .iter()

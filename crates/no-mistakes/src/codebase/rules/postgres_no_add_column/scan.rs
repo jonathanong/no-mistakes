@@ -35,7 +35,7 @@ pub(super) fn scan(
     // Duplicate entries are findings, not additional one-to-one allowances. Keeping
     // only unique entries here prevents a duplicate from also being reported stale.
     let mut remaining_allowed_migrations = unique_allowed_migrations;
-    for file in &facts.schema {
+    for file in &facts {
         let rel = sql_rel(root, &file.path);
         for column in &file.add_columns {
             let actual = AllowedMigration {

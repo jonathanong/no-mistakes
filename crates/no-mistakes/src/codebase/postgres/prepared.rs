@@ -105,7 +105,11 @@ pub(crate) fn prepare(
 
 impl PreparedPostgresFacts {
     pub fn schema(&self, path: &Path) -> anyhow::Result<&SqlSchemaFileFacts> {
-        entry(self.schema.get(path), path).map(Arc::as_ref)
+        let value = self.schema.get(path).or_else(|| {
+            self.schema
+                .get(&crate::codebase::ts_resolver::normalize_path(path))
+        });
+        entry(value, path).map(Arc::as_ref)
     }
     pub fn statements(
         &self,

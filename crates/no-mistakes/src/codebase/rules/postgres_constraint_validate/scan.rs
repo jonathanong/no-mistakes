@@ -16,7 +16,7 @@ pub(super) fn scan(
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut not_valid = BTreeMap::<String, (String, usize)>::new();
     let mut validated = BTreeMap::<String, (String, usize)>::new();
-    for file in &facts.schema {
+    for file in &facts {
         let rel = sql_rel(root, &file.path);
         collect_named(&file.not_valid_constraints, &rel, &mut not_valid);
         collect_named(&file.validated_constraints, &rel, &mut validated);

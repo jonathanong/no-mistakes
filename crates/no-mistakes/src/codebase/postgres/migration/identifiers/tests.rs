@@ -228,3 +228,23 @@ fn recursive_views_and_language_prefixed_do_keep_declaration_locations() {
         );
     }
 }
+
+#[test]
+fn concurrently_is_a_table_name_and_only_an_index_modifier() {
+    let facts = super::super::extract_migration_facts(&fixture_sql("keyword-name.sql"));
+    for name in [
+        "concurrently",
+        "very_long_column_name",
+        "keyword_constraint",
+        "concurrently_index",
+        "another_column",
+    ] {
+        assert!(
+            facts
+                .declared_identifiers
+                .iter()
+                .any(|identifier| identifier.name == name),
+            "{name}: {facts:?}"
+        );
+    }
+}
