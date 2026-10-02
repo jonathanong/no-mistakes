@@ -1,4 +1,4 @@
-SELECT foo$tag$bar FROM other_table;
+SELECT foo$tag$bar, metric$tag$ FROM other_table;
 UPDATE orders SET updated_at = now();
 -- no-mistakes-disable-next-line postgres-no-generated-column-writes
 UPDATE orders SET updated_at = now();

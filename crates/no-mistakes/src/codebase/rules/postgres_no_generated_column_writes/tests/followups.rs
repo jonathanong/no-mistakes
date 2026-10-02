@@ -68,6 +68,23 @@ fn generated_definition_wins_across_migrations() {
 }
 
 #[test]
+fn alter_added_generated_columns_extend_existing_positional_order() {
+    let root = unit_fixture("alter-generated-order");
+    let findings = check_with_files(
+        &root,
+        &config_with_options(""),
+        &[root.join("schema.sql"), root.join("writes.sql")],
+    )
+    .unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.target.as_deref() == Some("new_gen") && finding.line == 2),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn final_ordinary_definition_replaces_generated_state_and_column_order() {
     let (_, _, findings) = scan("recreated-trigger", &["schema.sql", "writes.sql"]);
     assert_eq!(findings.len(), 2, "{findings:#?}");

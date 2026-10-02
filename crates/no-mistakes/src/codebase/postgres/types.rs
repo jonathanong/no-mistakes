@@ -206,4 +206,3 @@ impl fmt::Display for PostgresFactError {
 }
 
 impl std::error::Error for PostgresFactError {}
-

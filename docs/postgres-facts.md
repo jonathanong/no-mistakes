@@ -81,6 +81,14 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
 - `ALTER TABLE … ADD COLUMN`: table, column name, type, nullability, default,
   `is_generated` status, and a source line. `unqualified_table_name` preserves
   the decoded last identifier component, including dots inside quoted names.
+- `table_events`: ordered `SqlTableSchemaEvent::Create`, `AddColumn`, and
+  `Drop` operations. Each records the qualified `table` key and decoded
+  `unqualified_table` component; CREATE and ADD retain column metadata.
+  Unquoted event identifiers fold to lowercase, quoted names preserve case,
+  and table-level primary keys remain attached to their columns. Lexical
+  `source_order` ordinals interleave direct and statically recovered routine
+  DDL, including multiple operations on the same source line. Live catalogs
+  apply CREATE as replacement, ADD in positional order, and DROP as removal.
 - Declared identifiers: each name a statement introduces, unquoted and without
   a schema qualifier, plus that statement's line. This covers `CREATE TABLE`
   (the table, its columns, and inline or table `CONSTRAINT` names),
