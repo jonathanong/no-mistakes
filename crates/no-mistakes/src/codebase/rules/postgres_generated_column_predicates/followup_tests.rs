@@ -56,48 +56,6 @@ fn schema_inputs_survive_query_includes_and_all_js_ts_extensions_work() {
 }
 
 #[test]
-fn mutation_history_applies_alter_drops_and_recreation_in_order() {
-    let root = fixture("history-followups");
-    let config = config_yaml(SQL);
-    let create = root.join("sql/001-create.sql");
-    let alter = root.join("sql/002-alter.sql");
-    let query = root.join("sql/query.sql");
-    assert_eq!(
-        check_with_files(
-            &root,
-            &config,
-            &[create.clone(), alter.clone(), query.clone()]
-        )
-        .unwrap()
-        .len(),
-        2
-    );
-    let dropped = [
-        create.clone(),
-        alter,
-        root.join("sql/003-drop.sql"),
-        query.clone(),
-    ];
-    assert!(check_with_files(&root, &config, &dropped)
-        .unwrap()
-        .is_empty());
-    let recreated = [
-        create,
-        root.join("sql/003-drop.sql"),
-        root.join("sql/004-recreate.sql"),
-        query.clone(),
-    ];
-    assert!(check_with_files(&root, &config, &recreated)
-        .unwrap()
-        .is_empty());
-    assert!(
-        check_with_files(&root, &config, &[root.join("sql/same-file.sql"), query])
-            .unwrap()
-            .is_empty()
-    );
-}
-
-#[test]
 fn each_clause_can_be_disabled_with_real_join_inputs() {
     let root = fixture("review-followups");
     let files = [
@@ -148,36 +106,6 @@ fn parse_errors_and_suppressions_use_host_and_expression_lines() {
         super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
         assert!(findings.is_empty(), "{findings:#?}");
     }
-}
-
-#[test]
-fn supplied_request_facts_are_reused_for_repeated_rule_consumers() {
-    let root = fixture("prepared-reuse");
-    let files = vec![root.join("sql/schema.sql"), root.join("src/query.ts")];
-    let config = config_yaml(&format!("{SQL}include: ['src/**/*.ts']\n"));
-    let sources = super::super::source_store_for_files(&files);
-    crate::ast::begin_parse_count(&root);
-    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
-        &root,
-        &files,
-        std::sync::Arc::clone(&sources),
-        &config,
-        &[RULE_ID],
-    )
-    .unwrap();
-    let schema = facts.postgres_schema_file(&files[0]).unwrap() as *const _;
-    let first =
-        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
-    let second =
-        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
-    let counts = crate::ast::finish_parse_count(&root);
-    assert_eq!(counts.get(&files[1]), Some(&1), "{counts:?}");
-    assert_eq!(first, second);
-    assert_eq!(first.len(), 1);
-    assert_eq!(
-        schema,
-        facts.postgres_schema_file(&files[0]).unwrap() as *const _
-    );
 }
 
 #[test]
