@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-identifier-length
+    scope: repository
+    options:
+      sqlInclude: [schema.sql]
+      maxBytes: 10
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json

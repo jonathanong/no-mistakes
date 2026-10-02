@@ -249,3 +249,38 @@ fn compile_sql_include_rejects_invalid_globs() {
     let error = super::compile_sql_include(&["[".into()]).unwrap_err();
     assert!(error.to_string().contains("invalid sqlInclude"));
 }
+
+#[test]
+fn prepared_schema_projection_borrows_request_owned_metadata() {
+    let root = fixture_root();
+    let paths = vec![schema_path("generated-column.sql")];
+    let sources = Arc::new(store(&paths));
+    let facts =
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+            &root,
+            paths.clone(),
+            Vec::new(),
+            CheckFactPlan {
+                postgres_schema: true,
+                postgres_sql_include: vec!["schema/*.sql".to_owned()],
+                ..Default::default()
+            },
+            None,
+            Arc::clone(&sources),
+        );
+    let selected = super::collect_prepared_schema_facts(
+        &root,
+        &paths,
+        &PostgresSchemaOptions {
+            sql_include: vec!["schema/*.sql".to_owned()],
+        },
+        &facts,
+    )
+    .unwrap();
+    // Identity matters: a deep clone would retain values but repeat per-rule allocations.
+    assert!(std::ptr::eq(
+        selected[0],
+        facts.postgres_schema_file(&paths[0]).unwrap()
+    ));
+    assert_eq!(sources.physical_read_count(), 1);
+}

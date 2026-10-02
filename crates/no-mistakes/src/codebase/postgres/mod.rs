@@ -75,10 +75,12 @@ pub use statements::{
 };
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
-    SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata,
-    SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts, SqlStatementKind,
-    SqlTableSchemaEvent, SqlUnnamedConstraint,
+    SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDeclaredIdentifier,
+    SqlDropIndexMetadata, SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint,
+    SqlSchemaFileFacts, SqlStatementKind, SqlTableSchemaEvent, SqlUnnamedConstraint,
 };
 
 #[cfg(test)]
 mod tests;
+
+pub(crate) use collect::collect_prepared_schema_facts;

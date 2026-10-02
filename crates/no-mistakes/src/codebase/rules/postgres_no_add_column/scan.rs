@@ -1,6 +1,5 @@
 use super::{sql_rel, AllowedMigration, CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::collect_postgres_facts;
+use crate::codebase::postgres::collect_prepared_schema_facts;
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;
 use std::collections::BTreeSet;
@@ -10,20 +9,11 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    sources: &SourceStore,
+    _sources: &SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            postgres_schema: true,
-            ..CheckFactPlan::default()
-        },
-        &opts.schema,
-        &Default::default(),
-    )
-    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
+        .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = Vec::new();
     let mut unique_allowed_migrations = BTreeSet::new();
     for migration in &opts.allowed_migrations {
@@ -45,7 +35,7 @@ pub(super) fn scan(
     // Duplicate entries are findings, not additional one-to-one allowances. Keeping
     // only unique entries here prevents a duplicate from also being reported stale.
     let mut remaining_allowed_migrations = unique_allowed_migrations;
-    for file in &facts.schema {
+    for file in &facts {
         let rel = sql_rel(root, &file.path);
         for column in &file.add_columns {
             let actual = AllowedMigration {

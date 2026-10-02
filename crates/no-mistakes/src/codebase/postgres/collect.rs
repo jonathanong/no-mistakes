@@ -52,6 +52,21 @@ pub fn postgres_sql_paths(
         .collect())
 }
 
+/// Project selected schema files from the request-owned fact pass.
+pub(crate) fn collect_prepared_schema_facts<'a>(
+    root: &Path,
+    candidates: &[PathBuf],
+    options: &PostgresSchemaOptions,
+    facts: &'a crate::codebase::check_facts::CheckFactMap,
+) -> anyhow::Result<Vec<&'a SqlSchemaFileFacts>> {
+    let mut schema = postgres_sql_paths(root, candidates, options)?
+        .iter()
+        .map(|path| facts.postgres_schema_file(path))
+        .collect::<anyhow::Result<Vec<_>>>()?;
+    schema.sort_by(|left, right| left.path.cmp(&right.path));
+    Ok(schema)
+}
+
 /// Read TS/JS paths through `sources` and extract executor call SQL.
 pub fn extract_embedded_sql_facts(
     _root: &Path,

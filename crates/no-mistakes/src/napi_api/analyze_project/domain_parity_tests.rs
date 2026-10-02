@@ -59,3 +59,5 @@ include!("domain_parity_tests/symbols.rs");
 include!("domain_parity_tests/symbol_parse_modes.rs");
 include!("domain_parity_tests/heterogeneous.rs");
 include!("domain_parity_tests/language_rules.rs");
+
+include!("domain_parity_tests/postgres_identifier.rs");

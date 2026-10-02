@@ -7,6 +7,12 @@ use std::sync::Arc;
 
 mod generated_predicates;
 mod naming;
+mod prepared_schema;
+mod schema;
+use schema::{
+    column_requires_trigger, conflict_ordering, duplicate_function_body, lock_ordering,
+    required_comments,
+};
 
 use naming::{
     array_columns, column_naming, explicit_columns, finite_text, object_naming,
@@ -31,17 +37,15 @@ pub(super) fn run(
         }
         POSTGRES_CONFLICT_ORDERING => conflict_ordering(root, config, files, sources, facts),
         POSTGRES_CONSTRAINT_VALIDATE => {
-            postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
+            prepared_schema::constraint_validate(root, config, files, sources, facts)
         }
         POSTGRES_EXPLICIT_COLUMNS => explicit_columns(root, config, files, sources, facts),
         POSTGRES_NO_ADD_COLUMN => {
-            postgres_no_add_column::check_with_files_and_sources(root, config, files, sources)
+            prepared_schema::no_add_column(root, config, files, sources, facts)
         }
-        POSTGRES_FK_INDEX => {
-            postgres_fk_index::check_with_files_and_sources(root, config, files, sources)
-        }
+        POSTGRES_FK_INDEX => prepared_schema::fk_index(root, config, files, sources, facts),
         POSTGRES_REDUNDANT_INDEX => {
-            postgres_redundant_index::check_with_files_and_sources(root, config, files, sources)
+            prepared_schema::redundant_index(root, config, files, sources, facts)
         }
         POSTGRES_GENERATED_COLUMN_PREDICATES => {
             generated_predicates::run(root, config, files, sources, facts)
@@ -56,21 +60,17 @@ pub(super) fn run(
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }
         POSTGRES_IDENTIFIER_LENGTH => {
-            postgres_identifier_length::check_with_files_and_sources(root, config, files, sources)
+            prepared_schema::identifier_length(root, config, files, sources, facts)
         }
         POSTGRES_ARRAY_COLUMNS => array_columns(root, config, files, sources, facts),
         POSTGRES_FINITE_TEXT_COLUMNS => finite_text(root, config, files, sources, facts),
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
         POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
         POSTGRES_REQUIRE_FK_ON_DELETE => {
-            postgres_require_fk_on_delete::check_with_files_and_sources(
-                root, config, files, sources,
-            )
+            prepared_schema::require_fk_on_delete(root, config, files, sources, facts)
         }
         POSTGRES_REQUIRE_NAMED_CONSTRAINTS => {
-            postgres_require_named_constraints::check_with_files_and_sources(
-                root, config, files, sources,
-            )
+            prepared_schema::require_named_constraints(root, config, files, sources, facts)
         }
         POSTGRES_REQUIRE_QUERY_ANNOTATION => {
             postgres_require_query_annotation::check_with_files_and_sources(
@@ -86,98 +86,13 @@ pub(super) fn run(
         }
         POSTGRES_TABLE_SHAPE => table_shape(root, config, files, sources, facts),
         POSTGRES_SQL_STATEMENT_POLICY => {
-            postgres_sql_statement_policy::check_with_files_and_sources(
-                root, config, files, sources,
-            )
+            prepared_schema::sql_statement_policy(root, config, files, sources, facts)
         }
         POSTGRES_IDEMPOTENT_INSERT => {
             postgres_idempotent_insert::check_with_files_and_sources(root, config, files, sources)
         }
         _ => return None,
     })
-}
-
-fn duplicate_function_body(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_duplicate_function_body::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => postgres_duplicate_function_body::check_with_files_and_sources(
-            root, config, files, sources,
-        ),
-    }
-}
-
-fn required_comments(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_required_comments::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => {
-            postgres_required_comments::check_with_files_and_sources(root, config, files, sources)
-        }
-    }
-}
-
-fn column_requires_trigger(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_column_requires_trigger::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => postgres_column_requires_trigger::check_with_files_and_sources(
-            root, config, files, sources,
-        ),
-    }
-}
-
-fn conflict_ordering(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_conflict_ordering::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => {
-            postgres_conflict_ordering::check_with_files_and_sources(root, config, files, sources)
-        }
-    }
-}
-
-fn lock_ordering(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_lock_ordering::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources),
-    }
 }
 
 #[cfg(test)]

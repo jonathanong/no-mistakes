@@ -1,94 +1,176 @@
-/// Byte offset of `words` in `sql`, skipping comments and quoted text.
-///
-/// The parser drops token locations, so declaration lines come from this scan.
-pub(super) fn find_opening(sql: &str, words: &[&str]) -> Option<(usize, usize)> {
-    let lower = sql.to_ascii_lowercase();
-    let bytes = lower.as_bytes();
-    let mut index = 0;
-    while index < bytes.len() {
-        if bytes[index] == b'-' && bytes.get(index + 1) == Some(&b'-') {
-            index = skip_line(&lower, index);
-            continue;
-        }
-        if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'*') {
-            index = skip_block(&lower, index);
-            continue;
-        }
-        if bytes[index] == b'\'' || bytes[index] == b'"' {
-            index = skip_quoted(&lower, index);
-            continue;
-        }
-        if let Some(end) = match_words(&lower, index, words) {
-            return Some((index, end));
-        }
-        index += lower[index..].chars().next().map_or(1, char::len_utf8);
+use crate::codebase::postgres::parse::unicode::tokenize_raw_unicode;
+use crate::codebase::postgres::types::SqlDeclaredIdentifier;
+use sqlparser::tokenizer::{Token, TokenWithSpan};
+use std::collections::{BTreeMap, VecDeque};
+
+/// One token pass indexes declarations by kind/name. Dollar-quoted routine
+/// bodies are opaque here; recovered bodies get their own location context.
+#[derive(Default)]
+pub(in crate::codebase::postgres::migration) struct Locations {
+    lines: BTreeMap<(String, String), VecDeque<usize>>,
+    recursive_views: Vec<SqlDeclaredIdentifier>,
+}
+
+impl Locations {
+    pub(in crate::codebase::postgres::migration) fn new(sql: &str) -> Self {
+        let mut locations = Self::default();
+        locations.index(sql, 0);
+        locations
     }
-    None
-}
 
-pub(super) fn line_number(sql: &str, byte: usize) -> usize {
-    sql.get(..byte)
-        .unwrap_or(sql)
-        .bytes()
-        .filter(|byte| *byte == b'\n')
-        .count()
-        + 1
-}
-
-fn match_words(sql: &str, start: usize, words: &[&str]) -> Option<usize> {
-    let mut at = start;
-    for (index, word) in words.iter().enumerate() {
-        if index > 0 {
-            at = skip_whitespace(sql, at)?;
-        }
-        if !sql[at..].starts_with(word) || !word_boundary(sql, at + word.len()) {
-            return None;
-        }
-        at += word.len();
+    pub(super) fn take(&mut self, kind: &str, name: &str) -> Option<usize> {
+        self.lines
+            .get_mut(&(kind.to_owned(), name.to_owned()))?
+            .pop_front()
     }
-    Some(at)
-}
 
-fn word_boundary(sql: &str, at: usize) -> bool {
-    sql[at..].chars().next().is_none_or(|character| {
-        !(character.is_alphanumeric() || character == '_' || character == '$')
-    })
-}
-
-fn skip_whitespace(sql: &str, start: usize) -> Option<usize> {
-    let bytes = sql.as_bytes();
-    let mut at = start;
-    while at < bytes.len() && bytes[at].is_ascii_whitespace() {
-        at += 1;
+    pub(in crate::codebase::postgres::migration) fn unparsed_declarations(
+        &self,
+    ) -> Vec<SqlDeclaredIdentifier> {
+        let mut names = self
+            .lines
+            .iter()
+            .filter(|((kind, _), _)| kind == "procedure")
+            .flat_map(|((_, name), lines)| {
+                lines.iter().map(|line| SqlDeclaredIdentifier {
+                    name: name.clone(),
+                    line: *line,
+                })
+            })
+            .collect::<Vec<_>>();
+        names.extend(self.recursive_views.iter().cloned());
+        names.sort_by_key(|name| name.line);
+        names
     }
-    (at > start).then_some(at)
-}
 
-fn skip_line(sql: &str, start: usize) -> usize {
-    sql[start..]
-        .find('\n')
-        .map_or(sql.len(), |offset| start + offset + 1)
-}
-
-fn skip_block(sql: &str, start: usize) -> usize {
-    sql[start + 2..]
-        .find("*/")
-        .map_or(sql.len(), |offset| start + 2 + offset + 2)
-}
-
-fn skip_quoted(sql: &str, start: usize) -> usize {
-    let bytes = sql.as_bytes();
-    let quote = bytes[start];
-    let mut index = start + 1;
-    while index < bytes.len() {
-        if bytes[index] == quote {
-            if bytes.get(index + 1) == Some(&quote) {
-                index += 2;
-                continue;
+    fn index(&mut self, sql: &str, base_line: usize) {
+        let tokens = tokenize_raw_unicode(sql)
+            .into_iter()
+            .filter(|token| !matches!(token.token, Token::Whitespace(_)))
+            .collect::<Vec<_>>();
+        for (at, token) in tokens.iter().enumerate() {
+            self.index_do_body(&tokens, at, base_line);
+            if let Some((kind, name, next)) = declaration(&tokens, at) {
+                if kind == "view" && recursive_view(&tokens, at) {
+                    // sqlparser does not support RECURSIVE VIEW; retain its declared names.
+                    self.recursive_views.extend(super::views::names(
+                        &tokens,
+                        name,
+                        next,
+                        base_line + token.span.start.line as usize,
+                    ));
+                    continue;
+                }
+                self.lines
+                    .entry((kind, name))
+                    .or_default()
+                    .push_back(base_line + token.span.start.line as usize);
             }
-            return index + 1;
         }
-        index += 1;
     }
-    sql.len()
+
+    fn index_do_body(&mut self, tokens: &[TokenWithSpan], at: usize, base_line: usize) {
+        if !word(tokens.get(at), "DO") {
+            return;
+        }
+        if word(tokens.get(at + 1), "LANGUAGE")
+            && !tokens.get(at + 2).is_some_and(|token| {
+                crate::codebase::postgres::parse::is_plpgsql_language(&token.token)
+            })
+        {
+            return;
+        }
+        let body_at = at
+            + if word(tokens.get(at + 1), "LANGUAGE") {
+                3
+            } else {
+                1
+            };
+        if let Some(TokenWithSpan {
+            token: Token::DollarQuotedString(body),
+            span,
+        }) = tokens.get(body_at)
+        {
+            // Lenient parsing recovers direct DO DDL, unlike routine bodies.
+            self.index(&body.value, base_line + span.start.line as usize - 1);
+        }
+    }
+}
+
+fn declaration(tokens: &[TokenWithSpan], at: usize) -> Option<(String, String, usize)> {
+    let token = tokens.get(at);
+    if !word(token, "CREATE") && !word(token, "ALTER") {
+        return None;
+    }
+    let mut object = at + 1;
+    while is_modifier(tokens.get(object)) {
+        object += 1;
+    }
+    let Token::Word(kind) = &tokens.get(object)?.token else {
+        return None;
+    };
+    let kind = kind.value.to_ascii_lowercase();
+    if kind == "procedure" && word(token, "ALTER") {
+        return None;
+    }
+    if ![
+        "table",
+        "index",
+        "view",
+        "trigger",
+        "function",
+        "procedure",
+        "type",
+    ]
+    .contains(&kind.as_str())
+    {
+        return None;
+    }
+    let mut name_at = object + 1;
+    if kind == "index" && word(tokens.get(name_at), "CONCURRENTLY") {
+        name_at += 1;
+    }
+    if word(tokens.get(name_at), "IF") {
+        name_at += 1;
+        if word(tokens.get(name_at), "NOT") {
+            name_at += 1;
+        }
+        if word(tokens.get(name_at), "EXISTS") {
+            name_at += 1;
+        }
+    }
+    if kind == "table" && word(token, "ALTER") && word(tokens.get(name_at), "ONLY") {
+        name_at += 1;
+    }
+    super::procedures::identifier(tokens, name_at).map(|(name, next)| (kind, name, next))
+}
+
+fn recursive_view(tokens: &[TokenWithSpan], at: usize) -> bool {
+    tokens
+        .iter()
+        .skip(at + 1)
+        .take_while(|token| is_modifier(Some(token)))
+        .any(|token| word(Some(token), "RECURSIVE"))
+}
+
+fn is_modifier(token: Option<&TokenWithSpan>) -> bool {
+    [
+        "OR",
+        "REPLACE",
+        "TEMP",
+        "TEMPORARY",
+        "UNLOGGED",
+        "CONSTRAINT",
+        "UNIQUE",
+        "MATERIALIZED",
+        "RECURSIVE",
+        "LOCAL",
+        "GLOBAL",
+    ]
+    .iter()
+    .any(|keyword| word(token, keyword))
+}
+
+pub(super) fn word(token: Option<&TokenWithSpan>, expected: &str) -> bool {
+    matches!(token.map(|token| &token.token), Some(Token::Word(word)) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected))
 }

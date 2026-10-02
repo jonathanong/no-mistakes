@@ -17,11 +17,7 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
 }
 
 pub(crate) fn extract_from_parsed(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
-    let mut facts = extract_parsed_migration_facts(sql, statements);
-    facts
-        .declared_identifiers
-        .extend(identifiers::procedure_names(sql));
-    facts
+    extract_parsed_migration_facts(sql, statements)
 }
 
 fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
@@ -38,13 +34,14 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
     let mut create_index_n = 0usize;
     let mut drop_index_n = 0usize;
     let mut drop_table_n = 0usize;
-    let mut identifier_from = 0usize;
+    let mut identifier_locations = identifiers::Locations::new(sql);
+    facts
+        .declared_identifiers
+        .extend(identifier_locations.unparsed_declarations());
     for statement in statements {
-        facts.declared_identifiers.extend(identifiers::collect(
-            sql,
-            statement,
-            &mut identifier_from,
-        ));
+        facts
+            .declared_identifiers
+            .extend(identifiers::collect(&mut identifier_locations, statement));
         statements::record(sql, statement, &mut facts);
         table_events::record(statement, &mut facts.table_events);
         match statement {

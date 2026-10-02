@@ -56,7 +56,7 @@ fn declaration_line_skips_comments_and_quoted_text() {
 }
 
 #[test]
-fn missing_opening_phrase_uses_line_one() {
+fn unmatched_source_does_not_invent_a_declaration() {
     let statement = crate::codebase::postgres::parse_postgres_sql("CREATE TABLE items (id int)")
         .unwrap()
         .into_iter()
@@ -65,10 +65,9 @@ fn missing_opening_phrase_uses_line_one() {
     let Statement::CreateTable(_) = &statement else {
         panic!("expected a table");
     };
-    let mut from = 0;
-    let names = super::collect("SELECT 1;", &statement, &mut from);
-    assert_eq!(names[0].line, 1);
-    assert_eq!(names[0].name, "items");
+    let mut locations = super::Locations::new("SELECT 1;");
+    let names = super::collect(&mut locations, &statement);
+    assert!(names.is_empty());
 }
 
 #[test]
@@ -88,7 +87,8 @@ fn procedure_names_drop_the_schema_and_unescape_quotes() {
 #[test]
 fn procedure_scan_skips_a_name_it_cannot_read() {
     let names =
-        super::procedure_names("CREATE PROCEDURE (\nCREATE PROCEDURE \"open\nCREATE PROCEDURE   ");
+        super::Locations::new("CREATE PROCEDURE (\nCREATE PROCEDURE \"open\nCREATE PROCEDURE   ")
+            .unparsed_declarations();
     assert!(names.is_empty());
 }
 
@@ -131,11 +131,147 @@ fn statements_without_declared_names_are_ignored() {
 
 #[test]
 fn unterminated_comments_and_quotes_do_not_hide_a_later_name() {
-    assert!(super::locate::find_opening("-- comment", &["create", "table"]).is_none());
-    assert!(super::locate::find_opening("/* comment", &["create", "table"]).is_none());
-    assert!(super::locate::find_opening("'unterminated", &["create", "table"]).is_none());
+    assert!(super::Locations::new("-- comment")
+        .unparsed_declarations()
+        .is_empty());
+    assert!(super::Locations::new("/* comment")
+        .unparsed_declarations()
+        .is_empty());
+    assert!(super::Locations::new("'unterminated")
+        .unparsed_declarations()
+        .is_empty());
 }
 
 fn name_of(constraint: &TableConstraint) -> Option<&str> {
     constraint_name(constraint).map(|name| name.value.as_str())
+}
+
+#[test]
+fn invalid_identifier_tokens_fail_closed_without_inventing_names() {
+    for fixture in [
+        "missing.sql",
+        "unicode-missing.sql",
+        "nonword.sql",
+        "qualifier.sql",
+        "unicode-number.sql",
+        "unicode-word.sql",
+        "unicode-space.sql",
+        "unicode-space-value.sql",
+        "escape-word.sql",
+        "escape-empty.sql",
+        "escape-multiple.sql",
+        "invalid-unicode.sql",
+    ] {
+        let tokens = fixture_tokens(fixture);
+        assert!(
+            super::procedures::identifier(&tokens, 2).is_none(),
+            "{fixture}: {tokens:?}"
+        );
+    }
+    for (fixture, expected) in [
+        ("quoted-apostrophe.sql", "owner's_proc"),
+        ("quoted-u.sql", "U"),
+        ("plain-u.sql", "U"),
+    ] {
+        assert_eq!(
+            super::procedures::identifier(&fixture_tokens(fixture), 2)
+                .unwrap()
+                .0,
+            expected
+        );
+    }
+    assert!(super::Locations::new(&fixture_sql("unknown-kind.sql"))
+        .unparsed_declarations()
+        .is_empty());
+    let sql = fixture_sql("modifiers.sql");
+    let facts = super::super::extract_migration_facts(&sql);
+    assert!(facts
+        .declared_identifiers
+        .iter()
+        .any(|name| name.name == "score"));
+}
+
+fn fixture_sql(name: &str) -> String {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/identifier-length/tokens")
+        .join(name);
+    std::fs::read_to_string(path).unwrap()
+}
+
+fn fixture_tokens(name: &str) -> Vec<sqlparser::tokenizer::TokenWithSpan> {
+    crate::codebase::postgres::parse::unicode::tokenize_raw_unicode(&fixture_sql(name))
+        .into_iter()
+        .filter(|token| !matches!(token.token, sqlparser::tokenizer::Token::Whitespace(_)))
+        .collect()
+}
+
+#[test]
+fn recursive_views_and_language_prefixed_do_keep_declaration_locations() {
+    let facts = super::super::extract_migration_facts(&fixture_sql("recursive-do.sql"));
+    for (name, line) in [
+        ("recursive_items", 1),
+        ("recursive_column", 1),
+        ("second_column", 1),
+        ("recovered_items", 3),
+        ("recovered_column", 3),
+        ("recovered_proc", 4),
+        ("view_without_columns", 7),
+        ("malformed_columns", 8),
+    ] {
+        assert!(
+            facts
+                .declared_identifiers
+                .iter()
+                .any(|identifier| { identifier.name == name && identifier.line == line }),
+            "missing {name}:{line}: {:?}",
+            facts.declared_identifiers
+        );
+    }
+}
+
+#[test]
+fn concurrently_is_a_table_name_and_only_an_index_modifier() {
+    let facts = super::super::extract_migration_facts(&fixture_sql("keyword-name.sql"));
+    for name in [
+        "concurrently",
+        "very_long_column_name",
+        "keyword_constraint",
+        "concurrently_index",
+        "another_column",
+    ] {
+        assert!(
+            facts
+                .declared_identifiers
+                .iter()
+                .any(|identifier| identifier.name == name),
+            "{name}: {facts:?}"
+        );
+    }
+}
+
+#[test]
+fn foreign_do_bodies_do_not_consume_outer_declaration_locations() {
+    let sql = fixture_sql("foreign-do.sql");
+    let mut locations = super::Locations::new(&sql);
+    assert_eq!(locations.take("table", "actual_items"), Some(8));
+    assert_eq!(locations.take("table", "actual_items"), None);
+    assert_eq!(locations.take("table", "supported_items"), Some(10));
+    assert_eq!(locations.take("table", "quoted_supported_items"), Some(6));
+    assert_eq!(locations.take("table", "skipped_items"), None);
+    assert_eq!(
+        locations.take("table", "uppercase_supported_items"),
+        Some(16)
+    );
+    let facts = super::super::extract_migration_facts(&sql);
+    let actual = facts
+        .declared_identifiers
+        .iter()
+        .filter(|identifier| identifier.name == "actual_items")
+        .collect::<Vec<_>>();
+    assert_eq!(actual.len(), 1, "{facts:?}");
+    assert_eq!(actual[0].line, 8);
+    assert!(!facts
+        .declared_identifiers
+        .iter()
+        .any(|identifier| identifier.name == "skipped_items"));
 }

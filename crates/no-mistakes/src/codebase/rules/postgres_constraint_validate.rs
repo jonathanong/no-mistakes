@@ -33,7 +33,24 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
@@ -47,7 +64,7 @@ pub(crate) fn check_with_files_and_sources(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &compiled, &files, sources)?);
+        findings.extend(scan::scan(root, &compiled, &files, sources, facts)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)

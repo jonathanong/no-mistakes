@@ -7,6 +7,13 @@ mod lenient;
 pub(super) mod unicode;
 mod unicode_decode;
 
+/// Match the built-in language using PostgreSQL identifier casing.
+pub(super) fn is_plpgsql_language(token: &sqlparser::tokenizer::Token) -> bool {
+    matches!(token, sqlparser::tokenizer::Token::Word(language)
+        if language.value == "plpgsql"
+            || language.quote_style.is_none() && language.value.eq_ignore_ascii_case("plpgsql"))
+}
+
 /// Parse failure for PostgreSQL SQL. Never panics.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostgresParseError {
