@@ -174,3 +174,14 @@ actually has its trigger. This rule only rejects writes to the listed names.
 
 Catalog history preserves existing definitions for `CREATE TABLE IF NOT EXISTS`
 and `ADD COLUMN IF NOT EXISTS`; these statements add definitions only when absent.
+
+Migration files replay in directory order, then by the first numeric run in each
+filename (for example, `2.sql` precedes `10.sql`). Table lifecycle state keeps
+schema-qualified identities. Qualified DML matches that identity; unqualified
+DML matches a unique surviving table name and skips ambiguous names. Findings
+include the schema when multiple live tables share a name. An unqualified CREATE
+can still supply a later qualified ALTER for that same unqualified table.
+
+Live table history excludes DDL inside dormant function/procedure definitions or
+conditional PL/pgSQL branches. Top-level DDL and unconditional immediate DO DDL
+remain visible; broad schema policy checks still inspect routine definitions.

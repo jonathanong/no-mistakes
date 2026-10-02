@@ -10,10 +10,11 @@ mod width;
 
 pub use insert::positional_insert_hits;
 
-/// Schema or extra generated columns keyed by lowercase table name.
+/// Generated columns keyed by qualified table identity, with unique unqualified lookup.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GeneratedTableColumns {
     tables: BTreeMap<String, GeneratedTable>,
+    relations: BTreeMap<String, BTreeSet<String>>,
 }
 
 /// Generated columns for one table, plus CREATE TABLE order when known.
@@ -38,8 +39,33 @@ impl GeneratedTableColumns {
 
     pub fn insert_table(&mut self, table: GeneratedTable) {
         let key = table.name.to_ascii_lowercase();
+        let base = key.rsplit('.').next().unwrap_or(&key).to_string();
+        self.register_relation(&key, &base);
+        self.insert_table_with_key(&key, table);
+    }
+
+    pub(crate) fn register_relation(&mut self, key: &str, base: &str) {
+        self.relations
+            .entry(base.to_ascii_lowercase())
+            .or_default()
+            .insert(key.to_ascii_lowercase());
+    }
+
+    pub(crate) fn display_name(&self, key: &str, base: &str) -> String {
+        if self
+            .relations
+            .get(&base.to_ascii_lowercase())
+            .is_some_and(|keys| keys.len() > 1)
+        {
+            key.to_string()
+        } else {
+            base.to_string()
+        }
+    }
+
+    pub(crate) fn insert_table_with_key(&mut self, key: &str, table: GeneratedTable) {
         self.tables
-            .entry(key)
+            .entry(key.to_ascii_lowercase())
             .and_modify(|existing| {
                 existing.generated.extend(table.generated.iter().cloned());
                 if existing.column_order.is_none() {
@@ -50,17 +76,39 @@ impl GeneratedTableColumns {
     }
 
     pub(crate) fn extend_from(&mut self, other: &Self) {
-        for table in other.tables.values() {
-            self.insert_table(table.clone());
+        for (base, keys) in &other.relations {
+            self.relations
+                .entry(base.clone())
+                .or_default()
+                .extend(keys.iter().cloned());
+        }
+        for (key, table) in &other.tables {
+            self.insert_table_with_key(key, table.clone());
         }
     }
 
+    /// Resolve an exact relation or a unique unqualified name.
     pub fn get(&self, table: &str) -> Option<&GeneratedTable> {
-        self.tables.get(&table.to_ascii_lowercase())
+        let key = table.to_ascii_lowercase();
+        self.tables.get(&key).or_else(|| {
+            if let Some((_, base)) = key.rsplit_once('.') {
+                // Preserve legacy public catalogs populated with unqualified names.
+                return self.tables.get(base);
+            }
+            let keys = self.relations.get(&key)?;
+            (keys.len() == 1)
+                .then(|| self.tables.get(keys.first().unwrap()))
+                .flatten()
+        })
     }
 
     pub fn contains_table(&self, table: &str) -> bool {
-        self.tables.contains_key(&table.to_ascii_lowercase())
+        let key = table.to_ascii_lowercase();
+        self.tables.contains_key(&key)
+            || self
+                .relations
+                .get(&key)
+                .is_some_and(|keys| keys.iter().any(|key| self.tables.contains_key(key)))
     }
 }
 

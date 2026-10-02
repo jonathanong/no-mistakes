@@ -16,15 +16,29 @@ pub(crate) type LiveTables<'a> = BTreeMap<String, LiveTable<'a>>;
 
 pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
     let mut tables = BTreeMap::new();
-    for file in schema {
-        if file.table_events.is_empty() {
+    let mut ordered: Vec<_> = schema.iter().collect();
+    ordered.sort_by(|left, right| {
+        crate::codebase::postgres::cmp_sql_rel(
+            &left.path.to_string_lossy().replace('\\', "/"),
+            &right.path.to_string_lossy().replace('\\', "/"),
+        )
+    });
+    for file in ordered {
+        if !file.table_events_collected {
             // Public Rust callers can supply the original facts without ordered events.
             for table in &file.tables {
-                create(&mut tables, &table.table_name, &table.columns, false);
+                create(
+                    &mut tables,
+                    &table.table_name,
+                    &table.table_name,
+                    &table.columns,
+                    false,
+                );
             }
             for column in &file.add_columns {
                 add(
                     &mut tables,
+                    &column.table_name,
                     &column.unqualified_table_name,
                     &column.column_name,
                     column.is_generated,
@@ -36,14 +50,22 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
         for event in &file.table_events {
             match event {
                 SqlTableSchemaEvent::Create {
+                    table,
                     unqualified_table,
                     columns,
                     if_not_exists,
                     ..
                 } => {
-                    create(&mut tables, unqualified_table, columns, *if_not_exists);
+                    create(
+                        &mut tables,
+                        table,
+                        unqualified_table,
+                        columns,
+                        *if_not_exists,
+                    );
                 }
                 SqlTableSchemaEvent::AddColumn {
+                    table,
                     unqualified_table,
                     column,
                     if_not_exists,
@@ -51,6 +73,7 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                 } => {
                     add(
                         &mut tables,
+                        table,
                         unqualified_table,
                         &column.name,
                         column.is_generated,
@@ -58,9 +81,12 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                     );
                 }
                 SqlTableSchemaEvent::Drop {
-                    unqualified_table, ..
+                    table,
+                    unqualified_table,
+                    ..
                 } => {
-                    tables.remove(&unqualified_table.to_ascii_lowercase());
+                    let key = existing_key(&tables, table, unqualified_table).to_string();
+                    tables.remove(&key);
                 }
             }
         }
@@ -70,15 +96,16 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
 
 fn create<'a>(
     tables: &mut LiveTables<'a>,
+    key: &'a str,
     name: &'a str,
     columns: &'a [SqlColumnMetadata],
     if_not_exists: bool,
 ) {
-    if if_not_exists && tables.contains_key(&name.to_ascii_lowercase()) {
+    if if_not_exists && tables.contains_key(key) {
         return;
     }
     tables.insert(
-        name.to_ascii_lowercase(),
+        key.to_string(),
         LiveTable {
             name,
             columns: columns
@@ -95,18 +122,18 @@ fn create<'a>(
 
 fn add<'a>(
     tables: &mut LiveTables<'a>,
+    key: &'a str,
     table: &'a str,
     name: &'a str,
     generated: bool,
     if_not_exists: bool,
 ) {
-    let entry = tables
-        .entry(table.to_ascii_lowercase())
-        .or_insert_with(|| LiveTable {
-            name: table,
-            columns: Vec::new(),
-            complete: false,
-        });
+    let key = existing_key(tables, key, table).to_string();
+    let entry = tables.entry(key).or_insert_with(|| LiveTable {
+        name: table,
+        columns: Vec::new(),
+        complete: false,
+    });
     let column = LiveColumn { name, generated };
     if let Some(existing) = entry
         .columns
@@ -118,5 +145,14 @@ fn add<'a>(
         }
     } else {
         entry.columns.push(column);
+    }
+}
+
+fn existing_key<'a>(tables: &LiveTables<'_>, key: &'a str, unqualified: &'a str) -> &'a str {
+    // An unqualified CREATE has unknown search_path; a later qualified ALTER can identify it.
+    if !tables.contains_key(key) && tables.contains_key(unqualified) {
+        unqualified
+    } else {
+        key
     }
 }

@@ -8,8 +8,8 @@ pub(super) fn catalog_from_tables(
     tables: &LiveTables<'_>,
     extra: &[ExtraGeneratedColumn],
 ) -> GeneratedTableColumns {
-    let mut catalog = GeneratedTableColumns::default();
-    for table in tables.values() {
+    let mut catalog = empty_catalog_for_tables(tables);
+    for (key, table) in tables {
         let generated = table
             .columns
             .iter()
@@ -19,17 +19,20 @@ pub(super) fn catalog_from_tables(
         if generated.is_empty() {
             continue;
         }
-        catalog.insert_table(GeneratedTable {
-            name: table.name.to_string(),
-            generated,
-            column_order: table.complete.then(|| {
-                table
-                    .columns
-                    .iter()
-                    .map(|column| column.name.to_ascii_lowercase())
-                    .collect()
-            }),
-        });
+        catalog.insert_table_with_key(
+            key,
+            GeneratedTable {
+                name: catalog.display_name(key, table.name),
+                generated,
+                column_order: table.complete.then(|| {
+                    table
+                        .columns
+                        .iter()
+                        .map(|column| column.name.to_ascii_lowercase())
+                        .collect()
+                }),
+            },
+        );
     }
     for extra in extra {
         if extra.table.is_empty() || extra.column.is_empty() {
@@ -112,10 +115,26 @@ fn schema_generated(tables: &LiveTables<'_>) -> std::collections::BTreeSet<(Stri
                 .columns
                 .iter()
                 .filter(|column| column.generated)
-                .map(move |column| (key.clone(), column.name.to_ascii_lowercase()))
+                .flat_map(move |column| {
+                    [
+                        (key.clone(), column.name.to_ascii_lowercase()),
+                        (
+                            table.name.to_ascii_lowercase(),
+                            column.name.to_ascii_lowercase(),
+                        ),
+                    ]
+                })
         })
         .collect()
 }
 
 #[cfg(test)]
 mod tests;
+
+fn empty_catalog_for_tables(tables: &LiveTables<'_>) -> GeneratedTableColumns {
+    let mut catalog = GeneratedTableColumns::default();
+    for (key, table) in tables {
+        catalog.register_relation(key, table.name);
+    }
+    catalog
+}

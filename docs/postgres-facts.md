@@ -458,3 +458,12 @@ and aggregate checks use this same request-owned preparation. Other rules do
 not opt into fragment parsing.
 
 Ordered CREATE and ADD COLUMN events retain `if_not_exists` so catalog consumers can preserve existing definitions when a migration retries DDL.
+
+The shared migration comparator orders directories lexically and filenames by
+their first numeric run. Live write catalogs retain qualified table lifecycle
+identities and resolve unqualified DML only when the surviving relation is unique.
+
+`table_events_collected` distinguishes a collected empty executed-event stream
+from legacy Rust facts supplied without events. Broad table/column policy facts
+still inspect routine bodies. Executed events retain top-level and immediate DO
+DDL, excluding dormant function/procedure definitions and conditional branches.

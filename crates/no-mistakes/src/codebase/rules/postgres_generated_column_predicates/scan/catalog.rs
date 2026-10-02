@@ -14,7 +14,7 @@ pub(super) type LiveColumns = BTreeMap<String, BTreeMap<String, SqlColumnMetadat
 pub(super) fn live_columns(schema: &[&SqlSchemaFileFacts]) -> LiveColumns {
     let mut live = LiveColumns::new();
     for file in schema {
-        if file.table_events.is_empty() {
+        if !file.table_events_collected {
             for table in &file.tables {
                 live.insert(table.table_name.clone(), column_map(&table.columns));
             }

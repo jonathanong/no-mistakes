@@ -1,12 +1,15 @@
 use sqlparser::tokenizer::{Token, TokenWithSpan};
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 /// Lexical statement ordinals retain ordering even when lenient ASTs lose spans.
-pub(crate) struct Positions(BTreeMap<(String, String), VecDeque<Vec<usize>>>);
+pub(crate) struct Positions(
+    BTreeMap<(String, String), VecDeque<Vec<usize>>>,
+    BTreeSet<Vec<usize>>,
+);
 
 impl Positions {
     pub(crate) fn new(sql: &str) -> Self {
-        let mut positions = Self(BTreeMap::new());
+        let mut positions = Self(BTreeMap::new(), BTreeSet::new());
         let tokens = super::super::super::parse::unicode::tokenize_raw_unicode(sql);
         for (ordinal, statement) in tokens
             .split(|token| matches!(token.token, Token::SemiColon))
@@ -22,6 +25,7 @@ impl Positions {
                     if let Token::DollarQuotedString(body) = &token.token {
                         let inner =
                             super::super::super::parse::unicode::tokenize_raw_unicode(&body.value);
+                        let mut scope = super::super::dynamic::execution::Scope::default();
                         for (inner_ordinal, statement) in inner
                             .split(|token| matches!(token.token, Token::SemiColon))
                             .enumerate()
@@ -30,6 +34,9 @@ impl Positions {
                                 .iter()
                                 .filter(|token| !matches!(token.token, Token::Whitespace(_)))
                                 .collect();
+                            if !scope.advance(&code) {
+                                positions.1.insert(vec![ordinal, inner_ordinal]);
+                            }
                             positions.record(&code, &[ordinal, inner_ordinal]);
                         }
                     }
@@ -44,6 +51,10 @@ impl Positions {
             .get_mut(&(kind.to_string(), table.to_string()))
             .and_then(VecDeque::pop_front)
             .unwrap_or_else(|| vec![usize::MAX])
+    }
+
+    pub(super) fn executed(&self, order: &[usize]) -> bool {
+        !self.1.contains(order)
     }
 
     fn record(&mut self, tokens: &[&TokenWithSpan], order: &[usize]) {

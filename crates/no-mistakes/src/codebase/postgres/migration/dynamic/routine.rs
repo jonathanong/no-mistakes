@@ -8,6 +8,7 @@ pub(super) struct RoutineBody {
     pub(super) source_bytes: Vec<usize>,
     direct_facts_already_recovered: bool,
     pub(super) source_order: Vec<usize>,
+    pub(super) executed: bool,
 }
 
 /// Executable PL/pgSQL DO/function/procedure bodies, including dollar, plain,
@@ -32,7 +33,11 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 return None;
             }
             let start = if do_block {
-                1
+                if code.get(1).is_some_and(|token| word(token, "LANGUAGE")) {
+                    3
+                } else {
+                    1
+                }
             } else {
                 code.iter()
                     .position(|token| word(token, "AS"))
@@ -44,6 +49,7 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 source_bytes: decoded.source_bytes,
                 direct_facts_already_recovered: do_block && decoded.dollar_quoted,
                 source_order: vec![ordinal],
+                executed: do_block,
             })
         })
         .collect()
@@ -65,18 +71,29 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
     let tokens = tokenize(&body.sql);
     let mut result = Vec::new();
     let mut start = 0usize;
+    let mut start_token = 0usize;
     let mut ordinal = 0usize;
-    for token in &tokens {
+    let mut scope = execution::Scope::default();
+    for (at, token) in tokens.iter().enumerate() {
         if !matches!(token.token, Token::SemiColon) {
             continue;
         }
         let end = location_offset(&body.sql, token.span.start.line, token.span.start.column)
             .map_or(body.sql.len(), |offset| offset + 1);
-        push_schema_statement(body, start, end, ordinal, &mut result);
+        let executed = scope.advance(&significant(&tokens[start_token..at])) && body.executed;
+        push_schema_statement(body, start, end, ordinal, executed, &mut result);
+        start_token = at + 1;
         start = end;
         ordinal += 1;
     }
-    push_schema_statement(body, start, body.sql.len(), ordinal, &mut result);
+    push_schema_statement(
+        body,
+        start,
+        body.sql.len(),
+        ordinal,
+        scope.advance(&significant(&tokens[start_token..])) && body.executed,
+        &mut result,
+    );
     result
 }
 
@@ -85,6 +102,7 @@ fn push_schema_statement(
     start: usize,
     end: usize,
     ordinal: usize,
+    executed: bool,
     result: &mut Vec<DynamicSql>,
 ) {
     let Some(sql) = body.sql.get(start..end) else {
@@ -96,6 +114,7 @@ fn push_schema_statement(
     let source_bytes = body.source_bytes.get(start..end).unwrap_or_default();
     let source_lines = source_lines(sql, source_bytes, body.line);
     result.push(DynamicSql {
+        executed,
         sql: sql.to_owned(),
         line: source_lines.first().copied().unwrap_or(body.line),
         source_lines,

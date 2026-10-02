@@ -1,3 +1,4 @@
+use super::super::super::idents::object_name_key;
 use super::super::super::schema::relation_name;
 use super::{GeneratedColumnWrite, GeneratedTable, GeneratedTableColumns};
 use sqlparser::ast::{
@@ -65,7 +66,7 @@ fn assignment_column_names(target: &AssignmentTarget) -> Vec<String> {
 
 pub(super) fn table_object_name(table: &TableObject) -> Option<String> {
     match table {
-        TableObject::TableName(name) => Some(relation_name(name)),
+        TableObject::TableName(name) => Some(object_name_key(name)),
         _ => None,
     }
 }
@@ -76,7 +77,7 @@ pub(super) fn table_with_joins_name(table: &TableWithJoins) -> Option<String> {
 
 pub(super) fn table_factor_name(table: &TableFactor) -> Option<String> {
     match table {
-        TableFactor::Table { name, .. } => Some(relation_name(name)),
+        TableFactor::Table { name, .. } => Some(object_name_key(name)),
         _ => None,
     }
 }

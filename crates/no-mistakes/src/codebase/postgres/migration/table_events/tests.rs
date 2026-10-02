@@ -34,3 +34,39 @@ fn malformed_ddl_positions_are_tolerant_and_do_not_invent_names() {
     assert_eq!(positions.take("ALTER", "foo"), [1]);
     assert_eq!(positions.take("DROP", "not an identifier"), [usize::MAX]);
 }
+
+#[test]
+fn live_events_exclude_dormant_and_conditional_ddl_but_preserve_policy_facts() {
+    let facts = super::super::extract_migration_facts(&fixture("execution.sql"));
+    let events: Vec<_> = facts
+        .table_events
+        .iter()
+        .map(|event| match event {
+            SqlTableSchemaEvent::Create { table, .. } => format!("create:{table}"),
+            SqlTableSchemaEvent::AddColumn { column, .. } => format!("add:{}", column.name),
+            SqlTableSchemaEvent::Drop { table, .. } => format!("drop:{table}"),
+        })
+        .collect();
+    assert_eq!(
+        events,
+        [
+            "create:orders",
+            "create:immediate",
+            "create:immediate_exec",
+            "create:immediate_quoted",
+            "add:actual_column"
+        ]
+    );
+    assert!(facts
+        .tables
+        .iter()
+        .any(|table| table.table_name == "dormant_generated"));
+    assert!(facts
+        .tables
+        .iter()
+        .any(|table| table.table_name == "conditional_created"));
+    assert!(facts
+        .add_columns
+        .iter()
+        .any(|column| column.column_name == "dormant_column"));
+}

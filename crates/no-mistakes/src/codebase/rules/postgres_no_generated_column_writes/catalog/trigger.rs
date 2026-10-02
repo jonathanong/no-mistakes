@@ -4,8 +4,8 @@ pub(crate) fn trigger_catalog_from_tables(
     tables: &LiveTables<'_>,
     columns: &[String],
 ) -> GeneratedTableColumns {
-    let mut catalog = GeneratedTableColumns::default();
-    for table in tables.values() {
+    let mut catalog = super::empty_catalog_for_tables(tables);
+    for (key, table) in tables {
         let maintained = table
             .columns
             .iter()
@@ -18,17 +18,20 @@ pub(crate) fn trigger_catalog_from_tables(
             .map(|column| column.name.to_ascii_lowercase())
             .collect::<std::collections::BTreeSet<_>>();
         if !maintained.is_empty() {
-            catalog.insert_table(GeneratedTable {
-                name: table.name.to_string(),
-                generated: maintained,
-                column_order: table.complete.then(|| {
-                    table
-                        .columns
-                        .iter()
-                        .map(|column| column.name.to_ascii_lowercase())
-                        .collect()
-                }),
-            });
+            catalog.insert_table_with_key(
+                key,
+                GeneratedTable {
+                    name: catalog.display_name(key, table.name),
+                    generated: maintained,
+                    column_order: table.complete.then(|| {
+                        table
+                            .columns
+                            .iter()
+                            .map(|column| column.name.to_ascii_lowercase())
+                            .collect()
+                    }),
+                },
+            );
         }
     }
     catalog

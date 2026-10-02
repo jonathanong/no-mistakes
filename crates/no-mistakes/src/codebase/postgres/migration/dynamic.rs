@@ -4,9 +4,12 @@
 //! dollar tags, and semicolons in strings.
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
+pub(super) mod execution;
 mod expression;
 mod literal;
+mod remap;
 mod routine;
+pub(super) use remap::remap_fact_lines;
 
 use routine::RoutineBody;
 
@@ -16,6 +19,7 @@ pub(super) struct DynamicSql {
     pub(super) line: usize,
     source_lines: Vec<usize>,
     pub(super) source_order: Vec<usize>,
+    pub(super) executed: bool,
 }
 
 impl DynamicSql {
@@ -26,6 +30,7 @@ impl DynamicSql {
             line,
             source_lines: vec![line; line_count],
             source_order: Vec::new(),
+            executed: false,
         }
     }
 

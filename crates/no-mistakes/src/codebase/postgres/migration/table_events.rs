@@ -16,24 +16,33 @@ pub(super) fn record(
     out: &mut Vec<SqlTableSchemaEvent>,
 ) {
     match statement {
-        Statement::CreateTable(table) => out.push(SqlTableSchemaEvent::Create {
-            if_not_exists: table.if_not_exists,
-            source_order: positions.take("CREATE", &object_name_key(&table.name)),
-            table: object_name_key(&table.name),
-            unqualified_table: super::relation(&table.name),
-            columns: table
-                .columns
-                .iter()
-                .zip(table_metadata(table).columns)
-                .map(|(definition, original)| {
-                    let mut column = event_column(definition);
-                    column.is_primary_key = original.is_primary_key;
-                    column
-                })
-                .collect(),
-        }),
+        Statement::CreateTable(table) => {
+            let source_order = positions.take("CREATE", &object_name_key(&table.name));
+            if !positions.executed(&source_order) {
+                return;
+            }
+            out.push(SqlTableSchemaEvent::Create {
+                if_not_exists: table.if_not_exists,
+                source_order,
+                table: object_name_key(&table.name),
+                unqualified_table: super::relation(&table.name),
+                columns: table
+                    .columns
+                    .iter()
+                    .zip(table_metadata(table).columns)
+                    .map(|(definition, original)| {
+                        let mut column = event_column(definition);
+                        column.is_primary_key = original.is_primary_key;
+                        column
+                    })
+                    .collect(),
+            });
+        }
         Statement::AlterTable(alter) => {
             let source_order = positions.take("ALTER", &object_name_key(&alter.name));
+            if !positions.executed(&source_order) {
+                return;
+            }
             for operation in &alter.operations {
                 if let AlterTableOperation::AddColumn {
                     column_def,
@@ -57,8 +66,12 @@ pub(super) fn record(
             ..
         } => {
             for name in names {
+                let source_order = positions.take("DROP", &object_name_key(name));
+                if !positions.executed(&source_order) {
+                    continue;
+                }
                 out.push(SqlTableSchemaEvent::Drop {
-                    source_order: positions.take("DROP", &object_name_key(name)),
+                    source_order,
                     table: object_name_key(name),
                     unqualified_table: super::relation(name),
                 });

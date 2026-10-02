@@ -54,6 +54,8 @@ pub struct SqlSchemaFileFacts {
     pub tables: Vec<SqlCreateTableMetadata>,
     /// Qualified CREATE/ALTER/DROP operations in statement order for live-column catalogs.
     pub table_events: Vec<SqlTableSchemaEvent>,
+    /// Distinguishes an empty execution projection from legacy hand-built facts.
+    pub table_events_collected: bool,
     pub indexes: Vec<SqlCreateIndexMetadata>,
     pub dropped_indexes: Vec<SqlDropIndexMetadata>,
     pub dropped_tables: Vec<SqlDropIndexMetadata>,

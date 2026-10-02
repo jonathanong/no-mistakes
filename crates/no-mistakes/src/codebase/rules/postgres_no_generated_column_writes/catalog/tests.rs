@@ -104,6 +104,7 @@ fn legacy_supplied_facts_keep_alter_column_support() {
     let mut facts = crate::codebase::postgres::extract_migration_facts(&sql);
     // Programmatic Rust callers may still populate the original aggregate fields.
     facts.table_events.clear();
+    facts.table_events_collected = false;
     let catalog = trigger_catalog_from_tables(&live_tables(&[facts]), &["updated_at".into()]);
     assert!(catalog
         .get("orders")
