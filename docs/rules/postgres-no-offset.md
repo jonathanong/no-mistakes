@@ -133,3 +133,10 @@ occurrences as `SqlStatementFileFacts.offset_uses`, with line, column, and
 `OffsetUse` kind. `sql_offset_uses` and `sql_file_offset_uses` use this same AST
 visitor and preserve source order. Bare `*.sql` patterns match SQL basenames;
 `sqlInclude: []` continues to opt out of SQL file scanning.
+
+Recovered literals and template quasis retain a compact physical-line map in
+`EmbeddedSqlCall.sql_source_positions` (`EmbeddedSqlSourcePosition`). Cooked
+newline escapes, line continuations, multiline interpolations, and initializers
+that begin below their declaration preserve the actual OFFSET source line.
+Prepared source failures retain their I/O kind; dispatch uses that captured
+outcome without checking filesystem state again.

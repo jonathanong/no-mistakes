@@ -75,7 +75,6 @@ pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffset
             )
         })
         .collect();
-    collector.uses.sort_by_key(|fact| (fact.line, fact.column));
     for (index, fact) in collector.uses.iter_mut().enumerate() {
         let location = if fact.line == 0 {
             keywords.get(index).copied()

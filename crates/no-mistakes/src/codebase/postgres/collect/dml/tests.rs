@@ -16,6 +16,7 @@ fn embedded_line_shift_covers_returning_stars_and_triggers() {
             sql_text: Some(sql.to_string()),
             kind: EmbeddedSqlKind::Inline,
             declaration_line: None,
+            sql_source_positions: Vec::new(),
         },
     );
     assert_eq!(facts.origin_line, 5);

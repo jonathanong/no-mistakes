@@ -11,6 +11,7 @@ pub(crate) struct BindingState {
     pub(crate) kind: EmbeddedSqlKind,
     pub(crate) line: u32,
     pub(crate) sql_builder: bool,
+    pub(crate) sql_source_positions: Vec<super::super::EmbeddedSqlSourcePosition>,
 }
 
 pub(crate) struct ScopeVisitor<'a> {

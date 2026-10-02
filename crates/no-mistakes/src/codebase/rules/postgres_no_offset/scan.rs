@@ -18,7 +18,9 @@ pub(super) fn scan(
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);
         let statements = match facts.postgres_statements(path, profile) {
             Ok(statements) => statements,
-            Err(_) if rel.ends_with(".sql") && !path.exists() => continue,
+            Err(_) if rel.ends_with(".sql") && facts.postgres.sql_source_not_found(path) => {
+                continue
+            }
             Err(error) => return Err(error),
         };
         let mut ordinal = 0;

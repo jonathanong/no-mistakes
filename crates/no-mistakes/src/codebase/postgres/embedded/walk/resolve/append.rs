@@ -39,6 +39,7 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
                     let arg = renumber_placeholders(&arg, count_placeholders(sql));
                     binding.sql = Some(format!("{sql}{arg}"));
                     binding.kind = EmbeddedSqlKind::Composed;
+                    binding.sql_source_positions.clear();
                 }
                 _ => {
                     super::super::scope::mark_binding_dynamic_keep_known_statement(binding);

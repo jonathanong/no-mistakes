@@ -49,6 +49,7 @@ impl ScopeVisitor<'_> {
                         kind: EmbeddedSqlKind::Dynamic,
                         line: 0,
                         sql_builder,
+                        sql_source_positions: Vec::new(),
                     },
                 );
             }
@@ -70,6 +71,7 @@ impl ScopeVisitor<'_> {
                     kind: EmbeddedSqlKind::Dynamic,
                     line: 0,
                     sql_builder: false,
+                    sql_source_positions: Vec::new(),
                 },
             );
         }
@@ -81,6 +83,7 @@ impl ScopeVisitor<'_> {
                 binding.kind = EmbeddedSqlKind::Dynamic;
                 binding.sql_builder = false;
                 binding.sql = None;
+                binding.sql_source_positions.clear();
                 return;
             }
         }

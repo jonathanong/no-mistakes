@@ -68,14 +68,16 @@ fn schema_ddl_start_skips_non_schema_ddl() {
 
 #[test]
 fn recover_schema_ddl_parses_or_skips_trailing_junk() {
-    let parsed = recover_schema_ddl(&tokens(
-        "IF THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID",
-    ))
+    let parsed = recover_schema_ddl(
+        &tokens("IF THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID"),
+        None,
+    )
     .expect("alter");
     assert!(matches!(parsed, sqlparser::ast::Statement::AlterTable(_)));
-    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE")).is_none());
+    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None).is_none());
     assert!(matches!(
-        recover_schema_ddl(&tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)")).expect("index"),
+        recover_schema_ddl(&tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)"), None)
+            .expect("index"),
         sqlparser::ast::Statement::CreateIndex(_)
     ));
 }

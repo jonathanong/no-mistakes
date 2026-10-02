@@ -142,3 +142,64 @@ fn stdin_inside_string_keeps_query_and_prepared_config_errors_propagate() {
         .is_err());
     }
 }
+
+#[test]
+fn prepared_missing_sql_decision_reuses_the_captured_read_failure() {
+    let root = fixture("review-followups");
+    let files = [root.join("db/missing.sql")];
+    let config = config_with_options("sqlInclude: ['*.sql']");
+    let sources = super::super::source_store_for_files(&files);
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        std::sync::Arc::clone(&sources),
+        &config,
+        &[RULE_ID],
+    )
+    .unwrap();
+    assert_eq!(sources.physical_read_count(), 1);
+    for _ in 0..2 {
+        assert!(
+            check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts)
+                .unwrap()
+                .is_empty()
+        );
+    }
+    assert_eq!(sources.physical_read_count(), 1);
+    let path = root.join("db/read-error.sql");
+    assert!(check_with_files(&root, &config, &[path]).is_err());
+}
+
+#[test]
+fn cooked_escapes_multiline_interpolations_and_delayed_initializers_keep_physical_lines() {
+    let root = fixture("review-followups");
+    let path = root.join("src/source-map.ts");
+    let mut findings = check_with_files(
+        &root,
+        &config_with_options("{}"),
+        std::slice::from_ref(&path),
+    )
+    .unwrap();
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [2, 8, 9, 11, 13, 16, 19, 22],
+        "{findings:#?}"
+    );
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [2, 8, 9, 11, 13, 16]
+    );
+}
+
+#[test]
+fn located_recovery_skips_unparsed_keywords_and_keeps_ordinary_then_recovered_order() {
+    let root = fixture("review-followups");
+    let path = root.join("db/recover-locations.sql");
+    let sql = std::fs::read_to_string(&path).unwrap();
+    assert_eq!(
+        crate::codebase::postgres::sql_file_offset_uses(&sql),
+        [(3, OffsetUse::Zero), (4, OffsetUse::Other)]
+    );
+}

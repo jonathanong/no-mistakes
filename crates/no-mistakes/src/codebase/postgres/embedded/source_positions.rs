@@ -1,0 +1,141 @@
+use super::{placeholders, tags};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
+use oxc_ast::ast::{Expression, TemplateLiteral};
+use oxc_span::GetSpan;
+
+mod escapes;
+#[cfg(test)]
+mod tests;
+
+/// A recovered SQL position whose physical source line changes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EmbeddedSqlSourcePosition {
+    pub sql_line: u32,
+    pub sql_column: u32,
+    pub source_line: u32,
+}
+
+pub(super) fn for_expression(
+    expr: &Expression<'_>,
+    source: &str,
+    start: usize,
+    line: u32,
+) -> Vec<EmbeddedSqlSourcePosition> {
+    let expr = unwrap_ts_wrappers(expr);
+    let mut out = Positions::default();
+    let line = line + newlines(&source[start..expr.span().start as usize]);
+    match expr {
+        Expression::StringLiteral(literal) => {
+            let raw = &source[literal.span.start as usize + 1..literal.span.end as usize - 1];
+            out.append(raw, literal.value.as_str(), line, false);
+        }
+        Expression::TemplateLiteral(template) => {
+            template_positions(template, source, line, &mut out, false)
+        }
+        Expression::TaggedTemplateExpression(tagged) => {
+            let line = line
+                + newlines(&source[tagged.span.start as usize..tagged.quasi.span.start as usize]);
+            template_positions(
+                &tagged.quasi,
+                source,
+                line,
+                &mut out,
+                tags::is_string_raw_tag_spelling(&tagged.tag),
+            );
+        }
+        _ => {}
+    }
+    out.positions
+}
+
+fn template_positions(
+    template: &TemplateLiteral<'_>,
+    source: &str,
+    mut line: u32,
+    out: &mut Positions,
+    raw_mode: bool,
+) {
+    let mut end = template.span.start as usize;
+    for (index, quasi) in template.quasis.iter().enumerate() {
+        let start = quasi.span.start as usize;
+        line += newlines(&source[end..start]);
+        if index > 0 {
+            out.placeholder(index, line);
+        }
+        let raw = &source[start..quasi.span.end as usize];
+        let cooked = quasi.value.cooked.as_ref().map(|value| value.as_str());
+        let decoded = if raw_mode {
+            quasi.value.raw.as_str()
+        } else {
+            cooked.unwrap_or(quasi.value.raw.as_str())
+        };
+        out.append(raw, decoded, line, raw_mode || cooked.is_none());
+        line += newlines(raw);
+        end = quasi.span.end as usize;
+    }
+}
+
+fn newlines(text: &str) -> u32 {
+    text.bytes().filter(|byte| *byte == b'\n').count() as u32
+}
+
+struct Positions {
+    positions: Vec<EmbeddedSqlSourcePosition>,
+    line: u32,
+    column: u32,
+}
+impl Default for Positions {
+    fn default() -> Self {
+        Self {
+            positions: Vec::new(),
+            line: 1,
+            column: 1,
+        }
+    }
+}
+impl Positions {
+    fn record(&mut self, source_line: u32) {
+        if self
+            .positions
+            .last()
+            .is_none_or(|position| position.source_line != source_line)
+        {
+            self.positions.push(EmbeddedSqlSourcePosition {
+                sql_line: self.line,
+                sql_column: self.column,
+                source_line,
+            });
+        }
+    }
+    fn placeholder(&mut self, index: usize, line: u32) {
+        self.record(line);
+        self.column += format!("{}{index}", placeholders::PLACEHOLDER_MARKER).len() as u32;
+    }
+    fn append(&mut self, raw: &str, decoded: &str, mut source_line: u32, raw_mode: bool) {
+        let mut at = 0;
+        let mut extra = 0;
+        for character in decoded.chars() {
+            if extra == 0 && !raw_mode {
+                while let Some(width) = escapes::continuation(&raw[at..]) {
+                    source_line += newlines(&raw[at..at + width]);
+                    at += width;
+                }
+            }
+            self.record(source_line);
+            if extra > 0 {
+                extra -= 1;
+            } else {
+                let width = escapes::width(&raw[at..], raw_mode);
+                extra = escapes::extra_characters(&raw[at..], width, raw_mode);
+                source_line += newlines(&raw[at..at + width]);
+                at += width;
+            }
+            if character == '\n' {
+                self.line += 1;
+                self.column = 1;
+            } else {
+                self.column += 1;
+            }
+        }
+    }
+}

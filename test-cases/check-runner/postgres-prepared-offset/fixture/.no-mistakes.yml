@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      sqlInclude: ['*.sql']
