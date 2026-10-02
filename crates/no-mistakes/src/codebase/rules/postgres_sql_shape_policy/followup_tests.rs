@@ -83,3 +83,28 @@ fn unanalyzable_targets_are_enabled_shapes() {
             .all(|finding| finding.target.as_deref() == Some(shape)));
     }
 }
+
+#[test]
+fn count_negation_and_ungrouped_having_preserve_existence_semantics() {
+    let root = fixture("review-followups");
+    let findings = check_with_files(
+        &root,
+        &config_yaml(BANNED),
+        &[root.join("sql/negated-count.sql")],
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        vec![1, 2, 3, 5]
+    );
+    for finding in findings {
+        assert_eq!(
+            finding.message.contains("use NOT EXISTS"),
+            [2, 3].contains(&finding.line),
+            "{finding:?}"
+        );
+    }
+}

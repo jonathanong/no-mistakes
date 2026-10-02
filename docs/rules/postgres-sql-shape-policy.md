@@ -164,6 +164,9 @@ even number of negations does not report an allowed `IN` predicate.
 built-in `COUNT` or `pg_catalog.count` aggregate. Schema-qualified custom
 functions and window counts are excluded. Findings recommend `EXISTS` for
 presence checks and `NOT EXISTS` for zero-row checks, preserving the predicate.
+Surrounding `NOT` operators are folded into the count comparison polarity;
+use the recommended EXISTS form for the complete negated comparison.
+Ungrouped bare counts in `HAVING` are existence probes and are reported.
 Grouped bare counts in `HAVING` remain allowed. For example,
 `GROUP BY account_id HAVING COUNT(*) > 0` tests each group rather than a scalar
 existence probe.

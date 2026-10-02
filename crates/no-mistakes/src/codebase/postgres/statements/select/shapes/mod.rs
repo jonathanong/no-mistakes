@@ -36,7 +36,7 @@ pub(super) fn collect(select: &Select) -> ShapeLines {
         walk(selection, Place::Where, bare, &mut out);
     }
     if let Some(having) = &select.having {
-        walk(having, Place::Having, false, &mut out);
+        walk(having, Place::Having, bare, &mut out);
     }
     out
 }
@@ -86,6 +86,17 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
                     out.not_in_subqueries.push(line::line_of(expr));
                 }
                 walk(left, place, bare, out);
+            } else if let Expr::BinaryOp { left, op, right } = unwrap_expr(inner) {
+                if let Some(absence) = existence(op, left, right, bare_allowed(place, bare)) {
+                    out.count_existence_checks.push(SqlCountExistenceFact {
+                        line: line::line_of(expr),
+                        negated: absence ^ negated,
+                    });
+                    walk(left, place, bare, out);
+                    walk(right, place, bare, out);
+                } else {
+                    walk(inner, place, bare, out);
+                }
             } else {
                 walk(inner, place, bare, out);
             }
@@ -115,7 +126,7 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
 }
 
 fn bare_allowed(place: Place, bare: bool) -> bool {
-    bare && matches!(place, Place::SelectList | Place::Where)
+    bare && matches!(place, Place::SelectList | Place::Where | Place::Having)
 }
 
 fn has_group_by(select: &Select) -> bool {
