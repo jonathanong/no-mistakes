@@ -79,6 +79,35 @@ fn custom_message_and_include_filter_apply_to_catalog_path() {
 }
 
 #[test]
+fn custom_message_does_not_rewrite_stale_allow_diagnostics() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/finite-text/unit/scenarios/stale-custom-message");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: super::RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        message: Some("use a lookup table".to_string()),
+        options: serde_yaml::from_str(
+            "schemaCatalogPath: schema.json\nallow:\n  - object: column:payments.currency\n    reason: provider-owned\n  - object: column:payments.missing\n    reason: obsolete\n",
+        )
+        .unwrap(),
+        ..RuleDef::default()
+    });
+    let findings = super::check_with_files(&root, &config, &[root.join("schema.json")]).unwrap();
+    assert!(
+        findings.iter().any(|finding| {
+            finding
+                .message
+                .contains("column:payments.status: use a lookup table")
+        }),
+        "{findings:#?}"
+    );
+    assert!(findings.iter().any(|finding| {
+        finding.message == "schema.json: stale postgres-finite-text-columns allow entry: column:payments.missing"
+    }), "{findings:#?}");
+}
+
+#[test]
 fn jsonc_catalog_comments_support_standard_suppression_directives() {
     for fixture in ["line-disable", "next-line-disable", "file-disable"] {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

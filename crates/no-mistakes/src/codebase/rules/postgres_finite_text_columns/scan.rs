@@ -54,6 +54,19 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
         ));
     }
     super::super::sort_findings(&mut findings);
+    if let Some(message) = compiled
+        .message
+        .as_deref()
+        .filter(|message| !message.trim().is_empty())
+    {
+        for finding in &mut findings {
+            finding.message = format!(
+                "{}: {}: {message}",
+                finding.file,
+                finding.target.as_deref().unwrap_or_default()
+            );
+        }
+    }
     let mut findings = compiled.allow.clone().apply(path, findings);
     super::super::sort_findings(&mut findings);
     findings

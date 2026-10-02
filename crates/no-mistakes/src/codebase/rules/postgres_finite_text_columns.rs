@@ -72,21 +72,7 @@ pub(crate) fn check_with_files_sources_and_facts(
             continue;
         }
         let catalog = facts.postgres_schema_catalog(&options.schema_catalog_path)?;
-        let mut rule_findings = scan::scan(catalog, &compiled, &options.schema_catalog_path);
-        if let Some(message) = compiled
-            .message
-            .as_deref()
-            .filter(|message| !message.trim().is_empty())
-        {
-            for finding in &mut rule_findings {
-                finding.message = format!(
-                    "{}: {}: {message}",
-                    finding.file,
-                    finding.target.as_deref().unwrap_or_default()
-                );
-            }
-        }
-        findings.extend(rule_findings);
+        findings.extend(scan::scan(catalog, &compiled, &options.schema_catalog_path));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
