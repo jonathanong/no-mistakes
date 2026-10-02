@@ -64,7 +64,7 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
     index = skip_ws(tokens, index + 1);
     if keyword_of(tokens.get(index)?) == Some(Keyword::LANGUAGE) {
         index = skip_ws(tokens, index + 1);
-        if !matches!(tokens.get(index)?, Token::Word(_)) {
+        if !crate::codebase::postgres::parse::is_plpgsql_language(tokens.get(index)?) {
             return None;
         }
         index = skip_ws(tokens, index + 1);

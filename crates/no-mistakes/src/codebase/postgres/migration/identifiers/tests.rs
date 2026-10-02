@@ -248,3 +248,30 @@ fn concurrently_is_a_table_name_and_only_an_index_modifier() {
         );
     }
 }
+
+#[test]
+fn foreign_do_bodies_do_not_consume_outer_declaration_locations() {
+    let sql = fixture_sql("foreign-do.sql");
+    let mut locations = super::Locations::new(&sql);
+    assert_eq!(locations.take("table", "actual_items"), Some(8));
+    assert_eq!(locations.take("table", "actual_items"), None);
+    assert_eq!(locations.take("table", "supported_items"), Some(10));
+    assert_eq!(locations.take("table", "quoted_supported_items"), Some(6));
+    assert_eq!(locations.take("table", "skipped_items"), None);
+    assert_eq!(
+        locations.take("table", "uppercase_supported_items"),
+        Some(16)
+    );
+    let facts = super::super::extract_migration_facts(&sql);
+    let actual = facts
+        .declared_identifiers
+        .iter()
+        .filter(|identifier| identifier.name == "actual_items")
+        .collect::<Vec<_>>();
+    assert_eq!(actual.len(), 1, "{facts:?}");
+    assert_eq!(actual[0].line, 8);
+    assert!(!facts
+        .declared_identifiers
+        .iter()
+        .any(|identifier| identifier.name == "skipped_items"));
+}

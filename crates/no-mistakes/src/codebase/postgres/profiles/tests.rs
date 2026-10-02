@@ -98,3 +98,36 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
         ]
     );
 }
+
+#[test]
+fn standalone_schema_preparation_rejects_invalid_options_before_reads() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/identifier-length/standalone-prepared");
+    let files = vec![root.join("schema.sql")];
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    for (options, expected) in [
+        ("sqlInclude: ['[']", "invalid sqlInclude"),
+        ("sqlInclude: false", "sqlInclude"),
+        ("schemaCatalogPath: [schema.json]", "schemaCatalogPath"),
+    ] {
+        let sources = snapshot.source_store_for(&root);
+        let mut config = NoMistakesConfig::default();
+        config.rules.push(RuleDef {
+            rule: "postgres-identifier-length".to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options).unwrap(),
+            ..RuleDef::default()
+        });
+        let error = prepare_rule_sql_facts(
+            &root,
+            &files,
+            std::sync::Arc::clone(&sources),
+            &config,
+            &["postgres-identifier-length"],
+        )
+        .err()
+        .expect("invalid options must fail during preparation");
+        assert!(error.to_string().contains(expected), "{error}");
+        assert_eq!(sources.physical_read_count(), 0);
+    }
+}

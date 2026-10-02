@@ -73,6 +73,13 @@ impl Locations {
         if !word(tokens.get(at), "DO") {
             return;
         }
+        if word(tokens.get(at + 1), "LANGUAGE")
+            && !tokens.get(at + 2).is_some_and(|token| {
+                crate::codebase::postgres::parse::is_plpgsql_language(&token.token)
+            })
+        {
+            return;
+        }
         let body_at = at
             + if word(tokens.get(at + 1), "LANGUAGE") {
                 3

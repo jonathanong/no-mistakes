@@ -45,16 +45,13 @@ pub(super) fn prepare_call_site_facts(
     }
     let mut files = call_site_files;
     if plan.postgres_schema || plan.postgres_dml {
-        files.extend(
-            crate::codebase::postgres::postgres_sql_paths(
-                root,
-                &sources.inventory().target_file_paths(),
-                &crate::codebase::postgres::PostgresSchemaOptions {
-                    sql_include: plan.postgres_sql_include.clone(),
-                },
-            )
-            .unwrap_or_default(),
-        );
+        files.extend(crate::codebase::postgres::postgres_sql_paths(
+            root,
+            &sources.inventory().target_file_paths(),
+            &crate::codebase::postgres::PostgresSchemaOptions {
+                sql_include: plan.postgres_sql_include.clone(),
+            },
+        )?);
     }
     if plan.embedded_sql {
         files.extend(

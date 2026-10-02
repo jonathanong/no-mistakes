@@ -123,9 +123,10 @@ fn source_lines(sql: &str, source_bytes: &[usize], fallback: usize) -> Vec<usize
 }
 
 fn plpgsql(tokens: &[&TokenWithSpan]) -> bool {
-    tokens
-        .windows(2)
-        .any(|pair| word(pair[0], "LANGUAGE") && word(pair[1], "plpgsql"))
+    tokens.windows(2).any(|pair| {
+        word(pair[0], "LANGUAGE")
+            && crate::codebase::postgres::parse::is_plpgsql_language(&pair[1].token)
+    })
 }
 
 #[cfg(test)]

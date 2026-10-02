@@ -21,6 +21,11 @@ fn invalid_fact_demands_fail_before_collection() {
             "sqlInclude",
         ),
         (
+            "postgres-identifier-length",
+            "sqlInclude: ['[']",
+            "invalid sqlInclude",
+        ),
+        (
             "postgres-lock-ordering",
             "executorNames: write",
             "executorNames",
