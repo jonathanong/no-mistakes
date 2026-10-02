@@ -30,4 +30,4 @@ expect(image).toBe('10.0.0.5:5000/acme/api:2')
 // A non-ASCII character ends a reference and is a boundary on either side, so the ASCII part is still a pin.
 expect(image).toBe('ghcr.io/acme/api:v6β')
 expect(image).toBe('βghcr.io/acme/api:7')
-expect(compose).toContain('éimage: postgres:18')
+// A letter glued to `image` is a different word, so it is not a pin.

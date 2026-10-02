@@ -64,9 +64,6 @@ fn a_non_ascii_character_before_a_reference_starts_it() {
         ("βghcr.io/acme/api:v2", "ghcr.io/acme/api:v2"),
         ("éghcr.io/acme/api:2.1", "ghcr.io/acme/api:2.1"),
         ("βubuntu-22.04", "ubuntu-22.04"),
-        ("βimage: postgres:18", "postgres:18"),
-        ("βFROM postgres:18", "postgres:18"),
-        ("βimage:ghcr.io/acme/api:v2", "ghcr.io/acme/api:v2"),
     ] {
         assert_pins(line, &[expected]);
     }
@@ -153,16 +150,17 @@ fn only_ascii_digits_are_version_digits() {
 }
 
 #[test]
-fn context_words_are_ascii_word_boundaries() {
-    // A non-ASCII letter is not part of the `image`, `FROM`, or `brew` word.
-    for (line, expected) in [
-        ("éimage: postgres:18", "postgres:18"),
-        ("éFROM postgres:18", "postgres:18"),
-        ("ébrew install postgresql@18", "postgresql@18"),
-        ("brewé install postgresql@18", "postgresql@18"),
-    ] {
-        assert_pins(line, &[expected]);
-    }
+fn a_unicode_letter_is_part_of_the_context_word() {
+    // `é` and `β` are letters, so they do not open `image`, `FROM`, or `brew`.
+    assert_none(&owned(&[
+        "éimage: postgres:18",
+        "éFROM postgres:18",
+        "βimage: postgres:18",
+        "βFROM postgres:18",
+        "βimage:ghcr.io/acme/api:v2",
+        "ébrew install postgresql@18",
+        "brewé install postgresql@18",
+    ]));
     // An ASCII letter glued to the word still makes a different word.
     assert_none(&owned(&[
         "myimage: postgres:18",

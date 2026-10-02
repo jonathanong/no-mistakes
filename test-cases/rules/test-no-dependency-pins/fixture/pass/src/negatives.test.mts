@@ -96,3 +96,7 @@ expect(
 expect(
   packageJson.dependencies.foo, // e.g. ).toBe('1.2.3')
 ).toMatch(/^1/)
+// A letter glued to a context word is not that word.
+expect(compose).toContain('éimage: postgres:18')
+expect(dockerfile).toContain('éFROM postgres:18')
+expect(script).toContain('brewé install postgresql@18')

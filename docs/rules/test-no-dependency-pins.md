@@ -222,8 +222,8 @@ ASCII part is still reported: `ghcr.io/owner/name:v2β`, `ghcr.io/owner/name:2.1
 `image: postgres:18β`, and `ubuntu-22.04β` report the pin in front of the `β`, a
 `β` directly before a reference does not hide it, and typographic quotes around
 `“ghcr.io/owner/name:2.1”` delimit it. The `image`, `FROM`, and `brew` context
-words follow the same rule: a non-ASCII letter next to one is not part of the
-word, so it is still that key.
+words are Unicode words. A letter glued to either side, such as an acute e
+before `image` or after `brew`, is a different word and is not that key.
 
 Digits are ASCII only. A tag, registry port, or runner label written with other
 digits (Arabic-Indic or full-width forms) is not a version: `ghcr.io/owner/name:v٢`,
