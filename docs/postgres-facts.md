@@ -89,7 +89,10 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   Referenced names, including `REFERENCES` targets, are omitted. Dollar-quoted
   `DO` bodies are included in this list; routine bodies are merged with lines
   remapped onto the outer file. `postgres-identifier-length` reads this list
-  and does not parse SQL itself.
+  and does not parse SQL itself. `SqlDeclaredIdentifier` is re-exported from
+  `codebase::postgres` for Rust callers. A single token index accounts for
+  declaration modifiers, nested comments, Unicode procedure names, and explicit
+  view-column declarations; routine bodies have their own location context.
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
 - `ALTER TABLE … VALIDATE CONSTRAINT` rows
 
@@ -101,6 +104,12 @@ lines anchored at the literal/assignment; runtime concatenation remains opaque.
 `collect_schema_facts` first filters candidates with
 `PostgresSchemaOptions.sql_include` (default `['**/*.sql']`).
 There is no hardcoded `backend/migrations/` root.
+
+Configured migration rules declare the union of `sqlInclude` patterns before
+request collection. Identifier length, added-column, named-constraint, index,
+foreign-key, validation, and statement-policy checks borrow the request's
+prepared schema projection, including I/O failures. Selecting a narrower rule
+scope filters that projection without another migration parse.
 
 `postgres-fk-index`, `postgres-redundant-index`, and
 `postgres-constraint-validate` consume these

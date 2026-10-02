@@ -197,25 +197,5 @@ pub(crate) fn prepare_rule_sql_facts(
     )
 }
 
-/// Declare SQL projections before the shared request fact pass.
-pub fn configure_prepared_postgres_plan(
-    config: &NoMistakesConfig,
-    plan: &mut crate::codebase::check_facts::CheckFactPlan,
-) -> Result<()> {
-    let dml_rules = [
-        "postgres-required-predicates",
-        "postgres-generated-column-predicates",
-        "postgres-explicit-columns",
-    ];
-    plan.postgres_schema |= !config
-        .rule_applications("postgres-generated-column-predicates")
-        .is_empty();
-    plan.postgres_dml |= dml_rules
-        .iter()
-        .any(|id| !config.rule_applications(id).is_empty());
-    plan.postgres_sql_include
-        .extend(sql_patterns(config, &dml_rules)?);
-    plan.postgres_sql_include.sort();
-    plan.postgres_sql_include.dedup();
-    Ok(())
-}
+mod plan;
+pub use plan::configure_prepared_postgres_plan;

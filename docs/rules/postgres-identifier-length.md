@@ -35,14 +35,18 @@ Every identifier the SQL declares must be at most `maxBytes` UTF-8 bytes
 after unquoting (`"Order"` is `Order`) and after dropping a schema qualifier.
 Declared names are table names, column names, inline and table `CONSTRAINT`
 names, index names, trigger names, function and procedure names, view and
-materialized view names, enum type names, and the new name in `ALTER TABLE`
+materialized view names and explicit view column names, enum type names, and the new name in `ALTER TABLE`
 `ADD CONSTRAINT`, `ADD COLUMN`, `RENAME TO`, `RENAME COLUMN … TO`,
 `RENAME CONSTRAINT … TO`, and `ALTER INDEX … RENAME TO`.
 
 A name that is only referenced is not a finding (`REFERENCES some_long_name`).
-Length is measured on the unquoted identifier. The truncated form in the
-finding is the longest prefix of at most `maxBytes` bytes that ends on a
-character boundary, so a multibyte character at the cut is not split.
+Length is measured on the unquoted identifier, including decoded PostgreSQL
+Unicode identifiers (`U&"..."` with optional `UESCAPE`). Declaration modifiers,
+nested comments, and recovered static `EXECUTE` statements retain their source
+locations. Routine-body declarations do not consume an outer declaration's line.
+At the default 63-byte limit, the finding shows PostgreSQL's truncated prefix
+on a character boundary. A smaller `maxBytes` reports the configured naming
+policy without claiming that PostgreSQL truncates at that smaller limit.
 
 ## Options and defaults
 

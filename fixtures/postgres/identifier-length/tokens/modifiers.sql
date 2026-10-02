@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS items (id int); ALTER TABLE ONLY items ADD COLUMN score int;

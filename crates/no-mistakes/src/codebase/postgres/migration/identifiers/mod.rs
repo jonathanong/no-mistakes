@@ -8,51 +8,33 @@ use sqlparser::ast::{
 mod locate;
 mod procedures;
 
-pub(super) fn procedure_names(
-    sql: &str,
-) -> Vec<crate::codebase::postgres::types::SqlDeclaredIdentifier> {
-    procedures::procedure_names(sql)
-}
+pub(super) use locate::Locations;
 
 pub(super) fn collect(
-    sql: &str,
+    locations: &mut Locations,
     statement: &Statement,
-    from: &mut usize,
 ) -> Vec<SqlDeclaredIdentifier> {
-    let Some(words) = opening_words(statement) else {
+    let Some((kind, object)) = declared_object(statement) else {
         return Vec::new();
     };
-    let line = statement_line(sql, from, words);
+    let Some(line) = locations.take(kind, &relation(object)) else {
+        return Vec::new();
+    };
     let mut names = Vec::new();
     push_statement(&mut names, statement, line);
     names
 }
 
-fn statement_line(sql: &str, from: &mut usize, words: &[&str]) -> usize {
-    let rest = sql.get(*from..).unwrap_or("");
-    let Some((start, end)) = locate::find_opening(rest, words) else {
-        return 1;
-    };
-    let absolute = *from + start;
-    *from += end;
-    locate::line_number(sql, absolute)
-}
-
-fn opening_words(statement: &Statement) -> Option<&'static [&'static str]> {
+fn declared_object(statement: &Statement) -> Option<(&'static str, &ObjectName)> {
     Some(match statement {
-        Statement::CreateTable(_) => &["create", "table"],
-        Statement::CreateIndex(index) if index.unique => &["create", "unique", "index"],
-        Statement::CreateIndex(_) => &["create", "index"],
-        Statement::CreateTrigger(_) => &["create", "trigger"],
-        Statement::CreateFunction(function) if function.or_replace => {
-            &["create", "or", "replace", "function"]
-        }
-        Statement::CreateFunction(_) => &["create", "function"],
-        Statement::CreateView(view) if view.materialized => &["create", "materialized", "view"],
-        Statement::CreateView(_) => &["create", "view"],
-        Statement::CreateType { .. } => &["create", "type"],
-        Statement::AlterTable(_) => &["alter", "table"],
-        Statement::AlterIndex { .. } => &["alter", "index"],
+        Statement::CreateTable(table) => ("table", &table.name),
+        Statement::CreateIndex(index) => ("index", index.name.as_ref()?),
+        Statement::CreateTrigger(trigger) => ("trigger", &trigger.name),
+        Statement::CreateFunction(function) => ("function", &function.name),
+        Statement::CreateView(view) => ("view", &view.name),
+        Statement::CreateType { name, .. } => ("type", name),
+        Statement::AlterTable(table) => ("table", &table.name),
+        Statement::AlterIndex { name, .. } => ("index", name),
         _ => return None,
     })
 }
@@ -75,7 +57,12 @@ fn push_statement(names: &mut Vec<SqlDeclaredIdentifier>, statement: &Statement,
         }
         Statement::CreateTrigger(trigger) => push_object(names, &trigger.name, line),
         Statement::CreateFunction(function) => push_object(names, &function.name, line),
-        Statement::CreateView(view) => push_object(names, &view.name, line),
+        Statement::CreateView(view) => {
+            push_object(names, &view.name, line);
+            for column in &view.columns {
+                push_ident(names, &column.name, line);
+            }
+        }
         Statement::CreateType { name, .. } => push_object(names, name, line),
         Statement::AlterTable(alter) => {
             for operation in &alter.operations {

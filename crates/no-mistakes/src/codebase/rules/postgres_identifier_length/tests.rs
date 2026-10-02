@@ -6,6 +6,8 @@ use crate::config::v2::{
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod followups;
+
 fn long(label: &str) -> String {
     format!("{label}{}", "x".repeat(64 - label.len()))
 }
@@ -130,6 +132,7 @@ fn fail_fixture_flags_every_declared_name_and_not_references() {
         "enum_type",
         "added_constraint",
         "added_column",
+        "added_inline_constraint",
         "renamed_table",
         "renamed_column",
         "renamed_constraint",
@@ -244,7 +247,7 @@ fn max_bytes_option_changes_the_limit() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains(
-            "identifier \"abcdefghijk\" is 11 bytes; PostgreSQL truncates identifiers longer than 10 bytes to \"abcdefghij\""
+            "identifier \"abcdefghijk\" is 11 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes"
         ),
         "{findings:?}"
     );

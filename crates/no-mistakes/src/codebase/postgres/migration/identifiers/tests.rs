@@ -56,7 +56,7 @@ fn declaration_line_skips_comments_and_quoted_text() {
 }
 
 #[test]
-fn missing_opening_phrase_uses_line_one() {
+fn unmatched_source_does_not_invent_a_declaration() {
     let statement = crate::codebase::postgres::parse_postgres_sql("CREATE TABLE items (id int)")
         .unwrap()
         .into_iter()
@@ -65,10 +65,9 @@ fn missing_opening_phrase_uses_line_one() {
     let Statement::CreateTable(_) = &statement else {
         panic!("expected a table");
     };
-    let mut from = 0;
-    let names = super::collect("SELECT 1;", &statement, &mut from);
-    assert_eq!(names[0].line, 1);
-    assert_eq!(names[0].name, "items");
+    let mut locations = super::Locations::new("SELECT 1;");
+    let names = super::collect(&mut locations, &statement);
+    assert!(names.is_empty());
 }
 
 #[test]
@@ -88,7 +87,8 @@ fn procedure_names_drop_the_schema_and_unescape_quotes() {
 #[test]
 fn procedure_scan_skips_a_name_it_cannot_read() {
     let names =
-        super::procedure_names("CREATE PROCEDURE (\nCREATE PROCEDURE \"open\nCREATE PROCEDURE   ");
+        super::Locations::new("CREATE PROCEDURE (\nCREATE PROCEDURE \"open\nCREATE PROCEDURE   ")
+            .procedures();
     assert!(names.is_empty());
 }
 
@@ -131,11 +131,72 @@ fn statements_without_declared_names_are_ignored() {
 
 #[test]
 fn unterminated_comments_and_quotes_do_not_hide_a_later_name() {
-    assert!(super::locate::find_opening("-- comment", &["create", "table"]).is_none());
-    assert!(super::locate::find_opening("/* comment", &["create", "table"]).is_none());
-    assert!(super::locate::find_opening("'unterminated", &["create", "table"]).is_none());
+    assert!(super::Locations::new("-- comment").procedures().is_empty());
+    assert!(super::Locations::new("/* comment").procedures().is_empty());
+    assert!(super::Locations::new("'unterminated")
+        .procedures()
+        .is_empty());
 }
 
 fn name_of(constraint: &TableConstraint) -> Option<&str> {
     constraint_name(constraint).map(|name| name.value.as_str())
+}
+
+#[test]
+fn invalid_identifier_tokens_fail_closed_without_inventing_names() {
+    for fixture in [
+        "missing.sql",
+        "unicode-missing.sql",
+        "nonword.sql",
+        "qualifier.sql",
+        "unicode-number.sql",
+        "unicode-word.sql",
+        "unicode-space.sql",
+        "unicode-space-value.sql",
+        "escape-word.sql",
+        "escape-empty.sql",
+        "escape-multiple.sql",
+        "invalid-unicode.sql",
+    ] {
+        let tokens = fixture_tokens(fixture);
+        assert!(
+            super::procedures::identifier(&tokens, 2).is_none(),
+            "{fixture}: {tokens:?}"
+        );
+    }
+    for (fixture, expected) in [
+        ("quoted-apostrophe.sql", "owner's_proc"),
+        ("quoted-u.sql", "U"),
+        ("plain-u.sql", "U"),
+    ] {
+        assert_eq!(
+            super::procedures::identifier(&fixture_tokens(fixture), 2)
+                .unwrap()
+                .0,
+            expected
+        );
+    }
+    assert!(super::Locations::new(&fixture_sql("unknown-kind.sql"))
+        .procedures()
+        .is_empty());
+    let sql = fixture_sql("modifiers.sql");
+    let facts = super::super::extract_migration_facts(&sql);
+    assert!(facts
+        .declared_identifiers
+        .iter()
+        .any(|name| name.name == "score"));
+}
+
+fn fixture_sql(name: &str) -> String {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/identifier-length/tokens")
+        .join(name);
+    std::fs::read_to_string(path).unwrap()
+}
+
+fn fixture_tokens(name: &str) -> Vec<sqlparser::tokenizer::TokenWithSpan> {
+    crate::codebase::postgres::parse::unicode::tokenize_raw_unicode(&fixture_sql(name))
+        .into_iter()
+        .filter(|token| !matches!(token.token, sqlparser::tokenizer::Token::Whitespace(_)))
+        .collect()
 }

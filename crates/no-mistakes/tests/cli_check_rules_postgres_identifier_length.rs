@@ -52,6 +52,14 @@ fn postgres_identifier_length_fails_a_long_index_name() {
         ),
         "{body}"
     );
+    assert!(
+        body.contains("inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
+        "{body}"
+    );
+    assert!(
+        body.contains("added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
+        "{body}"
+    );
 }
 
 #[test]

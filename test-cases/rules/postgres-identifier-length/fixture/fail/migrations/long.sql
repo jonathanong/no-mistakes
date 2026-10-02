@@ -3,7 +3,7 @@ SELECT 1;
 CREATE TABLE accounts (
   id uuid,
   column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx text,
-  CONSTRAINT inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (id IS NOT NULL),
+  checked int CONSTRAINT inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (checked > 0),
   CONSTRAINT table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx FOREIGN KEY (id) REFERENCES referenced_onlyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (id)
 );
 
@@ -48,7 +48,7 @@ CREATE MATERIALIZED VIEW matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 CREATE TYPE enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx AS ENUM ('ready');
 
 ALTER TABLE accounts ADD CONSTRAINT added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (id IS NOT NULL);
-ALTER TABLE accounts ADD COLUMN added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx text;
+ALTER TABLE accounts ADD COLUMN added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx text CONSTRAINT added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (id IS NOT NULL);
 ALTER TABLE accounts RENAME TO renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;
 ALTER TABLE accounts RENAME COLUMN id TO renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;
 ALTER TABLE accounts RENAME CONSTRAINT added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx TO renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;

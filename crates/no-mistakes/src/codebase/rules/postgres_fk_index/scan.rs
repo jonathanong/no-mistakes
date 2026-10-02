@@ -1,7 +1,7 @@
 use super::{sql_rel, CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
-    collect_postgres_facts, SqlCreateIndexMetadata, SqlForeignKeyMetadata, SqlSchemaFileFacts,
+    collect_prepared_schema_facts, SqlCreateIndexMetadata, SqlForeignKeyMetadata,
+    SqlSchemaFileFacts,
 };
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;
@@ -13,19 +13,10 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            postgres_schema: true,
-            ..CheckFactPlan::default()
-        },
-        &opts.schema,
-        &Default::default(),
-    )
-    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
+        .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let indexes = indexes_by_table(&facts.schema);
     let mut used_columns = BTreeSet::new();
     let mut used_tables = BTreeSet::new();
