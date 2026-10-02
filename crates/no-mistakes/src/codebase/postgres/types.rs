@@ -49,6 +49,8 @@ pub struct SqlDeclaredIdentifier {
 pub struct SqlSchemaFileFacts {
     pub path: PathBuf,
     pub tables: Vec<SqlCreateTableMetadata>,
+    /// Qualified CREATE/ALTER/DROP operations in statement order for live-column catalogs.
+    pub table_events: Vec<SqlTableSchemaEvent>,
     pub indexes: Vec<SqlCreateIndexMetadata>,
     pub dropped_indexes: Vec<SqlDropIndexMetadata>,
     pub dropped_tables: Vec<SqlDropIndexMetadata>,
@@ -197,3 +199,19 @@ impl fmt::Display for PostgresFactError {
 }
 
 impl std::error::Error for PostgresFactError {}
+
+/// Ordered table catalog changes, retaining qualified relation identities.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SqlTableSchemaEvent {
+    Create {
+        table: String,
+        columns: Vec<SqlColumnMetadata>,
+    },
+    AddColumn {
+        table: String,
+        column: SqlColumnMetadata,
+    },
+    Drop {
+        table: String,
+    },
+}

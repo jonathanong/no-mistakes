@@ -100,3 +100,31 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`,
 `postgres-no-generated-column-writes` bans writing generated columns.
 `postgres-explicit-columns` bans `SELECT *` on wide tables. This rule only
 cares about predicates and sorts on generated columns.
+
+Query `include` and `exclude` globs select query inputs; they do not discard
+SQL schema inputs selected by `sqlInclude`. All supported JS/TS extensions
+are included by default. The rule stays quiet when no generated columns or
+`extraGeneratedColumns` entries are tracked, even if SQL is dynamic.
+
+The live catalog applies CREATE TABLE, ALTER TABLE ADD COLUMN, DROP TABLE,
+and recreation in migration-file and statement order. Qualified relation
+identities remain distinct, so `public.orders` and `audit.orders` do not
+share generated-column metadata. Predicates on UPDATE and DELETE are
+checked alongside SELECT. Simple ORDER BY projection aliases resolve to
+their projected base column. JOIN predicates use only the relations visible
+at that join; CTE and derived factors prevent unqualified ownership proof.
+
+Findings use the predicate or sort expression's actual line, including
+embedded call/declaration lines, so line-specific suppressions remain
+applicable. Remediation is intentionally conditional: use the source column
+only with bounds or ordering that preserve the configured generation
+expression's semantics and an appropriate index. Custom functions and
+non-primary-key source columns do not imply UUIDv7 or primary-key indexing.
+Extra entries identify their configured source column without guessing which
+function generated it.
+
+The Rust statement facts expose `mutation_column_uses`; each column use
+includes `candidate_tables` for its expression scope. Schema facts expose
+ordered `SqlTableSchemaEvent` entries through `table_events`; existing
+unqualified schema metadata retains its prior meaning. Aggregate and
+standalone checks borrow these projections from one request fact pass.

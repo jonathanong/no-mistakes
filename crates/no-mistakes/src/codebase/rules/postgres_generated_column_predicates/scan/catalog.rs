@@ -1,57 +1,83 @@
 use super::super::{CompiledOptions, ExtraGeneratedColumn, RuleFinding, RULE_ID};
-use crate::codebase::postgres::SqlSchemaFileFacts;
+use crate::codebase::postgres::{SqlColumnMetadata, SqlSchemaFileFacts, SqlTableSchemaEvent};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) struct Tracked {
     pub(super) table: String,
     pub(super) column: String,
     pub(super) source: String,
-    pub(super) function: String,
+    pub(super) function: Option<String>,
 }
 
-pub(super) fn tracked_columns(
-    schema: &[SqlSchemaFileFacts],
-    opts: &CompiledOptions,
-) -> Vec<Tracked> {
-    let mut tracked = Vec::new();
+pub(super) type LiveColumns = BTreeMap<String, BTreeMap<String, SqlColumnMetadata>>;
+
+pub(super) fn live_columns(schema: &[&SqlSchemaFileFacts]) -> LiveColumns {
+    let mut live = LiveColumns::new();
     for file in schema {
-        for table in &file.tables {
-            let name = table.table_name.to_ascii_lowercase();
-            let keys: Vec<String> = table
-                .columns
-                .iter()
-                .filter(|column| column.is_primary_key)
-                .map(|column| column.name.to_ascii_lowercase())
-                .collect();
-            for column in &table.columns {
-                let Some(function) = column.generated_function.as_deref() else {
-                    continue;
-                };
-                if !opts
-                    .functions
-                    .iter()
-                    .any(|name| name.eq_ignore_ascii_case(function))
-                {
-                    continue;
+        if file.table_events.is_empty() {
+            for table in &file.tables {
+                live.insert(table.table_name.clone(), column_map(&table.columns));
+            }
+        }
+        for event in &file.table_events {
+            match event {
+                SqlTableSchemaEvent::Create { table, columns } => {
+                    live.insert(table.clone(), column_map(columns));
                 }
-                let args = &column.generated_function_arg_columns;
-                if args.len() != 1 {
-                    continue;
+                SqlTableSchemaEvent::AddColumn { table, column } => {
+                    live.entry(table.clone())
+                        .or_default()
+                        .insert(column.name.clone(), column.clone());
                 }
-                let source = args[0].to_ascii_lowercase();
-                if opts.require_primary_key && !(keys.len() == 1 && keys[0] == source) {
-                    continue;
+                SqlTableSchemaEvent::Drop { table } => {
+                    live.remove(table);
                 }
-                tracked.push(Tracked {
-                    table: name.clone(),
-                    column: column.name.to_ascii_lowercase(),
-                    source,
-                    function: function.to_ascii_lowercase(),
-                });
             }
         }
     }
-    let function = opts.functions.first().cloned().unwrap_or_default();
+    live
+}
+
+fn column_map(columns: &[SqlColumnMetadata]) -> BTreeMap<String, SqlColumnMetadata> {
+    columns
+        .iter()
+        .map(|column| (column.name.clone(), column.clone()))
+        .collect()
+}
+
+pub(super) fn tracked_columns(live: &LiveColumns, opts: &CompiledOptions) -> Vec<Tracked> {
+    let mut tracked = Vec::new();
+    for (name, columns) in live {
+        let keys: Vec<_> = columns
+            .iter()
+            .filter(|(_, column)| column.is_primary_key)
+            .map(|(name, _)| name)
+            .collect();
+        for (column_name, column) in columns {
+            let Some(function) = column.generated_function.as_deref() else {
+                continue;
+            };
+            if !opts
+                .functions
+                .iter()
+                .any(|name| name.eq_ignore_ascii_case(function))
+            {
+                continue;
+            }
+            let [source] = column.generated_function_arg_columns.as_slice() else {
+                continue;
+            };
+            if opts.require_primary_key && !(keys.len() == 1 && keys[0] == source) {
+                continue;
+            }
+            tracked.push(Tracked {
+                table: name.clone(),
+                column: column_name.clone(),
+                source: source.clone(),
+                function: Some(function.to_string()),
+            });
+        }
+    }
     for extra in &opts.extras {
         let table = extra.table.trim().to_ascii_lowercase();
         let column = extra.column.trim().to_ascii_lowercase();
@@ -65,36 +91,29 @@ pub(super) fn tracked_columns(
             table,
             column,
             source: extra.source_column.trim().to_ascii_lowercase(),
-            function: function.clone(),
+            function: None,
         });
     }
     tracked
 }
 
-pub(super) fn column_index(schema: &[SqlSchemaFileFacts]) -> BTreeMap<String, BTreeSet<String>> {
-    let mut columns = BTreeMap::new();
-    for file in schema {
-        for table in &file.tables {
-            columns.insert(
-                table.table_name.to_ascii_lowercase(),
-                table
-                    .columns
-                    .iter()
-                    .map(|column| column.name.to_ascii_lowercase())
-                    .collect(),
-            );
-        }
-    }
-    columns
+pub(super) fn column_index(live: &LiveColumns) -> BTreeMap<String, BTreeSet<String>> {
+    live.iter()
+        .map(|(table, columns)| (table.clone(), columns.keys().cloned().collect()))
+        .collect()
 }
 
 pub(super) fn stale_extras(
-    schema: &[SqlSchemaFileFacts],
+    live: &LiveColumns,
     extras: &[ExtraGeneratedColumn],
 ) -> Vec<RuleFinding> {
     extras
         .iter()
-        .filter(|extra| generated_in_schema(schema, extra))
+        .filter(|extra| {
+            live.get(extra.table.trim())
+                .and_then(|columns| columns.get(extra.column.trim()))
+                .is_some_and(|column| column.is_generated)
+        })
         .map(|extra| RuleFinding {
             rule: RULE_ID.to_string(),
             file: ".no-mistakes.yml".to_string(),
@@ -110,11 +129,5 @@ pub(super) fn stale_extras(
         .collect()
 }
 
-fn generated_in_schema(schema: &[SqlSchemaFileFacts], extra: &ExtraGeneratedColumn) -> bool {
-    schema.iter().flat_map(|file| &file.tables).any(|table| {
-        table.table_name.eq_ignore_ascii_case(extra.table.trim())
-            && table.columns.iter().any(|column| {
-                column.is_generated && column.name.eq_ignore_ascii_case(extra.column.trim())
-            })
-    })
-}
+#[cfg(test)]
+mod tests;

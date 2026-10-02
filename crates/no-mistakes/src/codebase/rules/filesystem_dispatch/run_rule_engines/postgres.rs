@@ -5,6 +5,7 @@ use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod generated_predicates;
 mod naming;
 
 use naming::{
@@ -43,9 +44,7 @@ pub(super) fn run(
             postgres_redundant_index::check_with_files_and_sources(root, config, files, sources)
         }
         POSTGRES_GENERATED_COLUMN_PREDICATES => {
-            postgres_generated_column_predicates::check_with_files_and_sources(
-                root, config, files, sources,
-            )
+            generated_predicates::run(root, config, files, sources, facts)
         }
         POSTGRES_NO_GENERATED_COLUMN_WRITES => {
             postgres_no_generated_column_writes::check_with_files_and_sources(

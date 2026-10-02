@@ -44,6 +44,7 @@ pub(crate) fn extract_from_parsed(
     let mut deletes = Vec::new();
     let mut triggers = Vec::new();
     let mut returning_stars = Vec::new();
+    let mut mutation_column_uses = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
     let mut executed = Vec::new();
@@ -59,6 +60,7 @@ pub(crate) fn extract_from_parsed(
         deletes: &mut deletes,
         triggers: &mut triggers,
         returning_stars: &mut returning_stars,
+        mutation_column_uses: &mut mutation_column_uses,
     };
     for statement in executed {
         collect_one(sql, statement, &mut out);
@@ -71,6 +73,7 @@ pub(crate) fn extract_from_parsed(
         deletes,
         triggers,
         returning_stars,
+        mutation_column_uses,
         parse_failed,
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
@@ -87,6 +90,7 @@ struct FactOut<'a> {
     deletes: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
     triggers: &'a mut Vec<SqlTriggerFact>,
     returning_stars: &'a mut Vec<SqlStarProjectionFact>,
+    mutation_column_uses: &'a mut Vec<SqlColumnUseFact>,
 }
 
 fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
@@ -111,7 +115,14 @@ fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
     select::collect(sql, statement, out.selects);
     out.returning_stars
         .extend(select::returning_stars(sql, statement));
-    mutations::collect(sql, statement, out.updates, out.deletes, out.selects);
+    mutations::collect(
+        sql,
+        statement,
+        out.updates,
+        out.deletes,
+        out.selects,
+        out.mutation_column_uses,
+    );
 }
 
 fn collect_query_inserts(

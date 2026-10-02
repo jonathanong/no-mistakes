@@ -5,7 +5,7 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-generated-column-predicates/fixture")
@@ -13,7 +13,7 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
-fn config_yaml(yaml: &str) -> NoMistakesConfig {
+pub(super) fn config_yaml(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
@@ -212,20 +212,13 @@ fn an_explicit_include_skips_other_files() {
 }
 
 #[test]
-fn dynamic_sql_fails_closed_while_static_statements_are_collected() {
+fn no_tracked_columns_are_quiet_even_with_dynamic_sql() {
     let root = fixture("coverage");
     let file = root.join("src/query.ts");
-    let findings = check_with_files(
-        &root,
-        &config_yaml("include: ['src/**/*.ts']\n"),
-        std::slice::from_ref(&file),
-    )
-    .unwrap();
     assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("not statically recoverable")),
-        "{findings:?}"
+        check_with_files(&root, &config_yaml("include: ['src/**/*.ts']\n"), &[file])
+            .unwrap()
+            .is_empty()
     );
 }
 

@@ -1,4 +1,6 @@
+mod returning;
 use super::{SqlRelationPredicateFact, SqlSelectFact};
+use returning::walk_returning;
 use sqlparser::ast::{
     Expr, FromTable, Statement, TableFactor, TableWithJoins, UpdateTableFromKind,
 };
@@ -9,8 +11,9 @@ pub(super) fn collect(
     updates: &mut Vec<Vec<SqlRelationPredicateFact>>,
     deletes: &mut Vec<Vec<SqlRelationPredicateFact>>,
     selects: &mut Vec<SqlSelectFact>,
+    column_uses: &mut Vec<super::SqlColumnUseFact>,
 ) {
-    collect_in_scope(sql, statement, &[], updates, deletes, selects);
+    collect_in_scope(sql, statement, &[], updates, deletes, selects, column_uses);
 }
 
 fn collect_in_scope(
@@ -20,6 +23,7 @@ fn collect_in_scope(
     updates: &mut Vec<Vec<SqlRelationPredicateFact>>,
     deletes: &mut Vec<Vec<SqlRelationPredicateFact>>,
     selects: &mut Vec<SqlSelectFact>,
+    column_uses: &mut Vec<super::SqlColumnUseFact>,
 ) {
     match statement {
         Statement::Update(update) => {
@@ -27,6 +31,11 @@ fn collect_in_scope(
             if let Some(from) = &update.from {
                 tables.extend(from_tables(from).iter().cloned());
             }
+            column_uses.extend(super::select::mutation_column_uses(
+                &tables,
+                update.selection.as_ref(),
+                ctes,
+            ));
             push_group(sql, &tables, update.selection.as_ref(), ctes, updates);
             walk_side_queries(sql, &tables, update.selection.as_ref(), ctes, selects);
             for assignment in &update.assignments {
@@ -39,14 +48,21 @@ fn collect_in_scope(
             if let Some(using) = &delete.using {
                 tables.extend(using.iter().cloned());
             }
+            column_uses.extend(super::select::mutation_column_uses(
+                &tables,
+                delete.selection.as_ref(),
+                ctes,
+            ));
             push_group(sql, &tables, delete.selection.as_ref(), ctes, deletes);
             walk_side_queries(sql, &tables, delete.selection.as_ref(), ctes, selects);
             walk_returning(sql, delete.returning.as_deref(), ctes, selects);
         }
-        Statement::Query(query) => collect_query(sql, query, ctes, updates, deletes, selects),
+        Statement::Query(query) => {
+            collect_query(sql, query, ctes, updates, deletes, selects, column_uses)
+        }
         Statement::Insert(insert) => {
             if let Some(source) = insert.source.as_deref() {
-                collect_query(sql, source, ctes, updates, deletes, selects);
+                collect_query(sql, source, ctes, updates, deletes, selects, column_uses);
             }
             walk_returning(sql, insert.returning.as_deref(), ctes, selects);
         }
@@ -61,6 +77,7 @@ fn collect_query(
     updates: &mut Vec<Vec<SqlRelationPredicateFact>>,
     deletes: &mut Vec<Vec<SqlRelationPredicateFact>>,
     selects: &mut Vec<SqlSelectFact>,
+    column_uses: &mut Vec<super::SqlColumnUseFact>,
 ) {
     let mut ctes = outer.to_vec();
     if let Some(with) = &query.with {
@@ -69,13 +86,29 @@ fn collect_query(
             if with.recursive {
                 ctes.push(name.clone());
             }
-            collect_query(sql, &cte.query, &ctes, updates, deletes, selects);
+            collect_query(
+                sql,
+                &cte.query,
+                &ctes,
+                updates,
+                deletes,
+                selects,
+                column_uses,
+            );
             if !with.recursive {
                 ctes.push(name);
             }
         }
     }
-    collect_set(sql, &query.body, &ctes, updates, deletes, selects);
+    collect_set(
+        sql,
+        &query.body,
+        &ctes,
+        updates,
+        deletes,
+        selects,
+        column_uses,
+    );
 }
 
 fn collect_set(
@@ -85,33 +118,21 @@ fn collect_set(
     updates: &mut Vec<Vec<SqlRelationPredicateFact>>,
     deletes: &mut Vec<Vec<SqlRelationPredicateFact>>,
     selects: &mut Vec<SqlSelectFact>,
+    column_uses: &mut Vec<super::SqlColumnUseFact>,
 ) {
     use sqlparser::ast::SetExpr;
     match set {
         SetExpr::Update(statement) | SetExpr::Delete(statement) | SetExpr::Insert(statement) => {
-            collect_in_scope(sql, statement, ctes, updates, deletes, selects)
+            collect_in_scope(sql, statement, ctes, updates, deletes, selects, column_uses)
         }
-        SetExpr::Query(query) => collect_query(sql, query, ctes, updates, deletes, selects),
+        SetExpr::Query(query) => {
+            collect_query(sql, query, ctes, updates, deletes, selects, column_uses)
+        }
         SetExpr::SetOperation { left, right, .. } => {
-            collect_set(sql, left, ctes, updates, deletes, selects);
-            collect_set(sql, right, ctes, updates, deletes, selects);
+            collect_set(sql, left, ctes, updates, deletes, selects, column_uses);
+            collect_set(sql, right, ctes, updates, deletes, selects, column_uses);
         }
         _ => {}
-    }
-}
-
-fn walk_returning(
-    sql: &str,
-    returning: Option<&[sqlparser::ast::SelectItem]>,
-    ctes: &[String],
-    selects: &mut Vec<SqlSelectFact>,
-) {
-    for item in returning.into_iter().flatten() {
-        if let sqlparser::ast::SelectItem::UnnamedExpr(expr)
-        | sqlparser::ast::SelectItem::ExprWithAlias { expr, .. } = item
-        {
-            super::select::walk_expr(sql, expr, ctes, false, selects);
-        }
     }
 }
 
