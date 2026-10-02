@@ -205,3 +205,6 @@ names fold to lowercase, and quotes preserve case or literal dots. Unqualified
 entries select a temporary table first, then an exact or unique surviving
 relation; ambiguous names are skipped. Qualified entries retain their selected
 schema. Stale-entry checks inspect that same relation rather than a namesake.
+
+Assignments inside conditional, loop or exception scopes invalidate static SQL
+variables, so later EXECUTE statements do not replay an uncertain branch value.

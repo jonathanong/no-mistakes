@@ -55,6 +55,26 @@ fn rollback_restores_tables_and_discards_aborted_columns() {
 }
 
 #[test]
+fn conditional_variable_assignments_do_not_change_definite_live_history() {
+    assert_eq!(lines("conditional-assignment"), [1]);
+    let root = unit_fixture("conditional-assignment");
+    let sql = std::fs::read_to_string(root.join("schema.sql")).unwrap();
+    let facts = crate::codebase::postgres::extract_migration_facts(&sql);
+    assert!(facts
+        .tables
+        .iter()
+        .any(|table| table.table_name == "dormant_fact"));
+    assert!(facts
+        .dropped_tables
+        .iter()
+        .any(|drop| drop.name == "orders"));
+    assert!(facts.table_events.iter().all(|event| !matches!(
+        event,
+        crate::codebase::postgres::SqlTableSchemaEvent::Drop { .. }
+    )));
+}
+
+#[test]
 fn configured_extras_follow_temp_unique_and_qualified_relation_identity() {
     let root = unit_fixture("configured-identities");
     let options = std::fs::read_to_string(root.join("options.yml")).unwrap();

@@ -477,3 +477,8 @@ qualification; `table` retains its legacy decoded spelling. CREATE events retain
 Executed table events discard changes rolled back within the SQL source, including
 `ROLLBACK TO SAVEPOINT`. `COMMIT`, transaction `END`, and released savepoints
 retain their changes. Broad policy facts continue to describe rolled-back DDL.
+
+A variable assigned in conditional/loop/exception scope becomes opaque to later
+definite EXECUTE recovery. Its syntactic SQL remains available to broad policy
+facts, including assignments in dormant PL/pgSQL routines, without producing
+executed table events.

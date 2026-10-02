@@ -165,3 +165,19 @@ fn rejects_invalid_literal_suffixes_and_preserves_unknown_format_directives() {
     assert_eq!(literal::normalize_format("%q %1q"), "%q %1q");
     assert!(schema_bodies("DO ' '").is_empty());
 }
+
+#[test]
+fn tolerant_recovery_keeps_the_origin_for_unmapped_decoded_lines() {
+    let sql = include_str!("../../../../../../../fixtures/rules/postgres-dynamic-sql/fixture.sql");
+    let mut recovered = DynamicSql::anchored(sql.to_string(), 3);
+    // Recovered AST positions may extend beyond the retained literal map.
+    assert_eq!(recovered.source_line(usize::MAX), 3);
+    recovered.source_lines.clear();
+    assert_eq!(recovered.source_line(1), 3);
+}
+
+#[test]
+fn malformed_control_and_format_tokens_do_not_invent_dynamic_sql() {
+    let sql = include_str!("../../../../../../../fixtures/rules/postgres-dynamic-sql/invalid.sql");
+    assert!(extract(sql).is_empty());
+}

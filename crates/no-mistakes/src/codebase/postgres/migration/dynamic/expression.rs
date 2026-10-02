@@ -16,14 +16,15 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
     let mut scope = execution::Scope::default();
     for (ordinal, statement) in statements(&all).into_iter().enumerate() {
         let code = significant(statement);
-        let executed = scope.advance(&code) && body.executed;
+        let definite = scope.advance(&code);
+        let executed = definite && body.executed;
         if code.is_empty() {
             continue;
         }
         if let Some(at) = code.iter().position(|token| word(token, "EXECUTE")) {
             let line = body_line(body, code[at]);
             if let Some(mut sql) = executed_expression(&code[at + 1..], &variables, line) {
-                sql.executed = executed;
+                sql.executed &= executed;
                 sql.source_order = body
                     .source_order
                     .iter()
@@ -37,8 +38,12 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
         if let Some(at) = assignment_at(&code) {
             if let Some(name) = assignment_name(&code, at) {
                 let line = body_line(body, code[at]);
-                let value = expression_sql(&code[at + 1..], &variables)
-                    .map(|sql| DynamicSql::anchored(sql, line));
+                let mut value = executed_expression(&code[at + 1..], &variables, line);
+                if let Some(value) = &mut value {
+                    // Retain syntactic SQL for policy facts, but invalidate definite
+                    // execution when a conditional assignment can replace its value.
+                    value.executed &= definite;
+                }
                 variables.insert(name.to_ascii_lowercase(), value);
             }
         }
@@ -60,22 +65,7 @@ fn executed_expression(
             return Some(value.clone());
         }
     }
-    expression_sql(tokens, variables).map(|sql| DynamicSql::anchored(sql, line))
-}
-
-fn expression_sql(
-    tokens: &[&TokenWithSpan],
-    variables: &HashMap<String, Option<DynamicSql>>,
-) -> Option<String> {
-    let tokens = execution_tokens(tokens);
-    static_expression(tokens).or_else(|| {
-        (tokens.len() == 1)
-            .then(|| identifier(tokens[0]))
-            .flatten()
-            .and_then(|name| variables.get(&name.to_ascii_lowercase()))
-            .and_then(|value| value.as_ref())
-            .map(|value| value.sql.clone())
-    })
+    static_expression(expression).map(|sql| DynamicSql::anchored(sql, line))
 }
 
 fn execution_tokens<'a>(tokens: &'a [&TokenWithSpan]) -> &'a [&'a TokenWithSpan] {
@@ -120,7 +110,7 @@ fn format_argument_start(tokens: &[&TokenWithSpan]) -> Option<usize> {
 }
 
 fn assignment_name<'a>(tokens: &'a [&TokenWithSpan], assignment: usize) -> Option<&'a str> {
-    let line = tokens.get(assignment)?.span.start.line;
+    let line = tokens[assignment].span.start.line;
     let identifiers = tokens[..assignment]
         .iter()
         .filter(|token| token.span.start.line == line)

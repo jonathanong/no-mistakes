@@ -30,7 +30,8 @@ impl DynamicSql {
             line,
             source_lines: vec![line; line_count],
             source_order: Vec::new(),
-            executed: false,
+            // A literal is certain until its assignment/execution scope narrows it.
+            executed: true,
         }
     }
 
