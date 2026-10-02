@@ -66,7 +66,10 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
                 (position.sql_line as usize, position.sql_column as usize) <= (line, column)
             })
             .checked_sub(1)
-            .map(|index| call.sql_source_positions[index].source_line as usize)
+            .map(|index| {
+                let position = &call.sql_source_positions[index];
+                position.source_line as usize + line - position.sql_line as usize
+            })
             .unwrap_or_else(|| line.saturating_add(shift))
     };
     for offset in &mut facts.offset_uses {
@@ -79,6 +82,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
         select.line = source_line(select.line, 1);
         for relation in &mut select.relations {
             relation.line = source_line(relation.line, 1);
+        }
+        for exists in &mut select.exists_set_operations {
+            exists.line = source_line(exists.line, 1);
         }
         for star in &mut select.star_projections {
             star.line = source_line(star.line, 1);

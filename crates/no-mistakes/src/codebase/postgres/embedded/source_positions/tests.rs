@@ -14,10 +14,14 @@ fn saved_escape_encodings_keep_offsets_on_the_physical_source_line() {
         let sql = call.sql_text.unwrap();
         let uses = crate::codebase::postgres::sql_file_offset_uses(&sql);
         assert_eq!(uses.len(), 1, "{sql}");
-        assert!(call
-            .sql_source_positions
-            .iter()
-            .all(|p| p.source_line == call.line));
+        assert_eq!(
+            call.sql_source_positions.first().unwrap().source_line,
+            call.line
+        );
+        assert_eq!(
+            call.sql_source_positions.last().unwrap().source_line,
+            call.line + 1
+        );
     }
 }
 

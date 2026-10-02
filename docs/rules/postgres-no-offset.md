@@ -140,3 +140,6 @@ newline escapes, line continuations, multiline interpolations, and initializers
 that begin below their declaration preserve the actual OFFSET source line.
 Prepared source failures retain their I/O kind; dispatch uses that captured
 outcome without checking filesystem state again.
+Source positions mark changes to the source-versus-SQL line offset. Between
+positions, map a SQL line with `source_line + sql_line - position.sql_line`;
+an empty position list retains the ordinary call/declaration line mapping.

@@ -7,7 +7,7 @@ mod escapes;
 #[cfg(test)]
 mod tests;
 
-/// A recovered SQL position whose physical source line changes.
+/// A recovered SQL position whose physical source-line offset changes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmbeddedSqlSourcePosition {
     pub sql_line: u32,
@@ -22,7 +22,10 @@ pub(super) fn for_expression(
     line: u32,
 ) -> Vec<EmbeddedSqlSourcePosition> {
     let expr = unwrap_ts_wrappers(expr);
-    let mut out = Positions::default();
+    let mut out = Positions {
+        origin: line,
+        ..Positions::default()
+    };
     let line = line + newlines(&source[start..expr.span().start as usize]);
     match expr {
         Expression::StringLiteral(literal) => {
@@ -83,6 +86,7 @@ struct Positions {
     positions: Vec<EmbeddedSqlSourcePosition>,
     line: u32,
     column: u32,
+    origin: u32,
 }
 impl Default for Positions {
     fn default() -> Self {
@@ -90,16 +94,18 @@ impl Default for Positions {
             positions: Vec::new(),
             line: 1,
             column: 1,
+            origin: 1,
         }
     }
 }
 impl Positions {
     fn record(&mut self, source_line: u32) {
-        if self
+        let expected = self
             .positions
             .last()
-            .is_none_or(|position| position.source_line != source_line)
-        {
+            .map(|position| position.source_line + self.line - position.sql_line)
+            .unwrap_or(self.origin + self.line - 1);
+        if expected != source_line {
             self.positions.push(EmbeddedSqlSourcePosition {
                 sql_line: self.line,
                 sql_column: self.column,
@@ -112,6 +118,10 @@ impl Positions {
         self.column += format!("{}{index}", placeholders::PLACEHOLDER_MARKER).len() as u32;
     }
     fn append(&mut self, raw: &str, decoded: &str, mut source_line: u32, raw_mode: bool) {
+        if !raw.contains('\n') || raw == decoded {
+            self.append_bulk(decoded, source_line, raw == decoded);
+            return;
+        }
         let mut at = 0;
         let mut extra = 0;
         for character in decoded.chars() {
@@ -135,6 +145,22 @@ impl Positions {
                 self.column = 1;
             } else {
                 self.column += 1;
+            }
+        }
+    }
+
+    fn append_bulk(&mut self, decoded: &str, mut source_line: u32, physical: bool) {
+        self.record(source_line);
+        for segment in decoded.split_inclusive('\n') {
+            if segment.ends_with('\n') {
+                self.line += 1;
+                self.column = 1;
+                if physical {
+                    source_line += 1;
+                }
+                self.record(source_line);
+            } else {
+                self.column += segment.chars().count() as u32;
             }
         }
     }
