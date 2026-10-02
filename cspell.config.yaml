@@ -119,6 +119,8 @@ words:
   - subpaths
   - tokei
   - timestamptz
+  - typmod
+  - typmods
   - tsconfig
   - UESCAPE
   - unconstructed
@@ -126,6 +128,7 @@ words:
   - urlpatterns
   - unmodeled
   - valkey
+  - varchar
   - viewmodel
   - vitest
   - walkdir

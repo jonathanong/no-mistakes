@@ -1,5 +1,6 @@
 fn pins(sql: &str, column: &str) -> Option<Vec<String>> {
-    super::super::pin::pinned_literals(sql, column)
+    let expr = super::super::parse::expression(sql)?;
+    super::super::pin::pinned_literals_expr(&expr, column)
 }
 
 fn eq(sql: &str, column: &str, expected: Option<&[&str]>) {

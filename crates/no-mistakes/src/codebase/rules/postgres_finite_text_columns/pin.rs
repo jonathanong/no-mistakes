@@ -1,11 +1,5 @@
 use sqlparser::ast::{BinaryOperator, Expr, Value};
 
-#[cfg(test)]
-pub(super) fn pinned_literals(definition: &str, column: &str) -> Option<Vec<String>> {
-    let expr = super::parse::expression(definition)?;
-    pinned_literals_expr(&expr, column)
-}
-
 pub(super) fn pinned_literals_expr(expr: &Expr, column: &str) -> Option<Vec<String>> {
     pin(expr, column)
 }
