@@ -7,9 +7,10 @@
 //! end of the pin, which lets one separator character close a pin and open the
 //! next.
 //!
-//! Docker references are ASCII-only. Digits are `[0-9]` and word boundaries are
-//! `(?-u:\b)`, never `\d`/`\b`, so a non-ASCII character always ends a reference
-//! (`ghcr.io/acme/api:v2β` reports `ghcr.io/acme/api:v2`) and is never a digit.
+//! Docker references are ASCII-only. Digits are `[0-9]`, never `\d`, so a
+//! non-ASCII character is never a digit (`ghcr.io/acme/api:v2β` reports
+//! `ghcr.io/acme/api:v2`). Context keywords use Unicode `\b`, so `éimage` and
+//! `brewé` are not `image` or `brew`.
 
 /// `(reason, regex, line_context)`: the pattern only runs on lines matching
 /// `line_context` when one is given.
@@ -119,7 +120,7 @@ macro_rules! image_end {
 /// under a registry host needs no context for either `:9` or `:v2`.
 macro_rules! image_context {
     () => {
-        r#"(?:(?-u:\b)image\\?["']?:\s*(?:\\?["'])?|(?-u:\b)FROM\s+(?:--platform=\S+\s+)?["']?)"#
+        r#"(?:\bimage\\?["']?:\s*(?:\\?["'])?|\bFROM\s+(?:--platform=\S+\s+)?["']?)"#
     };
 }
 
@@ -185,7 +186,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
     (
         "container image tag",
         concat!(
-            r#"(?-u:\b)image\\?["']?:"#,
+            r#"\bimage\\?["']?:"#,
             "(?P<pin>",
             host!(),
             "/",
@@ -226,7 +227,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
     (
         "versioned Homebrew formula",
         r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@[0-9]+(?:\.[0-9]+)?)(?:$|[^A-Za-z0-9_.@-]|\.(?:$|[^0-9A-Za-z_-]))",
-        Some(r"(?i)(?-u:\b)(?:brew|homebrew|linuxbrew)(?-u:\b)|/Cellar/"),
+        Some(r"(?i)\b(?:brew|homebrew|linuxbrew)\b|/Cellar/"),
     ),
     (
         "versioned runner label",
