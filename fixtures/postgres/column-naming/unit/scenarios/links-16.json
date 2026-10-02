@@ -1,0 +1,15 @@
+{
+  "tables": {
+    "link__accounts": {
+      "columns": {
+        "only_on_link": {
+          "dataType": "uuid"
+        },
+        "reviewer_user_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

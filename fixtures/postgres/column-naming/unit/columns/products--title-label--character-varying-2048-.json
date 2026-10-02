@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "products": {
+      "columns": {
+        "title_label": {
+          "dataType": "character varying(2048)"
+        }
+      }
+    }
+  }
+}

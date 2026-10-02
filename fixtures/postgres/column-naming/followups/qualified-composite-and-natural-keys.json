@@ -1,0 +1,48 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "users": { "columns": { "id": { "dataType": "uuid" }, "org_id": { "dataType": "uuid" } } },
+    "line_grants": {
+      "columns": { "account_id": { "dataType": "uuid" }, "user_id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "grant_target": {
+          "columns": ["account_id", "user_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["org_id", "id"]
+        }
+      }
+    },
+    "public.currencies": { "columns": { "currency_code": { "dataType": "text" } } },
+    "orders": {
+      "columns": { "currency_code": { "dataType": "text" }, "external_id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "currency": {
+          "columns": ["currency_code"],
+          "referencedTable": "public.currencies",
+          "referencedColumns": ["currency_code"]
+        }
+      }
+    },
+    "public.articles": { "columns": { "id": { "dataType": "uuid" } } },
+    "bookmarks": {
+      "columns": { "article_id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "article": {
+          "columns": ["article_id"],
+          "referencedTable": "public.articles",
+          "referencedColumns": ["id"]
+        }
+      }
+    },
+    "payments": {
+      "columns": { "external_id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "external": {
+          "columns": ["external_id"],
+          "referencedTable": "orders",
+          "referencedColumns": ["external_id"]
+        }
+      }
+    }
+  }
+}

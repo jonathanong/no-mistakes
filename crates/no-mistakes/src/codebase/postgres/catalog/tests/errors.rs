@@ -16,6 +16,13 @@ fn sparse_snapshot_uses_field_defaults() {
 }
 
 #[test]
+fn snapshot_without_tables_has_no_column_locations() {
+    let catalog = load_fixture("no-tables.json").unwrap();
+    assert!(catalog.tables().next().is_none());
+    assert_eq!(catalog.column_line("missing", "column"), 1);
+}
+
+#[test]
 fn snapshot_load_reports_unsupported_and_unreadable_fields() {
     let strategy = load_fixture("bad-strategy.json").unwrap_err();
     assert!(strategy.contains("table broken has unsupported partition strategy MAGIC"));
@@ -27,4 +34,6 @@ fn snapshot_load_reports_unsupported_and_unreadable_fields() {
     assert!(trigger.contains("table broken trigger bad has an unreadable definition"));
     let syntax = load_fixture("bad-partition-syntax.json").unwrap_err();
     assert!(syntax.contains("table broken has unreadable partition key"));
+    let extension = load_fixture("invalid-trailing-comma.json").unwrap_err();
+    assert!(extension.contains("not valid JSONC"), "{extension}");
 }

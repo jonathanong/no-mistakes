@@ -1,0 +1,10 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "total_amount": { "dataType": "numeric(2,\n-3)" }
+      }
+    }
+  }
+}

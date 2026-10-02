@@ -1,0 +1,51 @@
+{
+  "tables": {
+    "a": {
+      "columns": {
+        "k": {
+          "dataType": "uuid"
+        },
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "k",
+            "user_id"
+          ],
+          "referencedTable": "b",
+          "referencedColumns": [
+            "k",
+            "user_id"
+          ]
+        }
+      }
+    },
+    "b": {
+      "columns": {
+        "k": {
+          "dataType": "uuid"
+        },
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "k",
+            "user_id"
+          ],
+          "referencedTable": "a",
+          "referencedColumns": [
+            "k",
+            "user_id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "shipped_at": {
+          "dataType": "date"
+        }
+      }
+    }
+  }
+}

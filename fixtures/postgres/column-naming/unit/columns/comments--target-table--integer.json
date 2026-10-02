@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "comments": {
+      "columns": {
+        "target_table": {
+          "dataType": "integer"
+        }
+      }
+    }
+  }
+}

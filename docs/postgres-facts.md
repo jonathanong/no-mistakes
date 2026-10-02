@@ -314,7 +314,9 @@ comments (`-- name`) and empty `/* */` comments are not annotations.
 ## Schema catalog model
 
 `SchemaCatalog::load` reads a repository-relative PostgreSQL snapshot with
-`formatVersion: 2`. Missing snapshot fields default, so a catalog that only
+`formatVersion: 2`. Snapshots accept strict JSON syntax with `//` and `/* */`
+comments (JSONC); trailing commas and other JSONC extensions remain invalid.
+Missing snapshot fields default, so a catalog that only
 records indexes still loads. `postgres-finite-text-columns` reads column types,
 foreign keys, and `CHECK` definitions from this snapshot. `postgres-array-columns`
 reads column `data_type` values and enum names from this snapshot.

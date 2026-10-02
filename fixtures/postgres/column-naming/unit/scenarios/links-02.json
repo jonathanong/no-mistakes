@@ -1,0 +1,28 @@
+{
+  "tables": {
+    "line_grants": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "account_id",
+            "user_id"
+          ],
+          "referencedTable": "account_members",
+          "referencedColumns": [
+            "account_id",
+            "user_id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

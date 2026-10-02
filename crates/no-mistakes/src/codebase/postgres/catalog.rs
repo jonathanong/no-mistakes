@@ -13,6 +13,7 @@ mod function_comment;
 mod function_escape;
 mod function_outputs;
 mod function_quote;
+mod locations;
 mod model;
 mod names;
 mod order;
@@ -64,6 +65,7 @@ pub struct SchemaCatalog {
     functions: BTreeMap<String, CatalogFunction>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
+    column_lines: BTreeMap<(String, String), usize>,
 }
 #[derive(Debug, Clone, Default)]
 struct ArbiterTable {
@@ -80,15 +82,41 @@ impl SchemaCatalog {
                 path.display()
             )
         })?;
-        let snapshot: Snapshot = serde_json::from_str(&source)
-            .with_context(|| format!("schemaCatalogPath {} is not valid JSON", path.display()))?;
+        let parsed = jsonc_parser::parse_to_ast(
+            &source,
+            &jsonc_parser::CollectOptions::default(),
+            &jsonc_parser::ParseOptions {
+                allow_comments: true,
+                allow_loose_object_property_names: false,
+                allow_trailing_commas: false,
+                allow_missing_commas: false,
+                allow_single_quoted_strings: false,
+                allow_hexadecimal_numbers: false,
+                allow_unary_plus_numbers: false,
+            },
+        )
+        .with_context(|| format!("schemaCatalogPath {} is not valid JSONC", path.display()))?;
+        let column_lines = parsed
+            .value
+            .as_ref()
+            .map(|value| locations::column_lines(value, &source))
+            .unwrap_or_default();
+        let snapshot: Snapshot = serde_json::from_value(
+            parsed
+                .value
+                .ok_or_else(|| anyhow::anyhow!("schemaCatalogPath {} is empty", path.display()))?
+                .into(),
+        )
+        .with_context(|| format!("schemaCatalogPath {} has an invalid schema", path.display()))?;
         if snapshot.format_version != 2 {
             bail!(
                 "schemaCatalogPath {} must be a PostgreSQL schema snapshot with formatVersion 2",
                 path.display()
             );
         }
-        Self::from_snapshot(&path.display().to_string(), snapshot)
+        let mut catalog = Self::from_snapshot(&path.display().to_string(), snapshot)?;
+        catalog.set_column_lines(column_lines);
+        Ok(catalog)
     }
 
     fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<Self> {
@@ -97,6 +125,18 @@ impl SchemaCatalog {
 
     pub fn tables(&self) -> impl Iterator<Item = &CatalogTable> {
         self.model_tables.values()
+    }
+
+    /// Line of the column declaration in the JSONC schema snapshot.
+    pub(crate) fn column_line(&self, table: &str, column: &str) -> usize {
+        self.column_lines
+            .get(&(table.to_string(), column.to_string()))
+            .copied()
+            .unwrap_or(1)
+    }
+
+    pub(crate) fn set_column_lines(&mut self, lines: BTreeMap<(String, String), usize>) {
+        self.column_lines = lines;
     }
 
     pub fn table(&self, name: &str) -> Option<&CatalogTable> {

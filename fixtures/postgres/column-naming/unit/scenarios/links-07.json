@@ -1,0 +1,64 @@
+{
+  "tables": {
+    "grants": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "a": {
+          "columns": [
+            "account_id",
+            "user_id"
+          ],
+          "referencedTable": "account_seats",
+          "referencedColumns": [
+            "account_id",
+            "seat_id"
+          ]
+        },
+        "b": {
+          "columns": [
+            "team_id",
+            "user_id"
+          ],
+          "referencedTable": "account_members",
+          "referencedColumns": [
+            "account_id",
+            "user_id"
+          ]
+        }
+      }
+    },
+    "account_seats": {
+      "columns": {
+        "seat_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "account_members": {
+      "columns": {
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "user_fk": {
+          "columns": [
+            "user_id"
+          ],
+          "referencedTable": "users",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

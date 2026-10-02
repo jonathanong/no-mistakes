@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "members": {
+      "columns": {
+        "member_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "member_id"
+          ],
+          "referencedTable": "staff",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

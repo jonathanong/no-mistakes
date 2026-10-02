@@ -24,6 +24,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         functions: functions(snapshot.functions),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),
+        column_lines: BTreeMap::new(),
     })
 }
 

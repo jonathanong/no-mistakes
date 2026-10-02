@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "bookmarks": {
+      "columns": {
+        "article_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "article_id"
+          ],
+          "referencedTable": "articles",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

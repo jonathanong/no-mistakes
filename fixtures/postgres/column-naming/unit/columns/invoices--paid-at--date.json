@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "paid_at": {
+          "dataType": "date"
+        }
+      }
+    }
+  }
+}

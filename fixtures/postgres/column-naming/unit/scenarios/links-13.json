@@ -1,0 +1,23 @@
+{
+  "tables": {
+    "categories": {
+      "columns": {
+        "parent_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "parent_id"
+          ],
+          "referencedTable": "categories",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

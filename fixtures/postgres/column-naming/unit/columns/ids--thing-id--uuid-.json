@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "ids": {
+      "columns": {
+        "thing_id": {
+          "dataType": "uuid[]"
+        }
+      }
+    }
+  }
+}

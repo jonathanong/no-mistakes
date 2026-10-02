@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "rows": {
+      "columns": {
+        "import_batch_id": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "import_batch_id"
+          ],
+          "referencedTable": "import_batches",
+          "referencedColumns": [
+            "import_batch_id"
+          ]
+        }
+      }
+    }
+  }
+}

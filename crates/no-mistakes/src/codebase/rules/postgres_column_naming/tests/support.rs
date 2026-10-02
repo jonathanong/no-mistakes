@@ -140,14 +140,48 @@ pub(super) fn messages(yaml: &str, body: serde_json::Value) -> Vec<String> {
         .collect()
 }
 
+pub(super) fn fixture_body(name: &str) -> serde_json::Value {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/column-naming/unit");
+    let path = root.join(name);
+    let source = std::fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("failed to read fixture {}: {error}", path.display()));
+    serde_json::from_str(&source).unwrap()
+}
+
+pub(super) fn sole_fk(
+    table: &str,
+    name: &str,
+    data_type: &str,
+    referenced: &str,
+    referenced_column: &str,
+) -> serde_json::Value {
+    let filename = [table, name, data_type, referenced, referenced_column]
+        .into_iter()
+        .map(fixture_slug)
+        .collect::<Vec<_>>()
+        .join("--");
+    fixture_body(&format!("foreign-keys/{filename}.json"))
+}
+
+pub(super) fn fixture_messages(yaml: &str, name: &str) -> Vec<String> {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/column-naming/followups");
+    let path = root.join(name);
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
+    let catalog = SchemaCatalog::load(&root, name, &sources).unwrap();
+    let options: Options = serde_yaml::from_str(yaml).unwrap();
+    let compiled = compile(&options, None).unwrap();
+    scan(&catalog, &compiled, "schema.json")
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect()
+}
+
 pub(super) fn findings(yaml: &str, body: serde_json::Value) -> Vec<RuleFinding> {
     let options: Options = serde_yaml::from_str(yaml).unwrap();
     let compiled = compile(&options, None).unwrap();
-    let mut root = body;
-    if root.get("formatVersion").is_none() {
-        root["formatVersion"] = serde_json::json!(2);
-    }
-    let catalog = SchemaCatalog::from_json(&root.to_string()).unwrap();
+    let catalog = SchemaCatalog::from_json(&body.to_string()).unwrap();
     scan(&catalog, &compiled, &options.schema_catalog_path)
 }
 
@@ -170,32 +204,25 @@ pub(super) fn expect_err(yaml: &str, snippet: &str) {
 }
 
 pub(super) fn column(table: &str, name: &str, data_type: &str) -> serde_json::Value {
-    serde_json::json!({
-        "tables": { table: { "columns": { name: { "dataType": data_type } } } }
-    })
+    let filename = format!(
+        "{}--{}--{}.json",
+        fixture_slug(table),
+        fixture_slug(name),
+        fixture_slug(data_type)
+    );
+    fixture_body(&format!("columns/{filename}"))
 }
 
-pub(super) fn sole_fk(
-    table: &str,
-    name: &str,
-    data_type: &str,
-    referenced: &str,
-    referenced_column: &str,
-) -> serde_json::Value {
-    serde_json::json!({
-        "tables": {
-            table: {
-                "columns": { name: { "dataType": data_type } },
-                "foreignKeys": {
-                    "fk": {
-                        "columns": [name],
-                        "referencedTable": referenced,
-                        "referencedColumns": [referenced_column]
-                    }
-                }
-            }
+fn fixture_slug(value: &str) -> String {
+    let mut slug = String::new();
+    for character in value.chars() {
+        if character.is_ascii_alphanumeric() {
+            slug.push(character);
+        } else if !slug.is_empty() && !slug.ends_with('-') {
+            slug.push('-');
         }
-    })
+    }
+    slug
 }
 
 pub(super) fn at(table: &str, column: &str, text: &str) -> String {

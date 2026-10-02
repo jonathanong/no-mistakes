@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "api_keys": {
+      "columns": {
+        "revoked_by_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "revoked_by_id"
+          ],
+          "referencedTable": "deleted_user_identities",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

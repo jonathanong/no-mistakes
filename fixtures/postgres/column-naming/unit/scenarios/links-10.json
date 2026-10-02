@@ -1,0 +1,13 @@
+{
+  "tables": {
+    "entities": {
+      "columns": {
+        "entity_id": {
+          "dataType": "uuid",
+          "generated": "stored"
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

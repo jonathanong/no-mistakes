@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "friends": {
+      "columns": {
+        "friend_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "friend_id"
+          ],
+          "referencedTable": "people",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -201,9 +201,7 @@ fn a_missing_hint_is_omitted_and_every_matching_rule_reports() {
 
 #[test]
 fn generated_columns_follow_skip_generated_columns() {
-    let generated = serde_json::json!({
-        "tables": { "entities": { "columns": { "created_at": { "dataType": "date", "generated": "stored" } } } }
-    });
+    let generated = super::support::fixture_body("scenarios/names-00.json");
     expect_none(
         "schemaCatalogPath: schema.json\nskipGeneratedColumns: true\ntypeRules:\n  - types: [date]\n    namePattern: _on$\nnameTypeRules:\n  - namePattern: _at$\n    types: ['timestamp with time zone']\n",
         generated.clone(),

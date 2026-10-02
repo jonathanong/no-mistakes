@@ -13,6 +13,17 @@ fn unknown_option_keys_are_rejected() {
 }
 
 #[test]
+fn unknown_allow_entry_keys_are_rejected() {
+    let parsed = serde_yaml::from_str::<super::super::Options>(
+        "schemaCatalogPath: schema.json\nallow:\n  - object: 'column:a.b'\n    reason: legacy\n    reson: typo\n",
+    );
+    let Err(error) = parsed else {
+        panic!("expected unknown nested field");
+    };
+    assert!(error.to_string().contains("unknown field"), "{error}");
+}
+
+#[test]
 fn every_option_error_is_reported() {
     for (yaml, snippet) in [
         ("schemaCatalogPath: ''\n", "schemaCatalogPath: required"),
@@ -24,6 +35,10 @@ fn every_option_error_is_reported() {
         (
             "schemaCatalogPath: schema.json\ntypeRules:\n  - types: [boolean]\n    namePattern: '['\n",
             "typeRules: invalid regex",
+        ),
+        (
+            "schemaCatalogPath: schema.json\ntypeRules:\n  - types: [boolean]\n",
+            "typeRules: empty pattern",
         ),
         (
             "schemaCatalogPath: schema.json\ntypeRules:\n  - types: [boolean]\n    namePattern: _at$\n    hint: '   '\n",
@@ -56,6 +71,10 @@ fn every_option_error_is_reported() {
         (
             "schemaCatalogPath: schema.json\nignoreTablePatterns: ['[']\n",
             "ignoreTablePatterns: invalid regex",
+        ),
+        (
+            "schemaCatalogPath: schema.json\nignoreTablePatterns: ['  ']\n",
+            "ignoreTablePatterns: empty pattern",
         ),
         (
             "schemaCatalogPath: schema.json\nforeignKeys:\n  targetSuffixes:\n    - tables: []\n      suffixes: ['_id']\n",
@@ -98,6 +117,10 @@ fn every_option_error_is_reported() {
             "targetNames: invalid regex",
         ),
         (
+            "schemaCatalogPath: schema.json\nforeignKeys:\n  targetNames:\n    - tablePattern: ''\n      name: item\n",
+            "targetNames: empty pattern",
+        ),
+        (
             "schemaCatalogPath: schema.json\nforeignKeys:\n  targetNames:\n    - tablePattern: '^a$'\n      name: ''\n",
             "targetNames: empty name",
         ),
@@ -124,6 +147,10 @@ fn every_option_error_is_reported() {
         (
             "schemaCatalogPath: schema.json\nforeignKeys:\n  requireForeignKey:\n    types: [uuid]\n    namePattern: _id$\n    exempt:\n      - namePattern: '['\n        reason: because\n",
             "requireForeignKey: invalid regex",
+        ),
+        (
+            "schemaCatalogPath: schema.json\nforeignKeys:\n  requireForeignKey:\n    types: [uuid]\n    namePattern: _id$\n    exempt:\n      - namePattern: ''\n        reason: because\n",
+            "requireForeignKey: empty pattern",
         ),
         (
             "schemaCatalogPath: schema.json\nforeignKeys:\n  requireForeignKey:\n    types: [uuid]\n    namePattern: _id$\n    exempt:\n      - namePattern: '^cursor_'\n        reason: one\n      - namePattern: '^cursor_'\n        reason: two\n",
@@ -164,4 +191,10 @@ fn every_option_error_is_reported() {
     ] {
         expect_err(yaml, snippet);
     }
+}
+
+#[test]
+fn numeric_typmods_with_negative_scale_match_the_base_type() {
+    let yaml = "schemaCatalogPath: schema.json\ntypeRules:\n  - types: [numeric]\n    namePattern: _amount$\n";
+    assert!(super::support::fixture_messages(yaml, "signed-numeric-typmod.json").is_empty());
 }

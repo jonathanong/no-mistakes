@@ -1,0 +1,23 @@
+{
+  "tables": {
+    "sync": {
+      "columns": {
+        "cursor_order_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "cursor_order_id"
+          ],
+          "referencedTable": "orders",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

@@ -1,0 +1,22 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "payments": {
+      "columns": {
+        "account_number": { "dataType": "text" }
+      },
+      "foreignKeys": {
+        "fk_account_number": {
+          "columns": ["account_number"],
+          "referencedTable": "github_accounts",
+          "referencedColumns": ["account_number"]
+        }
+      }
+    },
+    "github_accounts": {
+      "columns": {
+        "account_number": { "dataType": "text" }
+      }
+    }
+  }
+}

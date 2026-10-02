@@ -1,0 +1,13 @@
+{
+  "tables": {
+    "entities": {
+      "columns": {
+        "created_at": {
+          "dataType": "date",
+          "generated": "stored"
+        }
+      }
+    }
+  },
+  "formatVersion": 2
+}

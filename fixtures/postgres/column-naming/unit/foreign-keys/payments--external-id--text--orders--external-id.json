@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "payments": {
+      "columns": {
+        "external_id": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "external_id"
+          ],
+          "referencedTable": "orders",
+          "referencedColumns": [
+            "external_id"
+          ]
+        }
+      }
+    }
+  }
+}
