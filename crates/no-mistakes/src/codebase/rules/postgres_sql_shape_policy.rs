@@ -23,6 +23,18 @@ pub(crate) struct BannedShapes {
     count_for_existence: bool,
 }
 
+impl BannedShapes {
+    fn unanalyzable_target(&self) -> &'static str {
+        if self.correlated_exists_set_operation {
+            CORRELATED_EXISTS_SET_OP
+        } else if self.not_in_subquery {
+            NOT_IN_SUBQUERY
+        } else {
+            COUNT_FOR_EXISTENCE
+        }
+    }
+}
+
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
@@ -154,3 +166,6 @@ fn banned_shapes(values: &[String]) -> Result<BannedShapes> {
 mod shape_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod followup_tests;

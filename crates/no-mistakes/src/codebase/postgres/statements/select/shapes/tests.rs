@@ -12,7 +12,13 @@ fn counts(sql: &str) -> Vec<usize> {
     extract_sql_statement_facts(sql)
         .selects
         .iter()
-        .flat_map(|select| select.count_existence_checks.clone())
+        .flat_map(|select| {
+            select
+                .count_existence_checks
+                .iter()
+                .map(|count| count.line)
+                .collect::<Vec<_>>()
+        })
         .collect()
 }
 
@@ -106,7 +112,13 @@ fn count_inside_a_cte_is_recorded_on_the_cte_line() {
     let lines: Vec<_> = facts
         .selects
         .iter()
-        .flat_map(|select| select.count_existence_checks.clone())
+        .flat_map(|select| {
+            select
+                .count_existence_checks
+                .iter()
+                .map(|count| count.line)
+                .collect::<Vec<_>>()
+        })
         .collect();
     // Line 2 is the CTE body. The outer `SELECT id FROM recent` is not a count.
     assert_eq!(lines, vec![2], "{facts:#?}");

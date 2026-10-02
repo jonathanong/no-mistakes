@@ -8,6 +8,25 @@ pub(super) fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&sqlp
     from::join_expr(operator)
 }
 
+pub(super) fn collect_predicate_shapes(expr: &sqlparser::ast::Expr, out: &mut Vec<SqlSelectFact>) {
+    let shapes = shapes::collect_predicate(expr);
+    if shapes.not_in_subqueries.is_empty() && shapes.count_existence_checks.is_empty() {
+        return;
+    }
+    out.push(SqlSelectFact {
+        line: 1,
+        tables: Vec::new(),
+        predicate_sql: String::new(),
+        exists_set_operations: Vec::new(),
+        relations: Vec::new(),
+        in_insert_select: false,
+        not_in_subqueries: shapes.not_in_subqueries,
+        count_existence_checks: shapes.count_existence_checks,
+        star_projections: Vec::new(),
+        column_uses: Vec::new(),
+    });
+}
+
 pub(super) fn walk_expr(
     sql: &str,
     expr: &sqlparser::ast::Expr,
@@ -144,7 +163,7 @@ fn push_select(
     from::collect_derived_queries(sql, &select.from, ctes, in_insert_select, out);
     nested::collect(sql, select, ctes, in_insert_select, out);
     let relations = super::predicates::select_relations(sql, select, ctes);
-    let shapes = shapes::collect(sql, select);
+    let shapes = shapes::collect(select);
     let line = super::lines::line_containing(
         sql,
         &[tables.first().map(String::as_str).unwrap_or("select")],

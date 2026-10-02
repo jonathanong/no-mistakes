@@ -169,6 +169,7 @@ fn walk_side_queries(
     selects: &mut Vec<SqlSelectFact>,
 ) {
     if let Some(selection) = selection {
+        super::select::collect_predicate_shapes(selection, selects);
         super::select::walk_expr(sql, selection, ctes, false, selects);
     }
     for table in tables {
@@ -176,6 +177,7 @@ fn walk_side_queries(
         for join in &table.joins {
             walk_factor(sql, &join.relation, ctes, selects);
             if let Some(expr) = super::select::join_expr(&join.join_operator) {
+                super::select::collect_predicate_shapes(expr, selects);
                 super::select::walk_expr(sql, expr, ctes, false, selects);
             }
         }

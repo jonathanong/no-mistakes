@@ -155,3 +155,20 @@ directive only for an intentional exception.
 [`postgres-required-predicates`](postgres-required-predicates.md) requires
 relation filters; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
+
+The opted-in `not-in-subquery` shape also checks `HAVING`, aggregate `FILTER`,
+and mutation predicates. Nested `NOT` operators are evaluated together so an
+even number of negations does not report an allowed `IN` predicate.
+
+`count-for-existence` recognizes transparent casts of scalar counts and the
+built-in `COUNT` or `pg_catalog.count` aggregate. Schema-qualified custom
+functions and window counts are excluded. Findings recommend `EXISTS` for
+presence checks and `NOT EXISTS` for zero-row checks, preserving the predicate.
+Grouped bare counts in `HAVING` remain allowed. For example,
+`GROUP BY account_id HAVING COUNT(*) > 0` tests each group rather than a scalar
+existence probe.
+
+Locations use parsed expression spans, including SQL comments, Unicode names,
+`!=` operator spelling, repeated statements, and embedded SQL declaration
+lines. Line-specific suppressions therefore apply at the reported expression.
+Unanalyzable SQL findings use a target from the enabled `bannedShapes`.

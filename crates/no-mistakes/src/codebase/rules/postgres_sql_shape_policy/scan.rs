@@ -42,7 +42,7 @@ pub(super) fn scan(
                     &rel,
                     call.line.max(1) as usize,
                     "executed SQL is not statically recoverable for shape policy",
-                    "correlated-exists-set-operation",
+                    opts.shapes.unanalyzable_target(),
                 ));
             }
         }
@@ -53,7 +53,7 @@ pub(super) fn scan(
                         &rel,
                         fragment.line.max(1) as usize,
                         "builder SQL is not statically recoverable for shape policy",
-                        "correlated-exists-set-operation",
+                        opts.shapes.unanalyzable_target(),
                     ));
                 }
                 continue;
@@ -67,7 +67,7 @@ pub(super) fn scan(
                     &rel,
                     fragment.line.max(1) as usize,
                     "builder SQL is not statically recoverable for shape policy",
-                    "correlated-exists-set-operation",
+                    opts.shapes.unanalyzable_target(),
                 ));
                 continue;
             }
@@ -83,9 +83,9 @@ pub(super) fn scan(
         if opts.fail_unanalyzable && file.parse_failed {
             findings.push(finding(
                 &rel,
-                1,
+                file.origin_line.max(1),
                 "SQL could not be analyzed for shape policy",
-                "correlated-exists-set-operation",
+                opts.shapes.unanalyzable_target(),
             ));
             continue;
         }
@@ -152,11 +152,11 @@ fn select_findings(
         }
     }
     if shapes.count_for_existence {
-        for line in &select.count_existence_checks {
+        for count in &select.count_existence_checks {
             findings.push(finding(
                 file,
-                line_at(*line),
-                "COUNT(...) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+                line_at(count.line),
+                if count.negated { "COUNT(...) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)" } else { "COUNT(...) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)" },
                 "count-for-existence",
             ));
         }

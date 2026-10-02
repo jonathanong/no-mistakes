@@ -5,7 +5,7 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-sql-shape-policy/fixture")
@@ -13,7 +13,7 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
-fn config_yaml(yaml: &str) -> NoMistakesConfig {
+pub(super) fn config_yaml(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
@@ -25,7 +25,7 @@ fn config_yaml(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-const BANNED: &str = r#"
+pub(super) const BANNED: &str = r#"
 sqlInclude: ["sql/**/*.sql"]
 bannedShapes:
   - correlated-exists-set-operation
