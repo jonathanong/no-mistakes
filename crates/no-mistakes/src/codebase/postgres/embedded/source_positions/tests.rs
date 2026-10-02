@@ -9,7 +9,7 @@ fn saved_escape_encodings_keep_offsets_on_the_physical_source_line() {
         &source,
         &super::super::EmbeddedSqlOptions::default(),
     );
-    assert_eq!(facts.calls.len(), 7);
+    assert_eq!(facts.calls.len(), 10);
     for call in facts.calls {
         let sql = call.sql_text.unwrap();
         let uses = crate::codebase::postgres::sql_file_offset_uses(&sql);
@@ -40,6 +40,10 @@ fn physical_line_endings_and_continuations_consume_the_saved_source_width() {
         assert_eq!(
             super::escapes::continuation(raw),
             row["continuation"].as_u64().map(|n| n as usize)
+        );
+        assert_eq!(
+            super::escapes::extra_characters(raw, row["width"].as_u64().unwrap() as usize, false),
+            row["extra"].as_u64().unwrap() as usize
         );
     }
 }

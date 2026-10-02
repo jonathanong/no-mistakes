@@ -1,6 +1,68 @@
 [
-  { "raw": "\r\n", "width": 2, "continuation": null },
-  { "raw": "\\\r\n", "width": 2, "continuation": 3 },
-  { "raw": "\\\r", "width": 2, "continuation": 2 },
-  { "raw": "\\\n", "width": 2, "continuation": 2 }
+  {
+    "raw": "\r\n",
+    "width": 2,
+    "continuation": null,
+    "extra": 0
+  },
+  {
+    "raw": "\\\r\n",
+    "width": 2,
+    "continuation": 3,
+    "extra": 0
+  },
+  {
+    "raw": "\\\r",
+    "width": 2,
+    "continuation": 2,
+    "extra": 0
+  },
+  {
+    "raw": "\\\n",
+    "width": 2,
+    "continuation": 2,
+    "extra": 0
+  },
+  {
+    "raw": "\\\u00e9",
+    "width": 3,
+    "continuation": null,
+    "extra": 0
+  },
+  {
+    "raw": "\\\u2028",
+    "width": 4,
+    "continuation": 4,
+    "extra": 0
+  },
+  {
+    "raw": "\\\u2029",
+    "width": 4,
+    "continuation": 4,
+    "extra": 0
+  },
+  {
+    "raw": "\\u{D800}",
+    "width": 8,
+    "continuation": null,
+    "extra": 4
+  },
+  {
+    "raw": "\\u{1F600}",
+    "width": 9,
+    "continuation": null,
+    "extra": 0
+  },
+  {
+    "raw": "\\uD800",
+    "width": 6,
+    "continuation": null,
+    "extra": 4
+  },
+  {
+    "raw": "\\uD83D\\uDE00",
+    "width": 12,
+    "continuation": null,
+    "extra": 0
+  }
 ]

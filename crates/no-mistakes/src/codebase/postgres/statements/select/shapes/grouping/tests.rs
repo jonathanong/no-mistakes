@@ -33,6 +33,22 @@ fn grouping_variants_and_empty_alternatives_keep_their_cardinality() {
         empty_grouping_set_multiplicity(&Expr::Cube(vec![Vec::new()]), false),
         Some(2)
     );
+    assert_eq!(
+        empty_grouping_set_multiplicity(&Expr::Rollup(vec![Vec::new()]), false),
+        Some(2)
+    );
+    assert_eq!(
+        empty_grouping_set_multiplicity(&Expr::Rollup(vec![Vec::new()]), true),
+        Some(1)
+    );
+    assert_eq!(
+        empty_grouping_set_multiplicity(&Expr::Cube(vec![Vec::new()]), true),
+        Some(1)
+    );
+    assert_eq!(
+        empty_grouping_set_multiplicity(&Expr::GroupingSets(vec![Vec::new(), Vec::new()]), true),
+        Some(1)
+    );
 }
 
 #[test]
@@ -54,6 +70,15 @@ fn quoted_distinct_identifier_is_not_the_postgres_modifier() {
             Vec::new(),
             Vec::new(),
         ]))],
+    );
+    assert!(has_group_by(&select));
+
+    select.group_by = GroupByExpr::Expressions(
+        vec![
+            Expr::Identifier(Ident::new("distinct")),
+            Expr::Identifier(Ident::new("account_id")),
+        ],
+        Vec::new(),
     );
     assert!(has_group_by(&select));
 }

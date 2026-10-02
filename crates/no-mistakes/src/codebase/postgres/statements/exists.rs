@@ -37,10 +37,12 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
     match expr {
         Expr::Exists { subquery, .. } => {
             if set_expr_has_set_op(&subquery.body) {
+                let (line, column) = exists_position(sql);
                 out.push(SqlExistsSetOpFact {
                     restricted: set_expr_restricted(&subquery.body),
                     correlated: super::exists_correlation::query_is_correlated(subquery),
-                    line: exists_line(sql),
+                    line,
+                    column,
                 });
             }
             collect_query_exists(sql, subquery, out);
@@ -52,8 +54,16 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
     }
 }
 
-fn exists_line(sql: &str) -> usize {
-    super::lines::line_containing(sql, &["exists"])
+fn exists_position(sql: &str) -> (usize, usize) {
+    let mut found = (1, 1);
+    for (index, line) in sql.lines().enumerate() {
+        let lower = line.to_ascii_lowercase();
+        if let Some(byte) = lower.find("exists") {
+            found = (index + 1, lower[..byte].chars().count() + 1);
+            break;
+        }
+    }
+    found
 }
 
 fn collect_query_exists(sql: &str, query: &Query, out: &mut Vec<SqlExistsSetOpFact>) {
@@ -144,3 +154,6 @@ fn is_const_or_placeholder(expr: &Expr) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests;

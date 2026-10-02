@@ -136,6 +136,53 @@ fn standalone_schema_preparation_rejects_invalid_options_before_reads() {
 }
 
 #[test]
+fn shape_only_preparation_does_not_extract_schema_facts() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/shape-only-schema");
+    let file = root.join("schema.sql");
+    let files = vec![file.clone()];
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    let sources = snapshot.source_store_for(&root);
+    let shape = prepare_rule_sql_facts(
+        &root,
+        &files,
+        std::sync::Arc::clone(&sources),
+        &rule_config("postgres-sql-shape-policy"),
+        &["postgres-sql-shape-policy"],
+    )
+    .unwrap();
+    assert!(shape.postgres.schema.is_empty());
+    let statements = shape.postgres.statements(&file, None).unwrap();
+    assert!(statements.iter().any(|facts| {
+        facts
+            .selects
+            .iter()
+            .any(|select| !select.not_in_subqueries.is_empty())
+    }));
+    let identified = prepare_rule_sql_facts(
+        &root,
+        &files,
+        sources,
+        &rule_config("postgres-identifier-length"),
+        &["postgres-identifier-length"],
+    )
+    .unwrap();
+    assert!(!identified.postgres.schema(&file).unwrap().tables.is_empty());
+}
+
+fn rule_config(rule: &str) -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: rule.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("sqlInclude: ['**/*.sql']").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+#[test]
 fn invalid_schema_and_statement_options_stop_request_planning() {
     for rule in ["postgres-identifier-length", "postgres-sql-shape-policy"] {
         let config = NoMistakesConfig {
