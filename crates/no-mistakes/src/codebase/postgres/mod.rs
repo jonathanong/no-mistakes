@@ -88,5 +88,3 @@ pub use types::{
 mod tests;
 
 pub(crate) use collect::collect_prepared_schema_facts;
-#[cfg(test)]
-pub(crate) use parse::LENIENT_PARSE_COUNT;

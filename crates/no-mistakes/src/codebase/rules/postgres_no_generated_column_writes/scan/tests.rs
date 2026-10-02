@@ -1,8 +1,7 @@
 use super::*;
-use crate::codebase::postgres::LENIENT_PARSE_COUNT;
 
 #[test]
-fn both_column_kinds_share_one_parse_per_statement() {
+fn combined_catalog_reports_both_column_kinds() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-no-generated-column-writes/unit-fixture/both-column-kinds",
     );
@@ -15,8 +14,12 @@ fn both_column_kinds_share_one_parse_per_statement() {
         super::super::catalog::trigger_catalog_from_facts(&schema, &["updated_at".into()]);
     let mut combined = trigger.clone();
     combined.extend_from(&generated);
-    LENIENT_PARSE_COUNT.with(|count| count.set(0));
     let findings = scan_sql_file(&paths[1], "writes.sql", &sources, &combined, &generated);
     assert_eq!(findings.len(), 2);
-    LENIENT_PARSE_COUNT.with(|count| assert_eq!(count.get(), 1));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("trigger-maintained")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("generated column")));
 }

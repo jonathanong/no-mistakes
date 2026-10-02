@@ -59,8 +59,6 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 /// `SET DEFAULT` are removed before parsing; the action keyword and
 /// constraint name stay. `ON UPDATE` column lists are left unchanged.
 pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    #[cfg(test)]
-    LENIENT_PARSE_COUNT.with(|count| count.set(count.get() + 1));
     lenient::parse_postgres_sql_lenient(sql)
 }
 
@@ -70,8 +68,3 @@ pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-thread_local! {
-    pub(crate) static LENIENT_PARSE_COUNT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
