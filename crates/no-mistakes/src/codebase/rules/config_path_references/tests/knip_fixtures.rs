@@ -53,13 +53,27 @@ fn knip_presets_do_not_scan_configs_under_source_skip_directories() {
 fn knip_workspace_entries_under_fixtures_report_missing_literals() {
     let root = knip_fixture("knip-workspace-fixtures-fail");
     let findings = check_with_files(&root, &preset_config(&root), &knip_files(&root)).unwrap();
+    let messages = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect::<Vec<_>>();
+    for missing in [
+        "missing.mts",
+        "missing-production.mts",
+        "missing-production-*.mts",
+        "missing-project.mts",
+        "missing-project-*.mts",
+    ] {
+        assert!(
+            messages.iter().any(|message| message.contains(missing)),
+            "missing production path {missing:?}: {messages:?}"
+        );
+    }
     assert!(
-        findings.iter().any(|finding| {
-            finding
-                .message
-                .contains("backend/dependency-cruiser-rules/__tests__/fixtures/build-insert-query/missing.mts")
-        }),
-        "{findings:?}"
+        messages
+            .iter()
+            .all(|message| !message.contains("ignored.mts")),
+        "leading-negation optional selector should remain ignored: {messages:?}"
     );
 }
 

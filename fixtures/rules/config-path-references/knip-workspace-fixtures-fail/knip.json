@@ -4,7 +4,14 @@
       "entry": [
         "__tests__/fixtures/**/*.mts",
         "__tests__/fixtures/build-insert-query/direct-import.mts",
-        "__tests__/fixtures/build-insert-query/missing.mts"
+        "__tests__/fixtures/build-insert-query/missing.mts",
+        "__tests__/fixtures/build-insert-query/missing-production.mts!",
+        "__tests__/fixtures/build-insert-query/missing-production-*.mts!",
+        "!__tests__/fixtures/ignored.mts!"
+      ],
+      "project": [
+        "__tests__/fixtures/build-insert-query/missing-project.mts!",
+        "__tests__/fixtures/build-insert-query/missing-project-*.mts!"
       ]
     }
   }

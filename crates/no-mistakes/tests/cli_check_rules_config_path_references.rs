@@ -111,4 +111,16 @@ fn config_path_references_knip_workspace_fixtures_fail() {
         ),
         "{body}"
     );
+    for missing in [
+        "missing-production.mts",
+        "missing-production-*.mts",
+        "missing-project.mts",
+        "missing-project-*.mts",
+    ] {
+        assert!(
+            body.contains(missing),
+            "missing production path {missing:?}: {body}"
+        );
+    }
+    assert!(!body.contains("ignored.mts"), "{body}");
 }
