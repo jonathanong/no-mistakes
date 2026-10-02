@@ -2,6 +2,24 @@ use super::shape_tests::{config_yaml, fixture, BANNED};
 use super::*;
 
 #[test]
+fn cooked_and_delayed_sql_initializers_use_physical_source_lines() {
+    let root = fixture("review-followups");
+    let path = root.join("src/source-map.ts");
+    let mut findings =
+        check_with_files(&root, &config_yaml(BANNED), std::slice::from_ref(&path)).unwrap();
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [2, 6, 8, 10, 12]
+    );
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [2, 6, 8, 10]
+    );
+}
+
+#[test]
 fn review_followups_preserve_shapes_locations_and_semantics() {
     let root = fixture("review-followups");
     for (name, lines) in [

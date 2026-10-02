@@ -70,7 +70,7 @@ fn invalid_examples_are_reported_when_opted_in() {
     );
     let count = messages("fail-shapes", "sql/count.sql");
     assert!(
-        count.contains("COUNT(...) compared with 0/1 counts every matching row"),
+        count.contains("COUNT(*) compared with 0/1 counts every matching row"),
         "{count}"
     );
     let root = fixture("pass-shapes");

@@ -11,12 +11,14 @@ use sqlparser::ast::{Expr, GroupByExpr, Select, SelectItem, UnaryOperator};
 
 pub(super) struct ShapeLines {
     pub not_in_subqueries: Vec<usize>,
+    pub not_in_columns: Vec<usize>,
     pub count_existence_checks: Vec<SqlCountExistenceFact>,
 }
 
 pub(super) fn collect(select: &Select) -> ShapeLines {
     let mut out = ShapeLines {
         not_in_subqueries: Vec::new(),
+        not_in_columns: Vec::new(),
         count_existence_checks: Vec::new(),
     };
     let bare = !has_group_by(select);
@@ -44,6 +46,7 @@ pub(super) fn collect(select: &Select) -> ShapeLines {
 pub(super) fn collect_predicate(expr: &Expr) -> ShapeLines {
     let mut out = ShapeLines {
         not_in_subqueries: Vec::new(),
+        not_in_columns: Vec::new(),
         count_existence_checks: Vec::new(),
     };
     walk(expr, Place::Where, false, &mut out);
@@ -84,12 +87,14 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
             {
                 if negated != *membership_negated {
                     out.not_in_subqueries.push(line::line_of(expr));
+                    out.not_in_columns.push(line::column_of(expr));
                 }
                 walk(left, place, bare, out);
             } else if let Expr::BinaryOp { left, op, right } = unwrap_expr(inner) {
                 if let Some(absence) = existence(op, left, right, bare_allowed(place, bare)) {
                     out.count_existence_checks.push(SqlCountExistenceFact {
                         line: line::line_of(expr),
+                        column: line::column_of(expr),
                         negated: absence ^ negated,
                     });
                     walk(left, place, bare, out);
@@ -105,6 +110,7 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
             if let Some(negated) = existence(op, left, right, bare_allowed(place, bare)) {
                 out.count_existence_checks.push(SqlCountExistenceFact {
                     line: line::line_of(expr),
+                    column: line::column_of(expr),
                     negated,
                 });
             }

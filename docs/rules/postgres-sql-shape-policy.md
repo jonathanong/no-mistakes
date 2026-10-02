@@ -89,11 +89,11 @@ derived-table `FROM` of the `EXISTS` subquery are not this shape.
 
 When `not-in-subquery` is banned, `NOT IN (SELECT …)` and
 `NOT (… IN (SELECT …))` are findings. `NOT IN` of a value list and `IN (SELECT …)`
-are not. When `count-for-existence` is banned, a `COUNT(*)` or `COUNT(expr)`
-(including `COUNT(DISTINCT …)`) compared with 0 or 1 to test existence is a
-finding: `> 0`, `>= 1`, `<> 0`, `!= 0`, `= 0`, `< 1`, `<= 0`, and the mirrored
-forms. The count may be a scalar subquery with no `GROUP BY`, or a bare
-`COUNT` in a SELECT list, WHERE, or HAVING of a query with no `GROUP BY`.
+are not. When `count-for-existence` is banned, a built-in `COUNT(*)` compared
+with 0 or 1 to test existence is a finding: `> 0`, `>= 1`, `<> 0`, `!= 0`,
+`= 0`, `< 1`, `<= 0`, and the mirrored forms. The count may be a scalar
+subquery with no `GROUP BY`, or a bare `COUNT(*)` in a SELECT list, WHERE, or
+HAVING of a query with no `GROUP BY`.
 Grouped `HAVING COUNT(*) > 0` and comparisons with any other number are not
 findings. Lowercase quoted built-ins (`"count"` or `pg_catalog."count"`) are
 recognized; quoted uppercase or custom-schema functions are excluded.
@@ -143,7 +143,7 @@ SELECT COUNT(*) > 0 AS has_orders FROM orders WHERE account_id = $1;
 
 Rewrite so the set operation is not inside a correlated `EXISTS`: test
 `IN (SELECT … FROM (<set-operation>) alias)` or use one restricted subquery.
-Replace `NOT IN (SELECT …)` and a `COUNT(...)` compared with 0 or 1 with
+Replace `NOT IN (SELECT …)` and a `COUNT(*)` compared with 0 or 1 with
 `NOT EXISTS (SELECT 1 FROM … WHERE …)` or `EXISTS (SELECT 1 FROM … WHERE …)`.
 
 ## Suppression
@@ -162,10 +162,13 @@ The opted-in `not-in-subquery` shape also checks `HAVING`, aggregate `FILTER`,
 and mutation predicates. Nested `NOT` operators are evaluated together so an
 even number of negations does not report an allowed `IN` predicate.
 
-`count-for-existence` recognizes transparent casts of scalar counts and the
-built-in `COUNT` or `pg_catalog.count` aggregate. Schema-qualified custom
-functions and window counts are excluded. Findings recommend `EXISTS` for
-presence checks and `NOT EXISTS` for zero-row checks, preserving the predicate.
+`count-for-existence` recognizes transparent casts of scalar `COUNT(*)` values
+and the built-in `COUNT(*)` or `pg_catalog.count(*)` aggregate. It deliberately
+skips `COUNT(expression)`: that count excludes NULL expressions, so replacing
+it with a plain `EXISTS` would change the result when matching rows contain only
+NULL values. Schema-qualified custom functions and window counts are excluded.
+Findings recommend `EXISTS` for presence checks and `NOT EXISTS` for zero-row
+checks, preserving the predicate.
 Surrounding `NOT` operators are folded into the count comparison polarity;
 use the recommended EXISTS form for the complete negated comparison.
 Ungrouped bare counts in `HAVING` are existence probes and are reported.
@@ -181,3 +184,9 @@ Unanalyzable SQL findings use a target from the enabled `bannedShapes`.
 Empty grouping sets (`GROUP BY ()`, including empty `GROUPING SETS`, `ROLLUP`,
 and `CUBE`) retain global aggregate semantics, so their count existence probes
 are checked. Aggregate FILTER predicates contribute one fact per occurrence.
+
+Embedded findings use the literal's physical source line, including cooked newline
+escapes, line continuations, and literals that begin below their declaration.
+The Rust facts retain original SQL columns in `SqlSelectFact.not_in_columns` and
+`SqlCountExistenceFact.column`; embedded calls expose compact source-line
+transitions through `EmbeddedSqlCall.sql_source_positions`.

@@ -1,7 +1,8 @@
 use super::has_group_by;
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{
-    BinaryOperator, Expr, FunctionArguments, Query, Select, SelectItem, SetExpr, Value,
+    BinaryOperator, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Query, Select,
+    SelectItem, SetExpr, Value,
 };
 
 pub(super) fn existence(
@@ -86,7 +87,15 @@ fn is_count_function(expr: &Expr) -> bool {
     if function.over.is_some() || !built_in {
         return false;
     }
-    matches!(function.args, FunctionArguments::List(_))
+    let FunctionArguments::List(arguments) = &function.args else {
+        return false;
+    };
+    arguments.duplicate_treatment.is_none()
+        && arguments.clauses.is_empty()
+        && matches!(
+            arguments.args.as_slice(),
+            [FunctionArg::Unnamed(FunctionArgExpr::Wildcard)]
+        )
 }
 
 fn unwrap_count(expr: &Expr) -> &Expr {

@@ -156,7 +156,7 @@ fn select_findings(
             findings.push(finding(
                 file,
                 line_at(count.line),
-                if count.negated { "COUNT(...) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)" } else { "COUNT(...) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)" },
+                if count.negated { "COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)" } else { "COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)" },
                 "count-for-existence",
             ));
         }
