@@ -1,9 +1,7 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::statements::{SqlColumnClause, SqlColumnUseFact, SqlSelectFact};
-use crate::codebase::postgres::{collect_postgres_facts, EmbeddedSqlKind};
+use crate::codebase::postgres::statements::{SqlColumnClause, SqlColumnUseFact};
+use crate::codebase::postgres::EmbeddedSqlKind;
 use crate::codebase::ts_source::relative_slash_path;
-use anyhow::Context;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -15,26 +13,40 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    query_files: &[PathBuf],
+    _sources: &crate::codebase::ts_source::SourceStore,
+    prepared: &crate::codebase::check_facts::CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            postgres_schema: true,
-            postgres_dml: true,
-            embedded_sql: true,
-            ..CheckFactPlan::default()
-        },
-        &opts.schema,
-        &opts.embedded,
-    )
-    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let columns = catalog::column_index(&facts.schema);
-    let tracked = catalog::tracked_columns(&facts.schema, opts);
-    let mut findings = catalog::stale_extras(&facts.schema, &opts.extras);
-    for file in &facts.embedded {
+    let sql_paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
+    let schema = sql_paths
+        .iter()
+        .map(|path| prepared.postgres_schema_file(path))
+        .collect::<anyhow::Result<Vec<_>>>()?;
+    let mut statements = Vec::new();
+    let mut embedded = Vec::new();
+    for path in &sql_paths {
+        statements.extend(prepared.postgres_statements(path, None)?.iter());
+    }
+    for path in files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+    {
+        embedded.push(prepared.embedded_sql(path, &opts.embedded)?);
+        statements.extend(
+            prepared
+                .postgres_statements(path, Some(&opts.embedded))?
+                .iter(),
+        );
+    }
+    let queries = crate::codebase::check_facts::PathMembership::new(query_files);
+    let live = catalog::live_columns(&schema);
+    let columns = catalog::column_index(&live);
+    let tracked = catalog::tracked_columns(&live, opts);
+    let mut findings = catalog::stale_extras(&live, &opts.extras);
+    if tracked.is_empty() {
+        return Ok(findings);
+    }
+    for file in embedded.iter().filter(|file| queries.contains(&file.path)) {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
             if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
@@ -47,38 +59,54 @@ pub(super) fn scan(
             }
         }
     }
-    for file in &facts.statements {
+    for file in statements
+        .iter()
+        .filter(|file| queries.contains(&file.path))
+    {
         let rel = relative_slash_path(root, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
             findings.push(sql_finding(
                 &rel,
-                1,
+                file.origin_line.max(1),
                 "SQL could not be analyzed for generated column predicates",
                 "unanalyzable",
             ));
             continue;
         }
         for select in &file.selects {
-            findings.extend(select_findings(&rel, select, opts, &tracked, &columns));
+            findings.extend(column_findings(
+                &rel,
+                &select.column_uses,
+                opts,
+                &tracked,
+                &columns,
+            ));
         }
+        findings.extend(column_findings(
+            &rel,
+            &file.mutation_column_uses,
+            opts,
+            &tracked,
+            &columns,
+        ));
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
 }
 
-fn select_findings(
+fn column_findings(
     file: &str,
-    select: &SqlSelectFact,
+    uses: &[SqlColumnUseFact],
     opts: &CompiledOptions,
     tracked: &[Tracked],
     columns: &BTreeMap<String, BTreeSet<String>>,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    for use_ in &select.column_uses {
+    for use_ in uses {
         if !clause_enabled(use_.clause, opts) {
             continue;
         }
-        let Some(table) = owner(use_, select, columns) else {
+        let Some(table) = owner(use_, columns) else {
             continue;
         };
         let Some(column) = tracked
@@ -97,17 +125,13 @@ fn select_findings(
     findings
 }
 
-fn owner(
-    use_: &SqlColumnUseFact,
-    select: &SqlSelectFact,
-    columns: &BTreeMap<String, BTreeSet<String>>,
-) -> Option<String> {
+fn owner(use_: &SqlColumnUseFact, columns: &BTreeMap<String, BTreeSet<String>>) -> Option<String> {
     if !use_.table.is_empty() {
         return Some(use_.table.clone());
     }
     let mut hits = Vec::new();
-    for table in &select.tables {
-        let key = table.to_ascii_lowercase();
+    for table in use_.candidate_tables.as_ref()? {
+        let key = table.clone();
         let cols = columns.get(&key)?;
         if cols.contains(&use_.column) {
             hits.push(key);
@@ -129,28 +153,20 @@ fn clause_enabled(clause: SqlColumnClause, opts: &CompiledOptions) -> bool {
 }
 
 fn message(clause: SqlColumnClause, column: &Tracked) -> String {
-    match clause {
-        SqlColumnClause::Where => format!(
-            "WHERE filters {table}.{name}, which is generated from {function}({source}); compare {source} against a UUIDv7 bound instead so the primary-key index is used",
-            table = column.table,
-            name = column.column,
-            function = column.function,
-            source = column.source
-        ),
-        SqlColumnClause::Join => format!(
-            "JOIN ON compares {table}.{name}, which is generated from {function}({source}); compare {source} instead",
-            table = column.table,
-            name = column.column,
-            function = column.function,
-            source = column.source
-        ),
+    let context = match clause {
+        SqlColumnClause::Where => format!("WHERE filters {}.{}", column.table, column.column),
+        SqlColumnClause::Join => format!("JOIN ON compares {}.{}", column.table, column.column),
         SqlColumnClause::OrderBy => format!(
-            "ORDER BY {table}.{name} sorts by a column generated from {source}; ORDER BY {source} instead (same order, uses the primary-key index)",
-            table = column.table,
-            name = column.column,
-            source = column.source
+            "ORDER BY {}.{} sorts by a column generated from {}",
+            column.table, column.column, column.source
         ),
-    }
+    };
+    let expression = column
+        .function
+        .as_ref()
+        .map(|function| format!("{function}({})", column.source))
+        .unwrap_or_else(|| format!("a configured expression using {}", column.source));
+    format!("{context}, which is generated from {expression}; consider using {source} directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index", source = column.source)
 }
 
 fn sql_finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {

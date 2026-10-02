@@ -74,7 +74,8 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
         [
             "postgres-conflict-ordering",
             "postgres-lock-ordering",
-            "postgres-required-predicates"
+            "postgres-required-predicates",
+            "postgres-generated-column-predicates"
         ]
     );
     assert_eq!(

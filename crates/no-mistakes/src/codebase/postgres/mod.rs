@@ -77,7 +77,7 @@ pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata,
     SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts, SqlStatementKind,
-    SqlUnnamedConstraint,
+    SqlTableSchemaEvent, SqlUnnamedConstraint,
 };
 
 #[cfg(test)]

@@ -13,6 +13,8 @@ pub struct SqlStatementFileFacts {
     pub triggers: Vec<SqlTriggerFact>,
     /// `RETURNING *` / `RETURNING t.*` on INSERT, UPDATE, and DELETE.
     pub returning_stars: Vec<SqlStarProjectionFact>,
+    /// Bare column comparisons on UPDATE/DELETE WHERE and JOIN ON predicates.
+    pub mutation_column_uses: Vec<SqlColumnUseFact>,
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,
@@ -121,6 +123,8 @@ pub enum SqlColumnClause {
 pub struct SqlColumnUseFact {
     pub table: String,
     pub column: String,
+    /// Base relations visible at this expression; None when a CTE or derived relation prevents ownership proof.
+    pub candidate_tables: Option<Vec<String>>,
     pub clause: SqlColumnClause,
     pub line: usize,
 }

@@ -21,6 +21,14 @@ pub(super) fn walk_expr(
 use super::{SqlSelectFact, SqlStarProjectionFact};
 use sqlparser::ast::{Query, Select, SetExpr, Statement};
 
+pub(super) fn mutation_column_uses(
+    tables: &[sqlparser::ast::TableWithJoins],
+    selection: Option<&sqlparser::ast::Expr>,
+    ctes: &[String],
+) -> Vec<super::SqlColumnUseFact> {
+    uses::collect_mutation(tables, selection, ctes)
+}
+
 pub(super) fn returning_stars(sql: &str, statement: &Statement) -> Vec<SqlStarProjectionFact> {
     stars::returning(sql, statement)
 }

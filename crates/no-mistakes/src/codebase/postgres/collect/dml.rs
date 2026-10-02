@@ -68,6 +68,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
             column.line = column.line.saturating_add(shift);
         }
     }
+    for use_ in &mut facts.mutation_column_uses {
+        use_.line = use_.line.saturating_add(shift);
+    }
     for star in &mut facts.returning_stars {
         star.line = star.line.saturating_add(shift);
     }

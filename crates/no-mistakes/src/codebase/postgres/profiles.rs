@@ -12,6 +12,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-conflict-ordering",
     "postgres-lock-ordering",
     "postgres-required-predicates",
+    "postgres-generated-column-predicates",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.
@@ -198,7 +199,13 @@ pub fn configure_prepared_postgres_plan(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
-    let dml_rules = ["postgres-required-predicates"];
+    let dml_rules = [
+        "postgres-required-predicates",
+        "postgres-generated-column-predicates",
+    ];
+    plan.postgres_schema |= !config
+        .rule_applications("postgres-generated-column-predicates")
+        .is_empty();
     plan.postgres_dml |= dml_rules
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());

@@ -9,6 +9,7 @@ mod indexes;
 mod lines;
 mod predicate;
 mod statements;
+mod table_events;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let statements = super::parse::parse_postgres_sql_lenient(sql);
@@ -45,6 +46,7 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
             &mut identifier_from,
         ));
         statements::record(sql, statement, &mut facts);
+        table_events::record(statement, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {
                 create_index_n += 1;
@@ -142,6 +144,7 @@ fn remap_dynamic_fact_lines(facts: &mut SqlSchemaFileFacts, dynamic: &dynamic::D
 
 fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {
     facts.tables.extend(dynamic.tables);
+    facts.table_events.extend(dynamic.table_events);
     facts.indexes.extend(dynamic.indexes);
     facts.dropped_indexes.extend(dynamic.dropped_indexes);
     facts.dropped_tables.extend(dynamic.dropped_tables);

@@ -43,7 +43,7 @@ pub(super) fn table_metadata(table: &sqlparser::ast::CreateTable) -> SqlCreateTa
     }
 }
 
-fn column_metadata(column: &sqlparser::ast::ColumnDef) -> SqlColumnMetadata {
+pub(super) fn column_metadata(column: &sqlparser::ast::ColumnDef) -> SqlColumnMetadata {
     let mut facts = SqlColumnMetadata {
         name: column.name.value.clone(),
         type_name: column_type_name(&column.data_type),

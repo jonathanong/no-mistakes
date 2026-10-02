@@ -15,7 +15,7 @@ pub const RULE_ID: &str = "postgres-generated-column-predicates";
 
 pub(crate) use check_with_files as check;
 
-const DEFAULT_EXTENSIONS: &[&str] = &["ts", "mts", "tsx", "js", "sql"];
+use crate::codebase::ts_source::TS_JS_EXTENSIONS;
 
 #[derive(Deserialize, Default, Clone)]
 #[serde(default, rename_all = "camelCase")]
@@ -61,11 +61,38 @@ pub(crate) fn check_with_files(
     check_with_files_and_sources(root, config, all_files, &sources)
 }
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<RuleFinding>> {
+    check_applications(root, config, all_files, sources, facts)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_applications(root, config, all_files, sources, &facts)
+}
+
+fn check_applications(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -85,11 +112,20 @@ pub(crate) fn check_with_files_and_sources(
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
             let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-            let files: Vec<PathBuf> = files
-                .into_iter()
+            let query_files: Vec<PathBuf> = files
+                .iter()
                 .filter(|path| allowed(root, path, &include, &exclude))
+                .cloned()
                 .collect();
-            scan::scan(root, &compiled, &files, sources)
+            let schema_files =
+                crate::codebase::postgres::postgres_sql_paths(root, &files, &compiled.schema)?;
+            let query_set = crate::codebase::check_facts::PathMembership::new(&query_files);
+            let schema_set = crate::codebase::check_facts::PathMembership::new(&schema_files);
+            let files: Vec<_> = files
+                .into_iter()
+                .filter(|path| query_set.contains(path) || schema_set.contains(path))
+                .collect();
+            scan::scan(root, &compiled, &files, &query_files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -102,7 +138,7 @@ fn allowed(root: &Path, path: &Path, include: &GlobMatcher, exclude: &GlobMatche
     let included = if include.is_empty() {
         path.extension()
             .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| DEFAULT_EXTENSIONS.contains(&ext))
+            .is_some_and(|ext| ext == "sql" || TS_JS_EXTENSIONS.contains(&ext))
     } else {
         include.is_match(&rel)
     };
@@ -144,3 +180,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 mod options_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod followup_tests;
