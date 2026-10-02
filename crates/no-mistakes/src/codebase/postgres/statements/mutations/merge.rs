@@ -42,5 +42,22 @@ fn collect_action_shapes(sql: &str, action: &MergeAction, selects: &mut Vec<SqlS
 
 fn action_expr(sql: &str, expr: &sqlparser::ast::Expr, selects: &mut Vec<SqlSelectFact>) {
     super::super::select::collect_predicate_shapes(expr, selects);
-    super::super::select::collect_exists_facts(sql, expr, selects);
+    let mut exists_set_operations = Vec::new();
+    super::super::exists::collect_exists(sql, Some(expr), &mut exists_set_operations);
+    if exists_set_operations.is_empty() {
+        return;
+    }
+    selects.push(SqlSelectFact {
+        line: 1,
+        tables: Vec::new(),
+        predicate_sql: String::new(),
+        exists_set_operations,
+        relations: Vec::new(),
+        in_insert_select: false,
+        not_in_subqueries: Vec::new(),
+        not_in_columns: Vec::new(),
+        count_existence_checks: Vec::new(),
+        star_projections: Vec::new(),
+        column_uses: Vec::new(),
+    });
 }
