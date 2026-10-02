@@ -2,8 +2,9 @@ use super::SqlExistsSetOpFact;
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{
     BinaryOperator, Expr, GroupByExpr, JoinConstraint, JoinOperator, Query, Select, SelectItem,
-    SetExpr, Value, ValueWithSpan,
+    SetExpr, Spanned, Value, ValueWithSpan,
 };
+use sqlparser::tokenizer::Location;
 
 pub(super) fn collect_from_select(sql: &str, select: &Select, out: &mut Vec<SqlExistsSetOpFact>) {
     collect_exists(sql, select.selection.as_ref(), out);
@@ -37,7 +38,7 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
     match expr {
         Expr::Exists { subquery, .. } => {
             if set_expr_has_set_op(&subquery.body) {
-                let (line, column) = exists_position(sql);
+                let (line, column) = exists_position(sql, subquery.span().start);
                 out.push(SqlExistsSetOpFact {
                     restricted: set_expr_restricted(&subquery.body),
                     correlated: super::exists_correlation::query_is_correlated(subquery),
@@ -54,7 +55,35 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
     }
 }
 
-fn exists_position(sql: &str) -> (usize, usize) {
+/// Locate the `EXISTS` keyword that opens the subquery starting at `start`,
+/// so several `EXISTS` expressions each keep their own physical position.
+fn exists_position(sql: &str, start: Location) -> (usize, usize) {
+    let Some(line_index) = (start.line as usize).checked_sub(1) else {
+        return first_exists_position(sql);
+    };
+    let line_offset: usize = sql
+        .split_inclusive('\n')
+        .take(line_index)
+        .map(str::len)
+        .sum();
+    let line_text = sql[line_offset..].lines().next().unwrap_or("");
+    let column_bytes = line_text
+        .char_indices()
+        .nth((start.column as usize).saturating_sub(1))
+        .map_or(line_text.len(), |(index, _)| index);
+    let lower = sql[..line_offset + column_bytes].to_ascii_lowercase();
+    let Some(byte) = lower.rfind("exists") else {
+        return first_exists_position(sql);
+    };
+    let before = &lower[..byte];
+    let line_start = before.rfind('\n').map_or(0, |index| index + 1);
+    (
+        before.matches('\n').count() + 1,
+        before[line_start..].chars().count() + 1,
+    )
+}
+
+fn first_exists_position(sql: &str) -> (usize, usize) {
     let mut found = (1, 1);
     for (index, line) in sql.lines().enumerate() {
         let lower = line.to_ascii_lowercase();

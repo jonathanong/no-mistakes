@@ -37,3 +37,41 @@ fn unclosed_dollar_quote_consumes_the_rest_of_the_statement() {
     let sql = "SELECT $tag$ GROUP BY DISTINCT ROLLUP (())";
     assert_eq!(separate_distinct_grouping(sql), sql);
 }
+
+#[test]
+fn comments_between_distinct_and_rollup_are_whitespace() {
+    for sql in [
+        "SELECT 1 GROUP BY DISTINCT /* note */ ROLLUP (())",
+        "SELECT 1 GROUP BY DISTINCT -- note\nROLLUP (())",
+        "SELECT 1 GROUP BY DISTINCT/* note */CUBE (())",
+    ] {
+        let rewritten = separate_distinct_grouping(sql);
+        assert_ne!(rewritten, sql, "{sql}");
+        assert_eq!(rewritten.matches('\n').count(), sql.matches('\n').count());
+        assert!(
+            crate::codebase::postgres::parse_postgres_sql(sql).is_ok(),
+            "{sql}"
+        );
+    }
+}
+
+#[test]
+fn unterminated_comment_in_the_gap_is_not_rewritten() {
+    let sql = "SELECT 1 GROUP BY DISTINCT /* ROLLUP (())";
+    assert_eq!(separate_distinct_grouping(sql), sql);
+    let sql = "SELECT 1 GROUP BY DISTINCT -x";
+    assert_eq!(separate_distinct_grouping(sql), sql);
+}
+
+#[test]
+fn lenient_parsing_rewrites_distinct_grouping() {
+    let sql = "DO $$ BEGIN NULL; END $$;\nSELECT 1 FROM orders GROUP BY DISTINCT ROLLUP (());";
+    assert!(!crate::codebase::postgres::parse::parse_postgres_sql_lenient(sql).is_empty());
+    assert_eq!(
+        crate::codebase::postgres::parse::parse_postgres_sql_lenient(sql)
+            .iter()
+            .filter(|s| matches!(s, sqlparser::ast::Statement::Query(_)))
+            .count(),
+        1
+    );
+}

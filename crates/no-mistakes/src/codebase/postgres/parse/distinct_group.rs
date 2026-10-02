@@ -107,10 +107,23 @@ fn skip_grouping_gap(sql: &str, mut index: usize) -> Option<(usize, Option<usize
                 index += 1;
             }
             '\n' | '\r' => index += 1,
+            // Comments are whitespace to PostgreSQL; their newlines stay in place.
+            '-' | '/' => match skip_comment(sql, index) {
+                Some(next) => index = next,
+                None => break,
+            },
             _ => break,
         }
     }
     (index > start).then_some((index, last_break))
+}
+
+fn skip_comment(sql: &str, index: usize) -> Option<usize> {
+    match sql.as_bytes().get(index..index + 2)? {
+        b"--" => Some(skip_line_comment(sql, index)),
+        b"/*" => Some(skip_block_comment(sql, index)),
+        _ => None,
+    }
 }
 
 fn skip_opaque(sql: &str, index: usize) -> Option<usize> {
