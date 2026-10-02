@@ -70,9 +70,16 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
-    check_applications(root, config, all_files, sources, None)
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_applications(root, config, all_files, sources, Some(&facts))
 }
 
 fn check_applications(
@@ -124,7 +131,9 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         Some(value) if value < 0 => {
             bail!("{RULE_ID} option maxColumns: must be zero or greater")
         }
-        Some(value) => value as u32,
+        Some(value) => u32::try_from(value).map_err(|_| {
+            anyhow::anyhow!("{RULE_ID} option maxColumns: must be at most {}", u32::MAX)
+        })?,
         None => 12,
     };
     Ok(CompiledOptions {
@@ -170,3 +179,9 @@ fn unique_names(values: &[String], option: &str, noun: &str) -> Result<Vec<Strin
 mod options_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod deferred_tests;
+
+#[cfg(test)]
+mod review_tests;

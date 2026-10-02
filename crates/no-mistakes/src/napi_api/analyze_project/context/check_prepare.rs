@@ -87,6 +87,7 @@ impl SharedCheckContext {
                 config,
                 crate::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
             )?;
+        crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
         if integration_enabled {
             plan.integration_runner_configs = Some(std::sync::Arc::new(
                 crate::integration_tests::prepare_runner_configs_with_catalog(

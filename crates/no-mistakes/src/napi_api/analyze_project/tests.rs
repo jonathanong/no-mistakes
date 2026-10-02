@@ -68,6 +68,19 @@ fn analyze_project_value_impl_accepts_parsed_options() {
 }
 
 #[test]
+fn analyze_project_prepares_postgres_statements_with_standalone_parity() {
+    let root = check_runner_fixture("postgres-prepared");
+    let result = analyze_project_check_result(&root);
+    assert_eq!(result, standalone_check_result(&root));
+    let findings = result["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{result:?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding["file"] == "queries.sql"));
+    assert!(findings.iter().any(|finding| finding["file"] == "query.ts"));
+}
+
+#[test]
 fn analyze_project_graph_report_uses_opt_in_call_relationships() {
     let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({

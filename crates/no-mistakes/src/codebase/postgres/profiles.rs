@@ -13,6 +13,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-lock-ordering",
     "postgres-required-predicates",
     "postgres-generated-column-predicates",
+    "postgres-explicit-columns",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.
@@ -154,11 +155,13 @@ fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<Stri
     for id in rule_ids {
         for rule in config.rule_applications(id) {
             let options: SqlOptions = rule.try_rule_options()?;
-            patterns.extend(if options.sql_include.is_empty() {
-                super::PostgresSchemaOptions::default().sql_include
-            } else {
-                options.sql_include
-            });
+            patterns.extend(
+                if options.sql_include.is_empty() && *id != "postgres-explicit-columns" {
+                    super::PostgresSchemaOptions::default().sql_include
+                } else {
+                    options.sql_include
+                },
+            );
         }
     }
     patterns.sort();
@@ -202,6 +205,7 @@ pub fn configure_prepared_postgres_plan(
     let dml_rules = [
         "postgres-required-predicates",
         "postgres-generated-column-predicates",
+        "postgres-explicit-columns",
     ];
     plan.postgres_schema |= !config
         .rule_applications("postgres-generated-column-predicates")

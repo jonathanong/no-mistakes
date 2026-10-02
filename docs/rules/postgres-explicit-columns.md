@@ -38,7 +38,10 @@ It does not report `EXISTS (SELECT *)`, `NOT EXISTS (SELECT *)`, `COUNT(*)`, a
 star inside `allowWholeRowFunctions`, or a star over a CTE or derived-table
 alias. The inner `SELECT *` of that CTE or subquery is still checked. One
 finding is emitted per star and relation. `RETURNING *` uses the same rule when
-`checkReturning` is true.
+`checkReturning` is true, including data-modifying CTEs. Bare RETURNING stars
+expand the mutation target; qualified stars can also refer to UPDATE FROM or
+DELETE USING tables. Schema-qualified relations retain their full catalog
+identity, and table-valued functions are not catalog tables.
 
 With no `relations` entries the rule still reports catalog tables wider than the
 default `maxColumns` of 12. `schemaCatalogPath` is required, so enabling the
@@ -51,7 +54,7 @@ match `postgres-required-predicates`. `unanalyzableSql` defaults to `fail`.
 
 `sqlInclude` defaults to `[]`, so `.sql` files are not scanned until you set
 globs. `schemaCatalogPath` has no default and is required. `maxColumns` defaults
-to `12`; `0` means every catalog table, and a negative value is a config error.
+to `12`; `0` means every catalog table. Values outside `0` through `4294967295` are configuration errors.
 `relations` defaults to `[]`. An empty name or a duplicate name is a config
 error. `allowWholeRowFunctions` defaults to `row_to_json`, `to_json`,
 `to_jsonb`, `json_agg`, and `jsonb_agg` (matched case-insensitively). An empty
@@ -100,7 +103,9 @@ For a whole-row JSON payload, keep the star inside a function listed in
 
 SQL and TypeScript honor `-- no-mistakes-disable-line`,
 `-- no-mistakes-disable-next-line`, and `-- no-mistakes-disable-file` for
-`postgres-explicit-columns`.
+`postgres-explicit-columns`. Findings point to each star projection, and
+embedded SQL parse failures point to their host call or declaration, so line
+suppression applies at the affected query.
 
 ## Related rules
 

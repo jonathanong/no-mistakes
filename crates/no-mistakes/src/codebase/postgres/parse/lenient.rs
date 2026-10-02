@@ -17,11 +17,12 @@ use rewrite::{
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, and `CREATE [UNIQUE] INDEX` after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    let mut tokens = super::unicode::tokenize(sql);
+    let located = super::unicode::tokenize_with_location(sql, false);
+    let mut tokens = located.iter().map(|token| token.token.clone()).collect();
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_referential_set_column_lists(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
-    recover::parse_chunks(split_statement_tokens(tokens))
+    recover::parse_chunks(split_statement_tokens(tokens), &located)
 }
 
 pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {

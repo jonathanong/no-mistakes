@@ -3,13 +3,28 @@ use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
-use sqlparser::tokenizer::Token;
+use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>) -> Vec<Statement> {
-    chunks.into_iter().flat_map(parse_chunk).collect()
+pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>, original: &[TokenWithSpan]) -> Vec<Statement> {
+    let mut located = original
+        .split(|token| token.token == Token::SemiColon)
+        .filter(|chunk| {
+            chunk
+                .iter()
+                .any(|token| !matches!(token.token, Token::Whitespace(_)))
+        });
+    chunks
+        .into_iter()
+        .flat_map(|chunk| {
+            let source = located
+                .next()
+                .filter(|source| chunk.iter().eq(source.iter().map(|token| &token.token)));
+            parse_chunk(chunk, source)
+        })
+        .collect()
 }
 
-fn parse_chunk(chunk: Vec<Token>) -> Vec<Statement> {
+fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
     if let Some(body) = peel_do_body(&chunk) {
         return super::parse_postgres_sql_lenient(&body)
             .into_iter()
@@ -17,7 +32,10 @@ fn parse_chunk(chunk: Vec<Token>) -> Vec<Statement> {
             .collect();
     }
     let dialect = PostgreSqlDialect {};
-    let mut parser = Parser::new(&dialect).with_tokens(chunk.clone());
+    let mut parser = match original {
+        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens.to_vec()),
+        None => Parser::new(&dialect).with_tokens(chunk.clone()),
+    };
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => vec![statement],
         _ => {
