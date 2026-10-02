@@ -189,6 +189,47 @@ fn repeated_scans_match() {
 }
 
 #[test]
+fn an_extra_column_absent_from_the_schema_is_tracked() {
+    let body = messages(
+        "pass",
+        "sqlInclude: [\"sql/**/*.sql\"]\nextraGeneratedColumns:\n  - {table: invoices, column: created_at, sourceColumn: id}\n",
+        &["sql/schema.sql", "sql/invoices.sql"],
+    )
+    .join("\n");
+    assert!(body.contains("ORDER BY invoices.created_at"), "{body}");
+}
+
+#[test]
+fn an_explicit_include_skips_other_files() {
+    let body = messages(
+        "fail",
+        "include: [\"sql/schema.sql\", \"sql/where.sql\"]\nsqlInclude: [\"sql/**/*.sql\"]\n",
+        &["sql/schema.sql", "sql/where.sql", "sql/order.sql"],
+    )
+    .join("\n");
+    assert!(body.contains("WHERE filters"), "{body}");
+    assert!(!body.contains("ORDER BY"), "{body}");
+}
+
+#[test]
+fn dynamic_sql_fails_closed_while_static_statements_are_collected() {
+    let root = fixture("coverage");
+    let file = root.join("src/query.ts");
+    let findings = check_with_files(
+        &root,
+        &config_yaml("include: ['src/**/*.ts']\n"),
+        std::slice::from_ref(&file),
+    )
+    .unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("not statically recoverable")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn suppression_directives_hide_predicates() {
     let root = fixture("suppress");
     let files: Vec<PathBuf> = ["schema.sql", "next-line.sql", "line.sql", "file.sql"]

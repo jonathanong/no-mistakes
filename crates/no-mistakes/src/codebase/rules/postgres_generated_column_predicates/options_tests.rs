@@ -29,6 +29,12 @@ fn defaults_track_uuid_extract_timestamp() {
 }
 
 #[test]
+fn a_named_function_list_is_kept() {
+    let opts = compiled("functions: [uuid_extract_timestamp]\n").unwrap();
+    assert_eq!(opts.functions, ["uuid_extract_timestamp"]);
+}
+
+#[test]
 fn config_errors_name_the_option() {
     let cases = [
         (

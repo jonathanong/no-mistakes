@@ -72,3 +72,6 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
         trigger.line = trigger.line.saturating_add(shift);
     }
 }
+
+#[cfg(test)]
+mod tests;
