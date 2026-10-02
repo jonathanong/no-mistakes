@@ -169,6 +169,9 @@ and the built-in `COUNT(*)` or `pg_catalog.count(*)` aggregate. It deliberately
 skips `COUNT(expression)`: that count excludes NULL expressions, so replacing
 it with a plain `EXISTS` would change the result when matching rows contain only
 NULL values. Schema-qualified custom functions and window counts are excluded.
+It also skips aggregate subqueries with `HAVING`, `LIMIT`/`OFFSET`, or `FETCH`,
+which can return no row; a scalar subquery then yields NULL instead of a zero
+count.
 Findings recommend `EXISTS` for presence checks and `NOT EXISTS` for zero-row
 checks, preserving the predicate.
 Surrounding `NOT` operators are folded into the count comparison polarity;
@@ -183,9 +186,13 @@ Locations use parsed expression spans, including SQL comments, Unicode names,
 lines. Line-specific suppressions therefore apply at the reported expression.
 Unanalyzable SQL findings use a target from the enabled `bannedShapes`.
 
-Empty grouping sets (`GROUP BY ()`, including empty `GROUPING SETS`, `ROLLUP`,
-and `CUBE`) retain global aggregate semantics, so their count existence probes
-are checked. Aggregate FILTER predicates contribute one fact per occurrence.
+A single effective empty grouping set (`GROUP BY ()` or
+`GROUPING SETS (())`) retains global aggregate semantics, so its count existence
+probes are checked. `GROUPING SETS` keeps duplicate sets by default, and
+`ROLLUP`/`CUBE` can expand empty inputs into repeated empty sets; those queries
+can return multiple rows and are not treated as scalar count queries. The
+`DISTINCT` grouping modifier collapses duplicate sets. Aggregate FILTER
+predicates contribute one fact per occurrence.
 
 Embedded findings use the literal's physical source line, including cooked newline
 escapes, line continuations, and literals that begin below their declaration.

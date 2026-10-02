@@ -12,6 +12,7 @@ fn leading_comment_text(line: &str) -> Option<&str> {
 struct LineCommentScanState {
     in_block_comment: bool,
     quote: Option<char>,
+    template_braces: Vec<usize>,
 }
 
 fn line_comment_start(
@@ -34,7 +35,7 @@ fn line_comment_start(
                 &mut in_regex_char_class,
                 &mut prev_significant,
             )
-            || consume_quote(ch, &mut escaped, state, &mut prev_significant)
+            || consume_quote(ch, &mut chars, &mut escaped, state, &mut prev_significant)
         {
             continue;
         }

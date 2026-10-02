@@ -1,4 +1,5 @@
 mod existence;
+mod grouping;
 mod line;
 use existence::existence;
 
@@ -7,7 +8,7 @@ mod tests;
 
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::SqlCountExistenceFact;
-use sqlparser::ast::{Expr, GroupByExpr, Select, SelectItem, UnaryOperator};
+use sqlparser::ast::{Expr, Select, SelectItem, UnaryOperator};
 
 pub(super) struct ShapeLines {
     pub not_in_subqueries: Vec<usize>,
@@ -21,7 +22,7 @@ pub(super) fn collect(select: &Select) -> ShapeLines {
         not_in_columns: Vec::new(),
         count_existence_checks: Vec::new(),
     };
-    let bare = !has_group_by(select);
+    let bare = !grouping::has_group_by(select);
     for item in &select.projection {
         if let SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } = item {
             walk(expr, Place::SelectList, bare, &mut out);
@@ -125,17 +126,4 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
 
 fn bare_allowed(place: Place, bare: bool) -> bool {
     bare && matches!(place, Place::SelectList | Place::Where | Place::Having)
-}
-
-fn has_group_by(select: &Select) -> bool {
-    match &select.group_by {
-        GroupByExpr::Expressions(exprs, _) => exprs.iter().any(|expr| match expr {
-            Expr::Tuple(items) => !items.is_empty(),
-            Expr::GroupingSets(sets) | Expr::Rollup(sets) | Expr::Cube(sets) => {
-                sets.iter().any(|set| !set.is_empty())
-            }
-            _ => true,
-        }),
-        GroupByExpr::All(_) => true,
-    }
 }

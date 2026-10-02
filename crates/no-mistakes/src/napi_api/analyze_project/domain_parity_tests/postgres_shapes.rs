@@ -11,5 +11,6 @@ fn prepared_sql_shape_check_matches_standalone_and_parses_builders_once() {
     assert_eq!(standalone["rules"].as_array().unwrap().len(), 2);
     assert_eq!(aggregate["reports"][0]["result"], standalone);
     assert_eq!(counts.get(&root.join("src/builders.ts")), Some(&1), "{counts:#?}");
-    assert_eq!(counts.len(), 1, "{counts:#?}");
+    assert_eq!(counts.get(&root.join("src/custom-executors.ts")), Some(&1), "{counts:#?}");
+    assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
 }

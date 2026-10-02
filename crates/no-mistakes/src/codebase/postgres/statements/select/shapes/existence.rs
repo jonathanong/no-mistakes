@@ -1,4 +1,4 @@
-use super::has_group_by;
+use super::grouping::has_group_by;
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{
     BinaryOperator, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Query, Select,
@@ -56,6 +56,9 @@ fn count_query(query: &Query) -> bool {
     let SetExpr::Select(select) = query.body.as_ref() else {
         return false;
     };
+    if select.having.is_some() || query.limit_clause.is_some() || query.fetch.is_some() {
+        return false;
+    }
     !has_group_by(select) && projection_is_count(select)
 }
 

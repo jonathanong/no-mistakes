@@ -148,22 +148,6 @@ fn quoted_lowercase_count_keeps_the_builtin_schema_and_case_restrictions() {
 }
 
 #[test]
-fn empty_grouping_sets_remain_global_existence_probes() {
-    let root = fixture("review-followups");
-    let findings = check_with_files(
-        &root,
-        &config_yaml(BANNED),
-        &[root.join("sql/empty-grouping.sql")],
-    )
-    .unwrap();
-    assert_eq!(
-        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
-        [1, 2, 3, 4, 5],
-        "{findings:#?}"
-    );
-}
-
-#[test]
 fn filter_facts_are_unique_and_lenient_spans_preserve_suppression() {
     let root = fixture("review-followups");
     let sql = std::fs::read_to_string(root.join("sql/filter-once.sql")).unwrap();

@@ -1,0 +1,57 @@
+[
+  {
+    "source": "const value = `raw ${\n  identifier // no-mistakes-disable-line template-rule\n} tail`;",
+    "line": 2,
+    "disabled": true
+  },
+  {
+    "source": "const value = `raw ${\n  { item: 1 } // no-mistakes-disable-line template-rule\n} tail`;",
+    "line": 2,
+    "disabled": true
+  },
+  {
+    "source": "const value = `raw ${\n  `nested ${\n    identifier // no-mistakes-disable-line template-rule\n  }`\n} tail`;",
+    "line": 3,
+    "disabled": true
+  },
+  {
+    "source": "const value = `raw ${\n  `nested` // no-mistakes-disable-line template-rule\n} tail`;",
+    "line": 2,
+    "disabled": true
+  },
+  {
+    "source": "const value = `raw // no-mistakes-disable-line template-rule`;",
+    "line": 1,
+    "disabled": false
+  },
+  {
+    "source": "const value = `raw \\${ identifier // no-mistakes-disable-line template-rule }`;",
+    "line": 1,
+    "disabled": false
+  },
+  {
+    "source": "const value = `raw $ money // no-mistakes-disable-line template-rule`;",
+    "line": 1,
+    "disabled": false
+  },
+  {
+    "source": "const value = `raw $\nmore`; // no-mistakes-disable-line template-rule",
+    "line": 1,
+    "disabled": false
+  },
+  {
+    "source": "const value = `raw ${\n  \"} // no-mistakes-disable-line template-rule\"\n} tail`;",
+    "line": 2,
+    "disabled": false
+  },
+  {
+    "source": "const value = `raw ${\n  /}/.test(value) // no-mistakes-disable-line template-rule\n} tail`;",
+    "line": 2,
+    "disabled": true
+  },
+  {
+    "source": "const value = `raw ${ `nested` } tail`; // no-mistakes-disable-line template-rule",
+    "line": 1,
+    "disabled": true
+  }
+]
