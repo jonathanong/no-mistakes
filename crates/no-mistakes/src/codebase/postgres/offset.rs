@@ -1,3 +1,4 @@
+mod locate;
 #[cfg(test)]
 mod tests;
 
@@ -58,8 +59,8 @@ pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffset
     if collector.uses.is_empty() {
         return Vec::new();
     }
-    let tokens =
-        super::parse::unicode::tokenize_raw_unicode(&super::parse::normalize_copy_data(sql));
+    let normalized = super::parse::normalize_copy_data(sql);
+    let tokens = super::parse::unicode::tokenize_raw_unicode(&normalized);
     let keywords: Vec<_> = tokens
         .iter()
         .filter_map(|token| {
@@ -72,15 +73,9 @@ pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffset
         })
         .collect();
     for (index, fact) in collector.uses.iter_mut().enumerate() {
-        let location = if fact.line == 0 {
-            keywords.get(index).copied()
-        } else {
-            keywords
-                .partition_point(|location| *location <= (fact.line, fact.column))
-                .checked_sub(1)
-                .map(|index| keywords[index])
-        };
-        if let Some((line, column)) = location {
+        if let Some((line, column)) =
+            locate::resolve(&normalized, &keywords, index, fact.line, fact.column)
+        {
             fact.line = line;
             fact.column = column;
         }

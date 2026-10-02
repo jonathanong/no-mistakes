@@ -28,3 +28,47 @@ pub(super) fn align(tokens: &[Token], original: &[TokenWithSpan]) -> Vec<TokenWi
         })
         .collect()
 }
+
+/// Place a peeled `DO` body on the opening dollar quote's line and column.
+pub(super) fn align_do_body(body: &str, original: Option<&[TokenWithSpan]>) -> String {
+    let Some((line, column, tag)) = original.and_then(dollar_quote) else {
+        return body.to_string();
+    };
+    let opener = 2 + tag.chars().count();
+    format!(
+        "{}{}{body}",
+        "\n".repeat(line.saturating_sub(1)),
+        " ".repeat(column.saturating_add(opener).saturating_sub(1))
+    )
+}
+
+/// Flatten decoded `chr()` text onto the chunk's first source line.
+pub(super) fn align_chr_sql(sql: &str, original: Option<&[TokenWithSpan]>) -> String {
+    let flat = sql.replace(['\n', '\r'], " ");
+    format!(
+        "{}{flat}",
+        "\n".repeat(chunk_line(original).saturating_sub(1))
+    )
+}
+
+fn dollar_quote(tokens: &[TokenWithSpan]) -> Option<(usize, usize, &str)> {
+    tokens.iter().find_map(|token| match &token.token {
+        Token::DollarQuotedString(quoted) => Some((
+            token.span.start.line as usize,
+            token.span.start.column as usize,
+            quoted.tag.as_deref().unwrap_or(""),
+        )),
+        _ => None,
+    })
+}
+
+fn chunk_line(original: Option<&[TokenWithSpan]>) -> usize {
+    original
+        .and_then(|tokens| {
+            tokens
+                .iter()
+                .find(|token| !matches!(token.token, Token::Whitespace(_)))
+        })
+        .map(|token| token.span.start.line as usize)
+        .unwrap_or(1)
+}

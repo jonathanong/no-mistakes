@@ -53,7 +53,7 @@ fn split_sql(sql: &str, data: &mut Vec<(usize, usize, usize)>) -> Vec<(usize, St
                 }
             }
             quote @ (b'\'' | b'"') => index = skip_quoted(bytes, index, quote, &mut line),
-            b'$' => index = skip_dollar(bytes, index, &mut line),
+            b'$' => index = dollar::skip(bytes, index, &mut line),
             b';' => {
                 push(&mut out, sql, start, index, code_line.unwrap_or(start_line));
                 let copy = super::copy_data::is_copy_stdin(&sql[start..index]);
@@ -127,44 +127,6 @@ fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> u
     index
 }
 
-fn skip_dollar(bytes: &[u8], index: usize, line: &mut usize) -> usize {
-    // Dollar signs are legal inside unquoted PostgreSQL identifiers.
-    if index > 0
-        && (bytes[index - 1].is_ascii_alphanumeric()
-            || matches!(bytes[index - 1], b'_' | b'$')
-            || !bytes[index - 1].is_ascii())
-    {
-        return index + 1;
-    }
-    if bytes.get(index + 1).is_some_and(u8::is_ascii_digit) {
-        return index + 1;
-    }
-    let mut tag_end = index + 1;
-    while tag_end < bytes.len()
-        && bytes[tag_end] != b'$'
-        && (bytes[tag_end].is_ascii_alphanumeric()
-            || bytes[tag_end] == b'_'
-            || !bytes[tag_end].is_ascii())
-    {
-        tag_end += 1;
-    }
-    if tag_end >= bytes.len() || bytes[tag_end] != b'$' {
-        return index + 1;
-    }
-    let tag = &bytes[index..=tag_end];
-    let mut cursor = index + tag.len();
-    while cursor + tag.len() <= bytes.len() {
-        if bytes[cursor] == b'\n' {
-            *line += 1;
-        }
-        if bytes[cursor..].starts_with(tag) {
-            return cursor + tag.len();
-        }
-        cursor += 1;
-    }
-    bytes.len()
-}
-
 /// COPY payloads are data, so tokenizer quotes and semicolons must not own them.
 pub(crate) fn normalize_copy_data(sql: &str) -> std::borrow::Cow<'_, str> {
     if !sql
@@ -194,6 +156,8 @@ pub(crate) fn normalize_copy_data(sql: &str) -> std::borrow::Cow<'_, str> {
     }
     std::borrow::Cow::Owned(String::from_utf8(bytes).unwrap())
 }
+
+mod dollar;
 
 #[cfg(test)]
 mod tests;
