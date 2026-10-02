@@ -44,42 +44,8 @@ pub(super) fn catalog_from_facts(
     catalog
 }
 
-pub(super) fn trigger_catalog_from_facts(
-    schema: &[SqlSchemaFileFacts],
-    columns: &[String],
-) -> GeneratedTableColumns {
-    let mut catalog = GeneratedTableColumns::default();
-    for file in schema {
-        for table in &file.tables {
-            let generated: Vec<String> = table
-                .columns
-                .iter()
-                .filter(|column| {
-                    !column.is_generated
-                        && columns
-                            .iter()
-                            .any(|name| name.eq_ignore_ascii_case(&column.name))
-                })
-                .map(|column| column.name.to_ascii_lowercase())
-                .collect();
-            if generated.is_empty() {
-                continue;
-            }
-            catalog.insert_table(GeneratedTable {
-                name: table.table_name.clone(),
-                generated: generated.into_iter().collect(),
-                column_order: Some(
-                    table
-                        .columns
-                        .iter()
-                        .map(|column| column.name.to_ascii_lowercase())
-                        .collect(),
-                ),
-            });
-        }
-    }
-    catalog
-}
+mod trigger;
+pub(super) use trigger::trigger_catalog_from_facts;
 
 pub(super) fn stale_trigger_findings(
     schema: &[SqlSchemaFileFacts],
@@ -102,7 +68,11 @@ pub(super) fn stale_trigger_findings(
 }
 
 fn schema_has_column(schema: &[SqlSchemaFileFacts], name: &str) -> bool {
-    schema.iter().flat_map(|file| &file.tables).any(|table| {
+    schema.iter().any(|file| {
+        file.add_columns
+            .iter()
+            .any(|column| column.column_name.eq_ignore_ascii_case(name))
+    }) || schema.iter().flat_map(|file| &file.tables).any(|table| {
         table
             .columns
             .iter()

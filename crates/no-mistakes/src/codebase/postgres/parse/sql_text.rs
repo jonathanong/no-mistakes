@@ -3,6 +3,10 @@
 /// Semicolons inside quotes, dollar quotes, and comments stay in the statement.
 /// A leading `--` comment is not the statement line, so a next-line suppression
 /// still points at the SQL.
+pub(crate) fn top_level_statements(sql: &str) -> Vec<(usize, String)> {
+    split_sql(sql, &mut Vec::new())
+}
+
 fn split_sql(sql: &str, data: &mut Vec<(usize, usize, usize)>) -> Vec<(usize, String)> {
     let bytes = sql.as_bytes();
     let mut index = 0usize;

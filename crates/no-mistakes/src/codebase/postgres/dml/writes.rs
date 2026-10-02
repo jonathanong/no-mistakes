@@ -49,6 +49,12 @@ impl GeneratedTableColumns {
             .or_insert(table);
     }
 
+    pub(crate) fn extend_from(&mut self, other: &Self) {
+        for table in other.tables.values() {
+            self.insert_table(table.clone());
+        }
+    }
+
     pub fn get(&self, table: &str) -> Option<&GeneratedTable> {
         self.tables.get(&table.to_ascii_lowercase())
     }

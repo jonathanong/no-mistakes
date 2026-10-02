@@ -84,8 +84,22 @@ fn postgres_no_generated_column_writes_flags_trigger_maintained_columns() {
         body.contains("do not write trigger-maintained column `orders.updated_at`"),
         "{body}"
     );
-    assert!(body.contains("fail-update.ts"), "{body}");
-    assert!(body.contains("fail-merge.sql"), "{body}");
+    for file in [
+        "fail-update.ts",
+        "fail-clock.ts",
+        "fail-insert.ts",
+        "fail-upsert.ts",
+        "fail-noop.ts",
+        "fail-merge.sql",
+    ] {
+        assert!(body.contains(file), "missing {file}: {body}");
+    }
+    assert_eq!(
+        body.matches("do not write trigger-maintained column")
+            .count(),
+        6,
+        "{body}"
+    );
     assert!(!body.contains("pass.ts"), "{body}");
 }
 

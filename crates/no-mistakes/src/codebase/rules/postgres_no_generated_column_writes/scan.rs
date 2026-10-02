@@ -36,6 +36,8 @@ pub(super) fn scan_with_sources(
     let catalog = super::catalog::catalog_from_facts(&facts.schema, &opts.extra_generated_columns);
     let trigger =
         super::catalog::trigger_catalog_from_facts(&facts.schema, &opts.trigger_maintained_columns);
+    let mut combined = trigger.clone();
+    combined.extend_from(&catalog);
     let mut findings =
         super::catalog::stale_extra_findings(&facts.schema, &opts.extra_generated_columns);
     findings.extend(super::catalog::stale_trigger_findings(
@@ -60,13 +62,13 @@ pub(super) fn scan_with_sources(
             findings.extend(scan_embedded(
                 &rel,
                 embedded_by_path.get(path.as_path()).copied(),
+                &combined,
                 &catalog,
-                &trigger,
             ));
             continue;
         }
         if path.extension().and_then(|extension| extension.to_str()) == Some("sql") {
-            findings.extend(scan_sql_file(path, &rel, sources, &catalog, &trigger));
+            findings.extend(scan_sql_file(path, &rel, sources, &combined, &catalog));
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);
@@ -77,7 +79,7 @@ fn scan_embedded(
     file: &str,
     facts: Option<&EmbeddedSqlFileFacts>,
     catalog: &GeneratedTableColumns,
-    trigger: &GeneratedTableColumns,
+    generated: &GeneratedTableColumns,
 ) -> Vec<RuleFinding> {
     let Some(facts) = facts else {
         return Vec::new();
@@ -88,7 +90,7 @@ fn scan_embedded(
             continue;
         };
         let line = call.line.max(1) as usize;
-        extend_writes(&mut findings, file, sql, catalog, trigger, |_, _| line);
+        extend_writes(&mut findings, file, sql, catalog, generated, |_, _| line);
     }
     findings
 }
@@ -98,20 +100,22 @@ fn scan_sql_file(
     file: &str,
     sources: &SourceStore,
     catalog: &GeneratedTableColumns,
-    trigger: &GeneratedTableColumns,
+    generated: &GeneratedTableColumns,
 ) -> Vec<RuleFinding> {
     let Some(source) = crate::codebase::rules::read_source(sources, path) else {
         return Vec::new();
     };
     let mut findings = Vec::new();
-    extend_writes(
-        &mut findings,
-        file,
-        &source,
-        catalog,
-        trigger,
-        |table, column| line_for_write(&source, table, column),
-    );
+    for (line, statement) in crate::codebase::postgres::top_level_statements(&source) {
+        extend_writes(
+            &mut findings,
+            file,
+            &statement,
+            catalog,
+            generated,
+            |_, _| line,
+        );
+    }
     findings
 }
 
@@ -120,42 +124,26 @@ fn extend_writes(
     file: &str,
     sql: &str,
     catalog: &GeneratedTableColumns,
-    trigger: &GeneratedTableColumns,
+    generated: &GeneratedTableColumns,
     line_for: impl Fn(&str, &str) -> usize,
 ) {
+    // Both column kinds share this parse; the generated catalog only classifies hits.
     for write in find_generated_column_writes(sql, catalog) {
-        findings.push(finding(
+        let render = if generated
+            .get(&write.table)
+            .is_some_and(|table| table.generated.contains(&write.column.to_ascii_lowercase()))
+        {
+            finding
+        } else {
+            trigger_finding
+        };
+        findings.push(render(
             file,
             line_for(&write.table, &write.column),
             &write.table,
             &write.column,
         ));
     }
-    for write in find_generated_column_writes(sql, trigger) {
-        findings.push(trigger_finding(
-            file,
-            line_for(&write.table, &write.column),
-            &write.table,
-            &write.column,
-        ));
-    }
-}
-
-fn line_for_write(source: &str, table: &str, column: &str) -> usize {
-    source
-        .lines()
-        .enumerate()
-        .find(|(_, line)| {
-            contains_ignore_ascii_case(line, column) || contains_ignore_ascii_case(line, table)
-        })
-        .map(|(index, _)| index + 1)
-        .unwrap_or(1)
-}
-
-fn contains_ignore_ascii_case(haystack: &str, needle: &str) -> bool {
-    haystack
-        .to_ascii_lowercase()
-        .contains(&needle.to_ascii_lowercase())
 }
 
 #[cfg(test)]

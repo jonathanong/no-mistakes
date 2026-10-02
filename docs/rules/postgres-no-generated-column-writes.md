@@ -124,7 +124,27 @@ INSERT INTO items (id, note) VALUES ($1, $2);
 UPDATE items SET created_at = now() WHERE id = $1;
 ```
 
+With `triggerMaintainedColumns: [updated_at]`, this also fails:
+
+```sql
+UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1;
+```
+
+The finding says “do not write trigger-maintained column `orders.updated_at`;
+it is listed in triggerMaintainedColumns, so the database sets it — remove it
+from the INSERT/UPDATE”. An unknown configured name produces
+“stale triggerMaintainedColumns entry: `updated_at` matches no column in schema SQL”.
+Columns introduced by `ALTER TABLE ADD COLUMN` count as schema columns.
+Raw SQL writes are reported separately at each statement's first code line,
+so line suppressions apply to the statement containing the write.
+
 ## Fix
+
+Omit `updated_at` from the trigger-maintained write and let its trigger set it:
+
+```sql
+UPDATE orders SET status = 'paid' WHERE id = $1;
+```
 
 Remove the generated column from the write and provide only source columns
 from which PostgreSQL computes it.
@@ -140,5 +160,5 @@ whose writes are validated elsewhere.
 [`postgres-no-add-column`](postgres-no-add-column.md) controls schema widening;
 [`postgres-sql-statement-policy`](postgres-sql-statement-policy.md) controls
 which SQL statement kinds are allowed in a file.
-`postgres-column-requires-trigger` checks that a trigger-maintained column
+[`postgres-column-requires-trigger`](postgres-column-requires-trigger.md) checks that a trigger-maintained column
 actually has its trigger. This rule only rejects writes to the listed names.
