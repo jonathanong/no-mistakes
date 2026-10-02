@@ -120,6 +120,13 @@ fn embedded_offset_zero_uses_the_fence_message() {
 }
 
 #[test]
+fn a_missing_sql_file_is_skipped() {
+    let root = fixture("fail-sql");
+    let findings = check_with_files(&root, &config(SQL), &[root.join("db/missing.sql")]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn repeated_sql_scans_match() {
     let files = ["db/views.sql"];
     assert_eq!(

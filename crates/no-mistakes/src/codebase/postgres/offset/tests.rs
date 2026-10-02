@@ -305,6 +305,70 @@ fn function_args_and_modifying_cte_offsets_are_detected() {
 }
 
 #[test]
+fn sql_file_splitting_covers_comments_quotes_and_other_statements() {
+    let uses = super::sql_file_offset_uses(
+        "/* header\n still */\nCREATE TABLE t (id int);\nSELECT 'a\nb';\nSELECT id FROM posts OFFSET 1;",
+    );
+    assert_eq!(uses, vec![(6, OffsetUse::Other)]);
+    assert!(super::sql_file_offset_uses("/* unterminated\nSELECT 1").is_empty());
+    assert!(super::sql_file_offset_uses("SELECT 'unterminated\n").is_empty());
+    let dollar = super::sql_file_offset_uses(
+        "SELECT $tag$one\ntwo$tag$;\nSELECT $1;\nSELECT id FROM posts OFFSET 2;",
+    );
+    assert_eq!(dollar, vec![(4, OffsetUse::Other)]);
+    assert!(super::sql_file_offset_uses("SELECT $$unterminated\n").is_empty());
+}
+
+#[test]
+fn parenthesized_zero_offset_is_still_zero() {
+    assert_eq!(
+        sql_offset_uses("SELECT id FROM posts OFFSET (0)").unwrap(),
+        vec![OffsetUse::Zero]
+    );
+    assert_eq!(
+        sql_offset_uses("SELECT id FROM posts OFFSET ((0))").unwrap(),
+        vec![OffsetUse::Zero]
+    );
+}
+
+#[test]
+fn group_by_all_window_reference_and_table_are_clean() {
+    assert!(!sql_has_offset_clause("SELECT id FROM posts GROUP BY ALL").unwrap());
+    assert!(!sql_has_offset_clause("SELECT id FROM posts UNION TABLE other").unwrap());
+    let sql = "SELECT count(*) OVER w FROM posts WINDOW w AS prev";
+    let statements =
+        sqlparser::parser::Parser::parse_sql(&sqlparser::dialect::GenericDialect {}, sql)
+            .unwrap_or_else(|error| panic!("{sql}: {error}"));
+    let mut uses = Vec::new();
+    for statement in &statements {
+        super::statement_offsets(statement, &mut uses);
+    }
+    assert!(uses.is_empty(), "{uses:?}");
+}
+
+#[test]
+fn dialect_limit_forms_are_collected() {
+    for sql in [
+        "SELECT id FROM posts ORDER BY ALL",
+        "SELECT id FROM posts LIMIT 10, 2",
+        "SELECT id FROM posts LIMIT 10 BY id OFFSET 1",
+        "SELECT id FROM posts LIMIT 10 BY (SELECT id FROM other OFFSET 1) OFFSET 0",
+    ] {
+        let statements =
+            sqlparser::parser::Parser::parse_sql(&sqlparser::dialect::GenericDialect {}, sql)
+                .unwrap_or_else(|error| panic!("{sql}: {error}"));
+        let mut uses = Vec::new();
+        for statement in &statements {
+            super::statement_offsets(statement, &mut uses);
+        }
+        assert!(
+            !uses.is_empty() || !sql.contains("OFFSET"),
+            "{sql}: {uses:?}"
+        );
+    }
+}
+
+#[test]
 fn zero_and_other_offsets_are_collected_separately() {
     assert_eq!(
         sql_offset_uses("SELECT id FROM posts OFFSET 0").unwrap(),
