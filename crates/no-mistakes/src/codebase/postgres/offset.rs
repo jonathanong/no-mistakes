@@ -1,32 +1,79 @@
+mod sql_text;
 #[cfg(test)]
 mod tests;
 mod walk;
 
-use super::parse::{parse_postgres_sql, PostgresParseError};
+use super::parse::{parse_postgres_sql, parse_postgres_sql_lenient, PostgresParseError};
+use super::statements::walk_executed;
 use sqlparser::ast::{
     CopySource, CreateTable, CreateView, Delete, DoUpdate, Insert, OnConflict, OnConflictAction,
     OnInsert, SelectItem, Statement, Update,
 };
-use walk::{expr_has_offset_query, query_has_offset, table_with_joins_has_offset};
+use walk::{expr_offsets, query_offsets, select_item_offsets, table_with_joins_offsets};
+
+/// One `OFFSET` clause. `Zero` is the integer literal `0`, including `OFFSET 0 ROWS`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OffsetUse {
+    Zero,
+    Other,
+}
+
+/// Parse `sql` and return every `OFFSET` clause in source order.
+pub fn sql_offset_uses(sql: &str) -> Result<Vec<OffsetUse>, PostgresParseError> {
+    let statements = parse_postgres_sql(sql)?;
+    let mut uses = Vec::new();
+    for statement in &statements {
+        statement_offsets(statement, &mut uses);
+    }
+    Ok(uses)
+}
 
 /// Parse `sql` and report whether any query uses an `OFFSET` clause.
 pub fn sql_has_offset_clause(sql: &str) -> Result<bool, PostgresParseError> {
-    let statements = parse_postgres_sql(sql)?;
-    Ok(statements.iter().any(statement_has_offset))
+    Ok(!sql_offset_uses(sql)?.is_empty())
 }
 
-pub(super) fn statement_has_offset(statement: &Statement) -> bool {
+/// Offset uses in a `.sql` file, using the statement pass's lenient split.
+///
+/// Only top-level queries and `CREATE [MATERIALIZED] VIEW` queries are walked.
+/// Each use is reported at that statement's start line.
+pub fn sql_file_offset_uses(sql: &str) -> Vec<(usize, OffsetUse)> {
+    let mut found = Vec::new();
+    for (line, chunk) in sql_text::top_level_statements(sql) {
+        let statements = parse_postgres_sql_lenient(&chunk);
+        let mut executed = Vec::new();
+        for statement in &statements {
+            walk_executed(statement, &mut executed);
+        }
+        for statement in executed {
+            let mut uses = Vec::new();
+            match statement {
+                Statement::Query(query) => query_offsets(query, &mut uses),
+                Statement::CreateView(view) => query_offsets(view.query.as_ref(), &mut uses),
+                _ => {}
+            }
+            for use_ in uses {
+                found.push((line, use_));
+            }
+        }
+    }
+    found
+}
+
+pub(super) fn statement_offsets(statement: &Statement, out: &mut Vec<OffsetUse>) {
     match statement {
-        Statement::Query(query) => query_has_offset(query),
+        Statement::Query(query) => query_offsets(query, out),
         Statement::Insert(Insert {
             source,
             returning,
             on,
             ..
         }) => {
-            source.as_ref().is_some_and(|query| query_has_offset(query))
-                || returning_has_offset(returning)
-                || insert_on_has_offset(on)
+            if let Some(query) = source.as_ref() {
+                query_offsets(query, out);
+            }
+            returning_offsets(returning, out);
+            insert_on_offsets(on, out);
         }
         Statement::Update(Update {
             assignments,
@@ -36,17 +83,19 @@ pub(super) fn statement_has_offset(statement: &Statement) -> bool {
             returning,
             ..
         }) => {
-            assignments
-                .iter()
-                .any(|assignment| expr_has_offset_query(&assignment.value))
-                || selection.as_ref().is_some_and(expr_has_offset_query)
-                || table_with_joins_has_offset(table)
-                || matches!(
-                    from.as_ref(),
-                    Some(sqlparser::ast::UpdateTableFromKind::AfterSet(tables))
-                        if tables.iter().any(table_with_joins_has_offset)
-                )
-                || returning_has_offset(returning)
+            for assignment in assignments {
+                expr_offsets(&assignment.value, out);
+            }
+            if let Some(selection) = selection {
+                expr_offsets(selection, out);
+            }
+            table_with_joins_offsets(table, out);
+            if let Some(sqlparser::ast::UpdateTableFromKind::AfterSet(tables)) = from.as_ref() {
+                for table in tables {
+                    table_with_joins_offsets(table, out);
+                }
+            }
+            returning_offsets(returning, out);
         }
         Statement::Delete(Delete {
             selection,
@@ -54,44 +103,56 @@ pub(super) fn statement_has_offset(statement: &Statement) -> bool {
             returning,
             ..
         }) => {
-            selection.as_ref().is_some_and(expr_has_offset_query)
-                || using
-                    .as_ref()
-                    .is_some_and(|tables| tables.iter().any(table_with_joins_has_offset))
-                || returning_has_offset(returning)
+            if let Some(selection) = selection {
+                expr_offsets(selection, out);
+            }
+            if let Some(tables) = using {
+                for table in tables {
+                    table_with_joins_offsets(table, out);
+                }
+            }
+            returning_offsets(returning, out);
         }
         Statement::CreateTable(CreateTable { query, .. }) => {
-            query.as_deref().is_some_and(query_has_offset)
+            if let Some(query) = query.as_deref() {
+                query_offsets(query, out);
+            }
         }
-        Statement::CreateView(CreateView { query, .. }) => query_has_offset(query),
+        Statement::CreateView(CreateView { query, .. }) => query_offsets(query, out),
         Statement::Copy {
             source: CopySource::Query(query),
             ..
-        } => query_has_offset(query),
-        Statement::Explain { statement, .. } => statement_has_offset(statement),
-        _ => false,
+        } => query_offsets(query, out),
+        Statement::Explain { statement, .. } => statement_offsets(statement, out),
+        _ => {}
     }
 }
 
-fn returning_has_offset(returning: &Option<Vec<SelectItem>>) -> bool {
-    returning
-        .as_ref()
-        .is_some_and(|items| items.iter().any(walk::select_item_has_offset))
+fn returning_offsets(returning: &Option<Vec<SelectItem>>, out: &mut Vec<OffsetUse>) {
+    if let Some(items) = returning {
+        for item in items {
+            select_item_offsets(item, out);
+        }
+    }
 }
 
-fn insert_on_has_offset(on: &Option<OnInsert>) -> bool {
-    matches!(
-        on,
-        Some(OnInsert::OnConflict(OnConflict {
-            action: OnConflictAction::DoUpdate(DoUpdate {
+fn insert_on_offsets(on: &Option<OnInsert>, out: &mut Vec<OffsetUse>) {
+    let Some(OnInsert::OnConflict(OnConflict {
+        action:
+            OnConflictAction::DoUpdate(DoUpdate {
                 assignments,
                 selection,
                 ..
             }),
-            ..
-        })) if assignments
-            .iter()
-            .any(|assignment| expr_has_offset_query(&assignment.value))
-            || selection.as_ref().is_some_and(expr_has_offset_query)
-    )
+        ..
+    })) = on
+    else {
+        return;
+    };
+    for assignment in assignments {
+        expr_offsets(&assignment.value, out);
+    }
+    if let Some(selection) = selection {
+        expr_offsets(selection, out);
+    }
 }

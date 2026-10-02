@@ -46,7 +46,14 @@ fn fail_fixture_reports_offset() {
     assert_eq!(findings[0].file, "src/query.ts");
     assert!(findings[0].line > 0);
     assert_eq!(findings[0].target.as_deref(), Some("offset"));
-    assert!(findings[0].message.contains("OFFSET"), "{findings:#?}");
+    assert!(
+        findings[0].message.contains("do not use SQL OFFSET"),
+        "{findings:#?}"
+    );
+    assert!(
+        !findings[0].message.contains("optimizer fence"),
+        "{findings:#?}"
+    );
 }
 
 #[test]
