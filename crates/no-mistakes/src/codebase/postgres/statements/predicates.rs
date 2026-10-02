@@ -6,9 +6,11 @@ mod coverage_tests;
 mod tests;
 
 use super::SqlRelationPredicateFact;
-use crate::codebase::postgres::schema::relation_name;
+use crate::codebase::postgres::idents::ident_key;
 use constrain::Instance;
-use sqlparser::ast::{Expr, ObjectName, ObjectNamePart, Select, TableFactor, TableWithJoins};
+use sqlparser::ast::{
+    Expr, JoinOperator, ObjectName, ObjectNamePart, Select, Spanned, TableFactor, TableWithJoins,
+};
 
 pub(super) fn select_relations(
     sql: &str,
@@ -35,7 +37,7 @@ pub(super) fn base_table(name: &ObjectName, ctes: &[String]) -> Option<String> {
         .iter()
         .filter(|part| matches!(part, ObjectNamePart::Identifier(_)))
         .count();
-    let table = relation_name(name);
+    let table = crate::codebase::postgres::idents::object_name_key(name);
     if table.is_empty() {
         return None;
     }
@@ -47,22 +49,40 @@ pub(super) fn base_table(name: &ObjectName, ctes: &[String]) -> Option<String> {
 }
 
 fn relations_for(
-    sql: &str,
+    _sql: &str,
     tables: &[TableWithJoins],
     selection: Option<&Expr>,
     ctes: &[String],
 ) -> Vec<SqlRelationPredicateFact> {
     let mut gathered = Gather::default();
     for table in tables {
+        let start = gathered.instances.len();
         walk_relation(&table.relation, false, None, ctes, &mut gathered);
         for join in &table.joins {
-            walk_relation(
-                &join.relation,
-                true,
-                super::select::join_expr(&join.join_operator),
-                ctes,
-                &mut gathered,
+            let right = gathered.instances.len();
+            let on = super::select::join_expr(&join.join_operator);
+            // ON filters only the non-preserved side of an outer join.
+            if matches!(
+                join.join_operator,
+                JoinOperator::Join(_)
+                    | JoinOperator::Inner(_)
+                    | JoinOperator::Right(_)
+                    | JoinOperator::RightOuter(_)
+            ) {
+                if let Some(on) = on {
+                    for instance in &mut gathered.instances[start..right] {
+                        instance.extra_on.push(on);
+                    }
+                }
+            }
+            let constrained_right = matches!(
+                join.join_operator,
+                JoinOperator::Join(_)
+                    | JoinOperator::Inner(_)
+                    | JoinOperator::Left(_)
+                    | JoinOperator::LeftOuter(_)
             );
+            walk_relation(&join.relation, constrained_right, on, ctes, &mut gathered);
         }
     }
     let constrained = constrain::constrain(
@@ -77,7 +97,7 @@ fn relations_for(
         .zip(constrained)
         .map(
             |(instance, (constrained_columns, unqualified_columns))| SqlRelationPredicateFact {
-                line: relation_line(sql, &instance.table, instance.alias.as_deref()),
+                line: instance.line,
                 table: instance.table.clone(),
                 alias: instance.alias.clone(),
                 constrained_columns,
@@ -125,7 +145,9 @@ fn walk_relation<'a>(
             };
             gathered.instances.push(Instance {
                 table,
-                alias: alias.as_ref().map(|alias| alias.name.value.clone()),
+                alias: alias.as_ref().map(|alias| ident_key(&alias.name)),
+                line: name.span().start.line as usize,
+                extra_on: Vec::new(),
                 joined,
                 on,
             });
@@ -152,20 +174,5 @@ fn walk_relation<'a>(
 }
 
 fn is_cte(table: &str, ctes: &[String]) -> bool {
-    ctes.iter().any(|cte| cte.eq_ignore_ascii_case(table))
-}
-
-fn relation_line(sql: &str, table: &str, alias: Option<&str>) -> usize {
-    sql.lines()
-        .enumerate()
-        .find(|(_, line)| {
-            contains_word(line, table) && alias.is_none_or(|alias| contains_word(line, alias))
-        })
-        .map(|(index, _)| index + 1)
-        .unwrap_or(1)
-}
-
-fn contains_word(line: &str, word: &str) -> bool {
-    line.split(|char: char| !char.is_ascii_alphanumeric() && char != '_')
-        .any(|part| part.eq_ignore_ascii_case(word))
+    ctes.iter().any(|cte| cte == table)
 }

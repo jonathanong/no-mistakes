@@ -9,7 +9,7 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-mod dml;
+pub(super) mod dml;
 
 /// Read `sql_paths` through `sources` and extract migration schema facts.
 pub fn extract_schema_facts(

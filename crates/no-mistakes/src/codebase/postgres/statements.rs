@@ -25,10 +25,19 @@ use sqlparser::ast::{Query, SetExpr, Statement};
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
+    let parsed = parse_postgres_sql(sql);
+    let parse_failed = parsed.is_err();
+    let statements = parsed.unwrap_or_else(|_| parse_postgres_sql_lenient(sql));
+    extract_from_parsed(sql, &statements, parse_failed)
+}
+
+pub(crate) fn extract_from_parsed(
+    sql: &str,
+    statements: &[Statement],
+    parse_failed: bool,
+) -> SqlStatementFileFacts {
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
-    let parse_failed = parse_postgres_sql(sql).is_err();
-    let statements = parse_postgres_sql_lenient(sql);
     let mut inserts = Vec::new();
     let mut selects = Vec::new();
     let mut updates = Vec::new();
@@ -38,7 +47,7 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
     let mut executed = Vec::new();
-    for statement in &statements {
+    for statement in statements {
         wrappers::walk_executed(statement, &mut executed);
     }
     let mut out = FactOut {

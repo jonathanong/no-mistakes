@@ -183,7 +183,7 @@ fn prepared_catalog_is_preferred_when_present() {
         &facts,
     )
     .unwrap();
-    assert!(findings[0].message.contains("40 columns of orders"));
+    assert!(findings[0].message.contains("40 columns of public.orders"));
     let mut broken = CheckFactMap::default();
     broken.postgres_schema_catalogs.insert(
         "missing/schema.json".to_string(),
@@ -207,7 +207,7 @@ fn prepared_catalog_is_preferred_when_present() {
         &CheckFactMap::default(),
     )
     .unwrap();
-    assert!(fallback[0].message.contains("40 columns of orders"));
+    assert!(fallback[0].message.contains("40 columns of public.orders"));
 }
 
 #[test]

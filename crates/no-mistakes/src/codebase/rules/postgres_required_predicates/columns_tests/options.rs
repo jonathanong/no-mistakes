@@ -14,7 +14,10 @@ fn repeated_scans_are_identical() {
 #[test]
 fn suppression_directives_hide_sql_findings() {
     let root = fixture("suppress");
-    let config = config_yaml(COLUMNS);
+    let config = config_yaml(&COLUMNS.replace(
+        "partitionKeyExemptions: [{table: bare, reason: legacy incomplete snapshot fixture}]\n",
+        "",
+    ));
     for name in ["sql/next-line.sql", "sql/line.sql", "sql/file.sql"] {
         let file = root.join(name);
         let mut findings = check_with_files(&root, &config, std::slice::from_ref(&file)).unwrap();

@@ -12,6 +12,8 @@ pub(super) struct Instance<'a> {
     pub table: String,
     pub alias: Option<String>,
     pub joined: bool,
+    pub line: usize,
+    pub extra_on: Vec<&'a Expr>,
     pub on: Option<&'a Expr>,
 }
 
@@ -49,6 +51,9 @@ pub(super) fn constrain(
                 if let Some(on) = instance.on {
                     cols = sets::union(cols, columns_from_expr(on, &ctx));
                 }
+            }
+            for on in &instance.extra_on {
+                cols = sets::union(cols, columns_from_expr(on, &ctx));
             }
             if let Some(selection) = selection {
                 cols = sets::union(cols, columns_from_expr(selection, &ctx));
@@ -88,9 +93,11 @@ fn columns_from_expr(expr: &Expr, ctx: &Ctx<'_>) -> Cols {
         Expr::InList {
             expr,
             negated: false,
-            ..
+            list,
+        } if !list.iter().any(|item| refs::references(item, ctx)) => {
+            from_hit(column_hit(expr, ctx))
         }
-        | Expr::InSubquery {
+        Expr::InSubquery {
             expr,
             negated: false,
             ..
@@ -136,7 +143,7 @@ struct Hit {
 fn column_hit(expr: &Expr, ctx: &Ctx<'_>) -> Option<Hit> {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => {
-            let column = ident.value.to_ascii_lowercase();
+            let column = crate::codebase::postgres::idents::ident_key(ident);
             if ctx.from_items <= 1 {
                 Some(Hit {
                     column,
@@ -154,7 +161,7 @@ fn column_hit(expr: &Expr, ctx: &Ctx<'_>) -> Option<Hit> {
         Expr::CompoundIdentifier(parts) => {
             let (qualifier, column) = refs::qualifier_and_column(parts)?;
             refs::qualifier_matches(&qualifier, ctx).then(|| Hit {
-                column: column.to_ascii_lowercase(),
+                column,
                 proven: true,
             })
         }

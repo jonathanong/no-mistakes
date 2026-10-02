@@ -1,4 +1,4 @@
-use super::schema::{extract_create_table_metadata, index_column_name, relation_name};
+use super::schema::{index_column_name, relation_name};
 use super::types::SqlSchemaFileFacts;
 use sqlparser::ast::{ObjectName, ObjectNamePart, ObjectType, Statement};
 
@@ -11,23 +11,34 @@ mod predicate;
 mod statements;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
-    let mut facts = extract_parsed_migration_facts(sql);
+    let statements = super::parse::parse_postgres_sql_lenient(sql);
+    extract_from_parsed(sql, &statements)
+}
+
+pub(crate) fn extract_from_parsed(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
+    let mut facts = extract_parsed_migration_facts(sql, statements);
     facts
         .declared_identifiers
         .extend(identifiers::procedure_names(sql));
     facts
 }
 
-fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
+fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
-        tables: extract_create_table_metadata(sql),
+        tables: statements
+            .iter()
+            .filter_map(|statement| match statement {
+                Statement::CreateTable(table) => Some(super::schema::table_metadata(table)),
+                _ => None,
+            })
+            .collect(),
         ..Default::default()
     };
     let mut create_index_n = 0usize;
     let mut drop_index_n = 0usize;
     let mut drop_table_n = 0usize;
     let mut identifier_from = 0usize;
-    for statement in super::parse::parse_postgres_sql_lenient(sql) {
+    for statement in statements {
         facts.declared_identifiers.extend(identifiers::collect(
             sql,
             &statement,
@@ -86,7 +97,10 @@ fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
         .into_iter()
         .chain(dynamic::extract(sql))
     {
-        let mut dynamic_facts = extract_parsed_migration_facts(&dynamic_sql.sql);
+        let mut dynamic_facts = extract_parsed_migration_facts(
+            &dynamic_sql.sql,
+            &super::parse::parse_postgres_sql_lenient(&dynamic_sql.sql),
+        );
         remap_dynamic_fact_lines(&mut dynamic_facts, &dynamic_sql);
         merge_dynamic_facts(&mut facts, dynamic_facts);
     }

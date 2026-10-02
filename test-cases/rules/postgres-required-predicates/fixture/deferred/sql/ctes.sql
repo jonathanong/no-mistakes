@@ -1,0 +1,2 @@
+WITH RECURSIVE orders AS (SELECT 1 AS id UNION ALL SELECT id FROM orders) SELECT id FROM orders;
+WITH "Orders" AS (SELECT 1) SELECT id FROM orders;

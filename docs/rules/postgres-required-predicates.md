@@ -46,14 +46,14 @@ behavior is unchanged.
 (including subqueries and CTE bodies), UPDATE, DELETE, and the SELECT of
 `INSERT … SELECT`. A column counts as constrained when a top-level AND
 conjunct is an equality, comparison, `IN`, `= ANY`, or `BETWEEN` on that
-column. `OR` counts only when every branch constrains it. `IS NULL`,
+column. Self-referential `IN` lists do not constrain a column. `OR` counts only when every branch constrains it. `IS NULL`,
 `IS NOT NULL`, `<>`, and `LIKE` do not. An unqualified name in a join counts
 only when the schema catalog shows no other FROM relation has that column.
 
 `partitionKeys: require` checks each instance whose catalog table is a
 partitioned table. Every column of the partition key must be constrained.
 Expression partition keys are not guessed from queries: the rule reports one
-catalog finding for that table. Tables in `partitionKeyExemptions` are
+catalog finding for that table, while column elements in a mixed key still require predicates. Missing partition keys produce a catalog finding. Tables in `partitionKeyExemptions` are
 skipped. An exemption for a table that is not a partitioned catalog table is
 stale. A relation may set `requireColumns` without `require`. MERGE is out of
 scope.
@@ -69,7 +69,7 @@ relation's `require` and `requireColumns` default to `[]`. An empty
 value is a configuration error). `partitionKeyExemptions` defaults to `[]`;
 an empty table, an empty reason, or a duplicate table is a configuration
 error. `allow` defaults to `[]` and suppresses catalog findings by object ref
-(`table:<name>`); an empty object, an empty reason, or a duplicate object is
+(`table:<name>`); an invalid object reference, an empty reason, or a duplicate object is
 a configuration error, and an unmatched entry is reported stale.
 `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
 configuration error). `importSpecifier` defaults to `@data-stores/psql`.
@@ -84,9 +84,9 @@ SELECT id FROM events WHERE account_id = ANY($1::uuid[]) AND kind = 'login';
 UPDATE orders SET status = 'paid' WHERE account_id = $1 AND id = $2;
 ```
 
-`LEFT JOIN` / `RIGHT JOIN` `ON` predicates count for the joined relation.
+`INNER JOIN` `ON` predicates constrain both sides. Outer-join `ON` predicates count only for the non-preserved side; `FULL JOIN` does not constrain either side.
 A schema-qualified `public.events` matches `events`. A CTE named `events` is
-not the partitioned table.
+not the partitioned table. Quoted CTE and column names preserve their case; recursive CTE names are visible inside their bodies. Nested reads in query expressions, VALUES, RETURNING, and data-modifying CTEs are checked.
 
 ## Counterexample
 
@@ -108,7 +108,7 @@ add that exemption instead of a query predicate.
 SQL findings honor `no-mistakes-disable-next-line postgres-required-predicates`,
 `no-mistakes-disable-line`, and `no-mistakes-disable-file`. Catalog findings
 (expression partition keys) have no source line to comment, so suppress them
-with `allow: [{object, reason}]`, for example `object: table:events`.
+with `allow: [{object, reason}]`, for example `object: table:events`. For a qualified catalog name use its full object ref, such as `table:public.events`. SQL findings use each relation occurrence’s host-file line.
 
 ## Related rules
 

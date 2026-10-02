@@ -82,6 +82,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         embedded_sql_options: Vec::new(),
         postgres_schema_catalog_paths: Vec::new(),
         postgres_dml: false,
+        postgres_sql_include: Vec::new(),
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
         } else {
@@ -92,7 +93,9 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
 }
 
 pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
-    plan.imports
+    plan.postgres_dml
+        || plan.postgres_schema
+        || plan.imports
         || plan.symbols
         || plan.react
         || plan.queue
@@ -129,6 +132,7 @@ fn postgres_embedded_sql_configured(config: &no_mistakes::config::v2::NoMistakes
     [
         no_mistakes::codebase::rules::POSTGRES_CONFLICT_ORDERING,
         no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
+        no_mistakes::codebase::rules::POSTGRES_REQUIRED_PREDICATES,
     ]
     .iter()
     .any(|rule_id| rule_configured(config, rule_id))

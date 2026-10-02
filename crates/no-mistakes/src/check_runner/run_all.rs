@@ -58,6 +58,7 @@ pub(crate) fn run_all_with_suppressed(
         unique_exports: unique_exports_enabled,
         embedded_sql: enabled.embedded_sql,
     });
+    no_mistakes::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
     plan.embedded_sql_options =
         no_mistakes::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;
     plan.postgres_schema_catalog_paths =

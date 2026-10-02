@@ -101,7 +101,7 @@ fn column_name(raw: &str) -> Option<String> {
     }
     chars
         .all(|character| character.is_ascii_alphanumeric() || character == '_' || character == '$')
-        .then(|| raw.to_string())
+        .then(|| raw.to_ascii_lowercase())
 }
 
 fn quoted_ident(raw: &str) -> Option<String> {

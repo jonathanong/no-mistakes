@@ -7,6 +7,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 mod scan;
 
@@ -27,12 +28,7 @@ pub(crate) struct PartitionExemption {
     pub(crate) reason: String,
 }
 
-#[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct AllowEntry {
-    pub(crate) object: String,
-    pub(crate) reason: String,
-}
+use crate::codebase::postgres::AllowEntry;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -93,9 +89,17 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
-    check_applications(root, config, all_files, sources, None)
+    let sources = std::sync::Arc::clone(sources);
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        Arc::clone(&sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_applications(root, config, all_files, &sources, Some(&facts))
 }
 
 fn check_applications(
@@ -186,3 +190,6 @@ mod columns_tests;
 mod options_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod deferred_tests;

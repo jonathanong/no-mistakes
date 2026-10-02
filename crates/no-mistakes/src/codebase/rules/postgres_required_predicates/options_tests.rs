@@ -124,12 +124,21 @@ fn dynamic_unparseable_and_unrelated_tables() {
     })
     .unwrap();
     let sql = root.join("sql/001.sql");
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&sql));
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        std::slice::from_ref(&sql),
+        std::sync::Arc::clone(&sources),
+        &config_yaml(relations),
+        &[RULE_ID],
+    )
+    .unwrap();
     let findings = scan::scan(
         &root,
         &unrelated,
         std::slice::from_ref(&sql),
-        &super::super::source_store_for_files(std::slice::from_ref(&sql)),
-        None,
+        &sources,
+        Some(&facts),
     )
     .unwrap();
     assert!(findings.is_empty(), "{findings:?}");

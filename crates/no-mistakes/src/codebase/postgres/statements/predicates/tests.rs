@@ -201,7 +201,7 @@ fn cte_is_not_the_table_and_schema_qualified_names_match() {
     assert!(has(
         &proven(
             "SELECT id FROM public.events WHERE account_id = $1",
-            "events",
+            "public.events",
             None
         ),
         "account_id"

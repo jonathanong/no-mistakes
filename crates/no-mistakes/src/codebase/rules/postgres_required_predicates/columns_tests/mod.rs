@@ -32,6 +32,7 @@ pub(super) const COLUMNS: &str = r#"
 sqlInclude: ["sql/**/*.sql"]
 schemaCatalogPath: schema.json
 partitionKeys: require
+partitionKeyExemptions: [{table: bare, reason: legacy incomplete snapshot fixture}]
 relations:
   - table: orders
     requireColumns: [account_id]

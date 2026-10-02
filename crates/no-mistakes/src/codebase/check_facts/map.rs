@@ -34,6 +34,7 @@ type RouteReachableFilesCache = Arc<
 
 #[derive(Default)]
 pub struct CheckFactMap {
+    pub(crate) postgres: crate::codebase::postgres::prepared::PreparedPostgresFacts,
     pub(crate) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
@@ -90,6 +91,21 @@ pub(crate) struct CheckFileFacts {
 }
 
 impl CheckFactMap {
+    #[doc(hidden)]
+    pub fn postgres_schema_file(
+        &self,
+        path: &std::path::Path,
+    ) -> anyhow::Result<&crate::codebase::postgres::SqlSchemaFileFacts> {
+        self.postgres.schema(path)
+    }
+    pub(crate) fn postgres_statements(
+        &self,
+        path: &std::path::Path,
+        profile: Option<&crate::codebase::postgres::EmbeddedSqlOptions>,
+    ) -> anyhow::Result<&[crate::codebase::postgres::SqlStatementFileFacts]> {
+        self.postgres.statements(path, profile)
+    }
+
     pub fn files(&self) -> &[PathBuf] {
         &self.files
     }
@@ -173,6 +189,7 @@ impl CheckFactMap {
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
         Self {
+            postgres: self.postgres.clone(),
             files: self.files.clone(),
             integration_route_links: self.integration_route_links.clone(),
             graph_files,

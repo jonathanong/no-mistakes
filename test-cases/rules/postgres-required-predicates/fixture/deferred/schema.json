@@ -1,0 +1,122 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "public.events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {
+        "key": "RANGE (account_id)"
+      },
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "TenantId": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "tenantid": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        }
+      }
+    },
+    "archive.events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {
+        "key": "RANGE (account_id)"
+      },
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "TenantId": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "tenantid": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        }
+      }
+    },
+    "mixed": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {
+        "key": "RANGE (account_id, lower(region), lower(kind))"
+      },
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "TenantId": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "tenantid": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        }
+      }
+    },
+    "quoted": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {
+        "key": "RANGE (\"TenantId\")"
+      },
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "TenantId": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "tenantid": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        }
+      }
+    },
+    "missing": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "TenantId": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        },
+        "tenantid": {
+          "dataType": "integer",
+          "ordinalPosition": 4
+        }
+      }
+    }
+  }
+}
