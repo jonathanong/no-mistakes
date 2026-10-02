@@ -74,3 +74,16 @@ fn postgres_finite_text_columns_json_has_rule_id() {
     let again = check(&root, true);
     assert_eq!(stdout(&out), stdout(&again));
 }
+
+#[test]
+fn postgres_finite_text_columns_cli_honors_jsonc_suppression_directives() {
+    for scenario in ["line-disable", "next-line-disable", "file-disable"] {
+        let root = fixture(scenario);
+        let out = check(&root, false);
+        assert!(
+            out.status.success(),
+            "fixture {scenario} should suppress its finding: {}",
+            stdout(&out)
+        );
+    }
+}

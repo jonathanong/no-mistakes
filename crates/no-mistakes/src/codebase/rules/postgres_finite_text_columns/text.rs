@@ -16,7 +16,7 @@ fn format_values(values: &[String]) -> String {
     let shown = values
         .iter()
         .take(10)
-        .map(|value| format!("'{value}'"))
+        .map(|value| format!("'{}'", value.replace('\'', "''")))
         .collect::<Vec<_>>()
         .join(", ");
     if values.len() > 10 {

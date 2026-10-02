@@ -1,0 +1,89 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "t0": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "t1": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "t2": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "t3": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "t4": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "t5": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "t6": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    }
+  }
+}

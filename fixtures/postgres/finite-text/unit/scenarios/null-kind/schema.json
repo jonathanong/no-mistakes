@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "columns": {
+        "kind": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((kind IS NULL))"
+        }
+      }
+    }
+  }
+}

@@ -10,14 +10,19 @@ schemaCatalogPath: schema.json
 namePatterns: ['(^|_)(status|state|kind|type|source|category|mode|channel)$']
 ";
 
+pub(super) const REVIEW_OPTIONS: &str = "schemaCatalogPath: schema.json\ncolumnTypes: [text, character varying]\nnamePatterns: ['(^|_)(status|state|kind)$']\nskipGeneratedColumns: true\n";
+
+pub(super) fn fixture(name: &str) -> serde_json::Value {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/finite-text")
+        .join(name);
+    serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap()
+}
+
 pub(super) fn messages(yaml: &str, body: serde_json::Value) -> Vec<String> {
     let options: Options = serde_yaml::from_str(yaml).unwrap();
-    let compiled = compile(&options).unwrap();
-    let mut root = body;
-    if root.get("formatVersion").is_none() {
-        root["formatVersion"] = serde_json::json!(2);
-    }
-    let catalog = SchemaCatalog::from_json(&root.to_string()).unwrap();
+    let compiled = compile(&options, None).unwrap();
+    let catalog = SchemaCatalog::from_json(&body.to_string()).unwrap();
     scan(&catalog, &compiled, &options.schema_catalog_path)
         .into_iter()
         .map(|finding| finding.message)
@@ -35,25 +40,9 @@ pub(super) fn expect_none(yaml: &str, body: serde_json::Value) {
 
 pub(super) fn expect_err(yaml: &str, snippet: &str) {
     let options: Options = serde_yaml::from_str(yaml).unwrap();
-    let error = match compile(&options) {
+    let error = match compile(&options, None) {
         Err(error) => error.to_string(),
         Ok(_) => panic!("expected config error containing {snippet}"),
     };
     assert!(error.contains(snippet), "{error}");
-}
-
-pub(super) fn checked(
-    table: &str,
-    column: &str,
-    data_type: &str,
-    definition: &str,
-) -> serde_json::Value {
-    serde_json::json!({
-        "tables": {
-            table: {
-                "columns": { column: { "dataType": data_type } },
-                "checkConstraints": { "ck": { "definition": definition } }
-            }
-        }
-    })
 }

@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['draft'::text])))"
+        }
+      }
+    }
+  }
+}

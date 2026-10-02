@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['v0'::text, 'v1'::text, 'v2'::text, 'v3'::text, 'v4'::text, 'v5'::text, 'v6'::text, 'v7'::text, 'v8'::text, 'v9'::text, 'v10'::text, 'v11'::text])))"
+        }
+      }
+    }
+  }
+}

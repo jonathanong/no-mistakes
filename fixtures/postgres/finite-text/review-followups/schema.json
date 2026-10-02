@@ -1,0 +1,80 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        },
+        "peer_status": {
+          "dataType": "text"
+        },
+        "foreign_status": {
+          "dataType": "text"
+        },
+        "generated_status": {
+          "dataType": "text",
+          "generated": "stored"
+        },
+        "bounded_state": {
+          "dataType": "varchar(12)"
+        },
+        "quoted_kind": {
+          "dataType": "text"
+        },
+        "malformed_state": {
+          "dataType": "character varying(x)"
+        }
+      },
+      "foreignKeys": {
+        "fk_status": {
+          "columns": [
+            "foreign_status"
+          ],
+          "referencedTable": "status_lookup",
+          "referencedColumns": [
+            "value"
+          ]
+        }
+      },
+      "checkConstraints": {
+        "ck_status_domain": {
+          "definition": "CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text])))",
+          "validated": true
+        },
+        "ck_status_state": {
+          "definition": "CHECK ((status IN ('sent', 'paid')))",
+          "validated": true
+        },
+        "ck_status_unvalidated": {
+          "definition": "CHECK ((status = 'deleted'::text))",
+          "validated": false
+        },
+        "ck_peer": {
+          "definition": "CHECK ((peer_status = ANY (ARRAY['sent'::text])))",
+          "validated": true
+        },
+        "ck_foreign": {
+          "definition": "CHECK ((foreign_status = ANY (ARRAY['sent'::text])))",
+          "validated": true
+        },
+        "ck_generated": {
+          "definition": "CHECK ((generated_status = ANY (ARRAY['sent'::text])))",
+          "validated": true
+        },
+        "ck_bounded": {
+          "definition": "CHECK ((bounded_state::text = ANY (ARRAY['open'::text, 'closed'::text])))",
+          "validated": true
+        },
+        "ck_quoted": {
+          "definition": "CHECK ((quoted_kind = 'O''Reilly'::text))",
+          "validated": true
+        },
+        "ck_malformed": {
+          "definition": "CHECK ((malformed_state = 'open'::text))",
+          "validated": true
+        }
+      }
+    }
+  }
+}

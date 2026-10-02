@@ -1,0 +1,77 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": {
+          "dataType": "invoice_statuses"
+        },
+        "invoice_status_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "invoice_status_id"
+          ],
+          "referencedTable": "invoice_statuses",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "plan_code": {
+          "dataType": "text"
+        },
+        "display_name": {
+          "dataType": "text"
+        },
+        "score": {
+          "dataType": "integer"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "plan_code"
+          ],
+          "referencedTable": "plans",
+          "referencedColumns": [
+            "code"
+          ]
+        }
+      },
+      "checkConstraints": {
+        "ck_code": {
+          "definition": "CHECK ((plan_code = 'free'::text))"
+        },
+        "ck_score": {
+          "definition": "CHECK ((score = ANY (ARRAY['-1'::integer, 0, 1])))"
+        },
+        "ck_status": {
+          "definition": "CHECK ((status <> ALL (ARRAY['deleted'::text])))"
+        },
+        "ck_mixed": {
+          "definition": "CHECK ((status = ANY (ARRAY[other_status, 'x'::text])))"
+        },
+        "ck_or": {
+          "definition": "CHECK (((kind <> 'refund'::text) OR (reason_code = 'fraud'::text)))"
+        },
+        "ck_len": {
+          "definition": "CHECK ((char_length(label) <= 100))"
+        }
+      }
+    },
+    "webhook_deliveries": {
+      "columns": {
+        "event_type": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

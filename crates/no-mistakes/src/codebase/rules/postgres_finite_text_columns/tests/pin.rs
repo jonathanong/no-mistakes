@@ -26,6 +26,14 @@ fn equality_in_any_and_null_pin_literals() {
     );
     eq(r#""Kind" = 'special'"#, "Kind", Some(&["special"]));
     eq("STATUS = 'draft'", "status", Some(&["draft"]));
+    eq("status IN ('open', lower('CLOSED'))", "status", None);
+    eq("status::char(1) = 'x'::text", "status", None);
+    eq("status::varchar = 'open'::text", "status", Some(&["open"]));
+    eq(
+        "status = ANY ((ARRAY['open', 'closed']::text[]))",
+        "status",
+        Some(&["open", "closed"]),
+    );
 }
 
 #[test]
@@ -37,6 +45,11 @@ fn or_requires_every_branch_and_and_keeps_the_first_list() {
     );
     eq("(kind = 'a') OR (score > 1)", "kind", None);
     eq("(score > 1) AND (kind = 'b')", "kind", Some(&["b"]));
+    eq(
+        "status IN ('a', 'b') AND status IN ('b', 'c')",
+        "status",
+        Some(&["a", "b"]),
+    );
     eq("(kind IS NULL) AND (kind IS NULL)", "kind", Some(&[]));
     eq("(((kind = 'a')))", "kind", Some(&["a"]));
     eq(

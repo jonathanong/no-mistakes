@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "archive_invoices": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = 'old'::text))"
+        }
+      }
+    }
+  }
+}

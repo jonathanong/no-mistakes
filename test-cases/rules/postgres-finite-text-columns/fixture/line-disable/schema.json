@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": { "dataType": "text" }, // no-mistakes-disable-line postgres-finite-text-columns
+        "state": { "dataType": "text" }
+      },
+      "checkConstraints": {
+        "ck_status": { "definition": "CHECK ((status = 'open'::text))" },
+        "ck_state": { "definition": "CHECK ((state = 'paid'::text))" }
+      }
+    }
+  }
+}

@@ -53,6 +53,7 @@ pub struct CatalogForeignKey {
 pub struct CatalogCheck {
     pub name: String,
     pub definition: String,
+    pub validated: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

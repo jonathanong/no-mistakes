@@ -1,0 +1,41 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'paid'::text])))"
+        }
+      }
+    },
+    "bills": {
+      "columns": {
+        "state": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((state = ANY (ARRAY['paid'::text, 'draft'::text, 'sent'::text])))"
+        }
+      }
+    },
+    "quotes": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status IN ('sent', 'paid', 'draft')))"
+        }
+      }
+    }
+  }
+}

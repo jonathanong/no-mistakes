@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "jobs": {
+      "columns": {
+        "scope": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((((scope = 'global'::text) AND (tenant_id IS NULL)) OR ((scope = 'tenant'::text) AND (tenant_id IS NOT NULL))))"
+        }
+      }
+    }
+  }
+}

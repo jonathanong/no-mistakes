@@ -1,0 +1,20 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck_narrow": {
+          "definition": "CHECK (((status = 'sent'::text) OR (status = 'paid'::text)))"
+        },
+        "ck_domain": {
+          "definition": "CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'paid'::text])))"
+        }
+      }
+    }
+  }
+}

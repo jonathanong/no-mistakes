@@ -1,0 +1,40 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "order_links": {
+      "columns": {
+        "order_id": {
+          "dataType": "uuid"
+        },
+        "link_kind": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "order_id",
+            "link_kind"
+          ],
+          "referencedTable": "orders",
+          "referencedColumns": [
+            "id",
+            "kind"
+          ]
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((link_kind = 'order'::text))"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "plan_type": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

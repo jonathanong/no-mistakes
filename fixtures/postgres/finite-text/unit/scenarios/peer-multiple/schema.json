@@ -1,0 +1,53 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "a": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "b": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "c": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "d": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    }
+  }
+}

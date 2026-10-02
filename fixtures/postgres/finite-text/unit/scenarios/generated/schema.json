@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "entities": {
+      "columns": {
+        "status": {
+          "dataType": "text",
+          "generated": "stored"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = 'on'::text))"
+        }
+      }
+    }
+  }
+}

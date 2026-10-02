@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "kind": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK (((kind IS NULL) OR (kind = ANY (ARRAY['a'::text, 'b'::text]))))"
+        }
+      }
+    }
+  }
+}

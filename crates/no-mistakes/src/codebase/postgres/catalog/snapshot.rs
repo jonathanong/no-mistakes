@@ -65,6 +65,12 @@ pub(super) struct SnapshotForeignKey {
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct SnapshotCheck {
     pub(super) definition: String,
+    #[serde(default = "default_validated")]
+    pub(super) validated: bool,
+}
+
+fn default_validated() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
