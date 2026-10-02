@@ -90,7 +90,7 @@ fn postgres_sql_shape_policy_flags_opt_in_shapes() {
     let body = stdout(&out);
     assert!(!out.status.success(), "{body}");
     assert!(body.contains("NOT IN (SELECT"), "{body}");
-    assert!(body.contains("COUNT(...) compared with 0/1"), "{body}");
+    assert!(body.contains("COUNT(*) compared with 0/1"), "{body}");
 }
 
 #[test]
