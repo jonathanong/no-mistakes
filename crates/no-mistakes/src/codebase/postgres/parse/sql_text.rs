@@ -188,3 +188,6 @@ pub(crate) fn normalize_copy_data(sql: &str) -> std::borrow::Cow<'_, str> {
     }
     std::borrow::Cow::Owned(String::from_utf8(bytes).unwrap())
 }
+
+#[cfg(test)]
+mod tests;

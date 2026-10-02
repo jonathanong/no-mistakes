@@ -1,0 +1,2 @@
+-- STDIN
+SELECT $tag$unterminated
