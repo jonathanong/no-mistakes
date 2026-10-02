@@ -89,7 +89,12 @@ fn words(sql: &str) -> Vec<Word> {
                 index = skip_block_comment(bytes, index, &mut line);
             }
             quote @ (b'\'' | b'"') => index = skip_quoted(bytes, index, quote, &mut line),
-            b'$' => {
+            // `foo$tag$` is an identifier, not a dollar-quote opener.
+            b'$' if index == 0
+                || !(bytes[index - 1].is_ascii_alphanumeric()
+                    || bytes[index - 1] == b'_'
+                    || bytes[index - 1] >= 0x80) =>
+            {
                 if let Some(end) = skip_dollar(bytes, index, &mut line) {
                     index = end;
                 } else {
