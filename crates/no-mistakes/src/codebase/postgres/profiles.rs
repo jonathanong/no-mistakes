@@ -176,16 +176,34 @@ pub(crate) fn prepare_rule_sql_facts(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
 ) -> Result<crate::codebase::check_facts::CheckFactMap> {
-    let profiles = configured_embedded_sql_options(config, rule_ids)?;
+    let dml_ids: Vec<_> = rule_ids
+        .iter()
+        .copied()
+        .filter(|id| PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id))
+        .collect();
+    let profiles = configured_embedded_sql_options(config, &dml_ids)?;
+    let patterns = sql_patterns(config, rule_ids)?;
+    let selected = if dml_ids.is_empty() {
+        super::postgres_sql_paths(
+            root,
+            files,
+            &super::PostgresSchemaOptions {
+                sql_include: patterns.clone(),
+            },
+        )
+        .unwrap_or_default()
+    } else {
+        files.to_vec()
+    };
     Ok(
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
-            files.to_vec(),
+            selected,
             Vec::new(),
             crate::codebase::check_facts::CheckFactPlan {
                 postgres_schema: true,
-                postgres_dml: true,
-                postgres_sql_include: sql_patterns(config, rule_ids)?,
+                postgres_dml: !dml_ids.is_empty(),
+                postgres_sql_include: patterns,
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,

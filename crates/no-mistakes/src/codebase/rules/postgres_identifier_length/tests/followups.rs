@@ -1,6 +1,30 @@
 use super::*;
 
 #[test]
+fn schema_only_preparation_keeps_embedded_typescript_out_of_scope() {
+    let sql = unit("max-bytes.sql");
+    let ts = unit("ignored.ts");
+    let paths = [sql.clone(), ts.clone()];
+    let root = sql.parent().unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&paths);
+    let config = config("maxBytes: 10\n");
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        &paths,
+        std::sync::Arc::clone(&sources),
+        &config,
+        &[RULE_ID],
+    )
+    .unwrap();
+    assert!(facts.postgres_schema_file(&sql).is_ok());
+    assert!(facts.postgres_statements(&sql, None).is_err());
+    assert!(facts
+        .postgres_statements(&ts, Some(&Default::default()))
+        .is_err());
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
 fn configured_schema_rules_borrow_one_prepared_migration_projection() {
     let path = unit("declaration-locations.sql");
     let root = path.parent().unwrap();

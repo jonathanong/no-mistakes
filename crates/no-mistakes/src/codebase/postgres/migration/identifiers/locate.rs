@@ -72,6 +72,9 @@ impl Locations {
                 continue;
             };
             let kind = kind.value.to_ascii_lowercase();
+            if kind == "procedure" && word(Some(token), "ALTER") {
+                continue;
+            }
             if ![
                 "table",
                 "index",
