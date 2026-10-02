@@ -54,7 +54,7 @@ fn postgres_rules_share_one_prepared_ts_parse() {
 }
 
 #[test]
-fn legacy_postgres_rule_does_not_request_an_unused_prepared_projection() {
+fn postgres_offset_rule_reuses_the_requested_prepared_projection() {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres/no-offset/legacy-single-pass");
     let fixture = crate::test_support::materialize_saved_fixture(&source);
@@ -68,10 +68,10 @@ fn legacy_postgres_rule_does_not_request_an_unused_prepared_projection() {
     let work = observer.snapshot().work;
 
     assert!(result.rules.is_empty(), "{:#?}", result.rules);
-    assert_eq!(work.get("parse.files"), None, "{work:#?}");
+    assert_eq!(work.get("parse.files"), Some(&1), "{work:#?}");
     assert_eq!(
         work.get("parse.files_after_extract"),
-        Some(&0),
-        "legacy rules must not trigger an unused prepared extraction: {work:#?}"
+        Some(&1),
+        "the prepared SQL projection parses its host exactly once: {work:#?}"
     );
 }

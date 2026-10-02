@@ -35,10 +35,17 @@ pub(super) fn collect(
 pub(crate) fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStatementFileFacts> {
     file.calls
         .iter()
-        .filter(|call| call.kind != EmbeddedSqlKind::Dynamic)
         .filter_map(|call| {
             let sql = call.sql_text.as_deref()?;
             let mut facts = extract_sql_statement_facts(sql);
+            if call.kind == EmbeddedSqlKind::Dynamic {
+                // Recovered interpolation text can prove OFFSET syntax, while
+                // other rules keep their existing dynamic-SQL failure policy.
+                facts = SqlStatementFileFacts {
+                    offset_uses: facts.offset_uses,
+                    ..Default::default()
+                };
+            }
             facts.path = file.path.clone();
             rebase_embedded_lines(&mut facts, call);
             Some(facts)
@@ -53,6 +60,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     } as usize;
     facts.origin_line = base;
     let shift = base.saturating_sub(1);
+    for offset in &mut facts.offset_uses {
+        offset.line = offset.line.saturating_add(shift);
+    }
     for insert in &mut facts.inserts {
         insert.line = insert.line.saturating_add(shift);
     }

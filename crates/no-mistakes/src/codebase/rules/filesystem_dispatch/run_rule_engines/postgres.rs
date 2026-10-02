@@ -13,6 +13,7 @@ use schema::{
     column_requires_trigger, conflict_ordering, duplicate_function_body, lock_ordering,
     required_comments,
 };
+mod no_offset;
 
 use naming::{
     array_columns, column_naming, explicit_columns, finite_text, object_naming,
@@ -56,9 +57,7 @@ pub(super) fn run(
             )
         }
         POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
-        POSTGRES_NO_OFFSET => {
-            postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
-        }
+        POSTGRES_NO_OFFSET => no_offset::run(root, config, files, sources, facts),
         POSTGRES_IDENTIFIER_LENGTH => {
             prepared_schema::identifier_length(root, config, files, sources, facts)
         }

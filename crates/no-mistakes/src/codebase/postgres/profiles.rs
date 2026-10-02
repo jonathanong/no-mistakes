@@ -14,6 +14,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-generated-column-predicates",
     "postgres-explicit-columns",
+    "postgres-no-offset",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.
@@ -156,7 +157,9 @@ fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<Stri
         for rule in config.rule_applications(id) {
             let options: SqlOptions = rule.try_rule_options()?;
             patterns.extend(
-                if options.sql_include.is_empty() && *id != "postgres-explicit-columns" {
+                if options.sql_include.is_empty()
+                    && !matches!(*id, "postgres-explicit-columns" | "postgres-no-offset")
+                {
                     super::PostgresSchemaOptions::default().sql_include
                 } else {
                     options.sql_include

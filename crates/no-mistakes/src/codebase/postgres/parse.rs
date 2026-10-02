@@ -3,7 +3,10 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::{Parser, ParserError};
 use std::fmt;
 
+mod copy_data;
 mod lenient;
+mod sql_text;
+pub(super) use sql_text::normalize_copy_data;
 pub(super) mod unicode;
 mod unicode_decode;
 
@@ -40,7 +43,8 @@ impl From<ParserError> for PostgresParseError {
 
 /// Parse `sql` with the PostgreSQL dialect.
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
-    Parser::parse_sql(&PostgreSqlDialect {}, sql).map_err(PostgresParseError::from)
+    Parser::parse_sql(&PostgreSqlDialect {}, &normalize_copy_data(sql))
+        .map_err(PostgresParseError::from)
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.

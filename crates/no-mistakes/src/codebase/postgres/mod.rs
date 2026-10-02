@@ -53,7 +53,9 @@ pub use embedded::{
 };
 pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
 pub use migration::extract_migration_facts;
-pub use offset::{sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse};
+pub use offset::{
+    sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse, SqlOffsetFact,
+};
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use profiles::{

@@ -15,6 +15,8 @@ pub struct SqlStatementFileFacts {
     pub returning_stars: Vec<SqlStarProjectionFact>,
     /// Bare column comparisons on UPDATE/DELETE WHERE and JOIN ON predicates.
     pub mutation_column_uses: Vec<SqlColumnUseFact>,
+    /// Executed OFFSET occurrences in source order.
+    pub offset_uses: Vec<super::offset::SqlOffsetFact>,
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,

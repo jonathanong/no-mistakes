@@ -17,7 +17,7 @@ use rewrite::{
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, and `CREATE [UNIQUE] INDEX` after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    let located = super::unicode::tokenize_with_location(sql, false);
+    let located = super::unicode::tokenize_with_location(&super::normalize_copy_data(sql), false);
     let mut tokens = located.iter().map(|token| token.token.clone()).collect();
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_referential_set_column_lists(&mut tokens);
