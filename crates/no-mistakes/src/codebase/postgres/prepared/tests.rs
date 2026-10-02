@@ -26,6 +26,7 @@ fn projections_are_prepared_once_and_borrowed_for_repeated_consumers() {
             CheckFactPlan {
                 postgres_schema: true,
                 postgres_dml: true,
+                postgres_sql_include: vec!["**/*.sql".into()],
                 embedded_sql: true,
                 embedded_sql_options: profiles.clone(),
                 ..Default::default()
@@ -81,6 +82,7 @@ fn request_preparation_preserves_io_failures_and_demand() {
     let plan = CheckFactPlan {
         postgres_schema: true,
         postgres_dml: true,
+        postgres_sql_include: vec!["**/*.sql".into()],
         ..Default::default()
     };
     let facts = prepare(
@@ -105,4 +107,47 @@ fn request_preparation_preserves_io_failures_and_demand() {
     );
     assert!(empty.schema.is_empty());
     assert!(empty.statements.is_empty());
+}
+
+#[test]
+fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
+    let root = root();
+    let sql = root.join("sql/schema.sql");
+    let ts = root.join("queries.ts");
+    let sources = crate::codebase::rules::source_store_for_files(&[sql.clone(), ts.clone()]);
+    let schema = prepare(
+        &root,
+        std::slice::from_ref(&sql),
+        &sources,
+        &CheckFactPlan {
+            postgres_schema: true,
+            postgres_sql_include: vec!["**/*.sql".into()],
+            ..Default::default()
+        },
+        &CheckFactMap::default(),
+    );
+    assert_eq!(
+        schema.schema(&sql).unwrap().tables[0].table_name,
+        "snapshot"
+    );
+    assert!(schema.statements.is_empty());
+    let dml = prepare(
+        &root,
+        &[sql.clone(), ts.clone()],
+        &sources,
+        &CheckFactPlan {
+            postgres_dml: true,
+            postgres_sql_include: vec!["**/*.sql".into()],
+            embedded_sql_options: vec![EmbeddedSqlOptions::default()],
+            ..Default::default()
+        },
+        &CheckFactMap::default(),
+    );
+    assert!(dml.schema.is_empty());
+    assert!(dml.statements(&sql, None).is_ok());
+    assert!(dml
+        .statements(&ts, Some(&EmbeddedSqlOptions::default()))
+        .unwrap_err()
+        .to_string()
+        .contains("prepared facts are missing"));
 }

@@ -112,11 +112,9 @@ fn collect_set(
                 walk_expr(sql, expr, ctes, in_insert_select, out);
             }
         }
-        SetExpr::Insert(statement) => {
-            if let Statement::Insert(insert) = statement {
-                if let Some(source) = insert.source.as_deref() {
-                    collect_query(sql, source, ctes, true, false, out);
-                }
+        SetExpr::Insert(Statement::Insert(insert)) => {
+            if let Some(source) = insert.source.as_deref() {
+                collect_query(sql, source, ctes, true, false, out);
             }
         }
         _ => {}

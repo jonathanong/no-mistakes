@@ -119,3 +119,15 @@ fn relation_lines_are_per_occurrence_and_rebased_to_host_file() {
         [5, 7, 9]
     );
 }
+
+#[test]
+fn prepared_scans_reject_an_absent_request() {
+    let root = fixture("deferred");
+    let file = root.join("sql/self-in.sql");
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
+    let opts = compile_options(&serde_yaml::from_str(REQUIRED).unwrap()).unwrap();
+    let error = scan::scan(&root, &opts, &[file], &sources, None).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("prepared PostgreSQL facts are required"));
+}

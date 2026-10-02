@@ -121,6 +121,6 @@ fn collect_check_facts_inner(
         postgres_schema_catalogs,
     };
     map.postgres =
-        crate::codebase::postgres::prepared::prepare(&root, &map.files, &sources, &plan, &map);
+        crate::codebase::postgres::prepared::prepare(root, &map.files, &sources, &plan, &map);
     map
 }

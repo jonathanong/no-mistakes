@@ -160,7 +160,7 @@ fn column_hit(expr: &Expr, ctx: &Ctx<'_>) -> Option<Hit> {
         }
         Expr::CompoundIdentifier(parts) => {
             let (qualifier, column) = refs::qualifier_and_column(parts)?;
-            refs::qualifier_matches(&qualifier, ctx).then(|| Hit {
+            refs::qualifier_matches(&qualifier, ctx).then_some(Hit {
                 column,
                 proven: true,
             })

@@ -41,16 +41,16 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
     for statement in statements {
         facts.declared_identifiers.extend(identifiers::collect(
             sql,
-            &statement,
+            statement,
             &mut identifier_from,
         ));
-        statements::record(sql, &statement, &mut facts);
+        statements::record(sql, statement, &mut facts);
         match statement {
             Statement::CreateIndex(index) => {
                 create_index_n += 1;
                 facts
                     .indexes
-                    .push(indexes::from_create_index(sql, create_index_n, &index));
+                    .push(indexes::from_create_index(sql, create_index_n, index));
             }
             Statement::Drop {
                 object_type: ObjectType::Index,
@@ -60,7 +60,7 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
                 drop_index_n += 1;
                 facts
                     .dropped_indexes
-                    .extend(indexes::from_drop_index(sql, drop_index_n, &names));
+                    .extend(indexes::from_drop_index(sql, drop_index_n, names));
             }
             Statement::Drop {
                 object_type: ObjectType::Table,
@@ -70,23 +70,23 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
                 drop_table_n += 1;
                 facts
                     .dropped_tables
-                    .extend(indexes::from_drop_table(sql, drop_table_n, &names));
+                    .extend(indexes::from_drop_table(sql, drop_table_n, names));
             }
             Statement::CreateTable(table) => {
                 let table_name = relation_name(&table.name);
                 facts.indexes.extend(indexes::covering_from_table(
                     &qualified_relation(&table.name),
-                    &table,
+                    table,
                 ));
                 constraints::collect_create_table_fks(
                     sql,
                     &table_name,
-                    &table,
+                    table,
                     &mut facts.foreign_keys,
                 );
             }
             Statement::AlterTable(alter) => {
-                constraints::collect_alter_table(sql, &alter, &mut facts)
+                constraints::collect_alter_table(sql, alter, &mut facts)
             }
             _ => {}
         }

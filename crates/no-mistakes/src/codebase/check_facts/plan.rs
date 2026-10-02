@@ -28,6 +28,7 @@ pub struct CheckFactPlan {
     /// Repository-relative schema snapshots loaded once at the request boundary.
     pub postgres_schema_catalog_paths: Vec<String>,
     pub postgres_dml: bool,
+    /// Union of SQL globs resolved from configured rule defaults. Empty selects no SQL files.
     pub postgres_sql_include: Vec<String>,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,

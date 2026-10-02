@@ -26,17 +26,12 @@ pub(crate) fn prepare(
 ) -> PreparedPostgresFacts {
     let mut out = PreparedPostgresFacts::default();
     if plan.postgres_schema || plan.postgres_dml {
-        let patterns = if plan.postgres_sql_include.is_empty() {
-            super::PostgresSchemaOptions::default().sql_include
-        } else {
-            plan.postgres_sql_include.clone()
-        };
         // Invalid globs are diagnosed when each rule validates/selects its paths.
         let paths = super::postgres_sql_paths(
             root,
             files,
             &super::PostgresSchemaOptions {
-                sql_include: patterns,
+                sql_include: plan.postgres_sql_include.clone(),
             },
         )
         .unwrap_or_default();
