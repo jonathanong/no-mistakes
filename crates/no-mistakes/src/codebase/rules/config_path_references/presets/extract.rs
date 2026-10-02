@@ -170,6 +170,7 @@ fn knip_workspace(extracted: &mut Vec<Extracted>, workspace: &str, config: &Valu
             if is_optional_glob(&path) {
                 continue;
             }
+            let path = path.strip_suffix('!').unwrap_or(&path);
             extracted.push(Extracted {
                 field: format!("workspaces.{workspace}.{key}[{index}]"),
                 value: format!("{prefix}{path}"),

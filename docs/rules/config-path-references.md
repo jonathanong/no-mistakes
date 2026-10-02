@@ -3,7 +3,9 @@
 Validates path strings stored inside structured YAML or JSON config files.
 `keys` reads dotted string or string-array fields. `presets` extract the
 required path fields for well-known configs (not optional `!` / `node_modules`
-/ `.git` ignore globs).
+/ `.git` ignore globs). For Knip, a trailing `!` production marker is removed
+from workspace `entry` and `project` paths before required-path validation;
+leading-negation selectors remain ignored.
 
 ## Why and when
 

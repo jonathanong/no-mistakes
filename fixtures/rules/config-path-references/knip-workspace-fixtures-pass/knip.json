@@ -3,7 +3,14 @@
     "backend/dependency-cruiser-rules": {
       "entry": [
         "__tests__/fixtures/**/*.mts",
-        "__tests__/fixtures/build-insert-query/direct-import.mts"
+        "__tests__/fixtures/build-insert-query/direct-import.mts",
+        "__tests__/fixtures/**/*.mts!",
+        "__tests__/fixtures/build-insert-query/direct-import.mts!",
+        "!__tests__/fixtures/ignored.mts!"
+      ],
+      "project": [
+        "__tests__/fixtures/build-insert-query/*.mts!",
+        "__tests__/fixtures/build-insert-query/aliased-import.mts!"
       ]
     }
   }
