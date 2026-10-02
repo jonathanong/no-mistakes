@@ -65,7 +65,7 @@ that names a generated column already found in schema SQL is a stale finding.
 SELECT id, created_at FROM orders ORDER BY id DESC LIMIT 20;
 SELECT id FROM orders WHERE id > $1;
 SELECT id FROM orders WHERE created_at IS NULL;
-SELECT date_trunc('day', created_at) AS d, COUNT(*) FROM orders GROUP BY d;
+SELECT min(created_at) FROM orders;
 SELECT id FROM invoices ORDER BY created_at;
 ```
 
