@@ -4,12 +4,14 @@ use super::SqlColumnMetadata;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlTableSchemaEvent {
     Create {
+        if_not_exists: bool,
         source_order: Vec<usize>,
         table: String,
         unqualified_table: String,
         columns: Vec<SqlColumnMetadata>,
     },
     AddColumn {
+        if_not_exists: bool,
         source_order: Vec<usize>,
         table: String,
         unqualified_table: String,

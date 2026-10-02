@@ -171,3 +171,6 @@ whose writes are validated elsewhere.
 which SQL statement kinds are allowed in a file.
 [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md) checks that a trigger-maintained column
 actually has its trigger. This rule only rejects writes to the listed names.
+
+Catalog history preserves existing definitions for `CREATE TABLE IF NOT EXISTS`
+and `ADD COLUMN IF NOT EXISTS`; these statements add definitions only when absent.

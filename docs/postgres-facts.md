@@ -456,3 +456,5 @@ each builder origin, and reuses the same statement facts for repeated consumers.
 Executed fragments use the prepared executor statements instead. Standalone
 and aggregate checks use this same request-owned preparation. Other rules do
 not opt into fragment parsing.
+
+Ordered CREATE and ADD COLUMN events retain `if_not_exists` so catalog consumers can preserve existing definitions when a migration retries DDL.

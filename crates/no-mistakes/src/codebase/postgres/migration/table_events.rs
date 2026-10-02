@@ -17,6 +17,7 @@ pub(super) fn record(
 ) {
     match statement {
         Statement::CreateTable(table) => out.push(SqlTableSchemaEvent::Create {
+            if_not_exists: table.if_not_exists,
             source_order: positions.take("CREATE", &object_name_key(&table.name)),
             table: object_name_key(&table.name),
             unqualified_table: super::relation(&table.name),
@@ -34,8 +35,14 @@ pub(super) fn record(
         Statement::AlterTable(alter) => {
             let source_order = positions.take("ALTER", &object_name_key(&alter.name));
             for operation in &alter.operations {
-                if let AlterTableOperation::AddColumn { column_def, .. } = operation {
+                if let AlterTableOperation::AddColumn {
+                    column_def,
+                    if_not_exists,
+                    ..
+                } = operation
+                {
                     out.push(SqlTableSchemaEvent::AddColumn {
+                        if_not_exists: *if_not_exists,
                         source_order: source_order.clone(),
                         table: object_name_key(&alter.name),
                         unqualified_table: super::relation(&alter.name),
