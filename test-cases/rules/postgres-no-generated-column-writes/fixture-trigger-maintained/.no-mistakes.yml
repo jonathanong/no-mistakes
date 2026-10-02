@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options:
+      triggerMaintainedColumns: [updated_at]

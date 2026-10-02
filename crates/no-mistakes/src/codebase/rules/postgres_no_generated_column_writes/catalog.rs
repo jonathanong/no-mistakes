@@ -44,6 +44,72 @@ pub(super) fn catalog_from_facts(
     catalog
 }
 
+pub(super) fn trigger_catalog_from_facts(
+    schema: &[SqlSchemaFileFacts],
+    columns: &[String],
+) -> GeneratedTableColumns {
+    let mut catalog = GeneratedTableColumns::default();
+    for file in schema {
+        for table in &file.tables {
+            let generated: Vec<String> = table
+                .columns
+                .iter()
+                .filter(|column| {
+                    !column.is_generated
+                        && columns
+                            .iter()
+                            .any(|name| name.eq_ignore_ascii_case(&column.name))
+                })
+                .map(|column| column.name.to_ascii_lowercase())
+                .collect();
+            if generated.is_empty() {
+                continue;
+            }
+            catalog.insert_table(GeneratedTable {
+                name: table.table_name.clone(),
+                generated: generated.into_iter().collect(),
+                column_order: Some(
+                    table
+                        .columns
+                        .iter()
+                        .map(|column| column.name.to_ascii_lowercase())
+                        .collect(),
+                ),
+            });
+        }
+    }
+    catalog
+}
+
+pub(super) fn stale_trigger_findings(
+    schema: &[SqlSchemaFileFacts],
+    columns: &[String],
+) -> Vec<crate::codebase::rules::RuleFinding> {
+    columns
+        .iter()
+        .filter(|column| !schema_has_column(schema, column))
+        .map(|column| crate::codebase::rules::RuleFinding {
+            rule: super::RULE_ID.to_string(),
+            file: ".no-mistakes.yml".to_string(),
+            line: 1,
+            message: format!(
+                "stale triggerMaintainedColumns entry: `{column}` matches no column in schema SQL"
+            ),
+            import: Some(column.clone()),
+            target: Some(column.clone()),
+        })
+        .collect()
+}
+
+fn schema_has_column(schema: &[SqlSchemaFileFacts], name: &str) -> bool {
+    schema.iter().flat_map(|file| &file.tables).any(|table| {
+        table
+            .columns
+            .iter()
+            .any(|column| column.name.eq_ignore_ascii_case(name))
+    })
+}
+
 pub(super) fn stale_extra_findings(
     schema: &[SqlSchemaFileFacts],
     extras: &[ExtraGeneratedColumn],

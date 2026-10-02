@@ -40,6 +40,7 @@ rules:
       extraGeneratedColumns:
         - table: votes
           column: created_at
+      triggerMaintainedColumns: [updated_at]
 ```
 
 Counterexample: DML assigns a generated column.
@@ -80,8 +81,13 @@ and application writes must not try to supply their computed values.
 ## What it catches/requires
 
 `UPDATE`, `INSERT`, or `MERGE` statements must omit generated columns discovered
-from migration SQL or listed in `extraGeneratedColumns`. TypeScript executor
-calls and included SQL files are both analyzed where configured.
+from migration SQL or listed in `extraGeneratedColumns`. The same statements
+must omit columns listed in `triggerMaintainedColumns`, including
+`ON CONFLICT DO UPDATE SET updated_at = orders.updated_at`. That assignment
+looks like a no-op, but a `BEFORE UPDATE` trigger still fires and bumps the
+column. TypeScript executor calls and included SQL files are both analyzed
+where configured. A column that is both generated and listed uses the
+generated-column message.
 
 ## Options and defaults
 
@@ -100,6 +106,11 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   omitted or empty list defaults to `[query, read, write]`.
 - `extraGeneratedColumns` adds `{ table, column }` pairs to the generated
   column catalog. It defaults to an empty list.
+- `triggerMaintainedColumns` defaults to `[]`. A non-generated column whose
+  name matches an entry, on any table in schema SQL, is treated as set by the
+  database. An empty name or a case-insensitive duplicate is a config error.
+  An entry that matches no column is a stale finding. `[]` leaves today's
+  generated-column findings unchanged.
 
 ## Valid example
 
@@ -129,3 +140,5 @@ whose writes are validated elsewhere.
 [`postgres-no-add-column`](postgres-no-add-column.md) controls schema widening;
 [`postgres-sql-statement-policy`](postgres-sql-statement-policy.md) controls
 which SQL statement kinds are allowed in a file.
+`postgres-column-requires-trigger` checks that a trigger-maintained column
+actually has its trigger. This rule only rejects writes to the listed names.
