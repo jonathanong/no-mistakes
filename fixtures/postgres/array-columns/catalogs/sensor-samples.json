@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "sensors": {
+      "columns": {
+        "samples": {
+          "dataType": "smallint[]"
+        }
+      }
+    }
+  }
+}

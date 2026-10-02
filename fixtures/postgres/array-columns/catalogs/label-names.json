@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "labels": {
+      "columns": {
+        "names": {
+          "dataType": "character varying[]"
+        }
+      }
+    }
+  }
+}

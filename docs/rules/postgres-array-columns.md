@@ -40,6 +40,9 @@ configured lists and with catalog enum names is case-insensitive.
 
 The column is skipped when the element type is in `allowElementTypes`, or when
 `allowEnumElements` is set and the element type names a catalog enum.
+An unqualified element type matches a schema-qualified enum. A qualified
+element type matches only that full name, so `audit.report_types` is not the
+enum `public.report_types`.
 Otherwise it is reported. An element type in `neverAllowElementTypes` uses the
 never-allowed text. An `allow` entry cannot suppress that finding. The entry
 is reported as `allow entry <object> cannot excuse a <type>[] column` and is

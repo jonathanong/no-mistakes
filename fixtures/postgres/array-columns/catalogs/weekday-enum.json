@@ -1,0 +1,20 @@
+{
+  "formatVersion": 2,
+  "enums": {
+    "Weekday": {
+      "values": [
+        "mon",
+        "tue"
+      ]
+    }
+  },
+  "tables": {
+    "shipments": {
+      "columns": {
+        "weekdays": {
+          "dataType": "weekday[]"
+        }
+      }
+    }
+  }
+}

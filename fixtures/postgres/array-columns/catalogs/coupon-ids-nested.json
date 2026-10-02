@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "columns": {
+        "coupon_ids": {
+          "dataType": "uuid[][]"
+        }
+      }
+    }
+  }
+}

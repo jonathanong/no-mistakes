@@ -75,8 +75,10 @@ fn skipped(element: &str, compiled: &Compiled, enums: &BTreeSet<String>) -> bool
         return false;
     }
     let lower = element.to_ascii_lowercase();
-    let tail = unqualified(&lower);
-    enums.contains(&lower) || enums.contains(tail)
+    if lower.contains('.') {
+        return enums.contains(&lower);
+    }
+    enums.contains(&lower) || enums.contains(unqualified(&lower))
 }
 
 fn enum_names(catalog: &SchemaCatalog) -> BTreeSet<String> {
