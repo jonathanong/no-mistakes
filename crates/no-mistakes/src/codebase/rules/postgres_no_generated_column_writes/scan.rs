@@ -131,7 +131,8 @@ fn extend_writes(
     // Both column kinds share this parse; the generated catalog only classifies hits.
     for write in find_generated_column_writes(sql, catalog) {
         let render = if generated
-            .get(&write.table)
+            .get_exact(&write.table)
+            .or_else(|| generated.get(&write.table))
             .is_some_and(|table| table.generated.contains(&write.column.to_ascii_lowercase()))
         {
             finding

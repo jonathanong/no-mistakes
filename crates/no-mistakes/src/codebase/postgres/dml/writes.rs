@@ -15,6 +15,7 @@ pub use insert::positional_insert_hits;
 pub struct GeneratedTableColumns {
     tables: BTreeMap<String, GeneratedTable>,
     relations: BTreeMap<String, BTreeSet<String>>,
+    preferred: BTreeMap<String, String>,
 }
 
 /// Generated columns for one table, plus CREATE TABLE order when known.
@@ -38,24 +39,25 @@ impl GeneratedTableColumns {
     }
 
     pub fn insert_table(&mut self, table: GeneratedTable) {
-        let key = table.name.to_ascii_lowercase();
-        let base = key.rsplit('.').next().unwrap_or(&key).to_string();
+        let key = catalog_key(&table.name);
+        let base = crate::codebase::postgres::idents::relation_suffix_name(&key);
         self.register_relation(&key, &base);
         self.insert_table_with_key(&key, table);
     }
 
     pub(crate) fn register_relation(&mut self, key: &str, base: &str) {
         self.relations
-            .entry(base.to_ascii_lowercase())
+            .entry(crate::codebase::postgres::idents::relation_part_key(base))
             .or_default()
-            .insert(key.to_ascii_lowercase());
+            .insert(catalog_key(key));
     }
 
     pub(crate) fn display_name(&self, key: &str, base: &str) -> String {
         if self
             .relations
-            .get(&base.to_ascii_lowercase())
+            .get(&crate::codebase::postgres::idents::relation_part_key(base))
             .is_some_and(|keys| keys.len() > 1)
+            || key.contains('"')
         {
             key.to_string()
         } else {
@@ -65,7 +67,7 @@ impl GeneratedTableColumns {
 
     pub(crate) fn insert_table_with_key(&mut self, key: &str, table: GeneratedTable) {
         self.tables
-            .entry(key.to_ascii_lowercase())
+            .entry(catalog_key(key))
             .and_modify(|existing| {
                 existing.generated.extend(table.generated.iter().cloned());
                 if existing.column_order.is_none() {
@@ -82,16 +84,32 @@ impl GeneratedTableColumns {
                 .or_default()
                 .extend(keys.iter().cloned());
         }
+        self.preferred.extend(other.preferred.clone());
         for (key, table) in &other.tables {
             self.insert_table_with_key(key, table.clone());
         }
     }
 
+    pub(crate) fn prefer_relation(&mut self, key: &str, base: &str) {
+        self.preferred.insert(
+            crate::codebase::postgres::idents::relation_part_key(base),
+            catalog_key(key),
+        );
+    }
+
+    pub(crate) fn get_exact(&self, table: &str) -> Option<&GeneratedTable> {
+        self.tables.get(&catalog_key(table))
+    }
+
     /// Resolve an exact relation or a unique unqualified name.
     pub fn get(&self, table: &str) -> Option<&GeneratedTable> {
-        let key = table.to_ascii_lowercase();
+        let key = catalog_key(table);
+        if let Some(preferred) = self.preferred.get(&key) {
+            return self.tables.get(preferred);
+        }
         self.tables.get(&key).or_else(|| {
-            if let Some((_, base)) = key.rsplit_once('.') {
+            let base = crate::codebase::postgres::idents::relation_suffix_key(&key);
+            if base != key {
                 // Preserve legacy public catalogs populated with unqualified names.
                 return self.tables.get(base);
             }
@@ -103,11 +121,15 @@ impl GeneratedTableColumns {
     }
 
     pub fn contains_table(&self, table: &str) -> bool {
-        let key = table.to_ascii_lowercase();
+        let key = catalog_key(table);
         self.tables.contains_key(&key)
             || self
                 .relations
                 .get(&key)
+                .or_else(|| {
+                    self.relations
+                        .get(&crate::codebase::postgres::idents::relation_part_key(table))
+                })
                 .is_some_and(|keys| keys.iter().any(|key| self.tables.contains_key(key)))
     }
 }
@@ -134,18 +156,14 @@ pub fn find_generated_column_writes(
         collect_statement_writes(statement, catalog, &mut writes);
     }
     writes.sort_by(|left, right| {
-        left.table
-            .to_ascii_lowercase()
-            .cmp(&right.table.to_ascii_lowercase())
-            .then_with(|| {
-                left.column
-                    .to_ascii_lowercase()
-                    .cmp(&right.column.to_ascii_lowercase())
-            })
+        left.table.cmp(&right.table).then_with(|| {
+            left.column
+                .to_ascii_lowercase()
+                .cmp(&right.column.to_ascii_lowercase())
+        })
     });
     writes.dedup_by(|left, right| {
-        left.table.eq_ignore_ascii_case(&right.table)
-            && left.column.eq_ignore_ascii_case(&right.column)
+        left.table == right.table && left.column.eq_ignore_ascii_case(&right.column)
     });
     writes
 }
@@ -165,3 +183,11 @@ fn collect_statement_writes(
 
 #[cfg(test)]
 mod tests;
+
+fn catalog_key(value: &str) -> String {
+    if value.contains('"') {
+        value.to_string()
+    } else {
+        value.to_ascii_lowercase()
+    }
+}

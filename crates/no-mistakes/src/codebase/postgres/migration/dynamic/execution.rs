@@ -40,7 +40,7 @@ impl Scope {
 }
 
 fn control(token: &TokenWithSpan) -> Option<&'static str> {
-    ["BEGIN", "IF", "CASE", "LOOP"]
+    ["BEGIN", "IF", "CASE", "LOOP", "EXCEPTION"]
         .into_iter()
         .find(|kind| word(token, kind))
 }

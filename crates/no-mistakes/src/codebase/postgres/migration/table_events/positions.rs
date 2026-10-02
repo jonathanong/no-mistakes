@@ -1,3 +1,4 @@
+use super::transactions::{self, Marker};
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -5,11 +6,12 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 pub(crate) struct Positions(
     BTreeMap<(String, String), VecDeque<Vec<usize>>>,
     BTreeSet<Vec<usize>>,
+    Vec<Marker>,
 );
 
 impl Positions {
     pub(crate) fn new(sql: &str) -> Self {
-        let mut positions = Self(BTreeMap::new(), BTreeSet::new());
+        let mut positions = Self(BTreeMap::new(), BTreeSet::new(), Vec::new());
         let tokens = super::super::super::parse::unicode::tokenize_raw_unicode(sql);
         for (ordinal, statement) in tokens
             .split(|token| matches!(token.token, Token::SemiColon))
@@ -19,6 +21,9 @@ impl Positions {
                 .iter()
                 .filter(|token| !matches!(token.token, Token::Whitespace(_)))
                 .collect();
+            if let Some(marker) = transactions::parse(&code, vec![ordinal]) {
+                positions.2.push(marker);
+            }
             positions.record(&code, &[ordinal]);
             if code.first().is_some_and(|token| word(token, "DO")) {
                 for token in &code {
@@ -55,6 +60,21 @@ impl Positions {
 
     pub(super) fn executed(&self, order: &[usize]) -> bool {
         !self.1.contains(order)
+    }
+
+    pub(in super::super) fn apply_transaction_projection(
+        &self,
+        events: &mut Vec<crate::codebase::postgres::SqlTableSchemaEvent>,
+    ) {
+        events.sort_by(|left, right| left.source_order().cmp(right.source_order()));
+        let orders = events
+            .iter()
+            .map(|event| event.source_order())
+            .collect::<Vec<_>>();
+        let retained = transactions::retained_events(&orders, &self.2);
+        drop(orders);
+        let mut retained = retained.into_iter();
+        events.retain(|_| retained.next().unwrap_or(true));
     }
 
     fn record(&mut self, tokens: &[&TokenWithSpan], order: &[usize]) {

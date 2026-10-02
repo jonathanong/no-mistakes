@@ -1,0 +1,11 @@
+UPDATE orders SET computed = 1;
+UPDATE public.orders SET computed = 1;
+UPDATE pg_temp.orders SET computed = 1;
+UPDATE public.orders SET id = 1;
+UPDATE same SET computed = 1;
+UPDATE public.same SET computed = 1;
+UPDATE audit.unique_orders SET computed = 1;
+UPDATE unique_orders SET computed = 1;
+UPDATE external_orders SET computed = 1;
+UPDATE "public.orders" SET computed = 1;
+UPDATE outside.external_orders SET computed = 1;

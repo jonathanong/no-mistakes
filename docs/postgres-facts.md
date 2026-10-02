@@ -469,3 +469,11 @@ still inspect routine bodies. Executed events retain top-level and immediate DO
 DDL, excluding dormant function/procedure definitions and conditional branches.
 
 ADD COLUMN events retain `table_if_exists` alongside column-level `if_not_exists`.
+
+`relation_key` encodes identifier components without conflating quoted dots with
+qualification; `table` retains its legacy decoded spelling. CREATE events retain
+`temporary`, and live write catalogs project those relations in `pg_temp`.
+
+Executed table events discard changes rolled back within the SQL source, including
+`ROLLBACK TO SAVEPOINT`. `COMMIT`, transaction `END`, and released savepoints
+retain their changes. Broad policy facts continue to describe rolled-back DDL.

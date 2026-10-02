@@ -108,9 +108,7 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
         dynamic::remap_fact_lines(&mut dynamic_facts, &dynamic_sql);
         merge_dynamic_facts(&mut facts, dynamic_facts);
     }
-    facts
-        .table_events
-        .sort_by(|left, right| left.source_order().cmp(right.source_order()));
+    table_positions.apply_transaction_projection(&mut facts.table_events);
     facts
 }
 

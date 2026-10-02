@@ -70,3 +70,51 @@ fn live_events_exclude_dormant_and_conditional_ddl_but_preserve_policy_facts() {
         .iter()
         .any(|column| column.column_name == "dormant_column"));
 }
+
+#[test]
+fn transaction_projection_keeps_only_committed_table_events() {
+    let facts = super::super::extract_migration_facts(&fixture("transactions.sql"));
+    let events: Vec<_> = facts
+        .table_events
+        .iter()
+        .map(|event| match event {
+            SqlTableSchemaEvent::Create {
+                relation_key,
+                temporary,
+                ..
+            } => format!("create:{relation_key}:temporary={temporary}"),
+            SqlTableSchemaEvent::AddColumn { relation_key, .. } => {
+                format!("add:{relation_key}")
+            }
+            SqlTableSchemaEvent::Drop { relation_key, .. } => format!("drop:{relation_key}"),
+        })
+        .collect();
+    assert_eq!(
+        events,
+        [
+            "create:orders:temporary=false",
+            "create:committed_start:temporary=false",
+            "create:committed_end:temporary=false",
+            "create:rollback_prepared_is_not_rollback:temporary=false",
+            "create:savepoint_kept:temporary=false",
+            "create:after_rollback_to:temporary=false",
+            "create:after_rollback_without_keyword:temporary=false",
+            "create:temporary_kept:temporary=true",
+            "create:plpgsql_block_kept:temporary=false",
+        ]
+    );
+    // Projection is deliberately limited to live catalog events. Broad policy
+    // facts still describe source text even when its transaction rolls back.
+    assert!(facts
+        .tables
+        .iter()
+        .any(|table| table.table_name == "rolled_back_create"));
+    assert!(facts
+        .add_columns
+        .iter()
+        .any(|column| column.column_name == "rolled_back_column"));
+    assert!(facts
+        .dropped_tables
+        .iter()
+        .any(|drop| drop.name == "orders"));
+}

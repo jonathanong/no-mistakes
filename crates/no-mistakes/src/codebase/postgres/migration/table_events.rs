@@ -1,5 +1,5 @@
 use crate::codebase::postgres::idents::{
-    ident_key, object_name_key, unwrap_expr, visit_function_args,
+    ident_key, object_name_identity, object_name_key, unwrap_expr, visit_function_args,
 };
 use crate::codebase::postgres::schema::{column_metadata, table_metadata};
 use crate::codebase::postgres::types::SqlTableSchemaEvent;
@@ -8,6 +8,7 @@ use sqlparser::ast::{
 };
 
 mod positions;
+mod transactions;
 pub(super) use positions::Positions;
 
 pub(super) fn record(
@@ -22,9 +23,11 @@ pub(super) fn record(
                 return;
             }
             out.push(SqlTableSchemaEvent::Create {
+                temporary: table.temporary,
                 if_not_exists: table.if_not_exists,
                 source_order,
                 table: object_name_key(&table.name),
+                relation_key: object_name_identity(&table.name),
                 unqualified_table: super::relation(&table.name),
                 columns: table
                     .columns
@@ -55,6 +58,7 @@ pub(super) fn record(
                         if_not_exists: *if_not_exists,
                         source_order: source_order.clone(),
                         table: object_name_key(&alter.name),
+                        relation_key: object_name_identity(&alter.name),
                         unqualified_table: super::relation(&alter.name),
                         column: event_column(column_def),
                     });
@@ -74,6 +78,7 @@ pub(super) fn record(
                 out.push(SqlTableSchemaEvent::Drop {
                     source_order,
                     table: object_name_key(name),
+                    relation_key: object_name_identity(name),
                     unqualified_table: super::relation(name),
                 });
             }

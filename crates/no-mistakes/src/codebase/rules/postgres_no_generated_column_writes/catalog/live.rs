@@ -10,6 +10,7 @@ pub(crate) struct LiveTable<'a> {
     pub(super) name: &'a str,
     pub(super) columns: Vec<LiveColumn<'a>>,
     pub(super) complete: bool,
+    pub(super) temporary: bool,
 }
 
 pub(crate) type LiveTables<'a> = BTreeMap<String, LiveTable<'a>>;
@@ -33,6 +34,7 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                     &table.table_name,
                     &table.columns,
                     false,
+                    false,
                 );
             }
             for column in &file.add_columns {
@@ -51,22 +53,24 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
         for event in &file.table_events {
             match event {
                 SqlTableSchemaEvent::Create {
-                    table,
+                    relation_key,
                     unqualified_table,
                     columns,
+                    temporary,
                     if_not_exists,
                     ..
                 } => {
                     create(
                         &mut tables,
-                        table,
+                        relation_key,
                         unqualified_table,
                         columns,
                         *if_not_exists,
+                        *temporary,
                     );
                 }
                 SqlTableSchemaEvent::AddColumn {
-                    table,
+                    relation_key,
                     unqualified_table,
                     column,
                     if_not_exists,
@@ -75,7 +79,7 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                 } => {
                     add(
                         &mut tables,
-                        table,
+                        relation_key,
                         unqualified_table,
                         &column.name,
                         column.is_generated,
@@ -84,11 +88,11 @@ pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
                     );
                 }
                 SqlTableSchemaEvent::Drop {
-                    table,
+                    relation_key,
                     unqualified_table,
                     ..
                 } => {
-                    let key = existing_key(&tables, table, unqualified_table).to_string();
+                    let key = existing_key(&tables, relation_key, unqualified_table);
                     tables.remove(&key);
                 }
             }
@@ -103,12 +107,18 @@ fn create<'a>(
     name: &'a str,
     columns: &'a [SqlColumnMetadata],
     if_not_exists: bool,
+    temporary: bool,
 ) {
-    if if_not_exists && tables.contains_key(key) {
+    let key = if temporary && !key.starts_with("pg_temp.") {
+        format!("pg_temp.{key}")
+    } else {
+        key.to_string()
+    };
+    if if_not_exists && tables.contains_key(&key) {
         return;
     }
     tables.insert(
-        key.to_string(),
+        key,
         LiveTable {
             name,
             columns: columns
@@ -119,6 +129,7 @@ fn create<'a>(
                 })
                 .collect(),
             complete: true,
+            temporary,
         },
     );
 }
@@ -132,14 +143,15 @@ fn add<'a>(
     if_not_exists: bool,
     table_if_exists: bool,
 ) {
-    let key = existing_key(tables, key, table).to_string();
+    let key = existing_key(tables, key, table);
     if table_if_exists && !tables.contains_key(&key) {
         return;
     }
-    let entry = tables.entry(key).or_insert_with(|| LiveTable {
+    let entry = tables.entry(key.clone()).or_insert_with(|| LiveTable {
         name: table,
         columns: Vec::new(),
         complete: false,
+        temporary: key.starts_with("pg_temp."),
     });
     let column = LiveColumn { name, generated };
     if let Some(existing) = entry
@@ -155,11 +167,16 @@ fn add<'a>(
     }
 }
 
-fn existing_key<'a>(tables: &LiveTables<'_>, key: &'a str, unqualified: &'a str) -> &'a str {
+fn existing_key(tables: &LiveTables<'_>, key: &str, unqualified: &str) -> String {
+    let base = crate::codebase::postgres::idents::relation_part_key(unqualified);
+    let temporary = format!("pg_temp.{base}");
+    if key == base && tables.contains_key(&temporary) {
+        return temporary;
+    }
     // An unqualified CREATE has unknown search_path; a later qualified ALTER can identify it.
-    if !tables.contains_key(key) && tables.contains_key(unqualified) {
-        unqualified
+    if !tables.contains_key(key) && tables.contains_key(&base) {
+        base
     } else {
-        key
+        key.to_string()
     }
 }

@@ -4,9 +4,11 @@ use super::SqlColumnMetadata;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlTableSchemaEvent {
     Create {
+        temporary: bool,
         if_not_exists: bool,
         source_order: Vec<usize>,
         table: String,
+        relation_key: String,
         unqualified_table: String,
         columns: Vec<SqlColumnMetadata>,
     },
@@ -15,12 +17,14 @@ pub enum SqlTableSchemaEvent {
         if_not_exists: bool,
         source_order: Vec<usize>,
         table: String,
+        relation_key: String,
         unqualified_table: String,
         column: SqlColumnMetadata,
     },
     Drop {
         source_order: Vec<usize>,
         table: String,
+        relation_key: String,
         unqualified_table: String,
     },
 }

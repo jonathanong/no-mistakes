@@ -189,3 +189,19 @@ remain visible; broad schema policy checks still inspect routine definitions.
 `ALTER TABLE IF EXISTS` leaves absent tables absent. Temporary declarations may
 use `GLOBAL` or `LOCAL` modifiers without changing lifecycle order. Dollar-quote
 tags accept Unicode identifier characters, including `$café$` and `$東京$`.
+
+Quoted identifier components containing dots remain distinct from qualification:
+`public.orders` and `"public.orders"` have separate histories. Temporary tables
+occupy the `pg_temp` namespace, shadow unqualified lookups, and leave permanent
+tables intact when dropped. Exception-handler DDL is conditional and does not
+change definite live table state.
+
+Within a migration source, `ROLLBACK` restores its prior table state and
+`ROLLBACK TO SAVEPOINT` discards changes after that savepoint. Committed DDL
+remains part of the write catalog, including DDL executed by an immediate DO block.
+
+`extraGeneratedColumns.table` uses PostgreSQL identifier spelling: unquoted
+names fold to lowercase, and quotes preserve case or literal dots. Unqualified
+entries select a temporary table first, then an exact or unique surviving
+relation; ambiguous names are skipped. Qualified entries retain their selected
+schema. Stale-entry checks inspect that same relation rather than a namesake.
