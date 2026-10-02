@@ -51,7 +51,7 @@ fn qualified_star_uses_the_alias_relation() {
 fn schema_qualified_name_keeps_the_table() {
     assert_eq!(
         stars("SELECT * FROM public.orders"),
-        vec![("orders".to_string(), false, None, 1)]
+        vec![("public.orders".to_string(), false, None, 1)]
     );
 }
 

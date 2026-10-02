@@ -18,60 +18,63 @@ pub fn unwrap_expr(expr: &Expr) -> &Expr {
 }
 
 pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
-    match expr {
-        Expr::BinaryOp { left, right, .. }
-        | Expr::IsDistinctFrom(left, right)
-        | Expr::IsNotDistinctFrom(left, right) => {
-            visit(left);
-            visit(right);
-        }
-        Expr::UnaryOp { expr, .. }
-        | Expr::Cast { expr, .. }
-        | Expr::Nested(expr)
-        | Expr::IsNull(expr)
-        | Expr::IsNotNull(expr)
-        | Expr::IsTrue(expr)
-        | Expr::IsFalse(expr) => visit(expr),
-        Expr::Function(function) => visit_function_arg_exprs(function, visit),
-        Expr::Case {
-            operand,
-            conditions,
-            else_result,
-            ..
-        } => {
-            if let Some(operand) = operand {
-                visit(operand);
-            }
-            for case in conditions {
-                visit(&case.condition);
-                visit(&case.result);
-            }
-            if let Some(else_result) = else_result {
-                visit(else_result);
+    // Expression-named argument labels are syntax, not column references.
+    if let Expr::Function(function) = expr {
+        for args in [&function.parameters, &function.args] {
+            if let sqlparser::ast::FunctionArguments::List(list) = args {
+                visit_function_args(&list.args, visit);
             }
         }
-        Expr::Between {
-            expr, low, high, ..
-        } => {
-            visit(expr);
-            visit(low);
-            visit(high);
+        if let Some(filter) = &function.filter {
+            visit(filter);
         }
-        Expr::InList { expr, list, .. } => {
-            visit(expr);
-            for item in list {
-                visit(item);
-            }
-        }
-        Expr::Like { expr, pattern, .. }
-        | Expr::ILike { expr, pattern, .. }
-        | Expr::SimilarTo { expr, pattern, .. }
-        | Expr::RLike { expr, pattern, .. } => {
-            visit(expr);
-            visit(pattern);
-        }
-        _ => {}
+        return;
     }
+    use sqlparser::ast::{Visit, Visitor};
+    use std::ops::ControlFlow;
+    struct Children<'a, F> {
+        visit: &'a mut F,
+        depth: usize,
+        queries: usize,
+    }
+    impl<F: FnMut(&Expr)> Visitor for Children<'_, F> {
+        type Break = ();
+        fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
+            if self.depth == 1 && self.queries == 0 {
+                (self.visit)(expr);
+            }
+            self.depth += 1;
+            ControlFlow::Continue(())
+        }
+        fn post_visit_expr(&mut self, _: &Expr) -> ControlFlow<()> {
+            self.depth -= 1;
+            ControlFlow::Continue(())
+        }
+        fn pre_visit_query(&mut self, _: &sqlparser::ast::Query) -> ControlFlow<()> {
+            self.queries += 1;
+            ControlFlow::Continue(())
+        }
+        fn post_visit_query(&mut self, _: &sqlparser::ast::Query) -> ControlFlow<()> {
+            self.queries -= 1;
+            ControlFlow::Continue(())
+        }
+    }
+    let _ = expr.visit(&mut Children {
+        visit,
+        depth: 0,
+        queries: 0,
+    });
+}
+
+pub(crate) fn object_name_key(name: &sqlparser::ast::ObjectName) -> String {
+    name.0
+        .iter()
+        .filter_map(|part| match part {
+            sqlparser::ast::ObjectNamePart::Identifier(ident) => Some(ident_key(ident)),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join(".")
 }
 
 pub(crate) fn ident_key(ident: &sqlparser::ast::Ident) -> String {
@@ -108,13 +111,6 @@ fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
         }
         other => visit_child_exprs(other, &mut |child| collect_idents(child, names)),
     }
-}
-
-fn visit_function_arg_exprs(function: &sqlparser::ast::Function, visit: &mut impl FnMut(&Expr)) {
-    let sqlparser::ast::FunctionArguments::List(list) = &function.args else {
-        return;
-    };
-    visit_function_args(&list.args, visit);
 }
 
 pub(crate) fn visit_function_args(

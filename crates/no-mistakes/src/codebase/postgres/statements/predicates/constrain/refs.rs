@@ -15,10 +15,10 @@ pub(super) fn references(expr: &Expr, ctx: &Ctx<'_>) -> bool {
 }
 
 pub(super) fn qualifier_and_column(parts: &[Ident]) -> Option<(String, String)> {
-    let column = parts.last()?.value.clone();
+    let column = crate::codebase::postgres::idents::ident_key(parts.last()?);
     let qualifier = match parts.len() {
-        2 => parts[0].value.clone(),
-        3.. => parts[parts.len() - 2].value.clone(),
+        2 => crate::codebase::postgres::idents::ident_key(&parts[0]),
+        3.. => crate::codebase::postgres::idents::ident_key(&parts[parts.len() - 2]),
         _ => return None,
     };
     Some((qualifier, column))
@@ -29,15 +29,18 @@ pub(super) fn qualifier_matches(qualifier: &str, ctx: &Ctx<'_>) -> bool {
     if instance
         .alias
         .as_ref()
-        .is_some_and(|alias| alias.eq_ignore_ascii_case(qualifier))
+        .is_some_and(|alias| alias == qualifier)
     {
         return true;
     }
-    instance.table.eq_ignore_ascii_case(qualifier)
+    instance.alias.is_none()
+        && instance.table.rsplit('.').next() == Some(qualifier)
         && ctx
             .instances
             .iter()
-            .filter(|other| other.table.eq_ignore_ascii_case(qualifier))
+            .filter(|other| {
+                other.alias.is_none() && other.table.rsplit('.').next() == Some(qualifier)
+            })
             .count()
             == 1
 }

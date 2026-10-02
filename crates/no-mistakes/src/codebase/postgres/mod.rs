@@ -8,12 +8,13 @@ mod collect;
 mod conflict;
 pub mod dml;
 mod embedded;
-mod idents;
+pub(crate) mod idents;
 mod locking;
 mod migration;
 mod offset;
 mod on_conflict;
 mod parse;
+pub(crate) mod prepared;
 mod profiles;
 mod rule_options;
 mod schema;
@@ -55,12 +56,13 @@ pub use migration::extract_migration_facts;
 pub use offset::{sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse};
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
+pub use profiles::{
+    configure_prepared_postgres_plan, configured_embedded_sql_options_for_checks,
+    configured_schema_catalog_paths, PREPARED_EMBEDDED_SQL_RULE_IDS, SCHEMA_CATALOG_RULE_IDS,
+};
 pub(crate) use profiles::{
     configured_embedded_sql_options, load_schema_catalogs, prepare_embedded_sql_facts,
-};
-pub use profiles::{
-    configured_embedded_sql_options_for_checks, configured_schema_catalog_paths,
-    PREPARED_EMBEDDED_SQL_RULE_IDS, SCHEMA_CATALOG_RULE_IDS,
+    prepare_rule_sql_facts,
 };
 pub use rule_options::fail_unanalyzable_sql;
 pub use schema::extract_create_table_metadata;

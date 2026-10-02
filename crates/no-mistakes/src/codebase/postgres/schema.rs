@@ -20,7 +20,7 @@ pub fn extract_create_table_metadata(sql: &str) -> Vec<SqlCreateTableMetadata> {
         .collect()
 }
 
-fn table_metadata(table: &sqlparser::ast::CreateTable) -> SqlCreateTableMetadata {
+pub(super) fn table_metadata(table: &sqlparser::ast::CreateTable) -> SqlCreateTableMetadata {
     let pk_columns = table_primary_key_columns(&table.constraints);
     let columns = table
         .columns

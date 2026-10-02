@@ -2,38 +2,45 @@ mod catalog;
 mod check;
 mod columns;
 
-use super::{CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::{collect_postgres_facts, EmbeddedSqlKind, SchemaCatalog};
+use super::{CompiledOptions, RuleFinding};
+use crate::codebase::postgres::EmbeddedSqlKind;
 use crate::codebase::ts_source::relative_slash_path;
-use anyhow::Context;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    _sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> anyhow::Result<Vec<RuleFinding>> {
     if opts.relations.is_empty() && !opts.partition_keys {
         return Ok(Vec::new());
     }
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            postgres_dml: true,
-            embedded_sql: true,
-            ..CheckFactPlan::default()
-        },
-        &opts.schema,
-        &opts.embedded,
-    )
-    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let catalog = load_catalog(root, opts, sources, prepared)?;
+    let prepared =
+        prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
+    let catalog = opts
+        .schema_catalog_path
+        .as_deref()
+        .map(|path| prepared.postgres_schema_catalog(path))
+        .transpose()?;
+    let sql_paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
+    let mut statements = Vec::new();
+    let mut embedded = Vec::new();
+    for path in &sql_paths {
+        statements.extend(prepared.postgres_statements(path, None)?.iter());
+    }
+    for path in files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+    {
+        embedded.push(prepared.embedded_sql(path, &opts.embedded)?);
+        statements.extend(
+            prepared
+                .postgres_statements(path, Some(&opts.embedded))?
+                .iter(),
+        );
+    }
     let mut findings = Vec::new();
     if let Some(catalog) = &catalog {
         if opts.partition_keys {
@@ -42,7 +49,7 @@ pub(super) fn scan(
             }
         }
     }
-    for file in &facts.embedded {
+    for file in embedded {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
             if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
@@ -56,48 +63,20 @@ pub(super) fn scan(
             }
         }
     }
-    for file in &facts.statements {
+    for file in statements {
         let rel = relative_slash_path(root, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
             findings.push(check::sql_finding(
                 &rel,
-                1,
+                file.origin_line.max(1),
                 "SQL could not be analyzed for required predicates",
                 Some("unanalyzable"),
                 None,
             ));
             continue;
         }
-        findings.extend(check::statement_findings(
-            &rel,
-            file,
-            opts,
-            catalog.as_deref(),
-        ));
+        findings.extend(check::statement_findings(&rel, file, opts, catalog));
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
-}
-
-fn load_catalog(
-    root: &Path,
-    opts: &CompiledOptions,
-    sources: &crate::codebase::ts_source::SourceStore,
-    prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> anyhow::Result<Option<Arc<SchemaCatalog>>> {
-    let Some(path) = &opts.schema_catalog_path else {
-        return Ok(None);
-    };
-    if let Some(prepared) = prepared {
-        let key = crate::codebase::postgres::normalize_schema_catalog_path(path)?
-            .to_string_lossy()
-            .into_owned();
-        if let Some(entry) = prepared.postgres_schema_catalogs.get(&key) {
-            return match entry {
-                Ok(catalog) => Ok(Some(Arc::clone(catalog))),
-                Err(error) => Err(anyhow::anyhow!(error.to_string())),
-            };
-        }
-    }
-    Ok(Some(Arc::new(SchemaCatalog::load(root, path, sources)?)))
 }

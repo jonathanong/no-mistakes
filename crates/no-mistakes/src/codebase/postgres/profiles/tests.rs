@@ -71,7 +71,11 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
     );
     assert_eq!(
         PREPARED_EMBEDDED_SQL_RULE_IDS,
-        ["postgres-conflict-ordering", "postgres-lock-ordering"]
+        [
+            "postgres-conflict-ordering",
+            "postgres-lock-ordering",
+            "postgres-required-predicates"
+        ]
     );
     assert_eq!(
         SCHEMA_CATALOG_RULE_IDS,

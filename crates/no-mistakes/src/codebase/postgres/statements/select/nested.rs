@@ -36,25 +36,73 @@ pub(super) fn walk_expr(
     in_insert_select: bool,
     out: &mut Vec<SqlSelectFact>,
 ) {
-    match expr {
-        Expr::Exists { subquery, .. } => {
-            super::collect_query(sql, subquery, ctes, in_insert_select, true, out);
+    use sqlparser::ast::Visit;
+    let _ = expr.visit(&mut Queries {
+        sql,
+        ctes,
+        in_insert_select,
+        out,
+        depth: 0,
+        in_exists: false,
+    });
+}
+
+struct Queries<'a> {
+    sql: &'a str,
+    ctes: &'a [String],
+    in_insert_select: bool,
+    out: &'a mut Vec<SqlSelectFact>,
+    depth: usize,
+    in_exists: bool,
+}
+
+impl sqlparser::ast::Visitor for Queries<'_> {
+    type Break = ();
+    fn pre_visit_expr(&mut self, expr: &Expr) -> std::ops::ControlFlow<()> {
+        if self.depth == 0 {
+            self.in_exists = matches!(expr, Expr::Exists { .. });
         }
-        Expr::Subquery(subquery) => {
-            super::collect_query(sql, subquery, ctes, in_insert_select, false, out);
-        }
-        Expr::InSubquery { expr, subquery, .. } => {
-            walk_expr(sql, expr, ctes, in_insert_select, out);
-            super::collect_query(sql, subquery, ctes, in_insert_select, false, out);
-        }
-        Expr::AnyOp { left, right, .. } | Expr::AllOp { left, right, .. } => {
-            walk_expr(sql, left, ctes, in_insert_select, out);
-            walk_expr(sql, right, ctes, in_insert_select, out);
-        }
-        other => crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
-            walk_expr(sql, child, ctes, in_insert_select, out);
-        }),
+        std::ops::ControlFlow::Continue(())
     }
+    fn pre_visit_query(&mut self, query: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
+        if self.depth == 0 {
+            super::collect_query(
+                self.sql,
+                query,
+                self.ctes,
+                self.in_insert_select,
+                self.in_exists,
+                self.out,
+            );
+        }
+        self.depth += 1;
+        std::ops::ControlFlow::Continue(())
+    }
+    fn post_visit_query(&mut self, _: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
+        self.depth -= 1;
+        std::ops::ControlFlow::Continue(())
+    }
+}
+
+pub(super) fn collect_query_expressions(
+    sql: &str,
+    query: &sqlparser::ast::Query,
+    ctes: &[String],
+    in_insert_select: bool,
+    out: &mut Vec<SqlSelectFact>,
+) {
+    use sqlparser::ast::Visit;
+    let mut visitor = Queries {
+        sql,
+        ctes,
+        in_insert_select,
+        out,
+        depth: 0,
+        in_exists: false,
+    };
+    let _ = query.order_by.visit(&mut visitor);
+    let _ = query.limit_clause.visit(&mut visitor);
+    let _ = query.fetch.visit(&mut visitor);
 }
 
 fn walk_optional(

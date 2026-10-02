@@ -1,4 +1,4 @@
-use super::schema::{extract_create_table_metadata, index_column_name, relation_name};
+use super::schema::{index_column_name, relation_name};
 use super::types::SqlSchemaFileFacts;
 use sqlparser::ast::{ObjectName, ObjectNamePart, ObjectType, Statement};
 
@@ -11,35 +11,46 @@ mod predicate;
 mod statements;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
-    let mut facts = extract_parsed_migration_facts(sql);
+    let statements = super::parse::parse_postgres_sql_lenient(sql);
+    extract_from_parsed(sql, &statements)
+}
+
+pub(crate) fn extract_from_parsed(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
+    let mut facts = extract_parsed_migration_facts(sql, statements);
     facts
         .declared_identifiers
         .extend(identifiers::procedure_names(sql));
     facts
 }
 
-fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
+fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
-        tables: extract_create_table_metadata(sql),
+        tables: statements
+            .iter()
+            .filter_map(|statement| match statement {
+                Statement::CreateTable(table) => Some(super::schema::table_metadata(table)),
+                _ => None,
+            })
+            .collect(),
         ..Default::default()
     };
     let mut create_index_n = 0usize;
     let mut drop_index_n = 0usize;
     let mut drop_table_n = 0usize;
     let mut identifier_from = 0usize;
-    for statement in super::parse::parse_postgres_sql_lenient(sql) {
+    for statement in statements {
         facts.declared_identifiers.extend(identifiers::collect(
             sql,
-            &statement,
+            statement,
             &mut identifier_from,
         ));
-        statements::record(sql, &statement, &mut facts);
+        statements::record(sql, statement, &mut facts);
         match statement {
             Statement::CreateIndex(index) => {
                 create_index_n += 1;
                 facts
                     .indexes
-                    .push(indexes::from_create_index(sql, create_index_n, &index));
+                    .push(indexes::from_create_index(sql, create_index_n, index));
             }
             Statement::Drop {
                 object_type: ObjectType::Index,
@@ -49,7 +60,7 @@ fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
                 drop_index_n += 1;
                 facts
                     .dropped_indexes
-                    .extend(indexes::from_drop_index(sql, drop_index_n, &names));
+                    .extend(indexes::from_drop_index(sql, drop_index_n, names));
             }
             Statement::Drop {
                 object_type: ObjectType::Table,
@@ -59,23 +70,23 @@ fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
                 drop_table_n += 1;
                 facts
                     .dropped_tables
-                    .extend(indexes::from_drop_table(sql, drop_table_n, &names));
+                    .extend(indexes::from_drop_table(sql, drop_table_n, names));
             }
             Statement::CreateTable(table) => {
                 let table_name = relation_name(&table.name);
                 facts.indexes.extend(indexes::covering_from_table(
                     &qualified_relation(&table.name),
-                    &table,
+                    table,
                 ));
                 constraints::collect_create_table_fks(
                     sql,
                     &table_name,
-                    &table,
+                    table,
                     &mut facts.foreign_keys,
                 );
             }
             Statement::AlterTable(alter) => {
-                constraints::collect_alter_table(sql, &alter, &mut facts)
+                constraints::collect_alter_table(sql, alter, &mut facts)
             }
             _ => {}
         }
@@ -86,7 +97,10 @@ fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
         .into_iter()
         .chain(dynamic::extract(sql))
     {
-        let mut dynamic_facts = extract_parsed_migration_facts(&dynamic_sql.sql);
+        let mut dynamic_facts = extract_parsed_migration_facts(
+            &dynamic_sql.sql,
+            &super::parse::parse_postgres_sql_lenient(&dynamic_sql.sql),
+        );
         remap_dynamic_fact_lines(&mut dynamic_facts, &dynamic_sql);
         merge_dynamic_facts(&mut facts, dynamic_facts);
     }

@@ -59,10 +59,17 @@ pub(super) fn collect_query(
     let mut ctes = outer_ctes.to_vec();
     if let Some(with) = &query.with {
         for cte in &with.cte_tables {
+            let name = crate::codebase::postgres::idents::ident_key(&cte.alias.name);
+            if with.recursive {
+                ctes.push(name.clone());
+            }
             collect_query(sql, &cte.query, &ctes, in_insert_select, false, out);
-            ctes.push(cte.alias.name.value.clone());
+            if !with.recursive {
+                ctes.push(name);
+            }
         }
     }
+    nested::collect_query_expressions(sql, query, &ctes, in_insert_select, out);
     let order = query_order(query);
     collect_set(
         sql,
@@ -99,6 +106,16 @@ fn collect_set(
         SetExpr::SetOperation { left, right, .. } => {
             collect_set(sql, left, ctes, in_insert_select, in_exists, &[], out);
             collect_set(sql, right, ctes, in_insert_select, in_exists, &[], out);
+        }
+        SetExpr::Values(values) => {
+            for expr in values.rows.iter().flat_map(|row| row.iter()) {
+                walk_expr(sql, expr, ctes, in_insert_select, out);
+            }
+        }
+        SetExpr::Insert(Statement::Insert(insert)) => {
+            if let Some(source) = insert.source.as_deref() {
+                collect_query(sql, source, ctes, true, false, out);
+            }
         }
         _ => {}
     }

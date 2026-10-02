@@ -1,50 +1,65 @@
-use super::super::{AllowEntry, CompiledOptions, RULE_ID};
+use super::super::{CompiledOptions, RULE_ID};
 use super::check::{self, exempt};
 use crate::codebase::postgres::{
-    CatalogTable, PartitionKeyElement, RelationKind, SchemaCatalog, SqlRelationPredicateFact,
+    catalog_finding, AllowList, CatalogObjectRef, PartitionKeyElement, RelationKind, SchemaCatalog,
+    SqlRelationPredicateFact,
 };
 use crate::codebase::rules::RuleFinding;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 
 pub(super) fn catalog_findings(
     path: &str,
     catalog: &SchemaCatalog,
     opts: &CompiledOptions,
 ) -> Vec<RuleFinding> {
+    let tables: Vec<_> = catalog
+        .tables()
+        .filter(|table| table.relation_kind == RelationKind::PartitionedTable)
+        .collect();
+    let mut expressions = Vec::new();
     let mut findings = Vec::new();
-    for table in catalog.tables() {
-        if table.relation_kind != RelationKind::PartitionedTable
-            || exempt(&table.name, &opts.partition_key_exemptions)
-        {
+    for table in &tables {
+        if exempt(&table.name, &opts.partition_key_exemptions) {
             continue;
         }
+        let object = CatalogObjectRef::Table(table.name.clone());
         let Some(key) = &table.partition_key else {
+            findings.push(catalog_finding(
+                RULE_ID,
+                path,
+                &object,
+                "partitioned table is missing physicalPartition.key; refresh the schema catalog",
+            ));
             continue;
         };
-        for element in &key.elements {
-            let PartitionKeyElement::Expression(expression) = element else {
-                continue;
-            };
-            let object = format!("table:{}", unqualified(&table.name));
-            findings.push(catalog_finding(
-                path,
-                &object,
-                &format!(
-                    "cannot derive a column from partition key expression {expression}; add a partitionKeyExemptions entry for {}",
-                    unqualified(&table.name)
-                ),
-            ));
+        let expression: Vec<_> = key
+            .elements
+            .iter()
+            .filter_map(|element| match element {
+                PartitionKeyElement::Expression(expression) => Some(expression.as_str()),
+                _ => None,
+            })
+            .collect();
+        if !expression.is_empty() {
+            expressions.push(catalog_finding(RULE_ID, path, &object, &format!("cannot derive a column from partition key expression {}; add a partitionKeyExemptions entry for {}", expression.join(", "), table.name)));
         }
     }
+    findings.extend(
+        AllowList::compile(RULE_ID, opts.allow.clone())
+            .expect("allow entries were validated")
+            .apply(path, expressions),
+    );
+    // Qualified and unqualified membership is indexed once, without cloning the catalog per exemption.
+    let names: BTreeSet<_> = tables
+        .iter()
+        .flat_map(|table| [table.name.as_str(), unqualified(&table.name)])
+        .collect();
     for entry in &opts.partition_key_exemptions {
-        if !catalog.tables().any(|table| {
-            table.relation_kind == RelationKind::PartitionedTable
-                && check::table_matches(&table.name, &entry.table)
-        }) {
-            let object = format!("table:{}", unqualified(&entry.table));
+        if !names.contains(entry.table.as_str()) {
             findings.push(catalog_finding(
+                RULE_ID,
                 path,
-                &object,
+                &CatalogObjectRef::Table(entry.table.clone()),
                 &format!(
                     "stale {RULE_ID} partitionKeyExemptions entry: {}",
                     entry.table
@@ -52,17 +67,6 @@ pub(super) fn catalog_findings(
             ));
         }
     }
-    let expression_targets: HashSet<_> = findings
-        .iter()
-        .filter(|finding| finding.message.contains("cannot derive a column"))
-        .filter_map(|finding| finding.target.clone())
-        .collect();
-    findings.retain(|finding| {
-        finding.target.as_ref().is_none_or(|target| {
-            !allowed(opts, target) || !finding.message.contains("cannot derive a column")
-        })
-    });
-    findings.extend(stale_allows(&opts.allow, &expression_targets, path));
     findings
 }
 
@@ -83,14 +87,14 @@ pub(super) fn partition_columns(
     let Some(table) = catalog.relation(&relation.table) else {
         return Vec::new();
     };
-    if table.relation_kind != RelationKind::PartitionedTable || has_expression(table) {
+    if table.relation_kind != RelationKind::PartitionedTable {
         return Vec::new();
     }
     let Some(key) = &table.partition_key else {
         return Vec::new();
     };
     key.elements.iter().filter_map(column_element)
-        .filter(|required| !columns.iter().any(|column| column.eq_ignore_ascii_case(required)))
+        .filter(|required| !columns.contains(*required))
         .map(|required| {
             check::sql_finding(
                 file,
@@ -106,24 +110,6 @@ pub(super) fn partition_columns(
         .collect()
 }
 
-fn stale_allows(allow: &[AllowEntry], produced: &HashSet<String>, path: &str) -> Vec<RuleFinding> {
-    allow
-        .iter()
-        .filter(|entry| !produced.contains(&entry.object))
-        .map(|entry| {
-            catalog_finding(
-                path,
-                &entry.object,
-                &format!("stale {RULE_ID} allow entry: {}", entry.object),
-            )
-        })
-        .collect()
-}
-
-fn allowed(opts: &CompiledOptions, target: &str) -> bool {
-    opts.allow.iter().any(|entry| entry.object == target)
-}
-
 fn column_element(element: &PartitionKeyElement) -> Option<&str> {
     match element {
         PartitionKeyElement::Column(column) => Some(column.as_str()),
@@ -131,27 +117,8 @@ fn column_element(element: &PartitionKeyElement) -> Option<&str> {
     }
 }
 
-fn has_expression(table: &CatalogTable) -> bool {
-    table.partition_key.as_ref().is_some_and(|key| {
-        key.elements
-            .iter()
-            .any(|element| matches!(element, PartitionKeyElement::Expression(_)))
-    })
-}
-
 fn unqualified(name: &str) -> &str {
     name.rsplit('.').next().unwrap_or(name)
-}
-
-fn catalog_finding(path: &str, object: &str, text: &str) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: path.to_string(),
-        line: 1,
-        message: format!("{path}: {object}: {text}"),
-        import: None,
-        target: Some(object.to_string()),
-    }
 }
 
 #[cfg(test)]

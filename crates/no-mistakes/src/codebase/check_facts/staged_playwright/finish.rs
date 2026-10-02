@@ -55,7 +55,8 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         &sources,
         &plan.postgres_schema_catalog_paths,
     );
-    CheckFactMap {
+    let mut map = CheckFactMap {
+        postgres: Default::default(),
         integration_route_links,
         files,
         graph_files,
@@ -79,5 +80,8 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         app_text_targets_cache: Arc::new(app_text_targets_cache),
         route_reachable_files_cache: Arc::new(DashMap::new()),
         postgres_schema_catalogs,
-    }
+    };
+    map.postgres =
+        crate::codebase::postgres::prepared::prepare(&root, &map.files, &sources, &plan, &map);
+    map
 }

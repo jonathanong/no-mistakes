@@ -22,7 +22,9 @@ pub(super) fn check(opts: &Options) -> Result<()> {
         _ => bail!("{RULE_ID} option partitionKeys: expected require or off"),
     }
     distinct_tables(&opts.partition_key_exemptions)?;
-    distinct_allows(&opts.allow)
+    distinct_allows(&opts.allow)?;
+    crate::codebase::postgres::AllowList::compile(RULE_ID, opts.allow.clone())?;
+    Ok(())
 }
 
 fn distinct_tables(entries: &[PartitionExemption]) -> Result<()> {

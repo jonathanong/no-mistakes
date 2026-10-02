@@ -1,0 +1,4 @@
+SELECT 1 ORDER BY (SELECT id FROM orders);
+SELECT 1 LIMIT (SELECT id FROM orders);
+SELECT ARRAY[(SELECT id FROM orders)];
+INSERT INTO logs (id) VALUES ((SELECT id FROM orders));

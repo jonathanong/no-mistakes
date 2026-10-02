@@ -32,7 +32,7 @@ pub(super) fn collect(
     Ok(facts)
 }
 
-fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStatementFileFacts> {
+pub(crate) fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStatementFileFacts> {
     file.calls
         .iter()
         .filter(|call| call.kind != EmbeddedSqlKind::Dynamic)
@@ -58,6 +58,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     }
     for select in &mut facts.selects {
         select.line = select.line.saturating_add(shift);
+        for relation in &mut select.relations {
+            relation.line = relation.line.saturating_add(shift);
+        }
         for star in &mut select.star_projections {
             star.line = star.line.saturating_add(shift);
         }
@@ -67,6 +70,14 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     }
     for star in &mut facts.returning_stars {
         star.line = star.line.saturating_add(shift);
+    }
+    for relation in facts
+        .updates
+        .iter_mut()
+        .chain(facts.deletes.iter_mut())
+        .flatten()
+    {
+        relation.line = relation.line.saturating_add(shift);
     }
     for trigger in &mut facts.triggers {
         trigger.line = trigger.line.saturating_add(shift);

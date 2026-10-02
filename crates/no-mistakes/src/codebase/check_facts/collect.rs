@@ -98,7 +98,8 @@ fn collect_check_facts_inner(
         &sources,
         &plan.postgres_schema_catalog_paths,
     );
-    CheckFactMap {
+    let mut map = CheckFactMap {
+        postgres: Default::default(),
         integration_route_links: Default::default(),
         files,
         graph_files,
@@ -118,5 +119,8 @@ fn collect_check_facts_inner(
         app_text_targets_cache: Arc::new(DashMap::new()),
         route_reachable_files_cache: Arc::new(DashMap::new()),
         postgres_schema_catalogs,
-    }
+    };
+    map.postgres =
+        crate::codebase::postgres::prepared::prepare(root, &map.files, &sources, &plan, &map);
+    map
 }
