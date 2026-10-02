@@ -1,7 +1,7 @@
 /// Generated interpolation markers must be distinguishable from user-authored
 /// SQL that happens to contain the public `sql_placeholder_` substring.
 pub(super) const PLACEHOLDER_MARKER: &str = "sql_placeholder_";
-const INTERNAL_PLACEHOLDER: &str = "\u{10FFFF}sqlph_";
+pub(super) const INTERNAL_PLACEHOLDER: &str = "\u{10FFFF}sqlph_";
 
 pub(super) fn internal_placeholder(index: usize) -> String {
     format!("{INTERNAL_PLACEHOLDER}{index}")

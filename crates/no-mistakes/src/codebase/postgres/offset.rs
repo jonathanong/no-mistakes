@@ -50,11 +50,7 @@ pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffset
     let mut collector = OffsetCollector::default();
     for statement in statements {
         let mut executed = Vec::new();
-        if let Statement::Explain { statement, .. } = statement {
-            walk_executed(statement, &mut executed);
-        } else {
-            walk_executed(statement, &mut executed);
-        }
+        walk_executed(statement, &mut executed);
         for statement in executed {
             let _ = statement.visit(&mut collector);
         }

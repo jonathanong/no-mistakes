@@ -120,7 +120,9 @@ keeps executed SQL identifiable in logs.
 The shared SQL pass records every OFFSET in source order, including INSERT,
 UPDATE, DELETE, COPY queries, CREATE TABLE AS, views, CTEs, RETURNING, ON CONFLICT,
 and subqueries inside CASE, arrays, functions, predicates, and ordering. Routine
-declarations are skipped. COPY FROM STDIN payload rows are data; queries after
+declarations and non-analyzing EXPLAIN plans are skipped; EXPLAIN ANALYZE queries
+are executed and checked, including the parenthesized ANALYZE option.
+COPY FROM STDIN payload rows are data; queries after
 its `\.` terminator are still checked. Nested comments, escaped E strings,
 dollar quotes, and Unicode identifiers retain their SQL meaning.
 
@@ -138,6 +140,10 @@ Recovered literals and template quasis retain a compact physical-line map in
 `EmbeddedSqlCall.sql_source_positions` (`EmbeddedSqlSourcePosition`). Cooked
 newline escapes, line continuations, multiline interpolations, and initializers
 that begin below their declaration preserve the actual OFFSET source line.
+Static `.append()` composition retains each appended literal or bound fragment's
+physical position, including placeholder renumbering. Put line suppression on
+the physical clause being suppressed. Existing directives on an executor call
+also suppress that call's recovered clauses through the common suppression pass.
 Prepared source failures retain their I/O kind; dispatch uses that captured
 outcome without checking filesystem state again.
 Source positions mark changes to the source-versus-SQL line offset. Between

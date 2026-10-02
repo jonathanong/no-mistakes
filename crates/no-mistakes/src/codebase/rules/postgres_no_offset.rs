@@ -74,7 +74,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
@@ -102,7 +102,7 @@ pub(crate) fn check_with_files_sources_and_facts(
                     compiled.includes(&relative_slash_path(root, path), sql.contains(path))
                 })
                 .collect();
-            scan(root, &compiled, &files, facts)
+            scan(root, &compiled, &files, facts, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -114,25 +114,13 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
     GlobMatcher::new(&opts.sql_include, &format!("{RULE_ID} sqlInclude"))?;
-    let defaults = EmbeddedSqlOptions::default();
     Ok(CompiledOptions {
         include,
         exclude,
         schema: crate::codebase::postgres::PostgresSchemaOptions {
             sql_include: opts.sql_include.clone(),
         },
-        embedded: EmbeddedSqlOptions {
-            import_specifier: if opts.import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                opts.import_specifier.clone()
-            },
-            executor_names: if opts.executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                opts.executor_names.clone()
-            },
-        },
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
     })
 }
 
@@ -143,3 +131,5 @@ mod tests;
 
 #[cfg(test)]
 mod followup_tests;
+#[cfg(test)]
+mod review_tests;

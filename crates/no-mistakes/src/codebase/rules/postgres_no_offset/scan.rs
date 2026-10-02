@@ -11,6 +11,7 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     facts: &CheckFactMap,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for path in files {
@@ -23,11 +24,34 @@ pub(super) fn scan(
             }
             Err(error) => return Err(error),
         };
+        let embedded = profile
+            .map(|profile| facts.embedded_sql(path, profile))
+            .transpose()?;
+        let mut calls = embedded
+            .into_iter()
+            .flat_map(|file| file.calls.iter())
+            .filter(|call| call.sql_text.is_some());
+        let source = profile.map(|_| sources.read_path(path)).transpose()?;
         let mut ordinal = 0;
         for statement in statements {
+            let disabled_call = calls.next().filter(|call| {
+                // Calls exist only for embedded profiles, whose source was read above.
+                let source = source.as_deref().unwrap();
+                crate::codebase::ts_source::matching_disable_directive(
+                    source,
+                    Some(call.line),
+                    RULE_ID,
+                )
+                .is_some()
+            });
             for offset in &statement.offset_uses {
                 ordinal += 1;
-                findings.push(finding(&rel, offset, ordinal));
+                let mut offset = *offset;
+                if let Some(call) = disabled_call {
+                    // Preserve existing executor directives through the common suppression pass.
+                    offset.line = call.line as usize;
+                }
+                findings.push(finding(&rel, &offset, ordinal));
             }
         }
     }

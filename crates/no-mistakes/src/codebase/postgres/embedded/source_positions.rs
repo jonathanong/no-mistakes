@@ -21,9 +21,20 @@ pub(super) fn for_expression(
     start: usize,
     line: u32,
 ) -> Vec<EmbeddedSqlSourcePosition> {
+    for_expression_with_offset(expr, source, start, line, 0)
+}
+
+pub(super) fn for_expression_with_offset(
+    expr: &Expression<'_>,
+    source: &str,
+    start: usize,
+    line: u32,
+    placeholder_offset: usize,
+) -> Vec<EmbeddedSqlSourcePosition> {
     let expr = unwrap_ts_wrappers(expr);
     let mut out = Positions {
         origin: line,
+        placeholder_offset,
         ..Positions::default()
     };
     let line = line + newlines(&source[start..expr.span().start as usize]);
@@ -61,10 +72,11 @@ fn template_positions(
     let mut end = template.span.start as usize;
     for (index, quasi) in template.quasis.iter().enumerate() {
         let start = quasi.span.start as usize;
-        line += newlines(&source[end..start]);
         if index > 0 {
-            out.placeholder(index, line);
+            let expression_start = template.expressions[index - 1].span().start as usize;
+            out.placeholder(index, line + newlines(&source[end..expression_start]));
         }
+        line += newlines(&source[end..start]);
         let raw = &source[start..quasi.span.end as usize];
         let cooked = quasi.value.cooked.as_ref().map(|value| value.as_str());
         let decoded = if raw_mode {
@@ -87,6 +99,7 @@ struct Positions {
     line: u32,
     column: u32,
     origin: u32,
+    placeholder_offset: usize,
 }
 impl Default for Positions {
     fn default() -> Self {
@@ -95,6 +108,7 @@ impl Default for Positions {
             line: 1,
             column: 1,
             origin: 1,
+            placeholder_offset: 0,
         }
     }
 }
@@ -114,8 +128,9 @@ impl Positions {
         }
     }
     fn placeholder(&mut self, index: usize, line: u32) {
+        let index = index + self.placeholder_offset;
         self.record(line);
-        self.column += format!("{}{index}", placeholders::PLACEHOLDER_MARKER).len() as u32;
+        self.column += placeholders::PLACEHOLDER_MARKER.len() as u32 + index.ilog10() + 1;
     }
     fn append(&mut self, raw: &str, decoded: &str, mut source_line: u32, raw_mode: bool) {
         if !raw.contains('\n') || raw == decoded {
@@ -124,7 +139,8 @@ impl Positions {
         }
         let mut at = 0;
         let mut extra = 0;
-        for character in decoded.chars() {
+        let mut characters = decoded.chars();
+        while let Some(character) = characters.next() {
             if extra == 0 && !raw_mode {
                 while let Some(width) = escapes::continuation(&raw[at..]) {
                     source_line += newlines(&raw[at..at + width]);
@@ -132,6 +148,17 @@ impl Positions {
                 }
             }
             self.record(source_line);
+            // Ordinary ASCII surrounding an escape has identical cooked width.
+            let run = raw[at..]
+                .bytes()
+                .take_while(|byte| byte.is_ascii() && !matches!(byte, b'\\' | b'\n' | b'\r'))
+                .count();
+            if extra == 0 && run > 1 {
+                characters.nth(run - 2);
+                at += run;
+                self.column += run as u32;
+                continue;
+            }
             if extra > 0 {
                 extra -= 1;
             } else {

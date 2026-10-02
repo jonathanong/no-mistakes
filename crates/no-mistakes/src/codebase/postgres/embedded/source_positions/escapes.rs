@@ -33,9 +33,10 @@ pub(super) fn width(raw: &str, raw_mode: bool) -> usize {
             }
         }
         b'0'..=b'7' => {
+            let maximum = if raw.as_bytes()[1] <= b'3' { 3 } else { 2 };
             1 + raw.as_bytes()[1..]
                 .iter()
-                .take(3)
+                .take(maximum)
                 .take_while(|byte| matches!(byte, b'0'..=b'7'))
                 .count()
         }
