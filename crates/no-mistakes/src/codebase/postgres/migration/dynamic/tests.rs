@@ -162,7 +162,7 @@ fn rejects_invalid_literal_suffixes_and_preserves_unknown_format_directives() {
         let code = significant(&tokens);
         assert!(literal::string_expression(&code, None).is_none());
     }
-    assert_eq!(literal::normalize_format("%q %1q"), "%q %1q");
+    assert_eq!(literal::normalize_format("%q %1q").sql, "%q %1q");
     assert!(schema_bodies("DO ' '").is_empty());
 }
 

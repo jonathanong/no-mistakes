@@ -204,6 +204,11 @@ subsequent DDL. In immediate PL/pgSQL blocks, plain `RETURN` keeps later DDL out
 of definite live history. `RETURN NEXT` and `RETURN QUERY` continue execution
 in set-returning routines.
 
+`format()` statements with unresolved `%I` or `%s` relation names remain available
+to broad schema policy checks, but their synthetic placeholder names do not
+change live table history, even when assigned or copied through SQL variables.
+`%L`, escaped `%%`, and format calls without runtime placeholders remain concrete.
+
 `extraGeneratedColumns.table` uses PostgreSQL identifier spelling: unquoted
 names fold to lowercase, and quotes preserve case or literal dots. Unqualified
 entries select a temporary table first, then an exact or unique surviving

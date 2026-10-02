@@ -125,8 +125,14 @@ pub(super) fn decode_unicode_string(value: &str, escape: char) -> Option<String>
     super::super::super::parse::unicode::decode_unicode_string(value, escape)
 }
 
-pub(super) fn normalize_format(template: &str) -> String {
+pub(super) struct NormalizedFormat {
+    pub sql: String,
+    pub concrete: bool,
+}
+
+pub(super) fn normalize_format(template: &str) -> NormalizedFormat {
     let mut out = String::new();
+    let mut concrete = true;
     let mut chars = template.chars().peekable();
     while let Some(character) = chars.next() {
         if character != '%' {
@@ -150,6 +156,8 @@ pub(super) fn normalize_format(template: &str) -> String {
                     "dynamic_value"
                 };
                 out.push_str(replacement);
+                // Identifier/string placeholders preserve policy shape, not live identity.
+                concrete &= next == 'L';
                 replaced = true;
                 break;
             }
@@ -165,5 +173,5 @@ pub(super) fn normalize_format(template: &str) -> String {
             out.push_str(&directive);
         }
     }
-    out
+    NormalizedFormat { sql: out, concrete }
 }

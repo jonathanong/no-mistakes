@@ -65,7 +65,11 @@ fn executed_expression(
             return Some(value.clone());
         }
     }
-    static_expression(expression).map(|sql| DynamicSql::anchored(sql, line))
+    static_expression(expression).map(|(sql, concrete)| {
+        let mut value = DynamicSql::anchored(sql, line);
+        value.executed = concrete;
+        value
+    })
 }
 
 fn execution_tokens<'a>(tokens: &'a [&TokenWithSpan]) -> &'a [&'a TokenWithSpan] {
@@ -76,7 +80,7 @@ fn execution_tokens<'a>(tokens: &'a [&TokenWithSpan]) -> &'a [&'a TokenWithSpan]
     &tokens[..end]
 }
 
-fn static_expression(tokens: &[&TokenWithSpan]) -> Option<String> {
+fn static_expression(tokens: &[&TokenWithSpan]) -> Option<(String, bool)> {
     if tokens
         .iter()
         .any(|token| matches!(token.token, Token::StringConcat | Token::Plus))
@@ -84,15 +88,17 @@ fn static_expression(tokens: &[&TokenWithSpan]) -> Option<String> {
         return None;
     }
     if let Some(decoded) = string_expression(tokens, None) {
-        return Some(decoded.sql);
+        return Some((decoded.sql, true));
     }
     if let Some(argument_start) = format_argument_start(tokens) {
         let comma = tokens
             .iter()
             .position(|token| matches!(token.token, Token::Comma))
             .unwrap_or(tokens.len().saturating_sub(1));
-        return string_expression(&tokens[argument_start..comma], None)
-            .map(|decoded| normalize_format(&decoded.sql));
+        return string_expression(&tokens[argument_start..comma], None).map(|decoded| {
+            let normalized = normalize_format(&decoded.sql);
+            (normalized.sql, normalized.concrete)
+        });
     }
     None
 }

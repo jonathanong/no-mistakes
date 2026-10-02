@@ -487,6 +487,12 @@ definite EXECUTE recovery. Its syntactic SQL remains available to broad policy
 facts, including assignments in dormant PL/pgSQL routines, without producing
 executed table events.
 
+`format()` recovery keeps `%I` and `%s` statements in broad schema facts using
+placeholder names, but does not project their synthetic relation identities into
+definite live-table history, including when the recovered SQL is assigned or
+copied through a variable. `%L`, escaped `%%`, and format calls without runtime
+placeholders remain concrete for live schema events.
+
 Generated-column write checks declare their migration schema, SQL query files, and
 executor profiles before the shared request fact pass. The statement pass records
 INSERT, UPDATE, and MERGE target columns and positional widths without consulting
