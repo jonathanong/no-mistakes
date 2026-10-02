@@ -181,6 +181,9 @@ schema-qualified identities. Qualified DML matches that identity; unqualified
 DML matches a unique surviving table name and skips ambiguous names. Findings
 include the schema when multiple live tables share a name. An unqualified CREATE
 can still supply a later qualified ALTER for that same unqualified table.
+Unqualified ALTER and DROP select a temporary table first, then an exact or unique
+surviving qualified relation. Ambiguous names leave the live catalog unchanged;
+qualify the statement when multiple schemas contain the same table name.
 
 Live table history excludes DDL inside dormant function/procedure definitions or
 conditional PL/pgSQL branches. Top-level DDL and unconditional immediate DO DDL
@@ -200,7 +203,9 @@ Within a migration source, `ROLLBACK` restores its prior table state and
 `ROLLBACK TO SAVEPOINT` discards changes after that savepoint. Committed DDL
 remains part of the write catalog, including DDL executed by an immediate DO block.
 `COMMIT AND CHAIN` and `ROLLBACK AND CHAIN` start a fresh tracked transaction for
-subsequent DDL. In immediate PL/pgSQL blocks, plain `RETURN` keeps later DDL out
+subsequent statements. `ABORT AND CHAIN` has the same rollback behavior, including
+optional WORK or TRANSACTION modifiers, while `AND NO CHAIN` ends the transaction.
+In immediate PL/pgSQL blocks, plain `RETURN` keeps later DDL out
 of definite live history. `RETURN NEXT` and `RETURN QUERY` continue execution
 in set-returning routines.
 

@@ -34,7 +34,7 @@ pub fn parse(tokens: &[&TokenWithSpan], order: Vec<usize>) -> Option<Marker> {
             }
             Some(Command::RollbackTo(identifier_at(tokens, at)?))
         } else {
-            Some(if keyword(first, "ROLLBACK") && and_chain(tokens, at) {
+            Some(if and_chain(tokens, at) {
                 Command::RollbackAndChain
             } else {
                 Command::Rollback

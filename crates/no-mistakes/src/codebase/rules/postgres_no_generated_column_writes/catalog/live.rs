@@ -92,8 +92,9 @@ pub(crate) fn live_tables<'a>(schema: &[&'a SqlSchemaFileFacts]) -> LiveTables<'
                     unqualified_table,
                     ..
                 } => {
-                    let key = existing_key(&tables, relation_key, unqualified_table);
-                    tables.remove(&key);
+                    if let Some(key) = existing_key(&tables, relation_key, unqualified_table) {
+                        tables.remove(&key);
+                    }
                 }
             }
         }
@@ -143,7 +144,9 @@ fn add<'a>(
     if_not_exists: bool,
     table_if_exists: bool,
 ) {
-    let key = existing_key(tables, key, table);
+    let Some(key) = existing_key(tables, key, table) else {
+        return;
+    };
     if table_if_exists && !tables.contains_key(&key) {
         return;
     }
@@ -167,16 +170,11 @@ fn add<'a>(
     }
 }
 
-fn existing_key(tables: &LiveTables<'_>, key: &str, unqualified: &str) -> String {
+fn existing_key(tables: &LiveTables<'_>, key: &str, unqualified: &str) -> Option<String> {
     let base = crate::codebase::postgres::idents::relation_part_key(unqualified);
-    let temporary = format!("pg_temp.{base}");
-    if key == base && tables.contains_key(&temporary) {
-        return temporary;
-    }
     // An unqualified CREATE has unknown search_path; a later qualified ALTER can identify it.
-    if !tables.contains_key(key) && tables.contains_key(&base) {
-        base
-    } else {
-        key.to_string()
+    if key != base && !tables.contains_key(key) && tables.contains_key(&base) {
+        return Some(base);
     }
+    crate::codebase::postgres::idents::resolve_relation_key(tables.keys().map(String::as_str), key)
 }

@@ -55,6 +55,42 @@ fn qualified_lifecycles_do_not_replace_other_schemas_and_ambiguous_names_are_ski
 }
 
 #[test]
+fn unqualified_alter_and_drop_reuse_unique_qualified_relations() {
+    let root = unit_fixture("unqualified-lifecycle");
+    let findings = check_with_files(
+        &root,
+        &config_with_options(""),
+        &[root.join("schema.sql"), root.join("writes.sql")],
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 3, 6, 7]
+    );
+}
+
+#[test]
+fn abort_chain_restarts_the_transaction_with_optional_modifiers() {
+    let root = unit_fixture("abort-chain");
+    let findings = check_with_files(
+        &root,
+        &config_with_options(""),
+        &[root.join("schema.sql"), root.join("writes.sql")],
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 3, 4]
+    );
+}
+
+#[test]
 fn live_catalog_replays_numeric_migration_names_in_numeric_order() {
     let root = unit_fixture("migration-order");
     let findings = check_with_files(

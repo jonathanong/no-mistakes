@@ -462,6 +462,8 @@ Ordered CREATE and ADD COLUMN events retain `if_not_exists` so catalog consumers
 The shared migration comparator orders directories lexically and filenames by
 their first numeric run. Live write catalogs retain qualified table lifecycle
 identities and resolve unqualified DML only when the surviving relation is unique.
+Unqualified ALTER and DROP share the same temporary-table preference and unique
+suffix resolution; ambiguous lifecycle names do not alter a definite relation.
 
 `table_events_collected` distinguishes a collected empty executed-event stream
 from legacy Rust facts supplied without events. Broad table/column policy facts
@@ -478,8 +480,9 @@ Executed table events discard changes rolled back within the SQL source, includi
 `ROLLBACK TO SAVEPOINT`. `COMMIT`, transaction `END`, and released savepoints
 retain their changes. Broad policy facts continue to describe rolled-back DDL.
 `COMMIT AND CHAIN` and `ROLLBACK AND CHAIN` leave the following transaction active
-for the next event group. A plain PL/pgSQL `RETURN` makes later statements in
-that block non-definite, including after a conditional branch; `RETURN NEXT` and
+for the next event group. `ABORT AND CHAIN` is the rollback synonym, including
+optional WORK or TRANSACTION modifiers. A plain PL/pgSQL `RETURN` makes later
+statements in that block non-definite, including after a conditional branch; `RETURN NEXT` and
 `RETURN QUERY` continue execution in set-returning routines.
 
 A variable assigned in conditional/loop/exception scope becomes opaque to later
