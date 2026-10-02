@@ -15,7 +15,7 @@ pub(crate) struct LiveTable<'a> {
 
 pub(crate) type LiveTables<'a> = BTreeMap<String, LiveTable<'a>>;
 
-pub(crate) fn live_tables(schema: &[SqlSchemaFileFacts]) -> LiveTables<'_> {
+pub(crate) fn live_tables<'a>(schema: &[&'a SqlSchemaFileFacts]) -> LiveTables<'a> {
     let mut tables = BTreeMap::new();
     let mut ordered: Vec<_> = schema.iter().collect();
     ordered.sort_by(|left, right| {

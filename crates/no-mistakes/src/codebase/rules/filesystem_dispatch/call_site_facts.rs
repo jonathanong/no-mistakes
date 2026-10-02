@@ -53,6 +53,11 @@ pub(super) fn prepare_call_site_facts(
             },
         )?);
     }
+    files.extend(crate::codebase::postgres::prepared::write_sql_paths(
+        root,
+        &sources.inventory().target_file_paths(),
+        &plan,
+    ));
     if plan.embedded_sql {
         files.extend(
             sources

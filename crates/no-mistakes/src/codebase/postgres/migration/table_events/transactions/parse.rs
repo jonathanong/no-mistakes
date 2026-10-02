@@ -14,7 +14,11 @@ pub fn parse(tokens: &[&TokenWithSpan], order: Vec<usize>) -> Option<Marker> {
         if keyword_at(tokens, 1, "PREPARED") {
             return None;
         }
-        Some(Command::Commit)
+        Some(if and_chain(tokens, transaction_modifier_end(tokens, 1)) {
+            Command::CommitAndChain
+        } else {
+            Command::Commit
+        })
     } else if keyword(first, "ROLLBACK") || keyword(first, "ABORT") {
         if keyword_at(tokens, 1, "PREPARED") {
             return None;
@@ -30,7 +34,11 @@ pub fn parse(tokens: &[&TokenWithSpan], order: Vec<usize>) -> Option<Marker> {
             }
             Some(Command::RollbackTo(identifier_at(tokens, at)?))
         } else {
-            Some(Command::Rollback)
+            Some(if keyword(first, "ROLLBACK") && and_chain(tokens, at) {
+                Command::RollbackAndChain
+            } else {
+                Command::Rollback
+            })
         }
     } else if keyword(first, "SAVEPOINT") {
         Some(Command::Savepoint(identifier_at(tokens, 1)?))
@@ -45,6 +53,17 @@ pub fn parse(tokens: &[&TokenWithSpan], order: Vec<usize>) -> Option<Marker> {
         None
     }?;
     Some(Marker { order, command })
+}
+
+fn transaction_modifier_end(tokens: &[&TokenWithSpan], mut at: usize) -> usize {
+    if keyword_at(tokens, at, "WORK") || keyword_at(tokens, at, "TRANSACTION") {
+        at += 1;
+    }
+    at
+}
+
+fn and_chain(tokens: &[&TokenWithSpan], at: usize) -> bool {
+    keyword_at(tokens, at, "AND") && keyword_at(tokens, at + 1, "CHAIN")
 }
 
 fn keyword_at(tokens: &[&TokenWithSpan], at: usize, expected: &str) -> bool {

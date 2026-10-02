@@ -4,9 +4,9 @@ use sqlparser::ast::Statement;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod insert;
-mod names;
+pub(crate) mod names;
 mod update;
-mod width;
+pub(crate) mod width;
 
 pub use insert::positional_insert_hits;
 

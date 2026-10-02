@@ -78,7 +78,8 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-generated-column-predicates",
             "postgres-explicit-columns",
             "postgres-no-offset",
-            "postgres-sql-shape-policy"
+            "postgres-sql-shape-policy",
+            "postgres-no-generated-column-writes",
         ]
     );
     assert_eq!(

@@ -2,17 +2,18 @@
 use super::{EmbeddedSqlOptions, SqlSchemaFileFacts, SqlStatementFileFacts};
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::ts_source::SourceStore;
-use rayon::prelude::*;
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
+mod sql;
+
 #[derive(Clone, Debug)]
 pub(crate) struct PreparationError {
-    message: Arc<str>,
-    source_kind: Option<std::io::ErrorKind>,
+    pub(crate) message: Arc<str>,
+    pub(crate) source_kind: Option<std::io::ErrorKind>,
 }
 type Entry<T> = Result<Arc<T>, Arc<PreparationError>>;
 mod fragments;
@@ -34,66 +35,7 @@ pub(crate) fn prepare(
 ) -> PreparedPostgresFacts {
     let mut out = PreparedPostgresFacts::default();
     if plan.postgres_schema || plan.postgres_dml {
-        // Invalid globs are diagnosed when each rule validates/selects its paths.
-        let paths = super::postgres_sql_paths(
-            root,
-            files,
-            &super::PostgresSchemaOptions {
-                sql_include: plan.postgres_sql_include.clone(),
-            },
-        )
-        .unwrap_or_default();
-        let rows: Vec<_> = paths
-            .par_iter()
-            .map(|path| {
-                let source = sources.read_path(path).map_err(|error| {
-                    Arc::new(PreparationError {
-                        message: Arc::from(format!("failed to collect PostgreSQL facts: {error}")),
-                        source_kind: Some(error.kind()),
-                    })
-                });
-                let parsed = source.as_ref().map(|source| {
-                    let parsed = super::parse::parse_postgres_sql(source);
-                    let failed = parsed.is_err();
-                    (
-                        parsed.unwrap_or_else(|_| super::parse::parse_postgres_sql_lenient(source)),
-                        failed,
-                    )
-                });
-                let schema = parsed
-                    .as_ref()
-                    .map(|(statements, _)| {
-                        let mut value = super::migration::extract_from_parsed(
-                            source.as_ref().unwrap(),
-                            statements,
-                        );
-                        value.path = path.clone();
-                        Arc::new(value)
-                    })
-                    .map_err(|error| Arc::clone(error));
-                let statements = parsed
-                    .as_ref()
-                    .map(|(statements, failed)| {
-                        let mut value = super::statements::extract_from_parsed(
-                            source.as_ref().unwrap(),
-                            statements,
-                            *failed,
-                        );
-                        value.path = path.clone();
-                        Arc::new(vec![value])
-                    })
-                    .map_err(|error| Arc::clone(error));
-                (path.clone(), schema, statements)
-            })
-            .collect();
-        for (path, schema, statements) in rows {
-            if plan.postgres_schema {
-                out.schema.insert(path.clone(), schema);
-            }
-            if plan.postgres_dml {
-                out.statements.insert(path, statements);
-            }
-        }
+        sql::collect(root, files, sources, plan, &mut out);
     }
     if plan.postgres_dml || plan.postgres_fragments {
         for path in files
@@ -160,6 +102,30 @@ impl PreparedPostgresFacts {
         });
         entry(value, path).map(Arc::as_ref)
     }
+    pub(crate) fn readable_schema(
+        &self,
+        path: &Path,
+    ) -> anyhow::Result<Option<&SqlSchemaFileFacts>> {
+        let value = self.schema.get(path).or_else(|| {
+            self.schema
+                .get(&crate::codebase::ts_resolver::normalize_path(path))
+        });
+        Ok(known_entry(value, path)?.as_ref().ok().map(Arc::as_ref))
+    }
+    pub(crate) fn readable_statements(
+        &self,
+        path: &Path,
+        profile: Option<&EmbeddedSqlOptions>,
+    ) -> anyhow::Result<Option<&[SqlStatementFileFacts]>> {
+        let value = match profile {
+            Some(profile) => self.embedded.get(&(path.to_path_buf(), profile.clone())),
+            None => self.statements.get(path),
+        };
+        Ok(known_entry(value, path)?
+            .as_ref()
+            .ok()
+            .map(|value| value.as_slice()))
+    }
     pub fn statements(
         &self,
         path: &Path,
@@ -172,16 +138,39 @@ impl PreparedPostgresFacts {
         entry(value, path).map(|value| value.as_slice())
     }
 }
-fn entry<'a, T>(value: Option<&'a Entry<T>>, path: &Path) -> anyhow::Result<&'a Arc<T>> {
-    match value {
-        Some(Ok(value)) => Ok(value),
-        Some(Err(error)) => Err(anyhow::anyhow!(error.message.to_string())),
-        None => Err(anyhow::anyhow!(
+fn known_entry<'a, T>(value: Option<&'a Entry<T>>, path: &Path) -> anyhow::Result<&'a Entry<T>> {
+    value.ok_or_else(|| {
+        anyhow::anyhow!(
             "prepared PostgreSQL facts are missing for {}",
             path.display()
-        )),
-    }
+        )
+    })
+}
+fn entry<'a, T>(value: Option<&'a Entry<T>>, path: &Path) -> anyhow::Result<&'a Arc<T>> {
+    known_entry(value, path)?
+        .as_ref()
+        .map_err(|error| anyhow::anyhow!(error.message.to_string()))
 }
 
 #[cfg(test)]
 mod tests;
+
+pub(crate) fn write_sql_paths(
+    root: &Path,
+    files: &[PathBuf],
+    plan: &CheckFactPlan,
+) -> Vec<PathBuf> {
+    let candidates: Vec<_> = files
+        .iter()
+        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("sql"))
+        .cloned()
+        .collect();
+    super::postgres_sql_paths(
+        root,
+        &candidates,
+        &super::PostgresSchemaOptions {
+            sql_include: plan.postgres_write_sql_include.clone(),
+        },
+    )
+    .unwrap_or_default()
+}

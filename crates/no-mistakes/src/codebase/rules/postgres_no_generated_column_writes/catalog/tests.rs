@@ -44,7 +44,7 @@ fn collects_generated_columns_and_extra_tables() {
         table: "votes".to_string(),
         column: "created_at".to_string(),
     }];
-    let catalog = catalog_from_tables(&live_tables(&schema), &extra);
+    let catalog = catalog_from_tables(&live_tables(&schema.iter().collect::<Vec<_>>()), &extra);
     assert!(catalog.get("items").is_some_and(|table| {
         table.generated.contains("created_at") && table.column_order.is_some()
     }));
@@ -73,7 +73,9 @@ fn ignores_tables_without_generated_columns_and_blank_extras() {
             column: String::new(),
         },
     ];
-    assert!(catalog_from_tables(&live_tables(&schema), &extra).is_empty());
+    assert!(
+        catalog_from_tables(&live_tables(&schema.iter().collect::<Vec<_>>()), &extra).is_empty()
+    );
 }
 
 #[test]
@@ -90,7 +92,8 @@ fn stale_extras_that_duplicate_schema_generated_columns() {
         table: "items".to_string(),
         column: "created_at".to_string(),
     }];
-    let findings = stale_extra_findings_from_tables(&live_tables(&schema), &extra);
+    let findings =
+        stale_extra_findings_from_tables(&live_tables(&schema.iter().collect::<Vec<_>>()), &extra);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("items.created_at"));
 }
@@ -105,7 +108,7 @@ fn legacy_supplied_facts_keep_alter_column_support() {
     // Programmatic Rust callers may still populate the original aggregate fields.
     facts.table_events.clear();
     facts.table_events_collected = false;
-    let catalog = trigger_catalog_from_tables(&live_tables(&[facts]), &["updated_at".into()]);
+    let catalog = trigger_catalog_from_tables(&live_tables(&[&facts]), &["updated_at".into()]);
     assert!(catalog
         .get("orders")
         .is_some_and(|table| table.generated.contains("updated_at")));

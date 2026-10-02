@@ -52,11 +52,14 @@ pub(super) fn run(
         POSTGRES_GENERATED_COLUMN_PREDICATES => {
             generated_predicates::run(root, config, files, sources, facts)
         }
-        POSTGRES_NO_GENERATED_COLUMN_WRITES => {
-            postgres_no_generated_column_writes::check_with_files_and_sources(
+        POSTGRES_NO_GENERATED_COLUMN_WRITES => match facts {
+            Some(facts) => postgres_no_generated_column_writes::check_with_files_sources_and_facts(
+                root, config, files, facts,
+            ),
+            None => postgres_no_generated_column_writes::check_with_files_and_sources(
                 root, config, files, sources,
-            )
-        }
+            ),
+        },
         POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
         POSTGRES_NO_OFFSET => no_offset::run(root, config, files, sources, facts),
         POSTGRES_IDENTIFIER_LENGTH => {

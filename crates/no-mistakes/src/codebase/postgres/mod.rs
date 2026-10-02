@@ -60,7 +60,6 @@ pub use offset::{
     sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse, SqlOffsetFact,
 };
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
-pub(crate) use parse::top_level_statements;
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use profiles::{
     configure_prepared_postgres_plan, configured_embedded_sql_options_for_checks,
@@ -78,6 +77,7 @@ pub use statements::{
     SqlConflictWhereProof, SqlCountExistenceFact, SqlExistsSetOpFact, SqlInsertFact,
     SqlOnConflictAction, SqlOnConflictFact, SqlRelationPredicateFact, SqlSelectFact,
     SqlStatementFileFacts, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod, SqlValueForm,
+    SqlWriteColumns, SqlWriteFact,
 };
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,

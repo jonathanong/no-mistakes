@@ -1,4 +1,5 @@
 mod fragments;
+mod postgres_readable;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;

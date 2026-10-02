@@ -477,8 +477,19 @@ qualification; `table` retains its legacy decoded spelling. CREATE events retain
 Executed table events discard changes rolled back within the SQL source, including
 `ROLLBACK TO SAVEPOINT`. `COMMIT`, transaction `END`, and released savepoints
 retain their changes. Broad policy facts continue to describe rolled-back DDL.
+`COMMIT AND CHAIN` and `ROLLBACK AND CHAIN` leave the following transaction active
+for the next event group. A plain PL/pgSQL `RETURN` makes later statements in
+that block non-definite, including after a conditional branch; `RETURN NEXT` and
+`RETURN QUERY` continue execution in set-returning routines.
 
 A variable assigned in conditional/loop/exception scope becomes opaque to later
 definite EXECUTE recovery. Its syntactic SQL remains available to broad policy
 facts, including assignments in dormant PL/pgSQL routines, without producing
 executed table events.
+
+Generated-column write checks declare their migration schema, SQL query files, and
+executor profiles before the shared request fact pass. The statement pass records
+INSERT, UPDATE, and MERGE target columns and positional widths without consulting
+a catalog. Rule consumers borrow those facts and resolve the protected columns
+after the ordered migration projection; they do not parse SQL again. Query-file
+`include` scope is independent of migration `sqlInclude`.

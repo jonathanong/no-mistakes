@@ -27,6 +27,14 @@ pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>, original: &[TokenWithSpan]) 
 
 fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
     if let Some(body) = peel_do_body(&chunk) {
+        let shift = original
+            .and_then(|tokens| {
+                tokens
+                    .iter()
+                    .find(|token| matches!(token.token, Token::DollarQuotedString(_)))
+            })
+            .map_or(0, |token| token.span.start.line.saturating_sub(1) as usize);
+        let body = format!("{}{}", "\n".repeat(shift), body);
         return super::parse_postgres_sql_lenient(&body)
             .into_iter()
             .filter(|statement| !is_begin_or_end(statement))

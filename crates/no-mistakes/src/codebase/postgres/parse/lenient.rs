@@ -18,6 +18,27 @@ use rewrite::{
 /// `CREATE TABLE`, `CREATE [UNIQUE] INDEX`, and DML after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     let located = super::unicode::tokenize_with_location(&super::normalize_copy_data(sql), false);
+    if located.is_empty() {
+        let chunks = super::top_level_statements(sql);
+        if chunks.len() <= 1 {
+            return Vec::new();
+        }
+        return chunks
+            .into_iter()
+            .scan((0usize, 1usize), |(offset, line), (_, text)| {
+                let start = *offset + sql[*offset..].find(&text).unwrap();
+                *line += sql[*offset..start]
+                    .bytes()
+                    .filter(|byte| *byte == b'\n')
+                    .count();
+                let chunk = format!("{}{}", "\n".repeat(line.saturating_sub(1)), text);
+                *line += text.bytes().filter(|byte| *byte == b'\n').count();
+                *offset = start + text.len();
+                Some(parse_postgres_sql_lenient(&chunk))
+            })
+            .flatten()
+            .collect();
+    }
     let mut tokens = located.iter().map(|token| token.token.clone()).collect();
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_referential_set_column_lists(&mut tokens);

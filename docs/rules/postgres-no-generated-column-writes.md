@@ -199,6 +199,10 @@ change definite live table state.
 Within a migration source, `ROLLBACK` restores its prior table state and
 `ROLLBACK TO SAVEPOINT` discards changes after that savepoint. Committed DDL
 remains part of the write catalog, including DDL executed by an immediate DO block.
+`COMMIT AND CHAIN` and `ROLLBACK AND CHAIN` start a fresh tracked transaction for
+subsequent DDL. In immediate PL/pgSQL blocks, plain `RETURN` keeps later DDL out
+of definite live history. `RETURN NEXT` and `RETURN QUERY` continue execution
+in set-returning routines.
 
 `extraGeneratedColumns.table` uses PostgreSQL identifier spelling: unquoted
 names fold to lowercase, and quotes preserve case or literal dots. Unqualified
@@ -208,3 +212,9 @@ schema. Stale-entry checks inspect that same relation rather than a namesake.
 
 Assignments inside conditional, loop or exception scopes invalidate static SQL
 variables, so later EXECUTE statements do not replay an uncertain branch value.
+
+The rule shares prepared PostgreSQL schema and statement facts with other enabled
+checks. Its query-file `include` scope is independent of schema `sqlInclude`, and
+each configured executor profile uses the shared parsed TS/JS program. Raw SQL
+findings retain each inner statement's physical line, including statements inside
+a multiline `DO` block, so line and next-line suppressions target that write.

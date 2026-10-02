@@ -52,6 +52,22 @@ fn rollback_discards_only_events_inside_the_transaction() {
 }
 
 #[test]
+fn transaction_chaining_starts_a_fresh_transaction() {
+    let retained = retained_events(
+        &[vec![2], vec![4], vec![7], vec![9]],
+        &[
+            marker(1, Command::Begin),
+            marker(3, Command::CommitAndChain),
+            marker(5, Command::Rollback),
+            marker(6, Command::Begin),
+            marker(8, Command::RollbackAndChain),
+            marker(10, Command::Commit),
+        ],
+    );
+    assert_eq!(retained, [true, false, false, true]);
+}
+
+#[test]
 fn savepoint_rollback_keeps_prior_and_later_committed_events() {
     let retained = retained_events(
         &[vec![2], vec![4], vec![6], vec![9]],

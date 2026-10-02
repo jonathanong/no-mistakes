@@ -47,3 +47,18 @@ CREATE TEMP TABLE temporary_kept (id int);
 DO $$ BEGIN
   CREATE TABLE plpgsql_block_kept (id int);
 END $$;
+BEGIN;
+CREATE TABLE committed_before_chain (id int);
+COMMIT AND CHAIN;
+CREATE TABLE rolled_back_after_commit_chain (id int);
+ROLLBACK;
+BEGIN;
+CREATE TABLE rolled_back_before_chain (id int);
+ROLLBACK WORK AND CHAIN;
+CREATE TABLE committed_after_rollback_chain (id int);
+COMMIT;
+BEGIN;
+CREATE TABLE committed_before_work_chain (id int);
+COMMIT WORK AND CHAIN;
+CREATE TABLE rolled_back_after_work_chain (id int);
+ROLLBACK;

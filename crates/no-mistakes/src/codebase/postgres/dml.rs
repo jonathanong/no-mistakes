@@ -3,7 +3,7 @@
 use regex::Regex;
 use std::sync::LazyLock;
 
-mod writes;
+pub(crate) mod writes;
 
 pub use writes::{
     find_generated_column_writes, GeneratedColumnWrite, GeneratedTable, GeneratedTableColumns,

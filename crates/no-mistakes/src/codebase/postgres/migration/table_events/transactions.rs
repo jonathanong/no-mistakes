@@ -15,7 +15,9 @@ mod tests;
 pub(super) enum Command {
     Begin,
     Commit,
+    CommitAndChain,
     Rollback,
+    RollbackAndChain,
     Savepoint(String),
     RollbackTo(String),
     Release(String),
@@ -65,8 +67,10 @@ impl Transaction {
                 self.pending.clear();
                 self.savepoints.clear();
             }
-            Command::Commit if self.active => self.commit(retained),
-            Command::Rollback if self.active => self.rollback(retained),
+            Command::Commit if self.active => self.commit(retained, false),
+            Command::CommitAndChain if self.active => self.commit(retained, true),
+            Command::Rollback if self.active => self.rollback(retained, false),
+            Command::RollbackAndChain if self.active => self.rollback(retained, true),
             Command::Savepoint(name) if self.active => {
                 self.savepoints.push((name.clone(), self.pending.len()));
             }
@@ -76,20 +80,20 @@ impl Transaction {
         }
     }
 
-    fn commit(&mut self, retained: &mut [bool]) {
+    fn commit(&mut self, retained: &mut [bool], chain: bool) {
         for index in self.pending.drain(..) {
             retained[index] = true;
         }
         self.savepoints.clear();
-        self.active = false;
+        self.active = chain;
     }
 
-    fn rollback(&mut self, retained: &mut [bool]) {
+    fn rollback(&mut self, retained: &mut [bool], chain: bool) {
         for index in self.pending.drain(..) {
             retained[index] = false;
         }
         self.savepoints.clear();
-        self.active = false;
+        self.active = chain;
     }
 
     fn rollback_to(&mut self, name: &str, retained: &mut [bool]) {

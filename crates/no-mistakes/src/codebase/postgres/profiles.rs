@@ -16,6 +16,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-explicit-columns",
     "postgres-no-offset",
     "postgres-sql-shape-policy",
+    "postgres-no-generated-column-writes",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.
@@ -42,7 +43,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct EmbeddedSqlRuleOptions {
-    import_specifier: String,
+    import_specifier: Option<String>,
     executor_names: Vec<String>,
 }
 
@@ -64,7 +65,7 @@ pub(crate) fn configured_embedded_sql_options(
         for rule in config.rule_applications(rule_id) {
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
             profiles.push(EmbeddedSqlOptions::configured(
-                &options.import_specifier,
+                options.import_specifier.as_deref().unwrap_or_default(),
                 &options.executor_names,
             ));
         }

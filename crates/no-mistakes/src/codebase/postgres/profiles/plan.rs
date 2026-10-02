@@ -11,6 +11,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
         "postgres-sql-shape-policy",
+        "postgres-no-generated-column-writes",
     ];
     plan.postgres_dml |= dml_rules
         .iter()
@@ -20,6 +21,7 @@ pub fn configure_prepared_postgres_plan(
         .is_empty();
     let schema_rules = [
         "postgres-generated-column-predicates",
+        "postgres-no-generated-column-writes",
         "postgres-identifier-length",
         "postgres-no-add-column",
         "postgres-require-named-constraints",
@@ -36,7 +38,30 @@ pub fn configure_prepared_postgres_plan(
         .extend(sql_patterns(config, &schema_rules)?);
     plan.postgres_sql_include
         .extend(sql_patterns(config, &dml_rules)?);
+    plan.postgres_write_sql_include
+        .extend(write_patterns(config)?);
+    plan.postgres_write_sql_include.sort();
+    plan.postgres_write_sql_include.dedup();
     plan.postgres_sql_include.sort();
     plan.postgres_sql_include.dedup();
     Ok(())
+}
+
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+struct WriteOptions {
+    include: Vec<String>,
+}
+
+pub(super) fn write_patterns(config: &NoMistakesConfig) -> Result<Vec<String>> {
+    let mut patterns = Vec::new();
+    for rule in config.rule_applications("postgres-no-generated-column-writes") {
+        let options: WriteOptions = rule.try_rule_options()?;
+        patterns.extend(if options.include.is_empty() {
+            vec!["**/*.sql".into()]
+        } else {
+            options.include
+        });
+    }
+    Ok(patterns)
 }

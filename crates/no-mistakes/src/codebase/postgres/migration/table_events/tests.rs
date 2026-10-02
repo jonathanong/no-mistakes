@@ -101,6 +101,9 @@ fn transaction_projection_keeps_only_committed_table_events() {
             "create:after_rollback_without_keyword:temporary=false",
             "create:temporary_kept:temporary=true",
             "create:plpgsql_block_kept:temporary=false",
+            "create:committed_before_chain:temporary=false",
+            "create:committed_after_rollback_chain:temporary=false",
+            "create:committed_before_work_chain:temporary=false",
         ]
     );
     // Projection is deliberately limited to live catalog events. Broad policy
