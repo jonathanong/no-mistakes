@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: column:invoices.state
+          reason: Suppression integration fixture keeps the second finding controlled

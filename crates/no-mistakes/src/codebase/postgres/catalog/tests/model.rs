@@ -90,6 +90,7 @@ fn full_snapshot_fills_the_read_only_model() {
         vec![CatalogCheck {
             name: "accounts_active_check".to_string(),
             definition: "CHECK ((is_active = true))".to_string(),
+            validated: true,
         }]
     );
     assert_eq!(

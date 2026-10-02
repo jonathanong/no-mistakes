@@ -1,8 +1,7 @@
 use sqlparser::ast::{BinaryOperator, Expr, Value};
 
-pub(super) fn pinned_literals(definition: &str, column: &str) -> Option<Vec<String>> {
-    let expr = super::parse::expression(definition)?;
-    pin(&expr, column)
+pub(super) fn pinned_literals_expr(expr: &Expr, column: &str) -> Option<Vec<String>> {
+    pin(expr, column)
 }
 
 fn pin(expr: &Expr, column: &str) -> Option<Vec<String>> {
@@ -105,7 +104,7 @@ fn any_array(left: &Expr, right: &Expr, column: &str) -> Option<Vec<String>> {
     if !is_column(left, column) {
         return None;
     }
-    let Expr::Array(array) = peel_nested(right) else {
+    let Expr::Array(array) = peel_safe_cast(right) else {
         return None;
     };
     string_list(&array.elem)
@@ -128,7 +127,7 @@ fn extend_new(values: &mut Vec<String>, more: &[String]) {
 }
 
 fn is_column(expr: &Expr, column: &str) -> bool {
-    let Expr::Identifier(ident) = peel_cast(expr) else {
+    let Expr::Identifier(ident) = peel_safe_cast(expr) else {
         return false;
     };
     if ident.quote_style == Some('"') {
@@ -139,7 +138,7 @@ fn is_column(expr: &Expr, column: &str) -> bool {
 }
 
 fn string_literal(expr: &Expr) -> Option<String> {
-    let Expr::Value(value) = peel_cast(expr) else {
+    let Expr::Value(value) = peel_safe_cast(expr) else {
         return None;
     };
     match &value.value {
@@ -159,9 +158,26 @@ fn peel_nested(expr: &Expr) -> &Expr {
     }
 }
 
-fn peel_cast(expr: &Expr) -> &Expr {
+fn peel_safe_cast(expr: &Expr) -> &Expr {
     match expr {
-        Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => peel_cast(inner),
+        Expr::Nested(inner) => peel_safe_cast(inner),
+        Expr::Cast {
+            expr: inner,
+            data_type,
+            ..
+        } if safe_cast(data_type) => peel_safe_cast(inner),
         other => other,
     }
+}
+
+fn safe_cast(data_type: &sqlparser::ast::DataType) -> bool {
+    let name = data_type.to_string().to_ascii_lowercase();
+    safe_text_type(&name) || name.strip_suffix("[]").is_some_and(safe_text_type)
+}
+
+fn safe_text_type(name: &str) -> bool {
+    matches!(
+        name,
+        "text" | "varchar" | "character varying" | "char varying"
+    )
 }

@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "payments": {
+      "columns": {
+        "currency": { "dataType": "text" },
+        "status": { "dataType": "text" }
+      },
+      "checkConstraints": {
+        "ck_currency": { "definition": "CHECK ((currency = 'USD'::text))" },
+        "ck_status": { "definition": "CHECK ((status = 'open'::text))" }
+      }
+    }
+  }
+}

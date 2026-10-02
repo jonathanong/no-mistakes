@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "columns": {
+        "plan_type": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

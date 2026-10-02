@@ -1,11 +1,13 @@
 use super::compile::Compiled;
-use super::pin::pinned_literals;
+use super::pin::pinned_literals_expr;
 use super::text::{literal_text, name_text};
 use super::RULE_ID;
 use crate::codebase::postgres::{
     catalog_finding, CatalogColumn, CatalogObjectRef, CatalogTable, SchemaCatalog,
 };
 use crate::codebase::rules::RuleFinding;
+use sqlparser::ast::Expr;
+use std::collections::BTreeMap;
 
 struct Seen {
     table: String,
@@ -17,6 +19,7 @@ struct Seen {
 
 pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
     let seen = collect(catalog, compiled);
+    let peers = peer_index(&seen);
     let mut findings = Vec::new();
     for item in &seen {
         if !item.candidate {
@@ -28,26 +31,59 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
         };
         if item.values.is_empty() {
             if let Some(pattern) = compiled.matching_pattern(&item.column) {
-                findings.push(catalog_finding(
+                findings.push(column_finding(
+                    catalog,
                     RULE_ID,
                     path,
                     &object,
+                    &item.table,
+                    &item.column,
                     &name_text(&item.data_type, pattern),
                 ));
             }
             continue;
         }
-        findings.push(catalog_finding(
+        findings.push(column_finding(
+            catalog,
             RULE_ID,
             path,
             &object,
-            &literal_text(&item.data_type, &item.values, &peers(&seen, item)),
+            &item.table,
+            &item.column,
+            &literal_text(&item.data_type, &item.values, &peers_for(&peers, item)),
         ));
     }
     super::super::sort_findings(&mut findings);
+    if let Some(message) = compiled
+        .message
+        .as_deref()
+        .filter(|message| !message.trim().is_empty())
+    {
+        for finding in &mut findings {
+            finding.message = format!(
+                "{}: {}: {message}",
+                finding.file,
+                finding.target.as_deref().unwrap_or_default()
+            );
+        }
+    }
     let mut findings = compiled.allow.clone().apply(path, findings);
     super::super::sort_findings(&mut findings);
     findings
+}
+
+fn column_finding(
+    catalog: &SchemaCatalog,
+    rule: &str,
+    path: &str,
+    object: &CatalogObjectRef,
+    table: &str,
+    column: &str,
+    text: &str,
+) -> RuleFinding {
+    let mut finding = catalog_finding(rule, path, object, text);
+    finding.line = catalog.column_line(table, column);
+    finding
 }
 
 fn collect(catalog: &SchemaCatalog, compiled: &Compiled) -> Vec<Seen> {
@@ -56,6 +92,16 @@ fn collect(catalog: &SchemaCatalog, compiled: &Compiled) -> Vec<Seen> {
         if compiled.ignores(&table.name) {
             continue;
         }
+        let mut checks: Vec<_> = table
+            .check_constraints
+            .iter()
+            .filter(|check| check.validated)
+            .collect();
+        checks.sort_by(|left, right| left.name.cmp(&right.name));
+        let parsed_checks: Vec<_> = checks
+            .into_iter()
+            .filter_map(|check| super::parse::expression(&check.definition))
+            .collect();
         for column in &table.columns {
             if !compiled.type_matches(&column.data_type) {
                 continue;
@@ -65,7 +111,7 @@ fn collect(catalog: &SchemaCatalog, compiled: &Compiled) -> Vec<Seen> {
                 column: column.name.clone(),
                 data_type: column.data_type.clone(),
                 candidate: candidate(column, table, compiled),
-                values: values_for(table, &column.name),
+                values: values_for(&parsed_checks, &column.name),
             });
         }
     }
@@ -86,43 +132,54 @@ fn sole_foreign_key(table: &CatalogTable, column: &str) -> bool {
         .any(|foreign_key| foreign_key.columns.len() == 1 && foreign_key.columns[0] == column)
 }
 
-fn values_for(table: &CatalogTable, column: &str) -> Vec<String> {
-    let mut checks: Vec<_> = table.check_constraints.iter().collect();
-    checks.sort_by(|left, right| left.name.cmp(&right.name));
-    let mut values = Vec::new();
+fn values_for(checks: &[Expr], column: &str) -> Vec<String> {
+    let mut pinned_checks = Vec::new();
     for check in checks {
-        let Some(pinned) = pinned_literals(&check.definition, column) else {
+        let Some(values) = pinned_literals_expr(check, column) else {
             continue;
         };
-        for value in pinned {
-            if !values.iter().any(|existing| existing == &value) {
-                values.push(value);
-            }
-        }
+        pinned_checks.push(values);
+    }
+    let Some(mut values) = pinned_checks.first().cloned() else {
+        return Vec::new();
+    };
+    for check_values in pinned_checks.iter().skip(1) {
+        values.retain(|value| check_values.contains(value));
     }
     values
 }
 
-fn peers(seen: &[Seen], item: &Seen) -> Vec<String> {
-    let mut peers: Vec<(String, String)> = seen
+type PeerIndex = BTreeMap<Vec<String>, Vec<(String, String)>>;
+
+fn peer_index(seen: &[Seen]) -> PeerIndex {
+    let mut index: PeerIndex = BTreeMap::new();
+    for item in seen
         .iter()
-        .filter(|other| other.table != item.table || other.column != item.column)
-        .filter(|other| !other.values.is_empty() && same_set(&other.values, &item.values))
-        .map(|other| {
-            (
-                format!("column:{}.{}", other.table, other.column),
-                format!("{}.{}", other.table, other.column),
-            )
-        })
-        .collect();
-    peers.sort();
-    peers.into_iter().map(|(_, display)| display).collect()
+        .filter(|item| item.candidate && !item.values.is_empty())
+    {
+        let mut key = item.values.clone();
+        key.sort();
+        key.dedup();
+        index.entry(key).or_default().push((
+            format!("column:{}.{}", item.table, item.column),
+            format!("{}.{}", item.table, item.column),
+        ));
+    }
+    for peers in index.values_mut() {
+        peers.sort();
+    }
+    index
 }
 
-fn same_set(left: &[String], right: &[String]) -> bool {
-    let mut left: Vec<&str> = left.iter().map(String::as_str).collect();
-    let mut right: Vec<&str> = right.iter().map(String::as_str).collect();
-    left.sort_unstable();
-    right.sort_unstable();
-    left == right
+fn peers_for(index: &PeerIndex, item: &Seen) -> Vec<String> {
+    let mut key = item.values.clone();
+    key.sort();
+    key.dedup();
+    index
+        .get(&key)
+        .into_iter()
+        .flatten()
+        .filter(|(sort_key, _)| sort_key != &format!("column:{}.{}", item.table, item.column))
+        .map(|(_, display)| display.clone())
+        .collect()
 }

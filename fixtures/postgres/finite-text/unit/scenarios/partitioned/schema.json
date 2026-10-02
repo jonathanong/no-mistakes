@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "parts": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "status": {
+          "dataType": "TEXT"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = 'open'::text))"
+        }
+      }
+    }
+  }
+}

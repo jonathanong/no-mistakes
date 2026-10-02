@@ -30,6 +30,7 @@ pub(super) fn checks(table: &SnapshotTable) -> Vec<CatalogCheck> {
         .map(|(name, check)| CatalogCheck {
             name: name.clone(),
             definition: check.definition.clone(),
+            validated: check.validated,
         })
         .collect()
 }

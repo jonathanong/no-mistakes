@@ -1,0 +1,29 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "bills": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    },
+    "invoices": {
+      "columns": {
+        "status": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))"
+        }
+      }
+    }
+  }
+}

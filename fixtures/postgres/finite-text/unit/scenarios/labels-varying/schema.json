@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "labels": {
+      "columns": {
+        "kind": {
+          "dataType": "character varying"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((kind::character varying = 'open'::character varying))"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "labels": {
+      "columns": {
+        "Kind": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "ck": {
+          "definition": "CHECK ((\"Kind\" IN ('a', 'b')))"
+        }
+      }
+    }
+  }
+}

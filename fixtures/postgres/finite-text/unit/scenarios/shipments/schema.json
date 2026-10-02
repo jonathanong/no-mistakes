@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "shipments": {
+      "columns": {
+        "state": {
+          "dataType": "text"
+        },
+        "lost_at": {
+          "dataType": "timestamp with time zone"
+        }
+      },
+      "checkConstraints": {
+        "ck_extra": {
+          "definition": "CHECK (((state <> 'lost'::text) OR (lost_at IS NOT NULL)))"
+        },
+        "ck_values": {
+          "definition": "CHECK ((state = ANY (ARRAY['new'::text, 'sent'::text, 'lost'::text])))"
+        }
+      }
+    }
+  }
+}

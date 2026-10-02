@@ -43,22 +43,30 @@ composite foreign key does not remove the column. `skipGeneratedColumns`
 skips columns whose `generated` field is set. Tables matching
 `ignoreTablePatterns` are not checked.
 
-A check pins a column when every `OR` branch pins it, or when an `AND` has at
-least one pinning conjunct. `c = 'x'`, `'x' = c`, `c IN (...)`, and
-`c = ANY (ARRAY[...])` pin string literals. `c IS NULL` pins an empty list so
-a nullable `OR` can still succeed. Casts on the column or the literal are
-ignored. Anything else, including a check that fails to parse, does not pin
-and is not an error.
+A validated check pins a column when every `OR` branch pins it, or when an
+`AND` has at least one pinning conjunct. `c = 'x'`, `'x' = c`, `c IN (...)`,
+and `c = ANY (ARRAY[...])` pin string literals. `c IS NULL` pins an empty list
+so a nullable `OR` can still succeed. A cast is peeled only when it is
+lossless for text values, such as `text` or unbounded `varchar`; casts to a
+fixed-width `char(n)` are not peeled because they can truncate values. Checks
+that fail to parse, checks that are not validated, and other expressions do
+not pin values and do not produce errors.
 
-Each pinned candidate gets one finding. The text lists values in first-seen
-order, walking constraints by name, and names up to five other pinned columns
-with the same set. A candidate that is not pinned can still match
-`namePatterns`. A column that is both pinned and name-matched gets only the
-literal finding.
+In snapshot JSON, a check with `"validated": false` is ignored. If older
+snapshots omit `validated`, the catalog treats the check as validated.
+
+For multiple conjuncts within one check, the first conjunct that pins the
+column supplies the displayed values. Across independent validated checks,
+the rule intersects the pinned sets. Values keep the order from the first
+check by name, with SQL single quotes doubled in the message. Peer names are
+indexed once and include only other candidate columns with the same value set;
+single-column foreign keys and skipped generated columns are not peers. A
+candidate that is not pinned can still match `namePatterns`. A column that is
+both pinned and name-matched gets only the literal finding.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `columnTypes` defaults to `["text", "character varying"]`; an empty list is a configuration error. Comparison with `data_type` is case-insensitive. `namePatterns` defaults to `[]`, which turns the name check off. `skipGeneratedColumns` defaults to `false`. `ignoreTablePatterns` defaults to `[]`. An invalid regex is a configuration error. `allow` defaults to `[]`. An empty reason, a duplicate object, or an object ref that is not `column:<table>.<column>` is a configuration error.
+`schemaCatalogPath` is required. `columnTypes` defaults to `["text", "character varying"]`; an empty list is a configuration error. Comparison with `data_type` is case-insensitive. The unbounded `character varying` candidate also matches valid positive typmods such as `character varying(32)` and `varchar(32)`. `namePatterns` defaults to `[]`, which turns the name check off. `skipGeneratedColumns` defaults to `false`. `ignoreTablePatterns` defaults to `[]`. An invalid regex is a configuration error. `allow` defaults to `[]`. An empty reason, a duplicate object, or an object ref that is not `column:<table>.<column>` is a configuration error. Rule-level `include`/`exclude` filters apply to the catalog path, and `message` replaces the default text for each finding.
 
 ## Valid example
 
@@ -115,9 +123,29 @@ add an `allow` entry with a reason instead of changing the column.
 
 ## Suppression
 
-Snapshot findings are line 1, so SQL comments cannot suppress them. Add
-`allow: [{object, reason}]` with object ref `column:<table>.<column>`. An
-entry that matches no finding is reported as
+Schema snapshots accept JSONC comments. A finding uses the line containing
+the column key in the snapshot, so the standard directives can suppress it:
+
+```jsonc
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        // no-mistakes-disable-next-line postgres-finite-text-columns
+        "status": { "dataType": "text" }
+      }
+    }
+  }
+}
+```
+
+Use `// no-mistakes-disable-line postgres-finite-text-columns` on the column
+declaration line, or `// no-mistakes-disable-file postgres-finite-text-columns`
+at the top of the snapshot to opt out for the whole file. Directives use the
+same `no-mistakes` spelling as other rules. `allow: [{object, reason}]` is
+also supported with object ref `column:<table>.<column>`; an entry that
+matches no finding is reported as
 `stale postgres-finite-text-columns allow entry: <object>`.
 
 ## Related rules
