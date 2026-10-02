@@ -89,8 +89,18 @@ pub(super) fn collect_alter_table(
             AlterTableOperation::AddColumn { column_def, .. } => {
                 facts.add_columns.push(SqlAddColumnMetadata {
                     table_name: index_table.clone(),
+                    unqualified_table_name: table_name.clone(),
                     column_name: column_def.name.value.clone(),
                     data_type: column_def.data_type.to_string(),
+                    is_generated: column_def.options.iter().any(|option| {
+                        matches!(
+                            &option.option,
+                            ColumnOption::Generated {
+                                generation_expr: Some(_),
+                                ..
+                            }
+                        )
+                    }),
                     nullable: !column_def
                         .options
                         .iter()

@@ -31,6 +31,42 @@ pub(super) fn catalog_from_facts(
             });
         }
     }
+    for column in schema
+        .iter()
+        .flat_map(|file| &file.add_columns)
+        .filter(|column| column.is_generated)
+    {
+        let name = column.unqualified_table_name.as_str();
+        let order = schema
+            .iter()
+            .flat_map(|file| &file.tables)
+            .find(|table| table.table_name.eq_ignore_ascii_case(name))
+            .map(|table| {
+                let mut order = table
+                    .columns
+                    .iter()
+                    .map(|column| column.name.to_ascii_lowercase())
+                    .collect::<Vec<_>>();
+                for added in schema
+                    .iter()
+                    .flat_map(|file| &file.add_columns)
+                    .filter(|added| added.unqualified_table_name.eq_ignore_ascii_case(name))
+                {
+                    let column = added.column_name.to_ascii_lowercase();
+                    if !order.contains(&column) {
+                        order.push(column);
+                    }
+                }
+                order
+            });
+        catalog.insert_table(GeneratedTable {
+            name: name.to_string(),
+            generated: [column.column_name.to_ascii_lowercase()]
+                .into_iter()
+                .collect(),
+            column_order: order,
+        });
+    }
     for extra in extra {
         if extra.table.is_empty() || extra.column.is_empty() {
             continue;
@@ -109,7 +145,7 @@ pub(super) fn stale_extra_findings(
 }
 
 fn schema_generated(schema: &[SqlSchemaFileFacts]) -> std::collections::BTreeSet<(String, String)> {
-    schema
+    let mut generated: std::collections::BTreeSet<_> = schema
         .iter()
         .flat_map(|file| &file.tables)
         .flat_map(|table| {
@@ -124,7 +160,20 @@ fn schema_generated(schema: &[SqlSchemaFileFacts]) -> std::collections::BTreeSet
                     )
                 })
         })
-        .collect()
+        .collect();
+    generated.extend(
+        schema
+            .iter()
+            .flat_map(|file| &file.add_columns)
+            .filter(|column| column.is_generated)
+            .map(|column| {
+                (
+                    column.unqualified_table_name.to_ascii_lowercase(),
+                    column.column_name.to_ascii_lowercase(),
+                )
+            }),
+    );
+    generated
 }
 
 #[cfg(test)]

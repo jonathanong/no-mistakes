@@ -26,9 +26,10 @@ pub(crate) fn trigger_catalog_from_facts(
             }
         }
         for column in &file.add_columns {
+            let table = column.unqualified_table_name.as_str();
             let order = tables
-                .entry(column.table_name.to_ascii_lowercase())
-                .or_insert_with(|| (column.table_name.clone(), Vec::new()));
+                .entry(table.to_ascii_lowercase())
+                .or_insert_with(|| (table.to_string(), Vec::new()));
             let order = &mut order.1;
             let name = column.column_name.to_ascii_lowercase();
             if !order.contains(&name) {

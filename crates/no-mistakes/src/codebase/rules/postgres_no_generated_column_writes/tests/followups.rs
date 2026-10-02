@@ -1,5 +1,31 @@
 use super::*;
 
+#[test]
+fn qualified_alter_generated_columns_and_sql_literal_boundaries_are_preserved() {
+    let (_, _, findings) = scan("review-regressions", &["schema.sql", "writes.sql"]);
+    let writes: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file == "writes.sql")
+        .collect();
+    assert_eq!(writes.len(), 8, "{findings:?}");
+    assert_eq!(
+        writes
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 2, 3, 4, 5, 6, 7, 9]
+    );
+    assert!(writes[..3]
+        .iter()
+        .all(|finding| finding.message.contains("trigger-maintained")));
+    assert!(writes[3..5]
+        .iter()
+        .all(|finding| finding.message.contains("generated column")));
+    assert!(writes[5..]
+        .iter()
+        .all(|finding| finding.message.contains("trigger-maintained")));
+}
+
 fn scan(name: &str, files: &[&str]) -> (PathBuf, Vec<PathBuf>, Vec<RuleFinding>) {
     let root = unit_fixture(name);
     let paths: Vec<_> = files.iter().map(|file| root.join(file)).collect();

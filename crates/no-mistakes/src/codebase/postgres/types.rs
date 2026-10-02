@@ -118,10 +118,14 @@ impl Default for SqlCreateIndexMetadata {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlAddColumnMetadata {
     pub table_name: String,
+    /// Decoded last identifier component, preserving dots inside quoted names.
+    pub unqualified_table_name: String,
     pub column_name: String,
     pub data_type: String,
     pub nullable: bool,
     pub default: Option<String>,
+    /// Whether the column is computed by a GENERATED expression.
+    pub is_generated: bool,
     pub line: usize,
 }
 

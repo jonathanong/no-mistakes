@@ -382,10 +382,12 @@ fn records_add_column_contract_fields() {
         facts.add_columns[0],
         super::super::SqlAddColumnMetadata {
             table_name: "posts".to_string(),
+            unqualified_table_name: "posts".to_string(),
             column_name: "status".to_string(),
             data_type: "TEXT".to_string(),
             nullable: false,
             default: Some("'draft'".to_string()),
+            is_generated: false,
             line: 1,
         }
     );

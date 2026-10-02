@@ -78,7 +78,9 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   referenced table, optional `ON DELETE` action (column lists on
   `ON DELETE SET NULL` / `SET DEFAULT` are omitted from the action string),
   and a source line
-- `ALTER TABLE … ADD COLUMN`: table, column name, and a source line
+- `ALTER TABLE … ADD COLUMN`: table, column name, type, nullability, default,
+  `is_generated` status, and a source line. `unqualified_table_name` preserves
+  the decoded last identifier component, including dots inside quoted names.
 - Declared identifiers: each name a statement introduces, unquoted and without
   a schema qualifier, plus that statement's line. This covers `CREATE TABLE`
   (the table, its columns, and inline or table `CONSTRAINT` names),

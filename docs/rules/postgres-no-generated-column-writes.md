@@ -1,5 +1,9 @@
 # `postgres-no-generated-column-writes`
 
+Columns added by schema-qualified `ALTER TABLE` statements use the same table
+identity as DML writes. ALTER-added generated columns retain generated status
+and take precedence over `triggerMaintainedColumns`.
+
 Forbids DML that writes a PostgreSQL `GENERATED ALWAYS` column. PostgreSQL
 rejects those assignments at runtime (`ERROR: cannot insert into column
 ...`). The rule collects generated columns from migration SQL through the
