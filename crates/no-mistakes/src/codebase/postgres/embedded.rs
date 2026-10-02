@@ -9,6 +9,8 @@ mod bindings;
 mod dml_kind;
 mod options;
 mod placeholders;
+mod source_positions;
+pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
 mod walk;
 
@@ -25,6 +27,8 @@ pub struct EmbeddedSqlCall {
     pub sql_text: Option<String>,
     pub kind: EmbeddedSqlKind,
     pub declaration_line: Option<u32>,
+    /// Compact physical-line mapping for literal and template recovery.
+    pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
 }
 
 /// A SQL fragment returned from a builder or appended to a

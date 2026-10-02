@@ -74,6 +74,7 @@ pub(crate) fn extract_from_parsed(
         triggers,
         returning_stars,
         mutation_column_uses,
+        offset_uses: super::offset::offset_facts(sql, statements),
         parse_failed,
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),

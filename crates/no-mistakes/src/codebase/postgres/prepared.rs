@@ -9,7 +9,12 @@ use std::{
     sync::Arc,
 };
 
-type Entry<T> = Result<Arc<T>, Arc<str>>;
+#[derive(Clone, Debug)]
+pub(crate) struct PreparationError {
+    message: Arc<str>,
+    source_kind: Option<std::io::ErrorKind>,
+}
+type Entry<T> = Result<Arc<T>, Arc<PreparationError>>;
 #[derive(Clone, Default)]
 pub(crate) struct PreparedPostgresFacts {
     pub schema: BTreeMap<PathBuf, Entry<SqlSchemaFileFacts>>,
@@ -39,7 +44,10 @@ pub(crate) fn prepare(
             .par_iter()
             .map(|path| {
                 let source = sources.read_path(path).map_err(|error| {
-                    Arc::<str>::from(format!("failed to collect PostgreSQL facts: {error}"))
+                    Arc::new(PreparationError {
+                        message: Arc::from(format!("failed to collect PostgreSQL facts: {error}")),
+                        source_kind: Some(error.kind()),
+                    })
                 });
                 let parsed = source.as_ref().map(|source| {
                     let parsed = super::parse::parse_postgres_sql(source);
@@ -94,7 +102,12 @@ pub(crate) fn prepare(
                     .embedded_sql(path, profile)
                     .map(|file| Arc::new(super::collect::dml::embedded_call_facts(file)))
                     .map_err(|error| {
-                        Arc::<str>::from(format!("failed to collect PostgreSQL facts: {error}"))
+                        Arc::new(PreparationError {
+                            message: Arc::from(format!(
+                                "failed to collect PostgreSQL facts: {error}"
+                            )),
+                            source_kind: None,
+                        })
                     });
                 out.embedded.insert((path.clone(), profile.clone()), entry);
             }
@@ -104,6 +117,11 @@ pub(crate) fn prepare(
 }
 
 impl PreparedPostgresFacts {
+    pub(crate) fn sql_source_not_found(&self, path: &Path) -> bool {
+        matches!(self.statements.get(path), Some(Err(error))
+            if error.source_kind == Some(std::io::ErrorKind::NotFound))
+    }
+
     pub fn schema(&self, path: &Path) -> anyhow::Result<&SqlSchemaFileFacts> {
         let value = self.schema.get(path).or_else(|| {
             self.schema
@@ -126,7 +144,7 @@ impl PreparedPostgresFacts {
 fn entry<'a, T>(value: Option<&'a Entry<T>>, path: &Path) -> anyhow::Result<&'a Arc<T>> {
     match value {
         Some(Ok(value)) => Ok(value),
-        Some(Err(error)) => Err(anyhow::anyhow!(error.to_string())),
+        Some(Err(error)) => Err(anyhow::anyhow!(error.message.to_string())),
         None => Err(anyhow::anyhow!(
             "prepared PostgreSQL facts are missing for {}",
             path.display()

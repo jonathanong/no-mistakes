@@ -76,7 +76,8 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-lock-ordering",
             "postgres-required-predicates",
             "postgres-generated-column-predicates",
-            "postgres-explicit-columns"
+            "postgres-explicit-columns",
+            "postgres-no-offset"
         ]
     );
     assert_eq!(

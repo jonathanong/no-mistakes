@@ -50,10 +50,13 @@ pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
     EmbeddedSqlFileFacts, EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions,
+    EmbeddedSqlSourcePosition,
 };
 pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
 pub use migration::extract_migration_facts;
-pub use offset::{sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse};
+pub use offset::{
+    sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse, SqlOffsetFact,
+};
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use profiles::{

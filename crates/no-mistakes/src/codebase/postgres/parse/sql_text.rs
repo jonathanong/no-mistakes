@@ -3,7 +3,7 @@
 /// Semicolons inside quotes, dollar quotes, and comments stay in the statement.
 /// A leading `--` comment is not the statement line, so a next-line suppression
 /// still points at the SQL.
-pub(super) fn top_level_statements(sql: &str) -> Vec<(usize, String)> {
+fn split_sql(sql: &str, data: &mut Vec<(usize, usize, usize)>) -> Vec<(usize, String)> {
     let bytes = sql.as_bytes();
     let mut index = 0usize;
     let mut line = 1usize;
@@ -30,20 +30,39 @@ pub(super) fn top_level_statements(sql: &str) -> Vec<(usize, String)> {
             }
             b'/' if bytes.get(index + 1) == Some(&b'*') => {
                 index += 2;
-                while index + 1 < bytes.len() && !(bytes[index] == b'*' && bytes[index + 1] == b'/')
-                {
+                let mut depth = 1usize;
+                while index < bytes.len() && depth > 0 {
                     if bytes[index] == b'\n' {
                         line += 1;
                     }
+                    if bytes[index..].starts_with(b"/*") {
+                        depth += 1;
+                        index += 2;
+                        continue;
+                    }
+                    if bytes[index..].starts_with(b"*/") {
+                        depth -= 1;
+                        index += 2;
+                        continue;
+                    }
                     index += 1;
                 }
-                index = (index + 2).min(bytes.len());
             }
             quote @ (b'\'' | b'"') => index = skip_quoted(bytes, index, quote, &mut line),
             b'$' => index = skip_dollar(bytes, index, &mut line),
             b';' => {
                 push(&mut out, sql, start, index, code_line.unwrap_or(start_line));
+                let copy = super::copy_data::is_copy_stdin(&sql[start..index]);
                 index += 1;
+                if copy {
+                    let (payload_end, after) = super::copy_data::payload_end(sql, index);
+                    data.push((index, payload_end, after));
+                    line += sql[index..after]
+                        .bytes()
+                        .filter(|byte| *byte == b'\n')
+                        .count();
+                    index = after;
+                }
                 start = index;
                 start_line = line;
                 code_line = None;
@@ -76,10 +95,25 @@ fn starts_comment(bytes: &[u8], index: usize) -> bool {
 }
 
 fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> usize {
+    let escaped = quote == b'\''
+        && index > 0
+        && matches!(bytes[index - 1], b'e' | b'E')
+        && (index < 2 || !(bytes[index - 2].is_ascii_alphanumeric() || bytes[index - 2] == b'_'));
     index += 1;
     while index < bytes.len() {
         if bytes[index] == b'\n' {
             *line += 1;
+        }
+        if escaped && bytes[index] == b'\\' {
+            if bytes.get(index + 1) == Some(&b'\n') {
+                *line += 1;
+            }
+            index = (index + 2).min(bytes.len());
+            continue;
+        }
+        if bytes[index] == quote && bytes.get(index + 1) == Some(&quote) {
+            index += 2;
+            continue;
         }
         if bytes[index] == quote {
             return index + 1;
@@ -90,6 +124,17 @@ fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> u
 }
 
 fn skip_dollar(bytes: &[u8], index: usize, line: &mut usize) -> usize {
+    // Dollar signs are legal inside unquoted PostgreSQL identifiers.
+    if index > 0
+        && (bytes[index - 1].is_ascii_alphanumeric()
+            || matches!(bytes[index - 1], b'_' | b'$')
+            || !bytes[index - 1].is_ascii())
+    {
+        return index + 1;
+    }
+    if bytes.get(index + 1).is_some_and(u8::is_ascii_digit) {
+        return index + 1;
+    }
     let mut tag_end = index + 1;
     while tag_end < bytes.len()
         && bytes[tag_end] != b'$'
@@ -113,3 +158,36 @@ fn skip_dollar(bytes: &[u8], index: usize, line: &mut usize) -> usize {
     }
     bytes.len()
 }
+
+/// COPY payloads are data, so tokenizer quotes and semicolons must not own them.
+pub(crate) fn normalize_copy_data(sql: &str) -> std::borrow::Cow<'_, str> {
+    if !sql
+        .as_bytes()
+        .windows(5)
+        .any(|word| word.eq_ignore_ascii_case(b"STDIN"))
+    {
+        return std::borrow::Cow::Borrowed(sql);
+    }
+    let mut ranges = Vec::new();
+    split_sql(sql, &mut ranges);
+    if ranges.is_empty() {
+        return std::borrow::Cow::Borrowed(sql);
+    }
+    let mut bytes = sql.as_bytes().to_vec();
+    for (start, end, after) in ranges.into_iter().rev() {
+        for byte in &mut bytes[start..end] {
+            if !matches!(*byte, b'\n' | b'\r') {
+                *byte = b' ';
+            }
+        }
+        if after > end {
+            // sqlparser needs a delimiter after its COPY data terminator.
+            let terminator_end = end + sql[end..after].find("\\.").unwrap() + 2;
+            bytes.insert(terminator_end, b';');
+        }
+    }
+    std::borrow::Cow::Owned(String::from_utf8(bytes).unwrap())
+}
+
+#[cfg(test)]
+mod tests;

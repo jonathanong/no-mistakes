@@ -12,7 +12,7 @@ mod scan;
 
 pub const RULE_ID: &str = "postgres-no-offset";
 
-use scan::scan_with_sources;
+use scan::scan;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -27,20 +27,21 @@ pub(crate) struct Options {
 pub(crate) struct CompiledOptions {
     include: GlobMatcher,
     exclude: GlobMatcher,
-    pub(crate) sql_include: GlobMatcher,
+    pub(crate) schema: crate::codebase::postgres::PostgresSchemaOptions,
     pub(crate) embedded: EmbeddedSqlOptions,
 }
 
 impl CompiledOptions {
-    fn includes(&self, rel: &str) -> bool {
+    fn includes(&self, rel: &str, sql: bool) -> bool {
         let excluded = !self.exclude.is_empty() && self.exclude.is_match(rel);
         if excluded {
             return false;
         }
         if rel.ends_with(".sql") {
-            return self.sql_include.is_match(rel);
+            return sql;
         }
-        self.include.is_empty() || self.include.is_match(rel)
+        crate::codebase::dependencies::extract::is_indexable(Path::new(rel))
+            && (self.include.is_empty() || self.include.is_match(rel))
     }
 }
 
@@ -57,7 +58,24 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -75,11 +93,16 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            let sql_paths =
+                crate::codebase::postgres::postgres_sql_paths(root, &files, &compiled.schema)?;
+            let sql = crate::codebase::check_facts::PathMembership::new(&sql_paths);
             let files: Vec<PathBuf> = files
                 .into_iter()
-                .filter(|path| compiled.includes(&relative_slash_path(root, path)))
+                .filter(|path| {
+                    compiled.includes(&relative_slash_path(root, path), sql.contains(path))
+                })
                 .collect();
-            scan_with_sources(root, &compiled, &files, sources)
+            scan(root, &compiled, &files, facts, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -90,24 +113,14 @@ pub(crate) fn check_with_files_and_sources(
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-    let sql_include = GlobMatcher::new(&opts.sql_include, &format!("{RULE_ID} sqlInclude"))?;
-    let defaults = EmbeddedSqlOptions::default();
+    GlobMatcher::new(&opts.sql_include, &format!("{RULE_ID} sqlInclude"))?;
     Ok(CompiledOptions {
         include,
         exclude,
-        sql_include,
-        embedded: EmbeddedSqlOptions {
-            import_specifier: if opts.import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                opts.import_specifier.clone()
-            },
-            executor_names: if opts.executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                opts.executor_names.clone()
-            },
+        schema: crate::codebase::postgres::PostgresSchemaOptions {
+            sql_include: opts.sql_include.clone(),
         },
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
     })
 }
 
@@ -115,3 +128,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 mod sql_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod followup_tests;
+#[cfg(test)]
+mod review_tests;

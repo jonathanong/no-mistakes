@@ -9,11 +9,11 @@ fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/rules/postgres-no-offset")
 }
 
-fn fixture(scenario: &str) -> PathBuf {
+pub(super) fn fixture(scenario: &str) -> PathBuf {
     fixture_root().join("fixture").join(scenario)
 }
 
-fn config_with_options(yaml: &str) -> NoMistakesConfig {
+pub(super) fn config_with_options(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
@@ -155,32 +155,15 @@ fn missing_source_file_errors() {
     let root = fixture("fail");
     let missing = root.join("src/does-not-exist.ts");
     let error = check_with_files(&root, &default_config(), &[missing]).expect_err("read");
-    assert!(
-        error.to_string().contains("failed to collect embedded SQL"),
-        "{error}"
-    );
+    assert!(error.to_string().contains("failed to read"), "{error}");
 }
 
 #[test]
-fn missing_sql_text_is_ignored() {
-    let call = crate::codebase::postgres::EmbeddedSqlCall {
-        line: 1,
-        callee: "query".to_string(),
-        sql_text: None,
-        ..Default::default()
-    };
-    assert!(super::scan::findings_for_call("src/query.ts", &call).is_empty());
-}
-
-#[test]
-fn unparseable_sql_is_ignored() {
-    let call = crate::codebase::postgres::EmbeddedSqlCall {
-        line: 1,
-        callee: "query".to_string(),
-        sql_text: Some("SELECT id FROM posts OFFSET".to_string()),
-        ..Default::default()
-    };
-    assert!(super::scan::findings_for_call("src/query.ts", &call).is_empty());
+fn dynamic_and_unparseable_embedded_calls_are_ignored() {
+    let root = fixture("review-followups");
+    let findings =
+        check_with_files(&root, &default_config(), &[root.join("src/invalid.ts")]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]

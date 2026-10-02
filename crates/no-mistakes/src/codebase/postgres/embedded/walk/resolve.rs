@@ -1,3 +1,5 @@
+mod executor;
+pub(super) use executor::executor_call;
 mod append;
 mod chain;
 mod compose;
@@ -11,13 +13,11 @@ pub(in crate::codebase::postgres::embedded::walk) use compose::{
 pub(super) use functions::LocalFunctions;
 pub(super) use loops::{bind_for_statement_left, enter_classic_for, leave_classic_for};
 
-use super::super::{first_call_argument, EmbeddedSqlCall, EmbeddedSqlKind};
+use super::super::EmbeddedSqlKind;
 use super::{BindingState, ScopeVisitor};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use compose::classify_init;
 use oxc_ast::ast::{
-    BindingPattern, CallExpression, Declaration, Expression, Function, Statement,
-    VariableDeclaration, VariableDeclarator,
+    BindingPattern, Declaration, Function, Statement, VariableDeclaration, VariableDeclarator,
 };
 
 /// Every name a parameter or declarator's binding pattern introduces,
@@ -110,6 +110,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
                 kind: EmbeddedSqlKind::Dynamic,
                 line,
                 sql_builder: false,
+                sql_source_positions: Vec::new(),
             },
         );
     }
@@ -152,6 +153,12 @@ fn record_declarator(
     let line =
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
     let (sql, kind) = classify_init(init, is_const, visitor);
+    let sql_source_positions = super::super::source_positions::for_expression(
+        init,
+        visitor.source,
+        ident.span.start as usize,
+        line,
+    );
     if let Some(scope) = visitor.current_scope() {
         scope.insert(
             ident.name.to_string(),
@@ -164,59 +171,8 @@ fn record_declarator(
                 sql,
                 kind,
                 line,
+                sql_source_positions,
             },
         );
-    }
-}
-
-pub(super) fn executor_call(
-    visitor: &ScopeVisitor<'_>,
-    call: &CallExpression<'_>,
-    callee: String,
-) -> EmbeddedSqlCall {
-    let line =
-        crate::codebase::ts_source::byte_offset_to_line(visitor.source, call.span.start as usize);
-    let Some(argument) = first_call_argument(call) else {
-        return EmbeddedSqlCall {
-            line,
-            callee,
-            sql_text: None,
-            kind: EmbeddedSqlKind::Dynamic,
-            declaration_line: None,
-        };
-    };
-    match unwrap_ts_wrappers(argument) {
-        Expression::Identifier(ident) => {
-            let binding = visitor.lookup(ident.name.as_str());
-            EmbeddedSqlCall {
-                line,
-                callee,
-                sql_text: binding.as_ref().and_then(|binding| {
-                    binding
-                        .sql
-                        .clone()
-                        .map(super::super::placeholders::publish_placeholders)
-                }),
-                kind: binding
-                    .as_ref()
-                    .map(|binding| binding.kind)
-                    .unwrap_or(EmbeddedSqlKind::Dynamic),
-                declaration_line: binding.map(|binding| binding.line),
-            }
-        }
-        _ => {
-            let (sql, kind) = classify_init(argument, true, visitor);
-            EmbeddedSqlCall {
-                line,
-                callee,
-                sql_text: sql.map(super::super::placeholders::publish_placeholders),
-                kind: if kind == EmbeddedSqlKind::ImmutableLocal {
-                    EmbeddedSqlKind::Inline
-                } else {
-                    kind
-                },
-                declaration_line: None,
-            }
-        }
     }
 }

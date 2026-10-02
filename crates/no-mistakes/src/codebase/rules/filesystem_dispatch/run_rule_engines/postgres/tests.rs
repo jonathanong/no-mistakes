@@ -7,6 +7,7 @@ use crate::codebase::rules::postgres_duplicate_function_body::RULE_ID as DUPLICA
 use crate::codebase::rules::postgres_explicit_columns::RULE_ID as EXPLICIT_COLUMNS_RULE;
 use crate::codebase::rules::postgres_finite_text_columns::RULE_ID as FINITE_TEXT_RULE;
 use crate::codebase::rules::postgres_identifier_length::RULE_ID as IDENTIFIER_LENGTH_RULE;
+use crate::codebase::rules::postgres_no_offset::RULE_ID as NO_OFFSET_RULE;
 use crate::codebase::rules::postgres_object_naming::RULE_ID as NAMING_RULE;
 use crate::codebase::rules::postgres_required_comments::RULE_ID as COMMENTS_RULE;
 use crate::codebase::rules::postgres_required_predicates::RULE_ID as REQUIRED_PREDICATES_RULE;
@@ -41,6 +42,7 @@ fn missing_facts_use_the_file_checkers() {
         ARRAY_COLUMNS_RULE,
         REQUIRED_PREDICATES_RULE,
         EXPLICIT_COLUMNS_RULE,
+        NO_OFFSET_RULE,
     ] {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }
@@ -67,6 +69,7 @@ fn prepared_facts_use_the_fact_checkers() {
         ARRAY_COLUMNS_RULE,
         REQUIRED_PREDICATES_RULE,
         EXPLICIT_COLUMNS_RULE,
+        NO_OFFSET_RULE,
         TABLE_RULE,
         STATUS_RULE,
     ] {

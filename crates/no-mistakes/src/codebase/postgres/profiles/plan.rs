@@ -7,6 +7,7 @@ pub fn configure_prepared_postgres_plan(
 ) -> Result<()> {
     let dml_rules = [
         "postgres-required-predicates",
+        "postgres-no-offset",
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
     ];

@@ -1,0 +1,1 @@
+A directory selected as SQL is a read failure, not a missing file.

@@ -1,0 +1,6 @@
+[
+  { "raw": "\r\n", "width": 2, "continuation": null },
+  { "raw": "\\\r\n", "width": 2, "continuation": 3 },
+  { "raw": "\\\r", "width": 2, "continuation": 2 },
+  { "raw": "\\\n", "width": 2, "continuation": 2 }
+]

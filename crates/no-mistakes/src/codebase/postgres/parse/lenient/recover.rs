@@ -1,4 +1,5 @@
 use super::{keyword_of, next_non_ws, skip_ws};
+mod locations;
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
@@ -18,8 +19,8 @@ pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>, original: &[TokenWithSpan]) 
         .flat_map(|chunk| {
             let source = located
                 .next()
-                .filter(|source| chunk.iter().eq(source.iter().map(|token| &token.token)));
-            parse_chunk(chunk, source)
+                .map(|source| locations::align(&chunk, source));
+            parse_chunk(chunk, source.as_deref())
         })
         .collect()
 }
@@ -41,7 +42,7 @@ fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Sta
         _ => {
             let recovered = recover_chr_encoded(&chunk);
             if recovered.is_empty() {
-                recover_schema_ddl(&chunk).into_iter().collect()
+                recover_schema_ddl(&chunk, original).into_iter().collect()
             } else {
                 recovered
             }
@@ -112,12 +113,14 @@ pub(super) fn concatenated_strings(tokens: &[Token]) -> Option<String> {
     (saw_string && !expect_string && !sql.is_empty()).then_some(sql)
 }
 
-fn recover_schema_ddl(tokens: &[Token]) -> Option<Statement> {
+fn recover_schema_ddl(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> Option<Statement> {
     let start = schema_ddl_start(tokens)?;
-    Parser::new(&PostgreSqlDialect {})
-        .with_tokens(tokens[start..].to_vec())
-        .parse_statement()
-        .ok()
+    let dialect = PostgreSqlDialect {};
+    let mut parser = match original {
+        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens[start..].to_vec()),
+        None => Parser::new(&dialect).with_tokens(tokens[start..].to_vec()),
+    };
+    parser.parse_statement().ok()
 }
 
 fn schema_ddl_start(tokens: &[Token]) -> Option<usize> {

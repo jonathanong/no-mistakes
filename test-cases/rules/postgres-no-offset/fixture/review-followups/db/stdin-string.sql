@@ -1,0 +1,1 @@
+SELECT 'STDIN' FROM posts OFFSET 1;

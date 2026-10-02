@@ -1,3 +1,10 @@
+fn statement_offsets(statement: &sqlparser::ast::Statement, out: &mut Vec<OffsetUse>) {
+    let mut collector = super::OffsetCollector::default();
+    let _ = sqlparser::ast::Visit::visit(statement, &mut collector);
+    collector.uses.sort_by_key(|fact| (fact.line, fact.column));
+    out.extend(collector.uses.into_iter().map(|fact| fact.kind));
+}
+
 use super::{sql_has_offset_clause, sql_offset_uses, OffsetUse};
 
 #[test]
@@ -221,7 +228,7 @@ fn values_row_subquery_offset_is_detected() {
 #[test]
 fn explain_and_copy_offset_is_detected() {
     assert!(sql_has_offset_clause("EXPLAIN ANALYZE SELECT id FROM posts OFFSET 10").unwrap());
-    assert!(sql_has_offset_clause("EXPLAIN SELECT id FROM posts OFFSET 10").unwrap());
+    assert!(!sql_has_offset_clause("EXPLAIN SELECT id FROM posts OFFSET 10").unwrap());
     assert!(!sql_has_offset_clause("EXPLAIN SELECT id FROM posts LIMIT 10").unwrap());
     assert!(sql_has_offset_clause("COPY (SELECT id FROM posts OFFSET 1) TO STDOUT").unwrap());
 }
@@ -341,7 +348,7 @@ fn group_by_all_window_reference_and_table_are_clean() {
             .unwrap_or_else(|error| panic!("{sql}: {error}"));
     let mut uses = Vec::new();
     for statement in &statements {
-        super::statement_offsets(statement, &mut uses);
+        statement_offsets(statement, &mut uses);
     }
     assert!(uses.is_empty(), "{uses:?}");
 }
@@ -359,7 +366,7 @@ fn dialect_limit_forms_are_collected() {
                 .unwrap_or_else(|error| panic!("{sql}: {error}"));
         let mut uses = Vec::new();
         for statement in &statements {
-            super::statement_offsets(statement, &mut uses);
+            statement_offsets(statement, &mut uses);
         }
         assert!(
             !uses.is_empty() || !sql.contains("OFFSET"),
@@ -387,4 +394,24 @@ fn zero_and_other_offsets_are_collected_separately() {
     assert_eq!(uses.len(), 2, "{uses:?}");
     assert!(uses.contains(&OffsetUse::Zero));
     assert!(uses.contains(&OffsetUse::Other));
+}
+
+#[test]
+fn spanless_recovery_uses_offset_keyword_and_empty_source_is_safe() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/fixture/review-followups/db/spanless.sql");
+    let sql = std::fs::read_to_string(path).unwrap();
+    let tokens = super::super::parse::unicode::tokenize_raw_unicode(&sql)
+        .into_iter()
+        .map(|token| token.token)
+        .collect();
+    let statements = sqlparser::parser::Parser::new(&sqlparser::dialect::PostgreSqlDialect {})
+        .with_tokens(tokens)
+        .parse_statements()
+        .unwrap();
+    let facts = super::offset_facts(&sql, &statements);
+    assert_eq!(facts.len(), 1);
+    assert_eq!((facts[0].line, facts[0].kind), (2, OffsetUse::Zero));
+    let facts = super::offset_facts("", &statements);
+    assert_eq!(facts[0].line, 1);
 }

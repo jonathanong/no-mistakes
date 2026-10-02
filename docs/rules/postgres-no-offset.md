@@ -4,11 +4,10 @@ Flags executed PostgreSQL SQL that uses an `OFFSET` clause. Offset pagination
 reads skipped rows again on every page and is usually the wrong default next to
 cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
-The rule uses the shared PostgreSQL embedded-SQL facts
-(`extract_embedded_sql_from_source`, `collect_postgres_facts`) and
-`sql_has_offset_clause`. It does not re-parse TypeScript with a private
-parser. Unparseable SQL is ignored so comments and prose are not treated as
-clauses.
+The request boundary prepares embedded SQL and statement facts once. This rule
+borrows those facts, including source locations, instead of reading or parsing
+source again. Unparseable statements are skipped while recoverable sibling
+statements remain checked; comments and prose are not clauses.
 
 ```yaml
 rules:
@@ -115,3 +114,38 @@ offset-based reporting query.
 [`postgres-lock-ordering`](postgres-lock-ordering.md) covers multi-row locks;
 [`postgres-require-query-annotation`](postgres-require-query-annotation.md)
 keeps executed SQL identifiable in logs.
+
+## Statement coverage and locations
+
+The shared SQL pass records every OFFSET in source order, including INSERT,
+UPDATE, DELETE, COPY queries, CREATE TABLE AS, views, CTEs, RETURNING, ON CONFLICT,
+and subqueries inside CASE, arrays, functions, predicates, and ordering. Routine
+declarations and non-analyzing EXPLAIN plans are skipped; EXPLAIN ANALYZE queries
+are executed and checked, including the parenthesized ANALYZE option.
+COPY FROM STDIN payload rows are data; queries after
+its `\.` terminator are still checked. Nested comments, escaped E strings,
+dollar quotes, and Unicode identifiers retain their SQL meaning.
+
+Each finding points to the OFFSET keyword. Shared SQL constants point to their
+declaration lines, and embedded multiline queries retain line-specific
+suppression. Multiple offsets on the same line remain separate findings.
+The first occurrence in a file keeps target `offset`; later occurrences use
+`offset#2`, `offset#3`, and so on. The Rust statement-fact contract exposes these
+occurrences as `SqlStatementFileFacts.offset_uses`, with line, column, and
+`OffsetUse` kind. `sql_offset_uses` and `sql_file_offset_uses` use this same AST
+visitor and preserve source order. Bare `*.sql` patterns match SQL basenames;
+`sqlInclude: []` continues to opt out of SQL file scanning.
+
+Recovered literals and template quasis retain a compact physical-line map in
+`EmbeddedSqlCall.sql_source_positions` (`EmbeddedSqlSourcePosition`). Cooked
+newline escapes, line continuations, multiline interpolations, and initializers
+that begin below their declaration preserve the actual OFFSET source line.
+Static `.append()` composition retains each appended literal or bound fragment's
+physical position, including placeholder renumbering. Put line suppression on
+the physical clause being suppressed. Existing directives on an executor call
+also suppress that call's recovered clauses through the common suppression pass.
+Prepared source failures retain their I/O kind; dispatch uses that captured
+outcome without checking filesystem state again.
+Source positions mark changes to the source-versus-SQL line offset. Between
+positions, map a SQL line with `source_line + sql_line - position.sql_line`;
+an empty position list retains the ordinary call/declaration line mapping.

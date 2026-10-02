@@ -104,18 +104,10 @@ fn suppression_directives_hide_sql_offsets() {
 
 #[test]
 fn embedded_offset_zero_uses_the_fence_message() {
-    let call = crate::codebase::postgres::EmbeddedSqlCall {
-        line: 4,
-        callee: "query".to_string(),
-        sql_text: Some("SELECT id FROM orders OFFSET 0".to_string()),
-        ..Default::default()
-    };
-    let findings = super::scan::findings_for_call("src/query.ts", &call);
+    let root = fixture("review-followups");
+    let findings = check_with_files(&root, &config("{}"), &[root.join("src/zero.ts")]).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("optimizer fence"),
-        "{findings:?}"
-    );
+    assert!(findings[0].message.contains("optimizer fence"));
     assert_eq!(findings[0].line, 4);
 }
 
