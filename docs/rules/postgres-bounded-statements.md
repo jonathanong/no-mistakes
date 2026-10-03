@@ -191,3 +191,8 @@ everywhere, use `allow: [{object: 'table:<name>', reason}]`.
 [`postgres-required-predicates`](postgres-required-predicates.md) read the same prepared
 statement facts. [`postgres-no-offset`](postgres-no-offset.md) bans the `OFFSET` paging
 that often replaces a bounded keyset sweep.
+
+A base-table column alias list (`FROM accounts AS a(id, real_id)`) renames columns by
+position. Pins on that item receive no catalog key credit; ordinary table aliases
+(`FROM accounts AS a`) retain key matching. This also applies to join conditions and
+`USING` pins.

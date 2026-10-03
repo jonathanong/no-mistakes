@@ -51,6 +51,8 @@ pub(super) struct Builder<'a> {
     usings: Vec<Using<'a>>,
     /// The next FROM item is the relation an `UPDATE` or `DELETE` changes.
     target_next: bool,
+    /// Renamed base columns cannot be matched to catalog keys without ordinal resolution.
+    renamed_columns: Vec<usize>,
 }
 
 impl<'a> Builder<'a> {
@@ -61,6 +63,7 @@ impl<'a> Builder<'a> {
             conditions: Vec::new(),
             usings: Vec::new(),
             target_next: false,
+            renamed_columns: Vec::new(),
         }
     }
 
@@ -116,7 +119,7 @@ impl<'a> Builder<'a> {
             pins::extract(selection, &resolver, &all, self.scope, &mut found);
         }
         for (item, pin) in found {
-            if !self.items[item].pins.contains(&pin) {
+            if !self.renamed_columns.contains(&item) && !self.items[item].pins.contains(&pin) {
                 self.items[item].pins.push(pin);
             }
         }
@@ -143,6 +146,11 @@ impl<'a> Builder<'a> {
                     SqlBoundItemKind::Table(_) => object_name_ident(name).map(ident_key),
                     _ => None,
                 });
+                if matches!(kind, SqlBoundItemKind::Table(_))
+                    && matches!(factor, TableFactor::Table { alias: Some(alias), .. } if !alias.columns.is_empty())
+                {
+                    self.renamed_columns.push(self.items.len());
+                }
                 self.push(kind, alias, start(name.span()));
             }
             TableFactor::Derived {
