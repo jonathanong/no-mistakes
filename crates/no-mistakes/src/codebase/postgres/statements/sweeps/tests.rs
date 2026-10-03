@@ -471,3 +471,17 @@ fn distinct_pages_are_not_row_sweeps() {
     .is_empty());
     assert!(sweeps("SELECT DISTINCT ON (account_id) account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2").is_empty());
 }
+
+#[test]
+fn sweep_table_parts_preserve_postgres_case() {
+    for (name, expected) in [
+        ("\"Orders\"", "Orders"),
+        ("Orders", "orders"),
+        ("orders", "orders"),
+    ] {
+        assert_eq!(
+            sweeps(&format!("SELECT id FROM {name} ORDER BY id LIMIT $1"))[0].table_parts,
+            vec![expected]
+        );
+    }
+}
