@@ -376,12 +376,12 @@ examined the language-frontend report on
 The report compared the expected base `ffc6bb12` with head `14df367b`, and both
 language jobs used `ubuntu-24.04-arm`. The measured language sources, benchmark
 adapter, and `fixtures/lang-frontends` corpus were unchanged. Every local run
-passed the existing preflights: 117 files, 69 parsed files, and 125 edges.
+passed the existing preflight checks: 117 files, 69 parsed files, and 125 edges.
 
 Matched local Criterion runs used one x86_64 Linux host, Rust 1.96.0, four Rayon
 threads, the `language-frontends` shard, and the same bench profile (LTO off,
-16 codegen units, debug information and incremental compilation off). Initial
-and repeated comparisons used 30 samples, a one-second warmup, and three-second
+16 code generation units, debug information and incremental compilation off).
+Initial and repeated comparisons used 30 samples, a one-second warmup, and three-second
 measurement; the adjacent reverse-order comparison used 50 samples, a
 two-second warmup, and five-second measurement for both binaries.
 
@@ -400,8 +400,8 @@ The initial statistically significant results remain part of the evidence.
 
 Criterion wall-clock timings on x86_64 do not validate CodSpeed's ARM64 CPU
 simulation or its memory measurements. Local validation did not include memory
-mode, so the reported allocation increase remains unvalidated locally. Keep that limitation explicit when
-recording the investigation; a matched wall-clock result does not establish
+mode, so the reported allocation increase has not been validated locally.
+Keep that limitation explicit when recording the investigation; a matched wall-clock result does not establish
 that a different measurement mode is noise.
 
 Use an isolated checkout and one dedicated `CARGO_TARGET_DIR` for both builds.
