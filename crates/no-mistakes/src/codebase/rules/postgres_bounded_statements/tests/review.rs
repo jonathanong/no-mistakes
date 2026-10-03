@@ -320,3 +320,38 @@ fn explicitly_temporary_schema_creation_also_shadows_bare_names() {
     ));
     assert_eq!(names(sql), ["accounts", "accounts", "accounts"]);
 }
+
+#[test]
+fn known_source_outputs_resolve_bare_columns_before_outer_pins() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-columns.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "accounts", "accounts", "accounts"]
+    );
+}
+
+#[test]
+fn projected_source_aliases_set_arms_and_unknown_functions_preserve_ownership() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-column-variants.sql"));
+    assert!(names(sql).is_empty());
+}
+
+#[test]
+fn unnest_without_a_column_alias_exposes_its_function_or_alias_name() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-unnest.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
+}
+
+#[test]
+fn qualified_scalar_functions_and_unknown_record_layouts_preserve_ownership() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-column-coverage.sql"));
+    assert_eq!(names(sql), ["accounts"]);
+}

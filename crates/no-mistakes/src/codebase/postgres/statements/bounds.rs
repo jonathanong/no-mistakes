@@ -25,6 +25,7 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Clone, Default)]
 pub(super) struct Scope {
     ctes: BTreeMap<String, SqlBoundQuery>,
+    columns: BTreeMap<String, Option<BTreeSet<String>>>,
 }
 
 impl Scope {
@@ -32,11 +33,12 @@ impl Scope {
         self.ctes.get(name)
     }
 
-    fn names(&self) -> BTreeSet<String> {
-        self.ctes.keys().cloned().collect()
+    fn names(&self) -> BTreeMap<String, Option<BTreeSet<String>>> {
+        self.columns.clone()
     }
 
     fn insert(&mut self, name: String, bound: SqlBoundQuery) {
+        self.columns.entry(name.clone()).or_insert(None);
         self.ctes.insert(name, bound);
     }
 }

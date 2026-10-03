@@ -41,6 +41,18 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
                 bound
             }
         };
+        let columns = if cte.alias.columns.is_empty() {
+            super::pins::projection_columns(&cte.query)
+        } else {
+            Some(
+                cte.alias
+                    .columns
+                    .iter()
+                    .map(|column| ident_key(&column.name))
+                    .collect(),
+            )
+        };
+        scope.columns.insert(name.clone(), columns);
         scope.insert(name, bound);
     }
     scope
