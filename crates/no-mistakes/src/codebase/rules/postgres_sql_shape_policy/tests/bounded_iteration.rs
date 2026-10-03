@@ -382,3 +382,16 @@ fn numeric_hex_literal_limits_are_reported_and_suppressible() {
         at(&[(1, "literal-limit"), (6, "literal-limit")])
     );
 }
+
+#[test]
+fn expanded_keysets_follow_the_order_keys_before_the_rule_reports_a_walk() {
+    let config = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\n";
+    assert_eq!(
+        found("expanded-keysets", config, "sql/pages.sql"),
+        at(&[
+            (2, "keyset-only-sweep"),
+            (3, "keyset-only-sweep"),
+            (10, "keyset-only-sweep"),
+        ])
+    );
+}

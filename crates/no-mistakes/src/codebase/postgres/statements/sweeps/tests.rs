@@ -485,3 +485,60 @@ fn sweep_table_parts_preserve_postgres_case() {
         );
     }
 }
+
+#[test]
+fn expanded_lexicographic_cursors() {
+    for (predicate, expected) in [
+        ("a > $1 OR (a = $1 AND b > $2)", vec!["a", "b"]),
+        (
+            "a < $1 OR (a = $1 AND b < $2) OR (a = $1 AND b = $2 AND c < $3)",
+            vec!["a", "b", "c"],
+        ),
+        ("a > $1 OR (a = $1 AND b < $2)", vec![]),
+        ("a > $1 OR (a = $3 AND b > $2)", vec![]),
+        ("a > $1 OR (a = $1 AND lower(b) > $2)", vec![]),
+        ("a > $1 OR b > $2", vec![]),
+        ("a > $1 OR (a > $1 AND b > $2)", vec![]),
+        ("a > $1 OR (c = $1 AND b > $2)", vec![]),
+        ("a > $1 OR (a = $1 AND b >= $2)", vec![]),
+        ("a > $1 OR (a = $1 AND b > 2)", vec![]),
+        ("a > $1 OR (TRUE AND b > $2)", vec![]),
+        ("a > $1 OR (a = $1 AND TRUE)", vec![]),
+    ] {
+        let sql = format!("SELECT a FROM t WHERE {predicate} ORDER BY a,b,c LIMIT $4");
+        assert_eq!(
+            sweeps(&sql)[0].conjuncts[0].cursor_columns,
+            expected,
+            "{predicate}"
+        );
+    }
+}
+
+#[test]
+fn saved_expanded_lexicographic_cursors_require_a_complete_prefix_chain() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-shape-policy/fixture/expanded-keysets/sql/pages.sql"
+    ));
+    let facts = extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let cursors: Vec<_> = facts
+        .sweeps
+        .iter()
+        .map(|sweep| sweep.conjuncts[0].cursor_columns.clone())
+        .collect();
+    assert_eq!(
+        cursors,
+        vec![
+            vec!["a", "b"],
+            vec!["a", "b"],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec!["a", "b"],
+            vec![],
+        ]
+    );
+}

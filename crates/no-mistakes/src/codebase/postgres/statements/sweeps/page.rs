@@ -2,8 +2,8 @@ use super::conjuncts;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
 use crate::codebase::postgres::statements::SqlSweepFact;
 use sqlparser::ast::{
-    Distinct, Expr, GroupByExpr, OrderBy, OrderByKind, Query, Select, SelectItem, SetExpr, Spanned,
-    TableFactor,
+    Distinct, Expr, GroupByExpr, OrderBy, OrderByKind, OrderBySort, Query, Select, SelectItem,
+    SetExpr, Spanned, TableFactor,
 };
 use std::collections::BTreeMap;
 
@@ -40,7 +40,13 @@ pub(super) fn sweep(query: &Query, ctes: &[String]) -> Option<SqlSweepFact> {
     // The relation answers to its last name part as written, a quoted dot included.
     let mut names: Vec<String> = object_name_ident(name).map(ident_key).into_iter().collect();
     names.extend(alias.as_ref().map(|alias| ident_key(&alias.name)));
-    let order_columns = order_columns(order, select, &names)?;
+    let (order_columns, order_ascending) = order_columns(order, select, &names)?;
+    let conjuncts = conjuncts::of(
+        select.selection.as_ref(),
+        &names,
+        &order_columns,
+        &order_ascending,
+    );
     let at = name.span().start;
     Some(SqlSweepFact {
         line: (at.line as usize).max(1),
@@ -53,7 +59,7 @@ pub(super) fn sweep(query: &Query, ctes: &[String]) -> Option<SqlSweepFact> {
             .collect(),
         table,
         order_columns,
-        conjuncts: conjuncts::of(select.selection.as_ref(), &names),
+        conjuncts,
     })
 }
 
@@ -93,7 +99,11 @@ fn page_of(query: &Query) -> Option<(&Select, &OrderBy)> {
 /// The ORDER BY columns, all plain columns of the relation. A bare name that is also an output
 /// name (an alias, or the label PostgreSQL gives `random()`) means that output expression, so it
 /// counts only when that is a plain column.
-fn order_columns(order: &OrderBy, select: &Select, names: &[String]) -> Option<Vec<String>> {
+fn order_columns(
+    order: &OrderBy,
+    select: &Select,
+    names: &[String],
+) -> Option<(Vec<String>, Vec<Option<bool>>)> {
     let OrderByKind::Expressions(expressions) = &order.kind else {
         return None;
     };
@@ -110,7 +120,7 @@ fn order_columns(order: &OrderBy, select: &Select, names: &[String]) -> Option<V
             _ => None,
         })
         .collect();
-    expressions
+    let columns: Option<Vec<_>> = expressions
         .iter()
         .map(|expression| match &expression.expr {
             Expr::Identifier(ident) => match aliases.get(&ident_key(ident)) {
@@ -119,5 +129,14 @@ fn order_columns(order: &OrderBy, select: &Select, names: &[String]) -> Option<V
             },
             other => conjuncts::column(other, names),
         })
-        .collect()
+        .collect();
+    let ascending = expressions
+        .iter()
+        .map(|expression| match expression.options.sort.as_ref() {
+            Some(OrderBySort::Asc) | None => Some(true),
+            Some(OrderBySort::Desc) => Some(false),
+            Some(OrderBySort::Using(_)) => None,
+        })
+        .collect();
+    Some((columns?, ascending))
 }

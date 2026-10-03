@@ -145,6 +145,8 @@ and remains eligible. With both shapes enabled, `literal-limit` still checks the
 written counts of these queries; for example, `SELECT DISTINCT id FROM orders
 ORDER BY id LIMIT 500` is reported for its literal limit, without a sweep finding.
 
+Expanded lexicographic cursors such as `a > $1 OR (a = $1 AND b > $2)` count like tuple cursors when each equality prefix uses the same bind, each comparison has the same direction, and the keys follow the leading `ORDER BY` columns with a uniform sort direction.
+
 `keyset-only-sweep` reports a walk over a whole table by its key: a query with a
 `LIMIT` over one base table (no join, grouping or set operation) ordered only by
 plain columns of that table, where every top-level `WHERE` conjunct is either a
