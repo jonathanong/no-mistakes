@@ -1,0 +1,275 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_pkey ON accounts (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "triggers": {
+        "trigger_accounts_fanout": {
+          "definition": "CREATE TRIGGER trigger_accounts_fanout AFTER UPDATE OR DELETE ON accounts FOR EACH ROW EXECUTE FUNCTION fn_account_fanout()"
+        }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "orders_parent_fkey": {
+          "columns": [
+            "account_id"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX orders_pkey ON orders (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "order_lines": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "order_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "order_lines_parent_fkey": {
+          "columns": [
+            "order_id"
+          ],
+          "referencedTable": "orders",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX order_lines_pkey ON order_lines (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "profiles_parent_fkey": {
+          "columns": [
+            "account_id"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "SET NULL",
+          "onUpdate": "SET NULL",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "profiles_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX profiles_pkey ON profiles (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "foreignKeys": {
+        "labels_parent_fkey": {
+          "columns": [
+            "account_id"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "labels_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labels_pkey ON labels (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "functions": {
+    "fn_account_fanout": {
+      "definition": "CREATE FUNCTION fn_account_fanout() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE orders SET account_id = NULL; RETURN NULL; END $$;"
+    }
+  },
+  "enums": {},
+  "views": {}
+}
