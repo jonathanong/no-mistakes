@@ -20,7 +20,8 @@ struct Evaluation {
     offenders: Vec<Offender>,
 }
 
-/// The relations that make `fact` unbounded. A relation the catalog does not know is not judged.
+/// The relations that make `fact` unbounded. A relation the catalog does not know is not
+/// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
 pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
     let evaluation = evaluate(&fact.query, catalog);
     let Some(target) = fact.target else {
@@ -67,8 +68,9 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
         .iter()
         .zip(&nested)
         .map(|(item, nested)| match &item.kind {
-            // A relation the catalog does not describe cannot be judged.
-            SqlBoundItemKind::Table(name) => catalog.relation(name).is_none(),
+            // A table is bounded only by its pins, known to the catalog or not: an unknown one is
+            // never reported, but it cannot size the relations pinned to it.
+            SqlBoundItemKind::Table(_) => false,
             SqlBoundItemKind::Query(_) => nested.as_ref().is_some_and(|inner| inner.bounded),
             SqlBoundItemKind::Other => true,
         })
@@ -128,6 +130,8 @@ fn keyed(
     let usable = |column: &str| {
         item.pins.iter().enumerate().any(|(index, pin)| {
             pin.column == column
+                // `IS NOT DISTINCT FROM $1` also matches NULL, which a unique key may repeat.
+                && (!pin.null_safe || catalog.column_is_not_null(name, column))
                 && match &pin.source {
                     SqlPinSource::Value => true,
                     SqlPinSource::Items(items) => items.iter().all(|other| bounded[*other]),

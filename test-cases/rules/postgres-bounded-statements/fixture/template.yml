@@ -1,0 +1,7 @@
+# Interpolations in a tagged template are binds, and bounds propagate across key joins.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: ['src/templates.mts']

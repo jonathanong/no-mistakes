@@ -34,16 +34,27 @@ The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELE
 in matching `.sql` files and in executor calls (`SELECT` is every query, including a
 set operation). A statement is bounded when any of these holds:
 
-- It has a `LIMIT` or `FETCH FIRST` (a placeholder counts; `LIMIT NULL` and `LIMIT ALL` do not).
-- It is a pure aggregate: an aggregate call such as `COUNT(*)` with no `GROUP BY`, which
-  returns one row.
+- It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` (a placeholder counts; `LIMIT NULL`,
+  `LIMIT ALL`, `FETCH … WITH TIES` and `FETCH … PERCENT` do not: ties and a share of the
+  rows are not a fixed count).
+- It is a pure aggregate: a built-in aggregate call such as `COUNT(*)` (bare or
+  `pg_catalog.`-qualified) with no `GROUP BY`, which returns one row. A function with the
+  same name in another schema is an ordinary function, called once per row.
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
-  `col = $1`, `col IS NOT DISTINCT FROM $1`, `col = ANY($1::uuid[])` (bounded by the
-  caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A column compared
-  with a column of another bounded relation counts too, so a lookup joined by primary key
-  from a bounded row is bounded.
+  `col = $1`, `col IS NOT DISTINCT FROM $1` (only on a `NOT NULL` column: it also matches
+  NULL, which a nullable unique column can repeat), `col = ANY($1::uuid[])` (bounded by the
+  caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
+  a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
+  `${id}::uuid`), which is a bind like `$1`.
+- A column compared with a column of another bounded relation is pinned too, so a bound
+  propagates across joins on unique keys to a fixed point: with `o.id = $1`, the account
+  `a.id = o.account_id` is bounded, and its profile `p.account_id = a.id` after it. A join on
+  a column that is not a whole key ends the chain (an account has many orders). `ON` pins
+  only the side an outer join can null-extend, never the preserved side, and a `WHERE` on the
+  null-extended side is not assumed to turn the join inner: a `LEFT JOIN` with its key
+  pinned only in `WHERE` reports the preserved relation.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
@@ -68,8 +79,12 @@ columns. These never prove one row:
 - Equality alternatives (`id = $1 OR id = $2`), ranges and `LIKE` do not pin.
 
 Relations the catalog does not describe (views, other schemas, relations created in the
-same script) are not judged. A statement whose SQL cannot be recovered statically fails
-closed unless `unanalyzableSql` is `ignore`.
+same script) are not judged, and they bound nothing: an unknown relation can supply every
+value of a column pinned to it, so a catalog table joined to one is still reported unless
+something else bounds it. A statement whose SQL cannot be recovered statically (`SQL could
+not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.
+`unanalyzableSql: ignore` skips those statements instead, as it does for the sibling
+rules; every statement that can be analyzed is still judged.
 
 ## Options and defaults
 

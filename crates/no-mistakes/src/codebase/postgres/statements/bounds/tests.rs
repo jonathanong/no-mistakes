@@ -13,13 +13,17 @@ fn item(item: &SqlBoundItem) -> String {
     let pins: Vec<String> = item
         .pins
         .iter()
-        .map(|pin| match &pin.source {
-            SqlPinSource::Value => format!("{}=value", pin.column),
-            SqlPinSource::Items(items) => {
-                let items: Vec<String> = items.iter().map(usize::to_string).collect();
-                format!("{}=#{}", pin.column, items.join(","))
+        .map(|pin| {
+            // `~=` is the null-safe `IS NOT DISTINCT FROM`.
+            let operator = if pin.null_safe { "~=" } else { "=" };
+            match &pin.source {
+                SqlPinSource::Value => format!("{}{operator}value", pin.column),
+                SqlPinSource::Items(items) => {
+                    let items: Vec<String> = items.iter().map(usize::to_string).collect();
+                    format!("{}{operator}#{}", pin.column, items.join(","))
+                }
+                SqlPinSource::Query(bound) => format!("{}{operator}({})", pin.column, query(bound)),
             }
-            SqlPinSource::Query(bound) => format!("{}=({})", pin.column, query(bound)),
         })
         .collect();
     let pins = if pins.is_empty() {
@@ -64,7 +68,7 @@ fn equality_conjuncts_pin_columns_to_values() {
     );
     assert_eq!(
         shape("SELECT 1 FROM t WHERE $1 IS NOT DISTINCT FROM t.k"),
-        ["select: t[k=value]"]
+        ["select: t[k~=value]"]
     );
     // A caller-sized list or array pins the column too.
     assert_eq!(
@@ -253,7 +257,7 @@ fn lines_map_through_nested_items_and_pins() {
         lines
     };
     assert_eq!(lines(&found[0]), [2, 3, 4]);
-    found[0].map_lines(&|line| line + 10);
+    found[0].map_lines(&|line, _| line + 10);
     assert_eq!(lines(&found[0]), [12, 13, 14]);
 }
 
@@ -282,6 +286,94 @@ fn derived_table_lines_map_too() {
         _ => Vec::new(),
     };
     assert_eq!(lines(&found[0]), [1, 2, 3]);
-    found[0].map_lines(&|line| line * 10);
+    found[0].map_lines(&|line, _| line * 10);
     assert_eq!(lines(&found[0]), [10, 20, 30]);
+}
+
+#[test]
+fn every_item_records_where_it_starts() {
+    let found = facts("SELECT *\nFROM accounts a, orders");
+    let fact = &found[0];
+    assert_eq!((fact.line, fact.column), (1, 1));
+    let at: Vec<(usize, usize)> = fact
+        .query
+        .items
+        .iter()
+        .map(|item| (item.line, item.column))
+        .collect();
+    assert_eq!(at, [(2, 6), (2, 18)]);
+    // The mapping sees the column too, which decides the owning operand of recovered SQL.
+    let seen = std::cell::RefCell::new(Vec::new());
+    let mut mapped = found.clone();
+    mapped[0].map_lines(&|line, column| {
+        seen.borrow_mut().push((line, column));
+        line
+    });
+    assert_eq!(seen.into_inner(), [(1, 1), (2, 6), (2, 18)]);
+}
+
+#[test]
+fn an_interpolation_recovered_from_a_template_is_a_bind() {
+    // `${id}` reaches the facts as `sql_placeholder_N`: a value, never a column.
+    assert_eq!(
+        shape("SELECT id FROM images WHERE id = sql_placeholder_1"),
+        ["select: images[id=value]"]
+    );
+    assert_eq!(
+        shape("SELECT id FROM images WHERE sql_placeholder_1::uuid = id"),
+        ["select: images[id=value]"]
+    );
+    assert_eq!(
+        shape("SELECT id FROM images WHERE id = ANY(sql_placeholder_1)"),
+        ["select: images[id=value]"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM a JOIN b ON b.a_id = a.id WHERE a.id = sql_placeholder_1 AND b.k IN (sql_placeholder_2, 3)"),
+        ["select: a[id=#1 id=value] b[a_id=#0 k=value]"]
+    );
+    // A bind never names a column of the item it is compared with.
+    assert_eq!(
+        shape(
+            "SELECT 1 FROM a, b WHERE a.id = sql_placeholder_1 AND b.id = sql_placeholder_1 + a.n"
+        ),
+        ["select: a[id=value] b[id=#0]"]
+    );
+}
+
+#[test]
+fn a_null_safe_comparison_is_recorded_as_such() {
+    assert_eq!(
+        shape("SELECT 1 FROM t WHERE t.k IS NOT DISTINCT FROM sql_placeholder_1 AND t.j = $1"),
+        ["select: t[k~=value j=value]"]
+    );
+}
+
+#[test]
+fn only_a_built_in_aggregate_caps_a_query() {
+    assert_eq!(shape("SELECT count(*) FROM t"), ["select: capped t"]);
+    assert_eq!(
+        shape("SELECT Pg_Catalog.Count(*) FROM t"),
+        ["select: capped t"]
+    );
+    // A function of another schema is an ordinary function, called once per row.
+    assert_eq!(shape("SELECT app.count(id) FROM t"), ["select: t"]);
+    assert_eq!(shape("SELECT db.app.count(id) FROM t"), ["select: t"]);
+    assert_eq!(shape("SELECT \"count\"(id) FROM t"), ["select: capped t"]);
+    assert_eq!(shape("SELECT \"Count\"(id) FROM t"), ["select: t"]);
+}
+
+#[test]
+fn fetch_caps_unless_it_returns_ties_or_a_share() {
+    assert_eq!(
+        shape("SELECT 1 FROM t ORDER BY k FETCH FIRST 5 ROWS ONLY"),
+        ["select: capped t"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM t ORDER BY k FETCH FIRST ROW ONLY"),
+        ["select: capped t"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM t ORDER BY k FETCH FIRST 5 ROWS WITH TIES"),
+        ["select: t"]
+    );
 }

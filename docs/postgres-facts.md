@@ -332,18 +332,23 @@ query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 
 `SqlStatementFileFacts.bounds` holds one `SqlBoundFact` per executed `SELECT`,
 `UPDATE` and `DELETE`, including those in data-modifying CTEs and under
-`EXPLAIN ANALYZE`; `INSERT … SELECT` is not a bound fact. A fact keeps the `kind`, the
-`line`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the `target` item.
-A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST` (`LIMIT NULL` and
-`LIMIT ALL` do not cap) or is a pure aggregate (an aggregate call, not windowed, with
+`EXPLAIN ANALYZE`; `INSERT … SELECT` is not a bound fact. A fact keeps the `kind`, its
+`line` and `column`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the
+`target` item. Every item keeps its own `line` and `column`, so SQL recovered from
+several source operands maps each relation to the operand that wrote it.
+A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` (`LIMIT
+NULL`, `LIMIT ALL`, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or is a pure
+aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not windowed, with
 no `GROUP BY`), and lists its FROM `items`. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
 operation), or `Other` (a table function or `VALUES`). A CTE reference without an
 alias is addressed by the CTE's name. A recursive reference is `Other`.
 
 Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an
-equality or `IS NOT DISTINCT FROM`, `= ANY(…)`, `IN (…)` or `IN (SELECT …)` against a
-`Value` (no relation of the statement), `Items` (columns of other items; a column
+equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)` or
+`IN (SELECT …)` against a
+`Value` (no relation of the statement: a literal, a bind, or an interpolation recovered
+from a template literal), `Items` (columns of other items; a column
 compared with its own item is never a pin), or a subquery. `WHERE` restricts every item.
 A join condition restricts only the non-preserved side of an outer join and both sides of
 an inner join; `FULL`, `USING`, `NATURAL` and `CROSS` joins pin nothing. A bare column
@@ -352,8 +357,10 @@ reference, so neither pins. Only base tables take pins. The facts are syntactic:
 decides against a catalog whether a pinned column set is a unique key.
 
 `SchemaCatalog::unique_keys(table)` returns those key column sets: valid, ready, live,
-immediate, non-partial unique or primary indexes whose keys are all plain columns.
-`postgres-bounded-statements` consumes both.
+immediate, non-partial unique or primary indexes whose keys are all plain columns, and
+`SchemaCatalog::column_is_not_null(table, column)` says whether a column cannot hold NULL
+(`ctid` never does), which decides whether an `IS NOT DISTINCT FROM` pin identifies a row.
+`postgres-bounded-statements` consumes all three.
 
 ## Query annotation facts
 

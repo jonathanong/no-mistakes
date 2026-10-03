@@ -1,0 +1,9 @@
+# unanalyzableSql: ignore skips SQL that cannot be recovered or parsed, like its sibling rules.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      exclude: ['src/jobs.ts', 'src/templates.mts']
+      sqlInclude: ['sql/broken.sql']
+      unanalyzableSql: ignore

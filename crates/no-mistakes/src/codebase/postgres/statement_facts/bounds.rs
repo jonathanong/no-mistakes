@@ -14,6 +14,7 @@ pub enum SqlBoundKind {
 pub struct SqlBoundFact {
     pub kind: SqlBoundKind,
     pub line: usize,
+    pub column: usize,
     pub query: SqlBoundQuery,
     /// For `UPDATE` and `DELETE`: the index in `query.items` of the relation being changed.
     pub target: Option<usize>,
@@ -33,6 +34,7 @@ pub struct SqlBoundItem {
     pub kind: SqlBoundItemKind,
     pub alias: Option<String>,
     pub line: usize,
+    pub column: usize,
     pub pins: Vec<SqlBoundPin>,
 }
 
@@ -51,6 +53,8 @@ pub enum SqlBoundItemKind {
 pub struct SqlBoundPin {
     pub column: String,
     pub source: SqlPinSource,
+    /// `IS NOT DISTINCT FROM` also matches NULL, so it picks out one row only on a NOT NULL column.
+    pub null_safe: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,17 +68,18 @@ pub enum SqlPinSource {
 }
 
 impl SqlBoundFact {
-    /// Map every line through `map`, for SQL embedded in a host file.
-    pub fn map_lines(&mut self, map: &impl Fn(usize) -> usize) {
-        self.line = map(self.line);
+    /// Map every position through `map(line, column)`, for SQL embedded in a host file: the
+    /// column decides which physical operand of a recovered string owns the line.
+    pub fn map_lines(&mut self, map: &impl Fn(usize, usize) -> usize) {
+        self.line = map(self.line, self.column);
         self.query.map_lines(map);
     }
 }
 
 impl SqlBoundQuery {
-    fn map_lines(&mut self, map: &impl Fn(usize) -> usize) {
+    fn map_lines(&mut self, map: &impl Fn(usize, usize) -> usize) {
         for item in &mut self.items {
-            item.line = map(item.line);
+            item.line = map(item.line, item.column);
             if let SqlBoundItemKind::Query(query) = &mut item.kind {
                 query.map_lines(map);
             }

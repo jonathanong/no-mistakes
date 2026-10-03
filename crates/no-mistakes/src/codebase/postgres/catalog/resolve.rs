@@ -118,6 +118,16 @@ impl SchemaCatalog {
             })
             .collect()
     }
+    /// Whether `column` of `table` cannot hold NULL. Every row has a `ctid`.
+    pub fn column_is_not_null(&self, table: &str, column: &str) -> bool {
+        column == "ctid"
+            || self.relation(table).is_some_and(|table| {
+                table
+                    .columns
+                    .iter()
+                    .any(|candidate| candidate.name == column && !candidate.nullable)
+            })
+    }
     fn arbiter_table(&self, table: &str) -> Option<&ArbiterTable> {
         let key = normalize_table_name(table);
         self.tables.get(&key).or_else(|| {

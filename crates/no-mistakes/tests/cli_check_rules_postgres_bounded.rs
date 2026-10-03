@@ -121,7 +121,14 @@ fn joins_and_limited_subqueries_bound_by_key_and_unknown_relations_are_not_judge
     expect(
         "graph.yml",
         "sql/graph.sql",
-        &[(7, "table:orders"), (9, "table:orders")],
+        &[
+            (7, "table:orders"),
+            (9, "table:orders"),
+            (13, "table:accounts"),
+            (15, "table:contacts"),
+            (19, "table:orders"),
+            (24, "table:orders"),
+        ],
     );
 }
 
@@ -152,4 +159,26 @@ fn an_ordering_only_catalog_and_a_missing_catalog_path_are_errors() {
     let missing = check("no-catalog.yml");
     assert!(!missing.status.success());
     assert!(String::from_utf8_lossy(&missing.stderr).contains("schemaCatalogPath: required"));
+}
+
+#[test]
+fn template_interpolations_are_binds_and_key_joins_propagate_bounds() {
+    // `sql-template-strings` interpolations (`${id}`, `${image.id}`, `${id}::uuid`, a list) pin a
+    // key like `$1`, and a pinned order bounds its account and the account its profile. The two
+    // reported queries have no key, and an account's orders are not bounded by the account.
+    expect(
+        "template.yml",
+        "src/templates.mts",
+        &[(17, "table:invoices"), (20, "table:orders")],
+    );
+}
+
+#[test]
+fn unanalyzable_sql_fails_closed_unless_ignored() {
+    let found = findings("unanalyzable.yml");
+    assert_eq!(found.len(), 2, "{found:#?}");
+    assert!(found.iter().all(|(_, _, target)| target == "unanalyzable"));
+    assert!(!check("unanalyzable.yml").status.success());
+    assert_eq!(findings("ignore-unanalyzable.yml"), []);
+    assert!(check("ignore-unanalyzable.yml").status.success());
 }

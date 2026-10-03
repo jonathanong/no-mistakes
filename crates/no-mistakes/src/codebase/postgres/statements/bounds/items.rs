@@ -1,4 +1,4 @@
-use super::{line, pins, query, Scope};
+use super::{pins, query, start, Scope};
 use crate::codebase::postgres::idents::{ident_key, object_name_key};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use sqlparser::ast::{
@@ -11,11 +11,12 @@ pub(super) fn from_select(select: &Select, scope: &Scope) -> Vec<SqlBoundItem> {
     builder.finish(select.selection.as_ref())
 }
 
-pub(super) fn other(line: usize) -> SqlBoundItem {
+pub(super) fn other((line, column): (usize, usize)) -> SqlBoundItem {
     SqlBoundItem {
         kind: SqlBoundItemKind::Other,
         alias: None,
         line,
+        column,
         pins: Vec::new(),
     }
 }
@@ -93,19 +94,19 @@ impl<'a> Builder<'a> {
                 let alias = alias_key(alias).or_else(|| {
                     matches!(kind, SqlBoundItemKind::Query(_)).then(|| object_name_key(name))
                 });
-                self.push(kind, alias, line(name.span()));
+                self.push(kind, alias, start(name.span()));
             }
             TableFactor::Derived {
                 subquery, alias, ..
             } => {
                 let bound = query::bound_query(subquery, self.scope);
                 let kind = SqlBoundItemKind::Query(bound);
-                self.push(kind, alias_key(alias), line(subquery.span()));
+                self.push(kind, alias_key(alias), start(subquery.span()));
             }
             TableFactor::NestedJoin {
                 table_with_joins, ..
             } => self.tables(std::slice::from_ref(&**table_with_joins)),
-            other => self.push(SqlBoundItemKind::Other, None, line(other.span())),
+            other => self.push(SqlBoundItemKind::Other, None, start(other.span())),
         }
     }
 
@@ -118,11 +119,17 @@ impl<'a> Builder<'a> {
         }
     }
 
-    fn push(&mut self, kind: SqlBoundItemKind, alias: Option<String>, line: usize) {
+    fn push(
+        &mut self,
+        kind: SqlBoundItemKind,
+        alias: Option<String>,
+        (line, column): (usize, usize),
+    ) {
         self.items.push(SqlBoundItem {
             kind,
             alias,
             line,
+            column,
             pins: Vec::new(),
         });
     }

@@ -1,0 +1,8 @@
+# SQL that cannot be analyzed fails closed by default.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      exclude: ['src/jobs.ts', 'src/templates.mts']
+      sqlInclude: ['sql/broken.sql']

@@ -1,8 +1,10 @@
-use super::{items, line, Scope};
+use super::{items, start, Scope};
 use crate::codebase::postgres::idents::{ident_key, visit_child_exprs};
 use crate::codebase::postgres::statements::limit::is_limited;
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
-use sqlparser::ast::{Expr, GroupByExpr, Query, Select, SelectItem, SetExpr, Spanned, Statement};
+use sqlparser::ast::{
+    Expr, GroupByExpr, ObjectName, Query, Select, SelectItem, SetExpr, Spanned, Statement,
+};
 
 const AGGREGATES: &[&str] = &[
     "count",
@@ -49,12 +51,12 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
     for cte in &with.cte_tables {
         let name = ident_key(&cte.alias.name);
         let bound = if modifying_statement(&cte.query).is_some() {
-            sized_by_itself(line(cte.query.span()))
+            sized_by_itself(start(cte.query.span()))
         } else {
             let mut inner = scope.clone();
             if with.recursive {
                 // A recursive reference is sized by the recursion, not by this body.
-                inner.insert(name.clone(), sized_by_itself(line(cte.query.span())));
+                inner.insert(name.clone(), sized_by_itself(start(cte.query.span())));
             }
             bound_query(&cte.query, &inner)
         };
@@ -93,24 +95,26 @@ fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
             capped: false,
             items: vec![arm(left, scope), arm(right, scope)],
         },
-        _ => sized_by_itself(line(set.span())),
+        _ => sized_by_itself(start(set.span())),
     }
 }
 
 fn arm(set: &SetExpr, scope: &Scope) -> SqlBoundItem {
+    let (line, column) = start(set.span());
     SqlBoundItem {
         kind: SqlBoundItemKind::Query(set_bound(set, scope)),
         alias: None,
-        line: line(set.span()),
+        line,
+        column,
         pins: Vec::new(),
     }
 }
 
 /// A body whose size nothing in the statement text decides: it adds no unbounded relation.
-pub(super) fn sized_by_itself(line: usize) -> SqlBoundQuery {
+pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
         capped: false,
-        items: vec![items::other(line)],
+        items: vec![items::other(at)],
     }
 }
 
@@ -132,13 +136,7 @@ fn pure_aggregate(select: &Select) -> bool {
 
 fn contains_aggregate(expr: &Expr) -> bool {
     if let Expr::Function(function) = expr {
-        let name = function
-            .name
-            .0
-            .last()
-            .map(|part| part.to_string().to_ascii_lowercase())
-            .unwrap_or_default();
-        if function.over.is_none() && AGGREGATES.contains(&name.as_str()) {
+        if function.over.is_none() && builtin_aggregate(&function.name) {
             return true;
         }
     }
@@ -147,4 +145,23 @@ fn contains_aggregate(expr: &Expr) -> bool {
         found = found || contains_aggregate(child)
     });
     found
+}
+
+/// A built-in aggregate: the bare name, or `pg_catalog.<name>`. A function in any other schema
+/// that happens to share a name is an ordinary function, called once per row.
+fn builtin_aggregate(name: &ObjectName) -> bool {
+    let keys: Vec<String> = name
+        .0
+        .iter()
+        .filter_map(|part| part.as_ident().map(ident_key))
+        .collect();
+    let [.., function] = keys.as_slice() else {
+        return false;
+    };
+    let qualified = match keys.len() {
+        1 => true,
+        2 => keys[0] == "pg_catalog",
+        _ => false,
+    };
+    qualified && AGGREGATES.contains(&function.as_str())
 }

@@ -40,10 +40,13 @@ fn push(
     capped: bool,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    let line = items.first().map_or(1, |item| item.line);
+    let (line, column) = items
+        .first()
+        .map_or((1, 1), |item| (item.line, item.column));
     out.push(SqlBoundFact {
         kind,
         line,
+        column,
         query: SqlBoundQuery { capped, items },
         target: Some(0),
     });

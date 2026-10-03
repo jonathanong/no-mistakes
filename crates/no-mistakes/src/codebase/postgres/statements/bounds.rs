@@ -58,14 +58,20 @@ fn collect_query(query: &Query, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
         collect_in(statement, &scope, out);
         return;
     }
+    let (line, column) = start(query.span());
     out.push(SqlBoundFact {
         kind: SqlBoundKind::Select,
-        line: line(query.span()),
+        line,
+        column,
         query: query::bound_body(query, &scope),
         target: None,
     });
 }
 
-fn line(span: sqlparser::tokenizer::Span) -> usize {
-    (span.start.line as usize).max(1)
+/// The 1-based line and column where `span` starts.
+fn start(span: sqlparser::tokenizer::Span) -> (usize, usize) {
+    (
+        (span.start.line as usize).max(1),
+        (span.start.column as usize).max(1),
+    )
 }

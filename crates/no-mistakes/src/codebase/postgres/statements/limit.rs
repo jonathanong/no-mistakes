@@ -2,10 +2,12 @@
 use sqlparser::ast::{Expr, LimitClause, Query, Value};
 
 /// True when the query itself caps its rows: `LIMIT n` (a literal or a placeholder),
-/// MySQL's `LIMIT offset, n`, or `FETCH FIRST`. `LIMIT NULL` and `LIMIT ALL` do not cap.
+/// MySQL's `LIMIT offset, n`, or `FETCH FIRST n ROWS ONLY`. `LIMIT NULL` and `LIMIT ALL` do not
+/// cap, and neither does `FETCH FIRST n ROWS WITH TIES` (every row tied with the last is also
+/// returned) or a `PERCENT` count (a share of the rows, not a number).
 pub(super) fn is_limited(query: &Query) -> bool {
-    if query.fetch.is_some() {
-        return true;
+    if let Some(fetch) = &query.fetch {
+        return !fetch.with_ties && !fetch.percent;
     }
     match &query.limit_clause {
         Some(LimitClause::LimitOffset {
