@@ -78,11 +78,14 @@ pub(crate) fn extract_from_parsed(
         returning_stars: &mut returning_stars,
         mutation_column_uses: &mut mutation_column_uses,
     };
+    let mut temporary_relations = bounds::TemporaryRelations::default();
     for statement in executed {
         writes::collect(statement, &mut writes);
         collect_one(sql, statement, &mut out);
         if collect_bounds {
+            let first_bound = bounds.len();
             bounds::collect(statement, &mut bounds);
+            temporary_relations.apply(statement, &mut bounds[first_bound..]);
         }
     }
     dedupe::exists_set_operations(&mut selects);

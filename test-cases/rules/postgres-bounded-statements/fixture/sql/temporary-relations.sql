@@ -1,0 +1,17 @@
+SELECT * FROM accounts;
+CREATE TEMP TABLE accounts (id uuid);
+SELECT * FROM accounts;
+SELECT * FROM accounts WHERE id = $1;
+SELECT * FROM pg_temp.accounts;
+SELECT * FROM public.accounts;
+UPDATE orders o SET status = 'x' FROM accounts a WHERE a.id = $1 AND o.id = a.id;
+DROP TABLE accounts;
+SELECT * FROM accounts;
+SELECT * FROM accounts WHERE id = $1;
+CREATE TEMP VIEW accounts AS SELECT 1 AS id;
+SELECT * FROM accounts;
+DROP VIEW accounts;
+SELECT id INTO TEMP accounts FROM orders LIMIT 1;
+SELECT * FROM accounts;
+DROP TABLE pg_temp.accounts;
+SELECT * FROM accounts;

@@ -484,3 +484,39 @@ fn server_state_set_returning_functions_stay_opaque_in_from() {
         assert_eq!(shape(&format!("SELECT 1 FROM {call}")), ["select: opaque"]);
     }
 }
+
+#[test]
+fn temporary_relation_identity_tracks_source_statement_order() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-relations.sql"
+    ));
+    let shapes = shape(sql);
+    assert_eq!(shapes[0], "select: accounts");
+    assert_eq!(shapes[1], "select: opaque");
+    assert_eq!(shapes[2], "select: opaque");
+    assert_eq!(shapes[3], "select: opaque");
+    assert_eq!(shapes[4], "select: public.accounts");
+    assert_eq!(shapes[6], "select: accounts");
+}
+
+#[test]
+fn pg_temp_into_and_create_track_bare_temporary_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-qualified.sql"
+    ));
+    assert_eq!(
+        shape(sql),
+        [
+            "select: capped orders",
+            "select: opaque",
+            "select: opaque",
+            "select: accounts",
+            "select: opaque",
+            "select: accounts",
+            "select: capped orders",
+            "select: accounts"
+        ]
+    );
+}

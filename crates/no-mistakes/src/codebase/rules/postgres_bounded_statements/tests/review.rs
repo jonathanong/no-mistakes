@@ -299,3 +299,24 @@ fn jsonpath_set_returning_functions_expand_aggregate_rows() {
     );
     assert!(names("SELECT 1 FROM jsonb_path_query($1::jsonb, '$[*]')").is_empty());
 }
+
+#[test]
+fn temporary_relation_identity_tracks_source_statement_order() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-relations.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "orders", "accounts", "accounts"]
+    );
+}
+
+#[test]
+fn explicitly_temporary_schema_creation_also_shadows_bare_names() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-qualified.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts"]);
+}
