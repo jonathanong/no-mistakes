@@ -443,9 +443,11 @@ fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
 
 #[test]
 fn legacy_prepared_dispatcher_prepares_finite_set_call_facts_once() {
+    // Keep this root private: process-wide counting must include worker parses without
+    // admitting unrelated finite-set tests that run concurrently on shared fixtures.
     let root = crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/finite-set-consistency/call-literals/valid"),
+            .join("../../fixtures/rules/finite-set-consistency/prepared-dispatcher-count"),
     );
     let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
