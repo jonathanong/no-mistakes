@@ -148,7 +148,8 @@ in that PR.
 - **Tests** — fixture-backed behavior, plus declaration locks in
   `packages/no-mistakes/scripts/api.test.js` when `.d.ts` contracts change,
   plus `crates/no-mistakes/tests/docs_coverage.rs` when adding a CLI command
-  or rule page.
+  or rule page. Update and run
+  `crates/no-mistakes/src/main/diagnostics_args_tests.rs` for new CLI leaves.
 
 ## Agent Best Practices
 
