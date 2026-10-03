@@ -1,5 +1,6 @@
 use super::*;
 use anyhow::Context;
+use std::path::PathBuf;
 
 impl SchemaCatalog {
     pub fn from_json(json: &str) -> anyhow::Result<Self> {
@@ -18,6 +19,7 @@ mod expressions;
 mod findings;
 mod function_body;
 mod model;
+mod names;
 mod order;
 mod parse;
 mod relation;
@@ -60,6 +62,8 @@ fn expression_normalization_preserves_structural_parentheses() {
 #[test]
 fn rejects_outside_catalog_paths() {
     let root = Path::new("/repo");
+    assert!(catalog_path(root, "").is_err());
+    assert!(catalog_path(root, ".").is_err());
     assert!(catalog_path(root, "../schema.json").is_err());
     assert!(catalog_path(root, "/schema.json").is_err());
     assert_eq!(

@@ -433,6 +433,18 @@ jobs:
         with:
           tool: cargo-llvm-cov
 
+      - name: Start isolated PostgreSQL for catalog fixtures
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql
+          pg_bin="$(find /usr/lib/postgresql -path '*/bin/initdb' -print | sort -V | tail -n 1)"
+          pg_bin="${pg_bin%/initdb}"
+          "$pg_bin/initdb" -D "$RUNNER_TEMP/no-mistakes-postgres" --auth=trust --no-locale
+          "$pg_bin/pg_ctl" -D "$RUNNER_TEMP/no-mistakes-postgres" -l "$RUNNER_TEMP/no-mistakes-postgres.log" -o "-k $RUNNER_TEMP -p 56225 -c listen_addresses=" start
+          echo "NO_MISTAKES_TEST_POSTGRES_URL=postgresql://$USER@localhost/postgres?host=$RUNNER_TEMP&port=56225" >> "$GITHUB_ENV"
+          echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"
+
       - name: Clean Rust coverage artifacts
         timeout-minutes: 2
         run: |

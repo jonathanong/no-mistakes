@@ -633,3 +633,5 @@ See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and
 [Tests and selectors](configuration/tests.md) for how Swift and .NET
 already require explicit package/project lists.
+
+PostgreSQL observed ordering catalog generation has Rust library, CLI and async Node/N-API parity; see [`postgres catalog`](cli/postgres.md).

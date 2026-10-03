@@ -1,3 +1,5 @@
+import type { PostgresCatalogOptions, PostgresOrderingCatalog } from "./postgres-catalog-types";
+export type * from "./postgres-catalog-types";
 import type {
   CheckReport,
   AnalyzeProjectOptions,
@@ -175,3 +177,8 @@ export function reactCheck(
 export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
 ): Promise<ReactUsagesReport>;
+
+/** Observe committed PostgreSQL ordering metadata in a read-only transaction. Requires psql. */
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions>,
+): Promise<PostgresOrderingCatalog>;

@@ -166,3 +166,17 @@ json_binding!(
 );
 
 include!("napi_api/ci_bindings.rs");
+
+pub(crate) fn generate_postgres_catalog_json_impl(
+    options: serde_json::Value,
+) -> napi::Result<String> {
+    let options =
+        options::parse_options_value::<crate::postgres_catalog::PostgresCatalogOptions>(options)?;
+    let catalog = crate::postgres_catalog::generate(&options).map_err(options::to_napi_error)?;
+    Ok(catalog.to_string())
+}
+json_binding!(
+    generate_postgres_catalog_json,
+    "generatePostgresCatalogJson",
+    generate_postgres_catalog_json_impl
+);

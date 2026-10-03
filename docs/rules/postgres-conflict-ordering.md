@@ -132,3 +132,13 @@ specific `safeDirective` explanation over a file-level suppression.
 
 [`postgres-lock-ordering`](postgres-lock-ordering.md) applies the same optional
 catalog key-prefix requirement to multi-row `FOR UPDATE` readers.
+
+## Generated ordering catalogs
+
+[`postgres catalog`](../cli/postgres.md) observes PostgreSQL directly and emits
+independent ordering facts. It retains invalid/not-ready/non-live index state;
+those indexes cannot prove order. Unsupported custom operator classes/collations remain
+in the JSON but fail closed for canonical proof. Deferrable unique indexes cannot
+be conflict arbiters, although supported valid keys can still prove lock order.
+The generated catalog explicitly declares ordering coverage and cannot satisfy
+rules requiring complete schema metadata.

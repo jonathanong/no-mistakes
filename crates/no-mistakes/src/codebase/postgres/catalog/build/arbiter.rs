@@ -11,10 +11,16 @@ pub(super) fn arbiter_table(table: &SnapshotTable) -> ArbiterTable {
             (index.unique || index.primary)
                 && index.valid
                 && index.ready
-                && index.access_method.eq_ignore_ascii_case("btree")
+                && index.live.unwrap_or(true)
                 && !index.keys.is_empty()
         })
         .map(|(name, index)| CanonicalIndex {
+            ordering_supported: index.access_method.eq_ignore_ascii_case("btree")
+                && index
+                    .keys
+                    .iter()
+                    .all(|key| key.ordering_supported.unwrap_or(true)),
+            immediate: index.immediate.unwrap_or(true),
             name: name.clone(),
             constraint_backed: index.constraint_backed,
             predicate: index

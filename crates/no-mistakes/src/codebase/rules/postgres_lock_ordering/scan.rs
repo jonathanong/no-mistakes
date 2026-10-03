@@ -19,7 +19,7 @@ pub(super) fn scan_with_sources(
     let catalog = opts
         .schema_catalog_path
         .as_deref()
-        .map(|path| facts.postgres_schema_catalog(path))
+        .map(|path| facts.postgres_ordering_catalog(path))
         .transpose()?;
     let mut findings = Vec::new();
     for path in files

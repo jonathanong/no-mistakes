@@ -176,3 +176,12 @@ pub struct CatalogView {
     pub definition: String,
     pub comment: Option<String>,
 }
+
+/// Facts guaranteed by a catalog producer. Partial catalogs must not prove full-schema rules.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CatalogCoverage {
+    #[default]
+    Complete,
+    Ordering,
+}

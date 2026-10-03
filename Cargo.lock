@@ -1365,6 +1365,7 @@ dependencies = [
  "oxc_parser",
  "oxc_span",
  "oxc_syntax",
+ "percent-encoding",
  "predicates",
  "proc-macro2",
  "pulldown-cmark",
@@ -1382,6 +1383,7 @@ dependencies = [
  "tempfile",
  "toml",
  "unicode-id-start",
+ "url",
  "wait-timeout",
  "windows-sys",
 ]

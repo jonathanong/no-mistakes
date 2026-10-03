@@ -111,13 +111,13 @@ fn qualifiers_are_allowed(expression: &str, qualifiers: &[String]) -> bool {
         };
         let qualifier = parts[..parts.len().saturating_sub(1)]
             .iter()
-            .map(|part| part.value.as_str())
+            .map(|part| part.to_string())
             .collect::<Vec<_>>()
             .join(".");
-        if qualifiers
-            .iter()
-            .any(|candidate| candidate.eq_ignore_ascii_case(&qualifier))
-        {
+        if qualifiers.iter().any(|candidate| {
+            super::names::normalize_table_name(candidate)
+                == super::names::normalize_table_name(&qualifier)
+        }) {
             ControlFlow::Continue(())
         } else {
             ControlFlow::Break(())

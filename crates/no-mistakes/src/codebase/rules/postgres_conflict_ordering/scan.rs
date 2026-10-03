@@ -23,7 +23,7 @@ pub(super) fn scan_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let catalog = facts.postgres_schema_catalog(&opts.schema_catalog_path)?;
+    let catalog = facts.postgres_ordering_catalog(&opts.schema_catalog_path)?;
     let mut findings = Vec::new();
     for path in files
         .iter()

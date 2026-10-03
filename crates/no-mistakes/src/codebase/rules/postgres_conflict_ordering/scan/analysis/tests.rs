@@ -61,6 +61,8 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
     assert_eq!(resolved[1].expression, "id");
 
     let index = CanonicalIndex {
+        ordering_supported: true,
+        immediate: true,
         name: "items_key".to_string(),
         constraint_backed: false,
         keys: expected.clone(),

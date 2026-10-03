@@ -122,3 +122,5 @@ groups, limits, diffs, and deleted-file behavior.
   aliases and resolver ownership.
 - [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported
   forms, confidence limits, and `rg` fallbacks.
+
+For independent PostgreSQL ordering catalogs, use `postgres catalog --connection-env DATABASE_URL --schema public --output ordering-catalog.json`. This reads PostgreSQL metadata directly and emits tool-owned ordering facts; it does not read application snapshots.

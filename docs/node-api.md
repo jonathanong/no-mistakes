@@ -68,6 +68,13 @@ const {
 })();
 ````
 
+## PostgreSQL catalog generation
+
+`generatePostgresCatalog({ connectionEnv, schema })` asynchronously returns an
+independent ordering catalog from a live PostgreSQL schema. It requires `psql`
+and keeps connection secrets in the named environment variable. See
+[`postgres catalog`](cli/postgres.md) for coverage guarantees and limitations.
+
 ## CLI Mapping
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
@@ -83,6 +90,7 @@ const {
 | `call-sites`                               | `callSites(options)`                                                                                                                                                                                                                                                       |
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
+| `postgres catalog` | `generatePostgresCatalog(options)` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
@@ -196,6 +204,7 @@ does not have a one-to-one CLI command:
 | `dependents` | `dependents(options)` |
 | `effects` | `effects(options)` |
 | `exportsOf` | `exportsOf(options)` |
+| `generatePostgresCatalog` | `generatePostgresCatalog(options)` |
 | `fetches` | `fetches(options)` |
 | `flow` | `flow(options)` |
 | `impactedChecks` | `impactedChecks(options)` |
@@ -638,3 +647,5 @@ addon avoids UTF-16 string copies at the N-API boundary.
   `ciTopology()` reads the current filesystem for each call; pass `profile: "ci"`
   (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.
+
+`generatePostgresCatalog` is a runtime export; its named public types are `PostgresCatalogOptions` and `PostgresOrderingCatalog`.
