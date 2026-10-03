@@ -11,6 +11,8 @@ mod items;
 mod pins;
 mod query;
 mod table;
+mod temporary;
+pub(super) use temporary::TemporaryRelations;
 #[cfg(test)]
 mod tests;
 mod using;

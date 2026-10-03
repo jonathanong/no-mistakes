@@ -211,3 +211,8 @@ select-list rows. In `FROM`, only functions whose arguments size their result
 that inspect server state or execute SQL (`pg_ls_dir`, `pg_listening_channels`,
 `ts_stat`) remain opaque even with fixed arguments. The real PostgreSQL test lane
 checks this function inventory against the PostgreSQL function catalog.
+
+Temporary tables and views created earlier in the same SQL source shadow unqualified
+catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.
+Temporary relations are unknown and bound no joined items; qualified permanent
+relations retain their catalog identity. State resets for every SQL source.
