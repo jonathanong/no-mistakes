@@ -135,7 +135,9 @@ configuration. Every query is checked, including CTEs and subqueries of
 `UPDATE` and `DELETE`. A placeholder, an expression and `LIMIT ALL` are not
 literals, and `FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
 `FETCH` keyword (a count that is written is reported at the count). `FETCH … WITH
-TIES` still writes a literal count, so it is reported too.
+TIES` still writes a literal count, so it is reported too. Implicit `FETCH` clauses
+in an `OFFSET` subquery and its outer query retain separate source locations;
+a line suppression applies only to the clause on that line.
 
 `keyset-only-sweep` excludes `DISTINCT`, `DISTINCT ON`, and grouped queries because
 they page distinct groups rather than table rows. `SELECT ALL` preserves table rows

@@ -5,7 +5,8 @@ use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
 use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Spanned, Value,
+    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, SetExpr, Spanned,
+    Value,
 };
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Span, Token};
@@ -104,12 +105,46 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
         query.limit_clause.as_ref().map(Spanned::span),
     ];
     let after = spans.into_iter().flatten().map(end).max()?;
-    tokens.all().iter().find_map(|token| match &token.token {
-        Token::Word(word) if word.keyword == Keyword::FETCH && start(token.span) >= after => {
-            Some(start(token.span))
-        }
-        _ => None,
-    })
+    // An implicit nested FETCH has an empty AST span, including when it ends an OFFSET
+    // subquery. Keep token nesting as well as spans so that clause cannot locate this query.
+    // A parenthesized body begins before its inner query's span. Account for those
+    // opening parentheses before scanning from the body start.
+    let mut depth = 0usize;
+    let mut body = query.body.as_ref();
+    while let SetExpr::Query(inner) = body {
+        depth += 1;
+        body = inner.body.as_ref();
+    }
+    // sqlparser does not give TABLE bodies a source span. The token scan cannot
+    // anchor its nesting to this query, so retain the span-only lookup in that case.
+    if matches!(body, SetExpr::Table(_)) {
+        return tokens.all().iter().find_map(|token| match &token.token {
+            Token::Word(word) if word.keyword == Keyword::FETCH && start(token.span) >= after => {
+                Some(start(token.span))
+            }
+            _ => None,
+        });
+    }
+    tokens
+        .all()
+        .iter()
+        .filter(|token| start(token.span) >= start(query.body.span()))
+        .find_map(|token| match &token.token {
+            Token::LParen => {
+                depth += 1;
+                None
+            }
+            Token::RParen => {
+                depth = depth.saturating_sub(1);
+                None
+            }
+            Token::Word(word)
+                if word.keyword == Keyword::FETCH && depth == 0 && start(token.span) >= after =>
+            {
+                Some(start(token.span))
+            }
+            _ => None,
+        })
 }
 
 fn start(span: Span) -> (usize, usize) {
