@@ -51,8 +51,8 @@ set operation). A statement is bounded when any of these holds:
   caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
-  different value for each row (`nextval`, `random`, `gen_random_uuid`, `clock_timestamp`
-  and the like) is not a value; any other function call is assumed to be row-invariant,
+  different value for each row (`random`, `gen_random_uuid`, `clock_timestamp`, the
+  sequence functions and the like) is not a value; any other function call is assumed to be row-invariant,
   since a function's volatility is not part of the facts. A subquery that reads a column of
   the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever its own bound: every
   row finds itself in it.
