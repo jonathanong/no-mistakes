@@ -27,6 +27,7 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
                         )
                     {
                         let raw = format!("0{}", word.value);
+                        let hex = matches!(raw.as_bytes()[1], b'x' | b'X');
                         let value = match integer(&raw) {
                             Ok(value) => Some(value.to_string()),
                             Err(error)
@@ -43,9 +44,15 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
                             }
                             Err(_) => None,
                         };
-                        if let Some(value) = value {
+                        let repaired =
+                            value.map(|value| Token::Number(value, false)).or_else(|| {
+                                // Keep malformed contiguous hex lexically invalid in every position.
+                                // Leaving the pair untouched would parse as a projection alias.
+                                hex.then_some(Token::Char('\0'))
+                            });
+                        if let Some(repaired) = repaired {
                             let mut combined = token.clone();
-                            combined.token = Token::Number(value, false);
+                            combined.token = repaired;
                             combined.span.end = next.span.end;
                             // Ordinary SQL keeps its original token vector without cloning.
                             let out = out.get_or_insert_with(|| {

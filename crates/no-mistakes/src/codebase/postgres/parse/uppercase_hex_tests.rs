@@ -38,6 +38,7 @@ fn uppercase_hex_preserves_strict_and_recovered_caps_with_alias_controls() {
 fn malformed_uppercase_radix_does_not_become_numeric() {
     let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-sql-shape-policy/fixture/radix-prefix-separators/sql/uppercase-hex-invalid.sql"));
     for sql in sql.lines() {
-        assert!(super::parse_postgres_sql(sql).is_err());
+        assert!(super::parse_postgres_sql(sql).is_err(), "{sql}");
+        assert!(super::parse_postgres_sql_lenient(sql).is_empty(), "{sql}");
     }
 }
