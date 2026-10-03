@@ -538,6 +538,7 @@ fn saved_expanded_lexicographic_cursors_require_a_complete_prefix_chain() {
             vec![],
             vec![],
             vec!["a", "b"],
+            vec![],
         ]
     );
 }

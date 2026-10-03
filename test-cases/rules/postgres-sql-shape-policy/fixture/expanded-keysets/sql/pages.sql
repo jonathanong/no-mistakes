@@ -8,3 +8,5 @@ SELECT * FROM accounts WHERE a > $1 OR b > $2 ORDER BY a, b LIMIT $3;
 SELECT * FROM accounts WHERE b > $1 OR (b = $1 AND a > $2) ORDER BY a, b LIMIT $3;
 SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b > $2) ORDER BY a ASC, b DESC LIMIT $3;
 SELECT * FROM accounts WHERE a < $1 OR (a = $1 AND b < $2) ORDER BY a DESC, b DESC LIMIT $3;
+-- A custom ORDER BY operator has no known direction for the expanded cursor.
+SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b > $2) ORDER BY a USING >, b USING > LIMIT $3;
