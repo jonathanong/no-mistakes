@@ -107,6 +107,9 @@ distinct uncapped base-relation reads plus an opaque source. This retains findin
 while preventing the summary from bounding another relation, so pathological generated
 SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
 reports each relation that makes a statement unbounded, once, at that relation's line.
+An uncapped SELECT also reports unbounded relations read by its IN-subquery pins,
+even when another predicate pins the outer table. UPDATE and DELETE retain target-only
+reporting.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
 `RETURNING` rows is not unbounded because of it. Those rows are opaque, though: one row per

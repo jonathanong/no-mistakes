@@ -452,7 +452,11 @@ fn base_table_column_alias_lists_supply_no_catalog_key_pins() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/column-alias-list.sql"
     ));
-    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
+    // A pin subquery still reads orders even when its outer account is pinned.
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "accounts", "orders", "accounts"]
+    );
 }
 
 #[test]
