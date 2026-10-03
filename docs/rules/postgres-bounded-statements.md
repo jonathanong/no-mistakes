@@ -295,3 +295,6 @@ With both options omitted, executor calls (including `.query`) are not scanned.
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
+Nested CTE names remain visible only within their query scope. A nested `WITH`
+clause cannot hide a parent base relation when checking outer column references.

@@ -532,3 +532,5 @@ mod server_state_projection;
 mod quoted_qualifier_paths;
 
 mod fixture_configs;
+
+mod nested_cte_scope;
