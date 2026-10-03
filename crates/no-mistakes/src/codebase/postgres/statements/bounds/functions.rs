@@ -23,7 +23,9 @@ const AGGREGATES: &[&str] = &[
     "range_intersect_agg",
 ];
 
+mod scalar;
 mod set_returning;
+use scalar::SCALAR;
 use set_returning::SET_RETURNING;
 
 /// Functions whose result row count follows caller-provided argument values.
@@ -60,7 +62,7 @@ fn named(name: &ObjectName, list: &[&str]) -> bool {
 }
 
 /// A built-in aggregate: the bare name, or `pg_catalog.<name>`. A function in any other schema
-/// that happens to share a name is an ordinary function, called once per row.
+/// that shares a name has unknown cardinality and may return a set.
 pub(super) fn is_aggregate(name: &ObjectName) -> bool {
     builtin(name, AGGREGATES)
 }
@@ -71,10 +73,19 @@ pub(super) fn is_set_returning(name: &ObjectName) -> bool {
     named(name, SET_RETURNING)
 }
 
-/// A select-list SRF can introduce rows independently of FROM. Its output is caller-sized
+/// Unknown projection calls may return a set. Only documented builtin scalar cardinality
+/// (including aggregates) proves otherwise; spelling alone never trusts a user schema.
+pub(super) fn projection_can_expand(name: &ObjectName) -> bool {
+    is_set_returning(name)
+        || !(is_aggregate(name)
+            || builtin(name, SCALAR)
+            || (name.0.len() == 1 && named(name, &["coalesce", "greatest", "least", "nullif"])))
+}
+
+/// A projection call can introduce rows independently of FROM. Its output is caller-sized
 /// only for a known built-in whose arguments contain no database-backed values.
 pub(super) fn data_backed_projection(function: &Function) -> bool {
-    if !is_set_returning(&function.name) {
+    if !projection_can_expand(&function.name) {
         return false;
     }
     if !builtin(&function.name, CALLER_SIZED) {
