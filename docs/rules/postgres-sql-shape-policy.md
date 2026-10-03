@@ -300,3 +300,6 @@ when Unicode characters precede the limit on its source line.
 Valid radix integers above the supported unsigned row-cap range remain parseable
 as numeric expressions. Their cap is classified as unknown, so they do not
 prevent collection of other statement facts.
+Adjacent radix tokens are repaired before SQL parsing, including projections
+that would otherwise be accepted as implicit aliases. Whitespace-separated
+aliases and quoted names retain their existing meaning.

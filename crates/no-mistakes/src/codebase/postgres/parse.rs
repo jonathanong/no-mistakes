@@ -48,22 +48,15 @@ impl From<ParserError> for PostgresParseError {
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
     let normalized = normalize_copy_data(sql);
     let separated = distinct_group::separate_distinct_grouping(&normalized);
-    Parser::parse_sql(&PostgreSqlDialect {}, &separated)
-        .or_else(|error| {
-            let Ok(tokens) =
-                sqlparser::tokenizer::Tokenizer::new(&PostgreSqlDialect {}, &separated)
-                    .tokenize_with_location()
-            else {
-                return Err(error);
-            };
-            let Some(tokens) = radix_numbers::repair(&tokens) else {
-                return Err(error);
-            };
-            Parser::new(&PostgreSqlDialect {})
-                .with_tokens_with_locations(tokens)
-                .parse_statements()
-                .map_err(|_| error)
-        })
+    let tokens = sqlparser::tokenizer::Tokenizer::new(&PostgreSqlDialect {}, &separated)
+        .tokenize_with_location()
+        .map_err(|error| PostgresParseError {
+            message: error.to_string(),
+        })?;
+    let tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
+    Parser::new(&PostgreSqlDialect {})
+        .with_tokens_with_locations(tokens)
+        .parse_statements()
         .map_err(PostgresParseError::from)
 }
 
@@ -86,6 +79,8 @@ pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
     lenient::expand_chr_encoded_sql(sql)
 }
 
+#[cfg(test)]
+mod radix_first_tests;
 #[cfg(test)]
 mod tests;
 
