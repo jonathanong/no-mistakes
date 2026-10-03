@@ -12,7 +12,10 @@ impl Frame {
         with_ordinality: bool,
     ) {
         let own = alias.as_ref().map(|alias| ident_key(&alias.name));
-        self.relations.extend(own.clone());
+        if let Some(own) = &own {
+            self.whole_rows.insert(own.clone());
+            self.relations.insert(vec![own.clone()]);
+        }
         let columns: Vec<_> = alias
             .as_ref()
             .map(|alias| {
