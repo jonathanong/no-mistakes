@@ -617,3 +617,8 @@ Other statement consumers and unexecuted builder fragments skip this projection;
 adding bound demand preserves all existing statement fields. SQL parsing and source
 reads remain owned by the same request-scoped preparation pass. Direct public
 statement extraction retains its complete bound facts.
+
+Temporary tables and views created earlier in the same SQL source shadow unqualified
+catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.
+Temporary relations are unknown and bound no joined items; qualified permanent
+relations retain their catalog identity. State resets for every SQL source.

@@ -319,3 +319,94 @@ fn caller_sized_set_returning_functions_require_caller_supplied_arguments() {
 fn fixed_one_row_catalog_functions_preserve_aggregate_caps() {
     assert!(names("SELECT pg_stat_get_recovery_prefetch(), count(*) FROM orders").is_empty());
 }
+
+#[test]
+fn explicitly_temporary_schema_creation_also_shadows_bare_names() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-qualified.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts"]);
+}
+
+#[test]
+fn temporary_identity_obeys_transaction_ddl_and_search_path_lifecycle() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-lifecycle.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| (finding.table, finding.line))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            ("accounts", 5),
+            ("accounts", 10),
+            ("accounts", 15),
+            ("accounts", 24),
+            ("orders", 25),
+            ("accounts", 29),
+            ("accounts", 34),
+            ("accounts", 42),
+            ("orders", 43),
+            ("accounts", 48),
+            ("accounts", 54),
+            ("accounts", 64),
+            ("accounts", 72),
+            ("accounts", 79),
+            ("accounts", 86),
+            ("accounts", 98),
+            ("accounts", 105),
+            ("accounts", 108),
+            ("accounts", 117),
+        ]
+        .map(|(name, line)| (name.to_string(), line))
+    );
+}
+
+#[test]
+fn temporary_relation_identity_tracks_source_statement_order() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-relations.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "orders", "accounts", "accounts"]
+    );
+}
+
+#[test]
+fn on_commit_drop_removes_only_committed_temporary_identities() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-on-commit.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| (finding.table, finding.line))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            ("accounts", 6),
+            ("accounts", 13),
+            ("orders", 19),
+            ("accounts", 27),
+            ("accounts", 32)
+        ]
+        .map(|(name, line)| (name.to_string(), line))
+    );
+}
