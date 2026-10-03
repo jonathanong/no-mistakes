@@ -78,7 +78,11 @@ pub(super) fn extract(
             if let Some((item, _)) = resolver.column(left) {
                 let source = match unwrap_expr(right) {
                     Expr::Subquery(subquery) => subquery_source(subquery, resolver, scope),
-                    other => resolver.source(other, item),
+                    // A stored array can contain every key even when its owning row is pinned.
+                    // Only a caller-sized array value supplies a finite key set.
+                    other => resolver.source(other, item).filter(|sourced| {
+                        matches!(sourced.source, SqlPinSource::Value) && sourced.reads.is_empty()
+                    }),
                 };
                 pin(left, source, false);
             }

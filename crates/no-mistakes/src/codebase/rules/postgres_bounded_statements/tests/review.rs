@@ -251,3 +251,12 @@ fn an_explicit_collation_in_the_compared_value_fixes_no_row() {
     );
     assert!(names("SELECT 1 FROM accounts WHERE email = lower($1)").is_empty());
 }
+
+#[test]
+fn stored_arrays_do_not_inherit_their_rows_bound() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/stored-array.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts"]);
+}

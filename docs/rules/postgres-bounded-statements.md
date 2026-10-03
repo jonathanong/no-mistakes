@@ -51,7 +51,7 @@ set operation). A statement is bounded when any of these holds:
   that restricts it equate **every** column of one unique key with a value:
   `col = $1`, `col IS NOT DISTINCT FROM $1` (only on a `NOT NULL` column: it also matches
   NULL, which a nullable unique column can repeat), `col = ANY($1::uuid[])` (bounded by the
-  caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
+  caller's array; a stored array column or expression over columns supplies no key bound), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
   different value for each row (`random`, `gen_random_uuid`, `clock_timestamp`, the
