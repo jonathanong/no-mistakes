@@ -156,18 +156,17 @@ impl SchemaCatalog {
         if let Some(table) = self.model_tables.get(&normalized) {
             return Some(table);
         }
-        let tail = normalized.rsplit('.').next().unwrap_or(&normalized);
-        let qualified = tail.len() < normalized.len();
-        if qualified {
-            let qualifier = &normalized[..normalized.len() - tail.len() - 1];
-            let own = self.schema.as_deref().map(names::normalize_table_name);
-            if own.is_some_and(|own| own != qualifier) {
+        // Names are split quote-aware: `public."audit.log"` has a schema and one bare name.
+        let (qualifier, bare) = names::split_name(name);
+        if let (Some(qualifier), Some(own)) = (&qualifier, &self.schema) {
+            if qualifier != own {
                 return None;
             }
         }
         // A qualified name that is not an exact key can only mean a bare-keyed table.
         let mut matches = self.model_tables.iter().filter(|(key, _)| {
-            key.rsplit('.').next().unwrap_or(key) == tail && !(qualified && key.contains('.'))
+            let (key_qualifier, key_bare) = names::split_key(key);
+            key_bare == bare && (qualifier.is_none() || key_qualifier.is_none())
         });
         let (_, table) = matches.next()?;
         matches.next().is_none().then_some(table)
@@ -186,4 +185,4 @@ impl SchemaCatalog {
     }
 }
 
-pub(crate) use names::normalize_table_name;
+pub(crate) use names::{decoded_parts, normalize_table_name};

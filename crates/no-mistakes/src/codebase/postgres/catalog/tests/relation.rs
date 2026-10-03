@@ -49,6 +49,24 @@ fn an_explicit_foreign_schema_is_never_the_catalogs_bare_table() {
     }
     assert!(own.relation("audit.accounts").is_none());
     assert!(own.relation("\"Public\".accounts").is_none());
+    // Names are split quote-aware: a quoted schema or table that contains a dot is one part.
+    let quoted = SchemaCatalog::from_json(
+        r#"{"formatVersion": 2, "coverage": "complete", "schema": "Catalog.Test",
+            "tables": {"\"audit.log\"": {"columns": {"id": {"dataType": "integer"}}}}}"#,
+    )
+    .unwrap();
+    for spelling in [
+        "\"audit.log\"",
+        "\"Catalog.Test\".\"audit.log\"",
+        "\"Catalog.Test\".\"AUDIT.LOG\"",
+    ] {
+        assert_eq!(
+            quoted.relation(spelling).is_some(),
+            !spelling.contains("AUDIT"),
+            "{spelling}"
+        );
+    }
+    assert!(quoted.relation("public.\"audit.log\"").is_none());
     // A catalog that names no schema cannot tell, and keeps matching the bare key.
     let anonymous = SchemaCatalog::from_json(&json("")).unwrap();
     assert!(anonymous.relation("audit.accounts").is_some());

@@ -1,6 +1,6 @@
 use super::compile::{Compiled, TargetMode};
 use super::singular::{join_or, last_token, singular_name};
-use crate::codebase::postgres::{CatalogColumn, CatalogForeignKey, CatalogTable};
+use crate::codebase::postgres::{decoded_parts, CatalogColumn, CatalogForeignKey, CatalogTable};
 use regex::Captures;
 
 pub(super) fn foreign_key_texts(
@@ -132,13 +132,16 @@ fn suffix_example(column: &str, suffix: &str) -> String {
 }
 
 fn target_name(table: &str, compiled: &Compiled) -> String {
+    // The catalog spells the target as SQL (`other."Users"`); the policies see the name itself.
+    let parts = decoded_parts(table);
+    let table = parts.join(".");
     for entry in &compiled.target_names {
-        if let Some(captures) = entry.pattern.captures(table) {
+        if let Some(captures) = entry.pattern.captures(&table) {
             return substitute(&entry.name, &captures);
         }
     }
     singular_name(
-        table.rsplit('.').next().unwrap_or(table),
+        parts.last().map_or(table.as_str(), String::as_str),
         &compiled.singular,
     )
 }

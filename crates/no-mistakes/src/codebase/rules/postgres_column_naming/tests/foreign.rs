@@ -341,3 +341,28 @@ foreignKeys:
         ),
     );
 }
+
+#[test]
+fn a_quoted_foreign_key_target_is_decoded_before_the_naming_policies() {
+    // The catalog spells a mixed-case target as SQL (`"Users"`); the policies see `Users`.
+    let yaml = "schemaCatalogPath: schema.json\nforeignKeys:\n  targetMatch: last-word\n  \
+                targetNames:\n    - tablePattern: '^Users$'\n      name: user\n";
+    let table = |referenced: &str| {
+        serde_json::json!({
+            "formatVersion": 2, "coverage": "complete",
+            "tables": { "lines": {
+                "columns": { "user_id": { "dataType": "uuid" } },
+                "foreignKeys": { "fk": {
+                    "columns": ["user_id"], "referencedTable": referenced,
+                    "referencedColumns": ["id"]
+                } }
+            } }
+        })
+    };
+    assert!(super::support::findings(yaml, table("\"Users\"")).is_empty());
+    // A schema-qualified target is matched as the decoded `schema.table`.
+    let qualified = yaml.replace("'^Users$'", "'^other\\.Users$'");
+    assert!(super::support::findings(&qualified, table("other.\"Users\"")).is_empty());
+    // A name that only needs the quotes removed is singularized like an unquoted one.
+    assert!(super::support::findings(yaml, table("\"users\"")).is_empty());
+}
