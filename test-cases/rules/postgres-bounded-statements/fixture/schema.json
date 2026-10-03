@@ -590,6 +590,37 @@
       "physicalPartition": {
         "key": "RANGE (created_at)"
       }
+    },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "labels_name_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labels_name_key ON labels (name COLLATE \"C\")",
+          "keys": [
+            {
+              "column": "name",
+              "expression": "name",
+              "orderingSupported": false
+            }
+          ]
+        }
+      }
     }
   },
   "functions": {},

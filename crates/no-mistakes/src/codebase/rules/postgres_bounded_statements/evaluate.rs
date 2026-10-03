@@ -73,6 +73,8 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             SqlBoundItemKind::Table(_) => false,
             SqlBoundItemKind::Query(_) => nested.as_ref().is_some_and(|inner| inner.bounded),
             SqlBoundItemKind::Other => true,
+            // Nothing proves what it returns, so it sizes nothing pinned to it.
+            SqlBoundItemKind::Opaque => false,
         })
         .collect();
     // Bounded items bound the relations pinned to them: iterate to the least fixed point.

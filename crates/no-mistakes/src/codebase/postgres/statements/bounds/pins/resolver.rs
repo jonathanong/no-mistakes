@@ -4,7 +4,7 @@ use crate::codebase::postgres::idents::{
     ident_key, object_name_ident, unwrap_expr, visit_child_exprs,
 };
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
-use sqlparser::ast::{Expr, Ident, ObjectName, Query};
+use sqlparser::ast::{Expr, FunctionArguments, Ident, ObjectName, Query};
 use std::collections::BTreeSet;
 
 /// Built-in functions that return a different value for each row they are evaluated for, so an
@@ -104,8 +104,14 @@ impl Resolver {
             // A scalar subquery is a value the statement does not size, unless it reads the row.
             Expr::Subquery(query) => found.unknown |= self.is_correlated(query),
             Expr::Exists { .. } => {}
-            // A function that differs per row is not a fixed value.
-            Expr::Function(function) if is_row_variant(&function.name) => found.unknown = true,
+            // A function that differs per row is not a fixed value, and `ARRAY(SELECT …)` is the
+            // rows of a query, not a value the caller sized.
+            Expr::Function(function)
+                if is_row_variant(&function.name)
+                    || matches!(function.args, FunctionArguments::Subquery(_)) =>
+            {
+                found.unknown = true
+            }
             // A bind, whether `$1` or an interpolation recovered from a template literal.
             Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => {}
             expr @ (Expr::Identifier(_) | Expr::CompoundIdentifier(_)) => match self.column(expr) {

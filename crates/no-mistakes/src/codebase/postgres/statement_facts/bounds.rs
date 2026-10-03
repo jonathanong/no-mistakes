@@ -44,8 +44,12 @@ pub enum SqlBoundItemKind {
     Table(String),
     /// A CTE reference, derived table, or set-operation arm.
     Query(SqlBoundQuery),
-    /// A table function or `VALUES` list: sized by its own arguments.
+    /// A `VALUES` list, or a set-returning function sized by its caller-supplied arguments
+    /// (`unnest($1)`): it adds no unbounded relation and bounds what is pinned to it.
     Other,
+    /// A table function the text does not size (`get_all_accounts()`), or the recursive
+    /// reference of a recursive CTE: never reported, and it bounds nothing pinned to it.
+    Opaque,
 }
 
 /// A conjunct that equates one column of an item with a value.

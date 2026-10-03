@@ -5,16 +5,19 @@
 //! pure aggregate caps it. A rule decides, against a schema catalog, whether those pins make
 //! a relation single-row.
 mod dml;
+mod functions;
 mod items;
 mod pins;
 mod query;
+#[cfg(test)]
+mod review_tests;
 mod table;
 #[cfg(test)]
 mod tests;
 mod using;
 
 use super::{SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use sqlparser::ast::{Query, Spanned, Statement};
+use sqlparser::ast::{CopySource, Query, Spanned, Statement};
 use std::collections::BTreeMap;
 
 /// CTE names in scope, with the bound of each.
@@ -40,6 +43,11 @@ pub(super) fn collect(statement: &Statement, out: &mut Vec<SqlBoundFact>) {
 fn collect_in(statement: &Statement, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
     match statement {
         Statement::Query(query) => collect_query(query, scope, out),
+        // `COPY (SELECT …) TO` runs the query like any other.
+        Statement::Copy {
+            source: CopySource::Query(query),
+            ..
+        } => collect_query(query, scope, out),
         Statement::Update(update) => dml::update(update, scope, out),
         Statement::Delete(delete) => dml::delete(delete, scope, out),
         _ => {}

@@ -336,13 +336,18 @@ query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 `line` and `column`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the
 `target` item. Every item keeps its own `line` and `column`, so SQL recovered from
 several source operands maps each relation to the operand that wrote it.
-A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` (`LIMIT
-NULL`, `LIMIT ALL`, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or is a pure
-aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not windowed, with
-no `GROUP BY`), and lists its FROM `items`. An item is a base `Table`, a `Query`
+A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
+fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
+taken from a subquery or a column, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
+is a pure aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not
+windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returning function
+in the select list), and lists its FROM `items`. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
-operation), or `Other` (a table function or `VALUES`). A CTE reference without an
-alias is addressed by the CTE's name. A recursive reference is `Other`.
+operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`
+over arguments the statement supplies), or `Opaque` (any other table function, and the
+recursive reference of a recursive CTE: never reported, and it bounds nothing pinned to
+it). A CTE reference without an alias is addressed by the CTE's name. A `COPY (SELECT …)`
+query is a `Select` fact.
 
 Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an
 equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)` or

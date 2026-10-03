@@ -27,7 +27,7 @@ fn unbounded(sql: &str) -> Vec<(String, usize)> {
         .collect()
 }
 
-fn names(sql: &str) -> Vec<String> {
+pub(super) fn names(sql: &str) -> Vec<String> {
     unbounded(sql).into_iter().map(|(table, _)| table).collect()
 }
 
@@ -152,6 +152,7 @@ fn quoted_key_columns_match_quoted_sql_columns() {
           "tables": { "mixed": {
             "columns": { "Order Id": { "dataType": "uuid" } },
             "indexes": { "mixed_pkey": {
+              "accessMethod": "btree",
               "unique": true, "primary": true, "valid": true, "ready": true,
               "keys": [ { "column": "Order Id", "expression": "\"Order Id\"" } ]
             } }

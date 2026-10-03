@@ -34,12 +34,15 @@ The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELE
 in matching `.sql` files and in executor calls (`SELECT` is every query, including a
 set operation). A statement is bounded when any of these holds:
 
-- It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` (a placeholder counts; `LIMIT NULL`,
-  `LIMIT ALL`, `FETCH … WITH TIES` and `FETCH … PERCENT` do not: ties and a share of the
-  rows are not a fixed count).
+- It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` whose count is fixed: a literal, a bind
+  (`$1`, `${size}`) or an expression of them (`LEAST($1, 100)`). `LIMIT NULL`, `LIMIT ALL`,
+  a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
+  `FETCH … PERCENT` do not cap: they can return every row.
 - It is a pure aggregate: a built-in aggregate call such as `COUNT(*)` (bare or
-  `pg_catalog.`-qualified) with no `GROUP BY`, which returns one row. A function with the
-  same name in another schema is an ordinary function, called once per row.
+  `pg_catalog.`-qualified), in the select list or in `HAVING`, with no `GROUP BY`, which
+  returns one row. A function with the same name in another schema is an ordinary function,
+  called once per row, and a set-returning function in the select list
+  (`generate_series(1, count(*))`) expands the row again.
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
@@ -72,7 +75,11 @@ set operation). A statement is bounded when any of these holds:
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
 uncapped read of that relation), a derived table or CTE is bounded when its own query is,
-and a `VALUES` list or table function (`unnest`) is sized by its own arguments. The rule
+and a `VALUES` list or a set-returning built-in over arguments the statement supplies
+(`unnest($1)`, `generate_series(1, 10)`) is sized by the caller. Any other table function
+(`FROM get_all_accounts()`), an array taken from a query (`ANY(ARRAY(SELECT …))`) and the
+recursive reference of a `WITH RECURSIVE` are opaque: never reported themselves, and they
+bound nothing pinned to them. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
 reports each relation that makes a statement unbounded, once, at that relation's line.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
@@ -87,11 +94,19 @@ columns. These never prove one row:
 - An invalid or not-ready index (a failed concurrent build), and a deferrable constraint,
   which may hold duplicates inside a transaction, are not keys.
 - An expression index is not matched by column equality.
+- An index whose operator class or collation is not the column's default (the catalog's
+  `orderingSupported` is false) may treat values as distinct that `=` on the column treats
+  as equal, so it is not a key.
 - A **part** of a composite key is not a key.
 - Equality alternatives (`id = $1 OR id = $2`), ranges and `LIKE` do not pin.
 
-Relations the catalog does not describe (views, other schemas, relations created in the
-same script) are not judged, and they bound nothing: an unknown relation can supply every
+Table inheritance (`INHERITS`) is not modeled: the unique key of a parent is assumed to
+hold across its children, although PostgreSQL does not enforce it there. Partitioning is
+modeled; use it instead of inheritance, or keep inheritance parents out of this rule.
+
+Relations the catalog does not describe (views, relations created in the same script) and
+relations spelled with another schema (`audit.accounts` when the catalog is for `public`)
+are not judged, and they bound nothing: an unknown relation can supply every
 value of a column pinned to it, so a catalog table joined to one is still reported unless
 something else bounds it. A statement whose SQL cannot be recovered statically (`SQL could
 not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.

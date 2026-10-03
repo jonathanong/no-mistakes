@@ -112,7 +112,11 @@ impl SchemaCatalog {
         table
             .indexes
             .iter()
-            .filter(|index| index.immediate && index.predicate.is_none())
+            // A key whose operator class or collation is not the column's default may treat
+            // values as distinct that an equality on the column treats as equal.
+            .filter(|index| {
+                index.immediate && index.predicate.is_none() && index.ordering_supported
+            })
             .filter_map(|index| {
                 index
                     .keys

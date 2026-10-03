@@ -35,6 +35,7 @@ fn item(item: &SqlBoundItem) -> String {
         SqlBoundItemKind::Table(table) => format!("{table}{pins}"),
         SqlBoundItemKind::Query(bound) => format!("({}){pins}", query(bound)),
         SqlBoundItemKind::Other => format!("other{pins}"),
+        SqlBoundItemKind::Opaque => format!("opaque{pins}"),
     }
 }
 
@@ -42,7 +43,7 @@ fn facts(sql: &str) -> Vec<SqlBoundFact> {
     extract_sql_statement_facts(sql).bounds
 }
 
-fn shape(sql: &str) -> Vec<String> {
+pub(super) fn shape(sql: &str) -> Vec<String> {
     facts(sql)
         .iter()
         .map(|fact| {
@@ -190,7 +191,7 @@ fn ctes_derived_tables_and_set_operations_carry_their_own_bounds() {
     );
     assert_eq!(
         shape("WITH RECURSIVE r AS (SELECT 1 UNION ALL SELECT n FROM r) SELECT * FROM r"),
-        ["select: (() ((other)))"]
+        ["select: (() ((opaque)))"]
     );
 }
 

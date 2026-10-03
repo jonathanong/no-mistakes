@@ -1,3 +1,4 @@
+use super::functions::{function_kind, unnest_kind};
 use super::using::Using;
 use super::{pins, query, start, Scope};
 use crate::codebase::postgres::idents::{ident_key, object_name_key};
@@ -12,9 +13,17 @@ pub(super) fn from_select(select: &Select, scope: &Scope) -> Vec<SqlBoundItem> {
     builder.finish(select.selection.as_ref())
 }
 
-pub(super) fn other((line, column): (usize, usize)) -> SqlBoundItem {
+pub(super) fn other(at: (usize, usize)) -> SqlBoundItem {
+    unnamed(SqlBoundItemKind::Other, at)
+}
+
+pub(super) fn opaque(at: (usize, usize)) -> SqlBoundItem {
+    unnamed(SqlBoundItemKind::Opaque, at)
+}
+
+fn unnamed(kind: SqlBoundItemKind, (line, column): (usize, usize)) -> SqlBoundItem {
     SqlBoundItem {
-        kind: SqlBoundItemKind::Other,
+        kind,
         alias: None,
         line,
         column,
@@ -109,8 +118,8 @@ impl<'a> Builder<'a> {
             TableFactor::Table {
                 name, alias, args, ..
             } => {
-                let kind = if args.is_some() {
-                    SqlBoundItemKind::Other
+                let kind = if let Some(args) = args {
+                    function_kind(name, args)
                 } else if target {
                     SqlBoundItemKind::Table(object_name_key(name))
                 } else {
@@ -132,7 +141,15 @@ impl<'a> Builder<'a> {
             TableFactor::NestedJoin {
                 table_with_joins, ..
             } => self.tables(std::slice::from_ref(&**table_with_joins)),
-            other => self.push(SqlBoundItemKind::Other, None, start(other.span())),
+            // `unnest(…)` is its own table factor: sized by the arrays it is given.
+            TableFactor::UNNEST {
+                array_exprs, alias, ..
+            } => self.push(
+                unnest_kind(array_exprs),
+                alias_key(alias),
+                start(factor.span()),
+            ),
+            other => self.push(SqlBoundItemKind::Opaque, None, start(other.span())),
         }
     }
 
