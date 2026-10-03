@@ -13,6 +13,7 @@ pub(super) fn update(update: &Update, scope: &Scope, out: &mut Vec<SqlBoundFact>
     }
     push(
         SqlBoundKind::Update,
+        super::start(update.update_token.0.span),
         builder.finish(update.selection.as_ref()),
         update.limit.is_some(),
         out,
@@ -28,6 +29,7 @@ pub(super) fn delete(delete: &Delete, scope: &Scope, out: &mut Vec<SqlBoundFact>
     }
     push(
         SqlBoundKind::Delete,
+        super::start(delete.delete_token.0.span),
         builder.finish(delete.selection.as_ref()),
         delete.limit.is_some(),
         out,
@@ -36,13 +38,11 @@ pub(super) fn delete(delete: &Delete, scope: &Scope, out: &mut Vec<SqlBoundFact>
 
 fn push(
     kind: SqlBoundKind,
+    (line, column): (usize, usize),
     items: Vec<super::super::SqlBoundItem>,
     capped: bool,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    let (line, column) = items
-        .first()
-        .map_or((1, 1), |item| (item.line, item.column));
     out.push(SqlBoundFact {
         kind,
         line,

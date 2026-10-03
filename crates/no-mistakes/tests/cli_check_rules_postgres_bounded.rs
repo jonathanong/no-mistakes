@@ -152,6 +152,15 @@ fn standard_suppression_directives_apply() {
 }
 
 #[test]
+fn embedded_statement_start_directives_cover_later_relation_lines() {
+    expect(
+        "statement-suppressions.yml",
+        "src/statement-suppressions.mts",
+        &[(20, "table:invoices")],
+    );
+}
+
+#[test]
 fn an_ordering_only_catalog_and_a_missing_catalog_path_are_errors() {
     let ordering = check("ordering.yml");
     assert!(!ordering.status.success());
