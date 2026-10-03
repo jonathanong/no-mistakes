@@ -7,11 +7,17 @@ pub(crate) struct Positions(
     BTreeMap<(String, String), VecDeque<Vec<usize>>>,
     BTreeSet<Vec<usize>>,
     Vec<Marker>,
+    BTreeMap<Vec<usize>, usize>,
 );
 
 impl Positions {
     pub(crate) fn new(sql: &str) -> Self {
-        let mut positions = Self(BTreeMap::new(), BTreeSet::new(), Vec::new());
+        let mut positions = Self(
+            BTreeMap::new(),
+            BTreeSet::new(),
+            Vec::new(),
+            BTreeMap::new(),
+        );
         let tokens = super::super::super::parse::unicode::tokenize_raw_unicode(sql);
         for (ordinal, statement) in tokens
             .split(|token| matches!(token.token, Token::SemiColon))
@@ -25,9 +31,12 @@ impl Positions {
                 positions.2.push(marker);
             }
             positions.record(&code, &[ordinal]);
+            let outer_line = start_line(&code);
+            positions.3.insert(vec![ordinal], outer_line);
             if code.first().is_some_and(|token| word(token, "DO")) {
                 for token in &code {
                     if let Token::DollarQuotedString(body) = &token.token {
+                        let body_line = token.span.start.line as usize;
                         let inner =
                             super::super::super::parse::unicode::tokenize_raw_unicode(&body.value);
                         let mut scope = super::super::dynamic::execution::Scope::default();
@@ -43,6 +52,10 @@ impl Positions {
                                 positions.1.insert(vec![ordinal, inner_ordinal]);
                             }
                             positions.record(&code, &[ordinal, inner_ordinal]);
+                            positions.3.insert(
+                                vec![ordinal, inner_ordinal],
+                                body_line + start_line(&code) - 1,
+                            );
                         }
                     }
                 }
@@ -56,6 +69,10 @@ impl Positions {
             .get_mut(&(kind.to_string(), table.to_string()))
             .and_then(VecDeque::pop_front)
             .unwrap_or_else(|| vec![usize::MAX])
+    }
+
+    pub(super) fn line(&self, order: &[usize]) -> usize {
+        self.3.get(order).copied().unwrap_or(0)
     }
 
     pub(super) fn executed(&self, order: &[usize]) -> bool {
@@ -155,4 +172,9 @@ fn object_name(tokens: &[&TokenWithSpan], mut cursor: usize) -> (String, usize) 
         cursor += 1;
     }
     (parts.join("."), cursor)
+}
+
+fn start_line(code: &[&TokenWithSpan]) -> usize {
+    code.first()
+        .map_or(1, |token| token.span.start.line as usize)
 }

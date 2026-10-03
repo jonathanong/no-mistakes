@@ -3,7 +3,7 @@ use crate::codebase::postgres::dml::{GeneratedTable, GeneratedTableColumns};
 
 mod configured;
 mod live;
-pub(super) use live::{live_tables, LiveTables};
+pub(super) use live::{live_tables, tables_before, LiveTables};
 
 pub(super) fn catalog_from_tables(
     tables: &LiveTables<'_>,

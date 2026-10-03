@@ -4,6 +4,7 @@
 //! dollar tags, and semicolons in strings.
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
+mod bindings;
 pub(super) mod execution;
 mod expression;
 mod literal;

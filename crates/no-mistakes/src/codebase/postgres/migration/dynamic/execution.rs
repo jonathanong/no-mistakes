@@ -1,4 +1,4 @@
-use super::{word, Token, TokenWithSpan};
+use super::{Token, TokenWithSpan};
 
 #[cfg(test)]
 #[path = "execution/tests.rs"]
@@ -11,6 +11,9 @@ pub(in crate::codebase::postgres::migration) struct Scope {
     blocks: Vec<&'static str>,
     // A plain RETURN makes the remaining body non-definite, including after a branch closes.
     execution_stopped: bool,
+    // Block depth of an unconditional RAISE EXCEPTION; the rest of that block is
+    // unreachable until its EXCEPTION handler (or the block end) is reached.
+    raised_at: Option<usize>,
 }
 
 impl Scope {
@@ -18,7 +21,7 @@ impl Scope {
         &mut self,
         code: &[&TokenWithSpan],
     ) -> bool {
-        let was_stopped = self.execution_stopped;
+        let was_stopped = self.execution_stopped || self.raised_at.is_some();
         let mut at = 0;
         let mut pending_loop = false;
         while let Some(token) = code.get(at) {
@@ -31,24 +34,41 @@ impl Scope {
                 }
                 break;
             }
+            if unquoted_word(token, "RAISE") {
+                let raises = code
+                    .get(at + 1)
+                    .is_some_and(|next| unquoted_word(next, "EXCEPTION"));
+                if raises && self.blocks.iter().all(|kind| *kind == "BEGIN") {
+                    self.raised_at.get_or_insert(self.blocks.len());
+                }
+                break;
+            }
             if starts_sql(token) {
                 break;
             }
-            if word(token, "END") {
+            if unquoted_word(token, "END") {
                 let kind = code
                     .get(at + 1)
                     .and_then(|token| control(token))
                     .unwrap_or("BEGIN");
                 if let Some(position) = self.blocks.iter().rposition(|entry| *entry == kind) {
                     self.blocks.truncate(position);
+                    if self.raised_at.is_some_and(|depth| position < depth) {
+                        // No handler caught the exception, so later statements never run.
+                        self.raised_at = None;
+                        self.execution_stopped = true;
+                    }
                 }
                 at += usize::from(kind != "BEGIN");
-            } else if word(token, "FOR") || word(token, "WHILE") {
+            } else if unquoted_word(token, "FOR") || unquoted_word(token, "WHILE") {
                 self.blocks.push("LOOP");
                 pending_loop = true;
-            } else if word(token, "LOOP") && pending_loop {
+            } else if unquoted_word(token, "LOOP") && pending_loop {
                 pending_loop = false;
             } else if let Some(kind) = control(token) {
+                if kind == "EXCEPTION" && self.raised_at == Some(self.blocks.len()) {
+                    self.raised_at = None;
+                }
                 self.blocks.push(kind);
             }
             at += 1;
@@ -64,7 +84,7 @@ fn unquoted_word(token: &TokenWithSpan, expected: &str) -> bool {
 fn control(token: &TokenWithSpan) -> Option<&'static str> {
     ["BEGIN", "IF", "CASE", "LOOP", "EXCEPTION"]
         .into_iter()
-        .find(|kind| word(token, kind))
+        .find(|kind| unquoted_word(token, kind))
 }
 
 fn starts_sql(token: &TokenWithSpan) -> bool {
@@ -72,6 +92,6 @@ fn starts_sql(token: &TokenWithSpan) -> bool {
         "CREATE", "ALTER", "DROP", "EXECUTE", "SELECT", "INSERT", "UPDATE", "DELETE", "RETURN",
     ]
     .into_iter()
-    .any(|kind| word(token, kind))
+    .any(|kind| unquoted_word(token, kind))
         || matches!(token.token, super::Token::Assignment | super::Token::Eq)
 }

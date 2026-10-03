@@ -20,7 +20,7 @@ rules:
 `sqlInclude` defaults to `**/*.sql`. There is no hardcoded `backend/` or
 migrations root. Mixed migration files are usable: schema DDL inside `DO $$`
 blocks is collected into the catalog, DML (`UPDATE` / `INSERT` / `MERGE`)
-inside `DO $$` is still skipped, and PostgreSQL 18 `VIRTUAL` generated
+inside `DO $$` is reported like top-level DML (see statement lines below), and PostgreSQL 18 `VIRTUAL` generated
 columns still populate the catalog. `include` selects DML files (`.ts`,
 `.mts`, `.tsx`, `.js`, `.sql` when unset). `importSpecifier` /
 `executorNames` select TypeScript call sites and default to
@@ -228,3 +228,14 @@ checks. Its query-file `include` scope is independent of schema `sqlInclude`, an
 each configured executor profile uses the shared parsed TS/JS program. Raw SQL
 findings retain each inner statement's physical line, including statements inside
 a multiline `DO` block, so line and next-line suppressions target that write.
+
+## Migration ordering
+
+SQL files that themselves define schema (`CREATE` / `ALTER` / `DROP TABLE`) are
+matched statement by statement against the catalog as of that write, so an
+`INSERT` that precedes a later `DROP TABLE` or ordinary recreation is still
+checked against the generated definition. Other files (TypeScript, DML-only SQL)
+use the final catalog. `CREATE TABLE ... AS`, `LIKE`, `INHERITS`, and partition
+tables keep an unknown positional column order, so positional `INSERT` values are
+not attributed to later `ALTER ... ADD COLUMN` generated columns. Quoted and
+unquoted column names that differ in case are distinct during `ALTER` replay.
