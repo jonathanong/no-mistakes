@@ -5,6 +5,7 @@
 //! pure aggregate caps it. A rule decides, against a schema catalog, whether those pins make
 //! a relation single-row.
 mod aggregate;
+mod compact_pins;
 mod dml;
 mod functions;
 mod items;

@@ -34,6 +34,8 @@ pub struct SqlBoundItem {
     pub kind: SqlBoundItemKind,
     /// The name columns are qualified by: the alias, else the table's own (bare) name.
     pub alias: Option<String>,
+    /// Positional column aliases as written; catalog column names are ambiguous when nonempty.
+    pub column_aliases: Vec<String>,
     pub line: usize,
     pub column: usize,
     pub pins: Vec<SqlBoundPin>,
@@ -65,6 +67,7 @@ impl SqlBoundItem {
         Self {
             kind,
             alias,
+            column_aliases: Vec::new(),
             line,
             column,
             pins: Vec::new(),
@@ -106,6 +109,16 @@ pub enum SqlPinSource {
     Value,
     /// An expression over columns of other items of the same statement (indexes into the items).
     Items(Vec<usize>),
+    /// A syntactically finite array constructor over other items. Every referenced column
+    /// must be catalog-proven scalar before its row bound can size the flattened array.
+    Array {
+        items: Vec<usize>,
+        scalar_columns: Vec<(usize, String)>,
+        /// Columns accessed only through scalar indexes; their catalog array element must be scalar.
+        indexed_columns: Vec<(usize, String)>,
+        /// Custom cast targets that require catalog scalar/enum evidence.
+        cast_types: Vec<String>,
+    },
     /// `IN (SELECT …)` or `= ANY (SELECT …)`: sized by the subquery.
     Query(SqlBoundQuery),
 }

@@ -3,6 +3,8 @@ use crate::codebase::postgres::statements::{
     SqlBoundQuery, SqlPinSource,
 };
 
+mod array_review;
+mod compact_aliases;
 mod review;
 
 fn query(bound: &SqlBoundQuery) -> String {
@@ -23,6 +25,14 @@ fn item(item: &SqlBoundItem) -> String {
                 SqlPinSource::Items(items) => {
                     let items: Vec<String> = items.iter().map(usize::to_string).collect();
                     format!("{}{operator}#{}", pin.column, items.join(","))
+                }
+                SqlPinSource::Array {
+                    items,
+                    scalar_columns,
+                    indexed_columns: _,
+                    cast_types: _,
+                } => {
+                    format!("{}{operator}array#{items:?}:{scalar_columns:?}", pin.column)
                 }
                 SqlPinSource::Query(bound) => format!("{}{operator}({})", pin.column, query(bound)),
             }

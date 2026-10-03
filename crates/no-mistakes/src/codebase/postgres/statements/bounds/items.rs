@@ -138,12 +138,21 @@ impl<'a> Builder<'a> {
                 };
                 // An unaliased relation is addressed by its own name: a CTE's, or a table's
                 // bare name (`orders.id` for `public.orders`).
+                let column_aliases = alias.as_ref().map_or_else(Vec::new, |alias| {
+                    alias
+                        .columns
+                        .iter()
+                        .map(|column| ident_key(&column.name))
+                        .collect()
+                });
                 let alias = alias_key(alias).or_else(|| match &kind {
                     SqlBoundItemKind::Query(_) => Some(object_name_key(name)),
                     SqlBoundItemKind::Table(_) => object_name_ident(name).map(ident_key),
                     _ => None,
                 });
-                self.push(kind, alias, start(name.span()));
+                let mut item = SqlBoundItem::new(kind, alias, start(name.span()));
+                item.column_aliases = column_aliases;
+                self.items.push(item);
             }
             TableFactor::Derived {
                 lateral,

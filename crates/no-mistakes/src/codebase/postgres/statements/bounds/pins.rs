@@ -1,9 +1,11 @@
+mod array;
 mod correlated;
 mod resolver;
 
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{SqlBareRead, SqlBoundItem, SqlBoundPin, SqlPinSource};
+use array::{constructor, finite_array};
 use resolver::Sourced;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
 use std::collections::BTreeSet;
@@ -78,7 +80,14 @@ pub(super) fn extract(
             if let Some((item, _)) = resolver.column(left) {
                 let source = match unwrap_expr(right) {
                     Expr::Subquery(subquery) => subquery_source(subquery, resolver, scope),
-                    other => resolver.source(other, item),
+                    other if constructor(other).is_some() => {
+                        finite_array(&constructor(other).unwrap().elem, item, resolver)
+                    }
+                    // A stored array can contain every key even when its owning row is pinned.
+                    // Only a caller-sized array value supplies a finite key set.
+                    other => resolver.source(other, item).filter(|sourced| {
+                        matches!(sourced.source, SqlPinSource::Value) && sourced.reads.is_empty()
+                    }),
                 };
                 pin(left, source, false);
             }

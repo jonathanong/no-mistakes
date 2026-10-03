@@ -53,7 +53,7 @@ set operation). A statement is bounded when any of these holds:
   that restricts it equate **every** column of one unique key with a value:
   `col = $1`, `col IS NOT DISTINCT FROM $1` (only on a `NOT NULL` column: it also matches
   NULL, which a nullable unique column can repeat), `col = ANY($1::uuid[])` (bounded by the
-  caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
+  caller's array; finite constructors (including array casts) over catalog-proven scalar columns of bounded rows also qualify. Signed numeric literals, builtin XML literals, and typed scalar literals such as `DATE '2026-01-01'` and interval literals preserve finite cardinality. Catalog-declared enum casts also qualify; unknown or array-bearing domains do not. A cast that decodes stored scalar text into an array supplies no finite bound; caller-provided arrays and casts of finite constructors retain their bounds. Builtin scalar types, including `pg_catalog` network types such as `inet`, and catalog-declared enums prove scalar leaves; positional aliases map through known visible column order. Unchanged key names retain credit, and PostgreSQL system columns also prove scalar leaves when aliases do not replace them. Scalar indexes into catalog-proven arrays of scalar elements, such as `ARRAY[o.account_ids[1]]`, preserve the bounded source-row dependency; slices and unknown/domain element types do not. Stored arrays, including `ARRAY[stored_array]`, supply no key bound), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
   different value for each row (`random`, `gen_random_uuid`, `clock_timestamp`, the
@@ -221,7 +221,10 @@ that often replaces a bounded keyset sweep.
 
 Oversized CTE expansions are compacted to their distinct uncapped base relations.
 This conservative summary retains unbounded reads and supplies no bound to joined
-items; an explicit outer `LIMIT` still caps the statement.
+items; an explicit outer `LIMIT` still caps the statement. Caller-sized pins survive
+only when every uncapped read of the relation has the same pin and no positional
+column aliases. Aliased reads lose pin credit because compaction discards the alias
+identity needed to prove that a visible name still names the catalog key.
 
 Built-in set-returning functions, including `jsonb_path_query`, expand aggregate
 select-list rows. In `FROM`, only functions whose arguments size their result
@@ -247,3 +250,5 @@ relations retain their catalog identity. State resets for every SQL source.
 Temporary `SELECT INTO` destinations are tracked through `UNION`, `INTERSECT`, and `EXCEPT`, including a parenthesized first input. The input reads are checked before the new temporary name shadows a permanent catalog relation.
 
 `CREATE TABLE pg_temp.name` creates a temporary identity even without the `TEMP` keyword. Quoted schema names retain PostgreSQL case and component boundaries, so a different schema or a literal dot in one identifier does not acquire temporary identity.
+
+Compacted caller-only array pins retain their scalar cast evidence for catalog validation. A pin with any source-row or scalar-column dependency is discarded; unknown cast types never gain a bound from compaction.

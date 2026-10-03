@@ -7,10 +7,14 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+mod array_review;
+mod compact_aliases;
+mod compact_caller_arrays;
 mod referential;
 mod review;
 mod suppression;
 mod trigger_scope;
+mod xml_array;
 
 fn catalog() -> SchemaCatalog {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -433,7 +437,7 @@ fn fetch_with_ties_and_foreign_aggregates_do_not_cap() {
     assert_eq!(names("SELECT app.count(id) FROM orders"), ["orders"]);
 }
 
-fn fixture_root() -> PathBuf {
+pub(super) fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-bounded-statements/fixture")
 }
