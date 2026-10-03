@@ -95,8 +95,10 @@ whose arguments read a column or a query (`unnest(ARRAY[a.id])`), an array taken
 (`ANY(ARRAY(SELECT …))`) and the recursive reference of a `WITH RECURSIVE` are opaque: never
 reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
-only the result. A chain of CTEs whose bounds grow past a few thousand items is treated as
-opaque, so pathological generated SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
+only the result. A chain of CTEs whose bounds grow past a few thousand items is compacted to its
+distinct uncapped base-relation reads plus an opaque source. This retains findings
+while preventing the summary from bounding another relation, so pathological generated
+SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
 reports each relation that makes a statement unbounded, once, at that relation's line.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
