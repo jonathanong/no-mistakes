@@ -15,6 +15,7 @@ fn referential_actions_do_not_expand_the_direct_statement_scope() {
         ("order_lines", "orders", "cascade"),
         ("profiles", "accounts", "set null"),
         ("labels", "accounts", "no action"),
+        ("restrictions", "accounts", "restrict"),
     ] {
         let key = &catalog.table(table).unwrap().foreign_keys[0];
         assert_eq!(key.referenced_table, parent);
@@ -23,7 +24,7 @@ fn referential_actions_do_not_expand_the_direct_statement_scope() {
     }
     let sql = sources.read_path(&files[1]).unwrap();
     let facts = extract_sql_statement_facts(&sql);
-    // Parent pins stay bounded even with CASCADE, SET NULL, NO ACTION and a
+    // Parent pins stay bounded even with CASCADE, SET NULL, NO ACTION, RESTRICT and a
     // two-level cascade in the catalog. This deliberately judges explicit rows.
     assert_eq!(facts.bounds.len(), 4);
     for fact in &facts.bounds[..3] {
