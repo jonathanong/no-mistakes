@@ -312,7 +312,7 @@ fn caller_sized_set_returning_functions_require_caller_supplied_arguments() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-arguments.sql"
     ));
-    assert_eq!(names(sql), ["accounts", "accounts"]);
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts"]);
 }
 
 #[test]

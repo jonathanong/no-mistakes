@@ -456,6 +456,7 @@ fn caller_sized_set_returning_functions_reject_server_derived_arguments() {
         [
             "select: opaque accounts[email=#0]",
             "select: opaque accounts[email=#0]",
+            "select: opaque accounts[email=#0]",
             "select: other accounts[email=#0]",
         ]
     );
