@@ -48,7 +48,7 @@ fn prepared_resolve_check_fixture_retains_every_route_report() {
     let fixture = prepared_resolve_check_fixture();
     assert_eq!(
         run_prepared_resolve_check(&fixture),
-        VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT
+        LARGE_ROUTE_BATCH_FILE_COUNT
     );
 }
 

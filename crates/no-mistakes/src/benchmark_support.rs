@@ -49,7 +49,7 @@ pub use relationships::{
 };
 pub use resolve_check::{
     prepared_resolve_check_fixture, run_prepared_resolve_check, PreparedResolveCheckFixture,
-    VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT,
+    LARGE_ROUTE_BATCH_FILE_COUNT,
 };
 pub use scoped_resolver::{
     build_repeated_scoped_resolvers, resolve_repeated_scoped_imports,

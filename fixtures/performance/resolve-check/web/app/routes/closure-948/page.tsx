@@ -1,2 +1,2 @@
-import { shared } from "@vouchington/shared";
+import { shared } from "@example/shared";
 export default function Page() { return shared; }
