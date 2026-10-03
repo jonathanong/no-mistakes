@@ -464,11 +464,11 @@ mod tests {
         let filter = filter("swift-test-plan");
         assert!(filter.is_match(
             &root,
-            &root.join("swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift")
+            &root.join("swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift")
         ));
         assert!(!filter.is_match(
             &root,
-            &root.join("swift-clients/core/Sources/VouchaCore/APIClient.swift")
+            &root.join("swift-clients/core/Sources/ExampleCore/APIClient.swift")
         ));
     }
 

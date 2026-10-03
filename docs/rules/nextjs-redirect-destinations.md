@@ -58,7 +58,7 @@ rules:
 External destinations (`://`, `//`) and parameterized `:[A-Za-z]` destinations
 are skipped. Query strings and hashes are stripped before matching. Dynamic
 App Router segments use the same `[slug]`, `[...x]`, and `[[...x]]` matching
-as Filaments `matchesRouteSegments`.
+as an application `matchesRouteSegments` helper.
 
 If `redirects` or `rewrites` text exists but the extractor cannot find a
 method/function body or string destinations, the rule reports extractor drift

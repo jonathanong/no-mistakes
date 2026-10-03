@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 /// True when executed SQL is missing a leading `/* name */` annotation.
 ///
 /// `BEGIN` / `COMMIT` / `ROLLBACK` are exempt, including when they already
-/// carry a leading block comment. Matches the Filaments runtime-query
+/// carry a leading block comment. Matches the runtime-query
 /// contract: `/^\s*\/\*\s*\S[\s\S]*?\*\//`.
 pub fn sql_requires_query_annotation(sql: &str) -> bool {
     !is_transaction_command(sql) && !has_leading_query_annotation(sql)

@@ -53,17 +53,17 @@ fn manifest_targets_handle_nested_dependency_parentheses() {
             name: "Fixture",
             targets: [
                 .target(
-                    name: "VouchaFeatures",
+                    name: "ExampleFeatures",
                     dependencies: [
-                        .product(name: "VouchaCore", package: "core"),
-                        "VouchaAPI",
+                        .product(name: "ExampleCore", package: "core"),
+                        "ExampleAPI",
                     ]
                 ),
                 .testTarget(
-                    name: "VouchaUITests",
+                    name: "ExampleUITests",
                     dependencies: [
-                        .target(name: "VouchaFeatures"),
-                        .product(name: "VouchaModels", package: "core"),
+                        .target(name: "ExampleFeatures"),
+                        .product(name: "ExampleModels", package: "core"),
                     ]
                 ),
             ]
@@ -73,29 +73,29 @@ fn manifest_targets_handle_nested_dependency_parentheses() {
     let targets = parse_manifest_targets(source);
     let features = targets
         .iter()
-        .find(|target| target.name == "VouchaFeatures")
+        .find(|target| target.name == "ExampleFeatures")
         .expect("source target should parse");
     assert_eq!(
         features.dependencies,
-        vec!["VouchaCore".to_string(), "VouchaAPI".to_string()]
+        vec!["ExampleCore".to_string(), "ExampleAPI".to_string()]
     );
     assert_eq!(
-        features.product_packages.get("VouchaCore"),
+        features.product_packages.get("ExampleCore"),
         Some(&"core".to_string())
     );
 
     let ui_tests = targets
         .iter()
-        .find(|target| target.name == "VouchaUITests")
+        .find(|target| target.name == "ExampleUITests")
         .expect("test target should parse");
     assert!(ui_tests.is_test);
     assert_eq!(
         ui_tests.dependencies,
-        vec!["VouchaFeatures".to_string(), "VouchaModels".to_string()]
+        vec!["ExampleFeatures".to_string(), "ExampleModels".to_string()]
     );
     assert_eq!(
         extract_test_target_names(source),
-        vec!["VouchaUITests".to_string()]
+        vec!["ExampleUITests".to_string()]
     );
 }
 

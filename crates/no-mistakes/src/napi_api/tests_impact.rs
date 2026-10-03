@@ -11,7 +11,7 @@ fn tests_impact_json_preserves_configured_native_test_projects() {
         ),
         (
             "swift-test-plan",
-            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+            "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
         ),
     ] {
         let output = tests_impact_json_impl(

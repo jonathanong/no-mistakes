@@ -1,1 +1,1 @@
-const ok = ['tests+person@voucha.ai', 'tests%2Bperson%40voucha.ai', 'https://example.com/path', 'user@example.company']
+const ok = ['tests+person@example.com', 'tests%2Bperson%40example.com', 'https://example.com/path', 'user@example.company']

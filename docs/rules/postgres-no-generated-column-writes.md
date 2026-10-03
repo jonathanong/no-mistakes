@@ -26,7 +26,7 @@ columns still populate the catalog. `include` selects DML files (`.ts`,
 `executorNames` select TypeScript call sites and default to
 `@data-stores/psql` and `query` / `read` / `write`.
 
-Tables that are not declared in SQL — for example Filaments election
+Tables that are not declared in SQL — for example application election
 `voteTable` relations — must be listed in `extraGeneratedColumns`. This rule
 does not scrape `voteTable:` literals.
 

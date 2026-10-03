@@ -307,7 +307,7 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
     let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).expect("swift fixture config should parse");
-    let swift_file = root.join("swift-clients/core/Sources/VouchaAPI/Endpoint.swift");
+    let swift_file = root.join("swift-clients/core/Sources/ExampleAPI/Endpoint.swift");
     let mut facts = crate::codebase::swift::SwiftFactMap::default();
     facts.files.insert(
         swift_file.clone(),
@@ -346,7 +346,7 @@ fn swift_http_edges_include_backend_route_defs() {
     let mut options = graph_config_options(&root).expect("swift fixture config should parse");
     options.route.backend_pattern = "backend/api/**/*.mts".to_string();
     options.route.backend_register_object = "app".to_string();
-    let swift_file = root.join("swift-clients/core/Sources/VouchaAPI/Endpoint.swift");
+    let swift_file = root.join("swift-clients/core/Sources/ExampleAPI/Endpoint.swift");
     let mut facts = crate::codebase::swift::SwiftFactMap::default();
     facts.files.insert(
         swift_file.clone(),

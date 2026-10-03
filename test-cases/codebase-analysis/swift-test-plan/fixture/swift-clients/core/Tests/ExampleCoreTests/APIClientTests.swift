@@ -1,6 +1,6 @@
 import XCTest
-import VouchaCore
-import VouchaAPI
+import ExampleCore
+import ExampleAPI
 
 final class APIClientTests: XCTestCase {
     func testLoadRSS() {

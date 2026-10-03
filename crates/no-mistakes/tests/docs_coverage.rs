@@ -1,3 +1,5 @@
+#[path = "support/docs_node_runtime_exports.rs"]
+mod docs_node_runtime_exports;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -200,55 +202,6 @@ fn assert_cli_group_has_one_leaf(
 }
 
 #[test]
-fn node_runtime_exports_have_api_docs() {
-    let root = repo_root();
-    let source = read(&root.join("packages/no-mistakes/index.js"));
-    let docs = read(&root.join("docs/node-api.md"));
-    let exports = source
-        .lines()
-        .filter_map(|line| line.trim().strip_prefix("module.exports."))
-        .filter_map(|assignment| assignment.split_once(' ').map(|(name, _)| name))
-        .collect::<Vec<_>>();
-    assert!(
-        !exports.is_empty(),
-        "runtime export inventory must not be empty"
-    );
-    let runtime_inventory = docs
-        .split_once("| Runtime export | API |\n")
-        .and_then(|(_, rest)| rest.split_once("\n\n").map(|(table, _)| table))
-        .expect("docs/node-api.md must contain a complete runtime export inventory table");
-    let source_exports = exports.iter().copied().collect::<BTreeSet<_>>();
-    let documented_rows = runtime_inventory
-        .lines()
-        .filter_map(|line| {
-            line.strip_prefix("| `")?
-                .split_once("` |")
-                .map(|(name, api)| (name, api.trim().trim_end_matches('|').trim()))
-        })
-        .collect::<Vec<_>>();
-    for (export, api) in &documented_rows {
-        assert!(
-            !api.is_empty(),
-            "runtime export `{export}` needs an API mapping"
-        );
-    }
-    let documented_exports = documented_rows
-        .iter()
-        .map(|(name, _)| *name)
-        .collect::<BTreeSet<_>>();
-    assert_eq!(
-        documented_exports, source_exports,
-        "runtime export inventory must exactly match packages/no-mistakes/index.js"
-    );
-    for export in source_exports {
-        assert!(
-            runtime_inventory.contains(&format!("| `{export}` |")),
-            "docs/node-api.md must map runtime export `{export}`"
-        );
-    }
-}
-
-#[test]
 fn no_mistakes_rules_have_docs() {
     let root = repo_root();
     let index = read(&root.join("docs/rules/README.md"));
@@ -401,7 +354,7 @@ fn rule_docs_use_supported_option_examples() {
         (
             "pnpm-overrides-ban.md",
             ["packageExtensions"].as_slice(),
-            ["voucha"].as_slice(),
+            [].as_slice(),
         ),
     ];
 
@@ -414,6 +367,70 @@ fn rule_docs_use_supported_option_examples() {
             assert!(!body.contains(needle), "{file} still contains `{needle}`");
         }
     }
+}
+
+#[test]
+fn consumer_identifiers_stay_outside_the_denylist() {
+    const CONSUMER_TOKENS: &[&str] = &["voucha", "@data-stores/valkey", "voucha.ai"];
+    const DENYLIST_FILE: &str = "crates/no-mistakes/tests/docs_coverage.rs";
+
+    let root = repo_root();
+    let denylist = read(&root.join(DENYLIST_FILE)).to_ascii_lowercase();
+    let declaration =
+        format!("const CONSUMER_TOKENS: &[&str] = &{:?};", CONSUMER_TOKENS).to_ascii_lowercase();
+    assert!(
+        denylist.contains(&declaration),
+        "the deny-list exception must remain the documented token declaration"
+    );
+    for (token, expected_occurrences) in CONSUMER_TOKENS.iter().zip([2, 1, 1]) {
+        assert_eq!(
+            denylist.matches(token).count(),
+            expected_occurrences,
+            "the deny-list may mention each consumer token only in its declaration"
+        );
+    }
+
+    let mut violations = Vec::new();
+    for tree in ["crates", "fixtures", "test-cases", "docs", "packages"] {
+        for entry in ignore::WalkBuilder::new(root.join(tree))
+            .hidden(false)
+            .git_ignore(true)
+            .build()
+        {
+            let entry = entry.unwrap_or_else(|err| panic!("failed to walk {tree}: {err}"));
+            if !entry.file_type().is_some_and(|kind| kind.is_file()) {
+                continue;
+            }
+            let path = entry.path();
+            let relative = path.strip_prefix(&root).unwrap_or(path);
+            let bytes = std::fs::read(path)
+                .unwrap_or_else(|err| panic!("failed to read {}: {err}", relative.display()));
+            let Ok(text) = String::from_utf8(bytes) else {
+                continue;
+            };
+            let lower = text.to_ascii_lowercase();
+            if relative == Path::new(DENYLIST_FILE) {
+                continue;
+            }
+            for (line, contents) in lower.lines().enumerate() {
+                for token in CONSUMER_TOKENS {
+                    if contents.contains(token) {
+                        violations.push(format!(
+                            "{}:{} contains a forbidden consumer identifier",
+                            relative.display(),
+                            line + 1
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    violations.sort();
+    assert!(
+        violations.is_empty(),
+        "consumer identifiers may occur only in the documented deny-list:\n{}",
+        violations.join("\n")
+    );
 }
 
 #[test]

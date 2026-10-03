@@ -13,7 +13,7 @@ rules:
     scope: repository
 ```
 
-Default include matches Filaments `TEST_FILE_RE`: files under `__tests__/` and
+Default include matches the supported test-file pattern: files under `__tests__/` and
 `*.test.{mts,ts,tsx,mjs,js,cts,cjs}` (including `*.mock.test.*`). Override
 with `include` globs or replace the default pin regexes with `patterns`.
 
@@ -310,7 +310,7 @@ Not caught, by design:
 ## Options and defaults
 
 There is no user-facing `defaultInclude` option. Internally, when `include` is
-omitted, the default include is Filaments `TEST_FILE_RE`: `__tests__/` and
+omitted, the default include is the supported test-file pattern: `__tests__/` and
 `*.test.{mts,ts,tsx,mjs,js,cts,cjs}`, including mocks. `include` replaces that
 set; `patterns` replaces the default pin regexes, including the container image,
 setup version, Homebrew formula, and runner label patterns and the placeholder
