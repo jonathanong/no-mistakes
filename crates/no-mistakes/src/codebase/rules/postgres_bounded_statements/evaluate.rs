@@ -30,9 +30,13 @@ pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Off
     if fact.query.capped || evaluation.items[target] {
         return Vec::new();
     }
-    offender(&fact.query.items[target], catalog)
-        .into_iter()
-        .collect()
+    let item = &fact.query.items[target];
+    match &item.kind {
+        SqlBoundItemKind::Table(name) => table_offender(name, item.line, catalog)
+            .into_iter()
+            .collect(),
+        _ => Vec::new(),
+    }
 }
 
 fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
@@ -88,9 +92,10 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             if bounded[index] {
                 continue;
             }
-            match &nested[index] {
-                Some(inner) => offenders.extend(inner.offenders.iter().cloned()),
-                None => offenders.extend(offender(item, catalog)),
+            if let Some(inner) = &nested[index] {
+                offenders.extend(inner.offenders.iter().cloned());
+            } else if let SqlBoundItemKind::Table(name) = &item.kind {
+                offenders.extend(table_offender(name, item.line, catalog));
             }
         }
     }
@@ -102,13 +107,10 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
     }
 }
 
-fn offender(item: &SqlBoundItem, catalog: &SchemaCatalog) -> Option<Offender> {
-    let SqlBoundItemKind::Table(name) = &item.kind else {
-        return None;
-    };
+fn table_offender(name: &str, line: usize, catalog: &SchemaCatalog) -> Option<Offender> {
     Some(Offender {
         table: catalog.relation(name)?.name.clone(),
-        line: item.line,
+        line,
     })
 }
 

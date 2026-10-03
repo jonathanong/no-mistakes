@@ -256,3 +256,32 @@ fn lines_map_through_nested_items_and_pins() {
     found[0].map_lines(&|line| line + 10);
     assert_eq!(lines(&found[0]), [12, 13, 14]);
 }
+
+#[test]
+fn expressions_over_other_items_and_scalar_subqueries_are_values() {
+    assert_eq!(
+        shape("SELECT 1 FROM a, b WHERE a.id IN (b.x, 5) AND b.id = $1"),
+        ["select: a[id=#1] b[id=value]"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM a WHERE a.f = EXISTS (SELECT 1) AND a.g = (SELECT 2)"),
+        ["select: a[f=value g=value]"]
+    );
+    assert_eq!(shape("(SELECT id FROM t LIMIT 5)"), ["select: capped t"]);
+    assert_eq!(shape("SELECT id FROM t LIMIT (NULL)"), ["select: t"]);
+    assert_eq!(shape("SELECT id FROM t LIMIT (4)"), ["select: capped t"]);
+}
+
+#[test]
+fn derived_table_lines_map_too() {
+    let mut found = facts("SELECT 1\nFROM (SELECT 1\n  FROM a) d");
+    let lines = |fact: &SqlBoundFact| match &fact.query.items[0].kind {
+        SqlBoundItemKind::Query(inner) => {
+            vec![fact.line, fact.query.items[0].line, inner.items[0].line]
+        }
+        _ => Vec::new(),
+    };
+    assert_eq!(lines(&found[0]), [1, 2, 3]);
+    found[0].map_lines(&|line| line * 10);
+    assert_eq!(lines(&found[0]), [10, 20, 30]);
+}
