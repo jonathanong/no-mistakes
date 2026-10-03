@@ -1,7 +1,7 @@
 use super::functions::{function_kind, unnest_kind};
 use super::using::Using;
 use super::{pins, query, start, Scope};
-use crate::codebase::postgres::idents::{ident_key, object_name_key};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use sqlparser::ast::{
     Expr, JoinOperator, ObjectName, Select, Spanned, TableFactor, TableWithJoins,
@@ -21,14 +21,25 @@ pub(super) fn opaque(at: (usize, usize)) -> SqlBoundItem {
     unnamed(SqlBoundItemKind::Opaque, at)
 }
 
-fn unnamed(kind: SqlBoundItemKind, (line, column): (usize, usize)) -> SqlBoundItem {
-    SqlBoundItem {
-        kind,
-        alias: None,
-        line,
-        column,
-        pins: Vec::new(),
-    }
+fn unnamed(kind: SqlBoundItemKind, at: (usize, usize)) -> SqlBoundItem {
+    SqlBoundItem::new(kind, None, at)
+}
+
+/// A relation name as SQL, so the catalog lookup decodes it the way PostgreSQL would: an unquoted
+/// part folds to lower case, and a quoted one keeps its case and any dots (`"Accounts"`).
+fn sql_name(name: &ObjectName) -> String {
+    name.0
+        .iter()
+        .filter_map(|part| part.as_ident())
+        .map(|ident| {
+            if ident.quote_style.is_some() {
+                format!("\"{}\"", ident.value.replace('"', "\"\""))
+            } else {
+                ident.value.to_ascii_lowercase()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(".")
 }
 
 /// Gathers FROM items and the join conditions that restrict them, then resolves the pins.
@@ -121,22 +132,33 @@ impl<'a> Builder<'a> {
                 let kind = if let Some(args) = args {
                     function_kind(name, args)
                 } else if target {
-                    SqlBoundItemKind::Table(object_name_key(name))
+                    SqlBoundItemKind::Table(sql_name(name))
                 } else {
                     self.named(name)
                 };
-                // An unaliased CTE reference is addressed by the CTE's name.
-                let alias = alias_key(alias).or_else(|| {
-                    matches!(kind, SqlBoundItemKind::Query(_)).then(|| object_name_key(name))
+                // An unaliased relation is addressed by its own name: a CTE's, or a table's
+                // bare name (`orders.id` for `public.orders`).
+                let alias = alias_key(alias).or_else(|| match &kind {
+                    SqlBoundItemKind::Query(_) => Some(object_name_key(name)),
+                    SqlBoundItemKind::Table(_) => object_name_ident(name).map(ident_key),
+                    _ => None,
                 });
                 self.push(kind, alias, start(name.span()));
             }
             TableFactor::Derived {
-                subquery, alias, ..
+                lateral,
+                subquery,
+                alias,
+                ..
             } => {
                 let bound = query::bound_query(subquery, self.scope);
-                let kind = SqlBoundItemKind::Query(bound);
-                self.push(kind, alias_key(alias), start(subquery.span()));
+                let mut item = SqlBoundItem::new(
+                    SqlBoundItemKind::Query(bound),
+                    alias_key(alias),
+                    start(subquery.span()),
+                );
+                item.lateral = *lateral && pins::reads_items(subquery, &self.items);
+                self.items.push(item);
             }
             TableFactor::NestedJoin {
                 table_with_joins, ..
@@ -155,26 +177,19 @@ impl<'a> Builder<'a> {
 
     /// A CTE reference carries the CTE's bound; anything else is a base relation.
     fn named(&self, name: &ObjectName) -> SqlBoundItemKind {
-        let key = object_name_key(name);
-        match self.scope.get(&key).filter(|_| !key.contains('.')) {
+        // A one-part name is a CTE reference when a CTE has that name.
+        let cte = self
+            .scope
+            .get(&object_name_key(name))
+            .filter(|_| name.0.len() == 1);
+        match cte {
             Some(bound) => SqlBoundItemKind::Query(bound.clone()),
-            None => SqlBoundItemKind::Table(key),
+            None => SqlBoundItemKind::Table(sql_name(name)),
         }
     }
 
-    fn push(
-        &mut self,
-        kind: SqlBoundItemKind,
-        alias: Option<String>,
-        (line, column): (usize, usize),
-    ) {
-        self.items.push(SqlBoundItem {
-            kind,
-            alias,
-            line,
-            column,
-            pins: Vec::new(),
-        });
+    fn push(&mut self, kind: SqlBoundItemKind, alias: Option<String>, at: (usize, usize)) {
+        self.items.push(SqlBoundItem::new(kind, alias, at));
     }
 }
 

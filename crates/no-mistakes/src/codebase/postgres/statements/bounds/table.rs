@@ -11,14 +11,10 @@ pub(super) fn bound(table: &Table, at: (usize, usize)) -> SqlBoundQuery {
     if name.is_empty() {
         return query::sized_by_itself(at);
     }
+    // The parser keeps no quote information for a TABLE name, so it is read as unquoted.
+    let kind = SqlBoundItemKind::Table(name.join(".").to_ascii_lowercase());
     SqlBoundQuery {
         capped: false,
-        items: vec![SqlBoundItem {
-            kind: SqlBoundItemKind::Table(name.join(".")),
-            alias: None,
-            line: at.0,
-            column: at.1,
-            pins: Vec::new(),
-        }],
+        items: vec![SqlBoundItem::new(kind, None, at)],
     }
 }

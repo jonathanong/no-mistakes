@@ -39,7 +39,7 @@ fn item(item: &SqlBoundItem) -> String {
     }
 }
 
-fn facts(sql: &str) -> Vec<SqlBoundFact> {
+pub(super) fn facts(sql: &str) -> Vec<SqlBoundFact> {
     extract_sql_statement_facts(sql).bounds
 }
 

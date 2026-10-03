@@ -1,4 +1,4 @@
-use super::tests::shape;
+use super::tests::{facts, shape};
 
 #[test]
 fn only_a_set_returning_built_in_over_given_arguments_is_sized_by_its_caller() {
@@ -125,5 +125,65 @@ fn array_from_a_query_is_not_a_value() {
     assert_eq!(
         shape("DELETE FROM t WHERE id = ANY(ARRAY[$1, $2])"),
         ["delete: t[id=value]"]
+    );
+}
+
+#[test]
+fn quoted_relations_keep_their_identity_and_unaliased_tables_answer_to_their_bare_name() {
+    assert_eq!(
+        shape("SELECT 1 FROM \"Accounts\""),
+        ["select: \"Accounts\""]
+    );
+    assert_eq!(shape("SELECT 1 FROM Accounts"), ["select: accounts"]);
+    assert_eq!(
+        shape("SELECT 1 FROM public.\"Order Items\""),
+        ["select: public.\"Order Items\""]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM \"Accounts\" WHERE \"Accounts\".id = $1"),
+        ["select: \"Accounts\"[id=value]"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM public.orders WHERE orders.id = $1"),
+        ["select: public.orders[id=value]"]
+    );
+    // A one-part quoted name with a dot is not a schema qualifier: it is the CTE it names.
+    assert_eq!(
+        shape("WITH \"work.items\" AS (SELECT 1) SELECT 1 FROM \"work.items\""),
+        ["select: ()"]
+    );
+}
+
+#[test]
+fn a_lateral_source_that_reads_earlier_items_is_marked() {
+    let flag = |sql: &str| facts(sql)[0].query.items[1].lateral;
+    assert!(flag(
+        "SELECT 1 FROM a JOIN LATERAL (SELECT a.id AS id) d ON a.id = d.id"
+    ));
+    assert!(!flag("SELECT 1 FROM a, LATERAL (SELECT 1 AS id) d"));
+    assert!(!flag("SELECT 1 FROM a, (SELECT 1 AS id) d"));
+}
+
+#[test]
+fn correlation_is_resolved_one_query_level_at_a_time() {
+    // A relation of a deeper level does not hide an outer reference at a shallower one.
+    assert_eq!(
+        shape("DELETE FROM t WHERE t.id IN (SELECT t.id FROM u WHERE u.x IN (SELECT x FROM t))"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id IN (SELECT id WHERE EXISTS (SELECT 1 FROM u))"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape(
+            "DELETE FROM t a WHERE a.id IN (SELECT a.id WHERE EXISTS (SELECT 1 FROM u a LIMIT 1))"
+        ),
+        ["delete: t"]
+    );
+    // Nothing outer is read: the subquery sizes the key.
+    assert_eq!(
+        shape("DELETE FROM t WHERE id IN (SELECT id FROM u WHERE u.k IN (SELECT k FROM t))"),
+        ["delete: t[id=(u[k=(t)])]"]
     );
 }

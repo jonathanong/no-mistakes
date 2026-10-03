@@ -71,7 +71,11 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             // A table is bounded only by its pins, known to the catalog or not: an unknown one is
             // never reported, but it cannot size the relations pinned to it.
             SqlBoundItemKind::Table(_) => false,
-            SqlBoundItemKind::Query(_) => nested.as_ref().is_some_and(|inner| inner.bounded),
+            // A LATERAL source that reads earlier items is sized per row of them, so it bounds
+            // nothing itself; the relations inside it are still judged below.
+            SqlBoundItemKind::Query(_) => {
+                !item.lateral && nested.as_ref().is_some_and(|inner| inner.bounded)
+            }
             SqlBoundItemKind::Other => true,
             // Nothing proves what it returns, so it sizes nothing pinned to it.
             SqlBoundItemKind::Opaque => false,
@@ -145,11 +149,12 @@ fn keyed(
     };
     let mut keys = catalog.unique_keys(name);
     // Every row has a `ctid`, so `ctid IN (SELECT ctid … LIMIT n)` bounds a statement. It is
-    // only unique within one physical table: the leaves of a partitioned table repeat values.
-    let partitioned = catalog
+    // only unique within one physical table: the leaves of a partitioned table repeat values,
+    // and a relation the catalog does not describe may be one.
+    let plain = catalog
         .relation(name)
-        .is_some_and(|table| table.relation_kind == RelationKind::PartitionedTable);
-    if !partitioned {
+        .is_some_and(|table| table.relation_kind != RelationKind::PartitionedTable);
+    if plain {
         keys.push(vec!["ctid".to_string()]);
     }
     keys.iter()

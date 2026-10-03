@@ -3,7 +3,7 @@ mod resolver;
 
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
-use crate::codebase::postgres::statements::{SqlBoundPin, SqlPinSource};
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundPin, SqlPinSource};
 use sqlparser::ast::{BinaryOperator, Expr, Query};
 use std::collections::BTreeSet;
 
@@ -80,6 +80,11 @@ pub(super) fn extract(
         }
         _ => {}
     }
+}
+
+/// Whether a `LATERAL` source reads a column of one of the FROM items before it.
+pub(super) fn reads_items(subquery: &Query, items: &[SqlBoundItem]) -> bool {
+    Resolver::new(items).is_correlated(subquery)
 }
 
 /// A subquery sizes the values it yields, unless it reads the row being checked: then every

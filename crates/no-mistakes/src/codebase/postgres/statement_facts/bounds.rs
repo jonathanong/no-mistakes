@@ -32,10 +32,31 @@ pub struct SqlBoundQuery {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundItem {
     pub kind: SqlBoundItemKind,
+    /// The name columns are qualified by: the alias, else the table's own (bare) name.
     pub alias: Option<String>,
     pub line: usize,
     pub column: usize,
     pub pins: Vec<SqlBoundPin>,
+    /// A `LATERAL` source that reads the FROM items before it: it is sized per row of those, so
+    /// it bounds nothing pinned to it, but the relations inside it are still judged.
+    pub lateral: bool,
+}
+
+impl SqlBoundItem {
+    pub fn new(
+        kind: SqlBoundItemKind,
+        alias: Option<String>,
+        (line, column): (usize, usize),
+    ) -> Self {
+        Self {
+            kind,
+            alias,
+            line,
+            column,
+            pins: Vec::new(),
+            lateral: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

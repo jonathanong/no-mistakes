@@ -55,7 +55,10 @@ set operation). A statement is bounded when any of these holds:
   sequence functions and the like) is not a value; any other function call is assumed to be row-invariant,
   since a function's volatility is not part of the facts. A subquery that reads a column of
   the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever its own bound: every
-  row finds itself in it.
+  row finds itself in it. References are resolved one query level at a time, so a relation of
+  a nested level never hides a reference of an outer one. A `LATERAL` source that reads
+  earlier FROM items is sized per row of them, so it bounds nothing pinned to it; the
+  relations inside it are still judged.
 - A column compared with a column of another bounded relation is pinned too, so a bound
   propagates across joins on unique keys to a fixed point: with `o.id = $1`, the account
   `a.id = o.account_id` is bounded, and its profile `p.account_id = a.id` after it. A join on
@@ -68,8 +71,9 @@ set operation). A statement is bounded when any of these holds:
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
-  one row of any table, so `WHERE ctid IN (SELECT ctid … LIMIT n)` bounds a statement, except
-  on a partitioned table, whose leaves repeat `ctid` values. The relations joined to the
+  one row of a plain table, so `WHERE ctid IN (SELECT ctid … LIMIT n)` bounds a statement,
+  except on a partitioned table, whose leaves repeat `ctid` values, and on a relation the
+  catalog does not describe, which may be one. The relations joined to the
   target only feed it values: each target row changes once. The target is always the
   physical relation, even when a CTE of the same name exists.
 
@@ -106,7 +110,8 @@ modeled; use it instead of inheritance, or keep inheritance parents out of this 
 
 Relations the catalog does not describe (views, relations created in the same script) and
 relations spelled with another schema (`audit.accounts` when the catalog is for `public`)
-are not judged, and they bound nothing: an unknown relation can supply every
+are not judged, and they bound nothing. A relation is found by the name PostgreSQL reads:
+an unquoted name folds to lower case and a quoted one (`"Order Items"`) is exact: an unknown relation can supply every
 value of a column pinned to it, so a catalog table joined to one is still reported unless
 something else bounds it. A statement whose SQL cannot be recovered statically (`SQL could
 not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.

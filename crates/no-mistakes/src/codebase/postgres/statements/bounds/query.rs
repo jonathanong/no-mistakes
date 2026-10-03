@@ -71,14 +71,8 @@ fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
 }
 
 fn arm(set: &SetExpr, scope: &Scope) -> SqlBoundItem {
-    let (line, column) = start(set.span());
-    SqlBoundItem {
-        kind: SqlBoundItemKind::Query(set_bound(set, scope)),
-        alias: None,
-        line,
-        column,
-        pins: Vec::new(),
-    }
+    let kind = SqlBoundItemKind::Query(set_bound(set, scope));
+    SqlBoundItem::new(kind, None, start(set.span()))
 }
 
 /// A body whose size nothing in the statement text decides: it adds no unbounded relation.

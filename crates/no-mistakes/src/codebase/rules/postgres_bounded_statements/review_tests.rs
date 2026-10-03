@@ -85,3 +85,58 @@ fn a_relation_in_another_schema_is_not_judged() {
     assert_eq!(names("SELECT * FROM public.accounts"), ["accounts"]);
     assert_eq!(names("SELECT * FROM accounts"), ["accounts"]);
 }
+
+#[test]
+fn a_quoted_relation_is_found_by_its_exact_name() {
+    let key = "\"Order Items\"";
+    assert_eq!(names("SELECT * FROM \"Order Items\""), [key]);
+    assert_eq!(names("SELECT * FROM public.\"Order Items\""), [key]);
+    assert!(names("SELECT * FROM \"Order Items\" WHERE id = $1").is_empty());
+    assert!(names("SELECT * FROM \"Order Items\" o WHERE o.id = $1").is_empty());
+    // Unquoted, the name folds to lower case: a different relation.
+    assert!(names("SELECT * FROM order_items").is_empty());
+}
+
+#[test]
+fn a_lateral_source_that_reads_the_row_bounds_nothing() {
+    assert_eq!(
+        names("SELECT * FROM accounts a JOIN LATERAL (SELECT a.id AS id) d ON a.id = d.id"),
+        ["accounts"]
+    );
+    // The relations inside a lateral source are still judged; a capped one is bounded.
+    assert_eq!(
+        names(
+            "SELECT 1 FROM accounts a, LATERAL (SELECT o.id FROM orders o \
+             WHERE o.account_id = a.id) x WHERE a.id = $1"
+        ),
+        ["orders"]
+    );
+    assert!(names(
+        "SELECT 1 FROM accounts a, LATERAL (SELECT o.id FROM orders o \
+         WHERE o.account_id = a.id LIMIT 1) x WHERE a.id = $1"
+    )
+    .is_empty());
+}
+
+#[test]
+fn an_unknown_relation_has_no_ctid_key_either() {
+    // Nothing says the unknown relation is a plain table, and ctid repeats across partitions.
+    assert_eq!(
+        names(
+            "UPDATE accounts a SET name = 'x' FROM external_events e \
+             WHERE e.ctid = $1 AND a.id = e.account_id"
+        ),
+        ["accounts"]
+    );
+    assert!(names("DELETE FROM sessions WHERE ctid = $1").is_empty());
+}
+
+#[test]
+fn nested_aliases_do_not_hide_an_outer_row_reference() {
+    for sql in [
+        "DELETE FROM accounts a WHERE a.id IN (SELECT a.id WHERE EXISTS (SELECT 1 FROM orders a LIMIT 1))",
+        "DELETE FROM accounts WHERE accounts.id IN (SELECT accounts.id FROM orders WHERE orders.id IN (SELECT id FROM accounts))",
+    ] {
+        assert_eq!(names(sql), ["accounts"], "{sql}");
+    }
+}
