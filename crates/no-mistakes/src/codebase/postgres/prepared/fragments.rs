@@ -37,7 +37,7 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<PreparedSqlFragment> {
 fn statement_facts(sql: &str) -> SqlStatementFileFacts {
     use crate::codebase::postgres::statements::extract_sql_statement_facts_with_bounds;
     let direct = extract_sql_statement_facts_with_bounds(sql, false);
-    if !direct.selects.is_empty() {
+    if !direct.parse_failed || !direct.selects.is_empty() {
         return direct;
     }
     // Predicate-only fragments retain the legacy synthetic SELECT context.
