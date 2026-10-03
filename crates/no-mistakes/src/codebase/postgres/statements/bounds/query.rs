@@ -1,11 +1,11 @@
 use super::aggregate::{orders_by_aggregate, pure_aggregate};
 use super::{items, start, Scope};
 use crate::codebase::postgres::idents::ident_key;
-use crate::codebase::postgres::statements::limit::is_limited;
+use crate::codebase::postgres::statements::limit::{is_limited, is_zero_limited};
 use crate::codebase::postgres::statements::{
     SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
-use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
+use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
 use std::collections::BTreeMap;
 
 pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
@@ -130,8 +130,58 @@ pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
 /// The body of `query` under `scope`, which already holds its CTEs.
 pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
-    bound.capped |= is_limited(query) || orders_by_aggregate(query);
+    if is_zero_limited(query) {
+        bound.capped = true;
+    } else if is_limited(query) {
+        cap_streaming_arms(&query.body, &mut bound);
+    }
+    bound.capped |= orders_by_aggregate(query);
     bound
+}
+
+/// Non-streaming set operations must inspect their input arms before an outer LIMIT can
+/// produce the final rows; UNION ALL can stop as soon as that limit is satisfied.
+fn requires_complete_arms(set: &SetExpr) -> bool {
+    match set {
+        SetExpr::SetOperation {
+            op,
+            set_quantifier,
+            left,
+            right,
+        } => {
+            *op != SetOperator::Union
+                || *set_quantifier != SetQuantifier::All
+                || requires_complete_arms(left)
+                || requires_complete_arms(right)
+        }
+        SetExpr::Query(query) => requires_complete_arms(&query.body),
+        _ => false,
+    }
+}
+
+/// A UNION ALL limit caps each streaming sibling independently. A blocking subtree keeps
+/// its input findings even when another sibling can stop after the requested rows.
+fn cap_streaming_arms(set: &SetExpr, bound: &mut SqlBoundQuery) {
+    if !requires_complete_arms(set) {
+        bound.capped = true;
+        return;
+    }
+    match set {
+        SetExpr::SetOperation {
+            op: SetOperator::Union,
+            set_quantifier: SetQuantifier::All,
+            left,
+            right,
+        } => {
+            for (set, item) in [left, right].into_iter().zip(&mut bound.items) {
+                if let SqlBoundItemKind::Query(inner) = &mut item.kind {
+                    cap_streaming_arms(set, inner);
+                }
+            }
+        }
+        SetExpr::Query(query) => cap_streaming_arms(&query.body, bound),
+        _ => {}
+    }
 }
 
 fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {

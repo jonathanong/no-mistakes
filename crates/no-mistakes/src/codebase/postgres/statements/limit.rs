@@ -1,4 +1,5 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
+mod zero;
 pub(super) use super::tokens::Tokens;
 use super::value::is_placeholder_ident;
 use super::SqlLimitValue;
@@ -63,6 +64,23 @@ fn is_fixed(expr: &Expr) -> bool {
         }
         _ => false,
     }
+}
+
+/// A literal zero row cap prevents even non-streaming set-operation inputs from running.
+pub(super) fn is_zero_limited(query: &Query) -> bool {
+    let count = if let Some(fetch) = &query.fetch {
+        if fetch.with_ties || fetch.percent {
+            return false;
+        }
+        fetch.quantity.as_ref()
+    } else {
+        match &query.limit_clause {
+            Some(LimitClause::LimitOffset { limit, .. }) => limit.as_ref(),
+            Some(LimitClause::OffsetCommaLimit { limit, .. }) => Some(limit),
+            _ => None,
+        }
+    };
+    count.is_some_and(zero::is_zero)
 }
 
 /// The count a query writes after `LIMIT` or `FETCH FIRST`, whether or not it caps the rows,
