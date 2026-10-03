@@ -198,7 +198,7 @@ fn a_quoted_dot_is_not_a_schema_qualifier_for_ignored_tables_and_an_inner_order_
 #[test]
 fn executor_sql_is_reported_at_its_source_line() {
     let root = fixture("embedded-bounded-iteration");
-    let yaml = "include: ['src/**/*.ts']\nbannedShapes: [literal-limit, keyset-only-sweep]\n";
+    let yaml = "include: ['src/**/*.ts']\nimportSpecifier: '@example/db'\nbannedShapes: [literal-limit, keyset-only-sweep]\n";
     let findings = check_with_files(&root, &config(yaml), &[root.join("src/jobs.ts")]).unwrap();
     let mut found: Vec<_> = findings
         .iter()
@@ -216,7 +216,7 @@ fn executor_sql_is_reported_at_its_source_line() {
 fn template_interpolations_are_binds_for_the_cursor_and_the_batch_size() {
     // `${after}` is the keyset cursor and `${size}` a tunable batch size, like `$1` and `$2`.
     let root = fixture("embedded-bounded-iteration");
-    let yaml = "include: ['src/**/*.mts']\nbannedShapes: [literal-limit, keyset-only-sweep]\n";
+    let yaml = "include: ['src/**/*.mts']\nimportSpecifier: '@example/db'\nbannedShapes: [literal-limit, keyset-only-sweep]\n";
     let findings =
         check_with_files(&root, &config(yaml), &[root.join("src/templates.mts")]).unwrap();
     let found: Vec<_> = findings
