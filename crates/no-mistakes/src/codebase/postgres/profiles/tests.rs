@@ -204,3 +204,39 @@ fn invalid_schema_and_statement_options_stop_request_planning() {
         );
     }
 }
+
+#[test]
+fn bounded_rule_alone_requests_bounds_and_standalone_preparation_keeps_them() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-bounded-statements/fixture/prepared-demand");
+    let file = root.join("queries.sql");
+    let files = vec![file.clone()];
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    let sources = snapshot.source_store_for(&root);
+    for (rule, expected) in [
+        ("postgres-required-predicates", false),
+        ("postgres-sql-shape-policy", false),
+        ("postgres-bounded-statements", true),
+    ] {
+        let config = rule_config(rule);
+        let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+        configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+        assert!(plan.postgres_dml);
+        assert_eq!(plan.postgres_bounds, expected, "{rule}");
+        let prepared = prepare_rule_sql_facts(
+            &root,
+            &files,
+            std::sync::Arc::clone(&sources),
+            &config,
+            &[rule],
+        )
+        .unwrap();
+        let statements = prepared.postgres.statements(&file, None).unwrap();
+        assert_eq!(
+            statements[0].bounds.len(),
+            if expected { 3 } else { 0 },
+            "{rule}"
+        );
+    }
+    assert_eq!(sources.physical_read_count(), 1);
+}

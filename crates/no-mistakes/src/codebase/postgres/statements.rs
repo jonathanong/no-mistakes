@@ -29,16 +29,25 @@ use sqlparser::ast::{Query, SetExpr, Statement};
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_bounds(sql, true)
+}
+
+/// Extract the requested SQL projections without reparsing for row bounds.
+pub(crate) fn extract_sql_statement_facts_with_bounds(
+    sql: &str,
+    collect_bounds: bool,
+) -> SqlStatementFileFacts {
     let parsed = parse_postgres_sql(sql);
     let parse_failed = parsed.is_err();
     let statements = parsed.unwrap_or_else(|_| parse_postgres_sql_lenient(sql));
-    extract_from_parsed(sql, &statements, parse_failed)
+    extract_from_parsed(sql, &statements, parse_failed, collect_bounds)
 }
 
 pub(crate) fn extract_from_parsed(
     sql: &str,
     statements: &[Statement],
     parse_failed: bool,
+    collect_bounds: bool,
 ) -> SqlStatementFileFacts {
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
@@ -71,7 +80,9 @@ pub(crate) fn extract_from_parsed(
     for statement in executed {
         writes::collect(statement, &mut writes);
         collect_one(sql, statement, &mut out);
-        bounds::collect(statement, &mut bounds);
+        if collect_bounds {
+            bounds::collect(statement, &mut bounds);
+        }
     }
     dedupe::exists_set_operations(&mut selects);
     SqlStatementFileFacts {

@@ -107,7 +107,14 @@ pub fn collect_postgres_facts(
         Vec::new()
     };
     let statements = if plan.postgres_dml {
-        dml::collect(root, sources, files, schema_options, &embedded)?
+        dml::collect(
+            root,
+            sources,
+            files,
+            schema_options,
+            &embedded,
+            plan.postgres_bounds,
+        )?
     } else {
         Vec::new()
     };

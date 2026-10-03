@@ -590,3 +590,10 @@ PostgreSQL, without an application snapshot producer. Complete coverage is accep
 by every catalog check. Explicit ordering coverage is accepted only by conflict/lock
 ordering checks; full-schema checks reject it. For one database, conflict and lock
 ordering report identical findings from either coverage.
+
+Prepared row-bound facts are explicit demand. `CheckFactPlan.postgres_bounds` is
+requested by `postgres-bounded-statements` and retained when plans are unioned.
+Other statement consumers and unexecuted builder fragments skip this projection;
+adding bound demand preserves all existing statement fields. SQL parsing and source
+reads remain owned by the same request-scoped preparation pass. Direct public
+statement extraction retains its complete bound facts.

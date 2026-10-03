@@ -17,6 +17,9 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_dml |= dml_rules
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_bounds |= !config
+        .rule_applications("postgres-bounded-statements")
+        .is_empty();
     plan.postgres_fragments |= !config
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();

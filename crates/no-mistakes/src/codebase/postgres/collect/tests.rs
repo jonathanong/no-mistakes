@@ -284,3 +284,46 @@ fn prepared_schema_projection_borrows_request_owned_metadata() {
     ));
     assert_eq!(sources.physical_read_count(), 1);
 }
+
+#[test]
+fn direct_collection_omits_bounds_until_the_plan_requests_them() {
+    let ts = embedded_path("string-literal.ts");
+    let sources = store(std::slice::from_ref(&ts));
+    let mut plan = CheckFactPlan {
+        postgres_dml: true,
+        ..Default::default()
+    };
+    let baseline = collect_postgres_facts(
+        &fixture_root(),
+        &sources,
+        std::slice::from_ref(&ts),
+        &plan,
+        &PostgresSchemaOptions::default(),
+        &EmbeddedSqlOptions::default(),
+    )
+    .unwrap();
+    assert!(!baseline.statements.is_empty());
+    assert!(baseline
+        .statements
+        .iter()
+        .all(|facts| facts.bounds.is_empty()));
+    plan.postgres_bounds = true;
+    let mut enabled = collect_postgres_facts(
+        &fixture_root(),
+        &sources,
+        std::slice::from_ref(&ts),
+        &plan,
+        &PostgresSchemaOptions::default(),
+        &EmbeddedSqlOptions::default(),
+    )
+    .unwrap();
+    assert!(enabled
+        .statements
+        .iter()
+        .any(|facts| !facts.bounds.is_empty()));
+    for facts in &mut enabled.statements {
+        facts.bounds.clear();
+    }
+    assert_eq!(enabled.statements, baseline.statements);
+    assert_eq!(sources.physical_read_count(), 1);
+}
