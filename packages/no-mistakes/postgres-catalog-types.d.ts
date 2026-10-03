@@ -1,8 +1,15 @@
+/** Which facts a generated catalog carries. It is stated in the catalog's `coverage` field. */
+export type PostgresCatalogCoverage = "complete" | "ordering";
 export interface PostgresCatalogOptions {
   /** Environment variable containing a PostgreSQL connection URL; never pass secrets as options. */
   connectionEnv: string;
   /** Exact PostgreSQL schema name. */
   schema: string;
+  /**
+   * `complete` (the default) carries every schema fact, and every catalog rule accepts it.
+   * `ordering` carries only what conflict and lock ordering need; other catalog rules reject it.
+   */
+  coverage?: PostgresCatalogCoverage;
 }
 export interface PostgresOrderingCatalog {
   formatVersion: 2;
@@ -10,6 +17,17 @@ export interface PostgresOrderingCatalog {
   schema: string;
   tables: Record<string, PostgresCatalogTable>;
 }
+/** A catalog with every fact the catalog model holds. Every catalog rule accepts it. */
+export interface PostgresCompleteCatalog {
+  formatVersion: 2;
+  coverage: "complete";
+  schema: string;
+  tables: Record<string, PostgresCompleteCatalogTable>;
+  functions: Record<string, PostgresCatalogFunction>;
+  enums: Record<string, PostgresCatalogEnum>;
+  views: Record<string, PostgresCatalogView>;
+}
+export type PostgresCatalog = PostgresOrderingCatalog | PostgresCompleteCatalog;
 export interface PostgresCatalogColumn {
   dataType: string;
   nullable: boolean;
@@ -18,6 +36,9 @@ export interface PostgresCatalogColumn {
   generated: "stored" | "virtual" | null;
   generatedExpression: string | null;
   identity: "a" | "d" | null;
+}
+export interface PostgresCompleteCatalogColumn extends PostgresCatalogColumn {
+  comment: string | null;
 }
 export interface PostgresCatalogIndexKey {
   column: string | null;
@@ -47,4 +68,38 @@ export interface PostgresCatalogTable {
   primaryKey: { columns: string[] } | null;
   uniqueConstraints: Record<string, { columns: string[] }>;
   indexes: Record<string, PostgresCatalogIndex>;
+}
+export interface PostgresCatalogForeignKey {
+  columns: string[];
+  referencedTable: string;
+  referencedColumns: string[];
+  onDelete: "NO ACTION" | "RESTRICT" | "CASCADE" | "SET NULL" | "SET DEFAULT";
+  onUpdate: "NO ACTION" | "RESTRICT" | "CASCADE" | "SET NULL" | "SET DEFAULT";
+  validated: boolean;
+}
+export interface PostgresCompleteCatalogTable extends Omit<PostgresCatalogTable, "columns"> {
+  columns: Record<string, PostgresCompleteCatalogColumn>;
+  comment: string | null;
+  /** `pg_get_partkeydef` text such as `RANGE (created_at)`; `null` unless partitioned. */
+  physicalPartition: { key: string } | null;
+  foreignKeys: Record<string, PostgresCatalogForeignKey>;
+  /** `definition` is `pg_get_constraintdef` text; NOT NULL constraints are not checks. */
+  checkConstraints: Record<string, { definition: string; validated: boolean }>;
+  /** `definition` is `pg_get_triggerdef` text; internal triggers are omitted. */
+  triggers: Record<string, { definition: string }>;
+}
+/** Keyed by name and identity arguments, such as `touch()` or `over(a integer)`. */
+export interface PostgresCatalogFunction {
+  /** `pg_get_functiondef` text. */
+  definition: string;
+}
+export interface PostgresCatalogEnum {
+  /** Labels in `enumsortorder`. */
+  values: string[];
+}
+export interface PostgresCatalogView {
+  materialized: boolean;
+  /** `pg_get_viewdef` text. */
+  definition: string;
+  comment: string | null;
 }

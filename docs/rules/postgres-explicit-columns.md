@@ -53,7 +53,7 @@ rule with no options is a config error rather than a silent skip.
 match `postgres-required-predicates`. `unanalyzableSql` defaults to `fail`.
 
 `sqlInclude` defaults to `[]`, so `.sql` files are not scanned until you set
-globs. `schemaCatalogPath` has no default and is required. `maxColumns` defaults
+globs. `schemaCatalogPath` has no default, is required, and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `maxColumns` defaults
 to `12`; `0` means every catalog table. Values outside `0` through `4294967295` are configuration errors.
 `relations` defaults to `[]`. An empty name or a duplicate name is a config
 error. `allowWholeRowFunctions` defaults to `row_to_json`, `to_json`,

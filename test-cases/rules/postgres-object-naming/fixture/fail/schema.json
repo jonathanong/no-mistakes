@@ -1,9 +1,9 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": {
     "invoice_line": {
       "columns": {
-        "id": { "type": "bigint", "ordinalPosition": 1 }
+        "id": { "dataType": "bigint", "ordinalPosition": 1 }
       }
     }
   }

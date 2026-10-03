@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_alpha()": {
       "definition": "CREATE FUNCTION fn_alpha() RETURNS α LANGUAGE sql AS $$ SELECT widget $$"

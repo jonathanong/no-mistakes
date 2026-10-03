@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_reject_orders_update": {
       "definition": "CREATE FUNCTION fn_reject_orders_update() RETURNS trigger LANGUAGE plpgsql AS $$\nBEGIN RAISE EXCEPTION 'orders rows are immutable' USING ERRCODE = '23514'; END $$;"

@@ -19,7 +19,7 @@ rules:
   - rule: postgres-conflict-ordering
     scope: repository
     options:
-      schemaCatalogPath: backend/data-stores/psql/schema-snapshot/schema.json
+      schemaCatalogPath: db/schema.json
       include: ["backend/**/*.ts"]
       sqlInclude: ["backend/queries/**/*.sql"]
       importSpecifier: "@data-stores/psql"
@@ -28,8 +28,8 @@ rules:
       safeDirective: deadlock-safe
 ```
 
-`schemaCatalogPath` is required and must name a repository-relative PostgreSQL
-schema snapshot with `formatVersion: 2`. The snapshot, not a
+`schemaCatalogPath` is required and must name a repository-relative catalog
+generated with [`no-mistakes postgres catalog`](../cli/postgres.md). The catalog, not a
 lexical sort, supplies an index's expression and key order. `sqlInclude` is
 opt-in (default `[]`) and adds static `.sql` query files; typed executor calls
 are always considered. `importSpecifier` defaults to `@data-stores/psql` and
@@ -133,12 +133,13 @@ specific `safeDirective` explanation over a file-level suppression.
 [`postgres-lock-ordering`](postgres-lock-ordering.md) applies the same optional
 catalog key-prefix requirement to multi-row `FOR UPDATE` readers.
 
-## Generated ordering catalogs
+## Generated catalogs
 
-[`postgres catalog`](../cli/postgres.md) observes PostgreSQL directly and emits
-independent ordering facts. It retains invalid/not-ready/non-live index state;
+[`postgres catalog`](../cli/postgres.md) observes PostgreSQL directly. This rule
+accepts both its `complete` and `ordering` coverage, and reports identical findings
+for either. Ordering coverage emits only independent ordering facts. It retains invalid/not-ready/non-live index state;
 those indexes cannot prove order. Unsupported custom operator classes/collations remain
 in the JSON but fail closed for canonical proof. Deferrable unique indexes cannot
 be conflict arbiters, although supported valid keys can still prove lock order.
-The generated catalog explicitly declares ordering coverage and cannot satisfy
-rules requiring complete schema metadata.
+An ordering catalog declares its coverage and cannot satisfy rules requiring
+complete schema metadata; a complete catalog satisfies every catalog rule.

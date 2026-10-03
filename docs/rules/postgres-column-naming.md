@@ -67,7 +67,7 @@ skipped by that check. Tables matching `ignoreTablePatterns` are not checked.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required and has no default. `typeRules`,
+`schemaCatalogPath` is required, has no default, and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `typeRules`,
 `nameTypeRules`, `ignoreTablePatterns`, `forbiddenColumnNames`, and `allow`
 default to `[]`. `skipGeneratedColumns` defaults to `false`.
 `foreignKeys.targetMatch` defaults to `off`. `foreignKeys.checkSelfReferences`

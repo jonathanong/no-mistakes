@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_concat_left": {
       "definition": "CREATE FUNCTION fn_concat_left() RETURNS int LANGUAGE sql AS 'SELECT '\n'left_fn()'"

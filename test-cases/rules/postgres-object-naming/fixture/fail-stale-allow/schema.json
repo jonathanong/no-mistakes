@@ -1,9 +1,9 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": {
     "order_line_items": {
       "columns": {
-        "order_id": { "type": "bigint", "ordinalPosition": 1 }
+        "order_id": { "dataType": "bigint", "ordinalPosition": 1 }
       }
     }
   }

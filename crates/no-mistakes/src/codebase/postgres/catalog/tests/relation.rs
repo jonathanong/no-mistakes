@@ -4,7 +4,7 @@ use super::SchemaCatalog;
 fn relation_uses_exact_names_then_a_unique_tail() {
     let catalog = SchemaCatalog::from_json(
         r#"{
-            "formatVersion": 2,
+            "formatVersion": 2, "coverage": "complete",
             "tables": {
                 "public.orders": { "columns": { "id": { "dataType": "integer" } } },
                 "public.events": { "columns": { "id": { "dataType": "integer" } } },

@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_ab": {
       "definition": "CREATE FUNCTION fn_ab(OUT a int, OUT b text) RETURNS record LANGUAGE sql AS $$ SELECT 1, 2 $$"

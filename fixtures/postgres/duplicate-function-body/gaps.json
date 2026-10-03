@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_lang_sql()": {
       "definition": "CREATE FUNCTION fn_lang_sql() RETURNS int LANGUAGE /* note */ sql AS $$ SELECT lang_body() $$"

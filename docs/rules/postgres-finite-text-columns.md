@@ -66,7 +66,7 @@ both pinned and name-matched gets only the literal finding.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `columnTypes` defaults to `["text", "character varying"]`; an empty list is a configuration error. Comparison with `data_type` is case-insensitive. The unbounded `character varying` candidate also matches valid positive typmods such as `character varying(32)` and `varchar(32)`. `namePatterns` defaults to `[]`, which turns the name check off. `skipGeneratedColumns` defaults to `false`. `ignoreTablePatterns` defaults to `[]`. An invalid regex is a configuration error. `allow` defaults to `[]`. An empty reason, a duplicate object, or an object ref that is not `column:<table>.<column>` is a configuration error. Rule-level `include`/`exclude` filters apply to the catalog path, and `message` replaces the default text for each finding.
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `columnTypes` defaults to `["text", "character varying"]`; an empty list is a configuration error. Comparison with `data_type` is case-insensitive. The unbounded `character varying` candidate also matches valid positive typmods such as `character varying(32)` and `varchar(32)`. `namePatterns` defaults to `[]`, which turns the name check off. `skipGeneratedColumns` defaults to `false`. `ignoreTablePatterns` defaults to `[]`. An invalid regex is a configuration error. `allow` defaults to `[]`. An empty reason, a duplicate object, or an object ref that is not `column:<table>.<column>` is a configuration error. Rule-level `include`/`exclude` filters apply to the catalog path, and `message` replaces the default text for each finding.
 
 ## Valid example
 

@@ -5,8 +5,7 @@ use serde::Deserialize;
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Snapshot {
-    pub(super) format_version: u32,
-    #[serde(default)]
+    /// Stated by the generator, never assumed: a missing value is a load error.
     pub(super) coverage: super::CatalogCoverage,
     #[serde(default)]
     pub(super) schema: Option<String>,
@@ -36,15 +35,23 @@ pub(super) struct SnapshotTable {
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub(super) struct SnapshotColumn {
+    /// Required: a missing type must fail the load rather than become `""`.
     pub(super) data_type: String,
+    #[serde(default)]
     pub(super) nullable: bool,
+    #[serde(default)]
     pub(super) default_expression: Option<String>,
+    #[serde(default)]
     pub(super) generated: Option<String>,
+    #[serde(default)]
     pub(super) generated_expression: Option<String>,
+    #[serde(default)]
     pub(super) identity: Option<String>,
+    #[serde(default)]
     pub(super) comment: Option<String>,
+    #[serde(default)]
     pub(super) ordinal_position: u32,
 }
 

@@ -1,0 +1,4 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": { "accounts": { "columns": { "id": { "type": "uuid" } } } }
+}

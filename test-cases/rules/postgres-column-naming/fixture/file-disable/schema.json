@@ -1,6 +1,6 @@
 // no-mistakes-disable-file postgres-column-naming: legacy billing catalog
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": {
     "invoices": {
       "columns": {

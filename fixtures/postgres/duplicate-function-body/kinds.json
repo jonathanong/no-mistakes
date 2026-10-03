@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_event_a": {
       "definition": "CREATE FUNCTION fn_event_a() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$"

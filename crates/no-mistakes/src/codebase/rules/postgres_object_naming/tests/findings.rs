@@ -54,7 +54,7 @@ abbreviations:\n  enabled: true\n";
     );
     expect(
         "schemaCatalogPath: schema.json\nspelling:\n  acknowledgement: acknowledgment\n",
-        serde_json::json!({"tables": {"orders": {"columns": {"acknowledgement_at": {"type": "timestamptz"}}}}}),
+        serde_json::json!({"tables": {"orders": {"columns": {"acknowledgement_at": {"dataType": "timestamptz"}}}}}),
         "schema.json: column:orders.acknowledgement_at: name spells \"acknowledgement\"; use \"acknowledgment\"",
     );
     expect(

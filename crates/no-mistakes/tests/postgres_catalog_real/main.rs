@@ -1,0 +1,6 @@
+//! Complete catalog generation against a real PostgreSQL cluster
+//! (`NO_MISTAKES_TEST_POSTGRES_URL`; CI provides one and never skips these).
+mod edges;
+mod parity;
+mod rules;
+mod support;

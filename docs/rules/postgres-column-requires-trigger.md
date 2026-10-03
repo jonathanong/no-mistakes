@@ -53,7 +53,7 @@ Findings use the object ref `table:<name>`.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `requirements` defaults to `[]`, and with that
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `requirements` defaults to `[]`, and with that
 default the rule reports nothing. Each requirement's `column` and `function`
 are required and non-empty. `timing` defaults to `before` (`before`, `after`,
 or `instead-of`). `events` defaults to `[update]` and must be a non-empty list

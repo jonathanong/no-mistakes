@@ -1,28 +1,28 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": {
     "orders": {
       "relationKind": "table",
       "comment": "One row per checkout; immutable after payment",
       "columns": {
-        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
         "note": {
-          "type": "text",
+          "dataType": "text",
           "nullable": true,
           "ordinalPosition": 2,
           "comment": "Free-form checkout note shown to support"
         },
-        "secret": { "type": "text", "nullable": true, "ordinalPosition": 3 },
-        "vendor_id": { "type": "uuid", "nullable": true, "ordinalPosition": 4 },
-        "code": { "type": "text", "nullable": true, "ordinalPosition": 5, "comment": "ab" },
-        "title": { "type": "text", "nullable": true, "ordinalPosition": 6, "comment": "   " }
+        "secret": { "dataType": "text", "nullable": true, "ordinalPosition": 3 },
+        "vendor_id": { "dataType": "uuid", "nullable": true, "ordinalPosition": 4 },
+        "code": { "dataType": "text", "nullable": true, "ordinalPosition": 5, "comment": "ab" },
+        "title": { "dataType": "text", "nullable": true, "ordinalPosition": 6, "comment": "   " }
       }
     },
     "events": {
       "relationKind": "partitioned table",
       "columns": {
         "payload": {
-          "type": "jsonb",
+          "dataType": "jsonb",
           "nullable": false,
           "ordinalPosition": 1,
           "comment": "Event body recorded on the partitioned parent"
@@ -33,7 +33,7 @@
       "relationKind": "table",
       "comment": "   \n",
       "columns": {
-        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1, "comment": "x" }
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1, "comment": "x" }
       }
     },
     "short_rows": {
@@ -43,7 +43,7 @@
     "schema_migrations": {
       "relationKind": "table",
       "columns": {
-        "version": { "type": "text", "nullable": false, "ordinalPosition": 1 }
+        "version": { "dataType": "text", "nullable": false, "ordinalPosition": 1 }
       }
     }
   },

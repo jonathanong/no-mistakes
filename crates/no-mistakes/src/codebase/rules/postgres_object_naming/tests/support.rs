@@ -62,6 +62,9 @@ pub(super) fn findings(yaml: &str, body: serde_json::Value) -> Vec<RuleFinding> 
     if root.get("formatVersion").is_none() {
         root["formatVersion"] = serde_json::json!(2);
     }
+    if root.get("coverage").is_none() {
+        root["coverage"] = serde_json::json!("complete");
+    }
     let catalog = SchemaCatalog::from_json(&root.to_string()).unwrap();
     scan(&catalog, &compiled, "schema.json")
 }

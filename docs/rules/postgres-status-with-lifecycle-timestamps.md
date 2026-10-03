@@ -49,7 +49,7 @@ columns in ordinal order. A generated `status` beside a stored `state` names
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `statusColumns` is required and has no
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `statusColumns` is required and has no
 default; an empty list, an empty string, or a duplicate name is an error.
 `lifecycleVerbs` defaults to `[]`, which reports nothing. An empty string or
 a duplicate verb is an error. `minLifecycleColumns` defaults to `2`; a value

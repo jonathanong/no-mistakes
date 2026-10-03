@@ -15,7 +15,8 @@ fn rejects_invalid_options_without_accessing_connection_secrets() {
     ] {
         assert!(generate(&PostgresCatalogOptions {
             connection_env: connection_env.into(),
-            schema: schema.into()
+            schema: schema.into(),
+            coverage: PostgresCatalogCoverage::Complete,
         })
         .is_err());
     }
@@ -56,6 +57,7 @@ fn observed_catalog_preserves_postgres_ordering_state() {
     let options = PostgresCatalogOptions {
         connection_env: "NO_MISTAKES_TEST_POSTGRES_URL".into(),
         schema: "Catalog.Test".into(),
+        coverage: PostgresCatalogCoverage::Ordering,
     };
     let catalog = generate(&options).unwrap();
     assert_eq!(
@@ -341,4 +343,40 @@ fn url_can_use_libpq_defaults_for_omitted_components() {
     assert!(command
         .get_envs()
         .any(|(key, value)| key == "PGSERVICE" && value.is_none()));
+}
+
+#[test]
+fn the_query_quotes_the_schema_and_never_scans_it_for_placeholders() {
+    // Every character that needs quoting, and a name that spells a placeholder.
+    let query = sql::catalog_query("a\"b'c\\d", PostgresCatalogCoverage::Complete);
+    assert!(query.contains("SET LOCAL search_path = pg_catalog, \"a\"\"b'c\\d\";"));
+    assert!(query.contains("nspname = E'a\"b''c\\\\d'"));
+    let placeholder = sql::catalog_query("__COMPLETE__", PostgresCatalogCoverage::Ordering);
+    assert!(placeholder.contains("nspname = E'__COMPLETE__'"));
+    assert!(placeholder.contains("'schema', E'__COMPLETE__'"));
+    // `pg_catalog` leads the path so the selected schema cannot shadow a built-in.
+    assert!(placeholder.contains("search_path = pg_catalog, \"__COMPLETE__\";"));
+    assert!(
+        placeholder.contains("'coverage', 'ordering'") && !placeholder.contains("__COVERAGE__")
+    );
+    assert!(query.contains("'coverage', 'complete'") && !query.contains("__SCHEMA__"));
+    assert!(query.contains("SET LOCAL statement_timeout = '30s';"));
+    assert!(query.starts_with("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;"));
+    assert!(query.ends_with("COMMIT;\n"));
+}
+
+#[test]
+fn options_default_to_complete_coverage_and_reject_unknown_values() {
+    let parse = |json: &str| serde_json::from_str::<PostgresCatalogOptions>(json);
+    let default = parse(r#"{"connectionEnv": "DATABASE_URL", "schema": "public"}"#).unwrap();
+    assert_eq!(default.coverage, PostgresCatalogCoverage::Complete);
+    let ordering =
+        parse(r#"{"connectionEnv": "A", "schema": "s", "coverage": "ordering"}"#).unwrap();
+    assert_eq!(ordering.coverage, PostgresCatalogCoverage::Ordering);
+    assert!(parse(r#"{"connectionEnv": "A", "schema": "s", "coverage": "partial"}"#).is_err());
+    assert!(parse(r#"{"connectionEnv": "A", "schema": "s", "extra": 1}"#).is_err());
+    assert_eq!(
+        serde_json::to_value(&ordering).unwrap()["coverage"],
+        "ordering"
+    );
 }

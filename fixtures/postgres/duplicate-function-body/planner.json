@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_table_int()": {
       "definition": "CREATE FUNCTION fn_table_int() RETURNS TABLE(language integer) LANGUAGE sql AS $$ SELECT table_body() $$"

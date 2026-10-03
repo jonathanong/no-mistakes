@@ -4,7 +4,7 @@ use super::support::{expect, expect_err, expect_none, findings, index, table, tr
 fn column_denied_token_does_not_repeat_on_the_table() {
     expect(
         "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: configuration}\n",
-        serde_json::json!({"tables": {"orders": {"columns": {"cfg_id": {"type": "text"}}}}}),
+        serde_json::json!({"tables": {"orders": {"columns": {"cfg_id": {"dataType": "text"}}}}}),
         "schema.json: column:orders.cfg_id: name uses denied token \"cfg\"; use \"configuration\"",
     );
 }
@@ -32,7 +32,7 @@ fn function_overloads_are_reported_once_per_snapshot_key() {
 fn uppercase_tokens_match_case_insensitively() {
     expect(
         "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: configuration}\n",
-        serde_json::json!({"tables": {"orders": {"columns": {"App_CFG": {"type": "text"}}}}}),
+        serde_json::json!({"tables": {"orders": {"columns": {"App_CFG": {"dataType": "text"}}}}}),
         "schema.json: column:orders.App_CFG: name uses denied token \"cfg\"; use \"configuration\"",
     );
 }

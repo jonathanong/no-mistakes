@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::postgres_catalog::{generate, PostgresCatalogOptions};
+use no_mistakes::postgres_catalog::{generate, PostgresCatalogCoverage, PostgresCatalogOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -12,12 +12,15 @@ pub struct PostgresArgs {
 }
 #[derive(Subcommand)]
 enum PostgresCommand {
-    /// Generate an independent ordering catalog from a live PostgreSQL schema.
+    /// Generate a schema catalog from a live PostgreSQL schema.
     Catalog {
         #[arg(long)]
         connection_env: String,
         #[arg(long)]
         schema: String,
+        /// `complete` carries every fact; `ordering` only what conflict and lock ordering need.
+        #[arg(long, value_enum, default_value_t)]
+        coverage: PostgresCatalogCoverage,
         #[arg(long)]
         output: PathBuf,
     },
@@ -26,11 +29,13 @@ pub fn run(args: PostgresArgs) -> Result<ExitCode> {
     let PostgresCommand::Catalog {
         connection_env,
         schema,
+        coverage,
         output,
     } = args.command;
     let catalog = generate(&PostgresCatalogOptions {
         connection_env,
         schema,
+        coverage,
     })?;
     let json = format!("{catalog:#}\n");
     publish_catalog(&output, &mut |file| file.write_all(json.as_bytes()))

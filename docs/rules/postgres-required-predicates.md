@@ -65,7 +65,7 @@ scope.
 relation's `require` and `requireColumns` default to `[]`. An empty
 `requireColumns` string is a configuration error.
 `schemaCatalogPath` defaults to unset and is required when `partitionKeys` is
-`require`. `partitionKeys` defaults to `off` (`require` or `off`; any other
+`require`. Generate the catalog with [`no-mistakes postgres catalog`](../cli/postgres.md). `partitionKeys` defaults to `off` (`require` or `off`; any other
 value is a configuration error). `partitionKeyExemptions` defaults to `[]`;
 an empty table, an empty reason, or a duplicate table is a configuration
 error. `allow` defaults to `[]` and suppresses catalog findings by object ref

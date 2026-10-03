@@ -101,11 +101,11 @@ fn valid_column_and_display_name_mismatch() {
     let yaml = "schemaCatalogPath: schema.json\npatterns:\n  column: '^[a-z][a-z0-9_]*$'\n";
     expect_none(
         yaml,
-        serde_json::json!({"tables": {"accounts": {"columns": {"display_name": {"type": "text"}}}}}),
+        serde_json::json!({"tables": {"accounts": {"columns": {"display_name": {"dataType": "text"}}}}}),
     );
     expect(
         yaml,
-        serde_json::json!({"tables": {"accounts": {"columns": {"displayName": {"type": "text"}}}}}),
+        serde_json::json!({"tables": {"accounts": {"columns": {"displayName": {"dataType": "text"}}}}}),
         "schema.json: column:accounts.displayName: column name does not match pattern ^[a-z][a-z0-9_]*$",
     );
 }

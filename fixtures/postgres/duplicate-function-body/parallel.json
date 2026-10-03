@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_safe": {
       "definition": "CREATE FUNCTION fn_safe() RETURNS int LANGUAGE sql PARALLEL SAFE AS $$ SELECT widget $$"
