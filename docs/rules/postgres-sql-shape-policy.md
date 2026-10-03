@@ -137,7 +137,11 @@ literals, and `FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
 `FETCH` keyword (a count that is written is reported at the count). `FETCH … WITH
 TIES` still writes a literal count, so it is reported too.
 
-`DISTINCT`, `DISTINCT ON`, and grouped queries page distinct groups rather than table rows and are excluded.
+`keyset-only-sweep` excludes `DISTINCT`, `DISTINCT ON`, and grouped queries because
+they page distinct groups rather than table rows. `SELECT ALL` preserves table rows
+and remains eligible. With both shapes enabled, `literal-limit` still checks the
+written counts of these queries; for example, `SELECT DISTINCT id FROM orders
+ORDER BY id LIMIT 500` is reported for its literal limit, without a sweep finding.
 
 `keyset-only-sweep` reports a walk over a whole table by its key: a query with a
 `LIMIT` over one base table (no join, grouping or set operation) ordered only by
