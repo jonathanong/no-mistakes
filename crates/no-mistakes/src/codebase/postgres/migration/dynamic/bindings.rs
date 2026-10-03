@@ -17,6 +17,14 @@ impl Blocks {
         // A statement chunk starts with `;`-free keyword chains such as `BEGIN DECLARE x ...`.
         let mut at = 0;
         while let Some(token) = code.get(at) {
+            if matches!(token.token, super::Token::ShiftLeft) {
+                // Skip a `<<label>>` block label before DECLARE/BEGIN.
+                at += code[at..]
+                    .iter()
+                    .position(|token| matches!(token.token, super::Token::ShiftRight))
+                    .map_or(1, |end| end + 1);
+                continue;
+            }
             if keyword(token, "DECLARE") {
                 self.open();
                 self.declaring = true;

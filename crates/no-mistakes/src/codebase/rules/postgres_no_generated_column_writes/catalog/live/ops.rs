@@ -16,7 +16,13 @@ pub(super) fn create<'a>(
         key.to_string()
     };
     // IF NOT EXISTS is a no-op when an unqualified name resolves to a live relation.
-    if if_not_exists && existing_key(tables, &key, name).is_some_and(|k| tables.contains_key(&k)) {
+    // A temporary table lives in pg_temp, so only an existing pg_temp relation counts.
+    let exists = if temporary {
+        tables.contains_key(&key)
+    } else {
+        existing_key(tables, &key, name).is_some_and(|k| tables.contains_key(&k))
+    };
+    if if_not_exists && exists {
         return;
     }
     tables.insert(

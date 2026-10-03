@@ -65,3 +65,16 @@ fn same_line_ddl_precedes_a_following_write() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 2);
 }
+
+#[test]
+fn labeled_nested_blocks_restore_outer_bindings() {
+    let findings = schema_and_writes("labeled-shadow");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
+#[test]
+fn temporary_if_not_exists_ignores_permanent_tables() {
+    // The temporary table shadows the generated permanent one, so the write is ordinary.
+    let findings = schema_and_writes("temp-if-not-exists");
+    assert!(findings.is_empty(), "{findings:?}");
+}
