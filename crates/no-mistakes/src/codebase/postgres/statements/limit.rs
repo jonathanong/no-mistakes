@@ -140,6 +140,16 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
         depth += 1;
         body = inner.body.as_ref();
     }
+    // sqlparser does not give TABLE bodies a source span. The token scan cannot
+    // anchor its nesting to this query, so retain the span-only lookup in that case.
+    if matches!(body, SetExpr::Table(_)) {
+        return tokens.all().iter().find_map(|token| match &token.token {
+            Token::Word(word) if word.keyword == Keyword::FETCH && start(token.span) >= after => {
+                Some(start(token.span))
+            }
+            _ => None,
+        });
+    }
     for token in tokens
         .all()
         .iter()
