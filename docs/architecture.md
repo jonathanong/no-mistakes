@@ -362,6 +362,53 @@ Shepherd Journal and acknowledge the result; code changes should be rerun on
 measurements must use the same machine, toolchain, benchmark mode, thread
 count, and fixture.
 
+### Control runs for unrelated benchmark changes
+
+An expected base and matching runner establish that a CodSpeed comparison is
+eligible for investigation. Establish causality before changing an unrelated
+implementation: inspect the measured source and fixtures, keep fixture preflight
+invariants, and repeat matched measurements in both base/head orders. Include a
+repeat of the same binary as a control for variation between runs.
+
+[Investigation #1171](https://github.com/jonathanong/no-mistakes/issues/1171)
+examined the language-frontend report on
+[the synthetic resolve-check fixture cleanup](https://github.com/jonathanong/no-mistakes/pull/1168#issuecomment-5969771786).
+The report compared the expected base `ffc6bb12` with head `14df367b`, and both
+language jobs used `ubuntu-24.04-arm`. The measured language sources, benchmark
+adapter, and `fixtures/lang-frontends` corpus were unchanged. Every local run
+passed the existing preflights: 117 files, 69 parsed files, and 125 edges.
+
+Matched local Criterion runs used one x86_64 Linux host, Rust 1.96.0, four Rayon
+threads, the `language-frontends` shard, and the same bench profile (LTO off,
+16 codegen units, debug information and incremental compilation off). Initial
+and repeated comparisons used 30 samples, a one-second warmup, and three-second
+measurement; the adjacent reverse-order comparison used 50 samples, a
+two-second warmup, and five-second measurement for both binaries.
+
+| Comparison | Extract time change | Edges time change |
+| --- | --- | --- |
+| Original base → head | +7.60%, p < 0.05 | +3.63%, p = 0.23 |
+| Original base → same base again | +2.76%, p = 0.24 | +5.72%, within Criterion's noise threshold |
+| Original base → head again | +7.61%, p < 0.05 | +6.53%, p < 0.05 |
+| Adjacent head → base | −0.45%, p = 0.72 | +11.08%, p < 0.05 |
+
+Positive values mean the second binary was slower. The adjacent extract
+comparison's 95% interval was −2.83% to +2.11%; the older base was slower for
+edges in that comparison, reversing the reported head regression. These
+controls did not establish a consistent head-specific wall-clock regression.
+The initial statistically significant results remain part of the evidence.
+
+Criterion wall-clock timings on x86_64 do not validate CodSpeed's ARM64 CPU
+simulation or its memory measurements. Local validation did not include memory
+mode, so the reported allocation increase remains unvalidated locally. Keep that limitation explicit when
+recording the investigation; a matched wall-clock result does not establish
+that a different measurement mode is noise.
+
+Use an isolated checkout and one dedicated `CARGO_TARGET_DIR` for both builds.
+Keep the saved baseline until the comparison finishes, then remove build
+artifacts. A saved Criterion executable must receive `--bench` to measure;
+without it, the executable only runs its preflight tests.
+
 ## Anti-Patterns
 
 Avoid these patterns:
