@@ -163,8 +163,9 @@ fn do_body_aligns_to_the_opening_dollar_quote() {
     assert!(padded.contains("\nSELECT 1 OFFSET 2\n"), "{padded:?}");
     let select = padded.find("SELECT").unwrap();
     let prefix = &padded[..select];
-    assert_eq!(prefix.bytes().filter(|byte| *byte == b'\n').count(), 2);
-    assert!(prefix.ends_with('\n'));
+    // One newline for the DO line, then padding to the column after `$$`
+    // (column 4 + 2 opener bytes - 1), then the body's own leading newline.
+    assert_eq!(prefix, "\n     \n");
     assert_eq!(
         super::locations::align_chr_sql("A\nB", Some(&original)),
         "\nA B"

@@ -53,7 +53,7 @@ fn split_sql(sql: &str, data: &mut Vec<(usize, usize, usize)>) -> Vec<(usize, St
                 }
             }
             quote @ (b'\'' | b'"') => index = skip_quoted(bytes, index, quote, &mut line),
-            b'$' => index = dollar::skip(bytes, index, &mut line),
+            b'$' => index = dollar::skip(sql, index, &mut line),
             b';' => {
                 push(&mut out, sql, start, index, code_line.unwrap_or(start_line));
                 let copy = super::copy_data::is_copy_stdin(&sql[start..index]);
