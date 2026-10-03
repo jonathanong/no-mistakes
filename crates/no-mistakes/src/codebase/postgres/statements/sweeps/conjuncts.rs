@@ -11,6 +11,7 @@ pub(super) fn of(
     names: &[String],
     order_columns: &[String],
     order_ascending: &[Option<bool>],
+    transparent_int4_casts: bool,
 ) -> Vec<SqlConjunctFact> {
     let mut leaves = Vec::new();
     if let Some(selection) = selection {
@@ -19,7 +20,13 @@ pub(super) fn of(
     leaves
         .into_iter()
         .map(|leaf| {
-            let cursor = cursor(leaf, names, order_columns, order_ascending);
+            let cursor = cursor(
+                leaf,
+                names,
+                order_columns,
+                order_ascending,
+                transparent_int4_casts,
+            );
             SqlConjunctFact {
                 text: leaf
                     .to_string()
@@ -102,6 +109,7 @@ fn cursor(
     names: &[String],
     order_columns: &[String],
     order_ascending: &[Option<bool>],
+    transparent_int4_casts: bool,
 ) -> Option<Cursor> {
     match expr {
         Expr::BinaryOp {
@@ -132,12 +140,25 @@ fn cursor(
             right,
         } => match (unwrap_expr(left), unwrap_expr(right)) {
             (Expr::IsNull(probe), other) | (other, Expr::IsNull(probe)) if is_bind(probe) => {
-                cursor(other, names, order_columns, order_ascending).map(|cursor| Cursor {
+                cursor(
+                    other,
+                    names,
+                    order_columns,
+                    order_ascending,
+                    transparent_int4_casts,
+                )
+                .map(|cursor| Cursor {
                     optional: true,
                     ..cursor
                 })
             }
-            _ => lexicographic::cursor(expr, names, order_columns, order_ascending),
+            _ => lexicographic::cursor(
+                expr,
+                names,
+                order_columns,
+                order_ascending,
+                transparent_int4_casts,
+            ),
         },
         _ => None,
     }

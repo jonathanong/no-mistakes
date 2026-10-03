@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact,
 };
 
+mod casted_expanded;
 mod commuted_expanded;
 mod reordered_expanded;
 

@@ -9,7 +9,11 @@ use std::collections::BTreeMap;
 
 /// A limited SELECT of one base table, ordered by that table's plain columns: a page of a walk.
 /// `ctes` are the CTE names visible to the query.
-pub(super) fn sweep(query: &Query, ctes: &[String]) -> Option<SqlSweepFact> {
+pub(super) fn sweep(
+    query: &Query,
+    ctes: &[String],
+    transparent_int4_casts: bool,
+) -> Option<SqlSweepFact> {
     let (select, order) = page_of(query)?;
     let [from] = select.from.as_slice() else {
         return None;
@@ -46,6 +50,7 @@ pub(super) fn sweep(query: &Query, ctes: &[String]) -> Option<SqlSweepFact> {
         &names,
         &order_columns,
         &order_ascending,
+        transparent_int4_casts,
     );
     let at = name.span().start;
     Some(SqlSweepFact {

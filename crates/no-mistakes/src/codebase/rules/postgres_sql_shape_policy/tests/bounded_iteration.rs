@@ -413,3 +413,21 @@ fn commuted_expanded_keysets_keep_the_same_rule_findings() {
         at(&[(2, "keyset-only-sweep"), (3, "keyset-only-sweep")])
     );
 }
+
+#[test]
+fn casted_expanded_keysets_preserve_bind_identity_in_rule_findings() {
+    let config = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\n";
+    assert_eq!(
+        found("casted-expanded-keysets", config, "sql/pages.sql"),
+        at(&[
+            (2, "keyset-only-sweep"),
+            (8, "keyset-only-sweep"),
+            (9, "keyset-only-sweep"),
+            (11, "keyset-only-sweep"),
+            (15, "keyset-only-sweep"),
+            (19, "keyset-only-sweep"),
+            (21, "keyset-only-sweep"),
+            (23, "keyset-only-sweep"),
+        ])
+    );
+}
