@@ -33,7 +33,7 @@ pub(super) fn sweep(query: &Query, ctes: &[String]) -> Option<SqlSweepFact> {
     );
     // A one-part name is a CTE reference when a CTE has that name; a quoted dot is no schema.
     let cte = name.0.len() == 1 && ctes.contains(&table);
-    if !from.joins.is_empty() || grouped || cte {
+    if !from.joins.is_empty() || grouped || select.distinct.is_some() || cte {
         return None;
     }
     // The relation answers to its last name part as written, a quoted dot included.

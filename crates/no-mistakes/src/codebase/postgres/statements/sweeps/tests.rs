@@ -473,3 +473,12 @@ fn bind_only_guards_do_not_select_rows() {
         vec![true, false, false, false, false]
     );
 }
+
+#[test]
+fn distinct_pages_are_not_row_sweeps() {
+    assert!(sweeps(
+        "SELECT DISTINCT account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2"
+    )
+    .is_empty());
+    assert!(sweeps("SELECT DISTINCT ON (account_id) account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2").is_empty());
+}
