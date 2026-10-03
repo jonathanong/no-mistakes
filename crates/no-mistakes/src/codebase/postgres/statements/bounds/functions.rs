@@ -84,7 +84,7 @@ pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlB
         | FunctionArg::ExprNamed {
             arg: FunctionArgExpr::Expr(expr),
             ..
-        } => !input_depends_on_data(expr, true),
+        } => !depends_on_data(expr),
         _ => false,
     });
     if given && builtin(name, CALLER_SIZED) {
@@ -104,13 +104,10 @@ pub(super) fn unnest_kind(arrays: &[Expr]) -> SqlBoundItemKind {
     }
 }
 
-/// Whether `expr` holds a subquery or a column: values the statement text does not provide.
+/// Whether `expr` holds a subquery, column, or function result: values whose source
+/// is not proven to be the statement or caller. An arbitrary call may read the database.
 pub(super) fn depends_on_data(expr: &Expr) -> bool {
-    input_depends_on_data(expr, false)
-}
-
-fn input_depends_on_data(expr: &Expr, reject_calls: bool) -> bool {
-    struct Found(bool, bool);
+    struct Found(bool);
     impl Visitor for Found {
         type Break = ();
         fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
@@ -120,8 +117,7 @@ fn input_depends_on_data(expr: &Expr, reject_calls: bool) -> bool {
         fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
             let column = match expr {
                 Expr::Identifier(ident) => !is_placeholder_ident(&ident.value),
-                Expr::CompoundIdentifier(_) => true,
-                Expr::Function(_) if self.1 => true,
+                Expr::CompoundIdentifier(_) | Expr::Function(_) => true,
                 _ => false,
             };
             if column {
@@ -131,7 +127,7 @@ fn input_depends_on_data(expr: &Expr, reject_calls: bool) -> bool {
             ControlFlow::Continue(())
         }
     }
-    let mut found = Found(false, reject_calls);
+    let mut found = Found(false);
     let _ = expr.visit(&mut found);
     found.0
 }
