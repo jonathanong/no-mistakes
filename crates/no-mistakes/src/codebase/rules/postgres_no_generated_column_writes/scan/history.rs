@@ -28,7 +28,7 @@ impl Catalogs {
 pub(super) fn events_before(file: &SqlSchemaFileFacts, line: usize) -> usize {
     file.table_events
         .iter()
-        .filter(|event| event.line() < line)
+        .filter(|event| event.precedes_write(line))
         .count()
 }
 

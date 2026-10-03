@@ -55,6 +55,12 @@ impl SqlTableSchemaEvent {
         }
     }
 
+    /// Whether this statement is treated as running before a write on `line`. Without
+    /// columns, a same-line DROP is assumed to follow the write so the write stays checked.
+    pub(crate) fn precedes_write(&self, line: usize) -> bool {
+        self.line() < line || (self.line() == line && !matches!(self, Self::Drop { .. }))
+    }
+
     pub(crate) fn line_mut(&mut self) -> &mut usize {
         match self {
             Self::Create { line, .. } | Self::AddColumn { line, .. } | Self::Drop { line, .. } => {

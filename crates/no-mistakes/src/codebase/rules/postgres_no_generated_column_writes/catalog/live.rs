@@ -77,7 +77,7 @@ fn apply_file<'a>(tables: &mut LiveTables<'a>, file: &'a SqlSchemaFileFacts, lim
         return;
     }
     for event in &file.table_events {
-        if limit.is_some_and(|line| event.line() >= line) {
+        if limit.is_some_and(|line| !event.precedes_write(line)) {
             continue;
         }
         apply_event(tables, event);

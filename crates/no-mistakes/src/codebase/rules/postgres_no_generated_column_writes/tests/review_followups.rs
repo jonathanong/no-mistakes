@@ -58,3 +58,10 @@ fn migration_writes_use_the_catalog_as_of_that_statement() {
     assert_eq!(findings[0].file, "001_create.sql");
     assert_eq!(findings[0].line, 2);
 }
+
+#[test]
+fn same_line_ddl_precedes_a_following_write() {
+    let findings = scan("same-line-migration", &["001_same_line.sql"]);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 2);
+}
