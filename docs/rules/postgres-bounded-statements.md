@@ -120,13 +120,17 @@ columns. These never prove one row:
 - A **part** of a composite key is not a key.
 - Equality alternatives (`id = $1 OR id = $2`), ranges and `LIKE` do not pin.
 
-The bound covers the rows named directly by the statement, including its explicit
-subqueries and data-modifying CTEs. It does not include work triggered by foreign-key
-referential actions (`ON DELETE` or `ON UPDATE CASCADE`, `SET NULL`, or `SET DEFAULT`)
-or triggers. A primary-key deletion can therefore pass while cascading to arbitrarily
-many child rows, including through multiple levels. `NO ACTION` or `RESTRICT` does
-not change this scope. Audit referential actions and trigger bodies separately; a bound on the parent
-does not bound their work. There is currently no option to include those implicit rows.
+The bound covers SELECT relation reads, including explicit subqueries, and the
+target-row selection of UPDATE and DELETE. DML source scans are not independently
+bounded: `DELETE FROM accounts USING (SELECT * FROM orders) o WHERE accounts.id = $1`
+passes because its target is uniquely pinned, even though the source reads all orders.
+Data-modifying CTEs are judged as their own statements when their kind is enabled.
+The bound does not include work triggered by foreign-key referential actions (`ON DELETE`
+or `ON UPDATE CASCADE`, `SET NULL`, or `SET DEFAULT`) or triggers. A primary-key deletion
+can therefore pass while cascading to arbitrarily many child rows, including through
+multiple levels. `NO ACTION` or `RESTRICT` does not change this scope. Audit referential
+actions and trigger bodies separately; a bound on the parent does not bound their work.
+There is currently no option to include those implicit rows.
 
 Table inheritance (`INHERITS`) is not modeled: the unique key of a parent is assumed to
 hold across its children, although PostgreSQL does not enforce it there. Partitioning is
