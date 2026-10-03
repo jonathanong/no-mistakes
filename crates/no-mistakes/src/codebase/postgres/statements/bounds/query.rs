@@ -2,11 +2,10 @@ use super::aggregate::{orders_by_aggregate, pure_aggregate};
 use super::{items, start, Scope};
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::limit::{is_limited, is_zero_limited};
-use crate::codebase::postgres::statements::{
-    SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
-};
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
 use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
-use std::collections::BTreeMap;
+mod compact;
+use compact::{compact, size, MAX_BOUND_ITEMS};
 
 pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
     bound_body(query, &with_scope(query, scope))
@@ -44,76 +43,6 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
         scope.insert(name, bound);
     }
     scope
-}
-
-const MAX_BOUND_ITEMS: usize = 2048;
-
-/// The number of items in a bound, nested queries and subquery pins included.
-fn size(query: &SqlBoundQuery) -> usize {
-    query
-        .items
-        .iter()
-        .map(|item| {
-            let inner = match &item.kind {
-                SqlBoundItemKind::Query(inner) => size(inner),
-                _ => 0,
-            };
-            let pins: usize = item
-                .pins
-                .iter()
-                .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) => size(inner),
-                    _ => 0,
-                })
-                .sum();
-            1 + inner + pins
-        })
-        .sum()
-}
-
-/// Keep a fail-closed summary of oversized CTEs. Capped subqueries contribute no
-/// unbounded reads; an opaque item prevents this summary from sizing a later join.
-fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuery {
-    fn tables(query: &SqlBoundQuery, found: &mut BTreeMap<String, SqlBoundItem>) {
-        if query.capped {
-            return;
-        }
-        for item in &query.items {
-            match &item.kind {
-                SqlBoundItemKind::Table(name) => {
-                    // Only caller-sized values remain valid after the surrounding items are
-                    // removed. A repeated relation is bounded only by pins common to every read.
-                    let pins: Vec<_> = item
-                        .pins
-                        .iter()
-                        .filter(|pin| matches!(pin.source, SqlPinSource::Value))
-                        .cloned()
-                        .collect();
-                    if let Some(previous) = found.get_mut(name) {
-                        previous.pins.retain(|pin| pins.contains(pin));
-                    } else {
-                        let mut table = SqlBoundItem::new(
-                            SqlBoundItemKind::Table(name.clone()),
-                            None,
-                            (item.line, item.column),
-                        );
-                        table.pins = pins;
-                        found.insert(name.clone(), table);
-                    }
-                }
-                SqlBoundItemKind::Query(inner) => tables(inner, found),
-                _ => {}
-            }
-        }
-    }
-    let mut found = BTreeMap::new();
-    tables(bound, &mut found);
-    let mut items: Vec<_> = found.into_values().collect();
-    items.push(items::opaque(at));
-    SqlBoundQuery {
-        capped: bound.capped,
-        items,
-    }
 }
 
 /// The `INSERT` / `UPDATE` / `DELETE` / `MERGE` inside a data-modifying CTE.
