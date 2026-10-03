@@ -44,10 +44,27 @@ fn statement_facts(sql: &str) -> SqlStatementFileFacts {
     let prefix = sql.trim_start();
     let wrapper = if prefix.starts_with("AND ") || prefix.starts_with("OR ") {
         format!("SELECT 1 WHERE true {sql}")
+    } else if starts_with_clause(prefix) {
+        // A fragment that is only the tail of a query (` ORDER BY id LIMIT 500`).
+        format!("SELECT 1 {sql}")
     } else {
         format!("SELECT 1 WHERE {sql}")
     };
     extract_sql_statement_facts_with_bounds(&wrapper, false)
+}
+
+/// Whether `text` begins with a clause that closes a query, as a word: `LIMIT 5`, not `limit_at`.
+fn starts_with_clause(text: &str) -> bool {
+    let upper = text.to_ascii_uppercase();
+    ["ORDER BY", "LIMIT", "OFFSET", "FETCH"]
+        .iter()
+        .any(|clause| {
+            upper.strip_prefix(clause).is_some_and(|rest| {
+                rest.chars()
+                    .next()
+                    .is_none_or(|next| !(next.is_alphanumeric() || next == '_'))
+            })
+        })
 }
 
 #[cfg(test)]

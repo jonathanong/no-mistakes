@@ -28,13 +28,21 @@ rules:
         - correlated-exists-set-operation
         - not-in-subquery
         - count-for-existence
+        - literal-limit
+        - keyset-only-sweep
+      shapeOptions:
+        literalLimit:
+          allowedValues: [1]
+        keysetOnlySweep:
+          nonSelectivePredicates: ['deleted_at IS NULL']
+          ignoreTables: []
       unanalyzableSql: fail
 ```
 
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
-`[correlated-exists-set-operation]`. `not-in-subquery` and
-`count-for-existence` are opt-in. Unknown `bannedShapes` values are a
-configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+`[correlated-exists-set-operation]`. `not-in-subquery`, `count-for-existence`,
+`literal-limit` and `keyset-only-sweep` are opt-in. Unknown `bannedShapes` values
+are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error).
 `importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
 `[query, read, write]`.
@@ -108,10 +116,81 @@ scopes are not tracked.
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
 `[correlated-exists-set-operation]`. Also accepted, and off unless listed:
-`not-in-subquery`, `count-for-existence`. Unknown `bannedShapes` values are a
-configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+`not-in-subquery`, `count-for-existence`, `literal-limit`, `keyset-only-sweep`.
+Unknown `bannedShapes` values are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error). `importSpecifier` defaults to
 `@data-stores/psql`. `executorNames` defaults to `[query, read, write]`.
+
+## Bounded iteration shapes
+
+Two opt-in shapes flag background-job SQL that signals unbounded work.
+
+`literal-limit` reports a `LIMIT` or `FETCH FIRST` whose count is an integer
+literal that is not in `shapeOptions.literalLimit.allowedValues`. A batch size
+written in SQL text cannot be tuned without a deploy, and it hides that the
+statement is a batch. Bind it (`LIMIT $1`) so the batch size is explicit
+configuration. Every query is checked, including CTEs and subqueries of
+`UPDATE` and `DELETE`. A placeholder, an expression and `LIMIT ALL` are not
+literals, and `FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
+`FETCH` keyword (a count that is written is reported at the count). `FETCH … WITH
+TIES` still writes a literal count, so it is reported too.
+
+`keyset-only-sweep` reports a walk over a whole table by its key: a query with a
+`LIMIT` over one base table (no join, grouping or set operation) ordered only by
+plain columns of that table, where every top-level `WHERE` conjunct is either a
+keyset cursor or a configured non-selective predicate. A cursor compares an `ORDER
+BY` column with a bind parameter using `>`, `>=`, `<` or `<=`: `id > $1`,
+`(created_at, id) > ($1, $2)`, or the optional form `($1::uuid IS NULL OR id > $1)`.
+With no `WHERE` at all the walk is whole-table too. Any other conjunct narrows the
+walk (a due timestamp, a parent id, `lease_expires_at IS NULL`), so the query is
+allowed: a background job should choose rows that need work, such as a work-item row,
+a dirty marker, a due timestamp or a parent id. A comparison with a literal or a
+function call such as `now()` is not a cursor. An interpolation in an executor's
+template literal (`` sql`… WHERE id > ${after} … LIMIT ${size}` ``) is a bind, like
+`$1`. A query is a page only when it caps its rows, so `FETCH … WITH TIES`,
+`FETCH … PERCENT` and `LIMIT 0` queries are not sweeps. Parentheses around a conjunct, an
+operand or the whole `SELECT` (`(SELECT …) ORDER BY id LIMIT $1`) do not change what it is.
+When the outer query has no `ORDER BY`, the one inside the parentheses orders the rows its
+`LIMIT` counts (`(SELECT … ORDER BY id) LIMIT $1`).
+A cursor bounds one side of the walk, so a lower and an upper bound on the ordered columns
+together (`id >= $1 AND id < $2`) are a window, which narrows it; an optional bound
+(`($1 IS NULL OR id >= $1)`) does not count, because a NULL bind switches it off. A constant `TRUE` or
+`1 = 1` conjunct, which query builders seed a `WHERE` with, selects nothing, and a relation
+with a `TABLESAMPLE` is restricted before it is ordered, so it is not a whole-table walk.
+A bare `ORDER BY` name
+that is also an output name means that output expression: `SELECT random() AS id … ORDER BY
+id`, and `SELECT random() … ORDER BY random`, are not ordered by a column of the table. A
+builder fragment that is only the tail of a query (`` .append(sql` ORDER BY id LIMIT 500`) ``)
+is inspected for its `LIMIT` too.
+
+| Option                                                | Type      | Default | Meaning / config errors                                                                                       |
+| ----------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| `shapeOptions.literalLimit.allowedValues`             | integer[] | `[1]`   | Literal values allowed in `LIMIT` / `FETCH FIRST`. A negative value is a configuration error.                 |
+| `shapeOptions.keysetOnlySweep.nonSelectivePredicates` | string[]  | `[]`    | Conjuncts (compared after whitespace and case normalization) that do not narrow the walk. An empty string is a configuration error. |
+| `shapeOptions.keysetOnlySweep.ignoreTables`           | string[]  | `[]`    | Tables that may be walked whole (small configuration tables). An empty string is a configuration error. An unqualified entry also matches the table in any schema, but a dot inside a quoted name belongs to the name: `items` does not match `"work.items"`. |
+
+Invalid with both shapes banned (and `deleted_at IS NULL` configured):
+
+```sql
+SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;                     -- both shapes
+SELECT id FROM orders WHERE ($1::uuid IS NULL OR id > $1) AND deleted_at IS NULL ORDER BY id LIMIT $2;  -- keyset-only
+WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED)
+  DELETE FROM invoices USING c WHERE invoices.id = c.id;                       -- literal-limit and keyset-only
+```
+
+Valid:
+
+```sql
+SELECT id FROM orders WHERE next_reconcile_at <= now() ORDER BY next_reconcile_at, id LIMIT $1;
+SELECT id FROM orders WHERE account_id = $1 AND id > $2 ORDER BY id LIMIT $3;   -- parent id narrows the walk
+SELECT id FROM order_reconcile_work_items WHERE lease_expires_at IS NULL ORDER BY id LIMIT $1;
+SELECT 1 FROM accounts WHERE id = $1 LIMIT 1;
+```
+
+Findings for both shapes are reported at the line of the count (`literal-limit`) or of
+the table (`keyset-only-sweep`) and honor the same suppression directives. The facts
+are `SqlStatementFileFacts.limit_uses` and `sweeps`; see
+[PostgreSQL fact sources](../postgres-facts.md).
 
 ## Valid example
 

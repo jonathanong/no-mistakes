@@ -128,6 +128,12 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     for trigger in &mut facts.triggers {
         trigger.line = source_line(trigger.line, 1);
     }
+    for limit in &mut facts.limit_uses {
+        limit.line = source_line(limit.line, limit.column);
+    }
+    for sweep in &mut facts.sweeps {
+        sweep.line = source_line(sweep.line, sweep.column);
+    }
     for bound in &mut facts.bounds {
         bound.map_lines(&source_line);
     }

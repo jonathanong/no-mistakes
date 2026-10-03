@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      include: ['src/**/*.ts', 'src/**/*.mts']
+      importSpecifier: '@example/db'
+      executorNames: [query]
+      bannedShapes: [literal-limit, keyset-only-sweep]

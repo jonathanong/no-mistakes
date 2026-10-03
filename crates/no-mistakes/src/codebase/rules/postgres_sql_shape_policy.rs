@@ -8,6 +8,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod iteration;
 mod scan;
 
 pub const RULE_ID: &str = "postgres-sql-shape-policy";
@@ -15,12 +16,16 @@ pub const RULE_ID: &str = "postgres-sql-shape-policy";
 const CORRELATED_EXISTS_SET_OP: &str = "correlated-exists-set-operation";
 const NOT_IN_SUBQUERY: &str = "not-in-subquery";
 const COUNT_FOR_EXISTENCE: &str = "count-for-existence";
+const LITERAL_LIMIT: &str = "literal-limit";
+const KEYSET_ONLY_SWEEP: &str = "keyset-only-sweep";
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct BannedShapes {
     correlated_exists_set_operation: bool,
     not_in_subquery: bool,
     count_for_existence: bool,
+    literal_limit: bool,
+    keyset_only_sweep: bool,
 }
 
 impl BannedShapes {
@@ -29,8 +34,12 @@ impl BannedShapes {
             CORRELATED_EXISTS_SET_OP
         } else if self.not_in_subquery {
             NOT_IN_SUBQUERY
-        } else {
+        } else if self.count_for_existence {
             COUNT_FOR_EXISTENCE
+        } else if self.literal_limit {
+            LITERAL_LIMIT
+        } else {
+            KEYSET_ONLY_SWEEP
         }
     }
 }
@@ -45,6 +54,7 @@ pub(crate) struct Options {
     pub(crate) executor_names: Vec<String>,
     pub(crate) banned_shapes: Vec<String>,
     pub(crate) unanalyzable_sql: String,
+    pub(crate) shape_options: iteration::ShapeOptions,
 }
 
 pub(crate) struct CompiledOptions {
@@ -54,6 +64,7 @@ pub(crate) struct CompiledOptions {
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
     shapes: BannedShapes,
+    iteration: iteration::IterationOptions,
 }
 
 impl CompiledOptions {
@@ -142,6 +153,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             &opts.unanalyzable_sql,
         )?,
         shapes,
+        iteration: iteration::compile(&opts.shape_options)?,
     })
 }
 
@@ -159,6 +171,10 @@ fn banned_shapes(values: &[String]) -> Result<BannedShapes> {
             shapes.not_in_subquery = true;
         } else if shape.eq_ignore_ascii_case(COUNT_FOR_EXISTENCE) {
             shapes.count_for_existence = true;
+        } else if shape.eq_ignore_ascii_case(LITERAL_LIMIT) {
+            shapes.literal_limit = true;
+        } else if shape.eq_ignore_ascii_case(KEYSET_ONLY_SWEEP) {
+            shapes.keyset_only_sweep = true;
         } else {
             anyhow::bail!("{RULE_ID}: unknown bannedShapes value `{shape}`");
         }
