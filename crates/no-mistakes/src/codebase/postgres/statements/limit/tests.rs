@@ -51,3 +51,64 @@ fn numeric_hex_limits_keep_source_identity_and_column() {
         assert_eq!((fact.line, fact.column, fact.value), (line, column, value));
     }
 }
+
+#[test]
+fn semantic_zero_page_facts_preserve_literal_value_classification() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-shape-policy/fixture/semantic-zero/sql/pages.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    for line in sql.lines().filter(|line| line.starts_with("SELECT")) {
+        assert!(
+            sqlparser::parser::Parser::parse_sql(&sqlparser::dialect::PostgreSqlDialect {}, line)
+                .is_ok(),
+            "{line}"
+        );
+    }
+    assert!(!facts.parse_failed);
+    assert_eq!(
+        facts
+            .sweeps
+            .iter()
+            .map(|fact| fact.line)
+            .collect::<Vec<_>>(),
+        vec![23, 24, 25, 26, 28, 31]
+    );
+    assert!(facts
+        .limit_uses
+        .iter()
+        .take(25)
+        .enumerate()
+        .all(|(index, fact)| fact.value
+            == if index == 4 {
+                super::SqlLimitValue::Literal(0)
+            } else {
+                super::SqlLimitValue::Other
+            }));
+    assert_eq!(facts.limit_uses[25].value, super::SqlLimitValue::Literal(0));
+}
+
+#[test]
+fn catalog_numeric_zero_keeps_empty_page_proofs() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-sql-shape-policy/fixture/semantic-zero/sql/qualified-zero.sql"));
+    let statements = crate::codebase::postgres::parse_postgres_sql(sql).unwrap();
+    let empty: Vec<_> = statements
+        .iter()
+        .filter_map(|statement| match statement {
+            sqlparser::ast::Statement::Query(query) => Some(super::is_empty_page(query)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(empty, [true, true, true, false, false, false, false]);
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(
+        facts
+            .sweeps
+            .iter()
+            .map(|fact| fact.line)
+            .collect::<Vec<_>>(),
+        [5, 6, 7, 9]
+    );
+}

@@ -323,3 +323,10 @@ With both options omitted, executor calls (including `.query`) are not scanned.
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
+For `keyset-only-sweep`, a zero-row page remains empty through parentheses, unary
+signs and standard PostgreSQL numeric casts (`LIMIT +0`, `LIMIT 0::bigint`).
+Unquoted catalog-qualified numeric casts such as `LIMIT 0::pg_catalog.int8` also
+prove an empty page. Application-schema types, quoted custom type spellings, and
+casts through nonnumeric intermediate types stay conservative. This semantic check does not change
+`literal-limit` classification: cast or unary expressions remain non-literal.

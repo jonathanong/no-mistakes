@@ -379,3 +379,5 @@ fn full_select_builder_fragments_are_analyzed_without_wrapping() {
 }
 
 mod predicate_escaping;
+
+mod semantic_zero;
