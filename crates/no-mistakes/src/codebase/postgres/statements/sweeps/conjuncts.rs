@@ -3,7 +3,7 @@ mod lexicographic;
 use super::super::value::is_placeholder_ident;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
-use sqlparser::ast::{BinaryOperator, Expr, Value, Visit, Visitor};
+use sqlparser::ast::{BinaryOperator, Expr, UnaryOperator, Value, Visit, Visitor};
 use std::ops::ControlFlow;
 
 /// The top-level `AND` conjuncts of a WHERE clause.
@@ -92,7 +92,22 @@ pub(super) fn column(expr: &Expr, names: &[String]) -> Option<String> {
 /// The ORDER BY-style columns a conjunct compares with a bind parameter, or none when it is not
 /// a cursor.
 fn cursor(expr: &Expr, names: &[String]) -> Option<Cursor> {
-    match expr {
+    match unwrap_expr(expr) {
+        Expr::UnaryOp {
+            op: UnaryOperator::Not,
+            expr,
+        } => {
+            let mut cursor = cursor(expr, names)?;
+            // Negating a NULL-switchable OR is not merely reversing its comparison.
+            if cursor.optional {
+                return None;
+            }
+            cursor.bound = match cursor.bound {
+                SqlCursorBound::Lower => SqlCursorBound::Upper,
+                SqlCursorBound::Upper => SqlCursorBound::Lower,
+            };
+            Some(cursor)
+        }
         Expr::BinaryOp {
             left,
             op:

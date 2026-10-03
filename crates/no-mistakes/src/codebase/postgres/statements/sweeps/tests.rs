@@ -524,3 +524,5 @@ fn sweep_table_parts_preserve_postgres_case() {
         );
     }
 }
+
+mod negated;
