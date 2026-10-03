@@ -1,10 +1,17 @@
+mod lexicographic;
+
 use super::super::value::is_placeholder_ident;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
 use sqlparser::ast::{BinaryOperator, Expr, Value};
 
 /// The top-level `AND` conjuncts of a WHERE clause.
-pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctFact> {
+pub(super) fn of(
+    selection: Option<&Expr>,
+    names: &[String],
+    order_columns: &[String],
+    order_ascending: &[Option<bool>],
+) -> Vec<SqlConjunctFact> {
     let mut leaves = Vec::new();
     if let Some(selection) = selection {
         flatten(selection, &mut leaves);
@@ -12,7 +19,7 @@ pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctF
     leaves
         .into_iter()
         .map(|leaf| {
-            let cursor = cursor(leaf, names);
+            let cursor = cursor(leaf, names, order_columns, order_ascending);
             SqlConjunctFact {
                 text: leaf
                     .to_string()
@@ -33,7 +40,7 @@ pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctF
 
 /// A keyset cursor: the columns compared with a bind, which side of them it bounds, and whether
 /// the bind may be NULL to switch the comparison off (`($1 IS NULL OR id > $1)`).
-struct Cursor {
+pub(super) struct Cursor {
     columns: Vec<String>,
     bound: SqlCursorBound,
     optional: bool,
@@ -90,7 +97,12 @@ pub(super) fn column(expr: &Expr, names: &[String]) -> Option<String> {
 
 /// The ORDER BY-style columns a conjunct compares with a bind parameter, or none when it is not
 /// a cursor.
-fn cursor(expr: &Expr, names: &[String]) -> Option<Cursor> {
+fn cursor(
+    expr: &Expr,
+    names: &[String],
+    order_columns: &[String],
+    order_ascending: &[Option<bool>],
+) -> Option<Cursor> {
     match expr {
         Expr::BinaryOp {
             left,
@@ -120,12 +132,12 @@ fn cursor(expr: &Expr, names: &[String]) -> Option<Cursor> {
             right,
         } => match (unwrap_expr(left), unwrap_expr(right)) {
             (Expr::IsNull(probe), other) | (other, Expr::IsNull(probe)) if is_bind(probe) => {
-                cursor(other, names).map(|cursor| Cursor {
+                cursor(other, names, order_columns, order_ascending).map(|cursor| Cursor {
                     optional: true,
                     ..cursor
                 })
             }
-            _ => None,
+            _ => lexicographic::cursor(expr, names, order_columns, order_ascending),
         },
         _ => None,
     }
