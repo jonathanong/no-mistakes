@@ -23,3 +23,27 @@ fn lenient_recovery_retains_radix_limits_and_original_lines() {
         ]
     );
 }
+
+#[test]
+fn malformed_migration_retains_radix_select_and_write_facts() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-sql-shape-policy/fixture/radix-prefix-separators/sql/mixed-malformed.sql"));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(facts.parse_failed);
+    assert_eq!(facts.selects.len(), 2);
+    assert_eq!(facts.inserts.len(), 1);
+    assert_eq!(facts.inserts[0].line, 4);
+    assert_eq!(facts.updates.len(), 1);
+    assert_eq!(facts.updates[0][0].line, 3);
+    assert_eq!(facts.updates[0][0].table, "orders");
+    assert_eq!(
+        facts
+            .limit_uses
+            .iter()
+            .map(|cap| (cap.line, cap.value))
+            .collect::<Vec<_>>(),
+        vec![
+            (1, crate::codebase::postgres::SqlLimitValue::Literal(15)),
+            (5, crate::codebase::postgres::SqlLimitValue::Literal(2))
+        ]
+    );
+}
