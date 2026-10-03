@@ -298,3 +298,54 @@ fn digit_separator_limits_are_literals() {
         ])
     );
 }
+
+#[test]
+fn ignore_tables_preserves_quoted_case_and_dots() {
+    let yaml = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\nshapeOptions:\n  keysetOnlySweep:\n    ignoreTables: ";
+    let unquoted_config = format!("{yaml}[Orders]\n");
+    assert_eq!(
+        found("quoted-table-case", &unquoted_config, "sql/001.sql"),
+        at(&[
+            (2, "keyset-only-sweep"),
+            (5, "keyset-only-sweep"),
+            (6, "keyset-only-sweep"),
+        ])
+    );
+    let root = fixture("quoted-table-case");
+    let findings = check_with_files(
+        &root,
+        &config(&unquoted_config),
+        &[root.join("sql/001.sql")],
+    )
+    .unwrap();
+    assert!(findings
+        .iter()
+        .find(|finding| finding.line == 2)
+        .unwrap()
+        .message
+        .contains("list `\"Orders\"` in"));
+    assert!(findings
+        .iter()
+        .find(|finding| finding.line == 5)
+        .unwrap()
+        .message
+        .contains("list `\"work.Orders\"` in"));
+    assert!(findings
+        .iter()
+        .find(|finding| finding.line == 6)
+        .unwrap()
+        .message
+        .contains("list `\" orders \"` in"));
+    assert_eq!(
+        found(
+            "quoted-table-case",
+            &format!("{yaml}['\"Orders\"', '\"work.Orders\"']\n"),
+            "sql/001.sql"
+        ),
+        at(&[
+            (3, "keyset-only-sweep"),
+            (4, "keyset-only-sweep"),
+            (6, "keyset-only-sweep"),
+        ])
+    );
+}
