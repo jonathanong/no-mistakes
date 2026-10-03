@@ -1,0 +1,6 @@
+-- A nested SQL call can source arbitrarily many JSON values from server data.
+SELECT a.email FROM jsonb_path_query(app.load_payload($1), '$[*]') x(value) JOIN accounts a ON a.email = x.value::text;
+-- PostgreSQL expression-named arguments must receive the same data-dependency check.
+SELECT a.email FROM jsonb_path_query(target => (SELECT jsonb_agg(payload) FROM batches), path => '$[*]') x(value) JOIN accounts a ON a.email = x.value::text;
+-- A caller-supplied JSON value still bounds the keyed join.
+SELECT a.email FROM jsonb_path_query(target => $1::jsonb, path => '$[*]') x(value) JOIN accounts a ON a.email = x.value::text;

@@ -218,3 +218,7 @@ checks this function inventory against the PostgreSQL function catalog.
 Snapshot expansion (`pg_snapshot_xip`, `txid_snapshot_xip`) is caller-sized only
 when its snapshot is supplied directly by the caller. A snapshot returned by
 `pg_current_snapshot()`, `txid_current_snapshot()`, or another SQL function is opaque.
+The same caller-supplied requirement applies to other caller-sized set-returning
+functions, including calls with PostgreSQL named arguments. Catalog functions
+known to return one row, such as `pg_stat_get_recovery_prefetch()`, preserve a
+pure aggregate's one-row cap.

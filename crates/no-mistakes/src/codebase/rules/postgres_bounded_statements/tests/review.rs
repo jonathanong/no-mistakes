@@ -305,3 +305,17 @@ fn snapshot_expansion_requires_a_caller_supplied_snapshot() {
         ["accounts", "accounts", "accounts", "accounts", "accounts"]
     );
 }
+
+#[test]
+fn caller_sized_set_returning_functions_require_caller_supplied_arguments() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-arguments.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts"]);
+}
+
+#[test]
+fn fixed_one_row_catalog_functions_preserve_aggregate_caps() {
+    assert!(names("SELECT pg_stat_get_recovery_prefetch(), count(*) FROM orders").is_empty());
+}

@@ -23,6 +23,9 @@ const AGGREGATES: &[&str] = &[
 mod set_returning;
 use set_returning::SET_RETURNING;
 
+/// Catalog SRFs that return one row and therefore preserve a pure aggregate's cap.
+const FIXED_ONE_ROW: &[&str] = &["pg_stat_get_recovery_prefetch"];
+
 /// Functions whose result row count follows caller-provided argument values.
 #[rustfmt::skip]
 const CALLER_SIZED: &[&str] = &[
@@ -65,21 +68,24 @@ pub(super) fn is_aggregate(name: &ObjectName) -> bool {
 /// A catalog set-returning function must have a builtin schema identity.
 /// A same-named user function has an unknown cardinality rather than the catalog contract.
 pub(super) fn is_set_returning(name: &ObjectName) -> bool {
-    builtin(name, SET_RETURNING)
+    builtin(name, SET_RETURNING) && !builtin(name, FIXED_ONE_ROW)
 }
 
 /// A table function is sized by the caller only when it is a set-returning built-in over
 /// arguments the text provides; any other function can return rows from anywhere.
 pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlBoundItemKind {
-    // Snapshot expansion is caller-sized only when the snapshot itself is supplied.
-    let snapshot = builtin(name, &["pg_snapshot_xip", "txid_snapshot_xip"]);
+    // A nested function can obtain server data even when its visible arguments are fixed.
     let given = args.args.iter().all(|arg| match arg {
         FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
         | FunctionArg::Named {
             arg: FunctionArgExpr::Expr(expr),
             ..
-        } => !input_depends_on_data(expr, snapshot),
-        _ => true,
+        }
+        | FunctionArg::ExprNamed {
+            arg: FunctionArgExpr::Expr(expr),
+            ..
+        } => !input_depends_on_data(expr, true),
+        _ => false,
     });
     if given && builtin(name, CALLER_SIZED) {
         SqlBoundItemKind::Other

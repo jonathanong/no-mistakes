@@ -426,10 +426,39 @@ fn every_known_set_returning_builtin_expands_aggregate_rows() {
     let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-builtins.sql"));
     let shapes = shape(sql);
+    // Comments in this parser-only inventory are not statements in the shape result.
+    let fixed_one_row = sql
+        .lines()
+        .filter(|line| line.starts_with("SELECT "))
+        .position(|line| line.starts_with("SELECT pg_stat_get_recovery_prefetch("))
+        .unwrap();
     assert!(shapes[..shapes.len() - 1]
         .iter()
-        .all(|shape| shape == "select: orders"));
+        .enumerate()
+        .all(|(index, shape)| {
+            if index == fixed_one_row {
+                shape == "select: capped orders"
+            } else {
+                shape == "select: orders"
+            }
+        }));
     assert_eq!(shapes.last().unwrap(), "select: other");
+}
+
+#[test]
+fn caller_sized_set_returning_functions_reject_server_derived_arguments() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-arguments.sql"
+    ));
+    assert_eq!(
+        shape(sql),
+        [
+            "select: opaque accounts[email=#0]",
+            "select: opaque accounts[email=#0]",
+            "select: other accounts[email=#0]",
+        ]
+    );
 }
 
 #[test]
