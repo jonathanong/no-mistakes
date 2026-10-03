@@ -10,3 +10,6 @@ SELECT * FROM accounts WHERE a > $1::smallint OR (a = $1::smallint AND b > $2) O
 -- Recovered SQL placeholders are identifiers; a literal prefix cannot copy a bind.
 SELECT * FROM accounts WHERE a > sql_placeholder_1::int OR (a = sql_placeholder_1 AND b > sql_placeholder_2) ORDER BY a, b LIMIT $3;
 SELECT * FROM accounts WHERE a > $1::int OR (a = 1 AND b > $2) ORDER BY a, b LIMIT $3;
+-- An outer int cast cannot erase a value-changing inner cast; identical chains remain comparable.
+SELECT * FROM accounts WHERE a > ($1::numeric)::int OR (a = $1::numeric AND b > $2) ORDER BY a, b LIMIT $3;
+SELECT * FROM accounts WHERE a > ($1::numeric)::int OR (a = ($1::numeric)::int AND b > $2) ORDER BY a, b LIMIT $3;

@@ -119,8 +119,17 @@ fn bind_identity(expr: &Expr) -> Option<&Expr> {
         }
         Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => Some(unwrap_expr(expr)),
         Expr::Cast {
-            expr, data_type, ..
-        } if transparent_int4_cast(data_type) => bind_identity(expr),
+            expr: inner,
+            data_type,
+            ..
+        } if transparent_int4_cast(data_type) => {
+            let identity = bind_identity(inner)?;
+            if matches!(identity, Expr::Cast { .. }) {
+                Some(unwrap_expr(expr))
+            } else {
+                Some(identity)
+            }
+        }
         Expr::Cast { .. } if is_bind(expr) => Some(unwrap_expr(expr)),
         _ => None,
     }
