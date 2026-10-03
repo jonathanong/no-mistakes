@@ -131,7 +131,9 @@ written in SQL text cannot be tuned without a deploy, and it hides that the
 statement is a batch. Bind it (`LIMIT $1`) so the batch size is explicit
 configuration. Every query is checked, including CTEs and subqueries of
 `UPDATE` and `DELETE`. A placeholder, an expression and `LIMIT ALL` are not
-literals, and `FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
+literals. Complete unexecuted SQL builders, including `SELECT 1` and `VALUES (1)`
+without a `FROM` clause, retain their limit facts and source locations.
+`FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
 `FETCH` keyword (a count that is written is reported at the count). `FETCH … WITH
 TIES` still writes a literal count, so it is reported too. Implicit `FETCH` clauses
 in an `OFFSET` subquery and its outer query retain separate source locations;
