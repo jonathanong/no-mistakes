@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 mod referential;
 mod review;
+mod suppression;
 
 fn catalog() -> SchemaCatalog {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
