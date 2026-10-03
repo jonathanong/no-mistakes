@@ -7,7 +7,7 @@ mod tests;
 use super::limit::{is_limited, limit_site, Tokens};
 use super::{walk_executed, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 use crate::codebase::postgres::idents::ident_key;
-use sqlparser::ast::{Query, Statement, Visit, Visitor};
+use sqlparser::ast::{DataType, Query, Statement, Visit, Visitor};
 use std::collections::HashMap;
 use std::ops::ControlFlow;
 
@@ -21,6 +21,7 @@ pub(super) fn collect(
     for statement in statements {
         let mut executed = Vec::new();
         walk_executed(statement, &mut executed);
+        collector.transparent_int4_casts = transparent_int4_casts_safe(statement);
         for statement in executed {
             let _ = statement.visit(&mut collector);
         }
@@ -32,6 +33,29 @@ pub(super) fn collect(
     (collector.limits, collector.sweeps)
 }
 
+/// A declared non-int4 parameter can change value when cast to int4. Keep casts opaque for
+/// that prepared statement rather than equating `$1::int` with `$1` in an expanded cursor.
+fn transparent_int4_casts_safe(statement: &Statement) -> bool {
+    match statement {
+        Statement::Prepare {
+            data_types,
+            statement,
+            ..
+        } => {
+            (data_types.is_empty()
+                || data_types.iter().all(|data_type| {
+                    matches!(
+                        data_type,
+                        DataType::Int(_) | DataType::Int4(_) | DataType::Integer(_)
+                    )
+                }))
+                && transparent_int4_casts_safe(statement)
+        }
+        Statement::Explain { statement, .. } => transparent_int4_casts_safe(statement),
+        _ => true,
+    }
+}
+
 struct Collector<'a> {
     limits: Vec<SqlLimitFact>,
     sweeps: Vec<SqlSweepFact>,
@@ -41,6 +65,7 @@ struct Collector<'a> {
     scopes: Vec<Vec<String>>,
     /// The names a CTE body sees, set when its WITH clause is entered and keyed by the body.
     bodies: HashMap<*const Query, Vec<String>>,
+    transparent_int4_casts: bool,
 }
 
 impl<'a> Collector<'a> {
@@ -51,6 +76,7 @@ impl<'a> Collector<'a> {
             tokens: Tokens::new(sql),
             scopes: Vec::new(),
             bodies: HashMap::new(),
+            transparent_int4_casts: true,
         }
     }
 
@@ -104,7 +130,7 @@ impl Visitor for Collector<'_> {
         }
         if is_limited(query) && !empty {
             let visible = self.scopes.last().map_or(&[][..], Vec::as_slice);
-            if let Some(sweep) = page::sweep(query, visible) {
+            if let Some(sweep) = page::sweep(query, visible, self.transparent_int4_casts) {
                 self.sweeps.push(sweep);
             }
         }

@@ -40,6 +40,22 @@ fn saved_expanded_cursors_compare_bind_identity_through_safe_casts() {
                 vec!["a".into(), "b".into()],
                 Some(SqlCursorBound::Lower)
             ),
+            (17, vec![], None),
+            (
+                19,
+                vec!["a".into(), "b".into()],
+                Some(SqlCursorBound::Lower)
+            ),
+            (
+                21,
+                vec!["a".into(), "b".into()],
+                Some(SqlCursorBound::Lower)
+            ),
+            (
+                23,
+                vec!["a".into(), "b".into()],
+                Some(SqlCursorBound::Lower)
+            ),
         ]
     );
 }
