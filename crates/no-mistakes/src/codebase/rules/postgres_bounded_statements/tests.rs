@@ -541,3 +541,5 @@ mod qualified_limit_functions;
 
 mod select_list_srf;
 mod server_state_projection;
+mod unknown_projection_cardinality;
+mod versioned_scalar_projection;

@@ -291,7 +291,7 @@ fn jsonpath_set_returning_functions_expand_aggregate_rows() {
 #[test]
 fn catalog_set_returning_names_do_not_classify_application_functions() {
     let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-qualified.sql"));
-    assert_eq!(names(sql), ["orders", "orders"]);
+    assert_eq!(names(sql), ["orders", "orders", "orders"]);
 }
 
 #[test]

@@ -389,11 +389,14 @@ fn only_a_built_in_aggregate_caps_a_query() {
         shape("SELECT Pg_Catalog.Count(*) FROM t"),
         ["select: capped t"]
     );
-    // A function of another schema is an ordinary function, called once per row.
-    assert_eq!(shape("SELECT app.count(id) FROM t"), ["select: t"]);
-    assert_eq!(shape("SELECT db.app.count(id) FROM t"), ["select: t"]);
+    // Another schema or quoted case identifies an unknown function that may expand rows.
+    assert_eq!(shape("SELECT app.count(id) FROM t"), ["select: t opaque"]);
+    assert_eq!(
+        shape("SELECT db.app.count(id) FROM t"),
+        ["select: t opaque"]
+    );
     assert_eq!(shape("SELECT \"count\"(id) FROM t"), ["select: capped t"]);
-    assert_eq!(shape("SELECT \"Count\"(id) FROM t"), ["select: t"]);
+    assert_eq!(shape("SELECT \"Count\"(id) FROM t"), ["select: t opaque"]);
 }
 
 #[test]

@@ -1,4 +1,6 @@
-use super::functions::{data_backed_projection, is_set_returning};
+use super::functions::{
+    data_backed_projection, projection_can_expand, projection_traversal_boundary,
+};
 use crate::codebase::postgres::idents::visit_child_exprs;
 use sqlparser::ast::{Distinct, Expr, Function, OrderByKind, Query, Select, SelectItem, SetExpr};
 
@@ -23,7 +25,7 @@ pub(super) fn expands_from_data(
     positions: super::super::value::PlaceholderPositions<'_>,
 ) -> bool {
     projected(select).iter().any(|expr| {
-        contains_call(expr, &|function| {
+        contains_projection_call(expr, &|function| {
             data_backed_projection(function, positions)
         })
     })
@@ -53,11 +55,9 @@ pub(super) fn orders_can_expand(query: &Query) -> bool {
     let OrderByKind::Expressions(expressions) = &order.kind else {
         return false;
     };
-    expressions.iter().any(|expression| {
-        contains_call(&expression.expr, &|function| {
-            function.over.is_none() && is_set_returning(&function.name)
-        })
-    })
+    expressions
+        .iter()
+        .any(|expression| contains_projection_call(&expression.expr, &projection_can_expand))
 }
 
 /// A predicate that removes the implicit group can cap a query whose ordering expands it.
@@ -86,7 +86,7 @@ fn one_group(select: &Select) -> bool {
     implicit_group::ungrouped(select)
         && !projected(select)
             .iter()
-            .any(|expr| contains_call(expr, &|function| is_set_returning(&function.name)))
+            .any(|expr| contains_projection_call(expr, &projection_can_expand))
         && (!distinct_on_expands(select) || super::predicate::rejects_all(select.having.as_ref()))
 }
 
@@ -96,8 +96,8 @@ fn distinct_on_expands(select: &Select) -> bool {
     matches!(
         &select.distinct,
         Some(Distinct::On(expressions))
-            if expressions.iter().any(|expr| contains_call(expr, &|function| {
-                function.over.is_none() && is_set_returning(&function.name)
+            if expressions.iter().any(|expr| contains_projection_call(expr, &|function| {
+                projection_can_expand(function)
             }))
     )
 }
@@ -114,15 +114,18 @@ fn projected(select: &Select) -> Vec<&Expr> {
 }
 
 /// Whether a call that `test` accepts occurs in `expr` (subqueries are not looked into).
-fn contains_call(expr: &Expr, test: &impl Fn(&Function) -> bool) -> bool {
+fn contains_projection_call(expr: &Expr, test: &impl Fn(&Function) -> bool) -> bool {
     if let Expr::Function(function) = expr {
         if test(function) {
             return true;
         }
+        if projection_traversal_boundary(function) {
+            return false;
+        }
     }
     let mut found = false;
     visit_child_exprs(expr, &mut |child| {
-        found = found || contains_call(child, test)
+        found = found || contains_projection_call(child, test)
     });
     found
 }
