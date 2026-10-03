@@ -1,14 +1,30 @@
 use super::super::super::value::is_placeholder_ident;
-use crate::codebase::postgres::idents::{ident_key, unwrap_expr, visit_child_exprs};
+use super::correlated::reads_outer_rows;
+use crate::codebase::postgres::idents::{
+    ident_key, object_name_ident, unwrap_expr, visit_child_exprs,
+};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
-use sqlparser::ast::{Expr, Ident};
+use sqlparser::ast::{Expr, Ident, ObjectName, Query};
 use std::collections::BTreeSet;
+
+/// Built-in functions that return a different value for each row they are evaluated for, so an
+/// equality against one picks out no fixed row. A function that is not listed (a user-defined
+/// one included) is assumed to be row-invariant: its volatility is not part of the facts.
+#[rustfmt::skip]
+const ROW_VARIANT: &[&str] = &[
+    "nextval", "currval", "lastval", "setval", "random", "random_normal", "setseed",
+    "gen_random_uuid", "uuidv4", "uuidv7", "uuid_generate_v1", "uuid_generate_v1mc",
+    "uuid_generate_v4", "clock_timestamp", "timeofday", "pg_sleep",
+];
 
 /// Maps column references to FROM items by alias, or by table name when unaliased.
 pub(in super::super) struct Resolver {
     names: Vec<(Option<String>, Option<String>)>,
     /// Only base relations take pins; a derived item is sized by its own query.
     tables: Vec<bool>,
+    /// What each item answers to (its alias, else its table name): the qualifiers a subquery
+    /// would use to read the row being checked.
+    outer: BTreeSet<String>,
 }
 
 /// What an expression refers to among the FROM items.
@@ -21,7 +37,7 @@ struct Refs {
 
 impl Resolver {
     pub(in super::super) fn new(items: &[SqlBoundItem]) -> Self {
-        let names = items
+        let names: Vec<(Option<String>, Option<String>)> = items
             .iter()
             .map(|item| {
                 let table = match &item.kind {
@@ -35,11 +51,24 @@ impl Resolver {
             .iter()
             .map(|item| matches!(item.kind, SqlBoundItemKind::Table(_)))
             .collect();
-        Self { names, tables }
+        let outer = names
+            .iter()
+            .filter_map(|(alias, table)| alias.clone().or_else(|| table.clone()))
+            .collect();
+        Self {
+            names,
+            tables,
+            outer,
+        }
     }
 
-    pub(super) fn is_table(&self, item: usize) -> bool {
+    pub(in super::super) fn is_table(&self, item: usize) -> bool {
         self.tables[item]
+    }
+
+    /// Whether `query` reads a column of one of these items, so it depends on the row checked.
+    pub(super) fn is_correlated(&self, query: &Query) -> bool {
+        reads_outer_rows(query, &self.outer)
     }
 
     /// The item and column when `expr` is a bare column of one FROM item.
@@ -72,8 +101,11 @@ impl Resolver {
 
     fn refs(&self, expr: &Expr, found: &mut Refs) {
         match unwrap_expr(expr) {
-            // A scalar subquery is a value the statement does not size.
-            Expr::Subquery(_) | Expr::Exists { .. } => {}
+            // A scalar subquery is a value the statement does not size, unless it reads the row.
+            Expr::Subquery(query) => found.unknown |= self.is_correlated(query),
+            Expr::Exists { .. } => {}
+            // A function that differs per row is not a fixed value.
+            Expr::Function(function) if is_row_variant(&function.name) => found.unknown = true,
             // A bind, whether `$1` or an interpolation recovered from a template literal.
             Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => {}
             expr @ (Expr::Identifier(_) | Expr::CompoundIdentifier(_)) => match self.column(expr) {
@@ -98,6 +130,10 @@ impl Resolver {
             SqlPinSource::Items(found.items.into_iter().collect())
         })
     }
+}
+
+fn is_row_variant(name: &ObjectName) -> bool {
+    object_name_ident(name).is_some_and(|ident| ROW_VARIANT.contains(&ident_key(ident).as_str()))
 }
 
 fn qualified(parts: &[Ident]) -> Option<(String, String)> {

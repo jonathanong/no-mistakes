@@ -197,6 +197,139 @@ fn an_unknown_relation_is_not_judged_and_bounds_nothing() {
 }
 
 #[test]
+fn a_subquery_that_reads_the_row_is_not_a_key_pin() {
+    // The subquery yields each row's own id, so it matches every row whatever its bound.
+    for sql in [
+        "DELETE FROM accounts a WHERE a.id IN (SELECT a.id)",
+        "DELETE FROM accounts WHERE id IN (SELECT id)",
+        "DELETE FROM accounts a WHERE a.id = (SELECT a.id)",
+        "DELETE FROM accounts a WHERE a.id = ANY (SELECT a.id)",
+        "DELETE FROM accounts a WHERE a.id IN (SELECT o.account_id FROM orders o WHERE o.account_id = a.id LIMIT 5)",
+    ] {
+        assert_eq!(names(sql), ["accounts"], "{sql}");
+    }
+    // An independent subquery still sizes the key, and an inner relation shadows an outer name.
+    for sql in [
+        "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions ORDER BY id LIMIT $1)",
+        "DELETE FROM sessions s WHERE s.id IN (SELECT s.id FROM sessions s ORDER BY s.id LIMIT $1)",
+        "DELETE FROM accounts WHERE id = (SELECT max(id) FROM accounts)",
+    ] {
+        assert!(names(sql).is_empty(), "{sql}");
+    }
+}
+
+#[test]
+fn a_function_that_differs_per_row_is_not_a_fixed_value() {
+    for sql in [
+        "DELETE FROM accounts WHERE id = nextval('account_ids')",
+        "DELETE FROM accounts WHERE id = gen_random_uuid()",
+        "DELETE FROM accounts WHERE id = pg_catalog.random()::text::uuid",
+        "DELETE FROM accounts WHERE id = ANY(ARRAY[gen_random_uuid()])",
+    ] {
+        assert_eq!(names(sql), ["accounts"], "{sql}");
+    }
+    // Functions of a bind, and per-statement constants, are values.
+    assert!(names("DELETE FROM accounts WHERE email = lower($1)").is_empty());
+    assert!(names("DELETE FROM sessions WHERE id = now()::text::uuid").is_empty());
+}
+
+#[test]
+fn table_returns_every_row_of_its_relation() {
+    // The parser accepts TABLE only as an arm of a set operation.
+    assert_eq!(
+        names("SELECT id FROM accounts WHERE id = $1 UNION TABLE orders"),
+        ["orders"]
+    );
+    assert_eq!(
+        names("SELECT id FROM accounts WHERE id = $1 UNION TABLE public.accounts"),
+        ["accounts"]
+    );
+    assert_eq!(
+        names("SELECT id FROM accounts WHERE id = $1 UNION ALL TABLE public.orders LIMIT 5"),
+        Vec::<String>::new()
+    );
+    assert!(names("SELECT id FROM accounts WHERE id = $1 UNION TABLE mystery").is_empty());
+}
+
+#[test]
+fn a_dml_target_is_a_physical_relation_even_when_a_cte_shares_its_name() {
+    assert_eq!(
+        names("WITH accounts AS (SELECT 1) DELETE FROM accounts"),
+        ["accounts"]
+    );
+    assert_eq!(
+        names("WITH orders AS (SELECT 1 AS id) UPDATE orders SET status = 'x'"),
+        ["orders"]
+    );
+    // A source item of the statement still resolves to the CTE.
+    assert!(names(
+        "WITH c AS (SELECT id FROM exports ORDER BY id LIMIT $1) \
+         UPDATE exports SET s3_key = NULL FROM c WHERE exports.id = c.id"
+    )
+    .is_empty());
+}
+
+#[test]
+fn a_relation_reached_by_several_arms_is_reported_once() {
+    assert_eq!(
+        names(
+            "SELECT * FROM orders UNION ALL SELECT * FROM accounts UNION ALL SELECT * FROM orders"
+        ),
+        ["orders", "accounts"]
+    );
+}
+
+#[test]
+fn ctid_is_not_a_key_of_a_partitioned_table() {
+    // The leaves of a partitioned table repeat ctid values.
+    assert_eq!(names("DELETE FROM events WHERE ctid = $1"), ["events"]);
+    assert_eq!(
+        names(
+            "UPDATE events SET id = id WHERE ctid IN (SELECT ctid FROM events ORDER BY id LIMIT 5)"
+        ),
+        ["events"]
+    );
+    assert!(names("DELETE FROM events WHERE id = $1 AND created_at = $2").is_empty());
+    assert!(names("DELETE FROM sessions WHERE ctid = $1").is_empty());
+}
+
+#[test]
+fn join_using_bounds_like_on() {
+    assert!(names("SELECT 1 FROM accounts a JOIN orders o USING (id) WHERE a.id = $1").is_empty());
+    assert!(
+        names("SELECT 1 FROM accounts a LEFT JOIN orders o USING (id) WHERE a.id = $1").is_empty()
+    );
+    // The preserved side is not pinned by the join, and a longer left side is ambiguous.
+    assert_eq!(
+        names("SELECT 1 FROM accounts a LEFT JOIN orders o USING (id) WHERE o.status = $1"),
+        ["accounts", "orders"]
+    );
+    assert_eq!(
+        names("SELECT 1 FROM accounts a JOIN profiles p ON p.account_id = a.id JOIN orders o USING (id) WHERE a.id = $1"),
+        ["orders"]
+    );
+}
+
+#[test]
+fn unique_keys_resolve_through_the_same_identity_as_the_table() {
+    let root = fixture_root();
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(
+        &root.join("schema-qualified.json"),
+    ));
+    let catalog = SchemaCatalog::load(&root, "schema-qualified.json", &sources).unwrap();
+    assert_eq!(catalog.unique_keys("widgets"), [vec!["id".to_string()]]);
+    let judged = |sql: &str| {
+        extract_sql_statement_facts(sql)
+            .bounds
+            .iter()
+            .map(|fact| offenders(fact, &catalog).len())
+            .sum::<usize>()
+    };
+    assert_eq!(judged("SELECT * FROM widgets WHERE id = $1"), 0);
+    assert_eq!(judged("SELECT * FROM widgets"), 1);
+}
+
+#[test]
 fn a_null_safe_comparison_bounds_only_a_not_null_key() {
     // contacts.email is a nullable unique column: `$1` = NULL matches every row without one.
     assert_eq!(

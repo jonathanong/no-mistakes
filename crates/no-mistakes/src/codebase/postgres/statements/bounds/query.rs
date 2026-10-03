@@ -95,6 +95,7 @@ fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
             capped: false,
             items: vec![arm(left, scope), arm(right, scope)],
         },
+        SetExpr::Table(table) => super::table::bound(table, start(set.span())),
         _ => sized_by_itself(start(set.span())),
     }
 }

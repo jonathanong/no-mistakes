@@ -8,8 +8,10 @@ mod dml;
 mod items;
 mod pins;
 mod query;
+mod table;
 #[cfg(test)]
 mod tests;
+mod using;
 
 use super::{SqlBoundFact, SqlBoundKind, SqlBoundQuery};
 use sqlparser::ast::{Query, Spanned, Statement};

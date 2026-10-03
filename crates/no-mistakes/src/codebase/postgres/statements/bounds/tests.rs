@@ -377,3 +377,116 @@ fn fetch_caps_unless_it_returns_ties_or_a_share() {
         ["select: t"]
     );
 }
+
+#[test]
+fn table_is_a_select_of_its_relation() {
+    // The parser accepts TABLE only as an arm of a set operation.
+    assert_eq!(
+        shape("SELECT 1 FROM a UNION TABLE orders"),
+        ["select: (a) (orders)"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM a UNION ALL TABLE public.orders LIMIT 5"),
+        ["select: capped (a) (public.orders)"]
+    );
+}
+
+#[test]
+fn join_using_pins_the_single_item_on_each_side() {
+    assert_eq!(
+        shape("SELECT 1 FROM a JOIN b USING (id) WHERE a.id = $1"),
+        ["select: a[id=#1 id=value] b[id=#0]"]
+    );
+    // An outer join pins only the side it can null-extend.
+    assert_eq!(
+        shape("SELECT 1 FROM a LEFT JOIN b USING (id)"),
+        ["select: a b[id=#0]"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM a RIGHT JOIN b USING (id)"),
+        ["select: a[id=#1] b"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM a FULL JOIN b USING (id)"),
+        ["select: a b"]
+    );
+    // Which item of a longer left side owns the column cannot be told.
+    assert_eq!(
+        shape("SELECT 1 FROM a JOIN b ON a.x = b.x JOIN c USING (id)"),
+        ["select: a[x=#1] b[x=#0] c"]
+    );
+    // A comma list is not a chain: the join binds b and c only.
+    assert_eq!(
+        shape("SELECT 1 FROM a, b JOIN c USING (id)"),
+        ["select: a b[id=#2] c[id=#1]"]
+    );
+}
+
+#[test]
+fn only_a_subquery_independent_of_the_row_is_a_pin() {
+    assert_eq!(
+        shape("DELETE FROM t WHERE t.id IN (SELECT t.id)"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id IN (SELECT id)"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE t.id = (SELECT t.id)"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE t.id = ANY (SELECT u.t_id FROM u WHERE u.t_id = t.id)"),
+        ["delete: t"]
+    );
+    // An inner relation shadows an outer name, and a bare column has the inner relation.
+    assert_eq!(
+        shape("DELETE FROM t WHERE id IN (SELECT id FROM t LIMIT 5)"),
+        ["delete: t[id=(capped t)]"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t s WHERE s.id IN (SELECT s.id FROM t s LIMIT 5)"),
+        ["delete: t[id=(capped t)]"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id = (SELECT max(id) FROM t)"),
+        ["delete: t[id=value]"]
+    );
+}
+
+#[test]
+fn a_function_that_differs_per_row_is_not_a_value() {
+    assert_eq!(
+        shape("DELETE FROM t WHERE id = nextval('s')"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id = pg_catalog.random()"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id = ANY(ARRAY[gen_random_uuid()])"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id = lower($1)"),
+        ["delete: t[id=value]"]
+    );
+    assert_eq!(
+        shape("DELETE FROM t WHERE id = now()"),
+        ["delete: t[id=value]"]
+    );
+}
+
+#[test]
+fn a_dml_target_is_never_a_cte() {
+    assert_eq!(
+        shape("WITH t AS (SELECT 1 AS id) DELETE FROM t"),
+        ["delete: t"]
+    );
+    assert_eq!(
+        shape("WITH c AS (SELECT 1) UPDATE t SET x = 1 FROM c"),
+        ["update: t ()"]
+    );
+}

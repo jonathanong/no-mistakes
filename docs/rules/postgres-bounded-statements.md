@@ -47,24 +47,36 @@ set operation). A statement is bounded when any of these holds:
   NULL, which a nullable unique column can repeat), `col = ANY($1::uuid[])` (bounded by the
   caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
-  `${id}::uuid`), which is a bind like `$1`.
+  `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
+  different value for each row (`nextval`, `random`, `gen_random_uuid`, `clock_timestamp`
+  and the like) is not a value; any other function call is assumed to be row-invariant,
+  since a function's volatility is not part of the facts. A subquery that reads a column of
+  the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever its own bound: every
+  row finds itself in it.
 - A column compared with a column of another bounded relation is pinned too, so a bound
   propagates across joins on unique keys to a fixed point: with `o.id = $1`, the account
   `a.id = o.account_id` is bounded, and its profile `p.account_id = a.id` after it. A join on
   a column that is not a whole key ends the chain (an account has many orders). `ON` pins
   only the side an outer join can null-extend, never the preserved side, and a `WHERE` on the
   null-extended side is not assumed to turn the join inner: a `LEFT JOIN` with its key
-  pinned only in `WHERE` reports the preserved relation.
+  pinned only in `WHERE` reports the preserved relation. `JOIN … USING (col)` pins the same
+  way as `ON a.col = b.col` when each side is one FROM item; after a longer chain, which
+  item owns the column cannot be told, so it pins nothing.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
-  one row of any table, so `WHERE ctid IN (SELECT ctid … LIMIT n)` bounds a statement.
-  The relations joined to the target only feed it values: each target row changes once.
+  one row of any table, so `WHERE ctid IN (SELECT ctid … LIMIT n)` bounds a statement, except
+  on a partitioned table, whose leaves repeat `ctid` values. The relations joined to the
+  target only feed it values: each target row changes once. The target is always the
+  physical relation, even when a CTE of the same name exists.
 
-A set operation (`UNION`) is bounded only when every arm is, a derived table or CTE is
-bounded when its own query is, and a `VALUES` list or table function (`unnest`) is sized
-by its own arguments. The rule reports each relation that makes a statement unbounded,
-at that relation's line.
+A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
+uncapped read of that relation), a derived table or CTE is bounded when its own query is,
+and a `VALUES` list or table function (`unnest`) is sized by its own arguments. The rule
+reports each relation that makes a statement unbounded, once, at that relation's line.
+Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
+`DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
+`RETURNING` rows is not unbounded because of it.
 
 A **unique key** is a primary key, a unique constraint, or a unique index in the catalog
 that is valid, ready, live and immediate, has no predicate, and whose keys are all plain

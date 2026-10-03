@@ -1,3 +1,4 @@
+use super::using::Using;
 use super::{pins, query, start, Scope};
 use crate::codebase::postgres::idents::{ident_key, object_name_key};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
@@ -27,6 +28,9 @@ pub(super) struct Builder<'a> {
     items: Vec<SqlBoundItem>,
     /// Join conditions, with the items each one restricts.
     conditions: Vec<(Vec<usize>, &'a Expr)>,
+    usings: Vec<Using<'a>>,
+    /// The next FROM item is the relation an `UPDATE` or `DELETE` changes.
+    target_next: bool,
 }
 
 impl<'a> Builder<'a> {
@@ -35,7 +39,16 @@ impl<'a> Builder<'a> {
             scope,
             items: Vec::new(),
             conditions: Vec::new(),
+            usings: Vec::new(),
+            target_next: false,
         }
+    }
+
+    /// Add the tables of an `UPDATE` or `DELETE`, whose first relation is the one it changes:
+    /// a DML target is a physical relation even when a CTE shares its name.
+    pub(super) fn target_tables(&mut self, tables: &'a [TableWithJoins]) {
+        self.target_next = true;
+        self.tables(tables);
     }
 
     pub(super) fn tables(&mut self, tables: &'a [TableWithJoins]) {
@@ -57,6 +70,13 @@ impl<'a> Builder<'a> {
                     crate::codebase::postgres::statements::select::join_expr(&join.join_operator)
                 {
                     self.conditions.push((restricted.collect(), on));
+                } else if chain + 1 == right && right + 1 == end {
+                    self.usings.extend(Using::of(
+                        &join.join_operator,
+                        restricted.collect(),
+                        chain,
+                        right,
+                    ));
                 }
             }
         }
@@ -68,6 +88,9 @@ impl<'a> Builder<'a> {
         let mut found = Vec::new();
         for (restricted, condition) in &self.conditions {
             pins::extract(condition, &resolver, restricted, self.scope, &mut found);
+        }
+        for using in &self.usings {
+            using.pins(&resolver, &mut found);
         }
         if let Some(selection) = selection {
             pins::extract(selection, &resolver, &all, self.scope, &mut found);
@@ -81,12 +104,15 @@ impl<'a> Builder<'a> {
     }
 
     fn factor(&mut self, factor: &'a TableFactor) {
+        let target = std::mem::take(&mut self.target_next);
         match factor {
             TableFactor::Table {
                 name, alias, args, ..
             } => {
                 let kind = if args.is_some() {
                     SqlBoundItemKind::Other
+                } else if target {
+                    SqlBoundItemKind::Table(object_name_key(name))
                 } else {
                     self.named(name)
                 };

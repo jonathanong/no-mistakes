@@ -351,7 +351,11 @@ equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)`
 from a template literal), `Items` (columns of other items; a column
 compared with its own item is never a pin), or a subquery. `WHERE` restricts every item.
 A join condition restricts only the non-preserved side of an outer join and both sides of
-an inner join; `FULL`, `USING`, `NATURAL` and `CROSS` joins pin nothing. A bare column
+an inner join; `USING (col)` pins like `ON a.col = b.col` when each side is one item,
+and `FULL`, `NATURAL` and `CROSS` joins pin nothing. A subquery that reads the row being
+checked, or a call to a built-in function that differs per row, is not a pin source.
+A DML target is always a `Table`, never a CTE reference, and a `TABLE name` set-operation
+arm is a `Table` item. A bare column
 among several items has no provable owner and an unknown qualifier is an outer
 reference, so neither pins. Only base tables take pins. The facts are syntactic: a rule
 decides against a catalog whether a pinned column set is a unique key.

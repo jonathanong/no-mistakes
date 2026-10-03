@@ -1,9 +1,10 @@
+mod correlated;
 mod resolver;
 
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{SqlBoundPin, SqlPinSource};
-use sqlparser::ast::{BinaryOperator, Expr};
+use sqlparser::ast::{BinaryOperator, Expr, Query};
 use std::collections::BTreeSet;
 
 pub(super) use resolver::Resolver;
@@ -62,11 +63,7 @@ pub(super) fn extract(
             expr,
             subquery,
             negated: false,
-        } => pin(
-            expr,
-            Some(SqlPinSource::Query(query::bound_query(subquery, scope))),
-            false,
-        ),
+        } => pin(expr, subquery_source(subquery, resolver, scope), false),
         Expr::AnyOp {
             left,
             compare_op: BinaryOperator::Eq,
@@ -75,9 +72,7 @@ pub(super) fn extract(
         } => {
             if let Some((item, _)) = resolver.column(left) {
                 let source = match unwrap_expr(right) {
-                    Expr::Subquery(subquery) => {
-                        Some(SqlPinSource::Query(query::bound_query(subquery, scope)))
-                    }
+                    Expr::Subquery(subquery) => subquery_source(subquery, resolver, scope),
                     other => resolver.source(other, item),
                 };
                 pin(left, source, false);
@@ -85,6 +80,13 @@ pub(super) fn extract(
         }
         _ => {}
     }
+}
+
+/// A subquery sizes the values it yields, unless it reads the row being checked: then every
+/// row can find itself among them, whatever the subquery's own bound.
+fn subquery_source(subquery: &Query, resolver: &Resolver, scope: &Scope) -> Option<SqlPinSource> {
+    (!resolver.is_correlated(subquery))
+        .then(|| SqlPinSource::Query(query::bound_query(subquery, scope)))
 }
 
 /// Pin either side of `left = right` that is a column of one item to the other side.

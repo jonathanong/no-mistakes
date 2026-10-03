@@ -2,7 +2,7 @@
 use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
-use crate::codebase::postgres::SchemaCatalog;
+use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -101,7 +101,9 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             }
         }
     }
-    offenders.dedup();
+    // The same relation can be reached by several arms; keep the first report of each.
+    let mut seen = std::collections::HashSet::new();
+    offenders.retain(|offender| seen.insert((offender.table.clone(), offender.line)));
     Evaluation {
         bounded: query.capped || bounded.iter().all(|state| *state),
         items: bounded,
@@ -140,8 +142,14 @@ fn keyed(
         })
     };
     let mut keys = catalog.unique_keys(name);
-    // Every row has a `ctid`, so `ctid IN (SELECT ctid … LIMIT n)` bounds a statement.
-    keys.push(vec!["ctid".to_string()]);
+    // Every row has a `ctid`, so `ctid IN (SELECT ctid … LIMIT n)` bounds a statement. It is
+    // only unique within one physical table: the leaves of a partitioned table repeat values.
+    let partitioned = catalog
+        .relation(name)
+        .is_some_and(|table| table.relation_kind == RelationKind::PartitionedTable);
+    if !partitioned {
+        keys.push(vec!["ctid".to_string()]);
+    }
     keys.iter()
         .any(|key| key.iter().all(|column| usable(column)))
 }

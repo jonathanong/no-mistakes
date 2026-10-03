@@ -102,7 +102,11 @@ impl SchemaCatalog {
     /// A partial index only covers some rows and a deferrable one may hold duplicates
     /// inside a transaction, so neither proves uniqueness. Expression keys are not columns.
     pub fn unique_keys(&self, table: &str) -> Vec<Vec<String>> {
-        let Some(table) = self.arbiter_table(table) else {
+        // The same relation `relation()` finds, so a bare name reaches a schema-qualified entry.
+        let Some(table) = self
+            .relation(table)
+            .and_then(|relation| self.arbiter_table(&relation.name))
+        else {
             return Vec::new();
         };
         table

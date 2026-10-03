@@ -71,6 +71,9 @@ pub(super) fn scan(
             }
         }
     }
+    // Sorted first: dedup only removes adjacent duplicates, and one relation can be reported
+    // by several statements of a file (or arms of one) with others between them.
+    crate::codebase::rules::sort_findings(&mut findings);
     findings.dedup();
     let mut findings = opts
         .allow

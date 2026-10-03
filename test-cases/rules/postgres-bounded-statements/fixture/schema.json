@@ -542,6 +542,54 @@
           ]
         }
       }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "indexes": {
+        "events_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX events_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            },
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      },
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      }
     }
   },
   "functions": {},
