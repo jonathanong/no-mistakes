@@ -432,3 +432,15 @@ fn base_table_column_alias_lists_supply_no_catalog_key_pins() {
         ]
     );
 }
+
+#[test]
+fn oversized_ctes_retain_uncapped_relation_reads() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/oversized-cte.sql"
+    ));
+    let bound = facts(sql);
+    assert_eq!(bound.len(), 2);
+    assert!(shape(sql)[0].contains("orders"));
+    assert!(bound[1].query.capped);
+}
