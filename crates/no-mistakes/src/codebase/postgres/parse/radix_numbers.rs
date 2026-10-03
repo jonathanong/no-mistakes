@@ -8,6 +8,14 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
     let mut index = 0;
     while index < tokens.len() {
         let token = &tokens[index];
+        if let Some(value) = numeric_hex(token) {
+            let out = out.get_or_insert_with(|| tokens[..index].to_vec());
+            let mut repaired = token.clone();
+            repaired.token = Token::Number(value, false);
+            out.push(repaired);
+            index += 1;
+            continue;
+        }
         if matches!(&token.token, Token::Number(number, _) if number == "0") {
             if let Some(next) = tokens.get(index + 1) {
                 if let Token::Word(word) = &next.token {
@@ -61,6 +69,32 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
         index += 1;
     }
     out
+}
+
+// sqlparser uses the same token variant for 0xFF and X'FF'. Their lexer spans retain
+// the distinction: numeric spelling has two prefix characters; quoted spelling has
+// a prefix and two quote characters. Normalize while that lexical identity survives,
+// before migration recovery reconstructs source text and changes its byte provenance.
+fn numeric_hex(token: &TokenWithSpan) -> Option<String> {
+    let Token::HexStringLiteral(value) = &token.token else {
+        return None;
+    };
+    let span = token.span;
+    if span.start.line != span.end.line
+        || span.end.column
+            != span
+                .start
+                .column
+                .saturating_add(value.chars().count() as u64 + 2)
+    {
+        return None;
+    }
+    let raw = format!("0x{value}");
+    match integer(&raw) {
+        Ok(value) => Some(value.to_string()),
+        Err(error) if *error.kind() == IntErrorKind::PosOverflow => Some(raw),
+        Err(_) => None,
+    }
 }
 
 #[cfg(test)]

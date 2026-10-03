@@ -89,3 +89,6 @@ mod radix_lenient_tests;
 
 #[cfg(test)]
 mod radix_large_tests;
+
+#[cfg(test)]
+mod recovered_hex_tests;

@@ -303,3 +303,7 @@ prevent collection of other statement facts.
 Adjacent radix tokens are repaired before SQL parsing, including projections
 that would otherwise be accepted as implicit aliases. Whitespace-separated
 aliases and quoted names retain their existing meaning.
+
+Numeric hexadecimal tokens retain their lexical identity through lenient encoded
+migration recovery, including concatenated strings and `chr()` reconstruction.
+Quoted hexadecimal strings remain non-literal caps after the same recovery.
