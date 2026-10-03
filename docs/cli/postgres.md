@@ -1,44 +1,143 @@
-<!-- cspell:ignore libpq dbname sslmode sslrootcert sslcert sslkey PGSERVICE PGSERVICEFILE PGHOSTADDR -->
+<!-- cspell:ignore libpq dbname sslmode sslrootcert sslcert sslkey PGSERVICE PGSERVICEFILE PGHOSTADDR partkeydef functiondef viewdef constraintdef triggerdef indexdef -->
 # `postgres`
 
 ## `postgres catalog`
 
-Generate no-mistakes-owned ordering facts directly from a PostgreSQL database.
-No application snapshot producer or snapshot format is required.
+Generate a schema catalog directly from a live PostgreSQL schema. no-mistakes owns
+both the catalog format and this generator: the catalog is the only input format
+that `schemaCatalogPath` reads, and no-mistakes never reads an application's own
+schema snapshot.
 
 ```sh
-no-mistakes postgres catalog --connection-env DATABASE_URL --schema public --output ordering-catalog.json
+no-mistakes postgres catalog --connection-env DATABASE_URL --schema public --output db/schema.json
 ```
+
+| Option                          | Meaning                                                                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `--connection-env <NAME>`       | Environment variable that holds a PostgreSQL connection URL.                                                                         |
+| `--schema <NAME>`               | Exact schema name, including case. It is not an SQL expression. A missing schema is an error, not an empty catalog.                  |
+| `--coverage complete\|ordering` | `complete` (the default) carries every schema fact. `ordering` carries only what conflict and lock ordering need.                    |
+| `--output <PATH>`               | Where to write the JSON. The file is written to a temporary name and renamed, so a failure leaves the previous catalog untouched.    |
 
 Set the named environment variable to a PostgreSQL connection URL. The connection
 is passed through the child environment, never an argument or diagnostic.
 Install `psql`; libpq authentication and TLS configuration apply. The generator
 uses a single repeatable-read, read-only transaction and does not execute DDL.
-The schema is an exact name, including case, not an SQL expression. A missing
-schema or failed query is an error, rather than an empty proof. Connections default
-to a 10-second timeout unless the URL specifies `connect_timeout`; metadata
-statements have a 30-second timeout. An invocation deadline can bound the whole
-operation further. The CLI replaces its output atomically after a successful
-write, preserving an existing catalog if generation or writing fails.
+Connections default to a 10-second timeout unless the URL specifies
+`connect_timeout`; metadata statements have a 30-second timeout. An invocation
+deadline can bound the whole operation further. The CLI replaces its output
+atomically after a successful write, preserving an existing catalog if generation
+or writing fails.
 
-The deterministic JSON uses the tool's `formatVersion: 2` contract and explicit
-`coverage: "ordering"`. It includes observed table columns, primary/unique
-constraints and indexes, including validity/readiness, key expressions, direction,
-NULL ordering and predicates. INCLUDE columns do not become ordering keys.
-Invalid, not-ready or non-live indexes remain visible and cannot prove order.
-Deferrable indexes cannot resolve conflict arbiters. Non-default operator classes or
-collations the canonical comparator cannot model have `orderingSupported: false`
-and fail closed; their observed metadata remains in the catalog.
+Use the output as `schemaCatalogPath`. A complete catalog works with every
+catalog-backed rule. Regenerate it after applying schema changes to a fresh test
+database; the catalog describes observed state at generation time. Every
+catalog states its `coverage`, and a file that does not is a load error that
+tells you to run this command.
 
-Use the output as `schemaCatalogPath` for `postgres-conflict-ordering` and
-`postgres-lock-ordering`. Other catalog-backed rules require complete schema facts
-and reject this partial catalog. Omitted checks, functions, triggers and other
-schema facts are not asserted absent. Existing complete catalogs without a
-coverage field remain complete. Regenerate after applying schema changes to a
-fresh test database; the catalog describes observed state at generation time.
+The async Node equivalent is `generatePostgresCatalog({ connectionEnv, schema,
+coverage })`. It returns the catalog object; the caller owns writing it to disk.
 
-The async Node equivalent is `generatePostgresCatalog({ connectionEnv, schema })`.
-It returns the catalog object; the caller owns writing it to disk.
+### Complete coverage
+
+A complete catalog (`"coverage": "complete"`) holds, for each table and
+partitioned table in the schema:
+
+- the relation kind, the table comment, and the partition key
+  (`pg_get_partkeydef`, such as `RANGE (created_at)`);
+- every column: `dataType` (`format_type`), nullability, default expression,
+  identity, comment, ordinal position among the live columns, and generated kind
+  (`stored`, or PostgreSQL 18 `virtual`) with its expression;
+- the primary key and unique constraints;
+- foreign keys, including composite ones: columns, referenced table and columns,
+  `ON DELETE` and `ON UPDATE` actions, and whether they are validated;
+- check constraints: name, `pg_get_constraintdef` text, and whether they are
+  validated. The text of a not-validated constraint ends in `NOT VALID`;
+- every index: uniqueness, primary and constraint-backed flags (an index behind a
+  primary key, unique or exclusion constraint is constraint-backed), access method,
+  key columns or expressions with direction and NULL ordering, predicate and
+  `pg_get_indexdef` text, plus the validity, readiness, liveness and
+  whether the index is deferrable, which ordering proofs need;
+- triggers as `pg_get_triggerdef` text. Only a trigger that fires in a normal session is
+  listed: one disabled with `ALTER TABLE … DISABLE TRIGGER`, or enabled only for the
+  replica role, is left out, because the definition text does not say so.
+
+It also holds the schema's functions and procedures (`pg_get_functiondef`
+text, keyed by name and identity arguments so every overload has its own stable
+key, such as `over(a integer)` and `over(a text)`), enums with their values in
+sort order, and views and materialized views (`pg_get_viewdef` text and comment).
+
+### What the catalog leaves out
+
+One selection policy applies to both coverages, so they can never disagree about
+which relations exist:
+
+- **Partition children** are not tables. Only the partitioned parent appears, with
+  its partition key. The indexes, constraints and triggers PostgreSQL clones onto
+  each leaf are not separate entries, and a foreign key that references a
+  partitioned table is one entry rather than one per partition.
+- **Extension-owned objects** are excluded: functions, types, tables and views that
+  belong to an installed extension. So are the enums of other schemas. A column that uses
+  one still names it in its `dataType` (qualified, for another schema), but it is not an
+  entry of `enums`: the catalog describes one schema, and `postgres-array-columns`
+  `allowTypes` is where such a type is listed.
+- **Internal triggers**, such as the triggers behind foreign keys and deferrable
+  unique constraints, are excluded.
+- **NOT NULL constraints**, which PostgreSQL 18 stores as constraints, are not check
+  constraints. Nullability comes from the column.
+- **Functions** are plain functions and procedures. Aggregates and window functions
+  are out of scope.
+- **Other relations** are not catalog tables: sequences, TOAST tables, temporary
+  tables and foreign tables. **Foreign tables are unsupported**; they do not appear
+  in the catalog.
+
+### Names and types
+
+Object names are SQL identifiers, quoted only where PostgreSQL requires it
+(`orders`, `"Order Items"`), and the reader normalizes them, so a quoted and an
+unquoted spelling of one identifier find the same table. Column names, and the
+column lists of primary keys and foreign keys, are the raw names, matching the keys
+of `columns`. The columns of a unique constraint, and index key expressions, are
+written as SQL.
+
+Types are rendered relative to the selected schema. A type defined in that schema
+is unqualified, so an enum column's `dataType` equals the catalog enum's name and an
+enum array is `<enum>[]`. A type from another schema stays qualified
+(`other.shade`), and so does an enum whose name a `pg_catalog` type shadows
+(`app.text`), which is also how that enum is keyed. The generator sets
+`search_path` to `pg_catalog` and the selected schema inside its transaction to get
+this rendering.
+
+### Stable output
+
+Generating twice from the same database produces byte-identical output: object
+keys are sorted, and every list has an explicit order. The catalog contains no
+OIDs, timestamps, server version, host or database name, so it is safe to commit and
+to regenerate in CI after migrations.
+
+Some text is produced by PostgreSQL itself and can differ between major versions:
+`pg_get_functiondef`, `pg_get_viewdef`, `pg_get_constraintdef`, `pg_get_triggerdef`
+and `format_type`. Generate the committed catalog and the CI catalog with the same
+PostgreSQL major version, or the regenerated file will show spurious differences.
+
+### Ordering coverage
+
+`--coverage ordering` writes `"coverage": "ordering"` with only the table columns,
+primary and unique constraints and indexes. It includes validity/readiness, key
+expressions, direction, NULL ordering and predicates. INCLUDE columns do not become
+ordering keys. Invalid, not-ready or non-live indexes remain visible and cannot
+prove order. Deferrable indexes cannot resolve conflict arbiters. Non-default operator
+classes or collations the canonical comparator cannot model have
+`orderingSupported: false` and fail closed; their observed metadata remains in the
+catalog.
+
+Only `postgres-conflict-ordering` and `postgres-lock-ordering` accept an ordering
+catalog. Every other catalog rule needs complete facts and rejects it, because
+omitted checks, functions, triggers and other facts are not asserted absent. For
+the same database, the two ordering rules report identical findings whether they
+read the complete or the ordering catalog.
+
+### Connection
 
 Supported URL query parameters are `host`, `port`, `user`, `dbname`, `sslmode`,
 `sslrootcert`, `sslcert`, `sslkey` and `connect_timeout`. Other libpq configuration

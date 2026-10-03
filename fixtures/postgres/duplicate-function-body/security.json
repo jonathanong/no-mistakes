@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_definer": {
       "definition": "CREATE FUNCTION fn_definer() RETURNS int LANGUAGE sql SECURITY DEFINER AS $$ SELECT widget $$"

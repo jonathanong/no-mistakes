@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_set()": {
       "definition": "CREATE FUNCTION fn_set() RETURNS int LANGUAGE sql SET application_name TO strict AS $$ SELECT set_body() $$"

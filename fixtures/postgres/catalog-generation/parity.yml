@@ -1,0 +1,15 @@
+# The two ordering rules, reading `catalog.json`. A real-PostgreSQL test generates that file once
+# per coverage from setup.sql and requires identical findings for both.
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: catalog.json
+      importSpecifier: fixture-db
+      executorNames: [query]
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: catalog.json
+      importSpecifier: fixture-db
+      executorNames: [query]

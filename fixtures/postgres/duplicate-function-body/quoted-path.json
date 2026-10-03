@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_quoted_a": {
       "definition": "CREATE FUNCTION fn_quoted_a() RETURNS int LANGUAGE sql SET search_path TO \"TenantA\" AS $$ SELECT widget $$"

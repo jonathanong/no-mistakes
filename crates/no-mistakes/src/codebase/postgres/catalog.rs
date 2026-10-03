@@ -1,5 +1,5 @@
 use crate::codebase::ts_source::SourceStore;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -13,6 +13,7 @@ mod function_comment;
 mod function_escape;
 mod function_outputs;
 mod function_quote;
+mod load;
 mod locations;
 mod model;
 mod names;
@@ -112,19 +113,10 @@ impl SchemaCatalog {
             .as_ref()
             .map(|value| locations::column_lines(value, &source))
             .unwrap_or_default();
-        let snapshot: Snapshot = serde_json::from_value(
-            parsed
-                .value
-                .ok_or_else(|| anyhow::anyhow!("schemaCatalogPath {} is empty", path.display()))?
-                .into(),
-        )
-        .with_context(|| format!("schemaCatalogPath {} has an invalid schema", path.display()))?;
-        if snapshot.format_version != 2 {
-            bail!(
-                "schemaCatalogPath {} must be a PostgreSQL schema snapshot with formatVersion 2",
-                path.display()
-            );
-        }
+        let value = parsed
+            .value
+            .ok_or_else(|| anyhow::anyhow!("schemaCatalogPath {} is empty", path.display()))?;
+        let snapshot = load::parse_snapshot(&path.display().to_string(), value.into())?;
         let mut catalog = Self::from_snapshot(&path.display().to_string(), snapshot)?;
         catalog.set_column_lines(column_lines);
         Ok(catalog)
@@ -150,20 +142,32 @@ impl SchemaCatalog {
         self.column_lines = lines;
     }
 
+    /// Tables are indexed by normalized name, so a quoted key such as `"Order Items"` is found
+    /// by its quoted or unquoted spelling, the way it round-trips from the generator.
     pub fn table(&self, name: &str) -> Option<&CatalogTable> {
-        self.model_tables.get(name)
+        self.model_tables.get(&names::normalize_table_name(name))
     }
 
+    /// The table a SQL name refers to: its exact key, or the one table whose bare name it is.
+    /// A name that spells a schema reaches a bare-keyed table only when it is this catalog's
+    /// schema; `audit.accounts` is not the `accounts` of the catalog for `public`.
     pub fn relation(&self, name: &str) -> Option<&CatalogTable> {
         let normalized = names::normalize_table_name(name);
         if let Some(table) = self.model_tables.get(&normalized) {
             return Some(table);
         }
-        let tail = normalized.rsplit('.').next().unwrap_or(&normalized);
-        let mut matches = self
-            .model_tables
-            .iter()
-            .filter(|(key, _)| key.rsplit('.').next().unwrap_or(key) == tail);
+        // Names are split quote-aware: `public."audit.log"` has a schema and one bare name.
+        let (qualifier, bare) = names::split_name(name);
+        if let (Some(qualifier), Some(own)) = (&qualifier, &self.schema) {
+            if qualifier != own {
+                return None;
+            }
+        }
+        // A qualified name that is not an exact key can only mean a bare-keyed table.
+        let mut matches = self.model_tables.iter().filter(|(key, _)| {
+            let (key_qualifier, key_bare) = names::split_key(key);
+            key_bare == bare && (qualifier.is_none() || key_qualifier.is_none())
+        });
         let (_, table) = matches.next()?;
         matches.next().is_none().then_some(table)
     }
@@ -181,4 +185,4 @@ impl SchemaCatalog {
     }
 }
 
-pub(crate) use names::normalize_table_name;
+pub(crate) use names::{decoded_parts, normalize_table_name};

@@ -1,4 +1,4 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": { "broken": { "physicalPartition": { "key": "RANGE id" } } }
 }

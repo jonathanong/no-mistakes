@@ -1,10 +1,10 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": {
     "orders": {
       "relationKind": "table",
       "columns": {
-        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 }
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
       }
     }
   }

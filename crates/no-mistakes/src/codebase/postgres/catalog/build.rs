@@ -16,7 +16,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
     for (name, table) in snapshot.tables {
         let model = model_table(path, &name, &table)?;
         tables.insert(normalize_table_name(&name), arbiter::arbiter_table(&table));
-        model_tables.insert(name, model);
+        model_tables.insert(normalize_table_name(&name), model);
     }
     Ok(SchemaCatalog {
         coverage: snapshot.coverage,

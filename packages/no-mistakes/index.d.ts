@@ -1,4 +1,9 @@
-import type { PostgresCatalogOptions, PostgresOrderingCatalog } from "./postgres-catalog-types";
+import type {
+  PostgresCatalog,
+  PostgresCatalogOptions,
+  PostgresCompleteCatalog,
+  PostgresOrderingCatalog,
+} from "./postgres-catalog-types";
 export type * from "./postgres-catalog-types";
 import type {
   CheckReport,
@@ -178,7 +183,16 @@ export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
 ): Promise<ReactUsagesReport>;
 
-/** Observe committed PostgreSQL ordering metadata in a read-only transaction. Requires psql. */
+/**
+ * Observe committed PostgreSQL metadata in a read-only transaction and return the catalog that
+ * `schemaCatalogPath` reads. Requires psql. `coverage: "ordering"` returns only the ordering facts.
+ */
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions & { coverage: "ordering" }>,
+): Promise<PostgresOrderingCatalog>;
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions & { coverage?: "complete" }>,
+): Promise<PostgresCompleteCatalog>;
 export function generatePostgresCatalog(
   options: WithInvocationOptions<PostgresCatalogOptions>,
-): Promise<PostgresOrderingCatalog>;
+): Promise<PostgresCatalog>;

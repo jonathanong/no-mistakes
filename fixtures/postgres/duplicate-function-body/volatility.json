@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_immutable": {
       "definition": "CREATE FUNCTION fn_immutable() RETURNS int IMMUTABLE LANGUAGE sql AS $$ SELECT widget $$"

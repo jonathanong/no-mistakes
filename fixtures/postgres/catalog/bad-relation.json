@@ -1,1 +1,1 @@
-{ "formatVersion": 2, "tables": { "broken": { "relationKind": "View" } } }
+{ "formatVersion": 2, "coverage": "complete", "tables": { "broken": { "relationKind": "View" } } }

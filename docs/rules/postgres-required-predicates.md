@@ -51,7 +51,9 @@ column. Self-referential `IN` lists do not constrain a column. `OR` counts only 
 only when the schema catalog shows no other FROM relation has that column.
 
 `partitionKeys: require` checks each instance whose catalog table is a
-partitioned table. Every column of the partition key must be constrained.
+partitioned table. Every column of the partition key must be constrained;
+a column keeps that role with a `COLLATE` or operator class, as in
+`name COLLATE "C" text_pattern_ops`.
 Expression partition keys are not guessed from queries: the rule reports one
 catalog finding for that table, while column elements in a mixed key still require predicates. Missing partition keys produce a catalog finding. Tables in `partitionKeyExemptions` are
 skipped. An exemption for a table that is not a partitioned catalog table is
@@ -65,7 +67,7 @@ scope.
 relation's `require` and `requireColumns` default to `[]`. An empty
 `requireColumns` string is a configuration error.
 `schemaCatalogPath` defaults to unset and is required when `partitionKeys` is
-`require`. `partitionKeys` defaults to `off` (`require` or `off`; any other
+`require`. Generate the catalog with [`no-mistakes postgres catalog`](../cli/postgres.md). `partitionKeys` defaults to `off` (`require` or `off`; any other
 value is a configuration error). `partitionKeyExemptions` defaults to `[]`;
 an empty table, an empty reason, or a duplicate table is a configuration
 error. `allow` defaults to `[]` and suppresses catalog findings by object ref

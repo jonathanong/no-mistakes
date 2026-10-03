@@ -16,6 +16,49 @@ fn sparse_snapshot_uses_field_defaults() {
 }
 
 #[test]
+fn a_catalog_must_state_coverage_and_every_column_type() {
+    // Only `no-mistakes postgres catalog` output is accepted: nothing is assumed complete.
+    let hint = "generate the catalog with `no-mistakes postgres catalog`";
+    let missing = load_fixture("missing-coverage.json").unwrap_err();
+    assert!(
+        missing.contains("has an invalid schema: missing field `coverage`"),
+        "{missing}"
+    );
+    assert!(missing.contains(hint), "{missing}");
+    let unknown = load_fixture("unknown-coverage.json").unwrap_err();
+    assert!(unknown.contains("unknown variant `partial`"), "{unknown}");
+    let untyped = load_fixture("missing-data-type.json").unwrap_err();
+    assert!(
+        untyped.contains("invalid schema: tables.accounts.columns.id: missing field `dataType`"),
+        "{untyped}"
+    );
+    assert!(untyped.contains(hint), "{untyped}");
+}
+
+#[test]
+fn another_producers_shapes_fail_with_the_failing_field() {
+    let renamed = load_fixture("foreign-type-key.json").unwrap_err();
+    assert!(
+        renamed.contains("tables.accounts.columns.id: missing field `dataType`"),
+        "{renamed}"
+    );
+    let trigger = load_fixture("foreign-trigger-string.json").unwrap_err();
+    assert!(
+        trigger.contains("tables.accounts.triggers.touch: invalid type: string"),
+        "{trigger}"
+    );
+    assert!(
+        trigger.contains("expected struct SnapshotTrigger"),
+        "{trigger}"
+    );
+    let version = load_fixture("wrong-version.json").unwrap_err();
+    assert!(
+        version.contains("no-mistakes postgres catalog"),
+        "{version}"
+    );
+}
+
+#[test]
 fn snapshot_without_tables_has_no_column_locations() {
     let catalog = load_fixture("no-tables.json").unwrap();
     assert!(catalog.tables().next().is_none());

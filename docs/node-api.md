@@ -70,10 +70,13 @@ const {
 
 ## PostgreSQL catalog generation
 
-`generatePostgresCatalog({ connectionEnv, schema })` asynchronously returns an
-independent ordering catalog from a live PostgreSQL schema. It requires `psql`
-and keeps connection secrets in the named environment variable. See
-[`postgres catalog`](cli/postgres.md) for coverage guarantees and limitations.
+`generatePostgresCatalog({ connectionEnv, schema, coverage })` asynchronously
+returns the schema catalog that `schemaCatalogPath` reads, generated from a live
+PostgreSQL schema. `coverage` is `"complete"` (the default; every catalog rule
+accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requires
+`psql` and keeps connection secrets in the named environment variable. The caller
+writes the returned object to disk. See [`postgres catalog`](cli/postgres.md) for
+what a catalog holds, what it leaves out, and its limitations.
 
 ## CLI Mapping
 
@@ -648,4 +651,4 @@ addon avoids UTF-16 string copies at the N-API boundary.
   (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.
 
-`generatePostgresCatalog` is a runtime export; its named public types are `PostgresCatalogOptions` and `PostgresOrderingCatalog`.
+`generatePostgresCatalog` is a runtime export. Its named public types are `PostgresCatalogOptions`, `PostgresCatalogCoverage`, `PostgresCompleteCatalog`, `PostgresOrderingCatalog` and their union `PostgresCatalog`. The overloads return `PostgresOrderingCatalog` for `coverage: "ordering"` and `PostgresCompleteCatalog` otherwise.

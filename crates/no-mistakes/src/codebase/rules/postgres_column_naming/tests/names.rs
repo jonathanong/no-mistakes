@@ -140,8 +140,8 @@ fn valid_type_names_and_array_types_pass() {
 fn type_comparison_is_case_insensitive_and_keeps_the_stored_type() {
     expect(
         "schemaCatalogPath: schema.json\ntypeRules:\n  - types: [boolean]\n    namePattern: '^is_'\n",
-        column("accounts", "active", "BOOLEAN"),
-        &at("accounts", "active", "BOOLEAN column name does not match ^is_"),
+        column("accounts", "loud", "BOOLEAN"),
+        &at("accounts", "loud", "BOOLEAN column name does not match ^is_"),
     );
 }
 

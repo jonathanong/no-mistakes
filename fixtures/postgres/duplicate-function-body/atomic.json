@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_atomic_a": {
       "definition": "CREATE FUNCTION fn_atomic_a() RETURNS int BEGIN ATOMIC SELECT language FROM settings; SELECT widget; END LANGUAGE sql"

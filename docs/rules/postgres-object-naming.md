@@ -107,7 +107,7 @@ pattern is omitted.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `patterns.<kind>` defaults to unset.
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `patterns.<kind>` defaults to unset.
 `tableMinWords` defaults to unset and, when set, must be from 1 to 32.
 `checkConstraintBackedIndexes` defaults to
 `false`. `abbreviations.enabled` defaults to `false`. `abbreviations.minLetters`

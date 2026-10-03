@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_strict": {
       "definition": "CREATE FUNCTION fn_strict(n int) RETURNS int LANGUAGE sql STRICT AS $$ SELECT widget $$"

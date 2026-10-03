@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_if": {
       "definition": "CREATE FUNCTION fn_if() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE TABLE IF NOT EXISTS widgets(id int); SELECT widget; END"

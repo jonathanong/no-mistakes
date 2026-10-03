@@ -1,9 +1,9 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "tables": {
     "accounts": {
       "columns": {
-        "active": {
+        "loud": {
           "dataType": "BOOLEAN"
         }
       }

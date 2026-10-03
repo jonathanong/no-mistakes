@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_01": { "definition": "CREATE FUNCTION fn_01() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
     "fn_02": { "definition": "CREATE FUNCTION fn_02() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },

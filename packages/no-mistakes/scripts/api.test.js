@@ -340,6 +340,16 @@ test("programmatic API proxies object options through async native addon calls",
         .command,
       "generatePostgresCatalog",
     );
+    assert.equal(
+      (
+        await api.generatePostgresCatalog({
+          connectionEnv: "DATABASE_URL",
+          schema: "public",
+          coverage: "ordering",
+        })
+      ).options.coverage,
+      "ordering",
+    );
     assert.equal((await api.swiftImporters({ file: "Sources/A.swift" })).command, "swiftImporters");
     assert.equal(
       (await api.swiftTestTargets({ file: "Sources/A.swift" })).command,
@@ -756,6 +766,41 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,
+  );
+});
+
+test("generatePostgresCatalog declarations separate complete and ordering catalogs", () => {
+  const types = readFileSync(join(packageRoot, "postgres-catalog-types.d.ts"), "utf8");
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+
+  assert.match(types, /export type PostgresCatalogCoverage = "complete" \| "ordering";/);
+  assert.match(types, /coverage\?: PostgresCatalogCoverage;/);
+  assert.match(
+    types,
+    /export interface PostgresCompleteCatalog \{\n  formatVersion: 2;\n  coverage: "complete";/,
+  );
+  assert.match(
+    types,
+    /export interface PostgresOrderingCatalog \{\n  formatVersion: 2;\n  coverage: "ordering";/,
+  );
+  assert.match(types, /export type PostgresCatalog = /);
+  for (const fact of ["functions", "enums", "views"]) {
+    assert.match(types, new RegExp(`  ${fact}: Record<string, PostgresCatalog`));
+  }
+  for (const fact of ["foreignKeys", "checkConstraints", "triggers", "physicalPartition"]) {
+    assert.match(types, new RegExp(`  ${fact}: `));
+  }
+  assert.match(
+    index,
+    /PostgresCatalogOptions & \{ coverage: "ordering" \}>,\n\): Promise<PostgresOrderingCatalog>;/,
+  );
+  assert.match(
+    index,
+    /PostgresCatalogOptions & \{ coverage\?: "complete" \}>,\n\): Promise<PostgresCompleteCatalog>;/,
+  );
+  assert.match(
+    index,
+    /WithInvocationOptions<PostgresCatalogOptions>,\n\): Promise<PostgresCatalog>;/,
   );
 });
 

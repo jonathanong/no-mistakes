@@ -123,4 +123,4 @@ groups, limits, diffs, and deleted-file behavior.
 - [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported
   forms, confidence limits, and `rg` fallbacks.
 
-For independent PostgreSQL ordering catalogs, use `postgres catalog --connection-env DATABASE_URL --schema public --output ordering-catalog.json`. This reads PostgreSQL metadata directly and emits tool-owned ordering facts; it does not read application snapshots.
+For the schema catalog that PostgreSQL rules read through `schemaCatalogPath`, use `postgres catalog --connection-env DATABASE_URL --schema public --output db/schema.json`. This reads PostgreSQL metadata directly and writes a complete catalog that every catalog rule accepts; add `--coverage ordering` for only the facts conflict and lock ordering need. It is the only catalog format no-mistakes reads, and it does not read application snapshots.

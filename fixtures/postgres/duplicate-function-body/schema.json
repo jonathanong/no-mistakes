@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_title": {
       "definition": "CREATE FUNCTION fn_title() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW.title IS DISTINCT FROM OLD.title; END $$;"

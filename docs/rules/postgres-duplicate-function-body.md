@@ -63,7 +63,7 @@ drift so a fix has to be repeated in each copy.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `minClusterSize` defaults to `2` and must be
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `minClusterSize` defaults to `2` and must be
 at least 2. `minTokens` defaults to `1` and must be at least 1.
 `normalizeIdentifiers` and `normalizeRaise` default to `true`.
 `keepIdentifiers` and `allow` default to `[]`. An empty allow reason, an

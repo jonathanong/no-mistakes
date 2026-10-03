@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_left": {
       "definition": "CREATE FUNCTION fn_left(note text DEFAULT E'it\\'s AS $$ SELECT shared $$') RETURNS int LANGUAGE sql AS $$ SELECT left_fn() $$"

@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_path": {
       "definition": "CREATE FUNCTION fn_path() RETURNS int LANGUAGE sql SET search_path TO security, definer AS $$ SELECT widget $$"

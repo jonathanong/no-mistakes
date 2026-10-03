@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_hex": {
       "definition": "CREATE FUNCTION fn_hex() RETURNS int LANGUAGE sql AS E'SELECT \\x31'"

@@ -1,4 +1,4 @@
 {
-  "formatVersion": 2,
-  "tables": { "broken": { "columns": { "id": { "generated": "always" } } } }
+  "formatVersion": 2, "coverage": "complete",
+  "tables": { "broken": { "columns": { "id": { "dataType": "integer", "generated": "always" } } } }
 }

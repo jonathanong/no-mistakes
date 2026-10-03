@@ -77,7 +77,7 @@ Findings use `table:<name>`. Shape texts start with `(shape <name>)`.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `shapes` defaults to `[]`. Each shape `name`
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `shapes` defaults to `[]`. Each shape `name`
 is required and unique. `tablePattern` is a required regex. A required column
 has exactly one of `name` or `namePattern`. `references: []` is an error.
 `onDelete` is `cascade`, `restrict`, `set null`, `set default`, or `no action`.

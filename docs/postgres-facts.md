@@ -1,3 +1,4 @@
+<!-- cspell:ignore functiondef viewdef constraintdef triggerdef -->
 # PostgreSQL fact sources
 
 `no-mistakes` exposes two reusable, rule-free fact sources for PostgreSQL
@@ -337,23 +338,53 @@ comments (`-- name`) and empty `/* */` comments are not annotations.
 
 ## Schema catalog model
 
-`SchemaCatalog::load` reads a repository-relative PostgreSQL snapshot with
-`formatVersion: 2`. Snapshots accept strict JSON syntax with `//` and `/* */`
-comments (JSONC); trailing commas and other JSONC extensions remain invalid.
-Missing snapshot fields default, so a catalog that only
-records indexes still loads. `postgres-finite-text-columns` reads column types,
-foreign keys, and `CHECK` definitions from this snapshot. `postgres-array-columns`
-reads column `data_type` values and enum names from this snapshot.
-`postgres-conflict-ordering` and
-`postgres-lock-ordering` keep resolving arbiters from valid, ready, unique or
-primary btree indexes only. `tables()`, `table(name)`, `functions()`,
-`enums()`, and `views()` expose the rest of the snapshot. Iterators are in
-name order. Function order follows the snapshot key. `table(name)` matches
-that key exactly.
+`SchemaCatalog::load` reads a repository-relative schema catalog. The catalog
+format is the one `no-mistakes postgres catalog` writes
+([`postgres catalog`](cli/postgres.md)): no-mistakes owns both the format and its
+generator, and this section is the only catalog contract. There is no external
+snapshot producer, and the loader never accepts another tool's snapshot shape.
+The file must state `formatVersion: 2` and its `coverage`, which is `complete`
+(every fact below) or `ordering` (only what conflict and lock ordering need).
+Nothing is assumed complete: a missing `coverage` is a load error. Every column
+must carry `dataType`, so a missing type fails the load instead of becoming `""`.
+An invalid catalog names the failing field, as in
+`schemaCatalogPath <path> has an invalid schema: tables.accounts.columns.id:
+missing field `dataType``, and says to generate the catalog with
+`no-mistakes postgres catalog`. Catalogs accept strict JSON syntax with `//` and
+`/* */` comments (JSONC); trailing commas and other JSONC extensions remain invalid.
+Apart from those required fields, a missing field takes its default so a
+hand-written fixture can state only the facts it tests; the generator always writes
+all of them.
 
-`SCHEMA_CATALOG_RULE_IDS` selects which configured rules load a snapshot.
+`postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`
+definitions from the catalog. `postgres-array-columns` reads column `data_type`
+values and enum names from it. A rule that needs more than ordering facts rejects an
+ordering catalog with `schemaCatalogPath <path> has ordering-only coverage; this
+rule requires a complete schema catalog`; only `postgres-conflict-ordering` and
+`postgres-lock-ordering` accept it. Both keep resolving arbiters from valid, ready,
+unique or primary btree indexes only. `tables()`, `table(name)`, `functions()`,
+`enums()`, and `views()` expose the rest of the catalog. Iterators are in
+name order. Function order follows the catalog key. Tables are indexed by
+normalized name, so `table(name)` and `relation(name)` find a quoted key such as
+`"Order Items"` by its quoted or unquoted spelling.
+
+`SCHEMA_CATALOG_RULE_IDS` selects which configured rules load a catalog.
 It is a separate list from `PREPARED_EMBEDDED_SQL_RULE_IDS`, so a schema-only
 rule can append its id without declaring an embedded-SQL executor.
+
+The generator selects relations with one policy for both coverages: partition
+children, extension-owned objects, internal triggers, PostgreSQL 18 NOT NULL
+constraints, aggregates and window functions, sequences, TOAST tables, temporary
+tables and foreign tables (unsupported) are not catalog facts. Types render relative
+to the selected schema, so an enum column's `dataType` equals its enum name.
+Identifier conventions: table, index, constraint, trigger, enum and function
+keys are SQL identifiers, quoted only where PostgreSQL requires it. Keys of `columns`,
+the column lists of `primaryKey` and `foreignKeys`, and index key `column` are raw
+names. Unique-constraint `columns` and index key `expression` are written as SQL.
+A function key is its name plus identity arguments, such as `over(a integer)`.
+`ordinalPosition` is the 1-based position among live columns. The text from
+`pg_get_functiondef`, `pg_get_viewdef`, `pg_get_constraintdef`, `pg_get_triggerdef`
+and `format_type` is PostgreSQL's own and can differ between major versions.
 
 JSON keys are camelCase. A table object may contain `relationKind`
 (`table`, the default, or `partitioned table`), `comment`, `columns`,
@@ -505,8 +536,10 @@ a catalog. Rule consumers borrow those facts and resolve the protected columns
 after the ordered migration projection; they do not parse SQL again. Query-file
 `include` scope is independent of migration `sqlInclude`.
 
-## Independent observed ordering catalogs
+## Generated schema catalogs
 
 [`postgres catalog`](cli/postgres.md) generates the tool-owned JSON directly from
-PostgreSQL, without an application snapshot producer. Explicit ordering coverage
-is accepted only by conflict/lock ordering checks; full-schema checks reject it.
+PostgreSQL, without an application snapshot producer. Complete coverage is accepted
+by every catalog check. Explicit ordering coverage is accepted only by conflict/lock
+ordering checks; full-schema checks reject it. For one database, conflict and lock
+ordering report identical findings from either coverage.

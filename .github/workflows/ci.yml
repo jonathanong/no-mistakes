@@ -436,11 +436,18 @@ jobs:
       - name: Start isolated PostgreSQL for catalog fixtures
         timeout-minutes: 5
         run: |
+          # PostgreSQL 18 exactly: the committed catalog fixture uses VIRTUAL generated columns
+          # and PostgreSQL 18 deparse text, which differs between major versions. The package
+          # includes the contrib extensions that the extension-exclusion tests install.
           sudo apt-get update
-          sudo apt-get install -y postgresql
-          pg_bin="$(find /usr/lib/postgresql -path '*/bin/initdb' -print | sort -V | tail -n 1)"
-          pg_bin="${pg_bin%/initdb}"
-          "$pg_bin/initdb" -D "$RUNNER_TEMP/no-mistakes-postgres" --auth=trust --no-locale
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-18
+          pg_bin=/usr/lib/postgresql/18/bin
+          test -f /usr/share/postgresql/18/extension/citext.control
+          test -f /usr/share/postgresql/18/extension/pg_stat_statements.control
+          echo "$pg_bin" >> "$GITHUB_PATH"
+          "$pg_bin/initdb" -D "$RUNNER_TEMP/no-mistakes-postgres" --auth=trust --no-locale -E UTF8
           "$pg_bin/pg_ctl" -D "$RUNNER_TEMP/no-mistakes-postgres" -l "$RUNNER_TEMP/no-mistakes-postgres.log" -o "-k $RUNNER_TEMP -p 56225 -c listen_addresses=" start
           echo "NO_MISTAKES_TEST_POSTGRES_URL=postgresql://$USER@localhost/postgres?host=$RUNNER_TEMP&port=56225" >> "$GITHUB_ENV"
           echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"

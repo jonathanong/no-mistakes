@@ -18,13 +18,13 @@ rules:
       importSpecifier: "@data-stores/psql"
       executorNames: [query, read, write]
       safeDirective: deadlock-safe
-      schemaCatalogPath: backend/data-stores/psql/schema-snapshot/schema.json
+      schemaCatalogPath: db/schema.json
 ```
 
 `importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
 `query`, `read`, and `write`. `safeDirective` defaults to `deadlock-safe`.
 `schemaCatalogPath` is optional; when present it must be a repository-relative
-PostgreSQL schema snapshot with `formatVersion: 2`.
+catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md).
 
 Counterexample: `query(\`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE\`)`
 without `ORDER BY` or `SKIP LOCKED`. Unparseable `FOR UPDATE` SQL is a
@@ -80,7 +80,8 @@ remains an alternative because it avoids waiting for an already-held row lock.
 `include` and `exclude` select source files. `importSpecifier` defaults to
 `@data-stores/psql`, `executorNames` defaults to `[query, read, write]`, and
 `safeDirective` defaults to `deadlock-safe`. `schemaCatalogPath` defaults to
-unset; set it to enable the catalog exact-prefix requirement.
+unset; set it to a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md) to enable the catalog
+exact-prefix requirement.
 
 ## Valid example
 
@@ -114,12 +115,13 @@ ensures lock statements remain identifiable in query logs; and
 [`postgres-conflict-ordering`](postgres-conflict-ordering.md) requires shared
 multi-row conflict writers to use the same catalog order.
 
-## Generated ordering catalogs
+## Generated catalogs
 
-[`postgres catalog`](../cli/postgres.md) observes PostgreSQL directly and emits
-independent ordering facts. It retains invalid/not-ready/non-live index state;
+[`postgres catalog`](../cli/postgres.md) observes PostgreSQL directly. This rule
+accepts both its `complete` and `ordering` coverage, and reports identical findings
+for either. Ordering coverage emits only independent ordering facts. It retains invalid/not-ready/non-live index state;
 those indexes cannot prove order. Unsupported custom operator classes/collations remain
 in the JSON but fail closed for canonical proof. Deferrable unique indexes cannot
 be conflict arbiters, although supported valid keys can still prove lock order.
-The generated catalog explicitly declares ordering coverage and cannot satisfy
-rules requiring complete schema metadata.
+An ordering catalog declares its coverage and cannot satisfy rules requiring
+complete schema metadata; a complete catalog satisfies every catalog rule.

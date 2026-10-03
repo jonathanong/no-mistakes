@@ -127,7 +127,6 @@ fn schema_qualified_tables_keep_distinct_catalog_identities() {
     let catalog = SchemaCatalog::from_snapshot(
         "schema.json",
         Snapshot {
-            format_version: 2,
             tables: BTreeMap::from([
                 ("public.items".to_owned(), table("public_items_key", "id")),
                 (
@@ -167,7 +166,6 @@ fn arbiter_indexes_keep_ready_btree_expression_keys() {
     let catalog = SchemaCatalog::from_snapshot(
         "schema.json",
         Snapshot {
-            format_version: 2,
             tables: BTreeMap::from([(
                 "widgets".to_owned(),
                 SnapshotTable {

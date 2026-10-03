@@ -46,7 +46,9 @@ matching entry reports. `forbiddenColumnNames` reports the first matching
 pattern.
 
 A single-column foreign key, other than a column named `id`, must end with a
-configured `targetSuffixes` suffix when the referenced table is listed.
+configured `targetSuffixes` suffix when the referenced table is listed. A table is
+listed by its name without SQL quoting: `Users` for `"Users"`, and `other.Users`
+for a schema-qualified reference.
 Otherwise, when `targetMatch` is `last-word` or `full-name`, the name must end
 with the referenced column and the remaining word or words must match the
 singular target name. Schema-qualified references derive the default target
@@ -67,7 +69,7 @@ skipped by that check. Tables matching `ignoreTablePatterns` are not checked.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required and has no default. `typeRules`,
+`schemaCatalogPath` is required, has no default, and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `typeRules`,
 `nameTypeRules`, `ignoreTablePatterns`, `forbiddenColumnNames`, and `allow`
 default to `[]`. `skipGeneratedColumns` defaults to `false`.
 `foreignKeys.targetMatch` defaults to `off`. `foreignKeys.checkSelfReferences`
@@ -119,6 +121,7 @@ the whole catalog. For example:
 ```jsonc
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "orders": {
       "columns": {

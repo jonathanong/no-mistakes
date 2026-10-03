@@ -50,13 +50,14 @@ not also reported stale.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `neverAllowElementTypes` defaults to `["uuid"]`. `allowElementTypes` defaults to `[]`. A type that appears in both lists is a configuration error. `allowEnumElements` defaults to `false`. `allow` defaults to `[]`. An empty reason, a duplicate object, or an object ref that is not `column:<table>.<column>` is a configuration error.
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `neverAllowElementTypes` defaults to `["uuid"]`. `allowElementTypes` defaults to `[]`. A type that appears in both lists is a configuration error. `allowEnumElements` defaults to `false`. `allow` defaults to `[]`. An empty reason, a duplicate object, or an object ref that is not `column:<table>.<column>` is a configuration error.
 
 ## Valid example
 
 ```json
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "oauth_clients": {
       "columns": { "redirect_uris": { "dataType": "text[]" } }
@@ -75,6 +76,7 @@ includes `smallint`.
 ```json
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "orders": {
       "columns": {

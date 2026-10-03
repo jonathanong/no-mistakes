@@ -1,0 +1,73 @@
+# Every catalog-backed rule, reading the catalog that `no-mistakes postgres catalog` generated
+# from schema.sql. A real-PostgreSQL test asserts each rule reports at least one finding.
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      plural:
+        enabled: true
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      typeRules:
+        - types: [boolean]
+          namePattern: '(^|_)(is|has|can|should)_'
+          hint: name boolean columns as a predicate
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      requirements:
+        - column: updated_at
+          function: fn_touch_updated_at
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-duplicate-function-body
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-table-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      bannedTablePatterns:
+        - pattern: '_history$'
+          message: use a *_revisions table
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      statusColumns: [status, state]
+      lifecycleVerbs: [sent, failed]
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      sqlInclude: ['sql/**/*.sql']
+      partitionKeys: require
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      sqlInclude: ['sql/**/*.sql']
+      maxColumns: 0

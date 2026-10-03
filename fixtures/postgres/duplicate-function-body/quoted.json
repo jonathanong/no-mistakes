@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_quote_a": {
       "definition": "CREATE FUNCTION fn_quote_a() RETURNS int LANGUAGE sql AS 'SELECT widget'"

@@ -51,7 +51,7 @@ when a pattern selected it.
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `objects` defaults to `[table]`. An empty
+`schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `objects` defaults to `[table]`. An empty
 list, an unknown value, or a duplicate value is a configuration error.
 `columnNamePatterns` and `exemptColumnNamePatterns` default to `[]`. An
 invalid regex is a configuration error. `minLength` defaults to `1` and must

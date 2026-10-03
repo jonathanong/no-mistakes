@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_type_a": {
       "definition": "CREATE FUNCTION fn_type_a() RETURNS \"TypeA\" LANGUAGE sql AS $$ SELECT 1 $$"

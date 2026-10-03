@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_param(integer)": {
       "definition": "CREATE FUNCTION fn_param(immutable integer) RETURNS int LANGUAGE sql AS $$ SELECT widget $$"

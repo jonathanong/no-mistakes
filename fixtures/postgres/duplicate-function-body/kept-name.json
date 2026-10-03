@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 2, "coverage": "complete",
   "functions": {
     "fn_plain": {
       "definition": "CREATE FUNCTION fn_plain() RETURNS int LANGUAGE sql AS $$ SELECT MixedCase $$"
