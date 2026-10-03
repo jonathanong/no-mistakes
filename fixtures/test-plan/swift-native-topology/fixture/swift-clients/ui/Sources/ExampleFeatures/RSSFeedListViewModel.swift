@@ -1,5 +1,5 @@
-import VouchaCore
-import VouchaAPI
+import ExampleCore
+import ExampleAPI
 
 public final class RSSFeedListViewModel {
     let client = APIClient()

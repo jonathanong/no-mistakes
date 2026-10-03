@@ -25,9 +25,10 @@ fn compiled() -> CompiledOptions {
     compile_options(&Options {
         banned_domains: vec!["example.com".to_string()],
         allowed_email_patterns: vec![
-            r"(?i)^tests(?:\+[a-z0-9._%${}-]+|%2b[a-z0-9._%${}-]+)(?:@|%40)voucha\.ai$".to_string(),
+            r"(?i)^tests(?:\+[a-z0-9._%${}-]+|%2b[a-z0-9._%${}-]+)(?:@|%40)example\.com$"
+                .to_string(),
         ],
-        replacement: Some("tests+<hash>@voucha.ai".to_string()),
+        replacement: Some("tests+<hash>@example.com".to_string()),
         extensions: Vec::new(),
     })
     .unwrap()
@@ -47,7 +48,7 @@ fn rejects_raw_and_encoded_banned_domains() {
     assert!(findings
         .iter()
         .all(|finding| finding.target.as_deref() == Some("example.com")));
-    assert!(findings[0].message.contains("tests+<hash>@voucha.ai"));
+    assert!(findings[0].message.contains("tests+<hash>@example.com"));
 }
 
 #[test]
@@ -123,7 +124,7 @@ fn check_with_files_scans_the_source_store_wrapper() {
         rule: RULE_ID.to_string(),
         scope: Some(RuleScope::Repository),
         options: serde_yaml::from_str(
-            "{bannedDomains: [example.com], allowedEmailPatterns: [], replacement: tests@voucha.ai}",
+            "{bannedDomains: [example.com], allowedEmailPatterns: [], replacement: tests@example.com}",
         )
         .unwrap(),
         ..Default::default()

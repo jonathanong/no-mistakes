@@ -15,7 +15,7 @@ rules:
     options:
       entrypoint: packages/api/src/index.mts
       queuePattern: packages/api/src/*.mts
-      factorySpecifier: "@data-stores/valkey/glide-mq-factory"
+      factorySpecifier: "@example/cache/glide-mq-factory"
       factoryFunction: createQueue
       tsconfig: tsconfig.json
 

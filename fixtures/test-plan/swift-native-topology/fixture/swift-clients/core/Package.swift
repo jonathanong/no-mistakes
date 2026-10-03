@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-  name: "VouchaCore",
+  name: "ExampleCore",
   products: [
-    .library(name: "VouchaAPI", targets: ["VouchaAPI"]),
-    .library(name: "VouchaCore", targets: ["VouchaCore"]),
+    .library(name: "ExampleAPI", targets: ["ExampleAPI"]),
+    .library(name: "ExampleCore", targets: ["ExampleCore"]),
   ],
   targets: [
-    .target(name: "VouchaAPI"),
-    .target(name: "VouchaCore", dependencies: ["VouchaAPI"]),
-    .testTarget(name: "VouchaCoreTests", dependencies: ["VouchaCore", "VouchaAPI"]),
+    .target(name: "ExampleAPI"),
+    .target(name: "ExampleCore", dependencies: ["ExampleAPI"]),
+    .testTarget(name: "ExampleCoreTests", dependencies: ["ExampleCore", "ExampleAPI"]),
   ]
 )

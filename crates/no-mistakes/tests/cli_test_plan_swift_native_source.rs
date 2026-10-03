@@ -12,7 +12,7 @@ fn test_plan_swift_native_source_uses_package_dependency_graph() {
         "--root",
         root.to_str().unwrap(),
         "--changed-file",
-        "swift-clients/core/Sources/VouchaCore/APIClient.swift",
+        "swift-clients/core/Sources/ExampleCore/APIClient.swift",
         "--json",
     ]);
 
@@ -32,22 +32,22 @@ fn test_plan_swift_native_source_uses_package_dependency_graph() {
     assert_eq!(
         selected,
         vec![
-            "swift-clients/android/Tests/VouchaAndroidTests/AppTests.swift",
-            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
-            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+            "swift-clients/android/Tests/ExampleAndroidTests/AppTests.swift",
+            "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
+            "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift",
         ]
     );
 
     let core_reason = &plan["selected_tests"][1]["reasons"][0];
     assert_eq!(
         core_reason["changed_file"],
-        "swift-clients/core/Sources/VouchaCore/APIClient.swift"
+        "swift-clients/core/Sources/ExampleCore/APIClient.swift"
     );
     assert_eq!(
         core_reason["path"],
         serde_json::json!([
-            "swift-clients/core/Sources/VouchaCore/APIClient.swift",
-            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift"
+            "swift-clients/core/Sources/ExampleCore/APIClient.swift",
+            "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift"
         ])
     );
     assert_eq!(core_reason["via"], serde_json::json!(["swift"]));
@@ -55,13 +55,13 @@ fn test_plan_swift_native_source_uses_package_dependency_graph() {
     let ui_reason = &plan["selected_tests"][2]["reasons"][0];
     assert_eq!(
         ui_reason["changed_file"],
-        "swift-clients/core/Sources/VouchaCore/APIClient.swift"
+        "swift-clients/core/Sources/ExampleCore/APIClient.swift"
     );
     assert_eq!(
         ui_reason["path"],
         serde_json::json!([
-            "swift-clients/core/Sources/VouchaCore/APIClient.swift",
-            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift"
+            "swift-clients/core/Sources/ExampleCore/APIClient.swift",
+            "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift"
         ])
     );
     assert_eq!(
@@ -80,7 +80,7 @@ fn test_plan_swift_android_source_stays_in_android_package() {
         "--root",
         root.to_str().unwrap(),
         "--changed-file",
-        "swift-clients/android/Sources/VouchaAndroid/App.swift",
+        "swift-clients/android/Sources/ExampleAndroid/App.swift",
         "--json",
     ]);
     assert!(
@@ -97,7 +97,7 @@ fn test_plan_swift_android_source_stays_in_android_package() {
         .collect();
     assert_eq!(
         selected,
-        vec!["swift-clients/android/Tests/VouchaAndroidTests/AppTests.swift"]
+        vec!["swift-clients/android/Tests/ExampleAndroidTests/AppTests.swift"]
     );
 }
 
@@ -111,7 +111,7 @@ fn test_plan_swift_native_source_commands_format_uses_package_filters() {
         "--root",
         root.to_str().unwrap(),
         "--changed-file",
-        "swift-clients/core/Sources/VouchaCore/APIClient.swift",
+        "swift-clients/core/Sources/ExampleCore/APIClient.swift",
         "--format",
         "commands",
     ]);
@@ -126,9 +126,9 @@ fn test_plan_swift_native_source_commands_format_uses_package_filters() {
     assert_eq!(
         commands,
         vec![
-            "swift test --package-path swift-clients/android --filter VouchaAndroidTests",
-            "swift test --package-path swift-clients/core --filter VouchaCoreTests",
-            "swift test --package-path swift-clients/ui --filter VouchaUITests",
+            "swift test --package-path swift-clients/android --filter ExampleAndroidTests",
+            "swift test --package-path swift-clients/core --filter ExampleCoreTests",
+            "swift test --package-path swift-clients/ui --filter ExampleUITests",
         ]
     );
 }
@@ -161,7 +161,7 @@ fn test_plan_swift_include_glob_accounts_and_targets_only_selected_package() {
     assert_eq!(selected.len(), 1);
     assert_eq!(
         selected[0]["test_file"],
-        "swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"
+        "swift-clients/apps/android/Tests/ExampleAndroidTests/DeviceTests.swift"
     );
     assert!(selected[0]["targets"]
         .as_array()
@@ -169,20 +169,20 @@ fn test_plan_swift_include_glob_accounts_and_targets_only_selected_package() {
         .iter()
         .any(|target| {
             target["config"] == "swift-clients/apps/android"
-                && target["project"] == "VouchaAndroidTests"
+                && target["project"] == "ExampleAndroidTests"
                 && target["runner_args"]
                     == serde_json::json!([
                         "--package-path",
                         "swift-clients/apps/android",
                         "--filter",
-                        "VouchaAndroidTests"
+                        "ExampleAndroidTests"
                     ])
         }));
     assert_eq!(
         plan["groups"],
         serde_json::json!([{
             "type": "all",
-            "selected": ["swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"],
+            "selected": ["swift-clients/apps/android/Tests/ExampleAndroidTests/DeviceTests.swift"],
             "remaining": 0,
             "limit": null
         }])
@@ -194,18 +194,18 @@ fn test_plan_swift_include_glob_accounts_and_targets_only_selected_package() {
         .any(|target| {
             target["runner"] == "swift"
                 && target["config"] == "swift-clients/apps/android"
-                && target["project"] == "VouchaAndroidTests"
+                && target["project"] == "ExampleAndroidTests"
                 && target["name"] == "swift-clients/apps/android"
                 && target["runner_args"]
                     == serde_json::json!([
                         "--package-path",
                         "swift-clients/apps/android",
                         "--filter",
-                        "VouchaAndroidTests"
+                        "ExampleAndroidTests"
                     ])
                 && target["test_files"]
                     == serde_json::json!([
-                        "swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"
+                        "swift-clients/apps/android/Tests/ExampleAndroidTests/DeviceTests.swift"
                     ])
         }));
 }

@@ -1,5 +1,5 @@
 import XCTest
-import VouchaAndroid
+import ExampleAndroid
 
 final class DeviceTests: XCTestCase {
     func testDevice() {

@@ -1,7 +1,7 @@
 import {
   createBulkEnqueueFunction,
   createEnqueueFunction,
-} from '@data-stores/valkey/glide-mq-factory';
+} from '@example/cache/glide-mq-factory';
 import { factoryQueue } from './queues.mts';
 
 const enqueueSingleJob = createEnqueueFunction({

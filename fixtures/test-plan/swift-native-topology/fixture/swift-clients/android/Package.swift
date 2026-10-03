@@ -2,13 +2,13 @@
 import PackageDescription
 
 let package = Package(
-  name: "VouchaAndroid",
+  name: "ExampleAndroid",
   dependencies: [
     .package(path: "../core"),
     .package(path: "../ui"),
   ],
   targets: [
-    .target(name: "VouchaAndroid", dependencies: ["VouchaCore", "VouchaFeatures"]),
-    .testTarget(name: "VouchaAndroidTests", dependencies: ["VouchaAndroid"]),
+    .target(name: "ExampleAndroid", dependencies: ["ExampleCore", "ExampleFeatures"]),
+    .testTarget(name: "ExampleAndroidTests", dependencies: ["ExampleAndroid"]),
   ]
 )

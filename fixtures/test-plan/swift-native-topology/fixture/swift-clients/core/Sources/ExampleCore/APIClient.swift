@@ -1,4 +1,4 @@
-import VouchaAPI
+import ExampleAPI
 
 public final class APIClient {
     public init() {}

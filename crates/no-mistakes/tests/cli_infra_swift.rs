@@ -126,7 +126,7 @@ fn infra_test_for_finds_covering_test() {
 #[test]
 fn swift_importers_lists_importing_files() {
     let root = fixture("swift-test-plan");
-    let file = "swift-clients/core/Sources/VouchaAPI/Endpoint.swift";
+    let file = "swift-clients/core/Sources/ExampleAPI/Endpoint.swift";
     for format in ["yml", "md", "paths", "human"] {
         let output = run_in(&root, &["swift", "importers", file, "--format", format]);
         assert!(output.status.success(), "format {format} failed");
@@ -145,7 +145,7 @@ fn swift_importers_lists_importing_files() {
 #[test]
 fn swift_test_targets_reports_covering_target() {
     let root = fixture("swift-test-plan");
-    let file = "swift-clients/core/Sources/VouchaAPI/Endpoint.swift";
+    let file = "swift-clients/core/Sources/ExampleAPI/Endpoint.swift";
     for format in ["yml", "md", "paths", "human"] {
         let output = run_in(&root, &["swift", "test-targets", file, "--format", format]);
         assert!(output.status.success(), "format {format} failed");
@@ -158,5 +158,5 @@ fn swift_test_targets_reports_covering_target() {
         .iter()
         .map(|row| row["target"].as_str().unwrap())
         .collect();
-    assert!(targets.contains(&"VouchaCoreTests"));
+    assert!(targets.contains(&"ExampleCoreTests"));
 }

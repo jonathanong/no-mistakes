@@ -94,7 +94,7 @@ fn custom_banned_statements_narrow_the_rule() {
 }
 
 #[test]
-fn option_defaults_use_schema_sql_include_and_filaments_kinds() {
+fn option_defaults_use_schema_sql_include_and_supported_kinds() {
     let compiled = compile_options(&Options::default());
     assert_eq!(
         compiled.schema.sql_include,

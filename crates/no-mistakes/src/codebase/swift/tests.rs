@@ -53,7 +53,7 @@ fn package_manifests_are_not_indexed_as_swift_source_symbols() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/swift-native-topology/fixture");
     let manifest = root.join("swift-clients/core/Package.swift");
-    let source = root.join("swift-clients/core/Sources/VouchaCore/APIClient.swift");
+    let source = root.join("swift-clients/core/Sources/ExampleCore/APIClient.swift");
     let facts = collect_swift_facts(
         &root,
         &[manifest.clone(), source.clone()],
