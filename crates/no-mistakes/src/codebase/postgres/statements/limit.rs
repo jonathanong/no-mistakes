@@ -4,7 +4,8 @@ use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
 use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Spanned, Value,
+    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, SetExpr, Spanned,
+    Value,
 };
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
@@ -131,7 +132,14 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
     let after = spans.into_iter().flatten().map(end).max()?;
     // An implicit nested FETCH has an empty AST span, including when it ends an OFFSET
     // subquery. Keep token nesting as well as spans so that clause cannot locate this query.
+    // A parenthesized body begins before its inner query's span. Account for those
+    // opening parentheses before scanning from the body start.
     let mut depth = 0usize;
+    let mut body = query.body.as_ref();
+    while let SetExpr::Query(inner) = body {
+        depth += 1;
+        body = inner.body.as_ref();
+    }
     for token in tokens
         .all()
         .iter()

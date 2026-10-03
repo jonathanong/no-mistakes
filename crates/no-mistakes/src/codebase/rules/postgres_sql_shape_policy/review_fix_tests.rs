@@ -161,7 +161,7 @@ fn implicit_fetch_after_offset_subquery_keeps_each_clause_line_and_suppression()
             .iter()
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [5, 7, 13, 15, 20, 23],
+        [5, 7, 13, 15, 20, 23, 28, 30, 34, 37],
         "{findings:#?}"
     );
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
@@ -171,7 +171,7 @@ fn implicit_fetch_after_offset_subquery_keeps_each_clause_line_and_suppression()
             .iter()
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [5, 7, 15, 20],
+        [5, 7, 15, 20, 28, 30, 34],
         "Each directive must suppress only its own query's FETCH clause: {findings:#?}"
     );
 }
