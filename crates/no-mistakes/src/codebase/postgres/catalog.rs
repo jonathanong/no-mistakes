@@ -148,16 +148,27 @@ impl SchemaCatalog {
         self.model_tables.get(&names::normalize_table_name(name))
     }
 
+    /// The table a SQL name refers to: its exact key, or the one table whose bare name it is.
+    /// A name that spells a schema reaches a bare-keyed table only when it is this catalog's
+    /// schema; `audit.accounts` is not the `accounts` of the catalog for `public`.
     pub fn relation(&self, name: &str) -> Option<&CatalogTable> {
         let normalized = names::normalize_table_name(name);
         if let Some(table) = self.model_tables.get(&normalized) {
             return Some(table);
         }
         let tail = normalized.rsplit('.').next().unwrap_or(&normalized);
-        let mut matches = self
-            .model_tables
-            .iter()
-            .filter(|(key, _)| key.rsplit('.').next().unwrap_or(key) == tail);
+        let qualified = tail.len() < normalized.len();
+        if qualified {
+            let qualifier = &normalized[..normalized.len() - tail.len() - 1];
+            let own = self.schema.as_deref().map(names::normalize_table_name);
+            if own.is_some_and(|own| own != qualifier) {
+                return None;
+            }
+        }
+        // A qualified name that is not an exact key can only mean a bare-keyed table.
+        let mut matches = self.model_tables.iter().filter(|(key, _)| {
+            key.rsplit('.').next().unwrap_or(key) == tail && !(qualified && key.contains('.'))
+        });
         let (_, table) = matches.next()?;
         matches.next().is_none().then_some(table)
     }

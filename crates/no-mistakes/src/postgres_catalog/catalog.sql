@@ -93,9 +93,11 @@ WITH selected AS (
     'checkConstraints', COALESCE((SELECT jsonb_object_agg(c.name, jsonb_build_object(
       'definition', c.definition, 'validated', c.validated)) FROM constraints c
       WHERE c.conrelid = r.oid AND c.contype = 'c'), '{}'::jsonb),
+    -- tgenabled O and A fire in a normal session. A disabled (D) or replica-only (R) trigger
+    -- does not, and pg_get_triggerdef does not say so, so it would read as active.
     'triggers', COALESCE((SELECT jsonb_object_agg(quote_ident(t.tgname),
       jsonb_build_object('definition', pg_get_triggerdef(t.oid))) FROM pg_trigger t
-      WHERE t.tgrelid = r.oid AND NOT t.tgisinternal), '{}'::jsonb)
+      WHERE t.tgrelid = r.oid AND NOT t.tgisinternal AND t.tgenabled IN ('O', 'A')), '{}'::jsonb)
   ) ELSE '{}'::jsonb END AS value FROM relations r WHERE r.relkind IN ('r', 'p')
 ), functions AS (
   -- pg_get_functiondef fails on aggregates and does not describe window functions: prokind f/p only.

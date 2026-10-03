@@ -58,7 +58,9 @@ partitioned table in the schema:
   key columns or expressions with direction and NULL ordering, predicate and
   `pg_get_indexdef` text, plus the validity, readiness, liveness and
   whether the index is deferrable, which ordering proofs need;
-- triggers as `pg_get_triggerdef` text.
+- triggers as `pg_get_triggerdef` text. Only a trigger that fires in a normal session is
+  listed: one disabled with `ALTER TABLE … DISABLE TRIGGER`, or enabled only for the
+  replica role, is left out, because the definition text does not say so.
 
 It also holds the schema's functions and procedures (`pg_get_functiondef`
 text, keyed by name and identity arguments so every overload has its own stable
@@ -75,7 +77,10 @@ which relations exist:
   each leaf are not separate entries, and a foreign key that references a
   partitioned table is one entry rather than one per partition.
 - **Extension-owned objects** are excluded: functions, types, tables and views that
-  belong to an installed extension.
+  belong to an installed extension. So are the enums of other schemas. A column that uses
+  one still names it in its `dataType` (qualified, for another schema), but it is not an
+  entry of `enums`: the catalog describes one schema, and `postgres-array-columns`
+  `allowTypes` is where such a type is listed.
 - **Internal triggers**, such as the triggers behind foreign keys and deferrable
   unique constraints, are excluded.
 - **NOT NULL constraints**, which PostgreSQL 18 stores as constraints, are not check

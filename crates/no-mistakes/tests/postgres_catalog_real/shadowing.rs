@@ -48,6 +48,27 @@ fn an_enum_is_keyed_by_the_type_a_column_renders() {
 }
 
 #[test]
+fn only_a_trigger_that_fires_in_a_normal_session_is_a_catalog_trigger() {
+    let Some(database) = shadow_database("triggers") else {
+        return;
+    };
+    let catalog = database.catalog("shadow_demo", None);
+    let triggers: Vec<&str> = catalog["tables"]["rooms"]["triggers"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect();
+    // rooms_off is disabled and rooms_replica fires only for the replica role.
+    assert_eq!(triggers, ["rooms_always", "rooms_live"]);
+    let all = database.query(
+        "SELECT count(*) FROM pg_trigger WHERE tgrelid = 'shadow_demo.rooms'::regclass \
+         AND NOT tgisinternal",
+    );
+    assert_eq!(all.trim(), "4");
+}
+
+#[test]
 fn an_enum_with_no_labels_has_an_empty_value_list_the_reader_accepts() {
     let Some(database) = shadow_database("empty_enum") else {
         return;
