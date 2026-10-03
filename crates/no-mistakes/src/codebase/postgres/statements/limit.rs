@@ -109,6 +109,7 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
     // subquery. Keep token nesting as well as spans so that clause cannot locate this query.
     // A parenthesized body begins before its inner query's span. Account for those
     // opening parentheses before scanning from the body start.
+    let body_start = start(query.body.span());
     let mut depth = 0usize;
     let mut body = query.body.as_ref();
     while let SetExpr::Query(inner) = body {
@@ -128,7 +129,7 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
     tokens
         .all()
         .iter()
-        .filter(|token| start(token.span) >= start(query.body.span()))
+        .filter(|token| start(token.span) >= body_start)
         .find_map(|token| match &token.token {
             Token::LParen => {
                 depth += 1;
