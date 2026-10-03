@@ -1,3 +1,5 @@
+mod select_all;
+
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact,
 };
@@ -459,4 +461,13 @@ fn a_sweep_records_the_parts_of_its_table_name() {
         parts("SELECT id FROM \"Work\".Items ORDER BY id LIMIT $1"),
         ["Work", "items"]
     );
+}
+
+#[test]
+fn distinct_pages_are_not_row_sweeps() {
+    assert!(sweeps(
+        "SELECT DISTINCT account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2"
+    )
+    .is_empty());
+    assert!(sweeps("SELECT DISTINCT ON (account_id) account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2").is_empty());
 }
