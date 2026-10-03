@@ -14,6 +14,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-generated-column-predicates",
     "postgres-explicit-columns",
+    "postgres-bounded-statements",
     "postgres-no-offset",
     "postgres-sql-shape-policy",
     "postgres-no-generated-column-writes",
@@ -38,6 +39,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-array-columns",
     "postgres-required-predicates",
     "postgres-explicit-columns",
+    "postgres-bounded-statements",
 ];
 
 #[derive(Default, Deserialize)]
@@ -160,7 +162,12 @@ fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<Stri
             let options: SqlOptions = rule.try_rule_options()?;
             patterns.extend(
                 if options.sql_include.is_empty()
-                    && !matches!(*id, "postgres-explicit-columns" | "postgres-no-offset")
+                    && !matches!(
+                        *id,
+                        "postgres-explicit-columns"
+                            | "postgres-bounded-statements"
+                            | "postgres-no-offset"
+                    )
                 {
                     super::PostgresSchemaOptions::default().sql_include
                 } else {

@@ -153,3 +153,5 @@ fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
         .to_string()
         .contains("prepared facts are missing"));
 }
+
+mod bound_demand;

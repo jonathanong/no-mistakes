@@ -1,0 +1,7 @@
+# schemaCatalogPath is required.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      exclude: ['src/**']
+      sqlInclude: ['sql/invalid.sql']

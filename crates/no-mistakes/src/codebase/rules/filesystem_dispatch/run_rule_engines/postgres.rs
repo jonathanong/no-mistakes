@@ -17,7 +17,7 @@ use schema::{
 mod no_offset;
 
 use naming::{
-    array_columns, column_naming, explicit_columns, finite_text, object_naming,
+    array_columns, bounded_statements, column_naming, explicit_columns, finite_text, object_naming,
     required_predicates, status_lifecycle, table_shape,
 };
 
@@ -86,6 +86,7 @@ fn run_naming_and_query_rules(
     facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        POSTGRES_BOUNDED_STATEMENTS => bounded_statements(root, config, files, sources, facts),
         POSTGRES_EXPLICIT_COLUMNS => explicit_columns(root, config, files, sources, facts),
         POSTGRES_GENERATED_COLUMN_PREDICATES => {
             generated_predicates::run(root, config, files, sources, facts)

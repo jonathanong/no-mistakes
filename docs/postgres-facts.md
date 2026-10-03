@@ -328,6 +328,53 @@ uses the statement pass's lenient split and reports each use on a top-level
 query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 `postgres-no-offset` consumes these helpers.
 
+## Row-bound facts
+
+`SqlStatementFileFacts.bounds` holds one `SqlBoundFact` per executed `SELECT`,
+`UPDATE` and `DELETE`, including those in data-modifying CTEs (whose `RETURNING` rows are an
+`Opaque` item of the query that reads them) and under `EXPLAIN ANALYZE`; `INSERT … SELECT`
+is not a bound fact. A fact keeps the `kind`, its
+`line` and `column`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the
+`target` item. Every item keeps its own `line` and `column`, so SQL recovered from
+several source operands maps each relation to the operand that wrote it.
+A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
+fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
+taken from a subquery or a column, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
+is a pure aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not
+windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returning function
+in the select list), and lists its FROM `items`. An item is a base `Table`, a `Query`
+(a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
+operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`
+over arguments the statement supplies), or `Opaque` (any other table function, and the
+recursive reference of a recursive CTE: never reported, and it bounds nothing pinned to
+it). A CTE reference without an alias is addressed by the CTE's name. A `COPY (SELECT …)`
+query is a `Select` fact.
+
+Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an
+equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)` or
+`IN (SELECT …)` against a
+`Value` (no relation of the statement: a literal, a bind, or an interpolation recovered
+from a template literal), `Items` (columns of other items; a column
+compared with its own item is never a pin), or a subquery. `WHERE` restricts every item.
+A join condition restricts only the non-preserved side of an outer join and both sides of
+an inner join; `USING (col)` pins like `ON a.col = b.col` when each side is one item,
+and `FULL`, `NATURAL` and `CROSS` joins pin nothing. A subquery that reads the row being
+checked, a value with an explicit `COLLATE`, or a call to a built-in function that differs per
+row, is not a pin source. Which relation owns a bare column of a subquery is known only to
+the catalog, so a pin and a `LATERAL` item keep `reads` (`lateral_reads`): each bare column
+with the base tables that could own it, outward when none of them has the column.
+A DML target is always a `Table`, never a CTE reference, and a `TABLE name` set-operation
+arm is a `Table` item, or the CTE it names. A bare column
+among several items has no provable owner and an unknown qualifier is an outer
+reference, so neither pins. Only base tables take pins. The facts are syntactic: a rule
+decides against a catalog whether a pinned column set is a unique key.
+
+`SchemaCatalog::unique_keys(table)` returns those key column sets: valid, ready, live,
+immediate, non-partial unique or primary indexes whose keys are all plain columns, and
+`SchemaCatalog::column_is_not_null(table, column)` says whether a column cannot hold NULL
+(`ctid` never does), which decides whether an `IS NOT DISTINCT FROM` pin identifies a row.
+`postgres-bounded-statements` consumes all three.
+
 ## Query annotation facts
 
 `sql_requires_query_annotation(sql)` reports whether executed SQL is missing a
@@ -543,3 +590,10 @@ PostgreSQL, without an application snapshot producer. Complete coverage is accep
 by every catalog check. Explicit ordering coverage is accepted only by conflict/lock
 ordering checks; full-schema checks reject it. For one database, conflict and lock
 ordering report identical findings from either coverage.
+
+Prepared row-bound facts are explicit demand. `CheckFactPlan.postgres_bounds` is
+requested by `postgres-bounded-statements` and retained when plans are merged.
+Other statement consumers and unexecuted builder fragments skip this projection;
+adding bound demand preserves all existing statement fields. SQL parsing and source
+reads remain owned by the same request-scoped preparation pass. Direct public
+statement extraction retains its complete bound facts.

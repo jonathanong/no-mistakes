@@ -35,8 +35,8 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<PreparedSqlFragment> {
 }
 
 fn statement_facts(sql: &str) -> SqlStatementFileFacts {
-    use crate::codebase::postgres::statements::extract_sql_statement_facts;
-    let direct = extract_sql_statement_facts(sql);
+    use crate::codebase::postgres::statements::extract_sql_statement_facts_with_bounds;
+    let direct = extract_sql_statement_facts_with_bounds(sql, false);
     if !direct.selects.is_empty() {
         return direct;
     }
@@ -47,7 +47,7 @@ fn statement_facts(sql: &str) -> SqlStatementFileFacts {
     } else {
         format!("SELECT 1 WHERE {sql}")
     };
-    extract_sql_statement_facts(&wrapper)
+    extract_sql_statement_facts_with_bounds(&wrapper, false)
 }
 
 #[cfg(test)]

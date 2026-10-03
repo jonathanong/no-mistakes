@@ -34,6 +34,7 @@ pub(crate) fn prepare_rule_sql_facts(
             crate::codebase::check_facts::CheckFactPlan {
                 postgres_schema: rule_ids.iter().any(|id| *id != "postgres-sql-shape-policy"),
                 postgres_dml: !dml_ids.is_empty(),
+                postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,
                 postgres_write_sql_include: if rule_ids

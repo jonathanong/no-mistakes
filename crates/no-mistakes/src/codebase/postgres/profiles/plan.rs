@@ -10,12 +10,16 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-offset",
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
+        "postgres-bounded-statements",
         "postgres-sql-shape-policy",
         "postgres-no-generated-column-writes",
     ];
     plan.postgres_dml |= dml_rules
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_bounds |= !config
+        .rule_applications("postgres-bounded-statements")
+        .is_empty();
     plan.postgres_fragments |= !config
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();

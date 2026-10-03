@@ -63,6 +63,7 @@ pub(super) fn collect(
                             source.as_ref().unwrap(),
                             statements,
                             *failed,
+                            plan.postgres_bounds,
                         );
                         value.path = path.clone();
                         Arc::new(vec![value])

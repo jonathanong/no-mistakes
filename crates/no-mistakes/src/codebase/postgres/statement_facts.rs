@@ -1,4 +1,9 @@
+mod bounds;
 mod writes;
+pub use bounds::{
+    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundPin,
+    SqlBoundQuery, SqlPinSource,
+};
 use std::path::PathBuf;
 pub use writes::{SqlWriteColumns, SqlWriteFact};
 
@@ -21,6 +26,8 @@ pub struct SqlStatementFileFacts {
     pub mutation_column_uses: Vec<SqlColumnUseFact>,
     /// Executed OFFSET occurrences in source order.
     pub offset_uses: Vec<super::offset::SqlOffsetFact>,
+    /// Row-count bounds of each executed SELECT, UPDATE and DELETE.
+    pub bounds: Vec<SqlBoundFact>,
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,

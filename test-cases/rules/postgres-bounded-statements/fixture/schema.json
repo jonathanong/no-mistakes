@@ -1,0 +1,669 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "name": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "accounts_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_email_key",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "status": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX orders_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "invoices": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "paid_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "invoices_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX invoices_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "exports": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "expires_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "s3_key": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "exports_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX exports_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "sessions": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "expires_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "sessions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX sessions_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "currencies": {
+      "relationKind": "table",
+      "columns": {
+        "code": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "code"
+        ]
+      },
+      "indexes": {
+        "currencies_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX currencies_pkey",
+          "keys": [
+            {
+              "column": "code",
+              "expression": "code"
+            }
+          ]
+        }
+      }
+    },
+    "order_lines": {
+      "relationKind": "table",
+      "columns": {
+        "order_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "line_no": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "order_id",
+          "line_no"
+        ]
+      },
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX order_lines_pkey",
+          "keys": [
+            {
+              "column": "order_id",
+              "expression": "order_id"
+            },
+            {
+              "column": "line_no",
+              "expression": "line_no"
+            }
+          ]
+        }
+      }
+    },
+    "partial_keys": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "partial_keys_slug_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX partial_keys_slug_idx",
+          "keys": [
+            {
+              "column": "slug",
+              "expression": "slug"
+            }
+          ]
+        }
+      }
+    },
+    "invalid_keys": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "invalid_keys_slug_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": false,
+          "ready": false,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX invalid_keys_slug_idx",
+          "keys": [
+            {
+              "column": "slug",
+              "expression": "slug"
+            }
+          ]
+        }
+      }
+    },
+    "deferred_keys": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "deferred_keys_slug_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": false,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX deferred_keys_slug_key",
+          "keys": [
+            {
+              "column": "slug",
+              "expression": "slug"
+            }
+          ]
+        }
+      }
+    },
+    "expr_keys": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "expr_keys_slug_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX expr_keys_slug_idx",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(slug)"
+            }
+          ]
+        }
+      }
+    },
+    "contacts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "contacts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX contacts_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "contacts_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX contacts_email_key",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "relationKind": "table",
+      "columns": {
+        "account_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "bio": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "account_id"
+        ]
+      },
+      "indexes": {
+        "profiles_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX profiles_pkey",
+          "keys": [
+            {
+              "column": "account_id",
+              "expression": "account_id"
+            }
+          ]
+        }
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "indexes": {
+        "events_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX events_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            },
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      },
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      }
+    },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "labels_name_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labels_name_key ON labels (name COLLATE \"C\")",
+          "keys": [
+            {
+              "column": "name",
+              "expression": "name",
+              "orderingSupported": false
+            }
+          ]
+        }
+      }
+    },
+    "\"Order Items\"": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "note": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "Order Items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX \"Order Items_pkey\"",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {}
+}

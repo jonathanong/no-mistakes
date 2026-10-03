@@ -1,7 +1,7 @@
 use super::{compile_sql_include, matches_sql_include, read_source};
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFileFacts, EmbeddedSqlKind};
 use crate::codebase::postgres::statement_facts::SqlStatementFileFacts;
-use crate::codebase::postgres::statements::extract_sql_statement_facts;
+use crate::codebase::postgres::statements::extract_sql_statement_facts_with_bounds;
 use crate::codebase::postgres::types::{PostgresFactError, PostgresSchemaOptions};
 use crate::codebase::ts_source::SourceStore;
 use rayon::prelude::*;
@@ -13,6 +13,7 @@ pub(super) fn collect(
     files: &[PathBuf],
     schema_options: &PostgresSchemaOptions,
     embedded: &[EmbeddedSqlFileFacts],
+    collect_bounds: bool,
 ) -> Result<Vec<SqlStatementFileFacts>, PostgresFactError> {
     let globs = compile_sql_include(&schema_options.sql_include)?;
     let mut facts = files
@@ -20,24 +21,27 @@ pub(super) fn collect(
         .filter(|path| matches_sql_include(root, path, &globs))
         .map(|path| {
             let source = read_source(path, sources)?;
-            let mut file = extract_sql_statement_facts(&source);
+            let mut file = extract_sql_statement_facts_with_bounds(&source, collect_bounds);
             file.path = path.clone();
             Ok(file)
         })
         .collect::<Result<Vec<_>, _>>()?;
     for file in embedded {
-        facts.extend(embedded_call_facts(file));
+        facts.extend(embedded_call_facts(file, collect_bounds));
     }
     facts.sort_by(|left, right| left.path.cmp(&right.path));
     Ok(facts)
 }
 
-pub(crate) fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStatementFileFacts> {
+pub(crate) fn embedded_call_facts(
+    file: &EmbeddedSqlFileFacts,
+    collect_bounds: bool,
+) -> Vec<SqlStatementFileFacts> {
     file.calls
         .iter()
         .filter_map(|call| {
             let sql = call.sql_text.as_deref()?;
-            let mut facts = extract_sql_statement_facts(sql);
+            let mut facts = extract_sql_statement_facts_with_bounds(sql, collect_bounds);
             if call.kind == EmbeddedSqlKind::Dynamic {
                 // Recovered interpolation text can prove OFFSET syntax and write
                 // targets. Other rules keep their existing dynamic-SQL failure policy.
@@ -123,6 +127,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     }
     for trigger in &mut facts.triggers {
         trigger.line = source_line(trigger.line, 1);
+    }
+    for bound in &mut facts.bounds {
+        bound.map_lines(&source_line);
     }
 }
 

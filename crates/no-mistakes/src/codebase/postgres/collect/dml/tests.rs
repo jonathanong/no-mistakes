@@ -1,5 +1,7 @@
 use super::rebase_embedded_lines;
-use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
+use crate::codebase::postgres::embedded::{
+    EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlSourcePosition,
+};
 use crate::codebase::postgres::statements::extract_sql_statement_facts;
 
 #[test]
@@ -44,4 +46,29 @@ fn embedded_line_shift_covers_returning_stars_and_triggers() {
         7
     );
     assert_eq!(facts.mutation_column_uses[0].line, 11);
+}
+
+#[test]
+fn bound_relations_rebase_by_their_sql_column() {
+    // Separate source operands can share one SQL line: the column picks the owning operand.
+    let sql = "SELECT * FROM accounts, orders".to_string();
+    let mut facts = extract_sql_statement_facts(&sql);
+    let position = |sql_column, source_line| EmbeddedSqlSourcePosition {
+        sql_line: 1,
+        sql_column,
+        source_line,
+    };
+    let call = EmbeddedSqlCall {
+        line: 10,
+        callee: "query".to_string(),
+        sql_text: Some(sql),
+        kind: EmbeddedSqlKind::Inline,
+        declaration_line: None,
+        sql_source_positions: vec![position(1, 10), position(15, 20), position(25, 30)],
+    };
+    rebase_embedded_lines(&mut facts, &call);
+    let bound = &facts.bounds[0];
+    assert_eq!(bound.line, 10);
+    let lines: Vec<usize> = bound.query.items.iter().map(|item| item.line).collect();
+    assert_eq!(lines, [20, 30]);
 }

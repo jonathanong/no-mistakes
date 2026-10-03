@@ -1,0 +1,10 @@
+# Every statement here can match many rows.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
+      exclude: ['src/**']
+      sqlInclude: ['sql/invalid.sql']

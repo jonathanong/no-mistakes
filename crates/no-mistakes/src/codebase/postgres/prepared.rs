@@ -62,7 +62,12 @@ pub(crate) fn prepare(
                     continue;
                 }
                 let entry = file
-                    .map(|file| Arc::new(super::collect::dml::embedded_call_facts(file)))
+                    .map(|file| {
+                        Arc::new(super::collect::dml::embedded_call_facts(
+                            file,
+                            plan.postgres_bounds,
+                        ))
+                    })
                     .map_err(|error| {
                         Arc::new(PreparationError {
                             message: Arc::from(format!(

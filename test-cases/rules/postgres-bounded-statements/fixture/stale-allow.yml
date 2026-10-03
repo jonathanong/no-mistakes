@@ -1,0 +1,15 @@
+# An allow entry that suppresses nothing is reported.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
+      exclude: ['src/**']
+      sqlInclude: ['sql/valid.sql']
+      allow:
+        - object: 'table:currencies'
+          reason: 'Fixed lookup table'
+        - object: 'table:accounts'
+          reason: 'Never reported, so this entry is stale'

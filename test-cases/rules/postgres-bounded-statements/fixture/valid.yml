@@ -1,0 +1,13 @@
+# Every statement here is bounded; currencies is allowed.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
+      exclude: ['src/**']
+      sqlInclude: ['sql/valid.sql']
+      allow:
+        - object: 'table:currencies'
+          reason: 'Fixed lookup table of under 200 rows'
