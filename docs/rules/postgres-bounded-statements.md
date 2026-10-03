@@ -211,9 +211,10 @@ items; an explicit outer `LIMIT` still caps the statement.
 Built-in set-returning functions, including `jsonb_path_query`, expand aggregate
 select-list rows. In `FROM`, only functions whose arguments size their result
 (`jsonb_path_query($1::jsonb, '$[*]')`, for example) bound joined items. Functions
-that inspect server state or execute SQL (`pg_ls_dir`, `pg_listening_channels`,
-`ts_stat`) remain opaque even with fixed arguments. The real PostgreSQL test lane
-checks this function inventory against the PostgreSQL function catalog.
+that inspect server state, parser metadata, or execute SQL (`pg_ls_dir`,
+`pg_listening_channels`, `ts_token_type`, `ts_stat`) remain opaque even with fixed
+arguments. The real PostgreSQL test lane checks this inventory against the
+PostgreSQL function catalog.
 
 Snapshot expansion (`pg_snapshot_xip`, `txid_snapshot_xip`) is caller-sized only
 when its snapshot is supplied directly by the caller. A snapshot returned by

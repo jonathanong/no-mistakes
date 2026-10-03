@@ -36,7 +36,7 @@ const CALLER_SIZED: &[&str] = &[
     "json_populate_recordset", "jsonb_populate_recordset", "json_to_recordset",
     "jsonb_to_recordset", "jsonb_path_query", "jsonb_path_query_tz", "aclexplode",
     "pg_options_to_table", "pg_mcv_list_items", "pg_snapshot_xip", "txid_snapshot_xip",
-    "ts_parse", "ts_debug", "ts_token_type",
+    "ts_parse", "ts_debug",
 ];
 
 /// Whether `name` is bare or `pg_catalog`-qualified and its bare part is in `list`. A function
