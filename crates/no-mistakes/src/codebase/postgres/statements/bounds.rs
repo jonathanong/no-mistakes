@@ -4,6 +4,7 @@
 //! value, with another item, or with a subquery, and each query keeps whether a `LIMIT` or a
 //! pure aggregate caps it. A rule decides, against a schema catalog, whether those pins make
 //! a relation single-row.
+mod aggregate;
 mod dml;
 mod functions;
 mod items;

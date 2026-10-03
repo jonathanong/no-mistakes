@@ -35,12 +35,13 @@ in matching `.sql` files and in executor calls (`SELECT` is every query, includi
 set operation). A statement is bounded when any of these holds:
 
 - It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` whose count is fixed: a literal, a bind
-  (`$1`, `${size}`) or an expression of them (`LEAST($1, 100)`). `LIMIT NULL`, `LIMIT ALL`,
+  (`$1`, `${size}`) or an expression of them using `COALESCE`, `LEAST` or `GREATEST`
+  (`LEAST($1, 100)`). `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
   a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
   `FETCH … PERCENT` do not cap: they can return every row.
 - It is a pure aggregate: a built-in aggregate call such as `COUNT(*)` (bare or
-  `pg_catalog.`-qualified), in the select list or in `HAVING`, with no `GROUP BY`, which
-  returns one row. A function with the same name in another schema is an ordinary function,
+  `pg_catalog.`-qualified), in the select list, in `HAVING` or in `ORDER BY`, with no
+  `GROUP BY`, which returns one row. A function with the same name in another schema is an ordinary function,
   called once per row, and a set-returning function in the select list
   (`generate_series(1, count(*))`) expands the row again.
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
@@ -79,11 +80,15 @@ set operation). A statement is bounded when any of these holds:
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
 uncapped read of that relation), a derived table or CTE is bounded when its own query is,
-and a `VALUES` list or a set-returning built-in over arguments the statement supplies
-(`unnest($1)`, `generate_series(1, 10)`) is sized by the caller. Any other table function
-(`FROM get_all_accounts()`), an array taken from a query (`ANY(ARRAY(SELECT …))`) and the
-recursive reference of a `WITH RECURSIVE` are opaque: never reported themselves, and they
-bound nothing pinned to them. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
+and a `VALUES` list or a set-returning built-in (bare or `pg_catalog.`-qualified) over
+arguments the statement supplies (`unnest($1)`, `generate_series(1, 10)`) is sized by the
+caller. Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
+whose arguments read a column or a query (`unnest(ARRAY[a.id])`), an array taken from a query
+(`ANY(ARRAY(SELECT …))`) and the recursive reference of a `WITH RECURSIVE` are opaque: never
+reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERSECT` read
+both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
+only the result. A chain of CTEs whose bounds grow past a few thousand items is treated as
+opaque, so pathological generated SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
 reports each relation that makes a statement unbounded, once, at that relation's line.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its

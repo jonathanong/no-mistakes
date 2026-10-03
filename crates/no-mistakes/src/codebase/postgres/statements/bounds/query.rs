@@ -1,11 +1,11 @@
-use super::functions::{is_aggregate, is_set_returning};
+use super::aggregate::{orders_by_aggregate, pure_aggregate};
 use super::{items, start, Scope};
-use crate::codebase::postgres::idents::{ident_key, visit_child_exprs};
+use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::limit::is_limited;
-use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
-use sqlparser::ast::{
-    Expr, Function, GroupByExpr, Query, Select, SelectItem, SetExpr, Spanned, Statement,
+use crate::codebase::postgres::statements::{
+    SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
+use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
 
 pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
     bound_body(query, &with_scope(query, scope))
@@ -28,11 +28,43 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
                 // bounds nothing joined to it.
                 inner.insert(name.clone(), opaque(start(cte.query.span())));
             }
-            bound_query(&cte.query, &inner)
+            let bound = bound_query(&cte.query, &inner);
+            // Each reference clones the CTE's bound, so a chain of CTEs that each read the one
+            // before twice grows exponentially: past a generous size it is opaque instead.
+            if size(&bound) > MAX_BOUND_ITEMS {
+                opaque(start(cte.query.span()))
+            } else {
+                bound
+            }
         };
         scope.insert(name, bound);
     }
     scope
+}
+
+const MAX_BOUND_ITEMS: usize = 2048;
+
+/// The number of items in a bound, nested queries and subquery pins included.
+fn size(query: &SqlBoundQuery) -> usize {
+    query
+        .items
+        .iter()
+        .map(|item| {
+            let inner = match &item.kind {
+                SqlBoundItemKind::Query(inner) => size(inner),
+                _ => 0,
+            };
+            let pins: usize = item
+                .pins
+                .iter()
+                .map(|pin| match &pin.source {
+                    SqlPinSource::Query(inner) => size(inner),
+                    _ => 0,
+                })
+                .sum();
+            1 + inner + pins
+        })
+        .sum()
 }
 
 /// The `INSERT` / `UPDATE` / `DELETE` / `MERGE` inside a data-modifying CTE.
@@ -49,7 +81,7 @@ pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
 /// The body of `query` under `scope`, which already holds its CTEs.
 pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
-    bound.capped |= is_limited(query);
+    bound.capped |= is_limited(query) || orders_by_aggregate(query);
     bound
 }
 
@@ -89,51 +121,4 @@ fn opaque(at: (usize, usize)) -> SqlBoundQuery {
         capped: false,
         items: vec![items::opaque(at)],
     }
-}
-
-/// An aggregate with no `GROUP BY` returns exactly one row, unless a set-returning function in
-/// the select list expands it. The aggregate may sit in `HAVING` alone.
-fn pure_aggregate(select: &Select) -> bool {
-    let ungrouped = matches!(
-        &select.group_by,
-        GroupByExpr::Expressions(expressions, modifiers)
-            if expressions.is_empty() && modifiers.is_empty()
-    );
-    let projected: Vec<&Expr> = select
-        .projection
-        .iter()
-        .filter_map(|item| match item {
-            SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => Some(expr),
-            _ => None,
-        })
-        .collect();
-    let aggregated = projected
-        .iter()
-        .any(|expr| contains_call(expr, &is_plain_aggregate))
-        || select
-            .having
-            .as_ref()
-            .is_some_and(|having| contains_call(having, &is_plain_aggregate));
-    let expanded = projected
-        .iter()
-        .any(|expr| contains_call(expr, &|function| is_set_returning(&function.name)));
-    ungrouped && aggregated && !expanded
-}
-
-fn is_plain_aggregate(function: &Function) -> bool {
-    function.over.is_none() && is_aggregate(&function.name)
-}
-
-/// Whether a call that `test` accepts occurs in `expr` (subqueries are not looked into).
-fn contains_call(expr: &Expr, test: &impl Fn(&Function) -> bool) -> bool {
-    if let Expr::Function(function) = expr {
-        if test(function) {
-            return true;
-        }
-    }
-    let mut found = false;
-    visit_child_exprs(expr, &mut |child| {
-        found = found || contains_call(child, test)
-    });
-    found
 }

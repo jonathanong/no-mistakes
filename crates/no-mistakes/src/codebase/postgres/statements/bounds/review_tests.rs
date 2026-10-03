@@ -187,3 +187,67 @@ fn correlation_is_resolved_one_query_level_at_a_time() {
         ["delete: t[id=(u[k=(t)])]"]
     );
 }
+
+#[test]
+fn a_table_function_over_columns_or_of_a_user_schema_is_opaque() {
+    // A column argument makes the factor lateral: it is evaluated per row of that item.
+    assert_eq!(
+        shape("SELECT 1 FROM a JOIN unnest(ARRAY[a.id]) u(id) ON a.id = u.id"),
+        ["select: a[id=#1] opaque"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM a, generate_series(1, a.n) g"),
+        ["select: a opaque"]
+    );
+    // Only a bare or pg_catalog name is the built-in.
+    assert_eq!(
+        shape("SELECT 1 FROM generate_series(1, 10) g"),
+        ["select: other"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM pg_catalog.generate_series(1, 10) g"),
+        ["select: other"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM app.generate_series(1, 10) g"),
+        ["select: opaque"]
+    );
+}
+
+#[test]
+fn a_function_that_can_return_null_does_not_fix_a_count() {
+    assert_eq!(shape("SELECT 1 FROM t LIMIT NULLIF(1, 1)"), ["select: t"]);
+    assert_eq!(shape("SELECT 1 FROM t LIMIT abs($1)"), ["select: t"]);
+    assert_eq!(
+        shape("SELECT 1 FROM t LIMIT GREATEST($1, 5)"),
+        ["select: capped t"]
+    );
+}
+
+#[test]
+fn an_aggregate_only_in_order_by_makes_one_row() {
+    assert_eq!(
+        shape("SELECT 1 FROM t ORDER BY count(*)"),
+        ["select: capped t"]
+    );
+    assert_eq!(shape("SELECT 1 FROM t ORDER BY id"), ["select: t"]);
+    assert_eq!(
+        shape("SELECT 1 FROM t GROUP BY k ORDER BY count(*)"),
+        ["select: t"]
+    );
+}
+
+#[test]
+fn a_chain_of_ctes_that_double_in_size_stays_small() {
+    // Each CTE reads the one before it twice; without a cap the bound doubles at every step.
+    let mut sql = String::from("WITH c0 AS (SELECT id FROM t)");
+    for level in 1..40 {
+        sql.push_str(&format!(
+            ", c{level} AS (SELECT id FROM c{} UNION ALL SELECT id FROM c{})",
+            level - 1,
+            level - 1
+        ));
+    }
+    sql.push_str(" SELECT 1 FROM c39");
+    assert_eq!(facts(&sql).len(), 1);
+}

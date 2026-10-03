@@ -1,5 +1,6 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
 use super::value::is_placeholder_ident;
+use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use sqlparser::ast::{
     Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Value,
 };
@@ -33,13 +34,20 @@ fn is_fixed(expr: &Expr) -> bool {
         Expr::Identifier(ident) => is_placeholder_ident(&ident.value),
         Expr::Cast { expr, .. } | Expr::UnaryOp { expr, .. } => is_fixed(expr),
         Expr::BinaryOp { left, right, .. } => is_fixed(left) && is_fixed(right),
-        Expr::Function(function) => match &function.args {
-            FunctionArguments::List(list) => list.args.iter().all(|arg| match arg {
-                FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => is_fixed(expr),
+        // Only the functions that return NULL for nothing but NULL arguments: `NULLIF(1, 1)`,
+        // like any function that can produce NULL from fixed inputs, is `LIMIT ALL`.
+        Expr::Function(function) => {
+            let pick = object_name_ident(&function.name).is_some_and(|ident| {
+                ["coalesce", "least", "greatest"].contains(&ident_key(ident).as_str())
+            });
+            pick && match &function.args {
+                FunctionArguments::List(list) => list.args.iter().all(|arg| match arg {
+                    FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => is_fixed(expr),
+                    _ => false,
+                }),
                 _ => false,
-            }),
-            _ => false,
-        },
+            }
+        }
         _ => false,
     }
 }

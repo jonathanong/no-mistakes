@@ -1,4 +1,5 @@
 //! The built-in functions the bound facts reason about, by name.
+use super::super::value::is_placeholder_ident;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBoundItemKind;
 use sqlparser::ast::{
@@ -32,67 +33,86 @@ const SET_RETURNING: &[&str] = &[
     "jsonb_to_recordset",
 ];
 
-fn named(name: &ObjectName, list: &[&str]) -> Option<bool> {
-    let ident = object_name_ident(name)?;
-    Some(list.contains(&ident_key(ident).as_str()))
-}
-
-/// A built-in aggregate: the bare name, or `pg_catalog.<name>`. A function in any other schema
-/// that happens to share a name is an ordinary function, called once per row.
-pub(super) fn is_aggregate(name: &ObjectName) -> bool {
+/// Whether `name` is bare or `pg_catalog`-qualified and its bare part is in `list`. A function
+/// of any other schema that shares a name is an ordinary function, whatever it returns.
+fn builtin(name: &ObjectName, list: &[&str]) -> bool {
     let schema = name
         .0
         .len()
         .checked_sub(2)
         .and_then(|index| name.0[index].as_ident());
-    let builtin = match name.0.len() {
+    let in_scope = match name.0.len() {
         1 => true,
         2 => schema.is_some_and(|schema| ident_key(schema) == "pg_catalog"),
         _ => false,
     };
-    builtin && named(name, AGGREGATES) == Some(true)
+    in_scope && named(name, list)
 }
 
-/// A set-returning function by name, whichever schema it is called through.
+fn named(name: &ObjectName, list: &[&str]) -> bool {
+    object_name_ident(name).is_some_and(|ident| list.contains(&ident_key(ident).as_str()))
+}
+
+/// A built-in aggregate: the bare name, or `pg_catalog.<name>`. A function in any other schema
+/// that happens to share a name is an ordinary function, called once per row.
+pub(super) fn is_aggregate(name: &ObjectName) -> bool {
+    builtin(name, AGGREGATES)
+}
+
+/// A set-returning function by name, whichever schema it is called through: in a select list a
+/// user-defined function of the same name expands the row just as well.
 pub(super) fn is_set_returning(name: &ObjectName) -> bool {
-    named(name, SET_RETURNING) == Some(true)
+    named(name, SET_RETURNING)
 }
 
 /// A table function is sized by the caller only when it is a set-returning built-in over
 /// arguments the text provides; any other function can return rows from anywhere.
 pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlBoundItemKind {
-    let sized = args.args.iter().all(|arg| match arg {
+    let given = args.args.iter().all(|arg| match arg {
         FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
         | FunctionArg::Named {
             arg: FunctionArgExpr::Expr(expr),
             ..
-        } => !contains_query(expr),
+        } => !depends_on_data(expr),
         _ => true,
     });
-    if sized && is_set_returning(name) {
+    if given && builtin(name, SET_RETURNING) {
         SqlBoundItemKind::Other
     } else {
         SqlBoundItemKind::Opaque
     }
 }
 
-/// `unnest(…)` as a table factor is sized by its arrays, unless one is taken from a query.
+/// `unnest(…)` as a table factor is sized by its arrays, unless one is taken from a query or
+/// from another FROM item (the table factor is then evaluated per row of that item).
 pub(super) fn unnest_kind(arrays: &[Expr]) -> SqlBoundItemKind {
-    if arrays.iter().any(contains_query) {
+    if arrays.iter().any(depends_on_data) {
         SqlBoundItemKind::Opaque
     } else {
         SqlBoundItemKind::Other
     }
 }
 
-/// Whether `expr` holds a subquery, whose rows the statement text does not size.
-pub(super) fn contains_query(expr: &Expr) -> bool {
+/// Whether `expr` holds a subquery or a column: values the statement text does not provide.
+pub(super) fn depends_on_data(expr: &Expr) -> bool {
     struct Found(bool);
     impl Visitor for Found {
         type Break = ();
         fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
             self.0 = true;
             ControlFlow::Break(())
+        }
+        fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
+            let column = match expr {
+                Expr::Identifier(ident) => !is_placeholder_ident(&ident.value),
+                Expr::CompoundIdentifier(_) => true,
+                _ => false,
+            };
+            if column {
+                self.0 = true;
+                return ControlFlow::Break(());
+            }
+            ControlFlow::Continue(())
         }
     }
     let mut found = Found(false);

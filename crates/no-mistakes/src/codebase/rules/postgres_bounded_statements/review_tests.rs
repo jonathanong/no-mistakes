@@ -140,3 +140,41 @@ fn nested_aliases_do_not_hide_an_outer_row_reference() {
         assert_eq!(names(sql), ["accounts"], "{sql}");
     }
 }
+
+#[test]
+fn a_table_function_that_reads_another_item_or_comes_from_a_user_schema_bounds_nothing() {
+    for sql in [
+        "SELECT * FROM accounts a JOIN unnest(ARRAY[a.id]) u(id) ON a.id = u.id",
+        "UPDATE accounts a SET name = 'x' FROM app.generate_series(1, 10) g(id) WHERE a.id = g.id",
+    ] {
+        assert_eq!(names(sql), ["accounts"], "{sql}");
+    }
+    assert!(names(
+        "UPDATE accounts a SET name = 'x' FROM unnest($1::uuid[]) AS ids(id) WHERE a.id = ids.id"
+    )
+    .is_empty());
+}
+
+#[test]
+fn only_a_non_null_function_of_fixed_inputs_fixes_a_count() {
+    assert_eq!(names("SELECT * FROM orders LIMIT NULLIF(1, 1)"), ["orders"]);
+    assert!(names("SELECT * FROM orders LIMIT GREATEST($1, 5)").is_empty());
+}
+
+#[test]
+fn set_operations_read_every_arm_so_every_arm_must_be_bounded() {
+    // The rule bounds the work, not only the result: EXCEPT and INTERSECT read both arms in full.
+    assert_eq!(
+        names("SELECT id FROM accounts WHERE id = $1 EXCEPT SELECT account_id FROM orders"),
+        ["orders"]
+    );
+    assert_eq!(
+        names("SELECT id FROM accounts WHERE id = $1 INTERSECT SELECT account_id FROM orders"),
+        ["orders"]
+    );
+}
+
+#[test]
+fn an_aggregate_only_in_order_by_bounds_the_query() {
+    assert!(names("SELECT 1 FROM orders ORDER BY count(*)").is_empty());
+}
