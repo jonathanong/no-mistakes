@@ -512,3 +512,7 @@ mod set_operation_limits;
 mod nested_pins;
 
 mod pin_subqueries;
+
+mod schema_correlation;
+
+mod function_scope;

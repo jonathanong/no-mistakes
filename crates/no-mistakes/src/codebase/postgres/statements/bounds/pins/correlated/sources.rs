@@ -1,8 +1,10 @@
+mod unnest;
+
 use super::columns::{function_columns, projection_columns};
 use super::scalar_arrays::scalar_array;
 use super::sql_name;
 use super::Scan;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
 use sqlparser::ast::{FunctionArg, FunctionArgExpr, TableFactor};
 
 impl Scan {
@@ -29,6 +31,9 @@ impl Scan {
                     .map(|alias| ident_key(&alias.name))
                     .or_else(|| object_name_ident(name).map(ident_key));
                 frame.relations.extend(own);
+                if alias.is_none() && args.is_none() {
+                    frame.relations.insert(object_name_key(name));
+                }
                 let mut columns = if let Some(alias) =
                     alias.as_ref().filter(|alias| !alias.columns.is_empty())
                 {
@@ -90,40 +95,7 @@ impl Scan {
                 with_ordinality,
                 ..
             } => {
-                let own = alias.as_ref().map(|alias| ident_key(&alias.name));
-                frame.relations.extend(own.clone());
-                let columns: Vec<_> = alias
-                    .as_ref()
-                    .map(|alias| {
-                        alias
-                            .columns
-                            .iter()
-                            .map(|column| ident_key(&column.name))
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                if !array_exprs.iter().all(scalar_array) {
-                    // Composite attributes and undeclared suffix columns remain unknown.
-                    frame.columns.extend(columns);
-                    frame.foreign = true;
-                    return;
-                }
-                let mut exposed: Vec<_> = (0..array_exprs.len())
-                    .map(|_| {
-                        if array_exprs.len() == 1 {
-                            own.clone().unwrap_or_else(|| "unnest".to_string())
-                        } else {
-                            "unnest".to_string()
-                        }
-                    })
-                    .collect();
-                if *with_ordinality {
-                    exposed.push("ordinality".to_string());
-                }
-                for (column, name) in exposed.iter_mut().zip(columns) {
-                    *column = name;
-                }
-                frame.columns.extend(exposed);
+                frame.add_unnest(alias, array_exprs, *with_ordinality);
             }
             // The factors inside a parenthesized join are visited on their own.
             TableFactor::NestedJoin {
