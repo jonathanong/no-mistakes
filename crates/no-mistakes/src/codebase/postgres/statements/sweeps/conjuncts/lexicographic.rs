@@ -1,8 +1,8 @@
-use super::{bound, column, flatten, is_bind, Cursor};
+use super::{bound, column, flatten, is_bind, is_placeholder_ident, Cursor};
 use crate::codebase::postgres::idents::unwrap_expr;
-use sqlparser::ast::{BinaryOperator, Expr};
+use sqlparser::ast::{BinaryOperator, DataType, Expr, Value};
 
-/// Match the expanded tuple comparison, retaining exact bind identity in every prefix.
+/// Match the expanded tuple comparison, retaining bind identity in every prefix.
 pub(super) fn cursor(
     expr: &Expr,
     names: &[String],
@@ -60,7 +60,7 @@ pub(super) fn cursor(
                 _ => return None,
             };
             if column(column_expr, names).as_ref() != Some(&keys[prefix].0)
-                || unwrap_expr(bind_expr) != keys[prefix].1
+                || bind_identity(bind_expr)? != keys[prefix].1
             {
                 return None;
             }
@@ -88,7 +88,7 @@ pub(super) fn cursor(
             return None;
         }
         direction = Some(lower);
-        keys.push((column(column_expr, names)?, unwrap_expr(bind_expr)));
+        keys.push((column(column_expr, names)?, bind_identity(bind_expr)?));
     }
     // An expanded comparison is contiguous only in its ORDER BY key sequence. Mixed sort
     // directions need different range operators per arm, which this matcher does not accept.
@@ -108,4 +108,27 @@ pub(super) fn cursor(
         bound: bound(direction?),
         optional: false,
     })
+}
+
+/// Keep an int4 bind's identity through built-in transparent spellings. Other casts retain
+/// their complete expression as an opaque identity, preserving an identical-bound comparison.
+fn bind_identity(expr: &Expr) -> Option<&Expr> {
+    match unwrap_expr(expr) {
+        Expr::Value(value) if matches!(value.value, Value::Placeholder(_)) => {
+            Some(unwrap_expr(expr))
+        }
+        Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => Some(unwrap_expr(expr)),
+        Expr::Cast {
+            expr, data_type, ..
+        } if transparent_int4_cast(data_type) => bind_identity(expr),
+        Expr::Cast { .. } if is_bind(expr) => Some(unwrap_expr(expr)),
+        _ => None,
+    }
+}
+
+fn transparent_int4_cast(data_type: &DataType) -> bool {
+    matches!(
+        data_type,
+        DataType::Int(_) | DataType::Int4(_) | DataType::Integer(_)
+    )
 }
