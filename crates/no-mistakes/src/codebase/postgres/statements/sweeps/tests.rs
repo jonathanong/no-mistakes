@@ -482,3 +482,31 @@ fn distinct_pages_are_not_row_sweeps() {
     .is_empty());
     assert!(sweeps("SELECT DISTINCT ON (account_id) account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2").is_empty());
 }
+
+#[test]
+fn expanded_lexicographic_cursors() {
+    for (predicate, expected) in [
+        ("a > $1 OR (a = $1 AND b > $2)", vec!["a", "b"]),
+        (
+            "a < $1 OR (a = $1 AND b < $2) OR (a = $1 AND b = $2 AND c < $3)",
+            vec!["a", "b", "c"],
+        ),
+        ("a > $1 OR (a = $1 AND b < $2)", vec![]),
+        ("a > $1 OR (a = $3 AND b > $2)", vec![]),
+        ("a > $1 OR (a = $1 AND lower(b) > $2)", vec![]),
+        ("a > $1 OR b > $2", vec![]),
+        ("a > $1 OR (a > $1 AND b > $2)", vec![]),
+        ("a > $1 OR (c = $1 AND b > $2)", vec![]),
+        ("a > $1 OR (a = $1 AND b >= $2)", vec![]),
+        ("a > $1 OR (a = $1 AND b > 2)", vec![]),
+        ("a > $1 OR (TRUE AND b > $2)", vec![]),
+        ("a > $1 OR (a = $1 AND TRUE)", vec![]),
+    ] {
+        let sql = format!("SELECT a FROM t WHERE {predicate} ORDER BY a,b,c LIMIT $4");
+        assert_eq!(
+            sweeps(&sql)[0].conjuncts[0].cursor_columns,
+            expected,
+            "{predicate}"
+        );
+    }
+}

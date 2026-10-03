@@ -1,3 +1,5 @@
+mod lexicographic;
+
 use super::super::value::is_placeholder_ident;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
@@ -35,7 +37,7 @@ pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctF
 
 /// A keyset cursor: the columns compared with a bind, which side of them it bounds, and whether
 /// the bind may be NULL to switch the comparison off (`($1 IS NULL OR id > $1)`).
-struct Cursor {
+pub(super) struct Cursor {
     columns: Vec<String>,
     bound: SqlCursorBound,
     optional: bool,
@@ -127,7 +129,7 @@ fn cursor(expr: &Expr, names: &[String]) -> Option<Cursor> {
                     ..cursor
                 })
             }
-            _ => None,
+            _ => lexicographic::cursor(expr, names),
         },
         _ => None,
     }
