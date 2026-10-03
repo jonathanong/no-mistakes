@@ -8,7 +8,7 @@ use std::cell::OnceCell;
 pub(super) struct Tokens<'a> {
     sql: &'a str,
     tokens: OnceCell<Vec<TokenWithSpan>>,
-    positions: OnceCell<Vec<Vec<usize>>>,
+    positions: OnceCell<Vec<SourceLine>>,
 }
 
 impl<'a> Tokens<'a> {
@@ -28,37 +28,64 @@ impl<'a> Tokens<'a> {
         })
     }
 
-    /// Index Unicode scalar positions once, so every endpoint lookup is constant-time even
-    /// when many literals share one long line. Both source and index stay request-local.
+    /// Sparse Unicode checkpoints bound every endpoint scan to 63 characters, including
+    /// many literals on one long line. Both source and index stay request-local.
     pub(super) fn source_at(&self, span: Span) -> Option<&'a str> {
         let positions = self.positions.get_or_init(|| source_positions(self.sql));
-        let start = byte_offset(positions, span.start)?;
-        let end = byte_offset(positions, span.end)?;
+        let start = byte_offset(self.sql, positions, span.start)?;
+        let end = byte_offset(self.sql, positions, span.end)?;
         self.sql.get(start..end)
     }
 }
 
-fn source_positions(sql: &str) -> Vec<Vec<usize>> {
-    let mut lines = vec![Vec::new()];
+const CHECKPOINT_WIDTH: usize = 64;
+
+#[derive(Default)]
+struct SourceLine {
+    checkpoints: Vec<usize>,
+    columns: usize,
+}
+
+impl SourceLine {
+    fn push(&mut self, offset: usize) {
+        if self.columns.is_multiple_of(CHECKPOINT_WIDTH) {
+            self.checkpoints.push(offset);
+        }
+        self.columns += 1;
+    }
+}
+
+fn source_positions(sql: &str) -> Vec<SourceLine> {
+    let mut lines = vec![SourceLine::default()];
     for (offset, character) in sql.char_indices() {
         lines.last_mut().unwrap().push(offset);
         if character == '\n' {
-            lines.push(Vec::new());
+            lines.push(SourceLine::default());
         }
     }
     lines.last_mut().unwrap().push(sql.len());
     lines
 }
 
-fn byte_offset(positions: &[Vec<usize>], target: Location) -> Option<usize> {
+fn byte_offset(sql: &str, positions: &[SourceLine], target: Location) -> Option<usize> {
     if target.line == 0 || target.line > positions.len() as u64 {
         return None;
     }
-    let columns = &positions[(target.line - 1) as usize];
-    if target.column == 0 || target.column > columns.len() as u64 {
+    let line = &positions[(target.line - 1) as usize];
+    if target.column == 0 || target.column > line.columns as u64 {
         return None;
     }
-    Some(columns[(target.column - 1) as usize])
+    let column = (target.column - 1) as usize;
+    let checkpoint = line.checkpoints[column / CHECKPOINT_WIDTH];
+    let remainder = column % CHECKPOINT_WIDTH;
+    // Appending the EOF endpoint lets a valid final location resolve without a character.
+    let relative = sql[checkpoint..]
+        .char_indices()
+        .map(|(offset, _)| offset)
+        .chain(std::iter::once(sql.len() - checkpoint))
+        .nth(remainder)
+        .unwrap();
+    Some(checkpoint + relative)
 }
 
 #[cfg(test)]

@@ -95,3 +95,32 @@ fn source_lookup_rejects_columns_beyond_the_saved_line() {
         None
     );
 }
+
+#[test]
+fn long_saved_source_uses_sparse_offsets_and_preserves_every_location() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-shape-policy/fixture/radix-hex-literals/sql/many.sql"
+    ));
+    let tokens = Tokens::new(sql);
+    let mut line = 1;
+    let mut column = 1;
+    for (offset, character) in sql.char_indices() {
+        assert_eq!(
+            tokens.source_at(Span::new(
+                Location::new(line, column),
+                Location::new(line, column)
+            )),
+            Some(&sql[offset..offset])
+        );
+        if character == '\n' {
+            line += 1;
+            column = 1;
+        } else {
+            column += 1;
+        }
+    }
+    let index = tokens.positions.get().unwrap();
+    let checkpoints: usize = index.iter().map(|line| line.checkpoints.len()).sum();
+    assert!(checkpoints < sql.chars().count() / 16);
+}
