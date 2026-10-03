@@ -31,8 +31,7 @@ rules:
 default to `true`. `replaySafeTriggerFunctions` defaults to `[]`.
 `triggerWrittenColumns` defaults to `{}`. `unanalyzableSql` defaults to `fail`
 (`fail` or `ignore`; other values are a configuration error).
-`importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
-`[query, read, write]`.
+`importSpecifier` has no default; `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 Counterexample: a bare insert.
 
@@ -90,8 +89,7 @@ column list still fail. Disjunctive `WHERE` and constant `SET` plus a matching
 `[]`. `triggerWrittenColumns` maps function names to columns those functions
 write (default `{}`). `unanalyzableSql` defaults to `fail` (`fail` or
 `ignore`; other values are a configuration error).
-`importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
-`[query, read, write]`.
+`importSpecifier` has no default. `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 ## Valid example
 
@@ -134,3 +132,15 @@ relation filters; [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md)
 bans correlated `EXISTS` set operations;
 [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md)
 bans writing generated columns in DML.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

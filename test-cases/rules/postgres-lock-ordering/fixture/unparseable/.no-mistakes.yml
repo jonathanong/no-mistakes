@@ -1,3 +1,5 @@
 rules:
   - rule: postgres-lock-ordering
     scope: repository
+    options:
+      importSpecifier: "@example/db"

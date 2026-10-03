@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const sql = "SELECT 1";
 other.append(" FROM items");

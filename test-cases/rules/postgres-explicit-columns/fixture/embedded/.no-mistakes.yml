@@ -2,4 +2,5 @@ rules:
   - rule: postgres-explicit-columns
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json

@@ -1,5 +1,5 @@
 import sql from "sql-template-strings";
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function insert(ids: string[], ordered: boolean) {
   const statement = sql`

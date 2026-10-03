@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 function build(sql: (strings: TemplateStringsArray, ...values: unknown[]) => string) {
   return sql`SELECT 1`;

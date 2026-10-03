@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const sql = "SELECT id FROM topics";
 while (flag) sql.append(" WHERE id = 1");

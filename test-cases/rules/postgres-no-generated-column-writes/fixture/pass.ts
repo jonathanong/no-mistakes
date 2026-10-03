@@ -1,4 +1,4 @@
-import { write } from '@data-stores/psql'
+import { write } from '@example/db'
 
 export function insertSourceColumn() {
   return write(`INSERT INTO items (id, note) VALUES ($1, $2)`)

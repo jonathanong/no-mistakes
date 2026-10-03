@@ -1,3 +1,5 @@
 rules:
   - rule: postgres-generated-column-predicates
     scope: repository
+    options:
+      importSpecifier: "@example/db"

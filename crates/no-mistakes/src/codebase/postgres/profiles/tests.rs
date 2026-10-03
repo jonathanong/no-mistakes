@@ -21,7 +21,7 @@ fn profiles_apply_defaults_and_deduplicate_executor_order() {
     )
     .unwrap();
     assert_eq!(profiles.len(), 1);
-    assert_eq!(profiles[0].import_specifier, "@data-stores/psql");
+    assert_eq!(profiles[0].import_specifier, "");
     assert_eq!(profiles[0].executor_names, ["read", "write"]);
 }
 
@@ -239,4 +239,36 @@ fn bounded_rule_alone_requests_bounds_and_standalone_preparation_keeps_them() {
         );
     }
     assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn every_embedded_rule_requires_explicit_executor_selection() {
+    use crate::codebase::postgres::extract_embedded_sql_from_source;
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/string-literal.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let mut ids = PREPARED_EMBEDDED_SQL_RULE_IDS.to_vec();
+    ids.extend([
+        "postgres-idempotent-insert",
+        "postgres-require-query-annotation",
+    ]);
+    for rule_id in ids {
+        for (yaml, expected_calls) in [
+            ("{}", 0),
+            ("importSpecifier: '@example/db'", 1),
+            ("executorNames: [query]", 1),
+            ("importSpecifier: '@other/db'", 0),
+        ] {
+            let mut config = NoMistakesConfig::default();
+            config.rules.push(RuleDef {
+                rule: rule_id.to_string(),
+                scope: Some(RuleScope::Repository),
+                options: serde_yaml::from_str(yaml).unwrap(),
+                ..RuleDef::default()
+            });
+            let profiles = configured_embedded_sql_options(&config, &[rule_id]).unwrap();
+            let facts = extract_embedded_sql_from_source(&path, &source, &profiles[0]);
+            assert_eq!(facts.calls.len(), expected_calls, "{rule_id}: {yaml}");
+        }
+    }
 }

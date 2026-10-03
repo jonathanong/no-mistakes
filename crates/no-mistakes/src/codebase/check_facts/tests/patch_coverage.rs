@@ -292,6 +292,7 @@ fn legacy_embedded_sql_demand_uses_the_default_profile() {
         facts.embedded_sql[0].0,
         crate::codebase::postgres::EmbeddedSqlOptions::default()
     );
+    assert!(facts.embedded_sql[0].1.calls.is_empty());
 }
 
 #[test]
@@ -327,7 +328,7 @@ fn prepared_postgres_fact_accessors_preserve_missing_and_load_errors() {
         ]),
         ..CheckFactMap::default()
     };
-    let options = crate::codebase::postgres::EmbeddedSqlOptions::default();
+    let options = crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &[]);
 
     assert!(facts
         .embedded_sql(&missing_file, &options)

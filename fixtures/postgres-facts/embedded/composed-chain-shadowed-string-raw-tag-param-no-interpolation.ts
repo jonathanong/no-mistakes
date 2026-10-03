@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 function build(String: { raw: (strings: TemplateStringsArray, ...values: unknown[]) => string }) {
   return String.raw`SELECT 1`;

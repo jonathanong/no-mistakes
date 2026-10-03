@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const text = sql`SELECT ${1}`;
 text.append(" AS sql_placeholder_1");

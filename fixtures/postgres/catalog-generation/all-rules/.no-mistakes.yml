@@ -4,10 +4,12 @@ rules:
   - rule: postgres-conflict-ordering
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
   - rule: postgres-lock-ordering
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
   - rule: postgres-object-naming
     scope: repository
@@ -62,17 +64,20 @@ rules:
   - rule: postgres-required-predicates
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
       sqlInclude: ['sql/**/*.sql']
       partitionKeys: require
   - rule: postgres-explicit-columns
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
       sqlInclude: ['sql/**/*.sql']
       maxColumns: 0
   - rule: postgres-bounded-statements
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
       sqlInclude: ['sql/**/*.sql']

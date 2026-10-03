@@ -16,6 +16,7 @@ pub(crate) struct BindingState {
 
 pub(crate) struct ScopeVisitor<'a> {
     pub(crate) source: &'a str,
+    pub(crate) query_members: bool,
     pub(crate) bindings: &'a HashSet<String>,
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
@@ -31,9 +32,11 @@ pub(crate) fn collect_calls(
     program: &Program<'_>,
     source: &str,
     bindings: &HashSet<String>,
+    query_members: bool,
 ) -> (Vec<EmbeddedSqlCall>, Vec<EmbeddedSqlFragment>) {
     let mut visitor = ScopeVisitor {
         source,
+        query_members,
         bindings,
         scopes: Vec::new(),
         calls: Vec::new(),

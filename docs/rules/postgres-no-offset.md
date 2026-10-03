@@ -17,19 +17,18 @@ rules:
       include: ["src/**/*.ts"]
       exclude: ["src/generated/**"]
       sqlInclude: ["db/views/**/*.sql", "db/migrations/**/*.sql"]
-      importSpecifier: "@data-stores/psql"
+      importSpecifier: "@example/db"
       executorNames: [query, read, write]
 ```
 
-`importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
-`query`, `read`, and `write`.
+`importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
 
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
 offsets such as `OFFSET ${limit}` are findings once the template becomes
 `OFFSET sql_placeholder_1`.
 
 ```ts
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function page() {
   return query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);
@@ -66,8 +65,7 @@ asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 `include` and `exclude` select source files. `sqlInclude` defaults to `[]`,
 so `.sql` files are not scanned unless a glob selects them. `importSpecifier`
-defaults to `@data-stores/psql`, and `executorNames` defaults to
-`[query, read, write]`.
+has no module default, and `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 `OFFSET 0` is reported as an optimizer fence: use a `MATERIALIZED` CTE
 (`WITH x AS MATERIALIZED (...)`). Any other offset keeps the pagination
@@ -149,3 +147,15 @@ outcome without checking filesystem state again.
 Source positions mark changes to the source-versus-SQL line offset. Between
 positions, map a SQL line with `source_line + sql_line - position.sql_line`;
 an empty position list retains the ordinary call/declaration line mapping.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

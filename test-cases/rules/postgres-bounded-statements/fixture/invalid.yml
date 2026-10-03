@@ -3,6 +3,7 @@ rules:
   - rule: postgres-bounded-statements
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
       importSpecifier: "@example/db"
       executorNames: [query, read, write]
