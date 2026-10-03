@@ -132,12 +132,26 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
         query.limit_clause.as_ref().map(Spanned::span),
     ];
     let after = spans.into_iter().flatten().map(end).max()?;
-    tokens.all().iter().find_map(|token| match &token.token {
-        Token::Word(word) if word.keyword == Keyword::FETCH && start(token.span) >= after => {
-            Some(start(token.span))
+    // An implicit nested FETCH has an empty AST span, including when it ends an OFFSET
+    // subquery. Keep token nesting as well as spans so that clause cannot locate this query.
+    let mut depth = 0usize;
+    for token in tokens
+        .all()
+        .iter()
+        .filter(|token| start(token.span) >= start(query.body.span()))
+    {
+        match &token.token {
+            Token::LParen => depth += 1,
+            Token::RParen => depth = depth.saturating_sub(1),
+            Token::Word(word)
+                if word.keyword == Keyword::FETCH && depth == 0 && start(token.span) >= after =>
+            {
+                return Some(start(token.span));
+            }
+            _ => {}
         }
-        _ => None,
-    })
+    }
+    None
 }
 
 fn start(span: Span) -> (usize, usize) {
