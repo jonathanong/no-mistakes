@@ -406,8 +406,8 @@ that a different measurement mode is noise.
 
 Use an isolated checkout and one dedicated `CARGO_TARGET_DIR` for both builds.
 Keep the saved baseline until the comparison finishes, then remove build
-artifacts. A saved Criterion executable must receive `--bench` to measure;
-without it, the executable only runs its preflight tests.
+artifacts. A saved Criterion executable must receive `--bench` for Criterion measurement;
+without it, test mode runs each selected benchmark once without measurement.
 
 ## Anti-Patterns
 
