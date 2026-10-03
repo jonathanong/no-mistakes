@@ -135,6 +135,8 @@ literals, and `FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
 `FETCH` keyword (a count that is written is reported at the count). `FETCH … WITH
 TIES` still writes a literal count, so it is reported too.
 
+`DISTINCT`, `DISTINCT ON`, and grouped queries page distinct groups rather than table rows and are excluded.
+
 Bind-only guards without column references, calls, or subqueries do not narrow a walk.
 
 `keyset-only-sweep` reports a walk over a whole table by its key: a query with a
