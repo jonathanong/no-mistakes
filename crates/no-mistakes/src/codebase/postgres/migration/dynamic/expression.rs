@@ -1,7 +1,7 @@
+use super::bindings::{self, Variables};
 use super::literal::{normalize_format, string_expression};
 use super::routine::{bodies, RoutineBody};
 use super::*;
-use std::collections::HashMap;
 
 /// Only static `EXECUTE` expressions become SQL facts. Runtime concatenation is
 /// intentionally opaque; assigned variables are invalidated on nonstatic write.
@@ -11,7 +11,8 @@ pub(super) fn extract(sql: &str) -> Vec<DynamicSql> {
 
 fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
     let all = tokenize(&body.sql);
-    let mut variables = HashMap::<String, Option<DynamicSql>>::new();
+    let mut variables = Variables::new();
+    let mut blocks = bindings::Blocks::default();
     let mut result = Vec::new();
     let mut scope = execution::Scope::default();
     for (ordinal, statement) in statements(&all).into_iter().enumerate() {
@@ -21,6 +22,7 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
         if code.is_empty() {
             continue;
         }
+        blocks.enter(&code, &mut variables);
         if let Some(at) = code.iter().position(|token| word(token, "EXECUTE")) {
             let line = body_line(body, code[at]);
             if let Some(mut sql) = executed_expression(&code[at + 1..], &variables, line) {
@@ -53,7 +55,7 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
 
 fn executed_expression(
     tokens: &[&TokenWithSpan],
-    variables: &HashMap<String, Option<DynamicSql>>,
+    variables: &Variables,
     line: usize,
 ) -> Option<DynamicSql> {
     let expression = execution_tokens(tokens);

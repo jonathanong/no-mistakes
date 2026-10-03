@@ -25,6 +25,12 @@ pub(super) fn record(
             out.push(SqlTableSchemaEvent::Create {
                 temporary: table.temporary,
                 if_not_exists: table.if_not_exists,
+                columns_complete: table.query.is_none()
+                    && table.like.is_none()
+                    && table.clone.is_none()
+                    && table.inherits.is_none()
+                    && table.partition_of.is_none(),
+                line: positions.line(&source_order),
                 source_order,
                 table: object_name_key(&table.name),
                 relation_key: object_name_identity(&table.name),
@@ -56,6 +62,7 @@ pub(super) fn record(
                     out.push(SqlTableSchemaEvent::AddColumn {
                         table_if_exists: alter.if_exists,
                         if_not_exists: *if_not_exists,
+                        line: positions.line(&source_order),
                         source_order: source_order.clone(),
                         table: object_name_key(&alter.name),
                         relation_key: object_name_identity(&alter.name),
@@ -76,6 +83,7 @@ pub(super) fn record(
                     continue;
                 }
                 out.push(SqlTableSchemaEvent::Drop {
+                    line: positions.line(&source_order),
                     source_order,
                     table: object_name_key(name),
                     relation_key: object_name_identity(name),

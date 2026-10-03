@@ -1,5 +1,9 @@
-use crate::codebase::postgres::{SqlColumnMetadata, SqlSchemaFileFacts, SqlTableSchemaEvent};
+use crate::codebase::postgres::{SqlSchemaFileFacts, SqlTableSchemaEvent};
 use std::collections::BTreeMap;
+use std::path::Path;
+
+mod ops;
+use ops::{add, create, existing_key};
 
 pub(crate) struct LiveColumn<'a> {
     pub(super) name: &'a str,
@@ -16,6 +20,20 @@ pub(crate) struct LiveTable<'a> {
 pub(crate) type LiveTables<'a> = BTreeMap<String, LiveTable<'a>>;
 
 pub(crate) fn live_tables<'a>(schema: &[&'a SqlSchemaFileFacts]) -> LiveTables<'a> {
+    replay(schema, None)
+}
+
+/// Catalog state when `line` of `path` executes: earlier files plus that file's
+/// earlier statements. Used for migration writes that precede later DDL.
+pub(crate) fn tables_before<'a>(
+    schema: &[&'a SqlSchemaFileFacts],
+    path: &Path,
+    line: usize,
+) -> LiveTables<'a> {
+    replay(schema, Some((path, line)))
+}
+
+fn replay<'a>(schema: &[&'a SqlSchemaFileFacts], cutoff: Option<(&Path, usize)>) -> LiveTables<'a> {
     let mut tables = BTreeMap::new();
     let mut ordered: Vec<_> = schema.iter().collect();
     ordered.sort_by(|left, right| {
@@ -25,156 +43,90 @@ pub(crate) fn live_tables<'a>(schema: &[&'a SqlSchemaFileFacts]) -> LiveTables<'
         )
     });
     for file in ordered {
-        if !file.table_events_collected {
-            // Public Rust callers can supply the original facts without ordered events.
-            for table in &file.tables {
-                create(
-                    &mut tables,
-                    &table.table_name,
-                    &table.table_name,
-                    &table.columns,
-                    false,
-                    false,
-                );
-            }
-            for column in &file.add_columns {
-                add(
-                    &mut tables,
-                    &column.table_name,
-                    &column.unqualified_table_name,
-                    &column.column_name,
-                    column.is_generated,
-                    false,
-                    false,
-                );
-            }
-            continue;
-        }
-        for event in &file.table_events {
-            match event {
-                SqlTableSchemaEvent::Create {
-                    relation_key,
-                    unqualified_table,
-                    columns,
-                    temporary,
-                    if_not_exists,
-                    ..
-                } => {
-                    create(
-                        &mut tables,
-                        relation_key,
-                        unqualified_table,
-                        columns,
-                        *if_not_exists,
-                        *temporary,
-                    );
-                }
-                SqlTableSchemaEvent::AddColumn {
-                    relation_key,
-                    unqualified_table,
-                    column,
-                    if_not_exists,
-                    table_if_exists,
-                    ..
-                } => {
-                    add(
-                        &mut tables,
-                        relation_key,
-                        unqualified_table,
-                        &column.name,
-                        column.is_generated,
-                        *if_not_exists,
-                        *table_if_exists,
-                    );
-                }
-                SqlTableSchemaEvent::Drop {
-                    relation_key,
-                    unqualified_table,
-                    ..
-                } => {
-                    if let Some(key) = existing_key(&tables, relation_key, unqualified_table) {
-                        tables.remove(&key);
-                    }
-                }
-            }
+        let target = cutoff.filter(|(path, _)| file.path == *path);
+        apply_file(&mut tables, file, target.map(|(_, line)| line));
+        if target.is_some() {
+            break;
         }
     }
     tables
 }
 
-fn create<'a>(
-    tables: &mut LiveTables<'a>,
-    key: &'a str,
-    name: &'a str,
-    columns: &'a [SqlColumnMetadata],
-    if_not_exists: bool,
-    temporary: bool,
-) {
-    let key = if temporary && !key.starts_with("pg_temp.") {
-        format!("pg_temp.{key}")
-    } else {
-        key.to_string()
-    };
-    if if_not_exists && tables.contains_key(&key) {
-        return;
-    }
-    tables.insert(
-        key,
-        LiveTable {
-            name,
-            columns: columns
-                .iter()
-                .map(|column| LiveColumn {
-                    name: &column.name,
-                    generated: column.is_generated,
-                })
-                .collect(),
-            complete: true,
-            temporary,
-        },
-    );
-}
-
-fn add<'a>(
-    tables: &mut LiveTables<'a>,
-    key: &'a str,
-    table: &'a str,
-    name: &'a str,
-    generated: bool,
-    if_not_exists: bool,
-    table_if_exists: bool,
-) {
-    let Some(key) = existing_key(tables, key, table) else {
-        return;
-    };
-    if table_if_exists && !tables.contains_key(&key) {
-        return;
-    }
-    let entry = tables.entry(key.clone()).or_insert_with(|| LiveTable {
-        name: table,
-        columns: Vec::new(),
-        complete: false,
-        temporary: key.starts_with("pg_temp."),
-    });
-    let column = LiveColumn { name, generated };
-    if let Some(existing) = entry
-        .columns
-        .iter_mut()
-        .find(|column| column.name.eq_ignore_ascii_case(name))
-    {
-        if !if_not_exists {
-            *existing = column;
+fn apply_file<'a>(tables: &mut LiveTables<'a>, file: &'a SqlSchemaFileFacts, limit: Option<usize>) {
+    if !file.table_events_collected {
+        // Public Rust callers can supply the original facts without ordered events.
+        for table in &file.tables {
+            create(
+                tables,
+                &table.table_name,
+                &table.table_name,
+                &table.columns,
+                false,
+                false,
+                true,
+            );
         }
-    } else {
-        entry.columns.push(column);
+        for column in &file.add_columns {
+            let (key, table, name) = (
+                &column.table_name,
+                &column.unqualified_table_name,
+                &column.column_name,
+            );
+            add(tables, key, table, name, column.is_generated, false, false);
+        }
+        return;
+    }
+    for event in &file.table_events {
+        if limit.is_some_and(|line| event.line() >= line) {
+            continue;
+        }
+        apply_event(tables, event);
     }
 }
 
-fn existing_key(tables: &LiveTables<'_>, key: &str, unqualified: &str) -> Option<String> {
-    let base = crate::codebase::postgres::idents::relation_part_key(unqualified);
-    // An unqualified CREATE has unknown search_path; a later qualified ALTER can identify it.
-    if key != base && !tables.contains_key(key) && tables.contains_key(&base) {
-        return Some(base);
+fn apply_event<'a>(tables: &mut LiveTables<'a>, event: &'a SqlTableSchemaEvent) {
+    match event {
+        SqlTableSchemaEvent::Create {
+            relation_key,
+            unqualified_table,
+            columns,
+            temporary,
+            if_not_exists,
+            columns_complete,
+            ..
+        } => create(
+            tables,
+            relation_key,
+            unqualified_table,
+            columns,
+            *if_not_exists,
+            *temporary,
+            *columns_complete,
+        ),
+        SqlTableSchemaEvent::AddColumn {
+            relation_key,
+            unqualified_table,
+            column,
+            if_not_exists,
+            table_if_exists,
+            ..
+        } => add(
+            tables,
+            relation_key,
+            unqualified_table,
+            &column.name,
+            column.is_generated,
+            *if_not_exists,
+            *table_if_exists,
+        ),
+        SqlTableSchemaEvent::Drop {
+            relation_key,
+            unqualified_table,
+            ..
+        } => {
+            if let Some(key) = existing_key(tables, relation_key, unqualified_table) {
+                tables.remove(&key);
+            }
+        }
     }
-    crate::codebase::postgres::idents::resolve_relation_key(tables.keys().map(String::as_str), key)
 }

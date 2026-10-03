@@ -2,10 +2,10 @@ use super::{finding, trigger_finding, CompiledOptions};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::postgres::dml::writes::positional_insert_hits;
-use crate::codebase::postgres::dml::GeneratedTableColumns;
 use crate::codebase::postgres::{SqlStatementFileFacts, SqlWriteColumns};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
+use history::{events_before, snapshots, Catalogs};
 use std::path::{Path, PathBuf};
 
 pub(super) fn scan(
@@ -29,18 +29,15 @@ pub(super) fn scan(
         .flatten()
         .collect();
     let tables = super::catalog::live_tables(&schema);
-    let catalog = super::catalog::catalog_from_tables(&tables, &opts.extra_generated_columns);
-    let trigger =
-        super::catalog::trigger_catalog_from_tables(&tables, &opts.trigger_maintained_columns);
-    let mut combined = trigger.clone();
-    combined.extend_from(&catalog);
+    let finals = Catalogs::build(&tables, opts);
     let mut findings =
         super::catalog::stale_extra_findings_from_tables(&tables, &opts.extra_generated_columns);
     findings.extend(super::catalog::stale_trigger_findings(
         &tables,
         &opts.trigger_maintained_columns,
     ));
-    if !combined.is_empty() {
+    let has_history = schema.iter().any(|file| !file.table_events.is_empty());
+    if !finals.combined.is_empty() || has_history {
         for path in files {
             if !opts.includes_dml(root, path) {
                 continue;
@@ -53,12 +50,22 @@ pub(super) fn scan(
             let Some(statements) = facts.postgres_readable_statements(path, profile)? else {
                 continue;
             };
+            // Migrations that define schema are matched against the catalog as of each write.
+            let history = schema
+                .iter()
+                .find(|file| file.path == *path && !file.table_events.is_empty());
+            let snapshots = history
+                .map(|file| snapshots(&schema, file, statements, opts))
+                .unwrap_or_default();
+            let lookup = |line: usize| match history {
+                Some(file) => snapshots.get(&events_before(file, line)).unwrap_or(&finals),
+                None => &finals,
+            };
             extend_writes(
                 &mut findings,
                 &relative_slash_path(root, path),
                 statements,
-                &combined,
-                &catalog,
+                &lookup,
             );
         }
     }
@@ -66,16 +73,16 @@ pub(super) fn scan(
     Ok(findings)
 }
 
-fn extend_writes(
+fn extend_writes<'a>(
     findings: &mut Vec<RuleFinding>,
     file: &str,
     statements: &[SqlStatementFileFacts],
-    catalog: &GeneratedTableColumns,
-    generated: &GeneratedTableColumns,
+    lookup: &dyn Fn(usize) -> &'a Catalogs,
 ) {
     for statement in statements {
         let mut hits = Vec::new();
         for write in &statement.writes {
+            let catalog = &lookup(write.line).combined;
             let Some(meta) = catalog.get(&write.table) else {
                 continue;
             };
@@ -100,6 +107,7 @@ fn extend_writes(
         hits.sort();
         hits.dedup();
         for (line, table, column) in hits {
+            let generated = &lookup(line).catalog;
             let render = if generated
                 .get_exact(table)
                 .or_else(|| generated.get(table))
@@ -114,5 +122,6 @@ fn extend_writes(
     }
 }
 
+mod history;
 #[cfg(test)]
 mod tests;

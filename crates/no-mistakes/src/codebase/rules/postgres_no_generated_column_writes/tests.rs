@@ -2,6 +2,7 @@ mod followups;
 mod identities;
 mod no_op;
 mod prepared;
+mod review_followups;
 mod trigger;
 
 use super::*;

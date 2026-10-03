@@ -8,6 +8,7 @@ pub(in super::super) fn remap_fact_lines(
         let mut order = dynamic.source_order.clone();
         order.extend(event.source_order());
         *event.source_order_mut() = order;
+        *event.line_mut() = dynamic.source_line(event.line());
     }
     for index in &mut facts.indexes {
         index.line = dynamic.source_line(index.line);
