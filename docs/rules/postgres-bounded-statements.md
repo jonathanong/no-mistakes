@@ -60,7 +60,9 @@ set operation). A statement is bounded when any of these holds:
   (`email = $1 COLLATE "C"`) is not a value either: it changes what `=` matches. A subquery
   that reads a column of the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever
   its own bound: every row finds itself in it. References are resolved one query level at a
-  time, so a relation of a nested level never hides a reference of an outer one. A bare column
+  time, so a relation of a nested level never hides a reference of an outer one.
+  Schema-qualified references retain their schema: an inner `audit.accounts` cannot
+  hide a reference to the outer `public.accounts`. A bare column
   belongs to the first level whose tables have it, as PostgreSQL resolves it: in
   `a.id IN (SELECT id FROM currencies LIMIT 1)` the `id` is the account's own when the catalog's
   `currencies` has no `id` column, so that subquery is not a pin either. A column of a derived
