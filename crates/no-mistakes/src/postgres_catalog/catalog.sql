@@ -62,7 +62,7 @@ WITH selected AS (
       WHERE c.conrelid = r.oid AND c.contype = 'u'), '{}'::jsonb),
     'indexes', COALESCE((SELECT jsonb_object_agg(quote_ident(ic.relname), jsonb_build_object(
       'accessMethod', am.amname, 'unique', i.indisunique, 'primary', i.indisprimary,
-      'constraintBacked', EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid AND c.contype IN ('p', 'u')),
+      'constraintBacked', EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid AND c.contype IN ('p', 'u', 'x')),
       'valid', i.indisvalid, 'ready', i.indisready, 'live', i.indislive, 'immediate', i.indimmediate,
       'predicate', pg_get_expr(i.indpred, i.indrelid), 'definition', pg_get_indexdef(i.indexrelid),
       'keys', (SELECT jsonb_agg(jsonb_build_object(
@@ -105,7 +105,9 @@ WITH selected AS (
   WHERE p.prokind IN ('f', 'p') AND NOT EXISTS (SELECT 1 FROM extension_members e
                                                 WHERE e.classid = 'pg_proc'::regclass AND e.objid = p.oid)
 ), enums AS (
-  SELECT quote_ident(t.typname) AS key, jsonb_build_object('values', (SELECT jsonb_agg(v.enumlabel
+  -- Keyed by the type as a column renders it (format_type under the same search_path), so a
+  -- column's element type always finds its enum, including one named like a pg_catalog type.
+  SELECT format_type(t.oid, NULL) AS key, jsonb_build_object('values', (SELECT jsonb_agg(v.enumlabel
     ORDER BY v.enumsortorder) FROM pg_enum v WHERE v.enumtypid = t.oid)) AS value
   FROM pg_type t JOIN selected s ON s.oid = t.typnamespace
   WHERE t.typtype = 'e' AND NOT EXISTS (SELECT 1 FROM extension_members e

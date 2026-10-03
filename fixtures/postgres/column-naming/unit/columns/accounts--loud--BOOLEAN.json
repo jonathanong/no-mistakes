@@ -3,7 +3,7 @@
   "tables": {
     "accounts": {
       "columns": {
-        "active": {
+        "loud": {
           "dataType": "BOOLEAN"
         }
       }

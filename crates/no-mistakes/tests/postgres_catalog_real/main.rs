@@ -3,4 +3,5 @@
 mod edges;
 mod parity;
 mod rules;
+mod shadowing;
 mod support;

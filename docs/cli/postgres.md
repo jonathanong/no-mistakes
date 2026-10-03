@@ -53,7 +53,8 @@ partitioned table in the schema:
   `ON DELETE` and `ON UPDATE` actions, and whether they are validated;
 - check constraints: name, `pg_get_constraintdef` text, and whether they are
   validated. The text of a not-validated constraint ends in `NOT VALID`;
-- every index: uniqueness, primary and constraint-backed flags, access method,
+- every index: uniqueness, primary and constraint-backed flags (an index behind a
+  primary key, unique or exclusion constraint is constraint-backed), access method,
   key columns or expressions with direction and NULL ordering, predicate and
   `pg_get_indexdef` text, plus the validity, readiness, liveness and
   whether the index is deferrable, which ordering proofs need;
@@ -97,8 +98,10 @@ written as SQL.
 Types are rendered relative to the selected schema. A type defined in that schema
 is unqualified, so an enum column's `dataType` equals the catalog enum's name and an
 enum array is `<enum>[]`. A type from another schema stays qualified
-(`other.shade`). The generator sets `search_path` to `pg_catalog` and the selected
-schema inside its transaction to get this rendering.
+(`other.shade`), and so does an enum whose name a `pg_catalog` type shadows
+(`app.text`), which is also how that enum is keyed. The generator sets
+`search_path` to `pg_catalog` and the selected schema inside its transaction to get
+this rendering.
 
 ### Stable output
 
