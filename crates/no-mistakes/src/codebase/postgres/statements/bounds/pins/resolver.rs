@@ -27,7 +27,7 @@ pub(in super::super) struct Resolver {
     tables: Vec<bool>,
     /// What each item answers to (its alias, else its table name): the qualifiers a subquery
     /// would use to read the row being checked.
-    outer: BTreeSet<String>,
+    outer: BTreeSet<Vec<String>>,
     /// The CTE names in scope: a one-part table name that is one is not a base table.
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
 }
@@ -67,14 +67,15 @@ impl Resolver {
             .iter()
             .map(|item| matches!(item.kind, SqlBoundItemKind::Table(_)))
             .collect();
-        let mut outer: BTreeSet<String> = names
+        let mut outer: BTreeSet<Vec<String>> = names
             .iter()
             .filter_map(|(alias, table)| alias.clone().or_else(|| table.clone()))
+            .map(|name| vec![name])
             .collect();
         for (item, (alias, bare)) in items.iter().zip(&names) {
             if alias.is_none() || alias == bare {
                 if let SqlBoundItemKind::Table(name) = &item.kind {
-                    outer.insert(decoded_parts(name).join("."));
+                    outer.insert(decoded_parts(name));
                 }
             }
         }
