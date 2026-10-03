@@ -52,7 +52,7 @@ impl TemporaryRelations {
                     .insert(state::key(&sql_name(&view.name)), dependencies);
             }
             Statement::Query(query) => {
-                if let SetExpr::Select(select) = &*query.body {
+                if let Some(select) = first_select(&query.body) {
                     if let Some(into) = &select.into {
                         if into.temporary {
                             for target in &into.targets {
@@ -99,5 +99,15 @@ impl TemporaryRelations {
                 }
             }
         }
+    }
+}
+
+// INTO belongs to the first SELECT in a set operation, including parenthesized queries.
+fn first_select(expr: &SetExpr) -> Option<&sqlparser::ast::Select> {
+    match expr {
+        SetExpr::Select(select) => Some(select),
+        SetExpr::SetOperation { left, .. } => first_select(left),
+        SetExpr::Query(query) => first_select(&query.body),
+        _ => None,
     }
 }
