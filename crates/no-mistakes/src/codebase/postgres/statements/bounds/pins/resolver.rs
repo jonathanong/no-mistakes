@@ -1,5 +1,6 @@
 use super::super::super::value::is_placeholder_ident;
 use super::correlated::{reads_outer_rows, Reads};
+use crate::codebase::postgres::catalog::decoded_parts;
 use crate::codebase::postgres::idents::{
     ident_key, object_name_ident, unwrap_expr, visit_child_exprs,
 };
@@ -56,7 +57,7 @@ impl Resolver {
             .iter()
             .map(|item| {
                 let table = match &item.kind {
-                    SqlBoundItemKind::Table(name) => name.rsplit('.').next().map(str::to_string),
+                    SqlBoundItemKind::Table(name) => decoded_parts(name).pop(),
                     _ => None,
                 };
                 (item.alias.clone(), table)
@@ -66,10 +67,17 @@ impl Resolver {
             .iter()
             .map(|item| matches!(item.kind, SqlBoundItemKind::Table(_)))
             .collect();
-        let outer = names
+        let mut outer: BTreeSet<String> = names
             .iter()
             .filter_map(|(alias, table)| alias.clone().or_else(|| table.clone()))
             .collect();
+        for (item, (alias, bare)) in items.iter().zip(&names) {
+            if alias.is_none() || alias == bare {
+                if let SqlBoundItemKind::Table(name) = &item.kind {
+                    outer.insert(decoded_parts(name).join("."));
+                }
+            }
+        }
         Self {
             names,
             tables,
