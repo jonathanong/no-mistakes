@@ -12,3 +12,8 @@ ignoreChecks:
   # report" when main has no upload for that flag. Patch coverage still blocks.
   - 'codecov/project'
   - 'codecov/project/*'
+
+# Match the repository's required linear history and allowed merge strategy.
+merge:
+  commandArgs:
+    - '--squash'
