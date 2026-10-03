@@ -20,17 +20,20 @@ const AGGREGATES: &[&str] = &[
     "range_intersect_agg",
 ];
 
-/// Set-returning functions whose row count follows the value of their arguments. In FROM, with
-/// arguments the statement or its caller supplies, they are sized by the caller; in a select
-/// list they turn one aggregate row into many.
+mod set_returning;
+use set_returning::SET_RETURNING;
+
+/// Functions whose result row count follows caller-provided argument values.
 #[rustfmt::skip]
-const SET_RETURNING: &[&str] = &[
+const CALLER_SIZED: &[&str] = &[
     "unnest", "generate_series", "generate_subscripts", "json_array_elements",
     "json_array_elements_text", "jsonb_array_elements", "jsonb_array_elements_text",
     "json_each", "json_each_text", "jsonb_each", "jsonb_each_text", "json_object_keys",
     "jsonb_object_keys", "string_to_table", "regexp_split_to_table", "regexp_matches",
     "json_populate_recordset", "jsonb_populate_recordset", "json_to_recordset",
-    "jsonb_to_recordset",
+    "jsonb_to_recordset", "jsonb_path_query", "jsonb_path_query_tz", "aclexplode",
+    "pg_options_to_table", "pg_mcv_list_items", "pg_snapshot_xip", "txid_snapshot_xip",
+    "ts_parse", "ts_debug", "ts_token_type",
 ];
 
 /// Whether `name` is bare or `pg_catalog`-qualified and its bare part is in `list`. A function
@@ -59,24 +62,26 @@ pub(super) fn is_aggregate(name: &ObjectName) -> bool {
     builtin(name, AGGREGATES)
 }
 
-/// A set-returning function by name, whichever schema it is called through: in a select list a
-/// user-defined function of the same name expands the row just as well.
+/// A catalog set-returning function must have a builtin schema identity.
+/// A same-named user function has an unknown cardinality rather than the catalog contract.
 pub(super) fn is_set_returning(name: &ObjectName) -> bool {
-    named(name, SET_RETURNING)
+    builtin(name, SET_RETURNING)
 }
 
 /// A table function is sized by the caller only when it is a set-returning built-in over
 /// arguments the text provides; any other function can return rows from anywhere.
 pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlBoundItemKind {
+    // Snapshot expansion is caller-sized only when the snapshot itself is supplied.
+    let snapshot = builtin(name, &["pg_snapshot_xip", "txid_snapshot_xip"]);
     let given = args.args.iter().all(|arg| match arg {
         FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
         | FunctionArg::Named {
             arg: FunctionArgExpr::Expr(expr),
             ..
-        } => !depends_on_data(expr),
+        } => !input_depends_on_data(expr, snapshot),
         _ => true,
     });
-    if given && builtin(name, SET_RETURNING) {
+    if given && builtin(name, CALLER_SIZED) {
         SqlBoundItemKind::Other
     } else {
         SqlBoundItemKind::Opaque
@@ -95,7 +100,11 @@ pub(super) fn unnest_kind(arrays: &[Expr]) -> SqlBoundItemKind {
 
 /// Whether `expr` holds a subquery or a column: values the statement text does not provide.
 pub(super) fn depends_on_data(expr: &Expr) -> bool {
-    struct Found(bool);
+    input_depends_on_data(expr, false)
+}
+
+fn input_depends_on_data(expr: &Expr, reject_calls: bool) -> bool {
+    struct Found(bool, bool);
     impl Visitor for Found {
         type Break = ();
         fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
@@ -106,6 +115,7 @@ pub(super) fn depends_on_data(expr: &Expr) -> bool {
             let column = match expr {
                 Expr::Identifier(ident) => !is_placeholder_ident(&ident.value),
                 Expr::CompoundIdentifier(_) => true,
+                Expr::Function(_) if self.1 => true,
                 _ => false,
             };
             if column {
@@ -115,7 +125,10 @@ pub(super) fn depends_on_data(expr: &Expr) -> bool {
             ControlFlow::Continue(())
         }
     }
-    let mut found = Found(false);
+    let mut found = Found(false, reject_calls);
     let _ = expr.visit(&mut found);
     found.0
 }
+
+#[cfg(test)]
+mod tests;

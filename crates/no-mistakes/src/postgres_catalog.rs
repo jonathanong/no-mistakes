@@ -3,7 +3,7 @@ mod connection;
 mod sql;
 
 use anyhow::{bail, Context, Result};
-use connection::connection_environment;
+pub(crate) use connection::connection_environment;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 

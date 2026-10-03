@@ -278,3 +278,30 @@ fn oversized_cte_compaction_preserves_key_pins_without_hiding_unpinned_reads() {
     ));
     assert_eq!(names(sql), ["orders"]);
 }
+
+#[test]
+fn jsonpath_set_returning_functions_expand_aggregate_rows() {
+    assert_eq!(
+        names("SELECT jsonb_path_query(jsonb_agg(to_jsonb(o)), '$[*]') FROM orders o"),
+        ["orders"]
+    );
+    assert!(names("SELECT 1 FROM jsonb_path_query($1::jsonb, '$[*]')").is_empty());
+}
+
+#[test]
+fn catalog_set_returning_names_do_not_classify_application_functions() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-qualified.sql"));
+    assert_eq!(names(sql), ["orders", "orders"]);
+}
+
+#[test]
+fn snapshot_expansion_requires_a_caller_supplied_snapshot() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/snapshot-arguments.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "accounts", "accounts", "accounts"]
+    );
+}
