@@ -1,6 +1,7 @@
 //! Recover radix numbers split into adjacent number/word tokens by sqlparser.
 use super::super::numeric_literal::integer;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
+use std::num::IntErrorKind;
 
 pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
     let mut out = Vec::with_capacity(tokens.len());
@@ -19,9 +20,27 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
                         )
                     {
                         let raw = format!("0{}", word.value);
-                        if let Ok(value) = integer(&raw) {
+                        let value = match integer(&raw) {
+                            Ok(value) => Some(value.to_string()),
+                            Err(error)
+                                if *error.kind() == IntErrorKind::PosOverflow
+                                    && raw[2..].chars().filter(|c| *c != '_').all(|c| {
+                                        c.is_digit(
+                                            if raw.as_bytes()[1].eq_ignore_ascii_case(&b'b') {
+                                                2
+                                            } else {
+                                                8
+                                            },
+                                        )
+                                    }) =>
+                            {
+                                Some(raw)
+                            }
+                            Err(_) => None,
+                        };
+                        if let Some(value) = value {
                             let mut combined = token.clone();
-                            combined.token = Token::Number(value.to_string(), false);
+                            combined.token = Token::Number(value, false);
                             combined.span.end = next.span.end;
                             out.push(combined);
                             index += 2;

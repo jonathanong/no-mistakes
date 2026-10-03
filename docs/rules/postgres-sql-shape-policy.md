@@ -297,3 +297,6 @@ Numeric hexadecimal limits such as `LIMIT 0xF_F` decode to the row count 255.
 Hexadecimal string syntax such as `LIMIT X'FF'` remains a non-literal expression;
 the classifier uses the original source spelling to distinguish them, including
 when Unicode characters precede the limit on its source line.
+Valid radix integers above the supported unsigned row-cap range remain parseable
+as numeric expressions. Their cap is classified as unknown, so they do not
+prevent collection of other statement facts.
