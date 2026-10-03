@@ -1,4 +1,4 @@
-use super::relation_name;
+use crate::codebase::postgres::catalog::normalize_table_name;
 use sqlparser::ast::{
     LockClause, LockType, ObjectName, ObjectNamePart, SetExpr, TableFactor, TableWithJoins,
 };
@@ -68,9 +68,22 @@ fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) -> 
     match factor {
         TableFactor::Table { name, alias, .. } => {
             let table = qualified_relation_name(name);
-            let mut names = BTreeSet::from([normalize(&table), normalize(&relation_name(name))]);
+            let mut names = BTreeSet::from([
+                normalize(&table),
+                normalize(
+                    &name
+                        .0
+                        .iter()
+                        .rev()
+                        .find_map(|part| match part {
+                            ObjectNamePart::Identifier(ident) => Some(ident.to_string()),
+                            _ => None,
+                        })
+                        .unwrap_or_default(),
+                ),
+            ]);
             if let Some(alias) = alias {
-                names.insert(normalize(&alias.name.value));
+                names.insert(normalize(&alias.name.to_string()));
             }
             relations.push(Relation { table, names });
             Some(())
@@ -102,7 +115,7 @@ fn qualified_relation_name(name: &ObjectName) -> String {
     name.0
         .iter()
         .filter_map(|part| match part {
-            ObjectNamePart::Identifier(ident) => Some(ident.value.as_str()),
+            ObjectNamePart::Identifier(ident) => Some(ident.to_string()),
             _ => None,
         })
         .collect::<Vec<_>>()
@@ -110,5 +123,5 @@ fn qualified_relation_name(name: &ObjectName) -> String {
 }
 
 fn normalize(name: &str) -> String {
-    name.to_ascii_lowercase()
+    normalize_table_name(name)
 }

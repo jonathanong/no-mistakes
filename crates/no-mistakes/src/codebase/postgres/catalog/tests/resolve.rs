@@ -14,6 +14,8 @@ fn key(expression: &str) -> CanonicalOrderKey {
 
 fn index(name: &str, keys: &[&str], constraint_backed: bool) -> CanonicalIndex {
     CanonicalIndex {
+        ordering_supported: true,
+        immediate: true,
         name: name.to_owned(),
         constraint_backed,
         keys: keys.iter().map(|expression| key(expression)).collect(),
@@ -34,6 +36,7 @@ fn catalog() -> SchemaCatalog {
                 index("users_pair_first", &["first", "second"], false),
                 index("users_pair_second", &["second", "first"], false),
                 CanonicalIndex {
+                    ordering_supported: true,
                     predicate: Some("is_live".to_owned()),
                     ..index("users_live_email", &["email"], false)
                 },
@@ -45,6 +48,7 @@ fn catalog() -> SchemaCatalog {
         "partial_users".to_owned(),
         ArbiterTable {
             indexes: vec![CanonicalIndex {
+                ordering_supported: true,
                 predicate: Some("is_live".to_owned()),
                 ..index("partial_users_email", &["email"], false)
             }],

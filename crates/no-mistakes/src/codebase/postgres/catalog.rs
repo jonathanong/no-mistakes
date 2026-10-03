@@ -1,7 +1,7 @@
 use crate::codebase::ts_source::SourceStore;
 use anyhow::{bail, Context, Result};
 use std::collections::BTreeMap;
-use std::path::{Component, Path, PathBuf};
+use std::path::Path;
 
 mod build;
 mod expressions;
@@ -18,6 +18,7 @@ mod model;
 mod names;
 mod order;
 mod partition;
+mod paths;
 mod resolve;
 mod snapshot;
 #[cfg(test)]
@@ -31,12 +32,14 @@ pub use findings::{
     catalog_finding, require_catalog_path, AllowEntry, AllowList, CatalogObjectRef,
 };
 pub use model::{
-    CatalogCheck, CatalogColumn, CatalogEnum, CatalogForeignKey, CatalogFunction, CatalogIndexInfo,
-    CatalogIndexKey, CatalogTable, CatalogTrigger, CatalogUnique, CatalogView, GeneratedKind,
-    PartitionKey, PartitionKeyElement, PartitionStrategy, RelationKind, TriggerEvent,
-    TriggerTiming,
+    CatalogCheck, CatalogColumn, CatalogCoverage, CatalogEnum, CatalogForeignKey, CatalogFunction,
+    CatalogIndexInfo, CatalogIndexKey, CatalogTable, CatalogTrigger, CatalogUnique, CatalogView,
+    GeneratedKind, PartitionKey, PartitionKeyElement, PartitionStrategy, RelationKind,
+    TriggerEvent, TriggerTiming,
 };
 pub(crate) use order::{canonical_order_keys, order_by_ascending};
+use paths::catalog_path;
+pub(crate) use paths::normalize_catalog_path;
 use snapshot::Snapshot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -47,6 +50,8 @@ pub struct CanonicalOrderKey {
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CanonicalIndex {
+    pub ordering_supported: bool,
+    pub immediate: bool,
     pub name: String,
     pub constraint_backed: bool,
     pub keys: Vec<CanonicalOrderKey>,
@@ -60,6 +65,8 @@ pub enum ResolvedArbiter {
 }
 #[derive(Debug, Clone, Default)]
 pub struct SchemaCatalog {
+    coverage: CatalogCoverage,
+    schema: Option<String>,
     tables: BTreeMap<String, ArbiterTable>,
     model_tables: BTreeMap<String, CatalogTable>,
     functions: BTreeMap<String, CatalogFunction>,
@@ -74,6 +81,10 @@ struct ArbiterTable {
 }
 
 impl SchemaCatalog {
+    pub fn coverage(&self) -> CatalogCoverage {
+        self.coverage
+    }
+
     pub fn load(root: &Path, raw_path: &str, sources: &SourceStore) -> Result<Self> {
         let path = catalog_path(root, raw_path)?;
         let source = sources.read_path(&path).map_err(|error| {
@@ -170,24 +181,4 @@ impl SchemaCatalog {
     }
 }
 
-pub(crate) fn normalize_catalog_path(raw_path: &str) -> Result<PathBuf> {
-    let path = Path::new(raw_path);
-    let mut normalized = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::Normal(value) => normalized.push(value),
-            Component::CurDir => {}
-            Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
-                bail!("schemaCatalogPath must be a non-empty repository-relative path");
-            }
-        }
-    }
-    if normalized.as_os_str().is_empty() {
-        bail!("schemaCatalogPath must be a non-empty repository-relative path");
-    }
-    Ok(normalized)
-}
-
-fn catalog_path(root: &Path, raw_path: &str) -> Result<PathBuf> {
-    Ok(root.join(normalize_catalog_path(raw_path)?))
-}
+pub(crate) use names::normalize_table_name;

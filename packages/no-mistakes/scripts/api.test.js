@@ -159,6 +159,8 @@ test("programmatic API proxies object options through async native addon calls",
       JSON.stringify({ command: "reactUsages", options: JSON.parse(json) }),
     infraResourceRefsJson: async (json) =>
       JSON.stringify({ command: "infraResourceRefs", options: JSON.parse(json) }),
+    generatePostgresCatalogJson: async (json) =>
+      JSON.stringify({ command: "generatePostgresCatalog", options: JSON.parse(json) }),
     infraOutputsJson: async (json) =>
       JSON.stringify({ command: "infraOutputs", options: JSON.parse(json) }),
     infraTestForJson: async (json) =>
@@ -333,6 +335,11 @@ test("programmatic API proxies object options through async native addon calls",
       "infraOutputs",
     );
     assert.equal((await api.infraTestFor({ tfFile: "infra/main.tf" })).command, "infraTestFor");
+    assert.equal(
+      (await api.generatePostgresCatalog({ connectionEnv: "DATABASE_URL", schema: "public" }))
+        .command,
+      "generatePostgresCatalog",
+    );
     assert.equal((await api.swiftImporters({ file: "Sources/A.swift" })).command, "swiftImporters");
     assert.equal(
       (await api.swiftTestTargets({ file: "Sources/A.swift" })).command,

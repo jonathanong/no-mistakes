@@ -7,6 +7,10 @@ use serde::Deserialize;
 pub(super) struct Snapshot {
     pub(super) format_version: u32,
     #[serde(default)]
+    pub(super) coverage: super::CatalogCoverage,
+    #[serde(default)]
+    pub(super) schema: Option<String>,
+    #[serde(default)]
     pub(super) tables: BTreeMap<String, SnapshotTable>,
     #[serde(default)]
     pub(super) functions: BTreeMap<String, SnapshotFunction>,
@@ -82,6 +86,8 @@ pub(super) struct SnapshotKeyConstraint {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct SnapshotIndex {
+    pub(super) immediate: Option<bool>,
+    pub(super) live: Option<bool>,
     pub(super) access_method: String,
     pub(super) unique: bool,
     pub(super) primary: bool,
@@ -96,6 +102,7 @@ pub(super) struct SnapshotIndex {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct SnapshotIndexKey {
+    pub(super) ordering_supported: Option<bool>,
     pub(super) column: Option<String>,
     pub(super) expression: String,
     pub(super) descending: bool,

@@ -44,3 +44,5 @@ mod tests;
 pub use ci::{run as ci_run, CiArgs};
 pub use impacted_checks::{run as impacted_checks_run, ImpactedChecksArgs};
 pub use tests::{run as tests_run, TestsArgs};
+
+pub mod postgres_catalog;

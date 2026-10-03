@@ -74,6 +74,7 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
 | [`planning-impact`](planning-impact.md) | npm-package CI artifacts from one prepared analysis. |
 | [`infra`](infra.md) | Terraform/OpenTofu resource, module, and output relationships. |
+| [`postgres`](postgres.md) | Generate independent PostgreSQL ordering catalogs. |
 | [`swift`](swift.md) | Swift package importers and covering test targets. |
 
 The [graph reference](graph.md) explains shared options and relationship

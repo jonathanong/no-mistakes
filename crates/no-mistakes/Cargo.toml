@@ -37,6 +37,8 @@ oxc_parser = "0.151.0"
 oxc_span = "0.151.0"
 oxc_syntax = "0.151.0"
 proc-macro2 = { version = "1", features = ["span-locations"] }
+percent-encoding = "2.3"
+url = "2.5"
 pulldown-cmark = "0.13"
 rayon = "1.10"
 regex = "1"

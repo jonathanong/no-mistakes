@@ -78,7 +78,7 @@ impl SchemaCatalog {
             table
                 .indexes
                 .iter()
-                .filter(|index| index.predicate.is_none())
+                .filter(|index| index.ordering_supported && index.predicate.is_none())
                 .any(|index| order_prefix_matches(order, &index.keys, true))
         })
     }
@@ -92,15 +92,27 @@ impl SchemaCatalog {
             table
                 .indexes
                 .iter()
-                .filter(|index| index.predicate.is_none())
+                .filter(|index| index.ordering_supported && index.predicate.is_none())
                 .any(|index| order_prefix_matches_for_qualifiers(order, &index.keys, qualifiers))
         })
     }
     fn arbiter_table(&self, table: &str) -> Option<&ArbiterTable> {
-        self.tables.get(&normalize_table_name(table))
+        let key = normalize_table_name(table);
+        self.tables.get(&key).or_else(|| {
+            let schema = self.schema.as_ref()?;
+            let schema_identifier = format!("\"{}\"", schema.replace('"', "\"\""));
+            let prefix = format!("{}.", normalize_table_name(&schema_identifier));
+            self.tables.get(key.strip_prefix(&prefix)?)
+        })
     }
 }
 fn resolve_candidates(candidates: Vec<CanonicalIndex>) -> ResolvedArbiter {
+    if candidates
+        .iter()
+        .any(|index| !index.immediate || !index.ordering_supported)
+    {
+        return ResolvedArbiter::Unresolved;
+    }
     let Some(first) = candidates.first() else {
         return ResolvedArbiter::Unresolved;
     };

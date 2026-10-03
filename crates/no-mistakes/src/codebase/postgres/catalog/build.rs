@@ -19,6 +19,8 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         model_tables.insert(name, model);
     }
     Ok(SchemaCatalog {
+        coverage: snapshot.coverage,
+        schema: snapshot.schema,
         tables,
         model_tables,
         functions: functions(snapshot.functions),

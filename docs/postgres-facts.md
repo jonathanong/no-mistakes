@@ -504,3 +504,9 @@ INSERT, UPDATE, and MERGE target columns and positional widths without consultin
 a catalog. Rule consumers borrow those facts and resolve the protected columns
 after the ordered migration projection; they do not parse SQL again. Query-file
 `include` scope is independent of migration `sqlInclude`.
+
+## Independent observed ordering catalogs
+
+[`postgres catalog`](cli/postgres.md) generates the tool-owned JSON directly from
+PostgreSQL, without an application snapshot producer. Explicit ordering coverage
+is accepted only by conflict/lock ordering checks; full-schema checks reject it.

@@ -10,6 +10,7 @@ mod fetches;
 mod flow;
 mod infra;
 mod lockfile;
+mod postgres;
 mod queues;
 mod react;
 mod registry_extension;
@@ -49,6 +50,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Generate independent PostgreSQL catalogs.
+    Postgres(postgres::PostgresArgs),
     /// Find files that the given files depend on.
     Dependencies(TraverseArgs),
     /// Find files that depend on the given files.
@@ -190,6 +193,7 @@ fn run_domain_command(command: Command) -> Result<CommandDispatch> {
         Command::Server(args) => server::run(args),
         Command::Infra(args) => infra::run(args),
         Command::Swift(args) => swift::run(args),
+        Command::Postgres(args) => postgres::run(args),
         Command::Check(args) => check::run(args),
         Command::Config(args) => config_cmd::run(args),
         Command::Tests(args) => tests_run(args),

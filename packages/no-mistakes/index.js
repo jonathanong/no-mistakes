@@ -24,6 +24,7 @@ function createJsonApis(descriptors) {
 }
 
 const jsonApis = createJsonApis({
+  generatePostgresCatalog: "generatePostgresCatalogJson",
   analyzeProject: "analyzeProjectJson",
   callSites: "callSitesJson",
   check: "checkJson",
@@ -164,3 +165,5 @@ module.exports.testsImpact = planning.testsImpact;
 module.exports.testsPlan = planning.testsPlan;
 module.exports.testsTargets = planning.testsTargets;
 module.exports.testsWhy = planning.testsWhy;
+
+module.exports.generatePostgresCatalog = jsonApis.generatePostgresCatalog;

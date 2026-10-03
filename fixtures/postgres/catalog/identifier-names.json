@@ -1,0 +1,27 @@
+[
+  {
+    "input": "PUBLIC.Users",
+    "table": "public.users",
+    "identifier": "users"
+  },
+  {
+    "input": "\"PUBLIC\".\"Users\"",
+    "table": "PUBLIC.Users",
+    "identifier": "Users"
+  },
+  {
+    "input": "\"a.b\".\"C\"",
+    "table": "\"a.b\".C",
+    "identifier": "C"
+  },
+  {
+    "input": "\"a\"\"b\"",
+    "table": "\"a\"\"b\"",
+    "identifier": "a\"b"
+  },
+  {
+    "input": " public . users ",
+    "table": "public.users",
+    "identifier": "users"
+  }
+]

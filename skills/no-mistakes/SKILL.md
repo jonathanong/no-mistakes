@@ -122,3 +122,5 @@ groups, limits, diffs, and deleted-file behavior.
   aliases and resolver ownership.
 - [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported
   forms, confidence limits, and `rg` fallbacks.
+
+For independent PostgreSQL ordering catalogs, use `postgres catalog`; see [the command reference](../../docs/cli/postgres.md).

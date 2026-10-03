@@ -20,6 +20,7 @@ export const {
   exportsOf,
   fetches,
   flow,
+  generatePostgresCatalog,
   impactedChecks,
   importUsages,
   importers,

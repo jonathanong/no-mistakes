@@ -1,4 +1,5 @@
 mod fragments;
+mod postgres_catalog;
 mod postgres_readable;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
@@ -129,22 +130,6 @@ impl CheckFactMap {
                     |error| anyhow::anyhow!(error.clone()),
                 )
             })
-    }
-
-    pub(crate) fn postgres_schema_catalog(
-        &self,
-        path: &str,
-    ) -> anyhow::Result<&crate::codebase::postgres::SchemaCatalog> {
-        let normalized = crate::codebase::postgres::normalize_schema_catalog_path(path)?
-            .to_string_lossy()
-            .into_owned();
-        match self.postgres_schema_catalogs.get(&normalized) {
-            Some(Ok(catalog)) => Ok(catalog),
-            Some(Err(error)) => Err(anyhow::anyhow!(error.to_string())),
-            None => Err(anyhow::anyhow!(
-                "prepared schema catalog is missing for schemaCatalogPath {path}"
-            )),
-        }
     }
 
     pub(crate) fn graph_file_universe(&self) -> &[PathBuf] {
