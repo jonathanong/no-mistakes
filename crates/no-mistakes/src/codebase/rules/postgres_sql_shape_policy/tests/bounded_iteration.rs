@@ -332,3 +332,12 @@ fn ignore_tables_preserves_quoted_case_and_dots() {
         at(&[(2, "keyset-only-sweep"), (3, "keyset-only-sweep")])
     );
 }
+
+#[test]
+fn non_selective_predicates_preserve_literal_case() {
+    let yaml = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\nshapeOptions:\n  keysetOnlySweep:\n    nonSelectivePredicates: [\"status = 'idle'\"]\n";
+    assert_eq!(
+        found("predicate-case", yaml, "sql/001.sql"),
+        at(&[(2, "keyset-only-sweep")])
+    );
+}
