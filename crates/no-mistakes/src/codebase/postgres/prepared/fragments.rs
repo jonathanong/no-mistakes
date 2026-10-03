@@ -55,16 +55,27 @@ fn statement_facts(sql: &str) -> SqlStatementFileFacts {
 
 /// Whether `text` begins with a clause that closes a query, as a word: `LIMIT 5`, not `limit_at`.
 fn starts_with_clause(text: &str) -> bool {
-    let upper = text.to_ascii_uppercase();
-    ["ORDER BY", "LIMIT", "OFFSET", "FETCH"]
+    use sqlparser::dialect::PostgreSqlDialect;
+    use sqlparser::keywords::Keyword;
+    use sqlparser::tokenizer::{Token, Tokenizer};
+    let Ok(tokens) = Tokenizer::new(&PostgreSqlDialect {}, text).tokenize() else {
+        return false;
+    };
+    let mut tokens = tokens
         .iter()
-        .any(|clause| {
-            upper.strip_prefix(clause).is_some_and(|rest| {
-                rest.chars()
-                    .next()
-                    .is_none_or(|next| !(next.is_alphanumeric() || next == '_'))
-            })
-        })
+        .filter(|token| !matches!(token, Token::Whitespace(_)));
+    match tokens.next() {
+        Some(Token::Word(word)) if word.keyword == Keyword::ORDER => {
+            matches!(tokens.next(), Some(Token::Word(word)) if word.keyword == Keyword::BY)
+        }
+        Some(Token::Word(word)) => {
+            matches!(
+                word.keyword,
+                Keyword::LIMIT | Keyword::OFFSET | Keyword::FETCH
+            )
+        }
+        _ => false,
+    }
 }
 
 #[cfg(test)]
