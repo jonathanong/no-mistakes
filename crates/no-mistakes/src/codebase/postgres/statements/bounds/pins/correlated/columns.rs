@@ -10,20 +10,19 @@ pub(in super::super::super) fn projection_columns(query: &Query) -> Option<BTree
 
 fn set_columns(set: &SetExpr) -> Option<BTreeSet<String>> {
     match set {
-        SetExpr::Select(select) => select
-            .projection
-            .iter()
-            .map(|item| match item {
-                SelectItem::ExprWithAlias { alias, .. } => Some(ident_key(alias)),
-                SelectItem::UnnamedExpr(Expr::Identifier(ident)) => Some(ident_key(ident)),
-                SelectItem::UnnamedExpr(Expr::CompoundIdentifier(parts)) => {
-                    parts.last().map(ident_key)
-                }
-                _ => None,
-            })
-            .collect(),
+        SetExpr::Select(select) => select.projection.iter().map(label_name).collect(),
         SetExpr::Query(query) => projection_columns(query),
         SetExpr::SetOperation { left, .. } => set_columns(left),
+        _ => None,
+    }
+}
+
+/// A syntactic output label can name a grouping expression in the same SELECT arm.
+pub(super) fn label_name(item: &SelectItem) -> Option<String> {
+    match item {
+        SelectItem::ExprWithAlias { alias, .. } => Some(ident_key(alias)),
+        SelectItem::UnnamedExpr(Expr::Identifier(ident)) => Some(ident_key(ident)),
+        SelectItem::UnnamedExpr(Expr::CompoundIdentifier(parts)) => parts.last().map(ident_key),
         _ => None,
     }
 }

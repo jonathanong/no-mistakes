@@ -1,4 +1,5 @@
 mod columns;
+mod frames;
 mod scalar_arrays;
 mod sources;
 use super::super::super::value::is_placeholder_ident;
@@ -7,7 +8,7 @@ use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBareRead;
 pub(in super::super) use columns::projection_columns;
 use sqlparser::ast::{
-    Expr, GroupByExpr, ObjectName, OrderByKind, Query, SetExpr, TableFactor, Visit, Visitor,
+    Expr, GroupByExpr, ObjectName, OrderByKind, Query, Select, SetExpr, TableFactor, Visit, Visitor,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::ControlFlow;
@@ -61,6 +62,8 @@ pub(in super::super) fn reads_outer_rows(
 struct Frame {
     /// A nested WITH clause must not change the relation names visible to its parent.
     previous_ctes: BTreeMap<String, Option<BTreeSet<String>>>,
+    split_selects: bool,
+    select_frame: bool,
     /// Identifier components preserve the distinction between a quoted dot and a separator.
     relations: BTreeSet<Vec<String>>,
     /// Bare relation names also identify whole-row references.
@@ -103,6 +106,7 @@ impl Visitor for Scan {
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         let mut frame = Frame {
             previous_ctes: self.ctes.clone(),
+            split_selects: matches!(&*query.body, SetExpr::SetOperation { .. }),
             ..Frame::default()
         };
         for name in output_names(query) {
@@ -131,46 +135,43 @@ impl Visitor for Scan {
     /// The relations of a level are complete only after it has been visited (the projection comes
     /// before FROM), so its references are resolved here and what remains moves up a level.
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        let frame = self.stack.pop().unwrap_or_default();
-        self.ctes = frame.previous_ctes;
-        let up: Vec<Vec<String>> = frame
-            .qualifiers
-            .into_iter()
-            .filter(|qualifier| !frame.relations.contains(qualifier))
-            .collect();
-        // A bare name that is a relation's own is a whole-row reference, not a column.
-        let own = frame.bare.iter().filter(|(name, count)| {
-            **count > frame.labels.get(*name).copied().unwrap_or(0)
-                && !frame.whole_rows.contains(*name)
-        });
-        let mut reads: Vec<SqlBareRead> = own
-            .map(|(name, _)| SqlBareRead {
-                column: name.clone(),
-                tables: Vec::new(),
-            })
-            .chain(frame.reads)
-            .collect();
-        if frame.foreign {
-            reads.clear();
-        } else {
-            reads.retain(|read| !frame.columns.contains(&read.column));
-        }
-        for read in &mut reads {
-            read.tables.extend(frame.tables.iter().cloned());
-            read.tables.sort();
-            read.tables.dedup();
-        }
-        match self.stack.last_mut() {
-            Some(parent) => {
-                parent.qualifiers.extend(up);
-                parent.reads.extend(reads);
+        self.finish_frame()
+    }
+
+    fn pre_visit_select(&mut self, select: &Select) -> ControlFlow<()> {
+        if self.stack.last().is_some_and(|frame| frame.split_selects) {
+            let mut frame = Frame {
+                previous_ctes: self.ctes.clone(),
+                select_frame: true,
+                ..Frame::default()
+            };
+            // Query ORDER BY labels belong to the combined output, not an arm's projection.
+            if let GroupByExpr::Expressions(expressions, _) = &select.group_by {
+                let labels: BTreeSet<_> = select
+                    .projection
+                    .iter()
+                    .filter_map(columns::label_name)
+                    .collect();
+                for expr in expressions {
+                    if let Expr::Identifier(ident) = expr {
+                        let name = ident_key(ident);
+                        if labels.contains(&name) {
+                            *frame.labels.entry(name).or_default() += 1;
+                        }
+                    }
+                }
             }
-            None => {
-                self.unresolved.extend(up);
-                self.reads = reads;
-            }
+            self.stack.push(frame);
         }
         ControlFlow::Continue(())
+    }
+
+    fn post_visit_select(&mut self, _: &Select) -> ControlFlow<()> {
+        if self.stack.last().is_some_and(|frame| frame.select_frame) {
+            self.finish_frame()
+        } else {
+            ControlFlow::Continue(())
+        }
     }
 
     fn pre_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {

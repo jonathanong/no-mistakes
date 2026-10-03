@@ -298,3 +298,10 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 Nested CTE names remain visible only within their query scope. A nested `WITH`
 clause cannot hide a parent base relation when checking outer column references.
+
+Each set-operation arm owns its relation aliases. An alias declared in a sibling
+arm cannot turn an outer column reference into a local reference.
+
+Within a set-operation arm, a bare `GROUP BY` name is treated as an output label
+only when that arm actually projects the label. `SELECT 1 GROUP BY id` retains an
+outer `id` read; `SELECT $1 AS id GROUP BY id` groups its own output instead.

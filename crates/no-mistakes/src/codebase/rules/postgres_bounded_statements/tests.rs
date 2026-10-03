@@ -534,3 +534,5 @@ mod quoted_qualifier_paths;
 mod fixture_configs;
 
 mod nested_cte_scope;
+
+mod set_arm_alias_scope;
