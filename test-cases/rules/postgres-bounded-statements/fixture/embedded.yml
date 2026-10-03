@@ -4,4 +4,4 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
-      include: ['src/**/*.ts']
+      include: ['src/jobs.ts']
