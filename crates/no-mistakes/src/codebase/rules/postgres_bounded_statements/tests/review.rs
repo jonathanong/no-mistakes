@@ -278,3 +278,15 @@ fn oversized_ctes_retain_uncapped_relation_reads() {
     ));
     assert_eq!(names(sql), ["orders"]);
 }
+
+#[test]
+fn table_arms_retain_possible_quoted_identifiers_and_cte_precedence() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-quoting.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        ["\"Order Items\"", "\"Order Items\"", "accounts", "accounts"]
+    );
+}
