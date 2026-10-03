@@ -134,11 +134,12 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
     let after = spans.into_iter().flatten().map(end).max()?;
     // An implicit nested FETCH has an empty AST span, including when it ends an OFFSET
     // subquery. Keep token nesting as well as spans so that clause cannot locate this query.
+    let body_start = start(query.body.span());
     let mut depth = 0usize;
     for token in tokens
         .all()
         .iter()
-        .filter(|token| start(token.span) >= start(query.body.span()))
+        .filter(|token| start(token.span) >= body_start)
     {
         match &token.token {
             Token::LParen => depth += 1,
