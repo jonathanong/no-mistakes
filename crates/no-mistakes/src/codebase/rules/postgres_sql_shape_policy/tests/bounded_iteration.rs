@@ -311,3 +311,24 @@ fn digit_separator_limits_are_literals() {
         ])
     );
 }
+
+#[test]
+fn ignore_tables_preserves_quoted_case_and_dots() {
+    let yaml = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\nshapeOptions:\n  keysetOnlySweep:\n    ignoreTables: ";
+    assert_eq!(
+        found(
+            "quoted-table-case",
+            &format!("{yaml}[Orders]\n"),
+            "sql/001.sql"
+        ),
+        at(&[(1, "keyset-only-sweep"), (4, "keyset-only-sweep")])
+    );
+    assert_eq!(
+        found(
+            "quoted-table-case",
+            &format!("{yaml}['\"Orders\"', '\"work.Orders\"']\n"),
+            "sql/001.sql"
+        ),
+        at(&[(2, "keyset-only-sweep"), (3, "keyset-only-sweep")])
+    );
+}

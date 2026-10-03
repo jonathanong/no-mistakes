@@ -175,7 +175,7 @@ is inspected for its `LIMIT` too.
 | ----------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `shapeOptions.literalLimit.allowedValues`             | integer[] | `[1]`   | Literal values allowed in `LIMIT` / `FETCH FIRST`. A negative value is a configuration error.                 |
 | `shapeOptions.keysetOnlySweep.nonSelectivePredicates` | string[]  | `[]`    | Conjuncts (compared after whitespace and case normalization) that do not narrow the walk. An empty string is a configuration error. |
-| `shapeOptions.keysetOnlySweep.ignoreTables`           | string[]  | `[]`    | Tables that may be walked whole (small configuration tables). An empty string is a configuration error. An unqualified entry also matches the table in any schema, but a dot inside a quoted name belongs to the name: `items` does not match `"work.items"`. |
+| `shapeOptions.keysetOnlySweep.ignoreTables`           | string[]  | `[]`    | Tables that may be walked whole (small configuration tables). Entries use SQL identifier spelling: unquoted `Orders` folds to `orders`, while `"Orders"` matches only that exact case. An empty string is a configuration error. An unqualified entry also matches the table in any schema, but a dot inside a quoted name belongs to the name: `items` does not match `"work.items"`. |
 
 Invalid with both shapes banned (and `deleted_at IS NULL` configured):
 

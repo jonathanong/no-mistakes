@@ -510,3 +510,17 @@ fn expanded_lexicographic_cursors() {
         );
     }
 }
+
+#[test]
+fn sweep_table_parts_preserve_postgres_case() {
+    for (name, expected) in [
+        ("\"Orders\"", "Orders"),
+        ("Orders", "orders"),
+        ("orders", "orders"),
+    ] {
+        assert_eq!(
+            sweeps(&format!("SELECT id FROM {name} ORDER BY id LIMIT $1"))[0].table_parts,
+            vec![expected]
+        );
+    }
+}
