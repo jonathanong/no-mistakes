@@ -58,6 +58,8 @@ pub(in super::super) fn reads_outer_rows(
 /// What one query level mentions, until its relations are all known.
 #[derive(Default)]
 struct Frame {
+    /// A nested WITH clause must not change the relation names visible to its parent.
+    previous_ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     /// Identifier components preserve the distinction between a quoted dot and a separator.
     relations: BTreeSet<Vec<String>>,
     /// Bare relation names also identify whole-row references.
@@ -98,7 +100,10 @@ impl Visitor for Scan {
     type Break = ();
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        let mut frame = Frame::default();
+        let mut frame = Frame {
+            previous_ctes: self.ctes.clone(),
+            ..Frame::default()
+        };
         for name in output_names(query) {
             *frame.labels.entry(name).or_default() += 1;
         }
@@ -126,6 +131,7 @@ impl Visitor for Scan {
     /// before FROM), so its references are resolved here and what remains moves up a level.
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
+        self.ctes = frame.previous_ctes;
         let up: Vec<Vec<String>> = frame
             .qualifiers
             .into_iter()

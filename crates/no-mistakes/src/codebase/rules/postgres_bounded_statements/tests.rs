@@ -520,3 +520,5 @@ mod qualified_limit_functions;
 mod select_list_srf;
 
 mod quoted_qualifier_paths;
+
+mod nested_cte_scope;
