@@ -1,4 +1,5 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
+pub(super) use super::tokens::Tokens;
 use super::value::is_placeholder_ident;
 use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
@@ -6,40 +7,14 @@ use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
 use sqlparser::ast::{
     Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Spanned, Value,
 };
-use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::{Span, Token, TokenWithSpan, Tokenizer};
-use std::cell::OnceCell;
+use sqlparser::tokenizer::{Span, Token};
 
 /// A query's row cap and where its count is written.
 pub(super) struct LimitSite {
     pub(super) value: SqlLimitValue,
     pub(super) line: usize,
     pub(super) column: usize,
-}
-
-/// The tokens of one SQL source, produced on first use: only a `FETCH FIRST ROW ONLY`, which
-/// writes no count to point at, needs them to find its `FETCH` keyword.
-pub(super) struct Tokens<'a> {
-    sql: &'a str,
-    tokens: OnceCell<Vec<TokenWithSpan>>,
-}
-
-impl<'a> Tokens<'a> {
-    pub(super) fn new(sql: &'a str) -> Self {
-        Self {
-            sql,
-            tokens: OnceCell::new(),
-        }
-    }
-
-    fn all(&self) -> &[TokenWithSpan] {
-        self.tokens.get_or_init(|| {
-            Tokenizer::new(&PostgreSqlDialect {}, self.sql)
-                .tokenize_with_location()
-                .unwrap_or_default()
-        })
-    }
 }
 
 /// True when the query itself caps its rows: `LIMIT n` (a literal, a bind or an expression of
@@ -97,7 +72,7 @@ pub(super) fn limit_site(query: &Query, tokens: &Tokens) -> Option<LimitSite> {
         let value = match (&fetch.quantity, fetch.percent) {
             (_, true) => SqlLimitValue::Other,
             (None, false) => SqlLimitValue::Literal(1),
-            (Some(quantity), false) => literal(quantity),
+            (Some(quantity), false) => literal(quantity, tokens),
         };
         return Some(match &fetch.quantity {
             Some(quantity) => site(value, start(quantity.span())),
@@ -114,7 +89,7 @@ pub(super) fn limit_site(query: &Query, tokens: &Tokens) -> Option<LimitSite> {
         | Some(LimitClause::OffsetCommaLimit { limit, .. })
             if !is_null(limit) =>
         {
-            Some(site(literal(limit), start(limit.span())))
+            Some(site(literal(limit, tokens), start(limit.span())))
         }
         _ => None,
     }
@@ -153,13 +128,21 @@ fn site(value: SqlLimitValue, (line, column): (usize, usize)) -> LimitSite {
     }
 }
 
-fn literal(expr: &Expr) -> SqlLimitValue {
+fn literal(expr: &Expr, tokens: &Tokens<'_>) -> SqlLimitValue {
     match expr {
-        Expr::Nested(inner) => literal(inner),
+        Expr::Nested(inner) => literal(inner, tokens),
         Expr::Value(value) => match &value.value {
             Value::Number(text, _) => {
                 numeric_literal(text).map_or(SqlLimitValue::Other, SqlLimitValue::Literal)
             }
+            Value::HexStringLiteral(_) => tokens
+                .source_at(value.span())
+                .filter(|text| {
+                    text.get(..2)
+                        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("0x"))
+                })
+                .and_then(|text| numeric_literal(text).ok())
+                .map_or(SqlLimitValue::Other, SqlLimitValue::Literal),
             _ => SqlLimitValue::Other,
         },
         _ => SqlLimitValue::Other,
@@ -173,6 +156,5 @@ fn is_null(expr: &Expr) -> bool {
         _ => false,
     }
 }
-
 #[cfg(test)]
 mod tests;
