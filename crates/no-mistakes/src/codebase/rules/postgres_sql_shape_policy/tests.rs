@@ -379,3 +379,6 @@ fn full_select_builder_fragments_are_analyzed_without_wrapping() {
 }
 
 mod predicate_escaping;
+
+#[cfg(test)]
+mod negated_keysets;
