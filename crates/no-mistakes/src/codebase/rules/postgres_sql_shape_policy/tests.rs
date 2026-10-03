@@ -377,3 +377,5 @@ fn full_select_builder_fragments_are_analyzed_without_wrapping() {
     let findings = check_with_files(&root, &config_yaml("{}"), &[builders]).unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
 }
+
+mod predicate_escaping;

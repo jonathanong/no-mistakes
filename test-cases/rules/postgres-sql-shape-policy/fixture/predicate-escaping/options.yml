@@ -1,0 +1,13 @@
+sqlInclude: ['sql/**/*.sql']
+bannedShapes: [keyset-only-sweep]
+shapeOptions:
+  keysetOnlySweep:
+    nonSelectivePredicates:
+      # Mixed outside spaces, tabs and newlines are formatting, not predicate contents.
+      - |-
+        status  	=
+          'a'' or x = ''b'
+      - '"a"" or x = ""b"'
+      - "status = 'a  b'"
+      - |-
+        status = E'a\' or x = \'b'

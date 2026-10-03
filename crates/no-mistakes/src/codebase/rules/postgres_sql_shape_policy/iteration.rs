@@ -74,11 +74,7 @@ fn normalized_predicate(text: &str) -> String {
     let rendered = parse_postgres_expression(text)
         .map(|expression| unwrap_expr(&expression).to_string())
         .unwrap_or_else(|| text.to_string());
-    rendered
-        .to_ascii_lowercase()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
+    crate::codebase::postgres::predicate_normalization::normalize(&rendered)
 }
 
 fn names(values: &[String], option: &str, shape: impl Fn(&str) -> String) -> Result<Vec<String>> {

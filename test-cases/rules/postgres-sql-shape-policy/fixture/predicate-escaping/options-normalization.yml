@@ -1,0 +1,12 @@
+sqlInclude: ['sql/**/*.sql']
+bannedShapes: [keyset-only-sweep]
+shapeOptions:
+  keysetOnlySweep:
+    nonSelectivePredicates:
+      - |-
+        status = E'a\' or x = \'b'
+      - |-
+        status = U&'a\0027 or x = \0027b'
+      - score = 1e3
+      - status = $tag$idle$tag$
+      - flags = X'DEAD'

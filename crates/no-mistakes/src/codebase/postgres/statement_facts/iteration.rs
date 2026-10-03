@@ -33,7 +33,7 @@ pub struct SqlSweepFact {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlConjunctFact {
-    /// The conjunct's SQL, lowercased with whitespace collapsed.
+    /// The conjunct's SQL tokens, folding only unquoted words and separating tokens.
     pub text: String,
     /// The columns it compares with a bind parameter as a keyset cursor (`id > $1`,
     /// `(a, b) > ($1, $2)`, or `($1 IS NULL OR id > $1)`); empty for any other predicate.

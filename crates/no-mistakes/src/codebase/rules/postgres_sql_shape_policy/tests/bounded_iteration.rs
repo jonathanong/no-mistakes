@@ -5,7 +5,7 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-sql-shape-policy/fixture")
@@ -29,7 +29,7 @@ const BOTH: &str =
     "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [literal-limit, keyset-only-sweep]\n";
 
 /// (line, target) for every finding.
-fn found(name: &str, yaml: &str, file: &str) -> Vec<(usize, String)> {
+pub(super) fn found(name: &str, yaml: &str, file: &str) -> Vec<(usize, String)> {
     let root = fixture(name);
     let mut found: Vec<_> = check_with_files(&root, &config(yaml), &[root.join(file)])
         .unwrap()
@@ -40,7 +40,7 @@ fn found(name: &str, yaml: &str, file: &str) -> Vec<(usize, String)> {
     found
 }
 
-fn at(findings: &[(usize, &str)]) -> Vec<(usize, String)> {
+pub(super) fn at(findings: &[(usize, &str)]) -> Vec<(usize, String)> {
     findings
         .iter()
         .map(|(line, target)| (*line, target.to_string()))
@@ -429,5 +429,14 @@ fn casted_expanded_keysets_preserve_bind_identity_in_rule_findings() {
             (21, "keyset-only-sweep"),
             (23, "keyset-only-sweep"),
         ])
+    );
+}
+
+#[test]
+fn non_selective_predicates_preserve_literal_case() {
+    let yaml = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\nshapeOptions:\n  keysetOnlySweep:\n    nonSelectivePredicates: [\"status = 'idle'\"]\n";
+    assert_eq!(
+        found("predicate-case", yaml, "sql/001.sql"),
+        at(&[(2, "keyset-only-sweep")])
     );
 }
