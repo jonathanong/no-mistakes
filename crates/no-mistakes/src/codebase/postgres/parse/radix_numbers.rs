@@ -23,7 +23,7 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
                         && token.span.end == next.span.start
                         && matches!(
                             word.value.as_bytes().first(),
-                            Some(b'o' | b'O' | b'b' | b'B')
+                            Some(b'o' | b'O' | b'b' | b'B' | b'x' | b'X')
                         )
                     {
                         let raw = format!("0{}", word.value);
@@ -32,13 +32,11 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
                             Err(error)
                                 if *error.kind() == IntErrorKind::PosOverflow
                                     && raw[2..].chars().filter(|c| *c != '_').all(|c| {
-                                        c.is_digit(
-                                            if raw.as_bytes()[1].eq_ignore_ascii_case(&b'b') {
-                                                2
-                                            } else {
-                                                8
-                                            },
-                                        )
+                                        c.is_digit(match raw.as_bytes()[1].to_ascii_lowercase() {
+                                            b'b' => 2,
+                                            b'o' => 8,
+                                            _ => 16,
+                                        })
                                     }) =>
                             {
                                 Some(raw)

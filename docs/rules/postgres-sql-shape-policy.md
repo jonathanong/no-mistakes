@@ -309,3 +309,6 @@ aliases and quoted names retain their existing meaning.
 Numeric hexadecimal tokens retain their lexical identity through lenient encoded
 migration recovery, including concatenated strings and `chr()` reconstruction.
 Quoted hexadecimal strings remain non-literal caps after the same recovery.
+
+Uppercase hexadecimal prefixes such as `0XFF` have the same numeric meaning in
+strict and recovered SQL. Whitespace-separated aliases remain aliases.

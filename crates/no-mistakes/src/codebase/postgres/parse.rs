@@ -92,3 +92,6 @@ mod radix_large_tests;
 
 #[cfg(test)]
 mod recovered_hex_tests;
+
+#[cfg(test)]
+mod uppercase_hex_tests;
