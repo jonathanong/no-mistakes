@@ -330,6 +330,10 @@ query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 
 ## Row-bound facts
 
+For `UPDATE` and `DELETE`, a bound fact's location is the statement keyword,
+while its relation items retain their own locations. Embedded SQL maps both to
+physical source lines so a suppression on the statement start covers its findings.
+
 `SqlStatementFileFacts.bounds` holds one `SqlBoundFact` per executed `SELECT`,
 `UPDATE` and `DELETE`, including those in data-modifying CTEs (whose `RETURNING` rows are an
 `Opaque` item of the query that reads them) and under `EXPLAIN ANALYZE`; `INSERT … SELECT`

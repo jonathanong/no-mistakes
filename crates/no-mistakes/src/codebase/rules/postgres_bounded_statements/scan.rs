@@ -8,7 +8,7 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let prepared =
@@ -47,6 +47,7 @@ pub(super) fn scan(
     }
     for file in statements {
         let rel = relative_slash_path(root, &file.path);
+        let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
             findings.push(finding(
                 &rel,
@@ -62,9 +63,14 @@ pub(super) fn scan(
             .filter(|bound| opts.statements.contains(&bound.kind))
         {
             for offender in offenders(bound, catalog) {
+                // Keep suppression and its audit in the shared layer. A directive
+                // on the statement start anchors all of that statement's findings.
+                let line = statement_directive_line(source.as_deref(), bound.line)
+                    .unwrap_or(offender.line)
+                    .max(1);
                 findings.push(finding(
                     &rel,
-                    offender.line.max(1),
+                    line,
                     &message(bound.kind, &offender.table),
                     &format!("table:{}", offender.table),
                 ));
@@ -81,6 +87,14 @@ pub(super) fn scan(
         .apply(&opts.schema_catalog_path, findings);
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
+}
+
+pub(super) fn statement_directive_line(source: Option<&str>, line: usize) -> Option<usize> {
+    use crate::codebase::ts_source::{matching_disable_directive, DisableDirective};
+    match matching_disable_directive(source?, Some(line.try_into().ok()?), RULE_ID)? {
+        DisableDirective::Line { .. } | DisableDirective::NextLine { .. } => Some(line),
+        DisableDirective::File { .. } => None,
+    }
 }
 
 fn message(kind: SqlBoundKind, table: &str) -> String {

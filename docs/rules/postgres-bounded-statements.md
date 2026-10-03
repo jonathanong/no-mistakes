@@ -199,6 +199,12 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`, `-- no-mistakes-disable-
 and `-- no-mistakes-disable-file` for `postgres-bounded-statements`. To exempt a table
 everywhere, use `allow: [{object: 'table:<name>', reason}]`.
 
+A line directive covering the first line of a statement suppresses every relation
+finding in that statement, including when its `FROM` or target is on a later line.
+Directives on a relation's own reported line also work. This applies to SQL files
+and SQL embedded in executor calls; statement-start directives use the physical
+source line of the SQL keyword.
+
 ## Related rules
 
 [`postgres-explicit-columns`](postgres-explicit-columns.md) and

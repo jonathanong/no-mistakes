@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 mod referential;
 mod review;
+mod suppression;
 mod trigger_scope;
 
 fn catalog() -> SchemaCatalog {

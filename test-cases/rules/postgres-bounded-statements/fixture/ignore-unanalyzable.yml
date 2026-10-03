@@ -6,6 +6,7 @@ rules:
       schemaCatalogPath: schema.json
       importSpecifier: "@example/db"
       executorNames: [query, read, write]
-      exclude: ['src/jobs.ts', 'src/templates.mts']
+      # Keep this recovery-only config independent of the statement-suppression fixture.
+      exclude: ['src/jobs.ts', 'src/templates.mts', 'src/statement-suppressions.mts']
       sqlInclude: ['sql/broken.sql']
       unanalyzableSql: ignore
