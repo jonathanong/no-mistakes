@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use std::process::Command;
 
-pub(super) fn connection_environment(raw: &str, command: &mut Command) -> Result<()> {
+pub(crate) fn connection_environment(raw: &str, command: &mut Command) -> Result<()> {
     let url =
         url::Url::parse(raw).map_err(|_| anyhow::anyhow!("connection must be a PostgreSQL URL"))?;
     if !matches!(url.scheme(), "postgres" | "postgresql") || url.fragment().is_some() {

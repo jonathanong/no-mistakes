@@ -204,3 +204,10 @@ items; an explicit outer `LIMIT` still caps the statement.
 For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
 Analysis conservatively checks both exact and folded spellings when they differ;
 a matching one-part CTE takes precedence over catalog relations.
+
+Built-in set-returning functions, including `jsonb_path_query`, expand aggregate
+select-list rows. In `FROM`, only functions whose arguments size their result
+(`jsonb_path_query($1::jsonb, '$[*]')`, for example) bound joined items. Functions
+that inspect server state or execute SQL (`pg_ls_dir`, `pg_listening_channels`,
+`ts_stat`) remain opaque even with fixed arguments. The real PostgreSQL test lane
+checks this function inventory against the PostgreSQL function catalog.
