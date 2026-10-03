@@ -27,6 +27,8 @@ fn saved_commuted_expanded_cursors_normalize_comparison_direction() {
             (5, vec![], None),
             (6, vec![], None),
             (7, vec![], None),
+            (9, vec![], None),
+            (10, vec![], None),
         ]
     );
 }
