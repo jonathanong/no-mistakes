@@ -73,6 +73,7 @@ both pinned and name-matched gets only the literal finding.
 ```json
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "invoices": {
       "columns": { "status": { "dataType": "invoice_statuses" } }
@@ -93,6 +94,7 @@ reference already, even when a check also lists its values.
 ```json
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "invoices": {
       "columns": { "status": { "dataType": "text" } },
@@ -129,6 +131,7 @@ the column key in the snapshot, so the standard directives can suppress it:
 ```jsonc
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "invoices": {
       "columns": {

@@ -119,6 +119,7 @@ the whole catalog. For example:
 ```jsonc
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "orders": {
       "columns": {

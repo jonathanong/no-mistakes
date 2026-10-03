@@ -57,6 +57,7 @@ not also reported stale.
 ```json
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "oauth_clients": {
       "columns": { "redirect_uris": { "dataType": "text[]" } }
@@ -75,6 +76,7 @@ includes `smallint`.
 ```json
 {
   "formatVersion": 2,
+  "coverage": "complete",
   "tables": {
     "orders": {
       "columns": {

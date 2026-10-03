@@ -6,6 +6,8 @@ SET search_path = shadow_demo, pg_catalog;
 -- so a column of this type renders qualified (shadow_demo.text[]), and the enum is keyed alike.
 CREATE TYPE text AS ENUM ('draft', 'live');
 CREATE TYPE tone AS ENUM ('warm', 'cool');
+-- PostgreSQL permits an enum with no labels.
+CREATE TYPE empty_kind AS ENUM ();
 
 CREATE TABLE rooms (
   id integer PRIMARY KEY,

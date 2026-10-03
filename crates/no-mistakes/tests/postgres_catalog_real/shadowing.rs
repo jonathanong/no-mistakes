@@ -1,4 +1,4 @@
-use super::support::{fixtures, Database};
+use super::support::{fixtures, load_catalog, Database};
 
 fn shadow_database(label: &str) -> Option<Database> {
     let database = Database::create(label)?;
@@ -36,7 +36,7 @@ fn an_enum_is_keyed_by_the_type_a_column_renders() {
     let enums = catalog["enums"].as_object().unwrap();
     assert_eq!(
         enums.keys().map(String::as_str).collect::<Vec<_>>(),
-        ["shadow_demo.text", "tone"]
+        ["empty_kind", "shadow_demo.text", "tone"]
     );
     // Every enum column's element type finds its enum under the key the generator wrote.
     for column in ["kinds", "tones"] {
@@ -45,4 +45,25 @@ fn an_enum_is_keyed_by_the_type_a_column_renders() {
         assert!(enums.contains_key(element), "{column}: {element}");
     }
     assert_eq!(enums["shadow_demo.text"]["values"][1], "live");
+}
+
+#[test]
+fn an_enum_with_no_labels_has_an_empty_value_list_the_reader_accepts() {
+    let Some(database) = shadow_database("empty_enum") else {
+        return;
+    };
+    let catalog = database.catalog("shadow_demo", None);
+    assert_eq!(
+        catalog["enums"]["empty_kind"]["values"],
+        serde_json::json!([])
+    );
+    // The loader requires an array of strings, so a null would be rejected here.
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("catalog.json");
+    assert!(database
+        .generate("shadow_demo", None, &path)
+        .status
+        .success());
+    let loaded = load_catalog(directory.path(), "catalog.json");
+    assert!(loaded.enums().any(|enum_type| enum_type.values.is_empty()));
 }

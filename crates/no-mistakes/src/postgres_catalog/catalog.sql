@@ -107,8 +107,10 @@ WITH selected AS (
 ), enums AS (
   -- Keyed by the type as a column renders it (format_type under the same search_path), so a
   -- column's element type always finds its enum, including one named like a pg_catalog type.
-  SELECT format_type(t.oid, NULL) AS key, jsonb_build_object('values', (SELECT jsonb_agg(v.enumlabel
-    ORDER BY v.enumsortorder) FROM pg_enum v WHERE v.enumtypid = t.oid)) AS value
+  -- A zero-label enum is legal, and jsonb_agg of no rows is NULL, so it is coalesced to [].
+  SELECT format_type(t.oid, NULL) AS key, jsonb_build_object('values', COALESCE((SELECT
+    jsonb_agg(v.enumlabel ORDER BY v.enumsortorder) FROM pg_enum v WHERE v.enumtypid = t.oid),
+    '[]'::jsonb)) AS value
   FROM pg_type t JOIN selected s ON s.oid = t.typnamespace
   WHERE t.typtype = 'e' AND NOT EXISTS (SELECT 1 FROM extension_members e
                                         WHERE e.classid = 'pg_type'::regclass AND e.objid = t.oid)
