@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-  name: "VouchaUI",
+  name: "ExampleUI",
   dependencies: [
     .package(path: "../core"),
   ],
   targets: [
-    .target(name: "VouchaFeatures", dependencies: [
-      .product(name: "VouchaCore", package: "core"),
-      .product(name: "VouchaAPI", package: "core"),
+    .target(name: "ExampleFeatures", dependencies: [
+      .product(name: "ExampleCore", package: "core"),
+      .product(name: "ExampleAPI", package: "core"),
     ]),
-    .testTarget(name: "VouchaUITests", dependencies: ["VouchaFeatures", "VouchaCore", "VouchaAPI"]),
+    .testTarget(name: "ExampleUITests", dependencies: ["ExampleFeatures", "ExampleCore", "ExampleAPI"]),
   ]
 )

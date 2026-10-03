@@ -1,3 +1,3 @@
-import VouchaCore
+import ExampleCore
 
 struct AndroidApp { let client = APIClient() }

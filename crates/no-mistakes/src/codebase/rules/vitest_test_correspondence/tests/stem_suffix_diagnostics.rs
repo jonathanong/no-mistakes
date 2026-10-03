@@ -3,7 +3,7 @@ use super::{check, fixture_root};
 #[test]
 fn rejected_names_report_configured_stem_suffixes() {
     // Keep custom suffixes in the diagnostic so a rejected name reveals the
-    // configuration-supported mapping (filaments#11499).
+    // configuration-supported mapping (a downstream suffix-mapping regression).
     let root = fixture_root("stem-suffix-diagnostics");
     let findings = check(
         &root,

@@ -14,7 +14,7 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
         "--root",
         root.to_str().unwrap(),
         "--changed-file",
-        "core/Sources/VouchaAPI/Endpoint.swift",
+        "core/Sources/ExampleAPI/Endpoint.swift",
         "--global-config-fallback",
         "true",
         "--json",
@@ -41,16 +41,16 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
     assert_eq!(
         selected,
         vec![
-            "apps/android/Tests/VouchaAndroidTests/DeviceTests.swift",
-            "core/Tests/VouchaCoreTests/APIClientTests.swift",
-            "ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+            "apps/android/Tests/ExampleAndroidTests/DeviceTests.swift",
+            "core/Tests/ExampleCoreTests/APIClientTests.swift",
+            "ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift",
         ]
     );
     let core = plan["selected_tests"]
         .as_array()
         .unwrap()
         .iter()
-        .find(|test| test["test_file"] == "core/Tests/VouchaCoreTests/APIClientTests.swift")
+        .find(|test| test["test_file"] == "core/Tests/ExampleCoreTests/APIClientTests.swift")
         .unwrap();
     assert_eq!(
         core["targets"][0]["base_command"],
@@ -58,7 +58,7 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
     );
     assert_eq!(
         core["targets"][0]["runner_args"],
-        serde_json::json!(["--filter", "VouchaCoreTests"])
+        serde_json::json!(["--filter", "ExampleCoreTests"])
     );
 }
 
@@ -125,6 +125,6 @@ fn test_plan_swift_deleted_package_manifest_scopes_native_fallback_to_package_te
         .collect();
     assert_eq!(
         selected,
-        vec!["swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift"]
+        vec!["swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift"]
     );
 }

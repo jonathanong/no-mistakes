@@ -66,7 +66,7 @@ fn infra_impls_require_their_arguments() {
 fn swift_importers_impl_returns_importers() {
     let options = json!({
         "root": fixture_root("swift-test-plan"),
-        "file": "swift-clients/core/Sources/VouchaAPI/Endpoint.swift",
+        "file": "swift-clients/core/Sources/ExampleAPI/Endpoint.swift",
     })
     .to_string();
     let output =
@@ -78,12 +78,12 @@ fn swift_importers_impl_returns_importers() {
 fn swift_test_targets_impl_returns_targets() {
     let options = json!({
         "root": fixture_root("swift-test-plan"),
-        "file": "swift-clients/core/Sources/VouchaAPI/Endpoint.swift",
+        "file": "swift-clients/core/Sources/ExampleAPI/Endpoint.swift",
     })
     .to_string();
     let output =
         swift_test_targets_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
-    assert!(output.contains("VouchaCoreTests"));
+    assert!(output.contains("ExampleCoreTests"));
 }
 
 #[test]

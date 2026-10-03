@@ -401,6 +401,8 @@ fn rule_docs_use_supported_option_examples() {
         (
             "pnpm-overrides-ban.md",
             ["packageExtensions"].as_slice(),
+            // Keep this identifying token only in the deny-list: it prevents
+            // consumer names from leaking into reusable public documentation.
             ["voucha"].as_slice(),
         ),
     ];

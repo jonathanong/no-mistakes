@@ -26,7 +26,7 @@ columns still populate the catalog. `include` selects DML files (`.ts`,
 `executorNames` select TypeScript call sites. No module is selected by default;
 a configured module enables `query`, `read`, and `write`.
 
-Tables that are not declared in SQL — for example Filaments election
+Tables that are not declared in SQL — for example application election
 `voteTable` relations — must be listed in `extraGeneratedColumns`. This rule
 does not scrape `voteTable:` literals.
 

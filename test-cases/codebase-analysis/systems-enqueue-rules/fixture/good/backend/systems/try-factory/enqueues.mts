@@ -1,8 +1,8 @@
 import {
   createBulkEnqueueFunction,
   createEnqueueFunction,
-} from '@data-stores/valkey/glide-mq-factory';
-import * as glideMqFactory from '@data-stores/valkey/glide-mq-factory';
+} from '@example/cache/glide-mq-factory';
+import * as glideMqFactory from '@example/cache/glide-mq-factory';
 import { tryFactoryQueue } from './queues.mts';
 
 function createCatchFactory(jobName: string) {

@@ -2,9 +2,9 @@
 import PackageDescription
 
 let package = Package(
-  name: "VouchaAndroid",
+  name: "ExampleAndroid",
   targets: [
-    .target(name: "VouchaAndroid"),
-    .testTarget(name: "VouchaAndroidTests", dependencies: ["VouchaAndroid"]),
+    .target(name: "ExampleAndroid"),
+    .testTarget(name: "ExampleAndroidTests", dependencies: ["ExampleAndroid"]),
   ]
 )

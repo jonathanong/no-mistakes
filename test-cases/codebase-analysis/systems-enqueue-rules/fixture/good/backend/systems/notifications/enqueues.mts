@@ -1,7 +1,7 @@
 import {
   createBulkEnqueueFunction,
   createEnqueueFunction as createGlideMqEnqueueFunction,
-} from '@data-stores/valkey/glide-mq-factory';
+} from '@example/cache/glide-mq-factory';
 import { notifications } from './queues.mts';
 
 const enqueueReferralSignupNotificationJob = createGlideMqEnqueueFunction({

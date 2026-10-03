@@ -154,7 +154,7 @@ order). The first quasi is copied as-is; each later quasi is prefixed with
 the next placeholder. User-authored text that happens to contain the
 `sql_placeholder_` substring is not renumbered when fragments are joined.
 This is the lock-ordering `sqlText` contract. It is intentionally different
-from Filaments' runtime-query helper, which joins quasis with `?`.
+from a runtime-query helper, which joins quasis with `?`.
 
 ### Executor bindings
 

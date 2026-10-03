@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "test-no-dependency-pins";
 
-/// Filaments `TEST_FILE_RE`.
+/// the supported test-file pattern.
 const DEFAULT_INCLUDE_RE: &str =
     r"(?:^|/)(?:__tests__/.*|[^/]+(?:\.mock)?\.test\.(?:mts|ts|tsx|mjs|js|cts|cjs))$";
 
