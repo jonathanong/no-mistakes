@@ -350,12 +350,14 @@ recursive reference of a recursive CTE: never reported, and it bounds nothing pi
 it). A CTE reference without an alias is addressed by the CTE's name. A `COPY (SELECT …)`
 query is a `Select` fact.
 
+Each item retains positional `column_aliases` as syntax, so catalog consumers can avoid confusing renamed columns with base names.
+
 Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an
 equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)` or
 `IN (SELECT …)` against a
 `Value` (no relation of the statement: a literal, a bind, or an interpolation recovered
 from a template literal), `Items` (columns of other items; a column
-compared with its own item is never a pin), or a subquery. `WHERE` restricts every item.
+compared with its own item is never a pin), `Array` (finite constructor dependencies plus scalar column requirements), or a subquery. An `Array` source keeps source-item indexes and column names; the evaluator proves those columns scalar against the prepared catalog before crediting their row bounds. Unknown types, array columns, and renamed source columns supply no scalar proof. `WHERE` restricts every item.
 A join condition restricts only the non-preserved side of an outer join and both sides of
 an inner join; `USING (col)` pins like `ON a.col = b.col` when each side is one item,
 and `FULL`, `NATURAL` and `CROSS` joins pin nothing. A subquery that reads the row being

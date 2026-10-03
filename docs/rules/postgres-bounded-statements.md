@@ -51,7 +51,7 @@ set operation). A statement is bounded when any of these holds:
   that restricts it equate **every** column of one unique key with a value:
   `col = $1`, `col IS NOT DISTINCT FROM $1` (only on a `NOT NULL` column: it also matches
   NULL, which a nullable unique column can repeat), `col = ANY($1::uuid[])` (bounded by the
-  caller's array), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
+  caller's array; finite constructors (including array casts) over catalog-proven scalar columns of bounded rows also qualify. Signed numeric literals preserve finite cardinality. Builtin scalar types, including `pg_catalog` network types such as `inet`, and catalog-declared enums prove scalar leaves; positional aliases map through known visible column order. Unchanged key names retain credit, and PostgreSQL system columns also prove scalar leaves when aliases do not replace them. Stored arrays, including `ARRAY[stored_array]`, supply no key bound), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
   different value for each row (`random`, `gen_random_uuid`, `clock_timestamp`, the

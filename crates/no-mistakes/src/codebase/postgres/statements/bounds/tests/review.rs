@@ -397,3 +397,39 @@ fn an_explicit_collation_in_the_value_fixes_no_row() {
         ["select: accounts[email=value]"]
     );
 }
+
+#[test]
+fn stored_arrays_do_not_inherit_their_rows_bound() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/stored-array.sql"
+    ));
+    assert_eq!(
+        shape(sql),
+        [
+            "update: accounts orders[id=value]",
+            "update: accounts orders[id=value]",
+            "delete: accounts[id=value]",
+            "delete: accounts[id=value]",
+            "update: accounts[id=#1] orders[id=value account_id=#0]",
+        ]
+    );
+}
+
+#[test]
+fn finite_array_facts_preserve_source_items_and_scalar_requirements() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/finite-array.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let pins = &facts.bounds[0].query.items[0].pins;
+    assert!(
+        matches!(&pins[0].source, crate::codebase::postgres::SqlPinSource::Array { items, scalar_columns } if items == &[1] && scalar_columns == &[(1, "account_id".to_string())])
+    );
+    assert_eq!(
+        facts.bounds[6].query.items[1].column_aliases,
+        ["account_id", "id"]
+    );
+}

@@ -24,6 +24,12 @@ fn item(item: &SqlBoundItem) -> String {
                     let items: Vec<String> = items.iter().map(usize::to_string).collect();
                     format!("{}{operator}#{}", pin.column, items.join(","))
                 }
+                SqlPinSource::Array {
+                    items,
+                    scalar_columns,
+                } => {
+                    format!("{}{operator}array#{items:?}:{scalar_columns:?}", pin.column)
+                }
                 SqlPinSource::Query(bound) => format!("{}{operator}({})", pin.column, query(bound)),
             }
         })

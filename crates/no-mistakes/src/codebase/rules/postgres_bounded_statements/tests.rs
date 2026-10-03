@@ -432,7 +432,7 @@ fn fetch_with_ties_and_foreign_aggregates_do_not_cap() {
     assert_eq!(names("SELECT app.count(id) FROM orders"), ["orders"]);
 }
 
-fn fixture_root() -> PathBuf {
+pub(super) fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-bounded-statements/fixture")
 }

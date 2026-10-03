@@ -10,6 +10,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod arrays;
 mod evaluate;
 mod scan;
 

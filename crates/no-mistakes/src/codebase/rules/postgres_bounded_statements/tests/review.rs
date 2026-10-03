@@ -251,3 +251,68 @@ fn an_explicit_collation_in_the_compared_value_fixes_no_row() {
     );
     assert!(names("SELECT 1 FROM accounts WHERE email = lower($1)").is_empty());
 }
+
+#[test]
+fn stored_arrays_do_not_inherit_their_rows_bound() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/stored-array.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts"]);
+}
+
+#[test]
+fn finite_array_constructors_require_bounded_scalar_catalog_leaves() {
+    let root = super::fixture_root();
+    let path = root.join("schema-finite-array.json");
+    let sources = crate::codebase::rules::source_store_for_files(&[path]);
+    let catalog =
+        crate::codebase::postgres::SchemaCatalog::load(&root, "schema-finite-array.json", &sources)
+            .unwrap();
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/finite-array.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| (finding.table, finding.line))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20, 27, 28, 29, 30, 33, 35, 36, 40, 43, 46,
+            49, 52, 53, 54
+        ]
+        .map(|line| ("accounts".to_string(), line))
+    );
+}
+
+#[test]
+fn signed_literals_and_builtin_network_columns_keep_finite_array_pins() {
+    let root = super::fixture_root();
+    let path = root.join("schema-signed-network-array.json");
+    let sources = crate::codebase::rules::source_store_for_files(&[path]);
+    let catalog = crate::codebase::postgres::SchemaCatalog::load(
+        &root,
+        "schema-signed-network-array.json",
+        &sources,
+    )
+    .unwrap();
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/signed-network-array.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| finding.line)
+        .collect();
+    assert_eq!(found, [3, 4, 5, 13, 14, 15, 16, 17, 18, 19, 20]);
+}

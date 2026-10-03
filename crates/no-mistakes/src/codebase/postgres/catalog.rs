@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 mod build;
+mod enums;
 mod expressions;
 mod findings;
 mod function;
