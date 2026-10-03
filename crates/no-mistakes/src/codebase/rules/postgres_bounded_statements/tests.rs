@@ -506,3 +506,5 @@ fn scanning_requires_prepared_facts() {
 mod pin_subqueries;
 
 mod schema_correlation;
+
+mod set_operation_limits;

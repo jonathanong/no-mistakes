@@ -5,7 +5,7 @@ use crate::codebase::postgres::statements::limit::is_limited;
 use crate::codebase::postgres::statements::{
     SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
-use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
+use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
 use std::collections::BTreeMap;
 
 pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
@@ -129,8 +129,29 @@ pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
 /// The body of `query` under `scope`, which already holds its CTEs.
 pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
-    bound.capped |= is_limited(query) || orders_by_aggregate(query);
+    bound.capped |=
+        (is_limited(query) && !requires_complete_arms(&query.body)) || orders_by_aggregate(query);
     bound
+}
+
+/// Non-streaming set operations must inspect their input arms before an outer LIMIT can
+/// produce the final rows; UNION ALL can stop as soon as that limit is satisfied.
+fn requires_complete_arms(set: &SetExpr) -> bool {
+    match set {
+        SetExpr::SetOperation {
+            op,
+            set_quantifier,
+            left,
+            right,
+        } => {
+            *op != SetOperator::Union
+                || *set_quantifier != SetQuantifier::All
+                || requires_complete_arms(left)
+                || requires_complete_arms(right)
+        }
+        SetExpr::Query(query) => requires_complete_arms(&query.body),
+        _ => false,
+    }
 }
 
 fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
