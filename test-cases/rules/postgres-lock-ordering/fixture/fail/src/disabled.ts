@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function lockRows(ids: string[]) {
   // no-mistakes-disable-next-line postgres-lock-ordering

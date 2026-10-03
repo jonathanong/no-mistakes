@@ -145,10 +145,10 @@ fn omitted_prepared_write_demand_is_an_error() {
 }
 
 #[test]
-fn null_import_specifier_keeps_the_default_executor_profile() {
+fn null_import_specifier_selects_no_executor_profile() {
     let root = unit_fixture("quoted-identity");
     let paths = [root.join("schema.sql"), root.join("write.ts")];
     let findings =
         check_with_files(&root, &config_with_options("importSpecifier: null"), &paths).unwrap();
-    assert_eq!(findings.len(), 2);
+    assert!(findings.is_empty());
 }

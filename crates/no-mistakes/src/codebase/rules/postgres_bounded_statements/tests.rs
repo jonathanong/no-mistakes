@@ -448,7 +448,7 @@ fn config(yaml: &str) -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(yaml).unwrap(),
+            options: crate::codebase::postgres::tests::fixture_rule_options(yaml),
             ..Default::default()
         }],
         ..Default::default()
@@ -530,3 +530,5 @@ mod select_list_srf;
 mod server_state_projection;
 
 mod quoted_qualifier_paths;
+
+mod fixture_configs;

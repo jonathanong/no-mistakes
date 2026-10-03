@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const sql = "INSERT INTO items (id) VALUES (1)" + " ON CONFLICT (id) DO NOTHING";
 

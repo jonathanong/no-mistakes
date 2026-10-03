@@ -2,4 +2,4 @@ rules:
 - rule: sql-template-strings
   scope: repository
   options:
-    psqlModule: "@data-stores/psql"
+    psqlModule: "@example/db"

@@ -34,10 +34,10 @@ const {
   unwrapTs,
 } = helpers;
 
-const IMPORT = `import { query, read, write } from "@data-stores/psql";\n`;
+const IMPORT = `import { query, read, write } from "@example/db";\n`;
 
 function ids(code, rule, option, filename = "app.ts") {
-  return messages(code, rule, option, filename);
+  return messages(code, rule, { importSpecifier: "@example/db", ...option }, filename);
 }
 
 describe("plugin exports", () => {
@@ -67,7 +67,7 @@ describe("plugin exports", () => {
 
 describe("postgres runtime helpers", () => {
   it("exposes the documented defaults and transaction contract", () => {
-    assert.equal(DEFAULT_IMPORT_SPECIFIER, "@data-stores/psql");
+    assert.equal(DEFAULT_IMPORT_SPECIFIER, "");
     assert.deepEqual(DEFAULT_EXECUTOR_NAMES, ["query", "read", "write"]);
     assert.deepEqual(DEFAULT_CHUNK_FUNCTION_NAMES, ["chunkArray"]);
     assert.equal(QUERY_PROPERTY, "query");
@@ -76,7 +76,7 @@ describe("postgres runtime helpers", () => {
     assert.ok(TRANSACTION_COMMAND.test("BEGIN"));
     assert.deepEqual(executorOptionDefaults(), {
       importSpecifier: DEFAULT_IMPORT_SPECIFIER,
-      executorNames: DEFAULT_EXECUTOR_NAMES,
+      executorNames: [],
       owners: [],
       chunkFunctionNames: DEFAULT_CHUNK_FUNCTION_NAMES,
     });
@@ -172,7 +172,7 @@ describe("postgres runtime helpers", () => {
     const program = {
       type: "Program",
       body: [
-        { type: "ImportDeclaration", importKind: "type", source: { value: "@data-stores/psql" } },
+        { type: "ImportDeclaration", importKind: "type", source: { value: "@example/db" } },
         {
           type: "ImportDeclaration",
           source: { value: "@other" },
@@ -180,10 +180,10 @@ describe("postgres runtime helpers", () => {
             { type: "ImportSpecifier", imported: { name: "query" }, local: { name: "query" } },
           ],
         },
-        { type: "ImportDeclaration", source: { value: "@data-stores/psql" } },
+        { type: "ImportDeclaration", source: { value: "@example/db" } },
         {
           type: "ImportDeclaration",
-          source: { value: "@data-stores/psql" },
+          source: { value: "@example/db" },
           specifiers: [
             { type: "ImportDefaultSpecifier", local: { name: "db" } },
             { type: "ImportNamespaceSpecifier", local: { name: "all" } },
@@ -208,7 +208,10 @@ describe("postgres runtime helpers", () => {
         },
       ],
     };
-    assert.deepEqual([...executorBindings(program)].sort(), ["query", "w"]);
+    assert.deepEqual([...executorBindings(program, { importSpecifier: "@example/db" })].sort(), [
+      "query",
+      "w",
+    ]);
     assert.deepEqual(
       [
         ...executorBindings(
@@ -856,14 +859,14 @@ describe("postgres-no-manual-transaction", () => {
 
   it("binds query when withTransaction helpers are imported", () => {
     const code = `
-      import { withTransaction } from "@data-stores/psql";
+      import { withTransaction } from "@example/db";
       query("BEGIN");
     `;
     assert.deepEqual(ids(code, "postgres-no-manual-transaction"), ["manualTransaction"]);
     assert.deepEqual(
       ids(
         `
-          import { withTransactionOptions as txn } from "@data-stores/psql";
+          import { withTransactionOptions as txn } from "@example/db";
           query("ROLLBACK");
         `,
         "postgres-no-manual-transaction",
@@ -886,7 +889,7 @@ describe("postgres-no-manual-transaction", () => {
     assert.deepEqual(
       ids(
         `
-          import type { query } from "@data-stores/psql";
+          import type { query } from "@example/db";
           query("BEGIN");
         `,
         "postgres-no-manual-transaction",
@@ -1042,7 +1045,7 @@ describe("postgres-no-unbounded-query-fanout", () => {
     assert.deepEqual(
       ids(
         `
-          import { withTransaction } from "@data-stores/psql";
+          import { withTransaction } from "@example/db";
           Promise.all(ids.map((id) => query("SELECT 1")));
         `,
         "postgres-no-unbounded-query-fanout",
@@ -1075,10 +1078,35 @@ describe("postgres-no-unbounded-query-fanout", () => {
   it("reports a lint message for the Promise.all call", () => {
     const [message] = lint(
       `${IMPORT}Promise.all(ids.map((id) => query("SELECT 1")));`,
-      { "no-mistakes/postgres-no-unbounded-query-fanout": "error" },
+      {
+        "no-mistakes/postgres-no-unbounded-query-fanout": [
+          "error",
+          { importSpecifier: "@example/db" },
+        ],
+      },
       "app.ts",
     );
     assert.equal(message.messageId, "unboundedFanout");
     assert.equal(message.ruleId, "no-mistakes/postgres-no-unbounded-query-fanout");
+  });
+});
+
+describe("explicit PostgreSQL executor selection", () => {
+  it("does not infer a database module", () => {
+    assert.deepEqual(messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction"), []);
+    assert.deepEqual(messages("client.query('BEGIN')", "postgres-no-manual-transaction"), []);
+    assert.deepEqual(
+      messages("client.query('BEGIN')", "postgres-no-manual-transaction", {
+        importSpecifier: "@example/db",
+        executorNames: ["run"],
+      }),
+      ["manualTransaction"],
+    );
+    assert.deepEqual(
+      messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction", {
+        executorNames: ["query"],
+      }),
+      ["manualTransaction"],
+    );
   });
 });

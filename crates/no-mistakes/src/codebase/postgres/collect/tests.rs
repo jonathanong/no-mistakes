@@ -127,7 +127,7 @@ fn extract_embedded_sql_facts_reads_through_source_store() {
         Path::new("/repo"),
         &sources,
         std::slice::from_ref(&tagged),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     assert_eq!(facts[0].path, tagged);
@@ -146,7 +146,7 @@ fn collect_postgres_facts_respects_plan_flags() {
         &files,
         &CheckFactPlan::default(),
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     assert!(empty.schema.is_empty());
@@ -162,7 +162,7 @@ fn collect_postgres_facts_respects_plan_flags() {
             ..CheckFactPlan::default()
         },
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     assert_eq!(both.schema.len(), 1);
@@ -177,7 +177,7 @@ fn collect_postgres_facts_respects_plan_flags() {
             ..CheckFactPlan::default()
         },
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     assert!(!statements.statements.is_empty());
@@ -196,7 +196,7 @@ fn embedded_insert_lines_are_rebased_to_the_call_site() {
             ..CheckFactPlan::default()
         },
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     let insert = facts
@@ -220,7 +220,7 @@ fn composed_insert_lines_are_rebased_to_the_declaration() {
             ..CheckFactPlan::default()
         },
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     let file = facts
@@ -299,7 +299,7 @@ fn direct_collection_omits_bounds_until_the_plan_requests_them() {
         std::slice::from_ref(&ts),
         &plan,
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     assert!(!baseline.statements.is_empty());
@@ -314,7 +314,7 @@ fn direct_collection_omits_bounds_until_the_plan_requests_them() {
         std::slice::from_ref(&ts),
         &plan,
         &PostgresSchemaOptions::default(),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
     .unwrap();
     assert!(enabled

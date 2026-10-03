@@ -1,5 +1,5 @@
 import sql from "sql-template-strings";
-import { read } from "@data-stores/psql";
+import { read } from "@example/db";
 
 function buildScopeCondition(scope: string) {
   return sql` AND tenant_id = ${scope}`;

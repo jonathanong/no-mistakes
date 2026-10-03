@@ -1,4 +1,4 @@
-import { withTransactionOptions as txn } from '@data-stores/psql'
+import { withTransactionOptions as txn } from '@example/db'
 
 export const arrow = () => query(`SELECT ${1}`)
 

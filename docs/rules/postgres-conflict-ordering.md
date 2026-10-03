@@ -22,7 +22,7 @@ rules:
       schemaCatalogPath: db/schema.json
       include: ["backend/**/*.ts"]
       sqlInclude: ["backend/queries/**/*.sql"]
-      importSpecifier: "@data-stores/psql"
+      importSpecifier: "@example/db"
       executorNames: [query, read, write]
       unanalyzableSql: fail
       safeDirective: deadlock-safe
@@ -31,10 +31,12 @@ rules:
 `schemaCatalogPath` is required and must name a repository-relative catalog
 generated with [`no-mistakes postgres catalog`](../cli/postgres.md). The catalog, not a
 lexical sort, supplies an index's expression and key order. `sqlInclude` is
-opt-in (default `[]`) and adds static `.sql` query files; typed executor calls
-are always considered. `importSpecifier` defaults to `@data-stores/psql` and
-`executorNames` to `[query, read, write]`. Transaction helpers and `.query(...)`
-calls use the shared typed-executor facts.
+opt-in (default `[]`) and adds static `.sql` query files. Typed executor calls
+require an explicit `importSpecifier` or `executorNames`. Trusted tags recover SQL
+text only after the executor has been selected.
+`importSpecifier` defaults to empty; when configured without explicit names,
+`executorNames` defaults to `[query, read, write]`. Transaction helpers and
+`.query(...)` calls use the shared typed-executor facts.
 
 `unanalyzableSql` defaults to `fail`; set it to `ignore` only while an explicit
 exception is being removed. `safeDirective` defaults to `deadlock-safe`.
@@ -143,3 +145,15 @@ in the JSON but fail closed for canonical proof. Deferrable unique indexes canno
 be conflict arbiters, although supported valid keys can still prove lock order.
 An ordering catalog declares its coverage and cannot satisfy rules requiring
 complete schema metadata; a complete catalog satisfies every catalog rule.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

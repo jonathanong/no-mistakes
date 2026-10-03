@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 /* deadlock-safe: this comment is more than 200 characters before the call site so it must not suppress the multi-row lock */
 const padding =

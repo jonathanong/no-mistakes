@@ -23,9 +23,9 @@ await withTransaction(async (tx) => {
 ## Options
 
 - `importSpecifier` identifies the database module and defaults to
-  `"@data-stores/psql"`.
+  empty (configure your database module explicitly).
 - `executorNames` lists checked executor names and defaults to
-  `["query", "read", "write"]`.
+  `["query", "read", "write"]` only with a configured module; otherwise it is empty.
 - `owners` is an absolute-suffix or repository-relative allowlist for the
   transaction lifecycle helper. It defaults to no owner exemptions.
 
@@ -45,3 +45,9 @@ await query("BEGIN");
 
 - [`postgres-cursor-call-contract`](postgres-cursor-call-contract.md) requires
   direct, attributable cursor calls.
+
+Executor import matching has no module default. Set `importSpecifier` explicitly
+to your database module to enable default `query`, `read`, and `write` names.
+Without a module, only explicit `executorNames` select named imports; explicit
+`query` also enables `.query` members. A configured module retains member matching
+even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).

@@ -21,9 +21,10 @@ for (const ids of chunkArray(userIds, 50)) {
 
 ## Options
 
-- `importSpecifier` identifies the database module; its default is the plugin's
-  standard PostgreSQL import.
-- `executorNames` lists checked executor names.
+- `importSpecifier` identifies the database module; it defaults to empty. Set
+  it explicitly to select imports from a module.
+- `executorNames` lists checked executor names and defaults to `[]`. A configured
+  module with no explicit names enables `query`, `read`, and `write`.
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
 
@@ -43,3 +44,9 @@ await Promise.all(ids.map((id) => query(sql, [id])));
 
 - [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md) covers
   another database lifecycle boundary.
+
+Executor import matching has no module default. Set `importSpecifier` explicitly
+to your database module to enable default `query`, `read`, and `write` names.
+Without a module, only explicit `executorNames` select named imports; explicit
+`query` also enables `.query` members. A configured module retains member matching
+even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).

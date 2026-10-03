@@ -1,4 +1,4 @@
-import { query } from '@data-stores/psql'
+import { query } from '@example/db'
 
 // Both rules consume distinct SQL occurrences from this one prepared AST.
 await query(`

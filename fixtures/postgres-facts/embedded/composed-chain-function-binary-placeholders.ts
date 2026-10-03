@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 function buildSql() {
   return sql`SELECT * FROM topics WHERE id = ${1}` + sql` AND status = ${2}`;

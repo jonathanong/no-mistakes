@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function list() {
   // no-mistakes-disable-next-line postgres-require-query-annotation: seed helper

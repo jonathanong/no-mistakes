@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const sql = "SELECT id FROM topics";
 // Conditional static appends keep this recovered SELECT and classify Dynamic

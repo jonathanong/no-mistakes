@@ -92,7 +92,10 @@ fn prepared_failure_entries_are_returned_without_fallback_collection() {
         let sources = super::super::source_store_for_files(&paths);
         let plan = CheckFactPlan {
             embedded_sql: true,
-            embedded_sql_options: vec![crate::codebase::postgres::EmbeddedSqlOptions::default()],
+            embedded_sql_options: vec![crate::codebase::postgres::EmbeddedSqlOptions::configured(
+                "@example/db",
+                &[],
+            )],
             ..Default::default()
         };
         let facts = collect_check_facts(&root, paths.clone(), plan);

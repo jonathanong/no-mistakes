@@ -9,7 +9,11 @@ fn fixture(name: &str) -> PathBuf {
 
 fn extract(name: &str) -> super::EmbeddedSqlFileFacts {
     let source = std::fs::read_to_string(fixture(name)).expect("fixture");
-    extract_embedded_sql_from_source(&fixture(name), &source, &EmbeddedSqlOptions::default())
+    extract_embedded_sql_from_source(
+        &fixture(name),
+        &source,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    )
 }
 
 #[test]
@@ -88,7 +92,7 @@ fn named_non_sql_export_aliased_to_sql_fails_closed() {
 
 #[test]
 fn class_function_and_destructured_sql_bindings_fail_closed() {
-    let options = EmbeddedSqlOptions::default();
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     for source in [
         "class sql {}\nsql`SELECT 1`;",
         "class String {}\nString`SELECT 1`;",

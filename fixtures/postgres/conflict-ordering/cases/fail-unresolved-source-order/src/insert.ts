@@ -1,4 +1,4 @@
-import { query } from '@data-stores/psql'
+import { query } from '@example/db'
 
 export function insert() {
   // Omitting INSERT target columns makes the source-to-arbiter mapping unknown.

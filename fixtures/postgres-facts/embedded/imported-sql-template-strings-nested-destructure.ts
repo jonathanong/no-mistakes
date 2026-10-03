@@ -1,5 +1,5 @@
 import tag from "sql-template-strings";
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 // Nested destructuring must shadow the imported tag alias.
 export function load(
