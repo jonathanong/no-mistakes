@@ -150,23 +150,26 @@ fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
             _ => None,
         });
     }
-    for token in tokens
+    tokens
         .all()
         .iter()
         .filter(|token| start(token.span) >= start(query.body.span()))
-    {
-        match &token.token {
-            Token::LParen => depth += 1,
-            Token::RParen => depth = depth.saturating_sub(1),
+        .find_map(|token| match &token.token {
+            Token::LParen => {
+                depth += 1;
+                None
+            }
+            Token::RParen => {
+                depth = depth.saturating_sub(1);
+                None
+            }
             Token::Word(word)
                 if word.keyword == Keyword::FETCH && depth == 0 && start(token.span) >= after =>
             {
-                return Some(start(token.span));
+                Some(start(token.span))
             }
-            _ => {}
-        }
-    }
-    None
+            _ => None,
+        })
 }
 
 fn start(span: Span) -> (usize, usize) {
