@@ -17,12 +17,9 @@ pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctF
         .map(|leaf| {
             let cursor = cursor(leaf, names);
             SqlConjunctFact {
-                text: leaf
-                    .to_string()
-                    .to_ascii_lowercase()
-                    .split_whitespace()
-                    .collect::<Vec<_>>()
-                    .join(" "),
+                text: crate::codebase::postgres::predicate_normalization::normalize(
+                    &leaf.to_string(),
+                ),
                 cursor_columns: cursor
                     .as_ref()
                     .map_or_else(Vec::new, |cursor| cursor.columns.clone()),
