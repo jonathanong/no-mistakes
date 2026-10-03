@@ -460,3 +460,16 @@ fn a_sweep_records_the_parts_of_its_table_name() {
         ["Work", "items"]
     );
 }
+
+#[test]
+fn bind_only_guards_do_not_select_rows() {
+    let facts = sweeps("SELECT id FROM orders WHERE $1::boolean IS NOT NULL AND id > $2 AND deleted_at IS NULL AND FALSE AND now() > $3 ORDER BY id LIMIT $4");
+    assert_eq!(
+        facts[0]
+            .conjuncts
+            .iter()
+            .map(|fact| fact.bind_guard)
+            .collect::<Vec<_>>(),
+        vec![true, false, false, false, false]
+    );
+}
