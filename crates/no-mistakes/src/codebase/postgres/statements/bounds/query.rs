@@ -157,7 +157,8 @@ fn requires_complete_arms(set: &SetExpr) -> bool {
 fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
     match set {
         SetExpr::Select(select) => SqlBoundQuery {
-            capped: pure_aggregate(select),
+            capped: pure_aggregate(select)
+                || super::predicate::rejects_all(select.selection.as_ref()),
             items: items::from_select(select, scope),
         },
         SetExpr::Query(query) => bound_query(query, scope),

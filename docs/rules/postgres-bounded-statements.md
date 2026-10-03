@@ -41,6 +41,8 @@ set operation). A statement is bounded when any of these holds:
   `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
   caller's cap: a caller that passes NULL at run time gets `LIMIT ALL`, which no statement
   text can rule out, so validate the number before the call, or write `COALESCE($1, 100)`.
+- Its WHERE predicate contains a constant FALSE conjunct (including parentheses),
+  so no rows can match. A FALSE disjunct does not bound the statement.
 - It is a pure aggregate: a built-in aggregate call such as `COUNT(*)` (bare or
   `pg_catalog.`-qualified), in the select list, in `HAVING` or in `ORDER BY`, with no
   `GROUP BY`, which returns one row. HAVING without an aggregate call also introduces
