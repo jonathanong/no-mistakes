@@ -74,3 +74,27 @@ fn config_yaml(yaml: &str) -> crate::config::v2::NoMistakesConfig {
         ..Default::default()
     }
 }
+
+#[test]
+fn complete_from_less_builders_keep_limit_locations_and_suppressions() {
+    let root = super::shape_tests::fixture("prepared");
+    let config = config_yaml("bannedShapes: [literal-limit]");
+    let files = [root.join("src/from-less-builders.ts")];
+    let mut findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [6, 10, 16, 20]
+    );
+    let sources = super::super::source_store_for_files(&files);
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [6, 10]
+    );
+}
