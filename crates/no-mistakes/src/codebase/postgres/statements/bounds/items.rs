@@ -10,7 +10,11 @@ use sqlparser::ast::{
 pub(super) fn from_select(select: &Select, scope: &Scope) -> Vec<SqlBoundItem> {
     let mut builder = Builder::new(scope);
     builder.tables(&select.from);
-    builder.finish(select.selection.as_ref())
+    let mut items = builder.finish(select.selection.as_ref());
+    if super::aggregate::expands_from_data(select) {
+        items.push(opaque(start(select.span())));
+    }
+    items
 }
 
 pub(super) fn other(at: (usize, usize)) -> SqlBoundItem {

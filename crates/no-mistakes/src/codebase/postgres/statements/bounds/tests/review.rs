@@ -75,9 +75,12 @@ fn an_aggregate_in_having_or_among_the_rare_built_ins_caps_a_query() {
     // A set-returning function in the select list turns one aggregate row into many.
     assert_eq!(
         shape("SELECT generate_series(1, count(*)) FROM t"),
-        ["select: t"]
+        ["select: t opaque"]
     );
-    assert_eq!(shape("SELECT unnest(array_agg(id)) FROM t"), ["select: t"]);
+    assert_eq!(
+        shape("SELECT unnest(array_agg(id)) FROM t"),
+        ["select: t opaque"]
+    );
     // A window function is not an aggregate, whatever it is called.
     assert_eq!(shape("SELECT count(*) OVER () FROM t"), ["select: t"]);
 }

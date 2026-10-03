@@ -1,4 +1,4 @@
-use super::functions::{is_aggregate, is_set_returning};
+use super::functions::{data_backed_projection, is_aggregate, is_set_returning};
 use crate::codebase::postgres::idents::visit_child_exprs;
 use sqlparser::ast::{
     Expr, Function, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
@@ -12,6 +12,14 @@ pub(super) fn pure_aggregate(select: &Select) -> bool {
             .iter()
             .any(|expr| contains_call(expr, &is_plain_aggregate))
             || select.having.is_some())
+}
+
+/// An expanding projection backed by data prevents a FROM-free SELECT from proving a
+/// bounded source for a relation joined to it.
+pub(super) fn expands_from_data(select: &Select) -> bool {
+    projected(select)
+        .iter()
+        .any(|expr| contains_call(expr, &data_backed_projection))
 }
 
 /// An aggregate used only in `ORDER BY` (`SELECT 1 FROM t ORDER BY count(*)`) makes an ungrouped
