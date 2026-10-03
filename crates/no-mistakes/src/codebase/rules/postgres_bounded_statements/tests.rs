@@ -7,6 +7,7 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+mod referential;
 mod review;
 
 fn catalog() -> SchemaCatalog {
