@@ -72,7 +72,7 @@ fn every_known_set_returning_builtin_expands_aggregate_rows() {
     let shapes = shape(sql);
     assert!(shapes[..shapes.len() - 1]
         .iter()
-        .all(|shape| shape == "select: orders"));
+        .all(|shape| shape == "select: orders opaque"));
     assert_eq!(shapes.last().unwrap(), "select: other");
 }
 
