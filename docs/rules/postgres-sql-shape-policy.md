@@ -41,6 +41,8 @@ rules:
 
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
 `[correlated-exists-set-operation]`. `not-in-subquery`, `count-for-existence`,
+Numeric digit separators in literal limits are decoded (`LIMIT 1_000` is `LIMIT 1000`).
+
 `literal-limit` and `keyset-only-sweep` are opt-in. Unknown `bannedShapes` values
 are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error).
