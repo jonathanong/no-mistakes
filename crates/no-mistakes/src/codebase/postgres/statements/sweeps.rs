@@ -4,8 +4,8 @@ mod page;
 #[cfg(test)]
 mod tests;
 
-use super::limit::{is_limited, limit_site, Tokens};
-use super::{walk_executed, SqlLimitFact, SqlLimitValue, SqlSweepFact};
+use super::limit::{is_empty_page, is_limited, limit_site, Tokens};
+use super::{walk_executed, SqlLimitFact, SqlSweepFact};
 use crate::codebase::postgres::idents::ident_key;
 use sqlparser::ast::{Query, Statement, Visit, Visitor};
 use std::collections::HashMap;
@@ -91,10 +91,8 @@ impl Visitor for Collector<'_> {
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         self.enter(query);
         let site = limit_site(query, &self.tokens);
-        // `LIMIT 0` returns nothing: it is a cap, but no page of a walk.
-        let empty = site
-            .as_ref()
-            .is_some_and(|site| site.value == SqlLimitValue::Literal(0));
+        // Transparent casts/unary signs can preserve zero without being bare literals.
+        let empty = is_empty_page(query);
         if let Some(site) = site {
             self.limits.push(SqlLimitFact {
                 line: site.line,
