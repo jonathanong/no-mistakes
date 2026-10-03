@@ -2,7 +2,7 @@ rules:
 - rule: services-sql-call-limit
   scope: repository
   options:
-    psqlModule: "@data-stores/psql"
+    psqlModule: "@example/db"
     serviceRoot: backend/services/
     sqlCalls:
     - read

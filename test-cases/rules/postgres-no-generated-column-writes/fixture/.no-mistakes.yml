@@ -1,4 +1,5 @@
 rules:
   - rule: postgres-no-generated-column-writes
     scope: repository
-    options: {}
+    options:
+      importSpecifier: "@example/db"

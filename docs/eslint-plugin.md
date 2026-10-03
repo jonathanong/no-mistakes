@@ -157,8 +157,8 @@ when set).
 
 ### `postgres-no-manual-transaction`
 
-`importSpecifier?: string` (default `"@data-stores/psql"`),
-`executorNames?: string[]` (default `["query", "read", "write"]`), and
+`importSpecifier?: string` (default empty),
+`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module), and
 `owners?: string[]`.
 
 ### `postgres-no-unbounded-query-fanout`
@@ -215,3 +215,9 @@ module.exports = [
 
 See the [ESLint rule index](eslint-rules/README.md) for behavior, fixes, and
 suppression guidance.
+
+Executor import matching has no module default. Set `importSpecifier` explicitly
+to your database module to enable default `query`, `read`, and `write` names.
+Without a module, only explicit `executorNames` select named imports; explicit
+`query` also enables `.query` members. Configured modules retain member matching
+with custom executor names. See the [migration notes](migrations/explicit-postgres-executors.md).

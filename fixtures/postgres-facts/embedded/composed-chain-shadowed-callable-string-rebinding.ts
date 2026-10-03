@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const String: { raw?: () => string } = () => "";
 String.raw = () => "DELETE FROM users";

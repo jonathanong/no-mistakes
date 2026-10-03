@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 const statement = sql`SELECT id FROM orders`;
 
 // The appended clause belongs to this later physical line.

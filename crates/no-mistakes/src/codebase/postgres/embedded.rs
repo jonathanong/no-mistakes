@@ -84,7 +84,13 @@ pub fn extract_embedded_sql_from_program(
     let bindings = executor_bindings(program, options);
     let mut executor_bindings: Vec<String> = bindings.iter().cloned().collect();
     executor_bindings.sort();
-    let (calls, mut fragments) = walk::collect_calls(program, source, &bindings);
+    let (calls, mut fragments) = walk::collect_calls(
+        program,
+        source,
+        &bindings,
+        !options.import_specifier.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
+    );
     for fragment in &mut fragments {
         fragment.sql_text = fragment
             .sql_text

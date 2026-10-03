@@ -1,4 +1,4 @@
-import { createClient } from '@data-stores/psql'
+import { createClient } from '@example/db'
 
 // module-level let — violation
 let counter = 0

@@ -1,4 +1,4 @@
-import { psql } from '@data-stores/psql'
+import { psql } from '@example/db'
 import { describe, it } from 'vitest'
 
 describe('bad backend test with direct SQL', () => {

@@ -43,3 +43,9 @@ await Promise.all(ids.map((id) => query(sql, [id])));
 
 - [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md) covers
   another database lifecycle boundary.
+
+Executor import matching has no module default. Set `importSpecifier` explicitly
+to your database module to enable default `query`, `read`, and `write` names.
+Without a module, only explicit `executorNames` select named imports; explicit
+`query` also enables `.query` members. A configured module retains member matching
+even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).

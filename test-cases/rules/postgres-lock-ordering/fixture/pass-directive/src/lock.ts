@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function lockRows(ids: string[]) {
   /* deadlock-safe: single row via unique key */

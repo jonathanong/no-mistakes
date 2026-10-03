@@ -53,7 +53,8 @@ fn collect_import_bindings(
     bindings: &mut HashSet<String>,
 ) {
     if import.import_kind == ImportOrExportKind::Type
-        || import.source.value.as_str() != options.import_specifier
+        || (!options.import_specifier.is_empty()
+            && import.source.value.as_str() != options.import_specifier)
     {
         return;
     }
@@ -68,7 +69,8 @@ fn collect_import_bindings(
             continue;
         }
         let imported = module_export_name(&named.imported);
-        if TRANSACTION_IMPORTS.contains(&imported.as_str()) {
+        if !options.import_specifier.is_empty() && TRANSACTION_IMPORTS.contains(&imported.as_str())
+        {
             bindings.insert(QUERY_PROPERTY.to_string());
         }
         if options.executor_names.iter().any(|name| name == &imported) {

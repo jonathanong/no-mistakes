@@ -2,6 +2,7 @@ rules:
   - rule: postgres-sql-shape-policy
     scope: repository
     options:
+      importSpecifier: "@example/db"
       sqlInclude: ["sql/**/*.sql"]
       bannedShapes:
         - correlated-exists-set-operation

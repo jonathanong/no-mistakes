@@ -1,5 +1,5 @@
 import * as sql from "sql-template-strings";
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 // Namespace import binds the module object, not the tag function.
 function build(id: number) {

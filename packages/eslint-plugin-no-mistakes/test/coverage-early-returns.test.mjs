@@ -112,7 +112,7 @@ describe("exported helper early returns", () => {
         body: [
           {
             type: "ImportDeclaration",
-            source: { value: "@data-stores/psql" },
+            source: { value: "@example/db" },
             specifiers: [{ type: "ImportSpecifier", imported: null, local: { name: "query" } }],
           },
         ],

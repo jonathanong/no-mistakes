@@ -22,7 +22,7 @@ fn config_with_options(options: &str) -> NoMistakesConfig {
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
         scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str(options).unwrap(),
+        options: crate::codebase::postgres::tests::fixture_rule_options(options),
         ..Default::default()
     });
     config

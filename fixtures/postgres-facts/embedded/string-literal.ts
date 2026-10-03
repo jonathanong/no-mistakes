@@ -1,4 +1,4 @@
-import { query } from '@data-stores/psql'
+import { query } from '@example/db'
 
 export function countUsers() {
   return query('SELECT count(*) FROM users')

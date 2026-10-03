@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const sql = "INSERT INTO items (id) VALUES (1)";
 // Nested unused function mutating an outer SQL binding must fail closed:

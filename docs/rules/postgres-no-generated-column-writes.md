@@ -23,8 +23,8 @@ blocks is collected into the catalog, DML (`UPDATE` / `INSERT` / `MERGE`)
 inside `DO $$` is reported like top-level DML (see statement lines below), and PostgreSQL 18 `VIRTUAL` generated
 columns still populate the catalog. `include` selects DML files (`.ts`,
 `.mts`, `.tsx`, `.js`, `.sql` when unset). `importSpecifier` /
-`executorNames` select TypeScript call sites and default to
-`@data-stores/psql` and `query` / `read` / `write`.
+`executorNames` select TypeScript call sites. No module is selected by default;
+a configured module enables `query`, `read`, and `write`.
 
 Tables that are not declared in SQL — for example Filaments election
 `voteTable` relations — must be listed in `extraGeneratedColumns`. This rule
@@ -39,7 +39,7 @@ rules:
         - "db/migrations/**/*.sql"
       include:
         - "src/**/*.{ts,sql}"
-      importSpecifier: "@data-stores/psql"
+      importSpecifier: "@example/db"
       executorNames: [query, write]
       extraGeneratedColumns:
         - table: votes
@@ -50,7 +50,7 @@ rules:
 Counterexample: DML assigns a generated column.
 
 ```ts
-import { write } from '@data-stores/psql'
+import { write } from '@example/db'
 
 write(`UPDATE items SET created_at = now()`)
 write(`INSERT INTO items (id, created_at) VALUES ($1, $2)`)
@@ -108,9 +108,9 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   `.ts`, `.mts`, `.tsx`, `.js`, and `.sql` files; otherwise its glob list is
   used.
 - `importSpecifier` supplies the embedded-SQL matcher's import source. When
-  omitted or empty, it defaults to `@data-stores/psql`.
+  omitted or empty, it has no module default.
 - `executorNames` supplies the imported executor names that contain SQL. An
-  omitted or empty list defaults to `[query, read, write]`.
+  omitted or empty list uses `[query, read, write]` only with a configured module.
 - `extraGeneratedColumns` adds `{ table, column }` pairs to the generated
   column catalog. It defaults to an empty list.
 - `triggerMaintainedColumns` defaults to `[]`. A non-generated column whose
@@ -239,3 +239,15 @@ use the final catalog. `CREATE TABLE ... AS`, `LIKE`, `INHERITS`, and partition
 tables keep an unknown positional column order, so positional `INSERT` values are
 not attributed to later `ALTER ... ADD COLUMN` generated columns. Quoted and
 unquoted column names that differ in case are distinct during `ALTER` replay.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 function evilTag(strings: TemplateStringsArray) {
   return strings.join("") + "; DROP TABLE users";

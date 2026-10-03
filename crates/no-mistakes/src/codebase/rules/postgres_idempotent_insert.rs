@@ -125,7 +125,6 @@ pub(crate) fn check_with_files_and_sources(
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-    let defaults = EmbeddedSqlOptions::default();
     Ok(CompiledOptions {
         include,
         exclude,
@@ -136,18 +135,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: EmbeddedSqlOptions {
-            import_specifier: if opts.import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                opts.import_specifier.clone()
-            },
-            executor_names: if opts.executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                opts.executor_names.clone()
-            },
-        },
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

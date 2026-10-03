@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 function run(sql: (strings: TemplateStringsArray, ...values: unknown[]) => string, id: number) {
   const text = sql`SELECT * FROM topics WHERE id = ${id}`;

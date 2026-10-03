@@ -3,8 +3,10 @@ rules:
   - rule: postgres-conflict-ordering
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
   - rule: postgres-lock-ordering
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json

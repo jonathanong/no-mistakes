@@ -1,5 +1,5 @@
 import sql from "sql-template-strings";
-import { read } from "@data-stores/psql";
+import { read } from "@example/db";
 
 // Control flow in a helper body is not simulated, so appending its result
 // must fail closed rather than guessing which return ran.
