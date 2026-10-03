@@ -204,3 +204,7 @@ A base-table column alias list (`FROM accounts AS a(id, real_id)`) renames colum
 position. Only keys whose aliased positions keep their original names retain catalog key credit; ordinary table aliases
 (`FROM accounts AS a`) retain key matching. This also applies to join conditions and
 `USING` pins.
+
+For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
+Analysis conservatively checks both exact and folded spellings when they differ;
+a matching one-part CTE takes precedence over catalog relations.

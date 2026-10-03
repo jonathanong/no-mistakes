@@ -11,16 +11,39 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
     if name.is_empty() {
         return query::sized_by_itself(at);
     }
-    // The parser keeps no quote information for a TABLE name, so it is read as unquoted.
-    let name = name.join(".").to_ascii_lowercase();
-    // A one-part name is a CTE reference when a CTE has that name, like any FROM item.
-    let cte = scope.get(&name).filter(|_| table.schema_name.is_none());
-    let kind = match cte {
-        Some(bound) => SqlBoundItemKind::Query(bound.clone()),
-        None => SqlBoundItemKind::Table(name),
+    // sqlparser loses TABLE identifier quoting. Conservatively retain both spellings
+    // when folding changes a name; catalog resolution selects the relation that exists.
+    let exact = name
+        .iter()
+        .map(|part| format!("\"{}\"", part.replace('"', "\"\"")))
+        .collect::<Vec<_>>()
+        .join(".");
+    let folded = name.join(".").to_ascii_lowercase();
+    let item = |relation: String, cte_name: &str| {
+        let cte = table
+            .schema_name
+            .is_none()
+            .then(|| scope.get(cte_name))
+            .flatten();
+        SqlBoundItem::new(
+            match cte {
+                Some(bound) => SqlBoundItemKind::Query(bound.clone()),
+                None => SqlBoundItemKind::Table(relation),
+            },
+            None,
+            at,
+        )
     };
+    // A possible CTE spelling resolves only that interpretation; it cannot hide the other one.
+    let mut items = vec![item(folded.clone(), &folded)];
+    if name
+        .iter()
+        .any(|part| part.to_ascii_lowercase() != *part || part.contains(' '))
+    {
+        items.push(item(exact, &name.join(".")));
+    }
     SqlBoundQuery {
         capped: false,
-        items: vec![SqlBoundItem::new(kind, None, at)],
+        items,
     }
 }
