@@ -1,4 +1,4 @@
-use super::tests::{facts, shape};
+use super::{facts, shape};
 
 #[test]
 fn only_a_set_returning_built_in_over_given_arguments_is_sized_by_its_caller() {

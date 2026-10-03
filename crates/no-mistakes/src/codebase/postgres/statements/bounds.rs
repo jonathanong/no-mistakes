@@ -10,8 +10,6 @@ mod functions;
 mod items;
 mod pins;
 mod query;
-#[cfg(test)]
-mod review_tests;
 mod table;
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-use super::tests::names;
+use super::names;
 
 #[test]
 fn an_opaque_table_function_bounds_nothing_but_a_caller_sized_one_does() {

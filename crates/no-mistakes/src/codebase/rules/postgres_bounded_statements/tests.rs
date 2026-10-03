@@ -7,6 +7,8 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+mod review;
+
 fn catalog() -> SchemaCatalog {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-bounded-statements/fixture");

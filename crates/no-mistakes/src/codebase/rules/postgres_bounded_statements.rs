@@ -161,6 +161,4 @@ fn statement_kinds(configured: Option<&[String]>) -> Result<Vec<SqlBoundKind>> {
 #[cfg(test)]
 mod options_tests;
 #[cfg(test)]
-mod review_tests;
-#[cfg(test)]
 mod tests;
