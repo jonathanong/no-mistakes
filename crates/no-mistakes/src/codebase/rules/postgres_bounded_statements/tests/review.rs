@@ -316,3 +316,12 @@ fn signed_literals_and_builtin_network_columns_keep_finite_array_pins() {
         .collect();
     assert_eq!(found, [3, 4, 5, 13, 14, 15, 16, 17, 18, 19, 20]);
 }
+
+#[test]
+fn base_table_column_alias_lists_supply_no_catalog_key_pins() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/column-alias-list.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
+}
