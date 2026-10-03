@@ -20,17 +20,20 @@ const AGGREGATES: &[&str] = &[
     "range_intersect_agg",
 ];
 
-/// Set-returning functions whose row count follows the value of their arguments. In FROM, with
-/// arguments the statement or its caller supplies, they are sized by the caller; in a select
-/// list they turn one aggregate row into many.
+mod set_returning;
+use set_returning::SET_RETURNING;
+
+/// Functions whose result row count follows caller-provided argument values.
 #[rustfmt::skip]
-const SET_RETURNING: &[&str] = &[
+const CALLER_SIZED: &[&str] = &[
     "unnest", "generate_series", "generate_subscripts", "json_array_elements",
     "json_array_elements_text", "jsonb_array_elements", "jsonb_array_elements_text",
     "json_each", "json_each_text", "jsonb_each", "jsonb_each_text", "json_object_keys",
     "jsonb_object_keys", "string_to_table", "regexp_split_to_table", "regexp_matches",
     "json_populate_recordset", "jsonb_populate_recordset", "json_to_recordset",
-    "jsonb_to_recordset",
+    "jsonb_to_recordset", "jsonb_path_query", "jsonb_path_query_tz", "aclexplode",
+    "pg_options_to_table", "pg_mcv_list_items", "pg_snapshot_xip", "txid_snapshot_xip",
+    "ts_parse", "ts_debug", "ts_token_type",
 ];
 
 /// Whether `name` is bare or `pg_catalog`-qualified and its bare part is in `list`. A function
@@ -76,7 +79,7 @@ pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlB
         } => !depends_on_data(expr),
         _ => true,
     });
-    if given && builtin(name, SET_RETURNING) {
+    if given && builtin(name, CALLER_SIZED) {
         SqlBoundItemKind::Other
     } else {
         SqlBoundItemKind::Opaque
@@ -119,3 +122,6 @@ pub(super) fn depends_on_data(expr: &Expr) -> bool {
     let _ = expr.visit(&mut found);
     found.0
 }
+
+#[cfg(test)]
+mod tests;

@@ -290,3 +290,12 @@ fn table_arms_retain_possible_quoted_identifiers_and_cte_precedence() {
         ["\"Order Items\"", "\"Order Items\"", "accounts", "accounts"]
     );
 }
+
+#[test]
+fn jsonpath_set_returning_functions_expand_aggregate_rows() {
+    assert_eq!(
+        names("SELECT jsonb_path_query(jsonb_agg(to_jsonb(o)), '$[*]') FROM orders o"),
+        ["orders"]
+    );
+    assert!(names("SELECT 1 FROM jsonb_path_query($1::jsonb, '$[*]')").is_empty());
+}

@@ -462,3 +462,25 @@ fn table_arms_preserve_both_possible_identifier_spellings() {
         ]
     );
 }
+
+#[test]
+fn every_known_set_returning_builtin_expands_aggregate_rows() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-builtins.sql"));
+    let shapes = shape(sql);
+    assert!(shapes[..shapes.len() - 1]
+        .iter()
+        .all(|shape| shape == "select: orders"));
+    assert_eq!(shapes.last().unwrap(), "select: other");
+}
+
+#[test]
+fn server_state_set_returning_functions_stay_opaque_in_from() {
+    for call in [
+        "pg_ls_dir('/tmp')",
+        "pg_listening_channels()",
+        "ts_stat($1)",
+    ] {
+        assert_eq!(shape(&format!("SELECT 1 FROM {call}")), ["select: opaque"]);
+    }
+}
