@@ -502,3 +502,5 @@ fn scanning_requires_prepared_facts() {
         .to_string()
         .contains("prepared PostgreSQL facts are required"));
 }
+
+mod pin_subqueries;

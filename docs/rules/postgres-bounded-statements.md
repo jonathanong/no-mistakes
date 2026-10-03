@@ -98,6 +98,9 @@ both arms in full like `UNION`, so every arm must be bounded: the rule bounds th
 only the result. A chain of CTEs whose bounds grow past a few thousand items is treated as
 opaque, so pathological generated SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
 reports each relation that makes a statement unbounded, once, at that relation's line.
+An uncapped SELECT also reports unbounded relations read by its IN-subquery pins,
+even when another predicate pins the outer table. UPDATE and DELETE retain target-only
+reporting.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
 `RETURNING` rows is not unbounded because of it. Those rows are opaque, though: one row per
