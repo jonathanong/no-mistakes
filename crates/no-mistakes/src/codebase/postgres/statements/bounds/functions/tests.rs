@@ -1,3 +1,5 @@
+mod projection_arguments;
+
 use super::SET_RETURNING;
 
 #[test]

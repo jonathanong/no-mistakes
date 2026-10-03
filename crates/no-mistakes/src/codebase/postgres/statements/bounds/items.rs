@@ -1,10 +1,10 @@
 mod builder;
 use super::super::value::PlaceholderPositions;
-use super::Scope;
+use super::{start, Scope};
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 pub(super) use builder::Builder;
-use sqlparser::ast::{ObjectName, Select};
+use sqlparser::ast::{ObjectName, Select, Spanned};
 
 pub(super) fn from_select(
     select: &Select,
@@ -18,7 +18,11 @@ pub(super) fn from_select(
     }
     let mut builder = Builder::new(scope, positions);
     builder.tables(&select.from);
-    builder.finish(select.selection.as_ref())
+    let mut items = builder.finish(select.selection.as_ref());
+    if super::aggregate::expands_from_data(select, positions) {
+        items.push(opaque(start(select.span())));
+    }
+    items
 }
 
 pub(super) fn other(at: (usize, usize)) -> SqlBoundItem {
