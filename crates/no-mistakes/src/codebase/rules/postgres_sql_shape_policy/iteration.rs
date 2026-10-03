@@ -156,6 +156,7 @@ pub(super) fn findings(
                 || sweep.conjuncts.iter().any(|conjunct| {
                     !is_cursor(conjunct, &sweep.order_columns)
                         && !conjunct.constant_true
+                        && !conjunct.bind_guard
                         && !options.non_selective.contains(&conjunct.text)
                 });
             if !selective && !options.ignored(&sweep.table_parts) {

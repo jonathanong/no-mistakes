@@ -283,3 +283,15 @@ fn shape_options_are_validated() {
     .is_ok());
     let _ = Path::new("");
 }
+
+#[test]
+fn bind_only_guard_does_not_hide_a_sweep() {
+    assert_eq!(
+        found(
+            "bind-guards",
+            "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\n",
+            "sql/001.sql"
+        ),
+        at(&[(1, "keyset-only-sweep")])
+    );
+}

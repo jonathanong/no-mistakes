@@ -135,6 +135,8 @@ literals, and `FETCH FIRST ROW ONLY` counts as the literal `1`, reported at its
 `FETCH` keyword (a count that is written is reported at the count). `FETCH … WITH
 TIES` still writes a literal count, so it is reported too.
 
+Bind-only guards without column references, calls, or subqueries do not narrow a walk.
+
 `keyset-only-sweep` reports a walk over a whole table by its key: a query with a
 `LIMIT` over one base table (no join, grouping or set operation) ordered only by
 plain columns of that table, where every top-level `WHERE` conjunct is either a

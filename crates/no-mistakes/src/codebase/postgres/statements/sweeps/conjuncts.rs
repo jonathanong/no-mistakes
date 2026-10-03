@@ -1,7 +1,8 @@
 use super::super::value::is_placeholder_ident;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
-use sqlparser::ast::{BinaryOperator, Expr, Value};
+use sqlparser::ast::{BinaryOperator, Expr, Value, Visit, Visitor};
+use std::ops::ControlFlow;
 
 /// The top-level `AND` conjuncts of a WHERE clause.
 pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctFact> {
@@ -26,6 +27,7 @@ pub(super) fn of(selection: Option<&Expr>, names: &[String]) -> Vec<SqlConjunctF
                 cursor_bound: cursor.as_ref().map(|cursor| cursor.bound),
                 cursor_optional: cursor.as_ref().is_some_and(|cursor| cursor.optional),
                 constant_true: is_constant_true(leaf),
+                bind_guard: is_bind_guard(leaf),
             }
         })
         .collect()
@@ -159,4 +161,37 @@ fn is_bind(expr: &Expr) -> bool {
         Expr::Tuple(items) => !items.is_empty() && items.iter().all(is_bind),
         _ => false,
     }
+}
+
+/// A guard can enable a walk, but cannot select individual rows.
+fn is_bind_guard(expr: &Expr) -> bool {
+    struct Guard {
+        bind: bool,
+        row_dependent: bool,
+    }
+    impl Visitor for Guard {
+        type Break = ();
+        fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
+            match expr {
+                Expr::Value(value) if matches!(value.value, Value::Placeholder(_)) => {
+                    self.bind = true
+                }
+                Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => self.bind = true,
+                Expr::Identifier(_)
+                | Expr::CompoundIdentifier(_)
+                | Expr::Function(_)
+                | Expr::Subquery(_)
+                | Expr::Exists { .. }
+                | Expr::InSubquery { .. } => self.row_dependent = true,
+                _ => {}
+            }
+            ControlFlow::Continue(())
+        }
+    }
+    let mut guard = Guard {
+        bind: false,
+        row_dependent: false,
+    };
+    let _ = expr.visit(&mut guard);
+    guard.bind && !guard.row_dependent
 }

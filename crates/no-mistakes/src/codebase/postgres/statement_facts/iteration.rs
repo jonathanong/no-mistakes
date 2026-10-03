@@ -45,6 +45,8 @@ pub struct SqlConjunctFact {
     pub cursor_optional: bool,
     /// `TRUE` or `1 = 1`: a conjunct a query builder seeds a WHERE with, which selects nothing.
     pub constant_true: bool,
+    /// A bind-only condition independent of every row, without calls or subqueries.
+    pub bind_guard: bool,
 }
 
 /// The direction of a cursor comparison: `id > $1` bounds `id` from below, `id < $1` from above.
