@@ -6,6 +6,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
+use std::collections::BTreeMap;
 
 pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
     bound_body(query, &with_scope(query, scope))
@@ -32,9 +33,10 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
             }
             let bound = bound_query(&cte.query, &inner);
             // Each reference clones the CTE's bound, so a chain of CTEs that each read the one
-            // before twice grows exponentially: past a generous size it is opaque instead.
+            // before twice grows exponentially. Compact oversized bounds conservatively,
+            // retaining the distinct uncapped relations instead of hiding their reads.
             if size(&bound) > MAX_BOUND_ITEMS {
-                opaque(start(cte.query.span()))
+                compact(&bound, start(cte.query.span()))
             } else {
                 bound
             }
@@ -67,6 +69,51 @@ fn size(query: &SqlBoundQuery) -> usize {
             1 + inner + pins
         })
         .sum()
+}
+
+/// Keep a fail-closed summary of oversized CTEs. Capped subqueries contribute no
+/// unbounded reads; an opaque item prevents this summary from sizing a later join.
+fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuery {
+    fn tables(query: &SqlBoundQuery, found: &mut BTreeMap<String, SqlBoundItem>) {
+        if query.capped {
+            return;
+        }
+        for item in &query.items {
+            match &item.kind {
+                SqlBoundItemKind::Table(name) => {
+                    // Only caller-sized values remain valid after the surrounding items are
+                    // removed. A repeated relation is bounded only by pins common to every read.
+                    let pins: Vec<_> = item
+                        .pins
+                        .iter()
+                        .filter(|pin| matches!(pin.source, SqlPinSource::Value))
+                        .cloned()
+                        .collect();
+                    if let Some(previous) = found.get_mut(name) {
+                        previous.pins.retain(|pin| pins.contains(pin));
+                    } else {
+                        let mut table = SqlBoundItem::new(
+                            SqlBoundItemKind::Table(name.clone()),
+                            None,
+                            (item.line, item.column),
+                        );
+                        table.pins = pins;
+                        found.insert(name.clone(), table);
+                    }
+                }
+                SqlBoundItemKind::Query(inner) => tables(inner, found),
+                _ => {}
+            }
+        }
+    }
+    let mut found = BTreeMap::new();
+    tables(bound, &mut found);
+    let mut items: Vec<_> = found.into_values().collect();
+    items.push(items::opaque(at));
+    SqlBoundQuery {
+        capped: bound.capped,
+        items,
+    }
 }
 
 /// The `INSERT` / `UPDATE` / `DELETE` / `MERGE` inside a data-modifying CTE.

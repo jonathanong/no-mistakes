@@ -251,3 +251,30 @@ fn an_explicit_collation_in_the_compared_value_fixes_no_row() {
     );
     assert!(names("SELECT 1 FROM accounts WHERE email = lower($1)").is_empty());
 }
+
+#[test]
+fn oversized_ctes_retain_uncapped_relation_reads() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/oversized-cte.sql"
+    ));
+    assert_eq!(names(sql), ["orders"]);
+}
+
+#[test]
+fn oversized_cte_compaction_does_not_invent_reads_from_capped_or_opaque_sources() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/oversized-cte-mixed.sql"
+    ));
+    assert!(names(sql).is_empty());
+}
+
+#[test]
+fn oversized_cte_compaction_preserves_key_pins_without_hiding_unpinned_reads() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/oversized-cte-pins.sql"
+    ));
+    assert_eq!(names(sql), ["orders"]);
+}
