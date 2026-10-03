@@ -305,3 +305,8 @@ For `keyset-only-sweep`, a zero-row page remains empty through parentheses, unar
 signs and standard PostgreSQL numeric casts (`LIMIT +0`, `LIMIT 0::bigint`).
 Unknown user-defined casts stay conservative. This semantic check does not change
 `literal-limit` classification: cast or unary expressions remain non-literal.
+
+Negating a recognized keyset comparison reverses its bound (`NOT (id <= $1)`
+is a lower-bound cursor). It still walks a key range; combining it with an
+opposite upper bound forms a selective window. Arbitrary negated predicates and
+negated optional-cursor disjunctions remain outside this comparison proof.

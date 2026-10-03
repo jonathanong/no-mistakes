@@ -379,3 +379,6 @@ fn full_select_builder_fragments_are_analyzed_without_wrapping() {
 }
 
 mod semantic_zero;
+
+#[cfg(test)]
+mod negated_keysets;
