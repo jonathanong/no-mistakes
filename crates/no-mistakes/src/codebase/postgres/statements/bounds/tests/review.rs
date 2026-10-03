@@ -397,3 +397,26 @@ fn an_explicit_collation_in_the_value_fixes_no_row() {
         ["select: accounts[email=value]"]
     );
 }
+
+#[test]
+fn oversized_ctes_retain_uncapped_relation_reads() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/oversized-cte.sql"
+    ));
+    let bound = facts(sql);
+    assert_eq!(bound.len(), 2);
+    assert!(shape(sql)[0].contains("orders"));
+    assert!(bound[1].query.capped);
+}
+
+#[test]
+fn oversized_cte_compaction_keeps_only_pins_common_to_every_relation_read() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/oversized-cte-pins.sql"
+    ));
+    assert_eq!(shape(sql).len(), 2);
+    assert!(shape(sql)[0].contains("orders[id=value]"));
+    assert!(!shape(sql)[1].contains("orders[id=value]"));
+}

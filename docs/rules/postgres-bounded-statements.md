@@ -203,3 +203,7 @@ everywhere, use `allow: [{object: 'table:<name>', reason}]`.
 [`postgres-required-predicates`](postgres-required-predicates.md) read the same prepared
 statement facts. [`postgres-no-offset`](postgres-no-offset.md) bans the `OFFSET` paging
 that often replaces a bounded keyset sweep.
+
+Oversized CTE expansions are compacted to their distinct uncapped base relations.
+This conservative summary retains unbounded reads and supplies no bound to joined
+items; an explicit outer `LIMIT` still caps the statement.
