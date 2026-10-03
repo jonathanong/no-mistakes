@@ -13,6 +13,7 @@ mod locking;
 mod migration;
 mod migration_order;
 pub(crate) use migration_order::cmp_sql_rel;
+mod numeric_literal;
 mod offset;
 mod on_conflict;
 mod parse;

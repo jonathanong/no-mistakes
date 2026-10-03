@@ -286,3 +286,4 @@ escapes, line continuations, and literals that begin below their declaration.
 The Rust facts retain original SQL columns in `SqlSelectFact.not_in_columns` and
 `SqlCountExistenceFact.column`; embedded calls expose compact source-line
 transitions through `EmbeddedSqlCall.sql_source_positions`.
+PostgreSQL integer limits support digit separators, including one immediately after an octal or binary radix prefix (for example, `LIMIT 0o_1_755` or `LIMIT 0b_1_0`). Their decoded row counts follow the same `literal-limit` policy as decimal limits.

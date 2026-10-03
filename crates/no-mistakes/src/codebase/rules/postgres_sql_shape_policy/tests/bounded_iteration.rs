@@ -349,3 +349,19 @@ fn ignore_tables_preserves_quoted_case_and_dots() {
         ])
     );
 }
+
+#[test]
+fn radix_prefix_separators_preserve_literal_limit_findings() {
+    assert_eq!(
+        found(
+            "radix-prefix-separators",
+            "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [literal-limit]\nshapeOptions:\n  literalLimit:\n    allowedValues: []\n",
+            "sql/pages.sql"
+        ),
+        at(&[
+            (1, "literal-limit"),
+            (2, "literal-limit"),
+            (3, "literal-limit")
+        ])
+    );
+}
