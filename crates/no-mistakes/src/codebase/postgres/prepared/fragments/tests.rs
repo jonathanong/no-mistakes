@@ -60,6 +60,9 @@ fn fragment_demand_is_explicit_and_equal_text_shares_a_statement_projection() {
 fn a_clause_only_fragment_keeps_its_limit() {
     for sql in [
         " ORDER BY id LIMIT 500",
+        "ORDER\nBY id LIMIT 500",
+        "-- page\nORDER BY id LIMIT 500",
+        "/* page */ ORDER /* split */ BY id LIMIT 500",
         "LIMIT 20",
         " order by id FETCH FIRST 5 ROWS ONLY",
         "OFFSET 10 LIMIT 5",
@@ -71,4 +74,11 @@ fn a_clause_only_fragment_keeps_its_limit() {
     assert!(super::statement_facts("limit_at > $1")
         .limit_uses
         .is_empty());
+}
+
+#[test]
+fn query_tail_detection_requires_real_keywords() {
+    for sql in ["/*", "ORDER wrong", "\"LIMIT\" 5", "5 LIMIT 2"] {
+        assert!(!super::starts_with_clause(sql), "{sql}");
+    }
 }
