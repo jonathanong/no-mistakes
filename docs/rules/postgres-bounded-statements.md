@@ -267,3 +267,13 @@ clause cannot hide a parent base relation when checking outer column references.
 
 Each set-operation arm owns its relation aliases. An alias declared in a sibling
 arm cannot turn an outer column reference into a local reference.
+
+Unknown SELECT-list function cardinality is opaque: a custom function can return
+a set of database rows even when its arguments are bind values. The rule trusts
+known PostgreSQL scalar builtins and aggregates by bare name or `pg_catalog`
+qualification, plus bare SQL scalar forms such as `COALESCE`. This builtin
+identity is a documented heuristic; a function in another schema
+with the same name stays unknown. Unlisted scalar builtins are conservative too.
+Use an explicit result `LIMIT` when the function's output must be bounded; known
+caller-sized set-returning builtins retain their argument-based bounds. Trusted
+scalar wrappers never hide unknown nested calls in their arguments.

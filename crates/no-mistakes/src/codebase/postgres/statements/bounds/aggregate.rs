@@ -1,4 +1,4 @@
-use super::functions::{data_backed_projection, is_aggregate, is_set_returning};
+use super::functions::{data_backed_projection, is_aggregate, projection_can_expand};
 use crate::codebase::postgres::idents::visit_child_exprs;
 use sqlparser::ast::{
     Expr, Function, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
@@ -47,7 +47,7 @@ fn one_group(select: &Select) -> bool {
     ungrouped
         && !projected(select)
             .iter()
-            .any(|expr| contains_call(expr, &|function| is_set_returning(&function.name)))
+            .any(|expr| contains_call(expr, &|function| projection_can_expand(&function.name)))
 }
 
 fn projected(select: &Select) -> Vec<&Expr> {

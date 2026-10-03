@@ -524,3 +524,5 @@ mod quoted_qualifier_paths;
 mod nested_cte_scope;
 
 mod set_arm_alias_scope;
+
+mod unknown_projection_cardinality;
