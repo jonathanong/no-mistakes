@@ -1,7 +1,9 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
+mod empty;
 use super::value::is_placeholder_ident;
 use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
+pub(super) use empty::is_empty_page;
 use sqlparser::ast::{
     Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Spanned, Value,
 };
