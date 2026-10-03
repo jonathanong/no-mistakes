@@ -4,6 +4,8 @@ use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact,
 };
 
+mod reordered_expanded;
+
 fn limits(sql: &str) -> Vec<(usize, usize, SqlLimitValue)> {
     extract_sql_statement_facts(sql)
         .limit_uses

@@ -24,11 +24,21 @@ pub(super) fn cursor(
     }
     let mut alternatives = Vec::new();
     arms(expr, &mut alternatives);
+    let mut alternatives: Vec<_> = alternatives
+        .into_iter()
+        .map(|arm| {
+            let mut terms = Vec::new();
+            flatten(arm, &mut terms);
+            terms
+        })
+        .collect();
+    // The number of equality-prefix terms identifies an arm's position in the
+    // expanded cursor. OR order is semantically irrelevant, so normalize it
+    // before checking the complete prefix chain.
+    alternatives.sort_by_key(Vec::len);
     let mut keys: Vec<(String, &Expr)> = Vec::new();
     let mut direction = None;
-    for (index, arm) in alternatives.into_iter().enumerate() {
-        let mut terms = Vec::new();
-        flatten(arm, &mut terms);
+    for (index, terms) in alternatives.into_iter().enumerate() {
         if terms.len() != index + 1 {
             return None;
         }

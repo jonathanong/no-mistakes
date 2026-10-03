@@ -395,3 +395,12 @@ fn expanded_keysets_follow_the_order_keys_before_the_rule_reports_a_walk() {
         ])
     );
 }
+
+#[test]
+fn reordered_expanded_keysets_keep_the_same_rule_findings() {
+    let config = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\n";
+    assert_eq!(
+        found("reordered-expanded-keysets", config, "sql/pages.sql"),
+        at(&[(2, "keyset-only-sweep"), (3, "keyset-only-sweep")])
+    );
+}
