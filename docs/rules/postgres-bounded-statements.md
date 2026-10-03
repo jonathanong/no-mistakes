@@ -38,7 +38,8 @@ set operation). A statement is bounded when any of these holds:
 
 - It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` whose count is fixed: a literal, a bind
   (`$1`, `${size}`) or an expression of them using `COALESCE`, `LEAST` or `GREATEST`
-  (`LEAST($1, 100)`). `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
+  (`LEAST($1, 100)`). These conditional constructs must be unqualified and unquoted;
+  qualified or quoted function lookalikes may return NULL and are not fixed caps. `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
   a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
   `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
   caller's cap: a caller that passes NULL at run time gets `LIMIT ALL`, which no statement
