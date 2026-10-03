@@ -1,7 +1,7 @@
 use super::columns::{function_columns, projection_columns};
 use super::sql_name;
 use super::Scan;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use sqlparser::ast::TableFactor;
 
 impl Scan {
@@ -23,9 +23,18 @@ impl Scan {
                     .as_ref()
                     .map(|alias| ident_key(&alias.name))
                     .or_else(|| object_name_ident(name).map(ident_key));
-                frame.relations.extend(own);
+                if let Some(own) = own {
+                    frame.whole_rows.insert(own.clone());
+                    frame.relations.insert(vec![own]);
+                }
                 if alias.is_none() {
-                    frame.relations.insert(object_name_key(name));
+                    frame.relations.insert(
+                        name.0
+                            .iter()
+                            .filter_map(|part| part.as_ident())
+                            .map(ident_key)
+                            .collect(),
+                    );
                 }
                 let columns =
                     if let Some(alias) = alias.as_ref().filter(|alias| !alias.columns.is_empty()) {
@@ -53,7 +62,9 @@ impl Scan {
                 subquery, alias, ..
             } => {
                 if let Some(alias) = alias {
-                    frame.relations.insert(ident_key(&alias.name));
+                    let name = ident_key(&alias.name);
+                    frame.whole_rows.insert(name.clone());
+                    frame.relations.insert(vec![name]);
                 }
                 let columns = match alias.as_ref().filter(|alias| !alias.columns.is_empty()) {
                     Some(alias) => Some(
@@ -77,7 +88,10 @@ impl Scan {
                 ..
             } => {
                 let own = alias.as_ref().map(|alias| ident_key(&alias.name));
-                frame.relations.extend(own.clone());
+                if let Some(own) = &own {
+                    frame.whole_rows.insert(own.clone());
+                    frame.relations.insert(vec![own.clone()]);
+                }
                 let columns: Vec<_> = alias
                     .as_ref()
                     .map(|alias| {

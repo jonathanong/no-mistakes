@@ -32,7 +32,7 @@ pub(in super::super) struct Reads {
 /// table (assumed to have it); for base tables the candidates are returned for the catalog.
 pub(in super::super) fn reads_outer_rows(
     query: &Query,
-    outer: &BTreeSet<String>,
+    outer: &BTreeSet<Vec<String>>,
     ctes: &BTreeMap<String, Option<BTreeSet<String>>>,
 ) -> Reads {
     let mut scan = Scan {
@@ -58,14 +58,17 @@ pub(in super::super) fn reads_outer_rows(
 /// What one query level mentions, until its relations are all known.
 #[derive(Default)]
 struct Frame {
-    relations: BTreeSet<String>,
+    /// Identifier components preserve the distinction between a quoted dot and a separator.
+    relations: BTreeSet<Vec<String>>,
+    /// Bare relation names also identify whole-row references.
+    whole_rows: BTreeSet<String>,
     /// The base tables of the level, as SQL names.
     tables: Vec<String>,
     /// A relation that is not a base table: a derived table, a function, a CTE.
     foreign: bool,
     /// Known projected columns of derived/CTE/function sources in this level.
     columns: BTreeSet<String>,
-    qualifiers: Vec<String>,
+    qualifiers: Vec<Vec<String>>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
     bare: BTreeMap<String, usize>,
@@ -79,7 +82,7 @@ struct Scan {
     stack: Vec<Frame>,
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     /// Qualifiers and bare reads that no level of the query resolved.
-    unresolved: Vec<String>,
+    unresolved: Vec<Vec<String>>,
     reads: Vec<SqlBareRead>,
 }
 
@@ -123,7 +126,7 @@ impl Visitor for Scan {
     /// before FROM), so its references are resolved here and what remains moves up a level.
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
-        let up: Vec<String> = frame
+        let up: Vec<Vec<String>> = frame
             .qualifiers
             .into_iter()
             .filter(|qualifier| !frame.relations.contains(qualifier))
@@ -131,7 +134,7 @@ impl Visitor for Scan {
         // A bare name that is a relation's own is a whole-row reference, not a column.
         let own = frame.bare.iter().filter(|(name, count)| {
             **count > frame.labels.get(*name).copied().unwrap_or(0)
-                && !frame.relations.contains(*name)
+                && !frame.whole_rows.contains(*name)
         });
         let mut reads: Vec<SqlBareRead> = own
             .map(|(name, _)| SqlBareRead {
@@ -174,13 +177,9 @@ impl Visitor for Scan {
         };
         match expr {
             Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-                frame.qualifiers.push(
-                    parts[..parts.len() - 1]
-                        .iter()
-                        .map(ident_key)
-                        .collect::<Vec<_>>()
-                        .join("."),
-                );
+                frame
+                    .qualifiers
+                    .push(parts[..parts.len() - 1].iter().map(ident_key).collect());
             }
             Expr::Identifier(ident) if !is_placeholder_ident(&ident.value) => {
                 *frame.bare.entry(ident_key(ident)).or_default() += 1;
