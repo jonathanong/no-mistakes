@@ -123,4 +123,4 @@ groups, limits, diffs, and deleted-file behavior.
 - [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported
   forms, confidence limits, and `rg` fallbacks.
 
-For independent PostgreSQL ordering catalogs, use `postgres catalog`; see [the command reference](../../docs/cli/postgres.md).
+For independent PostgreSQL ordering catalogs, use `postgres catalog`; see [the command reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/postgres.md).
