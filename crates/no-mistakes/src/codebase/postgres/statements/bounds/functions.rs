@@ -96,7 +96,8 @@ pub(super) fn unnest_kind(arrays: &[Expr]) -> SqlBoundItemKind {
     }
 }
 
-/// Whether `expr` holds a subquery or a column: values the statement text does not provide.
+/// Whether `expr` holds a subquery, column, or function result: values whose source
+/// is not proven to be the statement or caller. An arbitrary call may read the database.
 pub(super) fn depends_on_data(expr: &Expr) -> bool {
     struct Found(bool);
     impl Visitor for Found {
@@ -108,7 +109,7 @@ pub(super) fn depends_on_data(expr: &Expr) -> bool {
         fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
             let column = match expr {
                 Expr::Identifier(ident) => !is_placeholder_ident(&ident.value),
-                Expr::CompoundIdentifier(_) => true,
+                Expr::CompoundIdentifier(_) | Expr::Function(_) => true,
                 _ => false,
             };
             if column {
