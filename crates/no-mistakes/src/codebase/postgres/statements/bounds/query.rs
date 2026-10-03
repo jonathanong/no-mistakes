@@ -73,9 +73,10 @@ pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
     if super::aggregate::orders_can_expand(query) {
         if let Some(select) = select_body(&query.body) {
-            // Either predicate can reject the implicit group before ORDER BY expands it.
-            bound.capped = super::predicate::rejects_all(select.selection.as_ref())
-                || super::predicate::rejects_all(select.having.as_ref());
+            // WHERE cannot remove an implicit aggregate/HAVING group; HAVING can.
+            bound.capped = super::predicate::rejects_all(select.having.as_ref())
+                || (!super::aggregate::has_implicit_group(query, select)
+                    && super::predicate::rejects_all(select.selection.as_ref()));
         }
     }
     if is_zero_limited(query) {
@@ -143,7 +144,8 @@ fn cap_streaming_arms(set: &SetExpr, bound: &mut SqlBoundQuery) {
 fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
     match set {
         SetExpr::Select(select) => SqlBoundQuery {
-            capped: pure_aggregate(select),
+            capped: pure_aggregate(select)
+                || super::predicate::rejects_all(select.selection.as_ref()),
             items: items::from_select(select, scope),
         },
         SetExpr::Query(query) => bound_query(query, scope),

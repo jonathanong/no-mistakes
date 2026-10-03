@@ -521,3 +521,5 @@ mod function_scope;
 mod having_only;
 
 mod function_inputs;
+
+mod false_predicates;
