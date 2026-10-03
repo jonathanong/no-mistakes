@@ -1,3 +1,4 @@
+use super::super::aggregate::{orders_by_aggregate, orders_can_expand};
 use super::{facts, shape};
 
 /// `column@table+table` for each bare column the pins of the statement's target leave for the
@@ -11,6 +12,43 @@ fn pin_reads(sql: &str) -> Vec<String> {
         .flat_map(|pin| &pin.reads)
         .map(|read| format!("{}@{}", read.column, read.tables.join("+")))
         .collect()
+}
+
+#[test]
+fn projection_cardinality_review_regressions_keep_scalar_forms_bounded() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/scalar-projection-review.sql"));
+    assert_eq!(
+        shape(sql),
+        [
+            "select: orders[id=#1] ()",
+            "select: capped orders",
+            "select: orders[id=#1] ()",
+            "select: orders[id=#1] (opaque)",
+            "select: orders[id=#1] ()",
+            "select: orders[id=#1] (opaque)",
+            "select: orders[id=#1] (opaque)",
+            "select: orders[id=#1] (opaque)",
+            "select: orders[id=#1] (opaque)",
+            "select: orders[id=#1] ()",
+            "select: orders[id=#1] ()",
+            "select: orders[id=#1] ()",
+        ]
+    );
+}
+
+#[test]
+fn order_by_all_does_not_claim_expression_cardinality() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/order-by-all.sql"
+    ));
+    let mut statements =
+        sqlparser::parser::Parser::parse_sql(&sqlparser::dialect::DuckDbDialect {}, sql).unwrap();
+    let sqlparser::ast::Statement::Query(query) = statements.remove(0) else {
+        panic!("expected a query")
+    };
+    assert!(!orders_by_aggregate(&query));
+    assert!(!orders_can_expand(&query));
 }
 
 #[test]
@@ -483,7 +521,7 @@ fn catalog_set_returning_names_require_builtin_schema_identity() {
     assert_eq!(
         shape(sql),
         [
-            "select: capped orders opaque",
+            "select: orders opaque",
             "select: orders opaque",
             "select: orders opaque"
         ]

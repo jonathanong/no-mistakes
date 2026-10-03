@@ -536,3 +536,6 @@ mod fixture_configs;
 mod nested_cte_scope;
 
 mod set_arm_alias_scope;
+
+mod unknown_projection_cardinality;
+mod versioned_scalar_projection;

@@ -305,3 +305,22 @@ arm cannot turn an outer column reference into a local reference.
 Within a set-operation arm, a bare `GROUP BY` name is treated as an output label
 only when that arm actually projects the label. `SELECT 1 GROUP BY id` retains an
 outer `id` read; `SELECT $1 AS id GROUP BY id` groups its own output instead.
+
+Unknown SELECT-list function cardinality is opaque: a custom function can return
+a set of database rows even when its arguments are bind values. The rule trusts
+known PostgreSQL scalar builtins and aggregates by bare name or `pg_catalog`
+qualification, plus bare SQL scalar forms such as `COALESCE`. This builtin
+identity is a documented heuristic; a function in another schema
+with the same name stays unknown. Unlisted scalar builtins are conservative too.
+Use an explicit result `LIMIT` when the function's output must be bounded; known
+caller-sized set-returning builtins retain their argument-based bounds. Trusted
+scalar wrappers never hide unknown nested calls in their arguments.
+
+Analysis does not infer the target server version. Scalar names introduced after
+PostgreSQL 12 need explicit `pg_catalog` qualification: `gen_random_uuid` (PostgreSQL 13),
+`regexp_count`, `regexp_instr`, `regexp_substr` (PostgreSQL 15), and the PostgreSQL 18 UUID
+generators. Bare calls remain opaque because an older server can resolve them
+to user-defined set-returning functions. Known older scalar builtins retain their
+bare-name heuristic; an explicit `LIMIT` can still bound an unknown projection.
+See the [PostgreSQL 13 release notes](https://www.postgresql.org/docs/release/13.0/)
+and [PostgreSQL 15 release notes](https://www.postgresql.org/docs/15/release-15.htm).
