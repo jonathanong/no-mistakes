@@ -514,3 +514,5 @@ mod having_only;
 mod function_inputs;
 
 mod false_predicates;
+
+mod qualified_limit_functions;
