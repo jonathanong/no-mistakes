@@ -519,3 +519,5 @@ mod schema_correlation;
 mod function_scope;
 
 mod having_only;
+
+mod function_inputs;
