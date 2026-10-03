@@ -1,7 +1,7 @@
 use super::columns::{function_columns, projection_columns};
 use super::sql_name;
 use super::Scan;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
 use sqlparser::ast::TableFactor;
 
 impl Scan {
@@ -24,6 +24,9 @@ impl Scan {
                     .map(|alias| ident_key(&alias.name))
                     .or_else(|| object_name_ident(name).map(ident_key));
                 frame.relations.extend(own);
+                if alias.is_none() {
+                    frame.relations.insert(object_name_key(name));
+                }
                 let columns =
                     if let Some(alias) = alias.as_ref().filter(|alias| !alias.columns.is_empty()) {
                         Some(
