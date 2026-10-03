@@ -234,7 +234,7 @@ fn updates_and_deletes_name_their_target_and_the_items_that_feed_it() {
 fn data_modifying_ctes_are_statements_of_their_own() {
     assert_eq!(
         shape("WITH d AS (DELETE FROM t WHERE id = $1 RETURNING id) SELECT * FROM d"),
-        ["delete: t[id=value]", "select: (other)"]
+        ["delete: t[id=value]", "select: (opaque)"]
     );
     assert_eq!(
         shape("EXPLAIN ANALYZE UPDATE t SET a = 1 WHERE id = $1"),

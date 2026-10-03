@@ -50,6 +50,7 @@ impl<'a> Using<'a> {
                         column: object_name_key(column),
                         source: SqlPinSource::Items(vec![other]),
                         null_safe: false,
+                        reads: Vec::new(),
                     },
                 ));
             }

@@ -40,6 +40,20 @@ pub struct SqlBoundItem {
     /// A `LATERAL` source that reads the FROM items before it: it is sized per row of those, so
     /// it bounds nothing pinned to it, but the relations inside it are still judged.
     pub lateral: bool,
+    /// Bare columns of a `LATERAL` source that none of its own relations is known to own: it
+    /// reads the items before it when the catalog shows that none of their tables has them.
+    pub lateral_reads: Vec<SqlBareRead>,
+}
+
+/// A bare column that a subquery reads, with the base tables that could own it.
+///
+/// PostgreSQL resolves a bare column in the innermost query whose relations have it, and
+/// otherwise in the query around it. The facts do not know a table's columns, so a subquery
+/// reads the enclosing row when the catalog shows that none of `tables` has `column`.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SqlBareRead {
+    pub column: String,
+    pub tables: Vec<String>,
 }
 
 impl SqlBoundItem {
@@ -55,6 +69,7 @@ impl SqlBoundItem {
             column,
             pins: Vec::new(),
             lateral: false,
+            lateral_reads: Vec::new(),
         }
     }
 }
@@ -80,6 +95,9 @@ pub struct SqlBoundPin {
     pub source: SqlPinSource,
     /// `IS NOT DISTINCT FROM` also matches NULL, so it picks out one row only on a NOT NULL column.
     pub null_safe: bool,
+    /// Bare columns that subqueries in the value read: when one resolves to the enclosing query
+    /// the value depends on the row checked, and the pin fixes nothing.
+    pub reads: Vec<SqlBareRead>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

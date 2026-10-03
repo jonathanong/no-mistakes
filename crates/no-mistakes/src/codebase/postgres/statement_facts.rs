@@ -1,8 +1,8 @@
 mod bounds;
 mod writes;
 pub use bounds::{
-    SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundPin, SqlBoundQuery,
-    SqlPinSource,
+    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundPin,
+    SqlBoundQuery, SqlPinSource,
 };
 use std::path::PathBuf;
 pub use writes::{SqlWriteColumns, SqlWriteFact};

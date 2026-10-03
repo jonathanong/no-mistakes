@@ -331,8 +331,9 @@ query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 ## Row-bound facts
 
 `SqlStatementFileFacts.bounds` holds one `SqlBoundFact` per executed `SELECT`,
-`UPDATE` and `DELETE`, including those in data-modifying CTEs and under
-`EXPLAIN ANALYZE`; `INSERT … SELECT` is not a bound fact. A fact keeps the `kind`, its
+`UPDATE` and `DELETE`, including those in data-modifying CTEs (whose `RETURNING` rows are an
+`Opaque` item of the query that reads them) and under `EXPLAIN ANALYZE`; `INSERT … SELECT`
+is not a bound fact. A fact keeps the `kind`, its
 `line` and `column`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the
 `target` item. Every item keeps its own `line` and `column`, so SQL recovered from
 several source operands maps each relation to the operand that wrote it.
@@ -358,9 +359,12 @@ compared with its own item is never a pin), or a subquery. `WHERE` restricts eve
 A join condition restricts only the non-preserved side of an outer join and both sides of
 an inner join; `USING (col)` pins like `ON a.col = b.col` when each side is one item,
 and `FULL`, `NATURAL` and `CROSS` joins pin nothing. A subquery that reads the row being
-checked, or a call to a built-in function that differs per row, is not a pin source.
+checked, a value with an explicit `COLLATE`, or a call to a built-in function that differs per
+row, is not a pin source. Which relation owns a bare column of a subquery is known only to
+the catalog, so a pin and a `LATERAL` item keep `reads` (`lateral_reads`): each bare column
+with the base tables that could own it, outward when none of them has the column.
 A DML target is always a `Table`, never a CTE reference, and a `TABLE name` set-operation
-arm is a `Table` item. A bare column
+arm is a `Table` item, or the CTE it names. A bare column
 among several items has no provable owner and an unknown qualifier is an outer
 reference, so neither pins. Only base tables take pins. The facts are syntactic: a rule
 decides against a catalog whether a pinned column set is a unique key.

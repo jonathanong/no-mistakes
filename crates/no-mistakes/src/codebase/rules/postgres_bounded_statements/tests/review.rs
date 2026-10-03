@@ -178,3 +178,76 @@ fn set_operations_read_every_arm_so_every_arm_must_be_bounded() {
 fn an_aggregate_only_in_order_by_bounds_the_query() {
     assert!(names("SELECT 1 FROM orders ORDER BY count(*)").is_empty());
 }
+
+#[test]
+fn a_bare_column_that_no_table_of_the_subquery_has_reads_the_row_checked() {
+    // `currencies` has only `code`, so PostgreSQL resolves `id` to the account's own column and
+    // every account matches whenever the subquery returns a row.
+    for sql in [
+        "DELETE FROM accounts a WHERE a.id IN (SELECT id FROM currencies LIMIT 1)",
+        "DELETE FROM accounts WHERE id = ANY (SELECT id FROM currencies LIMIT 1)",
+        "DELETE FROM accounts WHERE id = (SELECT id FROM currencies LIMIT 1)",
+        "UPDATE accounts SET name = $1 WHERE id IN ($2, (SELECT id FROM currencies LIMIT 1))",
+        "DELETE FROM accounts WHERE id IN (SELECT code FROM currencies WHERE id = $1 LIMIT 1)",
+    ] {
+        assert_eq!(names(sql), ["accounts"], "{sql}");
+    }
+    // A table that has the column owns it, however deep the level, and so does one the catalog
+    // does not describe, or a column PostgreSQL gives every table.
+    for sql in [
+        "DELETE FROM accounts a WHERE a.id IN (SELECT id FROM orders LIMIT 1)",
+        "DELETE FROM accounts WHERE id IN (SELECT id FROM currencies c, orders LIMIT 1)",
+        "DELETE FROM accounts WHERE id IN (SELECT code FROM currencies \
+         WHERE EXISTS (SELECT 1 FROM orders WHERE id = $1) LIMIT 1)",
+        "DELETE FROM accounts WHERE id IN (SELECT id FROM mystery_table LIMIT 1)",
+        "DELETE FROM sessions WHERE ctid IN (SELECT ctid FROM currencies LIMIT 1)",
+    ] {
+        assert!(names(sql).is_empty(), "{sql}");
+    }
+}
+
+#[test]
+fn a_lateral_source_that_reads_the_row_through_a_bare_column_bounds_nothing() {
+    let sql = |column: &str| {
+        format!(
+            "SELECT 1 FROM accounts a, LATERAL (SELECT {column} FROM currencies LIMIT 1) c, \
+             orders o WHERE a.id = $1 AND o.id = c.id"
+        )
+    };
+    // The same as naming the account's column.
+    assert_eq!(names(&sql("a.id AS id")), ["orders"]);
+    assert_eq!(names(&sql("id")), ["orders"]);
+    // `code` is the source's own column, so it is bounded by its limit.
+    assert!(names(&sql("code AS id")).is_empty());
+}
+
+#[test]
+fn a_data_modifying_cte_bounds_nothing_pinned_to_it() {
+    // RETURNING yields a row per modified row; nothing in the text sizes it.
+    for sql in [
+        "WITH moved AS (INSERT INTO archive SELECT * FROM orders RETURNING id) \
+         DELETE FROM orders USING moved WHERE orders.id = moved.id",
+        "WITH d AS (DELETE FROM sessions WHERE id = $1 RETURNING id) \
+         SELECT 1 FROM orders o JOIN d ON o.id = d.id",
+    ] {
+        assert_eq!(names(sql), ["orders"], "{sql}");
+    }
+}
+
+#[test]
+fn a_table_arm_that_names_a_cte_carries_the_cte() {
+    assert_eq!(
+        names("WITH c AS (SELECT * FROM orders) SELECT 1 UNION ALL TABLE c"),
+        ["orders"]
+    );
+    assert_eq!(names("SELECT 1 UNION ALL TABLE orders"), ["orders"]);
+}
+
+#[test]
+fn an_explicit_collation_in_the_compared_value_fixes_no_row() {
+    assert_eq!(
+        names("SELECT 1 FROM accounts WHERE email = $1 COLLATE \"C\""),
+        ["accounts"]
+    );
+    assert!(names("SELECT 1 FROM accounts WHERE email = lower($1)").is_empty());
+}

@@ -1,5 +1,18 @@
 use super::{facts, shape};
 
+/// `column@table+table` for each bare column the pins of the statement's target leave for the
+/// catalog to place.
+fn pin_reads(sql: &str) -> Vec<String> {
+    let all = facts(sql);
+    let fact = all.first().unwrap_or_else(|| panic!("no fact for {sql}"));
+    fact.query.items[fact.target.unwrap_or(0)]
+        .pins
+        .iter()
+        .flat_map(|pin| &pin.reads)
+        .map(|read| format!("{}@{}", read.column, read.tables.join("+")))
+        .collect()
+}
+
 #[test]
 fn only_a_set_returning_built_in_over_given_arguments_is_sized_by_its_caller() {
     assert_eq!(
@@ -250,4 +263,137 @@ fn a_chain_of_ctes_that_double_in_size_stays_small() {
     }
     sql.push_str(" SELECT 1 FROM c39");
     assert_eq!(facts(&sql).len(), 1);
+}
+
+#[test]
+fn a_bare_column_is_kept_with_the_tables_that_could_own_it() {
+    // PostgreSQL resolves `id` outward when none of the subquery's tables has it, which only the
+    // catalog can tell.
+    assert_eq!(
+        pin_reads("DELETE FROM accounts a WHERE a.id IN (SELECT id FROM currencies LIMIT 1)"),
+        ["id@currencies"]
+    );
+    // Every table of the level is a candidate, and so is every table of a level in between.
+    assert_eq!(
+        pin_reads(
+            "DELETE FROM accounts a WHERE a.id IN (SELECT 1 FROM currencies c JOIN rates r \
+             ON c.code = r.code WHERE EXISTS (SELECT 1 FROM fees WHERE id = 1))"
+        ),
+        ["id@currencies+fees+rates"]
+    );
+    // A scalar subquery in the value, and in an IN list, is read the same way.
+    assert_eq!(
+        pin_reads("DELETE FROM accounts WHERE id = (SELECT id FROM currencies LIMIT 1)"),
+        ["id@currencies"]
+    );
+    assert_eq!(
+        pin_reads(
+            "DELETE FROM accounts WHERE id IN ($1, (SELECT id FROM currencies LIMIT 1), \
+             (SELECT id FROM currencies LIMIT 1))"
+        ),
+        ["id@currencies"]
+    );
+}
+
+#[test]
+fn a_bare_column_a_relation_other_than_a_base_table_may_own_is_not_an_outer_read() {
+    for sql in [
+        "DELETE FROM accounts WHERE id IN (SELECT id FROM (SELECT id FROM currencies) c LIMIT 1)",
+        "DELETE FROM accounts WHERE id IN (SELECT id FROM generate_series(1, 3) id LIMIT 1)",
+        "DELETE FROM accounts WHERE id IN (SELECT id FROM currencies, LATERAL (SELECT 1) l LIMIT 1)",
+        "WITH c AS (SELECT 1 AS id) DELETE FROM accounts WHERE id IN (SELECT id FROM c LIMIT 1)",
+        // `c` is a CTE of the subquery, not the base table of that name.
+        "DELETE FROM accounts WHERE id IN (WITH c AS (SELECT 1 AS id) SELECT id FROM c LIMIT 1)",
+    ] {
+        assert_eq!(pin_reads(sql), Vec::<String>::new(), "{sql}");
+    }
+}
+
+#[test]
+fn a_subquery_with_no_relation_of_its_own_reads_the_row_for_certain() {
+    // No pin at all: every row finds itself.
+    assert_eq!(
+        shape("DELETE FROM accounts WHERE id IN (SELECT id)"),
+        ["delete: accounts"]
+    );
+    assert_eq!(
+        shape("DELETE FROM accounts WHERE id = (SELECT id)"),
+        ["delete: accounts"]
+    );
+}
+
+#[test]
+fn output_names_whole_rows_and_keywords_are_not_columns() {
+    // `n` names an output column and `s` is the whole row of `sessions`: only `user_id` and
+    // `owner` are read as columns. `current_user` is not a column.
+    assert_eq!(
+        pin_reads(
+            "DELETE FROM accounts WHERE id IN (SELECT user_id, count(*) AS n FROM sessions s \
+             WHERE s IS NOT NULL AND owner = current_user GROUP BY user_id ORDER BY n LIMIT 5)"
+        ),
+        ["owner@sessions", "user_id@sessions"]
+    );
+    // The same name used both as an output and as a column is still read as a column.
+    assert_eq!(
+        pin_reads(
+            "DELETE FROM accounts WHERE id IN (SELECT count(*) AS n FROM sessions \
+             WHERE n > 1 ORDER BY n LIMIT 5)"
+        ),
+        ["n@sessions"]
+    );
+}
+
+#[test]
+fn a_lateral_source_keeps_its_bare_reads_for_the_catalog() {
+    let reads = |sql: &str| {
+        let item = &facts(sql)[0].query.items[1];
+        (
+            item.lateral,
+            item.lateral_reads
+                .iter()
+                .map(|read| format!("{}@{}", read.column, read.tables.join("+")))
+                .collect::<Vec<_>>(),
+        )
+    };
+    assert_eq!(
+        reads("SELECT 1 FROM accounts a, LATERAL (SELECT id FROM currencies LIMIT 1) c"),
+        (false, vec!["id@currencies".to_string()])
+    );
+    assert_eq!(
+        reads("SELECT 1 FROM accounts a, LATERAL (SELECT a.id FROM currencies LIMIT 1) c"),
+        (true, Vec::new())
+    );
+    assert_eq!(
+        reads("SELECT 1 FROM accounts a, (SELECT id FROM currencies LIMIT 1) c"),
+        (false, Vec::new())
+    );
+}
+
+#[test]
+fn a_table_arm_names_a_cte_when_one_has_that_name() {
+    assert_eq!(
+        shape("WITH c AS (SELECT * FROM orders) SELECT 1 UNION ALL TABLE c"),
+        ["select: () ((orders))"]
+    );
+    // A schema-qualified name is the table, whatever the CTE is called.
+    assert_eq!(
+        shape("WITH c AS (SELECT * FROM orders) SELECT 1 UNION ALL TABLE public.c"),
+        ["select: () (public.c)"]
+    );
+}
+
+#[test]
+fn an_explicit_collation_in_the_value_fixes_no_row() {
+    assert_eq!(
+        shape("SELECT 1 FROM accounts WHERE email = $1 COLLATE \"C\""),
+        ["select: accounts"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM accounts WHERE email IN ($1, ($2 COLLATE \"C\"))"),
+        ["select: accounts"]
+    );
+    assert_eq!(
+        shape("SELECT 1 FROM accounts WHERE email = $1::text"),
+        ["select: accounts[email=value]"]
+    );
 }

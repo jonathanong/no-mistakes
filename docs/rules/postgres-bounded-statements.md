@@ -38,7 +38,9 @@ set operation). A statement is bounded when any of these holds:
   (`$1`, `${size}`) or an expression of them using `COALESCE`, `LEAST` or `GREATEST`
   (`LEAST($1, 100)`). `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
   a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
-  `FETCH … PERCENT` do not cap: they can return every row.
+  `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
+  caller's cap: a caller that passes NULL at run time gets `LIMIT ALL`, which no statement
+  text can rule out, so validate the number before the call, or write `COALESCE($1, 100)`.
 - It is a pure aggregate: a built-in aggregate call such as `COUNT(*)` (bare or
   `pg_catalog.`-qualified), in the select list, in `HAVING` or in `ORDER BY`, with no
   `GROUP BY`, which returns one row. A function with the same name in another schema is an ordinary function,
@@ -54,10 +56,16 @@ set operation). A statement is bounded when any of these holds:
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
   different value for each row (`random`, `gen_random_uuid`, `clock_timestamp`, the
   sequence functions and the like) is not a value; any other function call is assumed to be row-invariant,
-  since a function's volatility is not part of the facts. A subquery that reads a column of
-  the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever its own bound: every
-  row finds itself in it. References are resolved one query level at a time, so a relation of
-  a nested level never hides a reference of an outer one. A `LATERAL` source that reads
+  since a function's volatility is not part of the facts. A value with an explicit collation
+  (`email = $1 COLLATE "C"`) is not a value either: it changes what `=` matches. A subquery
+  that reads a column of the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever
+  its own bound: every row finds itself in it. References are resolved one query level at a
+  time, so a relation of a nested level never hides a reference of an outer one. A bare column
+  belongs to the first level whose tables have it, as PostgreSQL resolves it: in
+  `a.id IN (SELECT id FROM currencies LIMIT 1)` the `id` is the account's own when the catalog's
+  `currencies` has no `id` column, so that subquery is not a pin either. A column of a derived
+  table, a function or a CTE is taken as that source's own, and so is any column of a table
+  the catalog does not describe. A `LATERAL` source that reads
   earlier FROM items is sized per row of them, so it bounds nothing pinned to it; the
   relations inside it are still judged.
 - A column compared with a column of another bounded relation is pinned too, so a bound
@@ -79,7 +87,7 @@ set operation). A statement is bounded when any of these holds:
   physical relation, even when a CTE of the same name exists.
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
-uncapped read of that relation), a derived table or CTE is bounded when its own query is,
+uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,
 and a `VALUES` list or a set-returning built-in (bare or `pg_catalog.`-qualified) over
 arguments the statement supplies (`unnest($1)`, `generate_series(1, 10)`) is sized by the
 caller. Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
@@ -92,7 +100,10 @@ opaque, so pathological generated SQL stays cheap to analyze. A `COPY (SELECT �
 reports each relation that makes a statement unbounded, once, at that relation's line.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
-`RETURNING` rows is not unbounded because of it.
+`RETURNING` rows is not unbounded because of it. Those rows are opaque, though: one row per
+modified row is not sized by the statement text, so they bound nothing pinned to them
+(`DELETE FROM orders USING moved WHERE orders.id = moved.id` is reported when `moved` is a
+data-modifying CTE).
 
 A **unique key** is a primary key, a unique constraint, or a unique index in the catalog
 that is valid, ready, live and immediate, has no predicate, and whose keys are all plain

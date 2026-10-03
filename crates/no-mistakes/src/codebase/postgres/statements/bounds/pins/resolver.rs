@@ -1,9 +1,11 @@
 use super::super::super::value::is_placeholder_ident;
-use super::correlated::reads_outer_rows;
+use super::correlated::{reads_outer_rows, Reads};
 use crate::codebase::postgres::idents::{
     ident_key, object_name_ident, unwrap_expr, visit_child_exprs,
 };
-use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
+use crate::codebase::postgres::statements::{
+    SqlBareRead, SqlBoundItem, SqlBoundItemKind, SqlPinSource,
+};
 use sqlparser::ast::{Expr, FunctionArguments, Ident, ObjectName, Query};
 use std::collections::BTreeSet;
 
@@ -25,6 +27,8 @@ pub(in super::super) struct Resolver {
     /// What each item answers to (its alias, else its table name): the qualifiers a subquery
     /// would use to read the row being checked.
     outer: BTreeSet<String>,
+    /// The CTE names in scope: a one-part table name that is one is not a base table.
+    ctes: BTreeSet<String>,
 }
 
 /// What an expression refers to among the FROM items.
@@ -33,10 +37,18 @@ struct Refs {
     items: BTreeSet<usize>,
     /// A column the FROM items cannot explain: an outer reference or an ambiguous bare name.
     unknown: bool,
+    /// Bare columns that subqueries of the expression read, if no table of theirs has them.
+    reads: Vec<SqlBareRead>,
+}
+
+/// What a pin's value is sized by, and the bare columns its subqueries read.
+pub(super) struct Sourced {
+    pub(super) source: SqlPinSource,
+    pub(super) reads: Vec<SqlBareRead>,
 }
 
 impl Resolver {
-    pub(in super::super) fn new(items: &[SqlBoundItem]) -> Self {
+    pub(in super::super) fn new(items: &[SqlBoundItem], ctes: BTreeSet<String>) -> Self {
         let names: Vec<(Option<String>, Option<String>)> = items
             .iter()
             .map(|item| {
@@ -59,6 +71,7 @@ impl Resolver {
             names,
             tables,
             outer,
+            ctes,
         }
     }
 
@@ -66,9 +79,9 @@ impl Resolver {
         self.tables[item]
     }
 
-    /// Whether `query` reads a column of one of these items, so it depends on the row checked.
-    pub(super) fn is_correlated(&self, query: &Query) -> bool {
-        reads_outer_rows(query, &self.outer)
+    /// What `query` reads of these items, so how far it depends on the row checked.
+    pub(in super::super) fn reads(&self, query: &Query) -> Reads {
+        reads_outer_rows(query, &self.outer, &self.ctes)
     }
 
     /// The item and column when `expr` is a bare column of one FROM item.
@@ -102,8 +115,15 @@ impl Resolver {
     fn refs(&self, expr: &Expr, found: &mut Refs) {
         match unwrap_expr(expr) {
             // A scalar subquery is a value the statement does not size, unless it reads the row.
-            Expr::Subquery(query) => found.unknown |= self.is_correlated(query),
+            Expr::Subquery(query) => {
+                let reads = self.reads(query);
+                found.unknown |= reads.certain;
+                found.reads.extend(reads.bare);
+            }
             Expr::Exists { .. } => {}
+            // An explicit collation changes what `=` matches, whatever the key's own collation
+            // (`email = $1 COLLATE "case_insensitive"`): the value fixes no row.
+            Expr::Collate { .. } => found.unknown = true,
             // A function that differs per row is not a fixed value, and `ARRAY(SELECT …)` is the
             // rows of a query, not a value the caller sized.
             Expr::Function(function)
@@ -124,16 +144,20 @@ impl Resolver {
         }
     }
 
-    pub(super) fn source(&self, value: &Expr, pinned: usize) -> Option<SqlPinSource> {
+    pub(super) fn source(&self, value: &Expr, pinned: usize) -> Option<Sourced> {
         let mut found = Refs::default();
         self.refs(value, &mut found);
         if found.unknown || found.items.contains(&pinned) {
             return None;
         }
-        Some(if found.items.is_empty() {
+        let source = if found.items.is_empty() {
             SqlPinSource::Value
         } else {
             SqlPinSource::Items(found.items.into_iter().collect())
+        };
+        Some(Sourced {
+            source,
+            reads: found.reads,
         })
     }
 }

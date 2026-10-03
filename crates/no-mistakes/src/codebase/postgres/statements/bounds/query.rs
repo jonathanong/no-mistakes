@@ -20,7 +20,9 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
     for cte in &with.cte_tables {
         let name = ident_key(&cte.alias.name);
         let bound = if modifying_statement(&cte.query).is_some() {
-            sized_by_itself(start(cte.query.span()))
+            // `RETURNING` yields one row per modified row, which nothing in the text sizes: it
+            // bounds nothing pinned to it. The statement inside is judged on its own.
+            opaque(start(cte.query.span()))
         } else {
             let mut inner = scope.clone();
             if with.recursive {
@@ -97,7 +99,7 @@ fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
             capped: false,
             items: vec![arm(left, scope), arm(right, scope)],
         },
-        SetExpr::Table(table) => super::table::bound(table, start(set.span())),
+        SetExpr::Table(table) => super::table::bound(table, scope, start(set.span())),
         _ => sized_by_itself(start(set.span())),
     }
 }

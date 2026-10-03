@@ -74,12 +74,12 @@ pub use rule_options::fail_unanalyzable_sql;
 pub use schema::extract_create_table_metadata;
 pub use statements::{
     extract_sql_statement_facts, has_top_level_not_exists_in, insert_keyword_count,
-    mask_quoted_sql, SqlAssignmentFact, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
-    SqlBoundPin, SqlBoundQuery, SqlColumnClause, SqlColumnUseFact, SqlConflictArbiter,
-    SqlConflictWhereProof, SqlCountExistenceFact, SqlExistsSetOpFact, SqlInsertFact,
-    SqlOnConflictAction, SqlOnConflictFact, SqlPinSource, SqlRelationPredicateFact, SqlSelectFact,
-    SqlStatementFileFacts, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod, SqlValueForm,
-    SqlWriteColumns, SqlWriteFact,
+    mask_quoted_sql, SqlAssignmentFact, SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind,
+    SqlBoundKind, SqlBoundPin, SqlBoundQuery, SqlColumnClause, SqlColumnUseFact,
+    SqlConflictArbiter, SqlConflictWhereProof, SqlCountExistenceFact, SqlExistsSetOpFact,
+    SqlInsertFact, SqlOnConflictAction, SqlOnConflictFact, SqlPinSource, SqlRelationPredicateFact,
+    SqlSelectFact, SqlStatementFileFacts, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod,
+    SqlValueForm, SqlWriteColumns, SqlWriteFact,
 };
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,

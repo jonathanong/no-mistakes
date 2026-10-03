@@ -27,7 +27,7 @@ fn unnamed(kind: SqlBoundItemKind, at: (usize, usize)) -> SqlBoundItem {
 
 /// A relation name as SQL, so the catalog lookup decodes it the way PostgreSQL would: an unquoted
 /// part folds to lower case, and a quoted one keeps its case and any dots (`"Accounts"`).
-fn sql_name(name: &ObjectName) -> String {
+pub(super) fn sql_name(name: &ObjectName) -> String {
     name.0
         .iter()
         .filter_map(|part| part.as_ident())
@@ -103,7 +103,7 @@ impl<'a> Builder<'a> {
     }
 
     pub(super) fn finish(mut self, selection: Option<&Expr>) -> Vec<SqlBoundItem> {
-        let resolver = pins::Resolver::new(&self.items);
+        let resolver = pins::Resolver::new(&self.items, self.scope.names());
         let all: Vec<usize> = (0..self.items.len()).collect();
         let mut found = Vec::new();
         for (restricted, condition) in &self.conditions {
@@ -157,7 +157,11 @@ impl<'a> Builder<'a> {
                     alias_key(alias),
                     start(subquery.span()),
                 );
-                item.lateral = *lateral && pins::reads_items(subquery, &self.items);
+                if *lateral {
+                    let reads = pins::reads_items(subquery, &self.items, self.scope);
+                    item.lateral = reads.certain;
+                    item.lateral_reads = reads.bare;
+                }
                 self.items.push(item);
             }
             TableFactor::NestedJoin {

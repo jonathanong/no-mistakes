@@ -17,7 +17,7 @@ mod using;
 
 use super::{SqlBoundFact, SqlBoundKind, SqlBoundQuery};
 use sqlparser::ast::{CopySource, Query, Spanned, Statement};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// CTE names in scope, with the bound of each.
 #[derive(Clone, Default)]
@@ -28,6 +28,10 @@ pub(super) struct Scope {
 impl Scope {
     fn get(&self, name: &str) -> Option<&SqlBoundQuery> {
         self.ctes.get(name)
+    }
+
+    fn names(&self) -> BTreeSet<String> {
+        self.ctes.keys().cloned().collect()
     }
 
     fn insert(&mut self, name: String, bound: SqlBoundQuery) {

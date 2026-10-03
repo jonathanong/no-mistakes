@@ -1,6 +1,6 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use crate::codebase::postgres::statements::{
-    SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
+    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 
@@ -74,7 +74,9 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             // A LATERAL source that reads earlier items is sized per row of them, so it bounds
             // nothing itself; the relations inside it are still judged below.
             SqlBoundItemKind::Query(_) => {
-                !item.lateral && nested.as_ref().is_some_and(|inner| inner.bounded)
+                !item.lateral
+                    && !reads_outer(&item.lateral_reads, catalog)
+                    && nested.as_ref().is_some_and(|inner| inner.bounded)
             }
             SqlBoundItemKind::Other => true,
             // Nothing proves what it returns, so it sizes nothing pinned to it.
@@ -138,6 +140,8 @@ fn keyed(
     let usable = |column: &str| {
         item.pins.iter().enumerate().any(|(index, pin)| {
             pin.column == column
+                // A subquery in the value that reads the row checked sizes nothing.
+                && !reads_outer(&pin.reads, catalog)
                 // `IS NOT DISTINCT FROM $1` also matches NULL, which a unique key may repeat.
                 && (!pin.null_safe || catalog.column_is_not_null(name, column))
                 && match &pin.source {
@@ -159,4 +163,24 @@ fn keyed(
     }
     keys.iter()
         .any(|key| key.iter().all(|column| usable(column)))
+}
+
+/// Columns every table has without the catalog listing them.
+const SYSTEM_COLUMNS: &[&str] = &["ctid", "tableoid", "xmin", "xmax", "cmin", "cmax"];
+
+/// Whether a subquery reads the query around it: a bare column that none of the base tables it
+/// could belong to has, so PostgreSQL resolves it outward. A table the catalog does not
+/// describe may have it, and is taken to.
+fn reads_outer(reads: &[SqlBareRead], catalog: &SchemaCatalog) -> bool {
+    reads.iter().any(|read| {
+        !SYSTEM_COLUMNS.contains(&read.column.as_str())
+            && read.tables.iter().all(|table| {
+                catalog.relation(table).is_some_and(|table| {
+                    table
+                        .columns
+                        .iter()
+                        .all(|column| column.name != read.column)
+                })
+            })
+    })
 }
