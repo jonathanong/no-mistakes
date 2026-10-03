@@ -4,4 +4,6 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
       include: ['src/jobs.ts']

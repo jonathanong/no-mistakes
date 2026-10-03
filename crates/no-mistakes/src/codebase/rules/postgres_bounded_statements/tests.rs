@@ -468,7 +468,7 @@ fn sql_that_cannot_be_analyzed_fails_closed_unless_ignored() {
         root.join("src/dynamic.ts"),
         root.join("schema.json"),
     ];
-    let base = "schemaCatalogPath: schema.json\nsqlInclude: ['sql/broken.sql']\n";
+    let base = "schemaCatalogPath: schema.json\nimportSpecifier: '@example/db'\nexecutorNames: [query, read, write]\nsqlInclude: ['sql/broken.sql']\n";
     let found: Vec<_> = check_with_files(&root, &config(base), &files)
         .unwrap()
         .into_iter()

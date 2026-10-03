@@ -1,5 +1,5 @@
 import sql from 'sql-template-strings'
-import { read, write } from '@data-stores/psql'
+import { read, write } from '@example/db'
 
 export async function lookups(id: string, image: { id: string }, a: string, b: string) {
   // Bounded: every `${…}` is a bind, like `$1`, and each query pins a whole key.

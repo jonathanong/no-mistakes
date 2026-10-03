@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function sweep() {
   return query(`SELECT id FROM invoices WHERE paid_at IS NULL`);
