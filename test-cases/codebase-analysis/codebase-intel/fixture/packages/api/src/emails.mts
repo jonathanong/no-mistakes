@@ -1,2 +1,2 @@
-import { createQueue } from '@data-stores/valkey/glide-mq-factory';
+import { createQueue } from '@example/cache/glide-mq-factory';
 export const emailsQueue = createQueue('emails', {});

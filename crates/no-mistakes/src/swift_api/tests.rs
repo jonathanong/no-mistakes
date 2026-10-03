@@ -11,7 +11,7 @@ fn report() -> SwiftReport {
     analyze_project(&fixture(), None).expect("swift fixture should analyze")
 }
 
-const ENDPOINT: &str = "swift-clients/core/Sources/VouchaAPI/Endpoint.swift";
+const ENDPOINT: &str = "swift-clients/core/Sources/ExampleAPI/Endpoint.swift";
 
 #[test]
 fn analyze_project_reuses_one_discovery_and_swift_fact_collection() {
@@ -46,10 +46,10 @@ fn importers_lists_files_that_import_the_target() {
     let files: Vec<&str> = rows.iter().map(|row| row.file.as_str()).collect();
     assert!(files
         .iter()
-        .any(|f| f.ends_with("VouchaCore/APIClient.swift")));
+        .any(|f| f.ends_with("ExampleCore/APIClient.swift")));
     assert!(files
         .iter()
-        .any(|f| f.ends_with("VouchaCoreTests/APIClientTests.swift")));
+        .any(|f| f.ends_with("ExampleCoreTests/APIClientTests.swift")));
     assert!(rows.iter().all(|row| row.depth >= 1));
 }
 
@@ -66,20 +66,21 @@ fn test_targets_reports_covering_test_target_and_command() {
     let rows = report.test_targets(ENDPOINT);
     let row = rows
         .iter()
-        .find(|row| row.target == "VouchaCoreTests")
-        .expect("VouchaCoreTests should cover Endpoint.swift");
+        .find(|row| row.target == "ExampleCoreTests")
+        .expect("ExampleCoreTests should cover Endpoint.swift");
     assert!(row.package.ends_with("swift-clients/core"));
     // The package path and the anchored, escaped regex filter are both quoted.
-    assert!(row
-        .command
-        .contains("swift test --package-path 'swift-clients/core' --filter '^VouchaCoreTests\\.'"));
+    assert!(row.command.contains(
+        "swift test --package-path 'swift-clients/core' --filter '^ExampleCoreTests\\.'"
+    ));
 }
 
 #[test]
 fn test_targets_includes_the_queried_test_files_own_target() {
     let report = report();
-    let rows = report.test_targets("swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift");
-    assert!(rows.iter().any(|row| row.target == "VouchaCoreTests"));
+    let rows =
+        report.test_targets("swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift");
+    assert!(rows.iter().any(|row| row.target == "ExampleCoreTests"));
 }
 
 #[test]

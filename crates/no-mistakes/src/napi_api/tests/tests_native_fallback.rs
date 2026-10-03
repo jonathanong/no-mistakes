@@ -54,7 +54,7 @@ fn tests_plan_json_reports_configured_swift_source_impact() {
     let options = json!({
         "framework": "swift",
         "root": swift_root,
-        "changedFiles": ["swift-clients/core/Sources/VouchaCore/APIClient.swift"],
+        "changedFiles": ["swift-clients/core/Sources/ExampleCore/APIClient.swift"],
     })
     .to_string();
     let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
@@ -65,14 +65,14 @@ fn tests_plan_json_reports_configured_swift_source_impact() {
     assert!(plan["fallback_reason"].is_null());
     assert_eq!(selected.len(), 3);
     assert!(selected.iter().any(|test| {
-        test["test_file"] == "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift"
+        test["test_file"] == "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift"
     }));
     assert!(selected.iter().any(|test| {
-        test["test_file"] == "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift"
+        test["test_file"] == "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift"
     }));
     assert!(selected.iter().any(|test| {
         test["test_file"]
-            == "swift-clients/android/Tests/VouchaAndroidTests/AppTests.swift"
+            == "swift-clients/android/Tests/ExampleAndroidTests/AppTests.swift"
     }));
 }
 
@@ -158,7 +158,7 @@ fn tests_plan_json_scopes_swift_accounting_and_execution_targets_with_include_gl
         plan["groups"],
         json!([{
             "type": "all",
-            "selected": ["swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"],
+            "selected": ["swift-clients/apps/android/Tests/ExampleAndroidTests/DeviceTests.swift"],
             "remaining": 0,
             "limit": null,
         }])
@@ -166,14 +166,14 @@ fn tests_plan_json_scopes_swift_accounting_and_execution_targets_with_include_gl
     assert!(plan["execution_targets"].as_array().unwrap().iter().any(|target| {
         target["runner"] == "swift"
             && target["config"] == "swift-clients/apps/android"
-            && target["project"] == "VouchaAndroidTests"
+            && target["project"] == "ExampleAndroidTests"
             && target["name"] == "swift-clients/apps/android"
             && target["runner_args"]
                 == json!([
                     "--package-path",
                     "swift-clients/apps/android",
                     "--filter",
-                    "VouchaAndroidTests",
+                    "ExampleAndroidTests",
                 ])
     }));
 }

@@ -95,7 +95,7 @@ fn swift_target_uses_file_parent_as_filter_without_project() {
         Some("swift-clients/core"),
         false,
         None,
-        "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+        "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
     );
 
     assert_eq!(target.base_command, vec!["swift", "test"]);
@@ -105,7 +105,7 @@ fn swift_target_uses_file_parent_as_filter_without_project() {
             "--package-path",
             "swift-clients/core",
             "--filter",
-            "VouchaCoreTests"
+            "ExampleCoreTests"
         ]
     );
 }

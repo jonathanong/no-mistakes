@@ -10,5 +10,5 @@ rules:
     options:
       bannedDomains: [example.com]
       allowedEmailPatterns:
-        - '(?i)^tests(?:\+[a-z0-9._%${}-]+|%2b[a-z0-9._%${}-]+)(?:@|%40)voucha\.ai$'
-      replacement: tests+<hash>@voucha.ai
+        - '(?i)^tests(?:\+[a-z0-9._%${}-]+|%2b[a-z0-9._%${}-]+)(?:@|%40)example\.com$'
+      replacement: tests+<hash>@example.com

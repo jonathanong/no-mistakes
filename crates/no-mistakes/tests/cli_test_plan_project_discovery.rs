@@ -379,14 +379,14 @@ fn test_plan_swift_uses_packages_and_dependency_graph() {
     assert_eq!(
         selected,
         vec![
-            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
-            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+            "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
+            "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift",
         ]
     );
     let core_targets = plan["selected_tests"][0]["targets"].as_array().unwrap();
     let core = core_targets
         .iter()
-        .find(|target| target["project"] == "VouchaCoreTests")
+        .find(|target| target["project"] == "ExampleCoreTests")
         .expect("SwiftPM test target should be emitted");
     assert_eq!(core["runner"], "swift");
     assert_eq!(core["config"], "swift-clients/core");
@@ -397,7 +397,7 @@ fn test_plan_swift_uses_packages_and_dependency_graph() {
             "--package-path",
             "swift-clients/core",
             "--filter",
-            "VouchaCoreTests"
+            "ExampleCoreTests"
         ])
     );
     let via: Vec<&str> = plan["selected_tests"][0]["reasons"][0]["via"]
@@ -419,7 +419,7 @@ fn test_plan_swift_direct_and_coverage_error() {
         "--root",
         root.to_str().unwrap(),
         "--changed-file",
-        "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+        "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift",
         "--json",
     ]);
     assert!(
@@ -430,7 +430,9 @@ fn test_plan_swift_direct_and_coverage_error() {
     let plan: serde_json::Value = serde_json::from_str(&stdout(&direct)).unwrap();
     assert_eq!(
         plan["groups"][0]["selected"],
-        serde_json::json!(["swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift"])
+        serde_json::json!([
+            "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift"
+        ])
     );
 
     let coverage = run(&[

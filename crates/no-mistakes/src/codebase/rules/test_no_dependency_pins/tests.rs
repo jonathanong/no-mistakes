@@ -53,7 +53,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
 }
 
 #[test]
-fn default_include_matches_filaments_test_file_re() {
+fn default_include_matches_supported_test_file_patterns() {
     let re = default_include_regex();
     for path in [
         "foo.test.ts",
