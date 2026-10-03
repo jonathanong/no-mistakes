@@ -5,16 +5,13 @@ use sqlparser::ast::{
 };
 
 /// An aggregate with no `GROUP BY` returns exactly one row, unless a set-returning function in
-/// the select list expands it. The aggregate may sit in `HAVING` alone.
+/// the select list expands it. HAVING itself introduces implicit single-group grouping.
 pub(super) fn pure_aggregate(select: &Select) -> bool {
     one_group(select)
         && (projected(select)
             .iter()
             .any(|expr| contains_call(expr, &is_plain_aggregate))
-            || select
-                .having
-                .as_ref()
-                .is_some_and(|having| contains_call(having, &is_plain_aggregate)))
+            || select.having.is_some())
 }
 
 /// An aggregate used only in `ORDER BY` (`SELECT 1 FROM t ORDER BY count(*)`) makes an ungrouped
