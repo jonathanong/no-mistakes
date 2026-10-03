@@ -14,6 +14,7 @@ mod mutations;
 mod not_exists;
 mod predicates;
 mod select;
+mod sweeps;
 mod trigger;
 mod value;
 mod wrappers;
@@ -85,6 +86,7 @@ pub(crate) fn extract_from_parsed(
         }
     }
     dedupe::exists_set_operations(&mut selects);
+    let (limit_uses, sweeps) = sweeps::collect(sql, statements);
     SqlStatementFileFacts {
         path: Default::default(),
         writes,
@@ -97,6 +99,8 @@ pub(crate) fn extract_from_parsed(
         mutation_column_uses,
         offset_uses: super::offset::offset_facts(sql, statements),
         bounds,
+        limit_uses,
+        sweeps,
         parse_failed,
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),

@@ -1,9 +1,45 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
 use super::value::is_placeholder_ident;
+use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Value,
+    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Spanned, Value,
 };
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::keywords::Keyword;
+use sqlparser::tokenizer::{Span, Token, TokenWithSpan, Tokenizer};
+use std::cell::OnceCell;
+
+/// A query's row cap and where its count is written.
+pub(super) struct LimitSite {
+    pub(super) value: SqlLimitValue,
+    pub(super) line: usize,
+    pub(super) column: usize,
+}
+
+/// The tokens of one SQL source, produced on first use: only a `FETCH FIRST ROW ONLY`, which
+/// writes no count to point at, needs them to find its `FETCH` keyword.
+pub(super) struct Tokens<'a> {
+    sql: &'a str,
+    tokens: OnceCell<Vec<TokenWithSpan>>,
+}
+
+impl<'a> Tokens<'a> {
+    pub(super) fn new(sql: &'a str) -> Self {
+        Self {
+            sql,
+            tokens: OnceCell::new(),
+        }
+    }
+
+    fn all(&self) -> &[TokenWithSpan] {
+        self.tokens.get_or_init(|| {
+            Tokenizer::new(&PostgreSqlDialect {}, self.sql)
+                .tokenize_with_location()
+                .unwrap_or_default()
+        })
+    }
+}
 
 /// True when the query itself caps its rows: `LIMIT n` (a literal, a bind or an expression of
 /// them), MySQL's `LIMIT offset, n`, or `FETCH FIRST n ROWS ONLY`. `LIMIT NULL` and `LIMIT ALL`
@@ -48,6 +84,91 @@ fn is_fixed(expr: &Expr) -> bool {
                 _ => false,
             }
         }
+        _ => false,
+    }
+}
+
+/// The count a query writes after `LIMIT` or `FETCH FIRST`, whether or not it caps the rows,
+/// and where: the count itself, or the `FETCH` keyword when it writes none.
+pub(super) fn limit_site(query: &Query, tokens: &Tokens) -> Option<LimitSite> {
+    if let Some(fetch) = &query.fetch {
+        // `FETCH FIRST ROW ONLY` takes one row; a percentage is not a row count.
+        let value = match (&fetch.quantity, fetch.percent) {
+            (_, true) => SqlLimitValue::Other,
+            (None, false) => SqlLimitValue::Literal(1),
+            (Some(quantity), false) => literal(quantity),
+        };
+        return Some(match &fetch.quantity {
+            Some(quantity) => site(value, start(quantity.span())),
+            None => site(
+                value,
+                fetch_keyword(query, tokens).unwrap_or_else(|| start(query.span())),
+            ),
+        });
+    }
+    match &query.limit_clause {
+        Some(LimitClause::LimitOffset {
+            limit: Some(limit), ..
+        })
+        | Some(LimitClause::OffsetCommaLimit { limit, .. })
+            if !is_null(limit) =>
+        {
+            Some(site(literal(limit), start(limit.span())))
+        }
+        _ => None,
+    }
+}
+
+/// Where this query's `FETCH` keyword starts: the first one after everything the query writes
+/// before it, so a `FETCH` inside a subquery or a comment is never mistaken for it.
+fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
+    let spans = [
+        Some(query.body.span()),
+        query.order_by.as_ref().map(Spanned::span),
+        query.limit_clause.as_ref().map(Spanned::span),
+    ];
+    let after = spans.into_iter().flatten().map(end).max()?;
+    tokens.all().iter().find_map(|token| match &token.token {
+        Token::Word(word) if word.keyword == Keyword::FETCH && start(token.span) >= after => {
+            Some(start(token.span))
+        }
+        _ => None,
+    })
+}
+
+fn start(span: Span) -> (usize, usize) {
+    (span.start.line as usize, span.start.column as usize)
+}
+
+fn end(span: Span) -> (usize, usize) {
+    (span.end.line as usize, span.end.column as usize)
+}
+
+fn site(value: SqlLimitValue, (line, column): (usize, usize)) -> LimitSite {
+    LimitSite {
+        value,
+        line,
+        column,
+    }
+}
+
+fn literal(expr: &Expr) -> SqlLimitValue {
+    match expr {
+        Expr::Nested(inner) => literal(inner),
+        Expr::Value(value) => match &value.value {
+            Value::Number(text, _) => text
+                .parse()
+                .map_or(SqlLimitValue::Other, SqlLimitValue::Literal),
+            _ => SqlLimitValue::Other,
+        },
+        _ => SqlLimitValue::Other,
+    }
+}
+
+fn is_null(expr: &Expr) -> bool {
+    match expr {
+        Expr::Nested(inner) => is_null(inner),
+        Expr::Value(value) => matches!(value.value, Value::Null),
         _ => false,
     }
 }

@@ -1,9 +1,11 @@
 mod bounds;
+mod iteration;
 mod writes;
 pub use bounds::{
     SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundPin,
     SqlBoundQuery, SqlPinSource,
 };
+pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 use std::path::PathBuf;
 pub use writes::{SqlWriteColumns, SqlWriteFact};
 
@@ -28,6 +30,10 @@ pub struct SqlStatementFileFacts {
     pub offset_uses: Vec<super::offset::SqlOffsetFact>,
     /// Row-count bounds of each executed SELECT, UPDATE and DELETE.
     pub bounds: Vec<SqlBoundFact>,
+    /// Every `LIMIT` / `FETCH FIRST` in the executed statements, in source order.
+    pub limit_uses: Vec<SqlLimitFact>,
+    /// Limited single-table queries ordered by plain columns: pages of a key walk.
+    pub sweeps: Vec<SqlSweepFact>,
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,

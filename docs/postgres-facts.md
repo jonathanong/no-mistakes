@@ -369,6 +369,26 @@ among several items has no provable owner and an unknown qualifier is an outer
 reference, so neither pins. Only base tables take pins. The facts are syntactic: a rule
 decides against a catalog whether a pinned column set is a unique key.
 
+`SqlStatementFileFacts.limit_uses` lists every `LIMIT` / `FETCH FIRST` count in the
+executed statements (CTEs and subqueries included) at its line and column, as
+`Literal(n)` for an integer literal (`FETCH FIRST ROW ONLY` is `Literal(1)`, located at
+its `FETCH` keyword) or `Other`
+for a placeholder, expression or percentage. `LIMIT NULL` and `LIMIT ALL` are not
+recorded. `sweeps` lists each limited query (one that caps its rows: not `WITH TIES`, not
+`LIMIT 0`) over one base table (no join, grouping or set operation; parentheses around
+the `SELECT` are looked through) ordered only by plain columns of that table (a bare
+`ORDER BY` name that is an output alias means the aliased expression), at the line and
+`column` of the table, with its top-level `WHERE`
+conjuncts: each conjunct's text (lowercased, whitespace collapsed) and its
+`cursor_columns`, the columns it compares with a bind parameter, or an interpolation
+recovered from a template literal, as a keyset cursor
+(`id > $1`, `(a, b) > ($1, $2)`, or `($1 IS NULL OR id > $1)`; parentheses are
+transparent), with the `cursor_bound` (`Lower` for `id > $1`, `Upper` for `id < $1`) that
+tells a window (`id >= $1 AND id < $2`) from a one-sided walk. A CTE body sees only the CTEs declared before it (all of them under
+`WITH RECURSIVE`), so a body's table named like a later CTE is still a table. The `literal-limit` and
+`keyset-only-sweep` shapes of `postgres-sql-shape-policy` consume them; the `LIMIT`
+definition is shared with the row-bound facts.
+
 `SchemaCatalog::unique_keys(table)` returns those key column sets: valid, ready, live,
 immediate, non-partial unique or primary indexes whose keys are all plain columns, and
 `SchemaCatalog::column_is_not_null(table, column)` says whether a column cannot hold NULL

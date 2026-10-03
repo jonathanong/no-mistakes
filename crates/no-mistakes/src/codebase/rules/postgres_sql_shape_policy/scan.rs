@@ -1,4 +1,4 @@
-use super::{BannedShapes, CompiledOptions, RuleFinding, RULE_ID};
+use super::{iteration, BannedShapes, CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::{postgres_sql_paths, EmbeddedSqlKind};
 use crate::codebase::ts_source::relative_slash_path;
@@ -51,11 +51,18 @@ pub(super) fn scan(
                 ));
                 continue;
             }
+            let line_at =
+                |line: usize| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize;
             for select in &statements.selects {
-                findings.extend(select_findings(&rel, select, &opts.shapes, |line| {
-                    fragment.line.saturating_add(line as u32).saturating_sub(1) as usize
-                }));
+                findings.extend(select_findings(&rel, select, &opts.shapes, line_at));
             }
+            findings.extend(iteration::findings(
+                &rel,
+                statements,
+                &opts.shapes,
+                &opts.iteration,
+                line_at,
+            ));
         }
     }
     let sql_paths = postgres_sql_paths(root, files, &opts.schema)?;
@@ -82,6 +89,13 @@ pub(super) fn scan(
                     line.max(1)
                 }));
             }
+            findings.extend(iteration::findings(
+                &rel,
+                file,
+                &opts.shapes,
+                &opts.iteration,
+                |line| line.max(1),
+            ));
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);
@@ -137,7 +151,7 @@ fn select_findings(
     findings
 }
 
-fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
+pub(super) fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),

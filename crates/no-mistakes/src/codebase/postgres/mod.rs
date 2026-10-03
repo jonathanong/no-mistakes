@@ -76,9 +76,10 @@ pub use statements::{
     extract_sql_statement_facts, has_top_level_not_exists_in, insert_keyword_count,
     mask_quoted_sql, SqlAssignmentFact, SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind,
     SqlBoundKind, SqlBoundPin, SqlBoundQuery, SqlColumnClause, SqlColumnUseFact,
-    SqlConflictArbiter, SqlConflictWhereProof, SqlCountExistenceFact, SqlExistsSetOpFact,
-    SqlInsertFact, SqlOnConflictAction, SqlOnConflictFact, SqlPinSource, SqlRelationPredicateFact,
-    SqlSelectFact, SqlStatementFileFacts, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod,
+    SqlConflictArbiter, SqlConflictWhereProof, SqlConjunctFact, SqlCountExistenceFact,
+    SqlCursorBound, SqlExistsSetOpFact, SqlInsertFact, SqlLimitFact, SqlLimitValue,
+    SqlOnConflictAction, SqlOnConflictFact, SqlPinSource, SqlRelationPredicateFact, SqlSelectFact,
+    SqlStatementFileFacts, SqlSweepFact, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod,
     SqlValueForm, SqlWriteColumns, SqlWriteFact,
 };
 pub use types::{

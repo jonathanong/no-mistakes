@@ -1,0 +1,5 @@
+SELECT id FROM orders WHERE TRUE AND id > $1 ORDER BY id LIMIT $2;
+SELECT id FROM orders WHERE 1 = 1 ORDER BY id LIMIT $1;
+SELECT id FROM orders TABLESAMPLE SYSTEM (10) ORDER BY id LIMIT $1;
+SELECT id FROM orders WHERE ($1::uuid IS NULL OR id >= $1) AND ($2::uuid IS NULL OR id < $2) ORDER BY id LIMIT $3;
+SELECT random() FROM orders ORDER BY random LIMIT $1;

@@ -94,7 +94,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-require-named-constraints`](postgres-require-named-constraints.md)     | Require names on ALTER TABLE ADD FOREIGN KEY and CHECK.                     |
 | [`postgres-require-fk-on-delete`](postgres-require-fk-on-delete.md)               | Require an explicit ON DELETE action on every foreign key.                  |
 | [`postgres-sql-statement-policy`](postgres-sql-statement-policy.md)               | Ban configured SQL statement kinds in matching schema files.                |
-| [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md)                       | Ban correlated EXISTS wrapping a UNION/INTERSECT/EXCEPT set operation.      |
+| [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md)                       | Ban configured SQL shapes: correlated EXISTS over set operations, NOT IN subqueries, COUNT existence checks, literal LIMITs, key-only sweeps. |
 | [`postgres-required-predicates`](postgres-required-predicates.md)                 | Require configured predicates and partition-key columns on named relations. |
 | [`postgres-idempotent-insert`](postgres-idempotent-insert.md)                     | Require replay-safe INSERT (ON CONFLICT / NOT EXISTS).                      |
 | [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md)     | Require a configured trigger for a column, and flag a leftover trigger.    |

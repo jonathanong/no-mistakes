@@ -120,6 +120,7 @@ words:
   - subdirs
   - subpackages
   - subpaths
+  - tablesample
   - tokei
   - timestamptz
   - typmod
