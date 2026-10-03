@@ -69,7 +69,8 @@ fn connection_environment(raw: &str, command: &mut Command) -> Result<()> {
     command
         .env_remove("PGSERVICE")
         .env_remove("PGSERVICEFILE")
-        .env_remove("PGHOSTADDR");
+        .env_remove("PGHOSTADDR")
+        .env("PGCONNECT_TIMEOUT", "10");
     let decode = |value: &str| {
         percent_encoding::percent_decode_str(value)
             .decode_utf8()

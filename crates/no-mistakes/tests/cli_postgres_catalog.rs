@@ -28,6 +28,21 @@ fn postgres_catalog_cli_writes_deterministic_owned_json_and_preserves_output_on_
             .unwrap()
     };
     assert!(run("pg_catalog").status.success());
+    let relative = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "postgres",
+            "catalog",
+            "--connection-env",
+            "NO_MISTAKES_TEST_POSTGRES_URL",
+            "--schema",
+            "pg_catalog",
+            "--output",
+            "catalog.json",
+        ])
+        .current_dir(directory.path())
+        .output()
+        .unwrap();
+    assert!(relative.status.success());
     let original = std::fs::read(&output).unwrap();
     let catalog: serde_json::Value = serde_json::from_slice(&original).unwrap();
     assert_eq!(catalog["coverage"], "ordering");

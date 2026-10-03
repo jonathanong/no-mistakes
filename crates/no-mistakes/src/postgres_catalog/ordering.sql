@@ -1,6 +1,7 @@
 BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
 SET LOCAL standard_conforming_strings = on;
 SET LOCAL search_path = pg_catalog;
+SET LOCAL statement_timeout = '30s';
 WITH relations AS (
   SELECT c.oid, c.relname, c.relkind FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace

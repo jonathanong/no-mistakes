@@ -15,7 +15,11 @@ is passed through the child environment, never an argument or diagnostic.
 Install `psql`; libpq authentication and TLS configuration apply. The generator
 uses a single repeatable-read, read-only transaction and does not execute DDL.
 The schema is an exact name, including case, not an SQL expression. A missing
-schema or failed query is an error, rather than an empty proof.
+schema or failed query is an error, rather than an empty proof. Connections default
+to a 10-second timeout unless the URL specifies `connect_timeout`; metadata
+statements have a 30-second timeout. An invocation deadline can bound the whole
+operation further. The CLI replaces its output atomically after a successful
+write, preserving an existing catalog if generation or writing fails.
 
 The deterministic JSON uses the tool's `formatVersion: 2` contract and explicit
 `coverage: "ordering"`. It includes observed table columns, primary/unique

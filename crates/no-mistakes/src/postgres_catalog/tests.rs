@@ -298,6 +298,7 @@ fn url_credentials_stay_in_child_environment() {
     assert_eq!(environment["PGPASSWORD"], "secret@value");
     assert_eq!(environment["PGDATABASE"], "database name");
     assert_eq!(environment["PGSSLMODE"], "require");
+    assert_eq!(environment["PGCONNECT_TIMEOUT"], "10");
     for invalid in [
         "host=localhost dbname=postgres",
         "https://localhost/db",
@@ -320,6 +321,10 @@ fn supported_url_parameters_map_to_libpq_environment() {
         .filter(|(_, value)| value.is_some())
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(environment.len(), 9);
+    assert_eq!(
+        environment[std::ffi::OsStr::new("PGCONNECT_TIMEOUT")],
+        Some(std::ffi::OsStr::new("5"))
+    );
 }
 
 #[test]
@@ -331,7 +336,7 @@ fn url_can_use_libpq_defaults_for_omitted_components() {
             .get_envs()
             .filter(|(_, value)| value.is_some())
             .count(),
-        0
+        1
     );
     assert!(command
         .get_envs()

@@ -53,6 +53,7 @@ syn = { version = "3", features = ["full", "visit"] }
 toml = "1.1"
 unicode-id-start = "1.4.0"
 wait-timeout = "0.2"
+tempfile = "3"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -74,7 +75,6 @@ windows-sys = { version = "0.61", features = [
 assert_cmd = "2"
 criterion = { package = "codspeed-criterion-compat", version = "=5.0.1" }
 predicates = "3"
-tempfile = "3"
 
 [build-dependencies]
 napi-build = "2.3.2"
