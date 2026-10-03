@@ -391,3 +391,31 @@ fn the_reader_derives_the_model_from_the_generated_catalog() {
         no_mistakes::codebase::postgres::ResolvedArbiter::Exact(_)
     ));
 }
+
+#[test]
+fn a_partition_column_with_a_collation_and_operator_class_is_still_a_column() {
+    use no_mistakes::codebase::postgres::PartitionKeyElement::Column;
+    let Some(database) = Database::create("partition_modifiers") else {
+        return;
+    };
+    database.query(
+        "CREATE TABLE tagged (name text NOT NULL, kind text NOT NULL, \"Code\" text NOT NULL) \
+         PARTITION BY RANGE (name COLLATE \"C\" text_pattern_ops, kind COLLATE \"C\", \
+         \"Code\" text_pattern_ops)",
+    );
+    let catalog = database.catalog("public", None);
+    // pg_get_partkeydef writes the modifiers after the column.
+    assert_eq!(
+        catalog["tables"]["tagged"]["physicalPartition"]["key"],
+        "RANGE (name COLLATE \"C\" text_pattern_ops, kind COLLATE \"C\", \"Code\" text_pattern_ops)"
+    );
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("catalog.json");
+    assert!(database.generate("public", None, &path).status.success());
+    let loaded = load_catalog(directory.path(), "catalog.json");
+    let key = loaded.table("tagged").unwrap().partition_key.as_ref();
+    assert_eq!(
+        key.unwrap().elements,
+        ["name", "kind", "Code"].map(|name| Column(name.to_string()))
+    );
+}

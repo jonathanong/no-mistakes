@@ -366,3 +366,44 @@ fn a_quoted_foreign_key_target_is_decoded_before_the_naming_policies() {
     // A name that only needs the quotes removed is singularized like an unquoted one.
     assert!(super::support::findings(yaml, table("\"users\"")).is_empty());
 }
+
+#[test]
+fn a_quoted_foreign_key_target_is_decoded_before_the_suffix_lookup() {
+    // `targetSuffixes` lists the table by its name, not by the SQL spelling the catalog holds.
+    let yaml = "schemaCatalogPath: schema.json\nforeignKeys:\n  targetSuffixes:\n    - tables: \
+                [Users, 'other.Users']\n      suffixes: ['_by_id']\n  targetMatch: last-word\n";
+    let table = |column: &str, referenced: &str| {
+        serde_json::json!({
+            "formatVersion": 2, "coverage": "complete",
+            "tables": { "lines": {
+                "columns": { column: { "dataType": "uuid" } },
+                "foreignKeys": { "fk": {
+                    "columns": [column], "referencedTable": referenced,
+                    "referencedColumns": ["id"]
+                } }
+            } }
+        })
+    };
+    expect(
+        yaml,
+        table("user_id", "\"Users\""),
+        &at(
+            "lines",
+            "user_id",
+            "foreign key to \"Users\" must end in _by_id (for example user_by_id)",
+        ),
+    );
+    expect(
+        yaml,
+        table("user_id", "other.\"Users\""),
+        &at(
+            "lines",
+            "user_id",
+            "foreign key to other.\"Users\" must end in _by_id (for example user_by_id)",
+        ),
+    );
+    expect_none(yaml, table("created_by_id", "\"Users\""));
+    expect_none(yaml, table("created_by_id", "other.\"Users\""));
+    // The decoded name is what is listed: the lower-case table `users` is not `Users`.
+    expect_none(yaml, table("user_id", "users"));
+}

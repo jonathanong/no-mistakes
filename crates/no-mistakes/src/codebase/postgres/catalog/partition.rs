@@ -90,31 +90,68 @@ fn classify(raw: &str) -> PartitionKeyElement {
     }
 }
 
+/// A key element that is a column, with or without the `COLLATE <collation>` and operator class
+/// that `pg_get_partkeydef` writes after it: `name COLLATE "C" text_pattern_ops`.
 fn column_name(raw: &str) -> Option<String> {
+    let (name, rest) = ident(raw)?;
+    modifiers_only(rest).then_some(name)
+}
+
+fn modifiers_only(rest: &str) -> bool {
+    if !rest.is_empty() && !rest.starts_with(char::is_whitespace) {
+        return false;
+    }
+    let mut rest = rest.trim_start();
+    let word_end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+    if rest[..word_end].eq_ignore_ascii_case("collate") {
+        match skip_qualified(rest[word_end..].trim_start()) {
+            Some(after) => rest = after.trim_start(),
+            None => return false,
+        }
+    }
+    rest.is_empty() || skip_qualified(rest).is_some_and(|after| after.trim().is_empty())
+}
+
+/// `schema.name` or `name`, each part bare or quoted: what follows it.
+fn skip_qualified(mut raw: &str) -> Option<&str> {
+    loop {
+        let (_, rest) = ident(raw)?;
+        match rest.strip_prefix('.') {
+            Some(next) => raw = next,
+            None => return Some(rest),
+        }
+    }
+}
+
+/// The identifier at the start of `raw`, decoded the way PostgreSQL reads it (a bare name folds
+/// to lower case), and the text after it.
+fn ident(raw: &str) -> Option<(String, &str)> {
     if let Some(inner) = raw.strip_prefix('"') {
         return quoted_ident(inner);
     }
-    let mut chars = raw.chars();
-    let first = chars.next()?;
+    let first = raw.chars().next()?;
     if !(first.is_ascii_alphabetic() || first == '_') {
         return None;
     }
-    chars
-        .all(|character| character.is_ascii_alphanumeric() || character == '_' || character == '$')
-        .then(|| raw.to_ascii_lowercase())
+    let end = raw
+        .find(|character: char| {
+            !(character.is_ascii_alphanumeric() || character == '_' || character == '$')
+        })
+        .unwrap_or(raw.len());
+    Some((raw[..end].to_ascii_lowercase(), &raw[end..]))
 }
 
-fn quoted_ident(raw: &str) -> Option<String> {
-    let mut chars = raw.chars();
+fn quoted_ident(raw: &str) -> Option<(String, &str)> {
+    let mut chars = raw.char_indices();
     let mut name = String::new();
-    while let Some(character) = chars.next() {
+    while let Some((index, character)) = chars.next() {
         if character == '"' {
-            if chars.as_str().starts_with('"') {
+            if raw[index + 1..].starts_with('"') {
                 name.push('"');
                 chars.next();
                 continue;
             }
-            return chars.next().is_none().then_some(name);
+            return Some((name, &raw[index + 1..]));
         }
         name.push(character);
     }

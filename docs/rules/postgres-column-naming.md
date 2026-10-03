@@ -46,7 +46,9 @@ matching entry reports. `forbiddenColumnNames` reports the first matching
 pattern.
 
 A single-column foreign key, other than a column named `id`, must end with a
-configured `targetSuffixes` suffix when the referenced table is listed.
+configured `targetSuffixes` suffix when the referenced table is listed. A table is
+listed by its name without SQL quoting: `Users` for `"Users"`, and `other.Users`
+for a schema-qualified reference.
 Otherwise, when `targetMatch` is `last-word` or `full-name`, the name must end
 with the referenced column and the remaining word or words must match the
 singular target name. Schema-qualified references derive the default target

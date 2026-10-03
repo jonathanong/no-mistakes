@@ -186,6 +186,38 @@ fn partition_parser_rejects_syntax_and_keeps_trailing_quoted_text_as_an_expressi
 }
 
 #[test]
+fn a_partition_column_keeps_its_collation_and_operator_class_modifiers() {
+    // `pg_get_partkeydef` writes `[ COLLATE collation ] [ opclass ]` after a column.
+    let key = parse_partition_key(
+        "RANGE (name COLLATE \"C\", \"Order\" text_pattern_ops, \
+         code COLLATE pg_catalog.\"C\" public.text_pattern_ops, kind collate other.\"Mixed Case\")",
+    )
+    .unwrap();
+    assert_eq!(
+        key.elements,
+        ["name", "Order", "code", "kind"]
+            .map(|name| PartitionKeyElement::Column(name.to_string()))
+            .to_vec()
+    );
+    // Anything else after the column is part of an expression, not a modifier.
+    for expression in [
+        "name COLLATE",
+        "name COLLATE \"C\" a b",
+        "name || other",
+        "name collate \"C\" + 1",
+        "name.part",
+        "name COLLATE other.",
+    ] {
+        let key = parse_partition_key(&format!("RANGE ({expression})")).unwrap();
+        assert_eq!(
+            key.elements,
+            vec![PartitionKeyElement::Expression(expression.to_string())],
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn trigger_function_folds_unquoted_names_and_keeps_quoted_case() {
     let folded = parse_trigger(
         "CREATE TRIGGER t BEFORE UPDATE ON t FOR EACH ROW EXECUTE FUNCTION public.Fn_Touch()",

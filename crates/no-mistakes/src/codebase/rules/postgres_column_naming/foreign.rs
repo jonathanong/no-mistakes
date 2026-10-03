@@ -32,7 +32,9 @@ fn one_foreign_key(
     compiled: &Compiled,
 ) -> Option<String> {
     let referenced = foreign_key.referenced_columns.first()?.as_str();
-    if let Some(suffixes) = compiled.suffixes.get(&foreign_key.referenced_table) {
+    // The catalog spells the target as SQL (`other."Users"`); the policies see the name itself.
+    let parts = decoded_parts(&foreign_key.referenced_table);
+    if let Some(suffixes) = compiled.suffixes.get(&parts.join(".")) {
         if !suffixes.iter().any(|suffix| column.name.ends_with(suffix)) {
             let example = suffix_example(&column.name, &suffixes[0]);
             return Some(format!(
@@ -43,7 +45,7 @@ fn one_foreign_key(
         }
         return None;
     }
-    let target = target_name(&foreign_key.referenced_table, compiled);
+    let target = target_name(&parts, compiled);
     let key = format!("_{referenced}");
     if descriptive(&column.name, referenced, &target, &compiled.target_mode) {
         return None;
@@ -131,9 +133,7 @@ fn suffix_example(column: &str, suffix: &str) -> String {
     format!("{stem}{suffix}")
 }
 
-fn target_name(table: &str, compiled: &Compiled) -> String {
-    // The catalog spells the target as SQL (`other."Users"`); the policies see the name itself.
-    let parts = decoded_parts(table);
+fn target_name(parts: &[String], compiled: &Compiled) -> String {
     let table = parts.join(".");
     for entry in &compiled.target_names {
         if let Some(captures) = entry.pattern.captures(&table) {
