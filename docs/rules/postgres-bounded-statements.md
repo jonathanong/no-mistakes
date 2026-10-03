@@ -124,8 +124,8 @@ The bound covers the rows named directly by the statement, including its explici
 subqueries and data-modifying CTEs. It does not include work triggered by foreign-key
 referential actions (`ON DELETE` or `ON UPDATE CASCADE`, `SET NULL`, or `SET DEFAULT`)
 or triggers. A primary-key deletion can therefore pass while cascading to arbitrarily
-many child rows, including through multiple levels. `NO ACTION` does not change this
-scope. Audit referential actions and trigger bodies separately; a bound on the parent
+many child rows, including through multiple levels. `NO ACTION` or `RESTRICT` does
+not change this scope. Audit referential actions and trigger bodies separately; a bound on the parent
 does not bound their work. There is currently no option to include those implicit rows.
 
 Table inheritance (`INHERITS`) is not modeled: the unique key of a parent is assumed to
