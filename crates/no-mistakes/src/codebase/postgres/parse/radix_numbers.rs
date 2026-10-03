@@ -4,9 +4,8 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::num::IntErrorKind;
 
 pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
-    let mut out = Vec::with_capacity(tokens.len());
+    let mut out: Option<Vec<TokenWithSpan>> = None;
     let mut index = 0;
-    let mut changed = false;
     while index < tokens.len() {
         let token = &tokens[index];
         if matches!(&token.token, Token::Number(number, _) if number == "0") {
@@ -42,19 +41,26 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
                             let mut combined = token.clone();
                             combined.token = Token::Number(value, false);
                             combined.span.end = next.span.end;
+                            // Ordinary SQL keeps its original token vector without cloning.
+                            let out = out.get_or_insert_with(|| {
+                                let mut repaired = Vec::with_capacity(tokens.len());
+                                repaired.extend_from_slice(&tokens[..index]);
+                                repaired
+                            });
                             out.push(combined);
                             index += 2;
-                            changed = true;
                             continue;
                         }
                     }
                 }
             }
         }
-        out.push(token.clone());
+        if let Some(out) = &mut out {
+            out.push(token.clone());
+        }
         index += 1;
     }
-    changed.then_some(out)
+    out
 }
 
 #[cfg(test)]
