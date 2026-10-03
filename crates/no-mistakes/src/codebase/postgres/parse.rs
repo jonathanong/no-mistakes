@@ -6,6 +6,7 @@ use std::fmt;
 mod copy_data;
 mod distinct_group;
 mod lenient;
+mod radix_numbers;
 mod sql_text;
 pub(super) use sql_text::normalize_copy_data;
 pub(crate) use sql_text::top_level_statements;
@@ -47,7 +48,23 @@ impl From<ParserError> for PostgresParseError {
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
     let normalized = normalize_copy_data(sql);
     let separated = distinct_group::separate_distinct_grouping(&normalized);
-    Parser::parse_sql(&PostgreSqlDialect {}, &separated).map_err(PostgresParseError::from)
+    Parser::parse_sql(&PostgreSqlDialect {}, &separated)
+        .or_else(|error| {
+            let Ok(tokens) =
+                sqlparser::tokenizer::Tokenizer::new(&PostgreSqlDialect {}, &separated)
+                    .tokenize_with_location()
+            else {
+                return Err(error);
+            };
+            let Some(tokens) = radix_numbers::repair(&tokens) else {
+                return Err(error);
+            };
+            Parser::new(&PostgreSqlDialect {})
+                .with_tokens_with_locations(tokens)
+                .parse_statements()
+                .map_err(|_| error)
+        })
+        .map_err(PostgresParseError::from)
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.

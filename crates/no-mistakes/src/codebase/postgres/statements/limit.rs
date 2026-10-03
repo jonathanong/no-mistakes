@@ -2,6 +2,7 @@
 use super::value::is_placeholder_ident;
 use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
+use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
 use sqlparser::ast::{
     Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, Spanned, Value,
 };
@@ -171,27 +172,6 @@ fn is_null(expr: &Expr) -> bool {
         Expr::Value(value) => matches!(value.value, Value::Null),
         _ => false,
     }
-}
-
-/// PostgreSQL digit separators are valid only between digits of the literal's radix.
-fn numeric_literal(text: &str) -> Result<u64, std::num::ParseIntError> {
-    let (digits, radix) = match text.get(..2).map(str::to_ascii_lowercase).as_deref() {
-        Some("0x") => (&text[2..], 16),
-        Some("0o") => (&text[2..], 8),
-        Some("0b") => (&text[2..], 2),
-        _ => (text, 10),
-    };
-    let chars: Vec<char> = digits.chars().collect();
-    if chars.iter().enumerate().any(|(index, character)| {
-        *character == '_'
-            && (index == 0
-                || index + 1 == chars.len()
-                || !chars[index - 1].is_digit(radix)
-                || !chars[index + 1].is_digit(radix))
-    }) {
-        return u64::from_str_radix("invalid", radix);
-    }
-    u64::from_str_radix(&digits.replace('_', ""), radix)
 }
 
 #[cfg(test)]
