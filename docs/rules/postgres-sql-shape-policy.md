@@ -291,3 +291,7 @@ PostgreSQL integer limits support digit separators, including one immediately af
 Radix-prefix separators also survive lenient migration recovery when unrelated
 statements require the fallback parser; valid statements retain their source
 locations and numeric row caps.
+Numeric hexadecimal limits such as `LIMIT 0xF_F` decode to the row count 255.
+Hexadecimal string syntax such as `LIMIT X'FF'` remains a non-literal expression;
+the classifier uses the original source spelling to distinguish them, including
+when Unicode characters precede the limit on its source line.

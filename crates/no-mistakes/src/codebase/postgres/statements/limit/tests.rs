@@ -17,3 +17,37 @@ fn separators_respect_radix_prefix_and_digit_boundaries() {
         assert!(super::numeric_literal(text).is_err(), "{text}");
     }
 }
+#[test]
+fn numeric_hex_limits_keep_source_identity_and_column() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-shape-policy/fixture/radix-hex-literals/sql/pages.sql"
+    ));
+    for (line, sql_line) in sql.lines().enumerate() {
+        if sql_line.starts_with("SELECT") {
+            assert!(
+                crate::codebase::postgres::parse_postgres_sql(sql_line).is_ok(),
+                "line {} did not parse",
+                line + 1
+            );
+        }
+    }
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+
+    let expected = [
+        (1, "0xF_F", super::SqlLimitValue::Literal(255)),
+        (3, "0xF_F", super::SqlLimitValue::Literal(255)),
+        (4, "X'FF'", super::SqlLimitValue::Other),
+        (5, "x'FF'", super::SqlLimitValue::Other),
+        (6, "0x0", super::SqlLimitValue::Literal(0)),
+        (8, "0x1", super::SqlLimitValue::Literal(1)),
+    ];
+    assert_eq!(facts.limit_uses.len(), expected.len());
+    for (fact, (line, literal, value)) in facts.limit_uses.iter().zip(expected) {
+        let source_line = sql.lines().nth(line - 1).unwrap();
+        let column = source_line.find(literal).unwrap();
+        let column = source_line[..column].chars().count() + 1;
+        assert_eq!((fact.line, fact.column, fact.value), (line, column, value));
+    }
+}

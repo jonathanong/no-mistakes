@@ -365,3 +365,20 @@ fn radix_prefix_separators_preserve_literal_limit_findings() {
         ])
     );
 }
+
+#[test]
+fn numeric_hex_literal_limits_are_reported_and_suppressible() {
+    let root = fixture("radix-hex-literals");
+    let file = root.join("sql/pages.sql");
+    let yaml = "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [literal-limit]\nshapeOptions:\n  literalLimit:\n    allowedValues: []\n";
+    let mut findings = check_with_files(&root, &config(yaml), std::slice::from_ref(&file)).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
+    crate::codebase::rules::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(
+        findings
+            .into_iter()
+            .map(|finding| (finding.line, finding.target.unwrap()))
+            .collect::<Vec<_>>(),
+        at(&[(1, "literal-limit"), (6, "literal-limit")])
+    );
+}
