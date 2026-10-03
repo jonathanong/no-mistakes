@@ -283,3 +283,18 @@ fn shape_options_are_validated() {
     .is_ok());
     let _ = Path::new("");
 }
+#[test]
+fn digit_separator_limits_are_literals() {
+    assert_eq!(
+        found(
+            "digit-separators",
+            "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [literal-limit]\n",
+            "sql/001.sql"
+        ),
+        at(&[
+            (1, "literal-limit"),
+            (2, "literal-limit"),
+            (3, "literal-limit")
+        ])
+    );
+}
