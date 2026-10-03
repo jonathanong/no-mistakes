@@ -10,6 +10,7 @@ mod dml;
 mod functions;
 mod items;
 mod pins;
+mod predicate;
 mod query;
 mod table;
 mod temporary;

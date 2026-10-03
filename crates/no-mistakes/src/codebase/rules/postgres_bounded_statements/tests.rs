@@ -517,3 +517,5 @@ mod pin_subqueries;
 mod schema_correlation;
 
 mod function_scope;
+
+mod having_only;

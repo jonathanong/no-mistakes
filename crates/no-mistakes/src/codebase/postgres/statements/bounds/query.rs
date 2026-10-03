@@ -3,7 +3,7 @@ use super::{items, start, Scope};
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::limit::{is_limited, is_zero_limited};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
-use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
+use sqlparser::ast::{Query, Select, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
 mod compact;
 use compact::{compact, size, MAX_BOUND_ITEMS};
 
@@ -71,6 +71,13 @@ pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
 /// The body of `query` under `scope`, which already holds its CTEs.
 pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
+    if super::aggregate::orders_can_expand(query) {
+        if let Some(select) = select_body(&query.body) {
+            // Either predicate can reject the implicit group before ORDER BY expands it.
+            bound.capped = super::predicate::rejects_all(select.selection.as_ref())
+                || super::predicate::rejects_all(select.having.as_ref());
+        }
+    }
     if is_zero_limited(query) {
         bound.capped = true;
     } else if is_limited(query) {
@@ -78,6 +85,14 @@ pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     }
     bound.capped |= orders_by_aggregate(query);
     bound
+}
+
+fn select_body(set: &SetExpr) -> Option<&Select> {
+    match set {
+        SetExpr::Select(select) => Some(select),
+        SetExpr::Query(query) => select_body(&query.body),
+        _ => None,
+    }
 }
 
 /// Non-streaming set operations must inspect their input arms before an outer LIMIT can
