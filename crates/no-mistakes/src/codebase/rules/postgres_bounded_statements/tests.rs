@@ -528,3 +528,5 @@ mod function_scope;
 mod having_only;
 
 mod function_inputs;
+
+mod qualified_limit_functions;

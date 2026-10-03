@@ -51,9 +51,11 @@ fn is_fixed(expr: &Expr) -> bool {
         // Only the functions that return NULL for nothing but NULL arguments: `NULLIF(1, 1)`,
         // like any function that can produce NULL from fixed inputs, is `LIMIT ALL`.
         Expr::Function(function) => {
-            let pick = object_name_ident(&function.name).is_some_and(|ident| {
-                ["coalesce", "least", "greatest"].contains(&ident_key(ident).as_str())
-            });
+            let pick = function.name.0.len() == 1
+                && object_name_ident(&function.name).is_some_and(|ident| {
+                    ident.quote_style.is_none()
+                        && ["coalesce", "least", "greatest"].contains(&ident_key(ident).as_str())
+                });
             pick && match &function.args {
                 FunctionArguments::List(list) => list.args.iter().all(|arg| match arg {
                     FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => is_fixed(expr),
