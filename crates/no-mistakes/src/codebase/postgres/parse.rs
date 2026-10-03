@@ -88,3 +88,6 @@ pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod radix_lenient_tests;
