@@ -196,3 +196,7 @@ A base-table column alias list (`FROM accounts AS a(id, real_id)`) renames colum
 position. Pins on that item receive no catalog key credit; ordinary table aliases
 (`FROM accounts AS a`) retain key matching. This also applies to join conditions and
 `USING` pins.
+
+Oversized CTE expansions are compacted to their distinct uncapped base relations.
+This conservative summary retains unbounded reads and supplies no bound to joined
+items; an explicit outer `LIMIT` still caps the statement.
