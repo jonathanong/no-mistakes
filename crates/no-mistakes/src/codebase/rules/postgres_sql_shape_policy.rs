@@ -183,6 +183,8 @@ fn banned_shapes(values: &[String]) -> Result<BannedShapes> {
 }
 
 #[cfg(test)]
+mod select_all_tests;
+#[cfg(test)]
 mod shape_tests;
 #[cfg(test)]
 mod tests;

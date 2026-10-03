@@ -2,7 +2,7 @@ use super::conjuncts;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
 use crate::codebase::postgres::statements::SqlSweepFact;
 use sqlparser::ast::{
-    Expr, GroupByExpr, OrderBy, OrderByKind, Query, Select, SelectItem, SetExpr, Spanned,
+    Distinct, Expr, GroupByExpr, OrderBy, OrderByKind, Query, Select, SelectItem, SetExpr, Spanned,
     TableFactor,
 };
 use std::collections::BTreeMap;
@@ -33,7 +33,8 @@ pub(super) fn sweep(query: &Query, ctes: &[String]) -> Option<SqlSweepFact> {
     );
     // A one-part name is a CTE reference when a CTE has that name; a quoted dot is no schema.
     let cte = name.0.len() == 1 && ctes.contains(&table);
-    if !from.joins.is_empty() || grouped || cte {
+    let deduplicates = matches!(select.distinct, Some(Distinct::Distinct | Distinct::On(_)));
+    if !from.joins.is_empty() || grouped || deduplicates || cte {
         return None;
     }
     // The relation answers to its last name part as written, a quoted dot included.
