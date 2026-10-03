@@ -7,3 +7,6 @@ SELECT * FROM accounts WHERE a > $1::cursor_id OR (a = $1 AND b > $2) ORDER BY a
 -- Opaque casts still match when every occurrence uses the identical expression.
 SELECT * FROM accounts WHERE a > $1::cursor_id OR (a = $1::cursor_id AND b > $2) ORDER BY a, b LIMIT $3;
 SELECT * FROM accounts WHERE a > $1::smallint OR (a = $1::smallint AND b > $2) ORDER BY a, b LIMIT $3;
+-- Recovered SQL placeholders are identifiers; a literal prefix cannot copy a bind.
+SELECT * FROM accounts WHERE a > sql_placeholder_1::int OR (a = sql_placeholder_1 AND b > sql_placeholder_2) ORDER BY a, b LIMIT $3;
+SELECT * FROM accounts WHERE a > $1::int OR (a = 1 AND b > $2) ORDER BY a, b LIMIT $3;
