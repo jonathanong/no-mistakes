@@ -200,3 +200,7 @@ position. Pins on that item receive no catalog key credit; ordinary table aliase
 Oversized CTE expansions are compacted to their distinct uncapped base relations.
 This conservative summary retains unbounded reads and supplies no bound to joined
 items; an explicit outer `LIMIT` still caps the statement.
+
+For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
+Analysis conservatively checks both exact and folded spellings when they differ;
+a matching one-part CTE takes precedence over catalog relations.

@@ -11,16 +11,40 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
     if name.is_empty() {
         return query::sized_by_itself(at);
     }
-    // The parser keeps no quote information for a TABLE name, so it is read as unquoted.
-    let name = name.join(".").to_ascii_lowercase();
-    // A one-part name is a CTE reference when a CTE has that name, like any FROM item.
-    let cte = scope.get(&name).filter(|_| table.schema_name.is_none());
-    let kind = match cte {
-        Some(bound) => SqlBoundItemKind::Query(bound.clone()),
-        None => SqlBoundItemKind::Table(name),
+    // sqlparser loses TABLE identifier quoting. Conservatively retain both spellings
+    // when folding changes a name; catalog resolution selects the relation that exists.
+    let exact = name
+        .iter()
+        .map(|part| format!("\"{}\"", part.replace('"', "\"\"")))
+        .collect::<Vec<_>>()
+        .join(".");
+    let folded = name.join(".").to_ascii_lowercase();
+    let cte = if table.schema_name.is_none() {
+        scope
+            .get(table.table_name.as_deref().unwrap_or_default())
+            .or_else(|| scope.get(&folded))
+    } else {
+        None
+    };
+    let items = match cte {
+        Some(bound) => vec![SqlBoundItem::new(
+            SqlBoundItemKind::Query(bound.clone()),
+            None,
+            at,
+        )],
+        None => {
+            let mut items = vec![SqlBoundItem::new(SqlBoundItemKind::Table(folded), None, at)];
+            if name
+                .iter()
+                .any(|part| part.to_ascii_lowercase() != *part || part.contains(' '))
+            {
+                items.push(SqlBoundItem::new(SqlBoundItemKind::Table(exact), None, at));
+            }
+            items
+        }
     };
     SqlBoundQuery {
         capped: false,
-        items: vec![SqlBoundItem::new(kind, None, at)],
+        items,
     }
 }
