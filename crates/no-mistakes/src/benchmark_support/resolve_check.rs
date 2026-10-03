@@ -5,13 +5,11 @@ use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-pub const VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT: usize = 2_120;
-const VOUCHINGTON_VISIBLE_FILE_COUNT: usize = 17_028;
+pub const LARGE_ROUTE_BATCH_FILE_COUNT: usize = 2_120;
+const LARGE_ROUTE_BATCH_VISIBLE_FILE_COUNT: usize = 17_028;
 
-/// Synthetic prepared request shaped like the Vouchington route batch: many
-/// prepared resolve-check file closure from Vouchington's 429 route roots,
-/// sharing its current request-visible repository universe. The route files
-/// exist on disk so nearest-config lookup takes its production file branch.
+/// Synthetic prepared request for a large route batch sharing a large visible-file universe.
+/// The route files exist on disk so nearest-config lookup takes its production file branch.
 /// File facts are already prepared; only the root tsconfig is read.
 pub struct PreparedResolveCheckFixture {
     root: PathBuf,
@@ -26,10 +24,10 @@ pub fn prepared_resolve_check_fixture() -> PreparedResolveCheckFixture {
         .join("../../fixtures/performance/resolve-check")
         .canonicalize()
         .expect("resolve-check performance fixture should exist");
-    let files = (0..VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT)
+    let files = (0..LARGE_ROUTE_BATCH_FILE_COUNT)
         .map(|index| root.join(format!("web/app/routes/closure-{index}/page.tsx")))
         .collect::<Vec<_>>();
-    let visible_paths = (0..(VOUCHINGTON_VISIBLE_FILE_COUNT - files.len() - 1))
+    let visible_paths = (0..(LARGE_ROUTE_BATCH_VISIBLE_FILE_COUNT - files.len() - 1))
         .map(|index| root.join(format!("web/lib/generated/module-{index}.ts")))
         .chain(files.iter().cloned())
         .chain(std::iter::once(root.join("tsconfig.json")))
@@ -42,7 +40,7 @@ pub fn prepared_resolve_check_fixture() -> PreparedResolveCheckFixture {
                 file,
                 TsFileFacts {
                     imports: vec![ExtractedImport {
-                        specifier: "@vouchington/shared".to_string(),
+                        specifier: "@example/shared".to_string(),
                         kind: ImportKind::Static,
                         line: 1,
                         function_scope: None,
