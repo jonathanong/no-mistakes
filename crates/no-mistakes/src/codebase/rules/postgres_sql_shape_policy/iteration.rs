@@ -33,8 +33,8 @@ pub(crate) struct IterationOptions {
     allowed_limits: Vec<u64>,
     /// Normalized conjuncts that do not narrow a walk.
     non_selective: Vec<String>,
-    /// Lowercased tables that may be walked whole.
-    ignore_tables: Vec<String>,
+    /// Decoded SQL name parts of tables that may be walked whole.
+    ignore_tables: Vec<Vec<String>>,
 }
 
 pub(super) fn compile(options: &ShapeOptions) -> Result<IterationOptions> {
@@ -58,9 +58,10 @@ pub(super) fn compile(options: &ShapeOptions) -> Result<IterationOptions> {
         "nonSelectivePredicates",
         normalized_predicate,
     )?;
-    let ignore_tables = names(&sweep.ignore_tables, "ignoreTables", |text| {
-        text.to_ascii_lowercase()
-    })?;
+    let ignore_tables = names(&sweep.ignore_tables, "ignoreTables", str::to_string)?
+        .iter()
+        .map(|name| crate::codebase::postgres::decoded_parts(name))
+        .collect();
     Ok(IterationOptions {
         allowed_limits,
         non_selective,
@@ -96,14 +97,9 @@ impl IterationOptions {
     /// An entry names the table as `schema.table` or by its last name part alone. A dot inside a
     /// quoted name belongs to that part: `items` does not match `"work.items"`.
     fn ignored(&self, parts: &[String]) -> bool {
-        let table = parts.join(".").to_ascii_lowercase();
-        let tail = parts
-            .last()
-            .map(|part| part.to_ascii_lowercase())
-            .unwrap_or_default();
         self.ignore_tables
             .iter()
-            .any(|entry| *entry == table || (!entry.contains('.') && *entry == tail))
+            .any(|entry| entry == parts || (entry.len() == 1 && entry.last() == parts.last()))
     }
 }
 
