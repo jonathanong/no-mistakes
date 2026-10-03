@@ -423,6 +423,7 @@ fn casted_expanded_keysets_preserve_bind_identity_in_rule_findings() {
             (2, "keyset-only-sweep"),
             (8, "keyset-only-sweep"),
             (9, "keyset-only-sweep"),
+            (11, "keyset-only-sweep"),
         ])
     );
 }
