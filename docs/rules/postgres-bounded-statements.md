@@ -98,7 +98,9 @@ A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm 
 uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,
 and a `VALUES` list or a set-returning built-in (bare or `pg_catalog.`-qualified) over
 arguments the statement supplies (`unnest($1)`, `generate_series(1, 10)`) is sized by the
-caller. Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
+caller. A data-backed select-list set-returning function is opaque even when its
+SELECT has no FROM items; it cannot bound another relation joined to its output.
+Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
 whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
 `unnest(get_all_account_ids())`), an array taken from a query
 (`ANY(ARRAY(SELECT …))`) and the recursive reference of a `WITH RECURSIVE` are opaque: never

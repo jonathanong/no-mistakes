@@ -1,9 +1,12 @@
 //! The built-in functions the bound facts reason about, by name.
 use super::super::value::is_placeholder_ident;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident};
+use crate::codebase::postgres::idents::{
+    ident_key, object_name_ident, unwrap_expr, visit_function_args,
+};
 use crate::codebase::postgres::statements::SqlBoundItemKind;
 use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, ObjectName, Query, TableFunctionArgs, Visit, Visitor,
+    BinaryOperator, Expr, Function, FunctionArg, FunctionArguments, ObjectName, Query,
+    TableFunctionArgs, Visit, Visitor,
 };
 use std::ops::ControlFlow;
 
@@ -71,27 +74,52 @@ pub(super) fn is_set_returning(name: &ObjectName) -> bool {
     builtin(name, SET_RETURNING) && !builtin(name, FIXED_ONE_ROW)
 }
 
+/// A select-list SRF can introduce rows independently of FROM. Its output is caller-sized
+/// only for a known built-in whose arguments contain no database-backed values.
+pub(super) fn data_backed_projection(function: &Function) -> bool {
+    if named(&function.name, SET_RETURNING) && !builtin(&function.name, SET_RETURNING) {
+        return true;
+    }
+    if !is_set_returning(&function.name) {
+        return false;
+    }
+    // Literal arguments do not size server-state SRFs such as pg_ls_dir or ts_stat.
+    if !builtin(&function.name, CALLER_SIZED) {
+        return true;
+    }
+    match &function.args {
+        FunctionArguments::List(list) => !list.args.iter().all(caller_supplied_argument),
+        _ => true,
+    }
+}
+
 /// A table function is sized by the caller only when it is a set-returning built-in over
 /// arguments the text provides; any other function can return rows from anywhere.
 pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlBoundItemKind {
-    // A nested function can obtain server data even when its visible arguments are fixed.
-    let given = args.args.iter().all(|arg| match arg {
-        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
-        | FunctionArg::Named {
-            arg: FunctionArgExpr::Expr(expr),
-            ..
-        }
-        | FunctionArg::ExprNamed {
-            arg: FunctionArgExpr::Expr(expr),
-            ..
-        } => !depends_on_data(expr),
-        _ => false,
-    });
+    let given = args.args.iter().all(caller_supplied_argument);
     if given && builtin(name, CALLER_SIZED) {
         SqlBoundItemKind::Other
     } else {
         SqlBoundItemKind::Opaque
     }
+}
+
+/// Named argument labels are syntax rather than data inputs. PostgreSQL's `:=` notation
+/// is represented by sqlparser as an assignment expression instead of an ExprNamed argument.
+fn caller_supplied_argument(arg: &FunctionArg) -> bool {
+    let mut supplied = false;
+    visit_function_args(std::slice::from_ref(arg), &mut |expr| {
+        let input = match unwrap_expr(expr) {
+            Expr::BinaryOp {
+                op: BinaryOperator::Assignment,
+                right,
+                ..
+            } => right,
+            _ => expr,
+        };
+        supplied = !depends_on_data(input);
+    });
+    supplied
 }
 
 /// `unnest(…)` as a table factor is sized by its arrays, unless one is taken from a query or

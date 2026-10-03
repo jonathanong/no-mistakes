@@ -75,9 +75,12 @@ fn an_aggregate_in_having_or_among_the_rare_built_ins_caps_a_query() {
     // A set-returning function in the select list turns one aggregate row into many.
     assert_eq!(
         shape("SELECT generate_series(1, count(*)) FROM t"),
-        ["select: t"]
+        ["select: t opaque"]
     );
-    assert_eq!(shape("SELECT unnest(array_agg(id)) FROM t"), ["select: t"]);
+    assert_eq!(
+        shape("SELECT unnest(array_agg(id)) FROM t"),
+        ["select: t opaque"]
+    );
     // A window function is not an aggregate, whatever it is called.
     assert_eq!(shape("SELECT count(*) OVER () FROM t"), ["select: t"]);
 }
@@ -439,7 +442,7 @@ fn every_known_set_returning_builtin_expands_aggregate_rows() {
             if index == fixed_one_row {
                 shape == "select: capped orders"
             } else {
-                shape == "select: orders"
+                shape == "select: orders opaque"
             }
         }));
     assert_eq!(shapes.last().unwrap(), "select: other");
@@ -479,7 +482,11 @@ fn catalog_set_returning_names_require_builtin_schema_identity() {
     let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/set-returning-qualified.sql"));
     assert_eq!(
         shape(sql),
-        ["select: capped orders", "select: orders", "select: orders"]
+        [
+            "select: capped orders opaque",
+            "select: orders opaque",
+            "select: orders opaque"
+        ]
     );
 }
 
