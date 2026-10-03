@@ -137,6 +137,8 @@ TIES` still writes a literal count, so it is reported too.
 
 `DISTINCT`, `DISTINCT ON`, and grouped queries page distinct groups rather than table rows and are excluded.
 
+Expanded lexicographic cursors such as `a > $1 OR (a = $1 AND b > $2)` count like tuple cursors when each equality prefix uses the same bind and every comparison has the same direction.
+
 Bind-only guards without column references, calls, or subqueries do not narrow a walk.
 
 `keyset-only-sweep` reports a walk over a whole table by its key: a query with a
