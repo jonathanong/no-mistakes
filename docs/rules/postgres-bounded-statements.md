@@ -216,3 +216,8 @@ Temporary tables and views created earlier in the same SQL source shadow unquali
 catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.
 Temporary relations are unknown and bound no joined items; qualified permanent
 relations retain their catalog identity. State resets for every SQL source.
+
+Bare subquery columns belong to a derived table or CTE only when its explicit
+projection exposes that name. Function column alias lists and known scalar built-in
+output names also determine ownership. Unknown functions and wildcard projections
+retain conservative unknown-column ownership.
