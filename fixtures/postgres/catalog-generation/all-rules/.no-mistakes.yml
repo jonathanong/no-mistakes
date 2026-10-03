@@ -71,3 +71,8 @@ rules:
       schemaCatalogPath: schema.json
       sqlInclude: ['sql/**/*.sql']
       maxColumns: 0
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      sqlInclude: ['sql/**/*.sql']

@@ -328,6 +328,33 @@ uses the statement pass's lenient split and reports each use on a top-level
 query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 `postgres-no-offset` consumes these helpers.
 
+## Row-bound facts
+
+`SqlStatementFileFacts.bounds` holds one `SqlBoundFact` per executed `SELECT`,
+`UPDATE` and `DELETE`, including those in data-modifying CTEs and under
+`EXPLAIN ANALYZE`; `INSERT … SELECT` is not a bound fact. A fact keeps the `kind`, the
+`line`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the `target` item.
+A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST` (`LIMIT NULL` and
+`LIMIT ALL` do not cap) or is a pure aggregate (an aggregate call, not windowed, with
+no `GROUP BY`), and lists its FROM `items`. An item is a base `Table`, a `Query`
+(a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
+operation), or `Other` (a table function or `VALUES`). A CTE reference without an
+alias is addressed by the CTE's name. A recursive reference is `Other`.
+
+Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an
+equality or `IS NOT DISTINCT FROM`, `= ANY(…)`, `IN (…)` or `IN (SELECT …)` against a
+`Value` (no relation of the statement), `Items` (columns of other items; a column
+compared with its own item is never a pin), or a subquery. `WHERE` restricts every item.
+A join condition restricts only the non-preserved side of an outer join and both sides of
+an inner join; `FULL`, `USING`, `NATURAL` and `CROSS` joins pin nothing. A bare column
+among several items has no provable owner and an unknown qualifier is an outer
+reference, so neither pins. Only base tables take pins. The facts are syntactic: a rule
+decides against a catalog whether a pinned column set is a unique key.
+
+`SchemaCatalog::unique_keys(table)` returns those key column sets: valid, ready, live,
+immediate, non-partial unique or primary indexes whose keys are all plain columns.
+`postgres-bounded-statements` consumes both.
+
 ## Query annotation facts
 
 `sql_requires_query_annotation(sql)` reports whether executed SQL is missing a

@@ -38,6 +38,7 @@ pub use super::package_json_workspace_coverage::RULE_ID as PACKAGE_JSON_WORKSPAC
 pub use super::pnpm_overrides_ban::RULE_ID as PNPM_OVERRIDES_BAN;
 pub use super::pnpm_release_age_policy::RULE_ID as PNPM_RELEASE_AGE_POLICY;
 pub use super::postgres_array_columns::RULE_ID as POSTGRES_ARRAY_COLUMNS;
+pub use super::postgres_bounded_statements::RULE_ID as POSTGRES_BOUNDED_STATEMENTS;
 pub use super::postgres_column_naming::RULE_ID as POSTGRES_COLUMN_NAMING;
 pub use super::postgres_column_requires_trigger::RULE_ID as POSTGRES_COLUMN_REQUIRES_TRIGGER;
 pub use super::postgres_conflict_ordering::RULE_ID as POSTGRES_CONFLICT_ORDERING;

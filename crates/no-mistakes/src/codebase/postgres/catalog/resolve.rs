@@ -96,6 +96,28 @@ impl SchemaCatalog {
                 .any(|index| order_prefix_matches_for_qualifiers(order, &index.keys, qualifiers))
         })
     }
+    /// Column sets that hold at most one row per value: valid, ready, live, immediate,
+    /// non-partial unique or primary indexes whose keys are all plain columns.
+    ///
+    /// A partial index only covers some rows and a deferrable one may hold duplicates
+    /// inside a transaction, so neither proves uniqueness. Expression keys are not columns.
+    pub fn unique_keys(&self, table: &str) -> Vec<Vec<String>> {
+        let Some(table) = self.arbiter_table(table) else {
+            return Vec::new();
+        };
+        table
+            .indexes
+            .iter()
+            .filter(|index| index.immediate && index.predicate.is_none())
+            .filter_map(|index| {
+                index
+                    .keys
+                    .iter()
+                    .map(|key| plain_column(&key.expression))
+                    .collect::<Option<Vec<_>>>()
+            })
+            .collect()
+    }
     fn arbiter_table(&self, table: &str) -> Option<&ArbiterTable> {
         let key = normalize_table_name(table);
         self.tables.get(&key).or_else(|| {
@@ -105,6 +127,22 @@ impl SchemaCatalog {
             self.tables.get(key.strip_prefix(&prefix)?)
         })
     }
+}
+/// The column name when an index key expression is a bare (possibly quoted) identifier.
+fn plain_column(expression: &str) -> Option<String> {
+    let text = expression.trim();
+    let bare = text
+        .chars()
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic() || first == '_')
+        && text
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$');
+    let quoted = text.len() >= 2
+        && text.starts_with('"')
+        && text.ends_with('"')
+        && !text[1..text.len() - 1].replace("\"\"", "").contains('"');
+    (bare || quoted).then(|| normalize_identifier(text))
 }
 fn resolve_candidates(candidates: Vec<CanonicalIndex>) -> ResolvedArbiter {
     if candidates

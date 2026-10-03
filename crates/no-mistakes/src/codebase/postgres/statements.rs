@@ -1,5 +1,6 @@
 //! Typed INSERT, SELECT, and trigger facts from PostgreSQL SQL.
 
+mod bounds;
 mod conflict;
 mod dedupe;
 mod exists;
@@ -7,6 +8,7 @@ mod exists_correlation;
 mod fallback;
 mod insert;
 mod insert_source;
+mod limit;
 mod lines;
 mod mutations;
 mod not_exists;
@@ -47,6 +49,7 @@ pub(crate) fn extract_from_parsed(
     let mut deletes = Vec::new();
     let mut triggers = Vec::new();
     let mut returning_stars = Vec::new();
+    let mut bounds = Vec::new();
     let mut mutation_column_uses = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
@@ -68,6 +71,7 @@ pub(crate) fn extract_from_parsed(
     for statement in executed {
         writes::collect(statement, &mut writes);
         collect_one(sql, statement, &mut out);
+        bounds::collect(statement, &mut bounds);
     }
     dedupe::exists_set_operations(&mut selects);
     SqlStatementFileFacts {
@@ -81,6 +85,7 @@ pub(crate) fn extract_from_parsed(
         returning_stars,
         mutation_column_uses,
         offset_uses: super::offset::offset_facts(sql, statements),
+        bounds,
         parse_failed,
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),

@@ -1,0 +1,7 @@
+# Executor SQL in TypeScript is judged too, at its source line.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: ['src/**/*.ts']

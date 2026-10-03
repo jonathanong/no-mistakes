@@ -1,0 +1,8 @@
+# Standard suppression directives apply to findings in SQL files.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      exclude: ['src/**']
+      sqlInclude: ['sql/suppress.sql']

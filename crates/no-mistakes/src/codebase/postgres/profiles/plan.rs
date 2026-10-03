@@ -10,6 +10,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-offset",
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
+        "postgres-bounded-statements",
         "postgres-sql-shape-policy",
         "postgres-no-generated-column-writes",
     ];

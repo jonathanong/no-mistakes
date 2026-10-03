@@ -24,6 +24,7 @@ words:
   - callsites
   - constantize
   - conname
+  - ctid
   - conrelid
   - cooldown
   - dedup

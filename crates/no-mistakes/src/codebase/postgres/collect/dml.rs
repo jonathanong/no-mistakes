@@ -124,6 +124,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     for trigger in &mut facts.triggers {
         trigger.line = source_line(trigger.line, 1);
     }
+    for bound in &mut facts.bounds {
+        bound.map_lines(&|line| source_line(line, 1));
+    }
 }
 
 #[cfg(test)]

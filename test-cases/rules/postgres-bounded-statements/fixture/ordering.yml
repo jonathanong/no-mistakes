@@ -1,0 +1,8 @@
+# An ordering-only catalog cannot prove boundedness.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-ordering.json
+      exclude: ['src/**']
+      sqlInclude: ['sql/invalid.sql']
