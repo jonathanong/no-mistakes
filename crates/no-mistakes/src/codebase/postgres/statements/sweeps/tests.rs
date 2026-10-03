@@ -5,6 +5,7 @@ use crate::codebase::postgres::statements::{
 };
 
 mod reordered_expanded;
+mod commuted_expanded;
 
 fn limits(sql: &str) -> Vec<(usize, usize, SqlLimitValue)> {
     extract_sql_statement_facts(sql)

@@ -51,8 +51,16 @@ pub(super) fn cursor(
             else {
                 return None;
             };
-            if column(left, names).as_ref() != Some(&keys[prefix].0)
-                || unwrap_expr(right) != keys[prefix].1
+            let (column_expr, bind_expr) = match (
+                column(left, names).is_some() && is_bind(right),
+                column(right, names).is_some() && is_bind(left),
+            ) {
+                (true, false) => (left, right),
+                (false, true) => (right, left),
+                _ => return None,
+            };
+            if column(column_expr, names).as_ref() != Some(&keys[prefix].0)
+                || unwrap_expr(bind_expr) != keys[prefix].1
             {
                 return None;
             }
@@ -60,16 +68,27 @@ pub(super) fn cursor(
         let Expr::BinaryOp { left, op, right } = unwrap_expr(terms[index]) else {
             return None;
         };
-        let lower = match op {
-            BinaryOperator::Gt => true,
-            BinaryOperator::Lt => false,
+        let (column_expr, bind_expr, lower) = match (
+            column(left, names).is_some() && is_bind(right),
+            column(right, names).is_some() && is_bind(left),
+        ) {
+            (true, false) => match op {
+                BinaryOperator::Gt => (left, right, true),
+                BinaryOperator::Lt => (left, right, false),
+                _ => return None,
+            },
+            (false, true) => match op {
+                BinaryOperator::Gt => (right, left, false),
+                BinaryOperator::Lt => (right, left, true),
+                _ => return None,
+            },
             _ => return None,
         };
-        if direction.is_some_and(|direction| direction != lower) || !is_bind(right) {
+        if direction.is_some_and(|direction| direction != lower) {
             return None;
         }
         direction = Some(lower);
-        keys.push((column(left, names)?, unwrap_expr(right)));
+        keys.push((column(column_expr, names)?, unwrap_expr(bind_expr)));
     }
     // An expanded comparison is contiguous only in its ORDER BY key sequence. Mixed sort
     // directions need different range operators per arm, which this matcher does not accept.
