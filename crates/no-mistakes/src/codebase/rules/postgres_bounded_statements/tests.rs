@@ -543,6 +543,7 @@ mod function_inputs;
 
 mod aliased_nested_joins;
 mod qualified_limit_functions;
+mod quoted_qualifier_paths;
 
 mod select_list_srf;
 mod server_state_projection;

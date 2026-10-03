@@ -4,7 +4,7 @@ use super::columns::{function_columns, projection_columns};
 use super::scalar_arrays::scalar_array;
 use super::sql_name;
 use super::Scan;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use sqlparser::ast::{FunctionArg, FunctionArgExpr, TableFactor};
 
 impl Scan {
@@ -30,9 +30,18 @@ impl Scan {
                     .as_ref()
                     .map(|alias| ident_key(&alias.name))
                     .or_else(|| object_name_ident(name).map(ident_key));
-                frame.scope.relations.extend(own);
+                if let Some(own) = own {
+                    frame.scope.whole_rows.insert(own.clone());
+                    frame.scope.relations.insert(vec![own]);
+                }
                 if alias.is_none() && args.is_none() {
-                    frame.scope.relations.insert(object_name_key(name));
+                    frame.scope.relations.insert(
+                        name.0
+                            .iter()
+                            .filter_map(|part| part.as_ident())
+                            .map(ident_key)
+                            .collect(),
+                    );
                 }
                 let mut columns = if let Some(alias) =
                     alias.as_ref().filter(|alias| !alias.columns.is_empty())
@@ -72,7 +81,9 @@ impl Scan {
                 subquery, alias, ..
             } => {
                 if let Some(alias) = alias {
-                    frame.scope.relations.insert(ident_key(&alias.name));
+                    let name = ident_key(&alias.name);
+                    frame.scope.whole_rows.insert(name.clone());
+                    frame.scope.relations.insert(vec![name]);
                 }
                 let columns = match alias.as_ref().filter(|alias| !alias.columns.is_empty()) {
                     Some(alias) => Some(
@@ -101,7 +112,9 @@ impl Scan {
             TableFactor::NestedJoin {
                 alias: Some(alias), ..
             } => {
-                frame.scope.relations.insert(ident_key(&alias.name));
+                let name = ident_key(&alias.name);
+                frame.scope.whole_rows.insert(name.clone());
+                frame.scope.relations.insert(vec![name]);
                 // A relation alias alone preserves child output names. Only explicit
                 // column renaming makes their catalog ownership unavailable here.
                 frame.scope.foreign |= !alias.columns.is_empty();
