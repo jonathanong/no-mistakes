@@ -438,8 +438,7 @@ fn fetch_with_ties_and_foreign_aggregates_do_not_cap() {
 }
 
 pub(super) fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-bounded-statements/fixture")
+    crate::test_support::rule_fixture_root("postgres-bounded-statements")
 }
 
 fn config(yaml: &str) -> NoMistakesConfig {

@@ -12,3 +12,10 @@ pub(crate) use js_string::{
     replace_quoted_placeholder,
 };
 pub(crate) use workflow_topology_impact::materialize_workflow_topology_impact_fixture;
+
+pub(crate) fn rule_fixture_root(rule: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("fixture")
+}
