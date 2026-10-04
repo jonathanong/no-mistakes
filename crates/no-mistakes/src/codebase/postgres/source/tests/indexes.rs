@@ -64,3 +64,30 @@ fn index_identity_preserves_semantics_and_normalizes_sort_defaults() {
     );
     assert!(indexes[4].predicate.is_some());
 }
+
+#[test]
+fn index_methods_preserve_quoted_case_and_fold_unquoted_case() {
+    let facts = facts("index-methods.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    let indexes = facts
+        .statements
+        .iter()
+        .map(|statement| {
+            let PostgresSqlStatementKind::CreateIndex { index } = &statement.facts else {
+                panic!()
+            };
+            index
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(indexes[0].method, "\"CustomAM\"");
+    assert_eq!(indexes[1].method, "\"CUSTOMAM\"");
+    assert_ne!(
+        indexes[0].structural_identity,
+        indexes[1].structural_identity
+    );
+    assert_eq!(indexes[2].method, "customam");
+    assert_eq!(
+        indexes[2].structural_identity,
+        indexes[3].structural_identity
+    );
+}

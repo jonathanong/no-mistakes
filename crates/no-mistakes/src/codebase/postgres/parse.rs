@@ -60,7 +60,7 @@ pub(super) struct PreparedPostgresTokens {
     pub lexical_error: Option<sqlparser::tokenizer::TokenizerError>,
 }
 
-/// One token inventory shared by strict parsing and standalone source facts.
+/// Prepare one source-fact token inventory while retaining a valid lexical prefix.
 pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
     let normalized = normalize_copy_data(sql);
     let separated = distinct_group::separate_distinct_grouping(&normalized);

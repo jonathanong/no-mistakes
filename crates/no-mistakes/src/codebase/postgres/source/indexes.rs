@@ -3,7 +3,7 @@ use super::{
     locations::Locations,
     types::*,
 };
-use sqlparser::ast::CreateIndex;
+use sqlparser::ast::{CreateIndex, IndexType};
 
 pub(super) fn index(value: &CreateIndex, locations: &Locations<'_>) -> PostgresSqlIndex {
     let mut result = PostgresSqlIndex {
@@ -11,7 +11,12 @@ pub(super) fn index(value: &CreateIndex, locations: &Locations<'_>) -> PostgresS
         table: name(&value.table_name),
         method: value.using.as_ref().map_or_else(
             || "btree".into(),
-            |method| method.to_string().to_ascii_lowercase(),
+            |method| match method {
+                IndexType::Custom(identifier) if identifier.quote_style.is_some() => {
+                    identifier.to_string()
+                }
+                _ => method.to_string().to_ascii_lowercase(),
+            },
         ),
         unique: value.unique,
         nulls_distinct: value.nulls_distinct.unwrap_or(true),
