@@ -11,6 +11,46 @@ pub(in super::super::super) fn projection_columns(query: &Query) -> Option<BTree
     set_columns(&query.body)
 }
 
+/// The alias list replaces only the first projection names; later names stay visible.
+pub(super) fn partial_alias_columns(
+    query: &Query,
+    alias: &sqlparser::ast::TableAlias,
+) -> Option<BTreeSet<String>> {
+    let mut columns: BTreeSet<String> = alias
+        .columns
+        .iter()
+        .map(|column| ident_key(&column.name))
+        .collect();
+    columns.extend(projection_suffix(&query.body, alias.columns.len())?);
+    Some(columns)
+}
+
+fn projection_suffix(set: &SetExpr, hidden: usize) -> Option<BTreeSet<String>> {
+    match set {
+        SetExpr::Select(select) => {
+            let prefix = select.projection.get(..hidden)?;
+            if prefix.iter().any(|item| {
+                matches!(
+                    item,
+                    SelectItem::Wildcard(_) | SelectItem::QualifiedWildcard(_, _)
+                )
+            }) {
+                return None;
+            }
+            // The prefix lookup above proves this start index is in bounds.
+            select.projection[hidden..].iter().map(label_name).collect()
+        }
+        SetExpr::Query(query) => projection_suffix(&query.body, hidden),
+        SetExpr::SetOperation { left, .. } => projection_suffix(left, hidden),
+        SetExpr::Values(values) => {
+            // The SQL parser only constructs VALUES with at least one row.
+            let width = values.rows[0].len();
+            (width == hidden).then(BTreeSet::new)
+        }
+        _ => None,
+    }
+}
+
 fn set_columns(set: &SetExpr) -> Option<BTreeSet<String>> {
     match set {
         SetExpr::Select(select) => select.projection.iter().map(label_name).collect(),

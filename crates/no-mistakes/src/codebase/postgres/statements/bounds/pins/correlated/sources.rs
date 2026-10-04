@@ -1,6 +1,6 @@
 mod unnest;
 
-use super::columns::{function_columns, projection_columns};
+use super::columns::{function_columns, partial_alias_columns, projection_columns};
 use super::scalar_arrays::scalar_array;
 use super::sql_name;
 use super::Scan;
@@ -86,13 +86,7 @@ impl Scan {
                     frame.scope.relations.insert(vec![name]);
                 }
                 let columns = match alias.as_ref().filter(|alias| !alias.columns.is_empty()) {
-                    Some(alias) => Some(
-                        alias
-                            .columns
-                            .iter()
-                            .map(|column| ident_key(&column.name))
-                            .collect(),
-                    ),
+                    Some(alias) => partial_alias_columns(subquery, alias),
                     None => projection_columns(subquery),
                 };
                 match columns {
