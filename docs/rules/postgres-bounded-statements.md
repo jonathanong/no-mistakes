@@ -174,7 +174,10 @@ set operation). A statement is bounded when any of these holds:
   it repeats the table's bare name: `FROM public.accounts accounts` exposes `accounts`
   as the alias but no longer exposes `public.accounts`. Schema-qualified references
   retain their schema: an inner `audit.accounts` cannot hide a reference to the outer
-  `public.accounts`. Quoted dots stay inside one identifier:
+  `public.accounts`. When the configured catalog explicitly selects `public`, an inner
+  `FROM accounts` with no alias can resolve to that same `public.accounts`; without that catalog
+  evidence the rule keeps the qualified reference conservative. Quoted dots stay inside one
+  identifier:
   a table or alias named `"public.accounts"` cannot hide that schema-qualified reference. A bare column
   belongs to the first level whose tables have it, as PostgreSQL resolves it: in
   `a.id IN (SELECT id FROM currencies LIMIT 1)` the `id` is the account's own when the catalog's

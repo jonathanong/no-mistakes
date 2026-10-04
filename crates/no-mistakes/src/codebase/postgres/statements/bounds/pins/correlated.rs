@@ -8,7 +8,7 @@ mod visitor;
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
-use crate::codebase::postgres::statements::SqlBareRead;
+use crate::codebase::postgres::statements::{SqlBareRead, SqlQualifiedRead, SqlQualifiedScope};
 use crate::fx::FxHashMap;
 use columns::output_names;
 pub(in super::super) use columns::projection_columns;
@@ -23,6 +23,15 @@ pub(in super::super) struct Reads {
     pub(in super::super) certain: bool,
     /// Bare columns that read the enclosing query unless a catalog table owns them.
     pub(in super::super) bare: Vec<SqlBareRead>,
+    /// Qualified references whose outer/local identity depends on the catalog.
+    pub(in super::super) qualified: Vec<SqlQualifiedRead>,
+}
+
+#[derive(Clone, Default)]
+struct Qualified {
+    key: Vec<String>,
+    sql: String,
+    scopes: Vec<SqlQualifiedScope>,
 }
 
 /// Whether `query` reads a column of a relation outside it, so the rows it returns depend on
@@ -47,11 +56,18 @@ pub(in super::super) fn reads_outer_rows(
         ..Scan::default()
     };
     let _ = query.visit(&mut scan);
-    let certain = scan
+    let mut qualified: Vec<SqlQualifiedRead> = scan
         .unresolved
-        .iter()
-        .any(|qualifier| outer.contains(qualifier))
-        || scan.reads.iter().any(|read| read.tables.is_empty());
+        .into_iter()
+        .filter(|read| outer.contains(&read.key))
+        .map(|read| SqlQualifiedRead {
+            qualifier: read.sql,
+            scopes: read.scopes,
+        })
+        .collect();
+    qualified.sort();
+    qualified.dedup();
+    let certain = scan.reads.iter().any(|read| read.tables.is_empty());
     let mut bare: Vec<SqlBareRead> = scan
         .reads
         .into_iter()
@@ -59,7 +75,11 @@ pub(in super::super) fn reads_outer_rows(
         .collect();
     bare.sort();
     bare.dedup();
-    Reads { certain, bare }
+    Reads {
+        certain,
+        bare,
+        qualified,
+    }
 }
 
 /// What one query level mentions, until its relations are all known.
@@ -74,9 +94,9 @@ struct Frame {
     select_frame: bool,
     /// Derived queries resolve against preceding sources, never their own output.
     enclosing: Option<Scope>,
-    escaping_qualifiers: Vec<Vec<String>>,
+    escaping_qualifiers: Vec<Qualified>,
     escaping_reads: Vec<SqlBareRead>,
-    qualifiers: Vec<Vec<String>>,
+    qualifiers: Vec<Qualified>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
     bare: BTreeMap<String, usize>,
@@ -93,7 +113,7 @@ struct Scan {
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     pending_ctes: FxHashMap<usize, (String, Option<BTreeSet<String>>)>,
     /// Qualifiers and bare reads that no level of the query resolved.
-    unresolved: Vec<Vec<String>>,
+    unresolved: Vec<Qualified>,
     reads: Vec<SqlBareRead>,
     positions: Option<Vec<(u32, u32)>>,
 }
@@ -121,10 +141,15 @@ impl Scan {
 
     fn finish_frame_without_query(&mut self) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
-        let mut up: Vec<Vec<String>> = frame
+        let scope_candidates = frame.scope.qualified_candidates();
+        let mut up: Vec<Qualified> = frame
             .qualifiers
             .into_iter()
-            .filter(|qualifier| !frame.scope.relations.contains(qualifier))
+            .filter(|qualifier| !frame.scope.relations.contains(&qualifier.key))
+            .map(|mut qualifier| {
+                qualifier.scopes.push(scope_candidates.clone());
+                qualifier
+            })
             .collect();
         // A bare name that is a relation's own is a whole-row reference, not a column.
         let own = frame.bare.iter().filter(|(name, count)| {
@@ -139,10 +164,18 @@ impl Scan {
             .chain(frame.reads)
             .collect();
         frame.scope.resolve_reads(&mut reads);
-        up.extend(frame.escaping_qualifiers);
+        for mut qualifier in frame.escaping_qualifiers {
+            if !frame.scope.relations.contains(&qualifier.key) {
+                qualifier.scopes.push(scope_candidates.clone());
+                up.push(qualifier);
+            }
+        }
         reads.extend(frame.escaping_reads);
         if let Some(enclosing) = &frame.enclosing {
-            up.retain(|qualifier| !enclosing.relations.contains(qualifier));
+            up.retain(|qualifier| !enclosing.relations.contains(&qualifier.key));
+            for qualifier in &mut up {
+                qualifier.scopes.push(enclosing.qualified_candidates());
+            }
             enclosing.resolve_reads(&mut reads);
         }
         match self.stack.last_mut() {

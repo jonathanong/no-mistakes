@@ -89,9 +89,15 @@ impl Visitor for Scan {
         };
         match expr {
             Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-                frame
-                    .qualifiers
-                    .push(parts[..parts.len() - 1].iter().map(ident_key).collect());
+                frame.qualifiers.push(super::Qualified {
+                    key: parts[..parts.len() - 1].iter().map(ident_key).collect(),
+                    sql: parts[..parts.len() - 1]
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join("."),
+                    scopes: Vec::new(),
+                });
             }
             Expr::Identifier(ident)
                 if !is_placeholder_ident_at(ident, self.positions.as_deref()) =>

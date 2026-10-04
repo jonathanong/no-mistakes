@@ -3,7 +3,7 @@ mod iteration;
 mod writes;
 pub use bounds::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
-    SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
+    SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlQualifiedRead, SqlQualifiedScope, SqlPossibleTemporary,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 use sqlparser::ast::Statement;

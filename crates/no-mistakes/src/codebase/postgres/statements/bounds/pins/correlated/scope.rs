@@ -1,4 +1,4 @@
-use crate::codebase::postgres::statements::SqlBareRead;
+use crate::codebase::postgres::statements::{SqlBareRead, SqlQualifiedScope};
 use crate::fx::FxHashMap;
 use std::cell::RefCell;
 use std::hash::Hash;
@@ -55,6 +55,13 @@ impl Tables {
         entries.push(table);
         self.visible = entries.len();
     }
+
+    fn visible(&self) -> Vec<String> {
+        self.entries
+            .as_ref()
+            .map(|entries| entries.borrow()[..self.visible].to_vec())
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Clone, Default)]
@@ -71,6 +78,13 @@ pub(super) struct Scope {
 }
 
 impl Scope {
+    pub(super) fn qualified_candidates(&self) -> SqlQualifiedScope {
+        SqlQualifiedScope {
+            tables: self.tables.visible(),
+            unknown: self.foreign,
+        }
+    }
+
     pub(super) fn resolve_reads(&self, reads: &mut Vec<SqlBareRead>) {
         if self.foreign {
             reads.clear();

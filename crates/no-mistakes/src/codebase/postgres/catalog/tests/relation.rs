@@ -71,3 +71,20 @@ fn an_explicit_foreign_schema_is_never_the_catalogs_bare_table() {
     let anonymous = SchemaCatalog::from_json(&json("")).unwrap();
     assert!(anonymous.relation("audit.accounts").is_some());
 }
+
+#[test]
+fn relation_identity_needs_explicit_schema_evidence_for_bare_names() {
+    let json = |schema: &str| {
+        format!(
+            r#"{{"formatVersion": 2, "coverage": "complete"{schema},
+                "tables": {{"accounts": {{"columns": {{"id": {{"dataType": "integer"}}}}}}}}}}"#
+        )
+    };
+    let explicit = SchemaCatalog::from_json(&json(r#", "schema": "public""#)).unwrap();
+    assert!(explicit.same_relation("public.accounts", "accounts"));
+    assert!(!explicit.same_relation("audit.accounts", "accounts"));
+
+    let anonymous = SchemaCatalog::from_json(&json("")).unwrap();
+    assert!(anonymous.same_relation("accounts", "accounts"));
+    assert!(!anonymous.same_relation("public.accounts", "accounts"));
+}

@@ -56,6 +56,7 @@ impl<'a> Using<'a> {
                         source: SqlPinSource::Items(vec![other]),
                         null_safe: false,
                         reads: Vec::new(),
+                        qualified_reads: Vec::new(),
                     },
                 ));
             }

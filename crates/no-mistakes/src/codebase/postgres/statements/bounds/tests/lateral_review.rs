@@ -9,7 +9,7 @@ fn derived_outputs_do_not_shadow_reads_inside_their_own_queries() {
     let all = facts(sql);
     assert_eq!(all.len(), 7);
     let pins = |index: usize| &all[index].query.items[all[index].target.unwrap()].pins;
-    for index in [0, 1, 4, 6] {
+    for index in [0, 4, 6] {
         // Every outer row finds itself, regardless of the inner LIMIT.
         assert!(
             pins(index)
@@ -19,6 +19,10 @@ fn derived_outputs_do_not_shadow_reads_inside_their_own_queries() {
         );
         assert_eq!(pins(index).len(), 1);
     }
+    // The catalog decides whether `a.id` in this LATERAL body is local or belongs to the row.
+    assert_eq!(pins(1).len(), 1);
+    assert!(matches!(pins(1)[0].source, super::SqlPinSource::Query(_)));
+    assert!(!pins(1)[0].qualified_reads.is_empty());
     assert_eq!(pins(2).len(), 1);
     assert_eq!(pins(2)[0].reads.len(), 1);
     assert_eq!(pins(2)[0].reads[0].column, "id");

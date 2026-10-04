@@ -69,6 +69,9 @@ pub struct SqlBoundItem {
     /// Bare columns of a `LATERAL` source that none of its own relations is known to own: it
     /// reads the items before it when the catalog shows that none of their tables has them.
     pub lateral_reads: Vec<SqlBareRead>,
+    /// Schema-qualified reads which may name items before a `LATERAL` source. Catalog identity
+    /// can show that an unqualified local table is the same relation.
+    pub lateral_qualified_reads: Vec<SqlQualifiedRead>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,6 +98,23 @@ pub struct SqlBareRead {
     pub tables: Vec<String>,
 }
 
+/// A schema-qualified reference which did not match a relation name syntactically.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SqlQualifiedRead {
+    /// The qualifier in SQL spelling, preserving quoted identifier boundaries.
+    pub qualifier: String,
+    /// Candidate scopes ordered from innermost outward.
+    pub scopes: Vec<SqlQualifiedScope>,
+}
+
+/// Candidate relations in one lexical query scope for a qualified read.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SqlQualifiedScope {
+    pub tables: Vec<String>,
+    /// The scope contains a relation whose identity cannot be established from its base tables.
+    pub unknown: bool,
+}
+
 impl SqlBoundItem {
     pub fn new(
         kind: SqlBoundItemKind,
@@ -112,6 +132,7 @@ impl SqlBoundItem {
             pins: Vec::new(),
             lateral: false,
             lateral_reads: Vec::new(),
+            lateral_qualified_reads: Vec::new(),
         }
     }
 }
@@ -140,6 +161,8 @@ pub struct SqlBoundPin {
     /// Bare columns that subqueries in the value read: when one resolves to the enclosing query
     /// the value depends on the row checked, and the pin fixes nothing.
     pub reads: Vec<SqlBareRead>,
+    /// Schema-qualified reads retained for catalog identity resolution.
+    pub qualified_reads: Vec<SqlQualifiedRead>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

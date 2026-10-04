@@ -13,8 +13,7 @@ fn nonrecursive_cte_definitions_keep_base_relation_ownership() {
         assert!(pins[0].reads.iter().all(|read| !read.tables.is_empty()));
     }
     assert_eq!(facts.bounds[4].query.items[0].pins.len(), 1);
-    assert!(matches!(
-        facts.bounds[4].query.items[0].pins[0].source,
-        SqlPinSource::ReadQuery(_)
-    ));
+    let pin = &facts.bounds[4].query.items[0].pins[0];
+    assert!(matches!(pin.source, SqlPinSource::Query(_)));
+    assert!(!pin.qualified_reads.is_empty());
 }

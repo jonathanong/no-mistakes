@@ -4,7 +4,9 @@ mod resolver;
 
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
-use crate::codebase::postgres::statements::{SqlBareRead, SqlBoundItem, SqlBoundPin, SqlPinSource};
+use crate::codebase::postgres::statements::{
+    SqlBareRead, SqlBoundItem, SqlBoundPin, SqlPinSource, SqlQualifiedRead,
+};
 use array::{caller_array, constructor, finite_array, scalar_subquery};
 use resolver::Sourced;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
@@ -23,8 +25,14 @@ pub(super) fn extract(
     out: &mut Vec<(usize, SqlBoundPin)>,
 ) {
     let mut pin = |column: &Expr, sourced: Option<Sourced>, null_safe: bool| {
-        if let (Some((item, column)), Some(Sourced { source, reads })) =
-            (resolver.column(column), sourced)
+        if let (
+            Some((item, column)),
+            Some(Sourced {
+                source,
+                reads,
+                qualified_reads,
+            }),
+        ) = (resolver.column(column), sourced)
         {
             if restricted.contains(&item) && resolver.is_table(item) {
                 out.push((
@@ -34,6 +42,7 @@ pub(super) fn extract(
                         source,
                         null_safe,
                         reads,
+                        qualified_reads,
                     },
                 ));
             }
@@ -152,6 +161,7 @@ fn subquery_source(
             SqlPinSource::Query(query)
         },
         reads: reads.bare,
+        qualified_reads: reads.qualified,
     }
 }
 
@@ -174,19 +184,27 @@ fn equate(
 /// An `IN` list is sized by the caller, plus whatever other items its elements name.
 fn merge(sources: Vec<Sourced>) -> Sourced {
     let mut reads: Vec<SqlBareRead> = Vec::new();
+    let mut qualified_reads: Vec<SqlQualifiedRead> = Vec::new();
     let mut items: BTreeSet<usize> = BTreeSet::new();
     for sourced in sources {
         reads.extend(sourced.reads);
+        qualified_reads.extend(sourced.qualified_reads);
         if let SqlPinSource::Items(named) = sourced.source {
             items.extend(named);
         }
     }
     reads.sort();
     reads.dedup();
+    qualified_reads.sort();
+    qualified_reads.dedup();
     let source = if items.is_empty() {
         SqlPinSource::Value
     } else {
         SqlPinSource::Items(items.into_iter().collect())
     };
-    Sourced { source, reads }
+    Sourced {
+        source,
+        reads,
+        qualified_reads,
+    }
 }

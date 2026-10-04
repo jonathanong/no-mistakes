@@ -21,6 +21,7 @@ mod names;
 mod order;
 mod partition;
 mod paths;
+mod relation_identity;
 mod resolve;
 mod search_path;
 mod snapshot;
