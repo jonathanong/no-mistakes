@@ -75,14 +75,14 @@ pub(crate) use profiles::{
 pub use rule_options::fail_unanalyzable_sql;
 pub use schema::extract_create_table_metadata;
 pub use statements::{
-    extract_sql_statement_facts, has_top_level_not_exists_in, insert_keyword_count,
-    mask_quoted_sql, SqlAssignmentFact, SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind,
-    SqlBoundKind, SqlBoundPin, SqlBoundQuery, SqlColumnClause, SqlColumnUseFact,
-    SqlConflictArbiter, SqlConflictWhereProof, SqlConjunctFact, SqlCountExistenceFact,
-    SqlCursorBound, SqlExistsSetOpFact, SqlInsertFact, SqlLimitFact, SqlLimitValue,
-    SqlOnConflictAction, SqlOnConflictFact, SqlPinSource, SqlRelationPredicateFact, SqlSelectFact,
-    SqlStatementFileFacts, SqlSweepFact, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod,
-    SqlValueForm, SqlWriteColumns, SqlWriteFact,
+    extract_sql_statement_facts, extract_sql_statement_facts_for_embedded_call,
+    has_top_level_not_exists_in, insert_keyword_count, mask_quoted_sql, SqlAssignmentFact,
+    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundPin,
+    SqlBoundQuery, SqlColumnClause, SqlColumnUseFact, SqlConflictArbiter, SqlConflictWhereProof,
+    SqlConjunctFact, SqlCountExistenceFact, SqlCursorBound, SqlExistsSetOpFact, SqlInsertFact,
+    SqlLimitFact, SqlLimitValue, SqlOnConflictAction, SqlOnConflictFact, SqlPinSource,
+    SqlRelationPredicateFact, SqlSelectFact, SqlStatementFileFacts, SqlSweepFact, SqlTriggerEvent,
+    SqlTriggerFact, SqlTriggerPeriod, SqlValueForm, SqlWriteColumns, SqlWriteFact,
 };
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,

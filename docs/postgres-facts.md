@@ -217,6 +217,16 @@ Each `EmbeddedSqlCall` records `kind`:
 returns typed INSERT / SELECT / CREATE TRIGGER facts without keeping the
 sqlparser AST:
 
+For SQL returned by `extract_embedded_sql_from_source`, pass its
+`EmbeddedSqlCall` to `extract_sql_statement_facts_for_embedded_call(&call)`.
+This composition API preserves the exact positions of generated interpolation
+markers, so a user-written identifier such as `sql_placeholder_1` remains a
+column while the generated marker is treated as a bind. It returns `None` when
+the call has no recovered SQL. Fact line and column locations are relative to
+the recovered SQL text; `Dynamic` calls can contain only a verified leading
+fragment. Use `extract_sql_statement_facts(sql)` for standalone SQL without
+embedded interpolation provenance.
+
 - executed `INSERT` (EXPLAIN without ANALYZE is skipped; PREPARE inner
   statements are treated as executed; CREATE FUNCTION/PROCEDURE bodies are not)
 - `ON CONFLICT` action, arbiter (columns / named constraint / unknown), SET
