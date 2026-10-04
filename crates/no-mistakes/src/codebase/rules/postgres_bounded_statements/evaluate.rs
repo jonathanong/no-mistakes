@@ -156,14 +156,14 @@ fn keyed(
     let SqlBoundItemKind::Table(name) = &item.kind else {
         return false;
     };
-    let usable = |column: &str| {
+    let usable = |column: &str, physical: &str| {
         item.pins.iter().enumerate().any(|(index, pin)| {
             pin.column == column
                 && arrays[index]
                 // A subquery in the value that reads the row checked sizes nothing.
                 && !reads_outer(&pin.reads, catalog)
                 // `IS NOT DISTINCT FROM $1` also matches NULL, which a unique key may repeat.
-                && (!pin.null_safe || catalog.column_is_not_null(name, column))
+                && (!pin.null_safe || catalog.column_is_not_null(name, physical))
                 && match &pin.source {
                     SqlPinSource::Value => true,
                     SqlPinSource::StoredArray(_) => false,
@@ -174,16 +174,18 @@ fn keyed(
                 }
         })
     };
-    // Retain only catalog keys whose visible names still denote the original columns.
+    // Preserve physical nullability while matching pins against visible aliases.
     let mut keys: Vec<_> = catalog
         .unique_keys(name)
         .into_iter()
-        .filter(|key| {
-            key.iter().all(|column| {
-                catalog.relation(name).is_some_and(|table| {
-                    super::arrays::key_unchanged(table, &item.column_aliases, column)
+        .filter_map(|key| {
+            key.into_iter()
+                .map(|column| {
+                    let table = catalog.relation(name)?;
+                    let visible = super::arrays::key_visible(table, &item.column_aliases, &column)?;
+                    Some((visible.to_owned(), column))
                 })
-            })
+                .collect::<Option<Vec<_>>>()
         })
         .collect();
     // Every row has a `ctid`, so `ctid IN (SELECT ctid … LIMIT n)` bounds a statement. It is
@@ -193,10 +195,12 @@ fn keyed(
         .relation(name)
         .is_some_and(|table| table.relation_kind != RelationKind::PartitionedTable);
     if plain && !item.column_aliases.iter().any(|alias| alias == "ctid") {
-        keys.push(vec!["ctid".to_string()]);
+        keys.push(vec![("ctid".to_string(), "ctid".to_string())]);
     }
-    keys.iter()
-        .any(|key| key.iter().all(|column| usable(column)))
+    keys.iter().any(|key| {
+        key.iter()
+            .all(|(visible, physical)| usable(visible, physical))
+    })
 }
 
 /// Columns every table has without the catalog listing them.

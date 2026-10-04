@@ -685,3 +685,9 @@ An explicit caller-sized `LIMIT` or finite `FETCH` in a parenthesized SELECT
 continues to cap its rows when an outer `ORDER BY` expands an expression.
 This proof follows only that SELECT wrapper: it does not cap unrelated set
 operation arms, NULL or data-derived limits, or a query with no explicit cap.
+
+A legacy catalog with exactly one physical column can map that column to its
+sole positional alias without ordinal metadata. Unique-key evaluation uses the
+visible alias and retains the physical column’s nullability. Multi-column
+legacy catalogs remain conservative; an alias named `ctid` does not prove the
+physical system column’s uniqueness. Stored array leaves remain unbounded.
