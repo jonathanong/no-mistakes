@@ -105,5 +105,5 @@ fn parameter_count(statement: &Statement, declared: usize) -> Option<usize> {
         }
         ControlFlow::Continue(())
     });
-    (valid && (declared == 0 || inferred <= declared)).then_some(declared.max(inferred))
+    valid.then_some(declared.max(inferred))
 }
