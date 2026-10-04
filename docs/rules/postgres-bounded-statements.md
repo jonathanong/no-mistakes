@@ -318,3 +318,9 @@ of temporary views, preserving relation names, quoted schema case and dots, and
 transitive temporary dependents. Transaction and savepoint rollback restore the
 original schema identities. Bare dependencies retain their conservative matching
 behavior.
+
+Known scalar reducers such as `pg_catalog.array_to_string(o.account_ids, ',')` may
+consume an array-valued argument inside a finite constructor. Their scalar result
+provides one candidate value; argument row dependencies still require the owner
+(`o`) to be bounded independently. Direct stored-array leaves remain unbounded,
+and unknown, unqualified, array-returning and set-returning calls remain opaque.
