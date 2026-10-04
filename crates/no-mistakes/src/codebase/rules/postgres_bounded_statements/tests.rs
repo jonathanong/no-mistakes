@@ -35,6 +35,7 @@ mod copy_quoted_table;
 mod explicit_self_alias;
 mod materialized_drop;
 mod materialized_namesake;
+mod multi_table_arms;
 mod partitions;
 mod permanent_view_chain;
 mod physical_cascade;

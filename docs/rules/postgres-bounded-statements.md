@@ -441,6 +441,8 @@ inheritance `*` after the name are analyzed as queries,
 including after temporary-table declarations. For `TABLE` set-operation arms, including `TABLE ONLY name`, the SQL parser omits identifier quote information.
 `INSERT INTO target TABLE ONLY source` also retains the source relation's quoted
 or folded identity after a target alias, column list, or identity override.
+Multiple `TABLE` set-operation arms can precede a later `SELECT` arm; each
+quoted temporary arm stays separate from an unquoted permanent namesake.
 `EXPLAIN TABLE name` is parsed as a plan without an executed query fact;
 `EXPLAIN ANALYZE TABLE name` executes the query and retains the same quoted
 or folded relation identity as standalone `TABLE name`.
