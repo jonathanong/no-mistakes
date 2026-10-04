@@ -1,6 +1,5 @@
 use crate::codebase::postgres::statements::SqlBareRead;
 use crate::fx::FxHashMap;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::hash::Hash;
 use std::rc::Rc;
@@ -24,7 +23,7 @@ impl<K: Eq + Hash> Names<K> {
 
     pub(super) fn contains<Q: Eq + Hash + ?Sized>(&self, name: &Q) -> bool
     where
-        K: Borrow<Q>,
+        K: std::borrow::Borrow<Q>,
     {
         self.entries.as_ref().is_some_and(|entries| {
             entries

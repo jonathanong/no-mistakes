@@ -54,7 +54,8 @@ fn public_embedded_call_composition_preserves_placeholder_provenance() {
 fn embedded_placeholder_positions_are_authoritative_across_fact_families() {
     let path = fixture("provenance-across-facts.ts");
     let source = std::fs::read_to_string(&path).expect("embedded SQL fixture");
-    let embedded = extract_embedded_sql_from_source(&path, &source, &EmbeddedSqlOptions::default());
+    let options = EmbeddedSqlOptions::configured("@data-stores/psql", &[]);
+    let embedded = extract_embedded_sql_from_source(&path, &source, &options);
 
     let query = &embedded.calls[0];
     assert_eq!(query.recovered_placeholder_positions.len(), 1);
