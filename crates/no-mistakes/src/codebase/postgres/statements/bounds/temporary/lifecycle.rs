@@ -17,15 +17,7 @@ impl TemporaryRelations {
             Statement::Savepoint { name } => {
                 self.savepoints.push((ident_key(name), self.state.clone()))
             }
-            Statement::ReleaseSavepoint { name } => {
-                if let Some(index) = self
-                    .savepoints
-                    .iter()
-                    .rposition(|(key, _)| *key == ident_key(name))
-                {
-                    self.savepoints.truncate(index);
-                }
-            }
+            Statement::ReleaseSavepoint { name } => self.release_savepoint(name),
             Statement::Rollback {
                 savepoint: Some(name),
                 ..
@@ -146,6 +138,16 @@ impl TemporaryRelations {
                 self.state.local_path = None;
             }
             _ => {}
+        }
+    }
+
+    fn release_savepoint(&mut self, name: &sqlparser::ast::Ident) {
+        if let Some(index) = self
+            .savepoints
+            .iter()
+            .rposition(|(key, _)| *key == ident_key(name))
+        {
+            self.savepoints.truncate(index);
         }
     }
 
