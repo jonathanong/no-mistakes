@@ -44,6 +44,16 @@ and is retired conservatively on a schema cascade.
 Schema renames update a declared permanent view's qualified identity and source
 edges before a later physical cascade.
 
+An explicitly parsed `search_path` also limits which physical schemas a bare
+`DROP` or `RENAME` target can name. For example, with `public, pg_temp`, dropping
+bare `accounts` leaves a temporary view over `other.accounts` intact. Qualified
+targets still match their exact schema, and transitive cascade nodes retain their
+identity after the path changes. Implicit `pg_catalog` and `pg_temp` remain eligible.
+Unknown paths, role substitution, `DEFAULT`, and unsupported quoted string lists
+retain conservative matching; membership alone does not prove which eligible
+schema owns an ambiguous bare target. Transaction, savepoint, and `SET LOCAL`
+restoration retain the complete path proof.
+
 `DROP SCHEMA ... CASCADE` retires temporary views depending on qualified physical
 relations in that schema, including transitive temporary dependents. Exact decoded
 schema identifiers preserve quoted case and dots; unrelated schemas stay live.
