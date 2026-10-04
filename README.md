@@ -175,6 +175,13 @@ within their ten-minute step deadlines. Development and test profiles use the sa
 setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
 Linux still runs the full suite and enforces the coverage gates.
 
+ARM macOS release builds use ThinLTO and 16 code generation units so LLVM can
+optimize the combined CLI and N-API build in parallel on a cold runner. The
+workflow sets these Cargo profile overrides before restoring its build cache.
+Other release targets and local builds retain full LTO and one code generation
+unit. Compile-time and runtime differences require measurements on the same
+platform; Linux benchmarks do not establish the macOS tradeoff.
+
 ## Support
 
 | Language/Framework/Tool | Status |

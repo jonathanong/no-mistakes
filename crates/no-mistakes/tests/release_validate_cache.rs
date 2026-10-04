@@ -120,3 +120,29 @@ fn validate_job_starts_isolated_catalog_postgres_after_disk_reclamation_before_t
         );
     }
 }
+
+#[test]
+fn macos_release_uses_parallel_codegen_and_thin_lto_before_cache_restore() {
+    let workflow = release_workflow();
+    let native = job_body(&workflow, "build-native");
+    // A cold macOS release exceeded 45 minutes with fat LTO and one codegen unit.
+    // Keep the overrides job-wide so cache identity and compilation agree.
+    let (job_settings, steps) = native.split_once("\n    steps:\n").unwrap();
+    let (_, job_env) = job_settings.split_once("\n    env:\n").unwrap();
+    let env_lines: Vec<_> = job_env
+        .lines()
+        .take_while(|line| !line.starts_with("    ") || line.starts_with("      "))
+        .collect();
+    for setting in [
+        "CARGO_PROFILE_RELEASE_LTO: ${{ matrix.target == 'aarch64-apple-darwin' && 'thin' || 'fat' }}",
+        "CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.target == 'aarch64-apple-darwin' && '16' || '1' }}",
+    ] {
+        assert!(
+            env_lines.contains(&format!("      {setting}").as_str()),
+            "missing job-level release profile override: {setting}"
+        );
+    }
+    assert!(steps.contains("Swatinem/rust-cache"));
+    assert!(steps.contains("NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked"));
+    assert!(native.contains("timeout-minutes: 45"));
+}
