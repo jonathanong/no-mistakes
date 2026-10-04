@@ -372,7 +372,11 @@ fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT AL
 taken from a subquery or a column, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
 is a pure aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not
 windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returning function
-in the select list), and lists its FROM `items`. An item is a base `Table`, a `Query`
+in the select list), and lists its FROM `items`. Bare, unquoted `COALESCE`, `LEAST`,
+and `GREATEST` preserve a fixed count beside literal NULL arguments when every
+argument is known and at least one supplies a guaranteed non-NULL count; all-NULL
+or unknown inputs do not establish a cap. The separate limit-value classification
+remains unchanged. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
 operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`
 over arguments the statement supplies, including nested bare, unquoted

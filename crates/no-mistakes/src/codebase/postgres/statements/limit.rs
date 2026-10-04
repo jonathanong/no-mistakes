@@ -1,15 +1,13 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
 mod empty;
+mod fixed_count;
+use fixed_count::is_fixed_at;
 mod zero;
 pub(super) use super::tokens::Tokens;
 use super::SqlLimitValue;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
 pub(super) use empty::is_empty_page;
-use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, LimitClause, Query, SetExpr, Spanned,
-    Value,
-};
+use sqlparser::ast::{Expr, LimitClause, Query, SetExpr, Spanned, Value};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Span, Token};
 
@@ -43,40 +41,6 @@ pub(super) fn is_limited_at(
             limit: Some(limit), ..
         })
         | Some(LimitClause::OffsetCommaLimit { limit, .. }) => is_fixed_at(limit, positions),
-        _ => false,
-    }
-}
-
-/// A count the statement text or its caller decides: a literal, a bind (`$1`, or an
-/// interpolation recovered from a template literal) or an expression of them. NULL means no
-/// limit, and a subquery or a column can return any number.
-fn is_fixed_at(expr: &Expr, positions: super::value::PlaceholderPositions<'_>) -> bool {
-    match expr {
-        Expr::Nested(inner) => is_fixed_at(inner, positions),
-        Expr::Value(value) => !matches!(value.value, Value::Null),
-        Expr::Identifier(ident) => super::value::is_placeholder_ident_at(ident, positions),
-        Expr::Cast { expr, .. } | Expr::UnaryOp { expr, .. } => is_fixed_at(expr, positions),
-        Expr::BinaryOp { left, right, .. } => {
-            is_fixed_at(left, positions) && is_fixed_at(right, positions)
-        }
-        // Only the functions that return NULL for nothing but NULL arguments: `NULLIF(1, 1)`,
-        // like any function that can produce NULL from fixed inputs, is `LIMIT ALL`.
-        Expr::Function(function) => {
-            let pick = function.name.0.len() == 1
-                && object_name_ident(&function.name).is_some_and(|ident| {
-                    ident.quote_style.is_none()
-                        && ["coalesce", "least", "greatest"].contains(&ident_key(ident).as_str())
-                });
-            pick && match &function.args {
-                FunctionArguments::List(list) => list.args.iter().all(|arg| match arg {
-                    FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => {
-                        is_fixed_at(expr, positions)
-                    }
-                    _ => false,
-                }),
-                _ => false,
-            }
-        }
         _ => false,
     }
 }

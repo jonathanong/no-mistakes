@@ -112,3 +112,29 @@ fn catalog_numeric_zero_keeps_empty_page_proofs() {
         [5, 6, 7, 9]
     );
 }
+
+#[test]
+fn argumentless_function_ast_cannot_prove_a_fixed_count() {
+    use sqlparser::ast::{Expr, FunctionArguments, LimitClause, Statement};
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/nullable-fixed-limit.sql"
+    ));
+    let mut statements = crate::codebase::postgres::parse_postgres_sql(sql).unwrap();
+    let Statement::Query(query) = &mut statements[0] else {
+        panic!("saved conditional-count fixture must start with SELECT");
+    };
+    let Some(LimitClause::LimitOffset {
+        limit: Some(expr), ..
+    }) = &mut query.limit_clause
+    else {
+        panic!("saved conditional-count fixture must have LIMIT");
+    };
+    let Expr::Function(function) = expr else {
+        panic!("saved conditional-count fixture must have a function count");
+    };
+    // Prepared AST callers can supply this form even though PostgreSQL's parser writes a list.
+    // Keep unsupported argument representations conservative at the shared fact boundary.
+    function.args = FunctionArguments::None;
+    assert!(!super::fixed_count::is_fixed_at(expr, None));
+}
