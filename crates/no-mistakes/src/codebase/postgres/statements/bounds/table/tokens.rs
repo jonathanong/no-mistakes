@@ -14,6 +14,7 @@ struct SourceSegment {
     end: (u64, u64),
     names: Vec<SourceTable>,
     operators: Vec<SourceOperator>,
+    froms: Vec<SourceOperator>,
     depths: Vec<SourceDepth>,
 }
 
@@ -34,6 +35,7 @@ impl TableTokenIndex {
                     end: location(last.span.end),
                     names: cursor.names,
                     operators: cursor.operators,
+                    froms: cursor.froms,
                     depths: cursor.depths,
                 })
             })
@@ -57,6 +59,7 @@ impl TableTokenIndex {
         TableTokenCursor {
             names: segment.names.clone(),
             operators: segment.operators.clone(),
+            froms: segment.froms.clone(),
             depths: segment.depths.clone(),
             next: 0,
             last_at: None,
@@ -76,6 +79,7 @@ fn location(at: Location) -> (u64, u64) {
 pub(in super::super::super) struct TableTokenCursor {
     names: Vec<SourceTable>,
     operators: Vec<SourceOperator>,
+    froms: Vec<SourceOperator>,
     depths: Vec<SourceDepth>,
     next: usize,
     last_at: Option<(usize, usize)>,
@@ -106,6 +110,31 @@ pub(super) struct SourceTable {
 }
 
 impl TableTokenCursor {
+    /// Ignore TABLE spellings in a SELECT projection before traversing its FROM sources.
+    /// A scalar query can contain its own FROM, so match only the SELECT's nesting depth.
+    pub(in super::super::super) fn advance_to_from(&mut self, select_start: Location) {
+        let start = (select_start.line as usize, select_start.column as usize);
+        let depth = self
+            .depths
+            .iter()
+            .rfind(|source| source.at <= start)
+            .map_or(0, |source| source.depth);
+        let Some(from) = self
+            .froms
+            .iter()
+            .find(|from| from.at > start && from.depth == depth)
+        else {
+            return;
+        };
+        while self
+            .names
+            .get(self.next)
+            .is_some_and(|name| name.at < from.at)
+        {
+            self.next += 1;
+        }
+    }
+
     pub(super) fn take(&mut self, table: &Table) -> Option<SourceTable> {
         let found = self.names[self.next..].iter().position(|source| {
             source.schema.as_deref() == table.schema_name.as_deref()

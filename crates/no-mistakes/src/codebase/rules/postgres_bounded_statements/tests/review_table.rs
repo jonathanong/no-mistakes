@@ -146,3 +146,22 @@ fn ignored_projection_table_arm_cannot_mask_a_derived_relation() {
         .collect();
     assert_eq!(found, ["accounts"]);
 }
+
+#[test]
+fn ignored_projection_table_arm_cannot_rename_a_direct_derived_relation() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-quoted-derived.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 1);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| finding.table)
+        .collect();
+    assert_eq!(found, ["accounts"]);
+}

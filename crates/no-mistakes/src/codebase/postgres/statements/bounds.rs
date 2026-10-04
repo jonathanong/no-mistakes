@@ -48,6 +48,12 @@ impl Scope {
         }
     }
 
+    fn advance_table_tokens_to_from(&self, select_start: sqlparser::tokenizer::Location) {
+        if let Some(tokens) = &self.table_tokens {
+            tokens.borrow_mut().advance_to_from(select_start);
+        }
+    }
+
     fn get(&self, name: &str) -> Option<&SqlBoundQuery> {
         self.ctes.get(name)
     }

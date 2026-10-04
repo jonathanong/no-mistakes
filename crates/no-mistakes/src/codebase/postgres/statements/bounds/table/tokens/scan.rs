@@ -10,6 +10,7 @@ impl TableTokenCursor {
             .collect();
         let mut names = Vec::new();
         let mut operators = Vec::new();
+        let mut froms = Vec::new();
         let mut depths = Vec::new();
         let mut depth: usize = 0;
         for (index, token) in words.iter().enumerate() {
@@ -32,6 +33,9 @@ impl TableTokenCursor {
                 Keyword::UNION | Keyword::INTERSECT | Keyword::EXCEPT
             ) {
                 operators.push(SourceOperator { at, depth });
+            }
+            if keyword.keyword == Keyword::FROM {
+                froms.push(SourceOperator { at, depth });
             }
             if keyword.keyword != Keyword::TABLE
                 || !query_table_context(words.get(index.wrapping_sub(1)).copied())
@@ -77,6 +81,7 @@ impl TableTokenCursor {
         Self {
             names,
             operators,
+            froms,
             depths,
             next: 0,
             last_at: None,

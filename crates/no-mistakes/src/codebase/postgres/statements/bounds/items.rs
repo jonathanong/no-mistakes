@@ -8,6 +8,11 @@ use sqlparser::ast::{
 };
 
 pub(super) fn from_select(select: &Select, scope: &Scope) -> Vec<SqlBoundItem> {
+    // Projection subqueries are not row-bound inputs; their TABLE spellings cannot belong
+    // to the FROM items we traverse below.
+    if !select.from.is_empty() {
+        scope.advance_table_tokens_to_from(select.select_token.0.span.start);
+    }
     let mut builder = Builder::new(scope);
     builder.tables(&select.from);
     builder.finish(select.selection.as_ref())
