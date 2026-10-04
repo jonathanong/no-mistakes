@@ -45,8 +45,8 @@ fn finite_arrays_accept_fixed_scalar_boolean_expressions_only() {
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
     assert!(!facts.parse_failed);
 
-    let cases = &facts.bounds[facts.bounds.len() - 23..];
-    let expected = [true; 20].into_iter().chain([false; 3]);
+    let cases = &facts.bounds[facts.bounds.len() - 24..];
+    let expected = [true; 21].into_iter().chain([false; 3]);
     for (fact, expected) in cases.iter().zip(expected) {
         let pins = &fact.query.items[0].pins;
         if expected {

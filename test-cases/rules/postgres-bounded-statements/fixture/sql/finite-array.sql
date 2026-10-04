@@ -74,6 +74,8 @@ DELETE FROM accounts WHERE enabled = ANY(ARRAY[INTERVAL '1 day' IS NULL]);
 DELETE FROM accounts WHERE enabled = ANY(ARRAY[-1 IS NULL]);
 DELETE FROM accounts WHERE enabled = ANY(ARRAY[(1 + 1) IS NULL]);
 DELETE FROM accounts WHERE enabled = ANY(ARRAY[sql_placeholder_2 IS NULL]);
+-- A comparison used as the sole array element is scalar, not an array-expanding expression.
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[1 = 1]);
 DELETE FROM accounts WHERE enabled = ANY(ARRAY[enabled IS NULL]);
 DELETE FROM accounts WHERE enabled = ANY(ARRAY[unknown_boolean() IS NULL]);
 DELETE FROM accounts WHERE enabled = ANY(ARRAY[generate_series(1, 2) IS NULL]);
