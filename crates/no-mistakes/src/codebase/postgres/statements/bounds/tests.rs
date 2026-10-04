@@ -1,3 +1,4 @@
+mod nonrecursive_ctes;
 mod stored_array;
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
