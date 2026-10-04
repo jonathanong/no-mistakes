@@ -57,6 +57,7 @@ fn push(
         kind,
         line,
         column,
+        statement_start: None,
         query: SqlBoundQuery {
             input_mode: Default::default(),
             capped,

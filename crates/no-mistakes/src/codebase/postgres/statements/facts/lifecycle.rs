@@ -20,6 +20,7 @@ impl LifecycleBuilder {
     pub fn collect(
         &mut self,
         statement: &Statement,
+        statement_start: Option<(usize, usize)>,
         scope: &bounds::Scope,
         positions: PlaceholderPositions<'_>,
         temporary: &TemporaryRelations,
@@ -27,6 +28,9 @@ impl LifecycleBuilder {
     ) -> (usize, Option<SqlViewReads>) {
         let first_bound = bounds.len();
         bounds::collect(statement, scope, positions, bounds);
+        for bound in &mut bounds[first_bound..] {
+            bound.statement_start = statement_start;
+        }
         let raw = &bounds[first_bound..];
         let view_reads = TemporaryRelations::view_reads(statement, scope, positions);
         self.conditional |= temporary.conditional(statement);

@@ -15,6 +15,8 @@ pub struct SqlBoundFact {
     pub kind: SqlBoundKind,
     pub line: usize,
     pub column: usize,
+    /// Original outer SQL statement position, including WITH or an executing wrapper.
+    pub statement_start: Option<(usize, usize)>,
     pub query: SqlBoundQuery,
     /// For `UPDATE` and `DELETE`: the index in `query.items` of the relation being changed.
     pub target: Option<usize>,
@@ -173,6 +175,9 @@ impl SqlBoundFact {
     /// column decides which physical operand of a recovered string owns the line.
     pub fn map_lines(&mut self, map: &impl Fn(usize, usize) -> usize) {
         self.line = map(self.line, self.column);
+        if let Some((line, column)) = &mut self.statement_start {
+            *line = map(*line, *column);
+        }
         self.query.map_lines(map);
     }
 }

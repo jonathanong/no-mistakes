@@ -46,6 +46,20 @@ impl TableTokenIndex {
         Self { segments }
     }
 
+    /// Reuse the request's statement segments to retain wrapper/CTE directive ownership.
+    pub(in super::super::super) fn statement_start_at(
+        &self,
+        start: Location,
+    ) -> Option<(usize, usize)> {
+        let start = location(start);
+        let index = self
+            .segments
+            .partition_point(|segment| segment.start <= start)
+            .checked_sub(1)?;
+        let segment = &self.segments[index];
+        (start <= segment.end).then_some((segment.start.0 as usize, segment.start.1 as usize))
+    }
+
     pub(in super::super::super) fn cursor_at(&self, start: Location) -> TableTokenCursor {
         let start = location(start);
         let Some(index) = self

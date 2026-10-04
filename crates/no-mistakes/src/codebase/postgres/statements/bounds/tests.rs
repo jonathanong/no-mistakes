@@ -316,7 +316,8 @@ fn every_item_records_where_it_starts() {
         seen.borrow_mut().push((line, column));
         line
     });
-    assert_eq!(seen.into_inner(), [(1, 1), (2, 6), (2, 18)]);
+    // The retained outer statement origin has its own operand mapping.
+    assert_eq!(seen.into_inner(), [(1, 1), (1, 1), (2, 6), (2, 18)]);
 }
 
 #[test]
