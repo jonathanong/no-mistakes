@@ -7,6 +7,7 @@ mod array_review;
 mod compact_aliases;
 mod repeated_begin;
 mod review;
+mod table_review;
 
 fn query(bound: &SqlBoundQuery) -> String {
     let items: Vec<String> = bound.items.iter().map(item).collect();

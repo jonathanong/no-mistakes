@@ -445,3 +445,30 @@ fn temporary_schema_create_without_temp_keyword_shadows_catalog() {
         ["accounts", "accounts", "accounts", "accounts", "accounts"]
     );
 }
+
+#[test]
+fn base_table_column_alias_lists_supply_no_catalog_key_pins() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/column-alias-list.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
+}
+
+#[test]
+fn table_arms_retain_possible_quoted_identifiers_and_cte_precedence() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-quoting.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        [
+            "\"Order Items\"",
+            "\"Order Items\"",
+            "accounts",
+            "accounts",
+            "accounts"
+        ]
+    );
+}

@@ -252,3 +252,12 @@ Temporary `SELECT INTO` destinations are tracked through `UNION`, `INTERSECT`, a
 `CREATE TABLE pg_temp.name` creates a temporary identity even without the `TEMP` keyword. Quoted schema names retain PostgreSQL case and component boundaries, so a different schema or a literal dot in one identifier does not acquire temporary identity.
 
 Compacted caller-only array pins retain their scalar cast evidence for catalog validation. A pin with any source-row or scalar-column dependency is discarded; unknown cast types never gain a bound from compaction.
+
+A base-table column alias list (`FROM accounts AS a(id, real_id)`) renames columns by
+position. Only keys whose aliased positions keep their original names retain catalog key credit; ordinary table aliases
+(`FROM accounts AS a`) retain key matching. This also applies to join conditions and
+`USING` pins.
+
+For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
+Analysis conservatively checks both exact and folded spellings when they differ;
+a matching one-part CTE takes precedence over catalog relations.
