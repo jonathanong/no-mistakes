@@ -64,7 +64,7 @@ fn insert_and_trigger_from_statement_reject_unrelated_ast() {
 fn set_expr_insert_non_insert_and_missing_keyword_lines() {
     let mut inserts = Vec::new();
     let mut insert_n = 0usize;
-    super::collect_set_inserts(
+    super::facts::collect_set_inserts(
         "",
         &SetExpr::Insert(Statement::Commit {
             chain: false,

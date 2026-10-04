@@ -227,6 +227,22 @@ fn template_interpolations_are_binds_for_the_cursor_and_the_batch_size() {
 }
 
 #[test]
+fn embedded_marker_identifiers_keep_their_source_provenance() {
+    let root = fixture("embedded-bounded-iteration");
+    let yaml = "include: ['src/**/*.mts']\nimportSpecifier: '@example/db'\nbannedShapes: [literal-limit, keyset-only-sweep]\n";
+    let findings =
+        check_with_files(&root, &config(yaml), &[root.join("src/templates.mts")]).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.target.clone().unwrap()))
+            .collect::<Vec<_>>(),
+        at(&[(5, "keyset-only-sweep")]),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn an_implicit_fetch_is_reported_at_the_fetch_clause() {
     // `FETCH FIRST ROW ONLY` writes no count, so the finding points at the FETCH keyword (a
     // line-level suppression beside it applies), not at the start of the query.
@@ -423,7 +439,6 @@ fn casted_expanded_keysets_preserve_bind_identity_in_rule_findings() {
             (2, "keyset-only-sweep"),
             (8, "keyset-only-sweep"),
             (9, "keyset-only-sweep"),
-            (11, "keyset-only-sweep"),
             (15, "keyset-only-sweep"),
             (19, "keyset-only-sweep"),
             (21, "keyset-only-sweep"),
@@ -438,5 +453,17 @@ fn non_selective_predicates_preserve_literal_case() {
     assert_eq!(
         found("predicate-case", yaml, "sql/001.sql"),
         at(&[(2, "keyset-only-sweep")])
+    );
+}
+
+#[test]
+fn bind_only_guard_does_not_hide_a_sweep() {
+    assert_eq!(
+        found(
+            "bind-guards",
+            "sqlInclude: ['sql/**/*.sql']\nbannedShapes: [keyset-only-sweep]\n",
+            "sql/001.sql"
+        ),
+        at(&[(1, "keyset-only-sweep"), (4, "keyset-only-sweep"),])
     );
 }

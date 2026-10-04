@@ -29,6 +29,9 @@ pub struct EmbeddedSqlCall {
     pub declaration_line: Option<u32>,
     /// Compact physical-line mapping for literal and template recovery.
     pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
+    /// SQL line and column of each generated interpolation marker, before any user-authored
+    /// identifier with the same spelling can be confused for it.
+    pub recovered_placeholder_positions: Vec<(u32, u32)>,
 }
 
 /// A SQL fragment returned from a builder or appended to a

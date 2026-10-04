@@ -16,8 +16,9 @@ use std::ops::ControlFlow;
 pub(super) fn collect(
     sql: &str,
     statements: &[Statement],
+    recovered_placeholder_positions: &[(u32, u32)],
 ) -> (Vec<SqlLimitFact>, Vec<SqlSweepFact>) {
-    let mut collector = Collector::new(sql);
+    let mut collector = Collector::new(sql, recovered_placeholder_positions);
     for statement in statements {
         let mut executed = Vec::new();
         walk_executed(statement, &mut executed);
@@ -66,10 +67,11 @@ struct Collector<'a> {
     /// The names a CTE body sees, set when its WITH clause is entered and keyed by the body.
     bodies: HashMap<*const Query, Vec<String>>,
     transparent_int4_casts: bool,
+    recovered_placeholder_positions: &'a [(u32, u32)],
 }
 
 impl<'a> Collector<'a> {
-    fn new(sql: &'a str) -> Self {
+    fn new(sql: &'a str, recovered_placeholder_positions: &'a [(u32, u32)]) -> Self {
         Self {
             limits: Vec::new(),
             sweeps: Vec::new(),
@@ -77,6 +79,7 @@ impl<'a> Collector<'a> {
             scopes: Vec::new(),
             bodies: HashMap::new(),
             transparent_int4_casts: true,
+            recovered_placeholder_positions,
         }
     }
 
@@ -130,7 +133,12 @@ impl Visitor for Collector<'_> {
         }
         if is_limited(query) && !empty {
             let visible = self.scopes.last().map_or(&[][..], Vec::as_slice);
-            if let Some(sweep) = page::sweep(query, visible, self.transparent_int4_casts) {
+            if let Some(sweep) = page::sweep(
+                query,
+                visible,
+                self.transparent_int4_casts,
+                self.recovered_placeholder_positions,
+            ) {
                 self.sweeps.push(sweep);
             }
         }

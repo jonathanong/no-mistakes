@@ -18,20 +18,24 @@ pub(crate) fn executor_call(
             kind: EmbeddedSqlKind::Dynamic,
             declaration_line: None,
             sql_source_positions: Vec::new(),
+            recovered_placeholder_positions: Vec::new(),
         };
     };
     match unwrap_ts_wrappers(argument) {
         Expression::Identifier(ident) => {
             let binding = visitor.lookup(ident.name.as_str());
+            let (sql_text, recovered_placeholder_positions) = binding
+                .as_ref()
+                .and_then(|binding| binding.sql.clone())
+                .map(super::super::super::placeholders::publish_placeholders_with_positions)
+                .map_or_else(
+                    || (None, Vec::new()),
+                    |(sql, positions)| (Some(sql), positions),
+                );
             EmbeddedSqlCall {
                 line,
                 callee,
-                sql_text: binding.as_ref().and_then(|binding| {
-                    binding
-                        .sql
-                        .clone()
-                        .map(super::super::super::placeholders::publish_placeholders)
-                }),
+                sql_text,
                 kind: binding
                     .as_ref()
                     .map(|binding| binding.kind)
@@ -40,15 +44,22 @@ pub(crate) fn executor_call(
                     .as_ref()
                     .map(|binding| binding.sql_source_positions.clone())
                     .unwrap_or_default(),
+                recovered_placeholder_positions,
                 declaration_line: binding.map(|binding| binding.line),
             }
         }
         _ => {
             let (sql, kind) = classify_init(argument, true, visitor);
+            let (sql_text, recovered_placeholder_positions) = sql
+                .map(super::super::super::placeholders::publish_placeholders_with_positions)
+                .map_or_else(
+                    || (None, Vec::new()),
+                    |(sql, positions)| (Some(sql), positions),
+                );
             EmbeddedSqlCall {
                 line,
                 callee,
-                sql_text: sql.map(super::super::super::placeholders::publish_placeholders),
+                sql_text,
                 kind: if kind == EmbeddedSqlKind::ImmutableLocal {
                     EmbeddedSqlKind::Inline
                 } else {
@@ -61,6 +72,7 @@ pub(crate) fn executor_call(
                     call.span.start as usize,
                     line,
                 ),
+                recovered_placeholder_positions,
             }
         }
     }

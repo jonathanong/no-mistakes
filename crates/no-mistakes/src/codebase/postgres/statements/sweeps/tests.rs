@@ -1,11 +1,13 @@
 mod select_all;
 
 use crate::codebase::postgres::statements::{
-    extract_sql_statement_facts, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact,
+    extract_sql_statement_facts, extract_sql_statement_facts_with_recovered_placeholders,
+    SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact,
 };
 
 mod casted_expanded;
 mod commuted_expanded;
+mod placeholder_provenance;
 mod reordered_expanded;
 
 fn limits(sql: &str) -> Vec<(usize, usize, SqlLimitValue)> {
@@ -30,7 +32,11 @@ fn sweeps(sql: &str) -> Vec<SqlSweepFact> {
 
 /// `table order-columns | conjunct(cursor columns) ...` for each sweep.
 fn shape(sql: &str) -> Vec<String> {
-    sweeps(sql)
+    shape_sweeps(&sweeps(sql))
+}
+
+fn shape_sweeps(sweeps: &[SqlSweepFact]) -> Vec<String> {
+    sweeps
         .iter()
         .map(|sweep| {
             let conjuncts: Vec<String> = sweep
@@ -182,28 +188,6 @@ fn parenthesized_cursors_are_unwrapped_at_every_depth() {
     }
     let rows = sweeps("SELECT 1 FROM t WHERE (((a, b)) > (($1, $2))) ORDER BY a, b LIMIT 3");
     assert_eq!(rows[0].conjuncts[0].cursor_columns, ["a", "b"]);
-}
-
-#[test]
-fn recovered_interpolations_are_binds() {
-    // `${after}` and `${size}` reach the facts as sql_placeholder_N identifiers.
-    assert_eq!(
-        shape("SELECT id FROM orders WHERE id > sql_placeholder_1 ORDER BY id LIMIT sql_placeholder_2"),
-        ["orders id | id > sql_placeholder_1(id)"]
-    );
-    assert_eq!(
-        shape("SELECT 1 FROM t WHERE (sql_placeholder_1::uuid IS NULL OR id > sql_placeholder_1) ORDER BY id LIMIT 3"),
-        ["t id | sql_placeholder_1::uuid is null or id > sql_placeholder_1(id)"]
-    );
-    assert_eq!(
-        shape("SELECT 1 FROM t WHERE (a, b) > (sql_placeholder_1, sql_placeholder_2) ORDER BY a, b LIMIT 3"),
-        ["t a,b | (a, b) > (sql_placeholder_1, sql_placeholder_2)(a,b)"]
-    );
-    // A bind is never the column side of a cursor.
-    assert_eq!(
-        shape("SELECT 1 FROM t WHERE sql_placeholder_1 > sql_placeholder_2 ORDER BY id LIMIT 3"),
-        ["t id | sql_placeholder_1 > sql_placeholder_2()"]
-    );
 }
 
 #[test]

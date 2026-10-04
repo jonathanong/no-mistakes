@@ -59,11 +59,12 @@ pub(super) fn collect(
                 parsed
                     .as_ref()
                     .map(|(statements, failed)| {
-                        let mut value = crate::codebase::postgres::statements::extract_from_parsed(
+                        let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             statements,
                             *failed,
                             plan.postgres_bounds,
+                            &[],
                         );
                         value.path = path.clone();
                         Arc::new(vec![value])
