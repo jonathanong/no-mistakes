@@ -12,6 +12,9 @@ pub(super) struct Snapshot {
     /// Only explicitly requested schemas are authoritative; a missing key is unknown.
     #[serde(default)]
     pub(super) search_path_evidence: BTreeMap<String, Option<BTreeSet<String>>>,
+    /// Connection identity stated by the producer; older catalogs leave it unknown.
+    #[serde(default)]
+    pub(super) current_database: Option<String>,
     #[serde(default)]
     pub(super) tables: BTreeMap<String, SnapshotTable>,
     #[serde(default)]

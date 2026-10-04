@@ -22,6 +22,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         coverage: snapshot.coverage,
         schema: snapshot.schema,
         search_path_evidence: snapshot.search_path_evidence,
+        current_database: snapshot.current_database,
         tables,
         model_tables,
         functions: functions(snapshot.functions),

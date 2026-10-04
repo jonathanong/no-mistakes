@@ -140,3 +140,6 @@ was missing or the role lacked `USAGE`. If a required inventory is unavailable,
 retain the rule's conservative findings and regenerate with appropriate schema
 access rather than treating unavailable evidence as an empty schema. Schema
 inventories remain explicit opt-in. See [catalog options](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/postgres.md).
+
+Generated catalogs also record the exact connected database in `currentDatabase`.
+Older catalogs omit that evidence, so database qualification stays conservative.

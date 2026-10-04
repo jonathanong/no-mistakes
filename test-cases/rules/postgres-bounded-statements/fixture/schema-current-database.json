@@ -1,0 +1,80 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "currentDatabase": "Audit.Database",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "relationKind": "table"
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "relationKind": "table"
+    },
+    "order_lines": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "relationKind": "table"
+    }
+  }
+}

@@ -75,6 +75,16 @@ run in PostgreSQL, so recovered SQL in those contexts leaves the partition attac
 
 `PREPARE` analyzes a `SELECT INTO TEMP` without creating its destination. The temporary identity begins when its `EXECUTE` runs with the prepared argument count; `DEALLOCATE` before execution leaves the catalog relation visible. A duplicate `PREPARE` keeps the original definition because PostgreSQL rejects the duplicate.
 
+Three-part temporary names such as `"Audit.Database".pg_temp.accounts` retain
+their database qualifier in prepared facts. They shadow a permanent catalog
+relation only when the catalog's optional `currentDatabase` exactly matches that
+decoded database name. A missing identity or another database keeps the
+conservative permanent-relation check. Quoted dots stay within their identifier;
+`pg_temp_like` and `"pg_temp.accounts"` are different schema names. The condition
+follows dependent temporary views, partition ownership, renames, drops,
+transactions, and savepoints.
+Catalog generation records `currentDatabase` in the same snapshot query.
+
 When an explicit `search_path` places schemas before `pg_temp`, a generated catalog can
 prove whether those schemas exist and which relation names they contain. Generate it
 with `--search-path-schema` for each earlier schema. A missing or incomplete evidence

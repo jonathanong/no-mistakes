@@ -1,4 +1,5 @@
 mod fixture_configs;
+mod current_database;
 mod nonrecursive_ctes;
 mod recovered_table;
 mod scalar_reducer_arrays;

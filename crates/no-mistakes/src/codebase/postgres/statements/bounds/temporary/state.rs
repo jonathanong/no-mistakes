@@ -5,14 +5,13 @@ mod physical;
 mod rename;
 mod schema;
 use crate::codebase::postgres::decoded_parts;
-use crate::codebase::postgres::statements::{
-    SqlBoundItemKind, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
-};
+use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum Dependency {
     Temporary(String),
+    ConditionalTemporary(String, String),
     Physical(Vec<String>),
 }
 
@@ -24,6 +23,7 @@ pub(super) struct State {
     // A partition is owned by its parent even for DROP without CASCADE.
     pub partitions: BTreeMap<String, String>,
     pub partitioned: BTreeSet<String>,
+    pub databases: BTreeMap<String, String>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub earlier_schemas: Option<Vec<String>>,
@@ -36,6 +36,7 @@ impl Default for State {
             physical_views: BTreeMap::new(),
             partitions: BTreeMap::new(),
             partitioned: BTreeSet::new(),
+            databases: BTreeMap::new(),
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
             earlier_schemas: None,
@@ -47,34 +48,6 @@ pub(super) fn key(name: &str) -> String {
     decoded_parts(name).last().cloned().unwrap_or_default()
 }
 impl State {
-    pub fn include_dependencies(&self, name: &str, out: &mut BTreeSet<Dependency>) {
-        if self.contains(name) {
-            out.insert(Dependency::Temporary(key(name)));
-        } else {
-            out.insert(Dependency::Physical(decoded_parts(name)));
-            if self.possible_temporary(name).is_some() {
-                // An unknown earlier schema can make the source physical or temporary.
-                // Keep both possibilities so a later CASCADE cannot leave a stale view.
-                out.insert(Dependency::Temporary(key(name)));
-            }
-        }
-    }
-
-    pub fn possible_temporary(&self, name: &str) -> Option<SqlPossibleTemporary> {
-        let parts = decoded_parts(name);
-        (parts.len() == 1 && !self.temp_first && self.relations.contains_key(&parts[0]))
-            .then(|| self.earlier_schemas.clone())
-            .flatten()
-            .map(|earlier_schemas| SqlPossibleTemporary {
-                database_qualifier: None,
-                earlier_schemas,
-            })
-    }
-    pub fn contains(&self, name: &str) -> bool {
-        let parts = decoded_parts(name);
-        (parts.len() == 1 && self.temp_first || parts.len() == 2 && parts[0] == "pg_temp")
-            && self.relations.contains_key(&key(name))
-    }
     pub fn dependencies(&self, query: &SqlBoundQuery, out: &mut BTreeSet<Dependency>) {
         for item in &query.items {
             match &item.kind {
@@ -93,7 +66,7 @@ impl State {
     }
     pub fn drop(&mut self, name: &str, cascade: bool) {
         let mut removed = BTreeSet::new();
-        let definite_temporary = self.contains(name);
+        let definite_temporary = self.matches_identity(name);
         // An unqualified name behind unknown earlier schemas may denote this temporary
         // relation. Retire it conservatively: retaining it after a real DROP can hide a
         // catalog read, while retiring it after a different DROP can only over-report.
@@ -120,7 +93,7 @@ impl State {
             if cascade {
                 for (name, dependencies) in &self.relations {
                     if dependencies.iter().any(|dependency| {
-                        matches!(dependency, Dependency::Temporary(parent) if removed.contains(parent))
+                        matches!(dependency, Dependency::Temporary(parent) | Dependency::ConditionalTemporary(parent, _) if removed.contains(parent))
                     }) {
                         removed.insert(name.clone());
                     }
@@ -134,5 +107,6 @@ impl State {
         self.partitions.retain(|child, _| !removed.contains(child));
         self.partitioned.retain(|name| !removed.contains(name));
         self.on_commit_drop.retain(|name| !removed.contains(name));
+        self.databases.retain(|name, _| !removed.contains(name));
     }
 }

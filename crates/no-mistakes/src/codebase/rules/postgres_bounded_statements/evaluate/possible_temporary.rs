@@ -29,7 +29,10 @@ fn resolve(query: &mut SqlBoundQuery, catalog: &SchemaCatalog) {
     for item in &mut query.items {
         let hidden = match (&item.kind, &item.possible_temporary) {
             (SqlBoundItemKind::Table(name), Some(candidate)) => {
-                candidate.database_qualifier.is_none()
+                candidate
+                    .database_qualifier
+                    .as_deref()
+                    .is_none_or(|database| catalog.current_database() == Some(database))
                     && catalog.hides_selected_relation(&candidate.earlier_schemas, name)
             }
             _ => false,
