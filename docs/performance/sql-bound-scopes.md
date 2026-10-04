@@ -1,5 +1,7 @@
 # PostgreSQL CTE scope sharing
 
+<!-- cspell:ignore codegen RUSTC -->
+
 The bound collector previously cloned the complete map of visible CTE bounds
 for every query and again for every CTE body. Independent definitions therefore
 copied all earlier bound trees. The collector now borrows scopes for queries
@@ -47,6 +49,6 @@ cargo bench -p no-mistakes --no-default-features --bench sql_bound_scopes
 
 When using a saved executable, pass `--bench` to enable measurement. When
 switching checkouts with one target directory, verify that Cargo actually
-recompiles the library and benchmark for the selected source revision before
+builds the library and benchmark again for the selected source revision before
 accepting a comparison. Preserve baseline data until the comparison finishes,
 then remove the completed worktree build artifacts.
