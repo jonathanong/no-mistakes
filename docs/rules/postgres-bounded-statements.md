@@ -275,3 +275,11 @@ output names also determine ownership. Unknown functions and wildcard projection
 retain conservative unknown-column ownership.
 
 Known scalar table functions expose their default position column when requested. UNNEST column names are inferred only for syntactically proven scalar arrays; composite and unknown element layouts retain unknown ownership. Parenthesized joins with wrapper aliases also retain unknown ownership when the child labels cannot describe the renamed output.
+
+Finite array constructors also accept explicitly known scalar builtin calls such as
+`ARRAY[pg_catalog.lower($1)]` when their arguments preserve finite leaves. Unknown
+calls, user-schema lookalikes, set-returning or array-returning functions, windows,
+and expressions reading unbounded rows remain conservative. The analysis assumes
+unqualified inventory names denote PostgreSQL builtins; PostgreSQL 15 additions
+`regexp_count`, `regexp_instr`, and `regexp_substr` require `pg_catalog` qualification
+because the configured catalog does not declare a server version.

@@ -7,6 +7,7 @@ use sqlparser::ast::{
 };
 
 mod indexed;
+mod scalar;
 pub(super) use indexed::indexed_base;
 
 pub(super) fn constructor(expr: &Expr) -> Option<&sqlparser::ast::Array> {
@@ -111,6 +112,12 @@ pub(super) fn finite_array(
                     let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = argument else {
                         return None;
                     };
+                    columns(expr, resolver, out, indexed, types, caller_only)?;
+                }
+                Some(())
+            }
+            Expr::Function(function) => {
+                for expr in scalar::arguments(function)? {
                     columns(expr, resolver, out, indexed, types, caller_only)?;
                 }
                 Some(())

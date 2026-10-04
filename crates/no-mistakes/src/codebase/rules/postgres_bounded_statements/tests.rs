@@ -16,6 +16,7 @@ mod referential;
 mod repeated_begin;
 mod review;
 mod review_table;
+mod scalar_call_array;
 mod suppression;
 mod trigger_scope;
 mod xml_array;

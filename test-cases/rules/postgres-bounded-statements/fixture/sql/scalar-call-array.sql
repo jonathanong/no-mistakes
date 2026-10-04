@@ -1,0 +1,28 @@
+-- Trusted scalar functions preserve finite leaves; custom calls never inherit builtin identity.
+DELETE FROM accounts WHERE email = ANY(ARRAY[pg_catalog.lower($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[upper(lower($1))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[concat($1, $2)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY["pg_catalog"."lower"($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[public.lower($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[custom_scalar($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[unnest($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[string_to_array($1, ',')]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[regexp_match($1, 'x')]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[random()]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower(custom_scalar($1))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower(email)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower($1) OVER ()]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower(value := $1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower(*)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower((SELECT email FROM accounts))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[other.pg_catalog.lower($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY["LOWER"($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY["PG_CATALOG".lower($1)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[pg_catalog.pg_backend_pid()::text]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[lower($1::app.unknown)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[concat(regexp_count($1, $2))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[concat(pg_catalog.regexp_count($1, $2))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[concat(regexp_instr($1, $2))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[concat(pg_catalog.regexp_instr($1, $2))]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[regexp_substr($1, $2)]);
+DELETE FROM accounts WHERE email = ANY(ARRAY[pg_catalog.regexp_substr($1, $2)]);
