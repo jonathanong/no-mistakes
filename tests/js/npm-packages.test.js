@@ -117,7 +117,16 @@ test("npm pack includes every transitive local require() from a published entry 
   const npmCache = mkdtempSync(join(tmpdir(), "no-mistakes-npm-pack-"));
   let packed;
   try {
-    const npmArguments = ["pack", "--dry-run", "--ignore-scripts", "--json"];
+    // Packing local files needs no registry access. Keep cold-cache hosted runs offline,
+    // and bound the child separately from the full transitive-file assertion budget.
+    const npmArguments = [
+      "pack",
+      "--dry-run",
+      "--ignore-scripts",
+      "--json",
+      "--offline",
+      "--no-update-notifier",
+    ];
     const command = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
     const commandArguments =
       process.platform === "win32" ? ["/d", "/s", "/c", "npm", ...npmArguments] : npmArguments;
@@ -125,6 +134,7 @@ test("npm pack includes every transitive local require() from a published entry 
       execFileSync(command, commandArguments, {
         cwd: packageDir,
         encoding: "utf8",
+        timeout: 25_000,
         env: { ...process.env, NPM_CONFIG_CACHE: npmCache },
       }),
     );
@@ -178,4 +188,4 @@ test("npm pack includes every transitive local require() from a published entry 
   };
 
   entryPoints.forEach(checkEntry);
-});
+}, 30_000);
