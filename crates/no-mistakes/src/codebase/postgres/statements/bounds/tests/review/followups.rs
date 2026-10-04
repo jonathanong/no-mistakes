@@ -9,8 +9,8 @@ fn stored_arrays_do_not_inherit_their_rows_bound() {
     assert_eq!(
         shape(sql),
         [
-            "update: accounts orders[id=value]",
-            "update: accounts orders[id=value]",
+            "update: accounts[id=stored-array#[1]] orders[id=value]",
+            "update: accounts[id=stored-array#[1]] orders[id=value]",
             "delete: accounts[id=value]",
             "delete: accounts[id=value]",
             "update: accounts[id=#1] orders[id=value account_id=#0]",

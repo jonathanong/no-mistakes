@@ -1,3 +1,4 @@
+mod stored_array;
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
     SqlBoundQuery, SqlPinSource,
@@ -25,6 +26,9 @@ fn item(item: &SqlBoundItem) -> String {
             let operator = if pin.null_safe { "~=" } else { "=" };
             match &pin.source {
                 SqlPinSource::Value => format!("{}{operator}value", pin.column),
+                SqlPinSource::StoredArray(items) => {
+                    format!("{}{operator}stored-array#{items:?}", pin.column)
+                }
                 SqlPinSource::Items(items) => {
                     let items: Vec<String> = items.iter().map(usize::to_string).collect();
                     format!("{}{operator}#{}", pin.column, items.join(","))

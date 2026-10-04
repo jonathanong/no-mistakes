@@ -163,6 +163,7 @@ fn keyed(
                 && (!pin.null_safe || catalog.column_is_not_null(name, column))
                 && match &pin.source {
                     SqlPinSource::Value => true,
+                    SqlPinSource::StoredArray(_) => false,
                     SqlPinSource::Items(items) | SqlPinSource::Array { items, .. } => items.iter().all(|other| bounded[*other]),
                     SqlPinSource::Query(_) => subqueries[index]
                         .as_ref()
