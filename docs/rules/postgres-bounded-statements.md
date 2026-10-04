@@ -236,6 +236,12 @@ reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERS
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
 INTERSECT or duplicate-eliminating UNION; UNION ALL can stream until its cap.
+This also applies through derived tables and CTE wrappers: `SELECT * FROM
+(SELECT id FROM accounts EXCEPT SELECT account_id FROM orders) AS q LIMIT 1`
+still reports the uncapped `orders` input. Independently streaming siblings keep
+their outer cap. Inner key predicates or row caps still bound their own inputs;
+compaction and temporary-name projection preserve these distinctions and source
+locations. Use ordinary `no-mistakes` suppression directives at those locations.
 A zero cap skips every input, including `FETCH FIRST 0 ROWS WITH TIES` and zero
 inside parentheses, unary signs, or built-in numeric casts such as
 `CAST(0 AS bigint)`. Custom casts do not prove zero.

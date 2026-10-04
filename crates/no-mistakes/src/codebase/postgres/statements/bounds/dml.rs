@@ -58,6 +58,7 @@ fn push(
         line,
         column,
         query: SqlBoundQuery {
+            input_mode: Default::default(),
             capped,
             items,
             outputs: Vec::new(),

@@ -25,9 +25,20 @@ pub struct SqlBoundFact {
 pub struct SqlBoundQuery {
     /// A `LIMIT` / `FETCH FIRST`, or a pure aggregate (no `GROUP BY`).
     pub capped: bool,
+    /// Set-input execution policy, independent of the number of returned rows.
+    pub input_mode: SqlBoundInputMode,
     pub items: Vec<SqlBoundItem>,
     /// Output columns in ordinal order; caller-sized values stay finite despite repeated rows.
     pub outputs: Vec<SqlBoundOutput>,
+}
+
+/// Whether set-operation inputs stream, must complete before output, or cannot execute.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SqlBoundInputMode {
+    #[default]
+    Streaming,
+    Blocking,
+    Skipped,
 }
 
 /// Syntactic value provenance for one projected column, independent of query row cardinality.

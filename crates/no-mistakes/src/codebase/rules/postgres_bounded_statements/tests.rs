@@ -1,3 +1,4 @@
+mod blocking_query_wrappers;
 mod caller_array_provenance;
 mod cardinality_basics;
 mod current_database;

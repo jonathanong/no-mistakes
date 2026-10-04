@@ -54,6 +54,7 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
         items
     };
     SqlBoundQuery {
+        input_mode: Default::default(),
         outputs: Vec::new(),
         capped: false,
         items,

@@ -75,6 +75,7 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope(
 /// A body whose rows nothing proves bounded, and which is never reported either.
 fn opaque(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
+        input_mode: Default::default(),
         outputs: Vec::new(),
         capped: false,
         items: vec![items::opaque(at)],

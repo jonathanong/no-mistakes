@@ -1,7 +1,7 @@
 use super::aggregate::orders_by_aggregate;
 use super::{items, start, Scope};
 use crate::codebase::postgres::statements::limit::is_zero_limited;
-use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
+use crate::codebase::postgres::statements::{SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery};
 use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
 mod blocking;
 mod compact;
@@ -54,6 +54,7 @@ fn bound_body_observed(
     }
     if is_zero_limited(query) {
         bound.capped = true;
+        bound.input_mode = SqlBoundInputMode::Skipped;
     } else if super::super::limit::is_limited_at(query, positions) {
         if let Some(mut blocking) = blocking_statuses(&query.body) {
             cap_streaming_arms(&query.body, &mut bound, &mut blocking);
@@ -63,6 +64,11 @@ fn bound_body_observed(
         }
     }
     bound.capped |= orders_by_aggregate(query);
+    // Aggregate/SRF expansion may emit rows despite an empty WHERE input. Preserve its
+    // existing uncapped semantics rather than converting that input predicate to a row cap.
+    if !bound.capped && bound.input_mode == SqlBoundInputMode::Skipped {
+        bound.input_mode = SqlBoundInputMode::Streaming;
+    }
     bound
 }
 
@@ -143,6 +149,7 @@ fn cap_streaming_arms(set: &SetExpr, bound: &mut SqlBoundQuery, blocking: &mut B
 /// A body whose size nothing in the statement text decides: it adds no unbounded relation.
 pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
+        input_mode: Default::default(),
         capped: false,
         items: vec![items::other(at)],
         outputs: Vec::new(),
