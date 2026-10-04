@@ -393,6 +393,9 @@ that could not run.
 PostgreSQL checks share the CLI SQL frontend: parenthesized `TABLE relation`
 subqueries retain quoted identity and view cascade dependencies in `check()`
 and `analyzeProject()` reports.
+Supported `TABLE` set-operation arms also supply exact relation names and source
+lines to `postgres-explicit-columns` and `postgres-required-predicates` through
+those same async check entrypoints.
 
 It rejects with the same rule application and `options` path diagnostic as the
 CLI when a configured option has the wrong type; invalid option objects are

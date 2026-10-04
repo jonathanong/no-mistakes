@@ -55,6 +55,30 @@ fn repeated_standalone_table_reads_have_distinct_finding_lines() {
 }
 
 #[test]
+fn table_set_arms_require_configured_predicates() {
+    let root = fixture("fail");
+    let findings = check_with_files(
+        &root,
+        &config(),
+        &[
+            root.join("sql/table-right-arm.sql"),
+            root.join("sql/table-left-arm.sql"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 1]
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("topics")));
+}
+
+#[test]
 fn required_predicate_passes() {
     assert!(run_sql(&fixture("pass")).is_empty());
 }

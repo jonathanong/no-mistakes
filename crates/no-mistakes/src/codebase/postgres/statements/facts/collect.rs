@@ -17,6 +17,7 @@ pub(super) fn collect_one(
     sql: &str,
     statement: &Statement,
     placeholder_positions: super::value::PlaceholderPositions<'_>,
+    table_cursor: Option<&mut bounds::TableTokenCursor>,
     out: &mut FactOut<'_>,
 ) {
     if let Statement::Insert(insert) = statement {
@@ -46,6 +47,7 @@ pub(super) fn collect_one(
         collect_query_inserts(sql, query, out.insert_n, out.inserts, placeholder_positions);
     }
     select::collect_with_placeholder_positions(sql, statement, placeholder_positions, out.selects);
+    select::collect_table_arms(statement, table_cursor, out.selects);
     out.returning_stars
         .extend(select::returning_stars(sql, statement));
     mutations::collect(

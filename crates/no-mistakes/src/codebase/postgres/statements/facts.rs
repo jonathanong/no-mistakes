@@ -44,7 +44,9 @@ fn extract_from_parsed_and_sources(
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
     let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
-    let table_index = collect_bounds.then(|| bounds::TableTokenIndex::new(tokens.all()));
+    let has_table_token = tokens.all().iter().any(table_keyword);
+    let need_table_tokens = collect_bounds || has_table_token;
+    let table_index = need_table_tokens.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
     let mut out = FactOut {
         insert_n: &mut insert_n,
@@ -61,26 +63,40 @@ fn extract_from_parsed_and_sources(
     let mut prepared = PreparedStatements::default();
     let mut lifecycle = LifecycleBuilder::default();
     for (index, source_statement) in statements.iter().enumerate() {
-        let recovered_source = collect_bounds
-            .then(|| sources.and_then(|sources| sources.get(index)))
-            .flatten()
+        let recovered_source = sources
+            .and_then(|sources| sources.get(index))
             .and_then(Option::as_ref);
-        let source_index = recovered_source.map(|source| {
-            recovered_indexes
-                .entry(Arc::as_ptr(source) as *const () as usize)
-                .or_insert_with(|| bounds::TableTokenIndex::new(source))
-        });
-        let scope = source_index
-            .map(|index| &*index)
-            .or(table_index.as_ref())
-            .map(|index| {
-                bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
+        let source_has_table =
+            recovered_source.is_some_and(|source| source.iter().any(table_keyword));
+        let source_index = recovered_source
+            .filter(|_| collect_bounds || source_has_table)
+            .map(|source| {
+                recovered_indexes
+                    .entry(Arc::as_ptr(source) as *const () as usize)
+                    .or_insert_with(|| bounds::TableTokenIndex::new(source))
             });
+        let table_tokens = source_index.map(|index| &*index).or(table_index.as_ref());
+        let scope = collect_bounds
+            .then(|| {
+                table_tokens.map(|index| {
+                    bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
+                })
+            })
+            .flatten();
+        let mut table_cursor = (has_table_token || source_has_table)
+            .then(|| table_tokens.map(|index| index.cursor_at(source_statement.span().start)))
+            .flatten();
         let mut executed = Vec::new();
         wrappers::walk_executed(source_statement, &mut executed);
         for statement in executed {
             writes::collect(statement, &mut writes);
-            collect_one(sql, statement, placeholder_positions, &mut out);
+            collect_one(
+                sql,
+                statement,
+                placeholder_positions,
+                table_cursor.as_mut(),
+                &mut out,
+            );
             if let Some(scope) = &scope {
                 let (first_bound, view_reads) = lifecycle.collect(
                     statement,
@@ -134,6 +150,10 @@ fn extract_from_parsed_and_sources(
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
         origin_line: 0,
     }
+}
+
+fn table_keyword(token: &TokenWithSpan) -> bool {
+    matches!(&token.token, sqlparser::tokenizer::Token::Word(word) if word.keyword == sqlparser::keywords::Keyword::TABLE)
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {

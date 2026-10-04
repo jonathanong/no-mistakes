@@ -1,0 +1,1 @@
+TABLE topics UNION ALL SELECT id FROM safe;

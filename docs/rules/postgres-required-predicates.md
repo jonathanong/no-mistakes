@@ -47,7 +47,10 @@ behavior is unchanged.
 
 `relations[].requireColumns` applies to every base-table instance in SELECT
 (including subqueries and CTE bodies), UPDATE, DELETE, and the SELECT of
-`INSERT … SELECT`. A column counts as constrained when a top-level AND
+`INSERT … SELECT`. Supported `TABLE` set-operation arms count as reads of
+their named relation; for example, `SELECT id FROM safe UNION ALL TABLE topics`
+still requires configured predicates on `topics`. A column counts as constrained
+when a top-level AND
 conjunct is an equality, comparison, `IN`, `= ANY`, or `BETWEEN` on that
 column. Self-referential `IN` lists do not constrain a column. `OR` counts only when every branch constrains it. `IS NULL`,
 `IS NOT NULL`, `<>`, and `LIKE` do not. An unqualified name in a join counts

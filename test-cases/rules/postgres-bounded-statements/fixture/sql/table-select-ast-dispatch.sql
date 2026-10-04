@@ -1,0 +1,1 @@
+INSERT INTO archive SELECT 1 UNION ALL TABLE "Topics";

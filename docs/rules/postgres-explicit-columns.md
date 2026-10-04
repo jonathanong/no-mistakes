@@ -31,6 +31,8 @@ column list is itself a reviewed contract.
 
 A standalone `TABLE accounts` reads every column of `accounts`, so it is
 checked like `SELECT * FROM accounts` when that relation is configured.
+The same check applies when `TABLE accounts` is an arm of a supported set
+operation, such as `SELECT id FROM safe UNION ALL TABLE accounts`.
 
 The rule reads star projections from the statement pass and column counts from
 the schema catalog. It reports a star when the catalog table has more than

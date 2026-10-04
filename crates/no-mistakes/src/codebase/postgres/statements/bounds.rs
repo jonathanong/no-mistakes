@@ -14,7 +14,7 @@ mod predicate;
 mod query;
 mod table;
 mod temporary;
-use table::TableTokenCursor;
+pub(in crate::codebase::postgres) use table::TableTokenCursor;
 pub(in crate::codebase::postgres) use table::TableTokenIndex;
 pub(super) use temporary::TemporaryRelations;
 #[cfg(test)]

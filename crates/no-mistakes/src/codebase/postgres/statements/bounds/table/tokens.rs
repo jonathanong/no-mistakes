@@ -83,7 +83,7 @@ fn first_after<T, K: Ord + Copy>(items: &[T], at: K, mut position: impl FnMut(&T
 /// Source spellings for TABLE query arms. sqlparser's `Table` AST stores only word values,
 /// so a quoted mixed-case name needs the already prepared token stream to retain identity.
 #[derive(Default)]
-pub(in super::super::super) struct TableTokenCursor {
+pub(in crate::codebase::postgres) struct TableTokenCursor {
     names: Vec<SourceTable>,
     operators: Vec<SourceOperator>,
     froms: Vec<SourceOperator>,
@@ -107,13 +107,13 @@ struct SourceDepth {
 }
 
 #[derive(Clone)]
-pub(super) struct SourceTable {
+pub(in crate::codebase::postgres) struct SourceTable {
     schema: Option<String>,
     table: String,
     parts: Vec<Ident>,
-    pub(super) name: String,
-    pub(super) key: String,
-    pub(super) at: (usize, usize),
+    pub(in crate::codebase::postgres) name: String,
+    pub(in crate::codebase::postgres) key: String,
+    pub(in crate::codebase::postgres) at: (usize, usize),
     depth: usize,
 }
 
@@ -152,7 +152,7 @@ impl TableTokenCursor {
         }
     }
 
-    pub(super) fn take(&mut self, table: &Table) -> Option<SourceTable> {
+    pub(in crate::codebase::postgres) fn take(&mut self, table: &Table) -> Option<SourceTable> {
         let found = self.names[self.next..].iter().position(|source| {
             source.schema.as_deref() == table.schema_name.as_deref()
                 && Some(source.table.as_str()) == table.table_name.as_deref()
@@ -164,7 +164,7 @@ impl TableTokenCursor {
         Some(source)
     }
 
-    pub(in super::super::super) fn advance_to_right_arm(&mut self, left_start: Location) {
+    pub(in crate::codebase::postgres) fn advance_to_right_arm(&mut self, left_start: Location) {
         let start = (left_start.line as usize, left_start.column as usize);
         let (from, max_depth) = if start == (0, 0) {
             (self.last_at.unwrap_or(start), self.last_depth)
