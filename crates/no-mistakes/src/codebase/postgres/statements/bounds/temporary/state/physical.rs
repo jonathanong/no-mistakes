@@ -56,20 +56,16 @@ impl State {
         old: &[String],
         new: &str,
         targets: &BTreeSet<Vec<String>>,
-    ) -> bool {
-        if old.len() > 1 && self.physical_views.contains_key(old) {
-            let mut target = old.to_vec();
-            target.pop();
-            target.push(new.to_owned());
-            if self.physical_views.contains_key(&target) {
-                // A known name collision rejects the entire rename in PostgreSQL.
-                return false;
-            }
+    ) -> Option<BTreeSet<Vec<String>>> {
+        let collisions = self.rename_collisions(new, targets);
+        if collisions.contains(old) {
+            // An exact known collision rejects the whole qualified rename.
+            return None;
         }
         let mut moved = BTreeMap::new();
         for (name, dependencies) in std::mem::take(&mut self.physical_views) {
-            let dependencies = rename_dependencies(&dependencies, old, new, targets);
-            let (name, original) = rename_identity(&name, old, new, targets);
+            let dependencies = rename_dependencies(&dependencies, old, new, targets, &collisions);
+            let (name, original) = rename_identity(&name, old, new, targets, &collisions);
             if let Some(original) = original {
                 moved
                     .entry(original)
@@ -82,7 +78,27 @@ impl State {
                 .extend(dependencies);
         }
         self.physical_views = moved;
-        true
+        Some(collisions)
+    }
+
+    fn rename_collisions(
+        &self,
+        new: &str,
+        targets: &BTreeSet<Vec<String>>,
+    ) -> BTreeSet<Vec<String>> {
+        self.physical_views
+            .keys()
+            .filter(|source| {
+                if source.len() <= 1 || !targets.iter().any(|target| names_match(source, target)) {
+                    return false;
+                }
+                let mut destination = (*source).clone();
+                destination.pop();
+                destination.push(new.to_owned());
+                self.physical_views.contains_key(&destination)
+            })
+            .cloned()
+            .collect()
     }
 }
 
@@ -91,12 +107,13 @@ pub(super) fn rename_dependencies(
     old: &[String],
     new: &str,
     targets: &BTreeSet<Vec<String>>,
+    collisions: &BTreeSet<Vec<String>>,
 ) -> BTreeSet<Dependency> {
     dependencies
         .iter()
         .flat_map(|dependency| match dependency {
             Dependency::Physical(parts) => {
-                let (renamed, original) = rename_identity(parts, old, new, targets);
+                let (renamed, original) = rename_identity(parts, old, new, targets, collisions);
                 std::iter::once(renamed)
                     .chain(original)
                     .map(Dependency::Physical)
@@ -113,8 +130,9 @@ fn rename_identity(
     old: &[String],
     new: &str,
     targets: &BTreeSet<Vec<String>>,
+    collisions: &BTreeSet<Vec<String>>,
 ) -> (Vec<String>, Option<Vec<String>>) {
-    if !targets.iter().any(|target| names_match(parts, target)) {
+    if collisions.contains(parts) || !targets.iter().any(|target| names_match(parts, target)) {
         return (parts.to_vec(), None);
     }
     let mut renamed = parts.to_vec();

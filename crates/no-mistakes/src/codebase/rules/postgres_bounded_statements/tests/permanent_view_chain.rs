@@ -32,3 +32,9 @@ fn permanent_view_node_rename_preserves_cascade_identity_and_failed_ddl() {
         ["orders", "orders", "orders", "orders", "orders", "orders"]
     );
 }
+
+#[test]
+fn bare_view_collision_preserves_each_schema_candidate() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-permanent-view-bare-collision.sql"));
+    assert_eq!(names(sql), ["orders", "orders", "orders"]);
+}

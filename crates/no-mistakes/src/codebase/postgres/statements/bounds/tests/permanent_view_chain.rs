@@ -73,3 +73,21 @@ fn permanent_view_node_rename_preserves_cascade_identity_and_failed_ddl() {
         ]
     );
 }
+
+#[test]
+fn bare_view_collision_preserves_each_schema_candidate() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-permanent-view-bare-collision.sql"));
+    let parsed = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!parsed.parse_failed);
+    assert_eq!(
+        shape(sql),
+        [
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders"
+        ]
+    );
+}
