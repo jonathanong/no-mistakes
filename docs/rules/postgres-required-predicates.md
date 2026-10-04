@@ -38,6 +38,9 @@ those columns.
 
 ## What it catches/requires
 
+A standalone `TABLE topics` reads `topics` without a predicate and is checked
+like `SELECT * FROM topics`. Each statement reports its own source line.
+
 A configured `relations[].require` entry still matches the relation's
 WHERE/JOIN SQL as a case-insensitive, whitespace-normalized substring. That
 behavior is unchanged.

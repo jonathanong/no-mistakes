@@ -120,6 +120,16 @@ impl TableTokenCursor {
     /// A scalar query can contain its own FROM, so match only the SELECT's nesting depth.
     pub(in super::super::super) fn advance_to_from(&mut self, select_start: Location) {
         let start = (select_start.line as usize, select_start.column as usize);
+        // Standalone TABLE is normalized to a SELECT whose synthetic tokens retain
+        // the TABLE source span. Its relation is already at this position; a later
+        // set-operation arm's FROM must not consume its source spelling.
+        if self
+            .names
+            .get(self.next)
+            .is_some_and(|name| name.at == start)
+        {
+            return;
+        }
         let depth_before = first_after(&self.depths, start, |source| source.at);
         let depth = depth_before
             .checked_sub(1)

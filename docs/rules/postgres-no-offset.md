@@ -56,6 +56,9 @@ less stable as rows are inserted or deleted between requests.
 
 ## What it catches/requires
 
+`TABLE posts OFFSET 10` is an executed query with an OFFSET clause and is
+reported at the OFFSET keyword, just like a SELECT query.
+
 Executed, statically recoverable PostgreSQL SQL must not contain `OFFSET`.
 `.sql` files are checked only when `sqlInclude` matches them. Interpolated
 offsets are checked after placeholder normalization; prose and unparseable
