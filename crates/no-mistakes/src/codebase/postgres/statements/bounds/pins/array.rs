@@ -35,7 +35,7 @@ pub(super) fn finite_array(
     fn columns(
         expr: &Expr,
         resolver: &Resolver,
-        out: &mut Vec<(usize, String)>,
+        mut out: Option<&mut Vec<(usize, String)>>,
         indexed: &mut Vec<(usize, String)>,
         types: &mut Vec<String>,
         caller_only: bool,
@@ -61,7 +61,10 @@ pub(super) fn finite_array(
                 if caller_only {
                     return None;
                 }
-                out.push(resolver.column(expr)?);
+                let column = resolver.column(expr)?;
+                if let Some(out) = out {
+                    out.push(column);
+                }
                 Some(())
             }
             Expr::CompoundFieldAccess { root, access_chain } if !caller_only => {
@@ -80,7 +83,7 @@ pub(super) fn finite_array(
                         columns(
                             element,
                             resolver,
-                            out,
+                            out.as_deref_mut(),
                             indexed,
                             types,
                             caller_only,
@@ -88,7 +91,7 @@ pub(super) fn finite_array(
                         )?;
                     }
                 } else {
-                    columns(expr, resolver, out, indexed, types, true, positions)?;
+                    columns(expr, resolver, out.as_deref_mut(), indexed, types, true, positions)?;
                 }
                 Some(())
             }
@@ -99,7 +102,7 @@ pub(super) fn finite_array(
             } => {
                 types.push(data_type.to_string());
                 if caller_only {
-                    columns(expr, resolver, out, indexed, types, true, positions)?;
+                    columns(expr, resolver, out.as_deref_mut(), indexed, types, true, positions)?;
                 }
                 Some(())
             }
@@ -107,7 +110,7 @@ pub(super) fn finite_array(
                 expr, data_type, ..
             } if !matches!(data_type, DataType::Array(_) | DataType::Custom(_, _)) => {
                 if caller_only {
-                    columns(expr, resolver, out, indexed, types, true, positions)?;
+                    columns(expr, resolver, out.as_deref_mut(), indexed, types, true, positions)?;
                 }
                 Some(())
             }
@@ -125,13 +128,14 @@ pub(super) fn finite_array(
                     let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = argument else {
                         return None;
                     };
-                    columns(expr, resolver, out, indexed, types, caller_only, positions)?;
+                    columns(expr, resolver, None, indexed, types, caller_only, positions)?;
                 }
                 Some(())
             }
             Expr::Function(function) => {
+                // The result is scalar; source extraction still retains argument row dependencies.
                 for expr in scalar::arguments(function)? {
-                    columns(expr, resolver, out, indexed, types, caller_only, positions)?;
+                    columns(expr, resolver, None, indexed, types, caller_only, positions)?;
                 }
                 Some(())
             }
@@ -140,7 +144,7 @@ pub(super) fn finite_array(
                     columns(
                         element,
                         resolver,
-                        out,
+                        out.as_deref_mut(),
                         indexed,
                         types,
                         caller_only,
@@ -161,7 +165,7 @@ pub(super) fn finite_array(
             columns(
                 element,
                 resolver,
-                &mut scalar_columns,
+                Some(&mut scalar_columns),
                 &mut indexed_columns,
                 &mut cast_types,
                 false,
