@@ -14,6 +14,7 @@ pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
 mod sql_text;
 mod standalone_table;
+mod table_boundary;
 mod table_only;
 pub(super) use sql_text::normalize_copy_data;
 pub(crate) use sql_text::top_level_statements;
@@ -81,6 +82,7 @@ fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>
     table_only::normalize(tokens);
     derived_table::normalize(tokens);
     standalone_table::normalize(tokens);
+    table_boundary::normalize(tokens);
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.

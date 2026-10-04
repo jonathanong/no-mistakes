@@ -77,11 +77,14 @@ fn should_rewrite(
             && preceded_by_set_op(previous, before_previous)
 }
 
-fn is_table(token: &Token) -> bool {
+pub(super) fn is_table(token: &Token) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::TABLE)
 }
 
-fn preceded_by_set_op(previous: Option<&Token>, before_previous: Option<&Token>) -> bool {
+pub(super) fn preceded_by_set_op(
+    previous: Option<&Token>,
+    before_previous: Option<&Token>,
+) -> bool {
     is_set_op(previous)
         || matches!(previous, Some(Token::Word(word)) if matches!(word.keyword, Keyword::ALL | Keyword::DISTINCT))
             && is_set_op(before_previous)
@@ -91,7 +94,7 @@ fn is_set_op(token: Option<&Token>) -> bool {
     matches!(token, Some(Token::Word(word)) if matches!(word.keyword, Keyword::UNION | Keyword::INTERSECT | Keyword::EXCEPT))
 }
 
-fn advance_previous<'a>(
+pub(super) fn advance_previous<'a>(
     token: &'a Token,
     previous: &mut Option<&'a Token>,
     before_previous: &mut Option<&'a Token>,
