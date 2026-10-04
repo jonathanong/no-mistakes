@@ -14,6 +14,7 @@ mod array_review;
 mod compact_aliases;
 mod compact_caller_arrays;
 mod materialized_drop;
+mod materialized_namesake;
 mod physical_cascade;
 mod recursive_forward;
 mod referential;
