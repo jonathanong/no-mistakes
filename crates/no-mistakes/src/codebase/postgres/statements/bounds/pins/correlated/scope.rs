@@ -81,6 +81,14 @@ pub(super) struct Scope {
 }
 
 impl Scope {
+    /// Keep physical ownership separate from names visible through SQL qualifiers.
+    pub(super) fn record_base_table(&mut self, table: String, aliased: bool) {
+        self.tables.push(table.clone());
+        if !aliased {
+            self.qualified_tables.push(table);
+        }
+    }
+
     pub(super) fn qualified_candidates(&self) -> SqlQualifiedScope {
         SqlQualifiedScope {
             tables: self.qualified_tables.visible(),

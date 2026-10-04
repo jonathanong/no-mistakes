@@ -60,11 +60,9 @@ impl Scan {
                             && !args.args.iter().all(|argument| matches!(argument, FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if scalar_array(expr)))
                         { None } else { function_columns(name, alias) }
                 } else {
-                    let table = sql_name(name);
-                    frame.scope.tables.push(table.clone());
-                    if alias.is_none() {
-                        frame.scope.qualified_tables.push(table);
-                    }
+                    frame
+                        .scope
+                        .record_base_table(sql_name(name), alias.is_some());
                     return;
                 };
                 if args.is_some()
