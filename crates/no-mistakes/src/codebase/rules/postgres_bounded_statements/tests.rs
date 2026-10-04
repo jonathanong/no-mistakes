@@ -7,6 +7,7 @@ mod legacy_single_column;
 mod nested_positive_order;
 mod nested_zero_order;
 mod nonrecursive_ctes;
+mod pin_query_reads;
 mod recovered_table;
 mod rejecting_having_projection;
 mod scalar_case_projection;

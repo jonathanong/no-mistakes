@@ -124,7 +124,12 @@ impl TemporaryRelations {
             match &mut item.kind {
                 SqlBoundItemKind::Table(name) if self.state.contains(name) => {
                     item.kind = SqlBoundItemKind::Opaque;
-                    item.pins.clear();
+                    item.pins.retain(|pin| {
+                        matches!(
+                            pin.source,
+                            SqlPinSource::Query(_) | SqlPinSource::ReadQuery(_)
+                        )
+                    });
                 }
                 SqlBoundItemKind::Table(name) => {
                     item.possible_temporary = self.state.possible_temporary(name);
@@ -133,7 +138,8 @@ impl TemporaryRelations {
                 _ => {}
             }
             for pin in &mut item.pins {
-                if let SqlPinSource::Query(query) = &mut pin.source {
+                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &mut pin.source
+                {
                     self.query(query);
                 }
             }

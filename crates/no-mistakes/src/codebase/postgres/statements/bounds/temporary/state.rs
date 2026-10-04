@@ -63,7 +63,7 @@ impl State {
                 _ => {}
             }
             for pin in &item.pins {
-                if let SqlPinSource::Query(query) = &pin.source {
+                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &pin.source {
                     self.dependencies(query, out);
                 }
             }

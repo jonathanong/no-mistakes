@@ -11,7 +11,13 @@ fn derived_outputs_do_not_shadow_reads_inside_their_own_queries() {
     let pins = |index: usize| &all[index].query.items[all[index].target.unwrap()].pins;
     for index in [0, 1, 4, 6] {
         // Every outer row finds itself, regardless of the inner LIMIT.
-        assert!(pins(index).is_empty(), "statement {index}");
+        assert!(
+            pins(index)
+                .iter()
+                .all(|pin| matches!(pin.source, super::SqlPinSource::ReadQuery(_))),
+            "statement {index}"
+        );
+        assert_eq!(pins(index).len(), 1);
     }
     assert_eq!(pins(2).len(), 1);
     assert_eq!(pins(2)[0].reads.len(), 1);

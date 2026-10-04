@@ -20,7 +20,7 @@ fn has_possible_temporary(query: &SqlBoundQuery) -> bool {
         item.possible_temporary.is_some()
             || matches!(&item.kind, SqlBoundItemKind::Query(inner) if has_possible_temporary(inner))
             || item.pins.iter().any(|pin| {
-                matches!(&pin.source, SqlPinSource::Query(inner) if has_possible_temporary(inner))
+                matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) if has_possible_temporary(inner))
             })
     })
 }
@@ -41,14 +41,18 @@ fn resolve(query: &mut SqlBoundQuery, catalog: &SchemaCatalog) {
             // A proven temporary source has no permanent catalog pins or array lengths.
             // Its executed pin subqueries remain independent catalog reads.
             item.kind = SqlBoundItemKind::Opaque;
-            item.pins
-                .retain(|pin| matches!(&pin.source, SqlPinSource::Query(_)));
+            item.pins.retain(|pin| {
+                matches!(
+                    &pin.source,
+                    SqlPinSource::Query(_) | SqlPinSource::ReadQuery(_)
+                )
+            });
         }
         if let SqlBoundItemKind::Query(inner) = &mut item.kind {
             resolve(inner, catalog);
         }
         for pin in &mut item.pins {
-            if let SqlPinSource::Query(inner) = &mut pin.source {
+            if let SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) = &mut pin.source {
                 resolve(inner, catalog);
             }
         }
