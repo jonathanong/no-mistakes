@@ -444,6 +444,12 @@ tells a window (`id >= $1 AND id < $2`) from a one-sided walk. A CTE body sees o
 `keyset-only-sweep` shapes of `postgres-sql-shape-policy` consume them; the `LIMIT`
 definition is shared with the row-bound facts.
 
+Expanded cursor prefixes compare bind identities recursively inside tuples. Built-in
+int4 casts, including the exact `pg_catalog.int4` type, are transparent when the
+referenced prepared parameter is declared integer; unrelated parameter types do
+not affect that decision. Missing declarations and value-changing casts retain
+their complete expression identity. Quoted type names preserve their meaning.
+
 `SqlConjunctFact.text` folds unquoted words to ASCII lowercase and collapses
 whitespace outside tokens. String literal bodies and quoted identifier contents
 retain their case and internal spacing. Escaped and Unicode string literals are

@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 pub(super) fn sweep(
     query: &Query,
     ctes: &[String],
-    transparent_int4_casts: bool,
+    int4_bindings: &super::Int4Bindings,
     recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<SqlSweepFact> {
     let (select, order) = page_of(query)?;
@@ -52,7 +52,7 @@ pub(super) fn sweep(
         &names,
         &order_columns,
         &order_ascending,
-        transparent_int4_casts,
+        int4_bindings,
         recovered_placeholder_positions,
     );
     let at = name.span().start;

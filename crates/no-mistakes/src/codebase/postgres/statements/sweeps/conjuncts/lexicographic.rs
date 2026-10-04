@@ -1,7 +1,6 @@
-use super::placeholders::is_recovered_placeholder;
-use super::{bound, column, flatten, is_bind, Cursor};
+use super::{bound, column, flatten, Cursor};
 use crate::codebase::postgres::idents::unwrap_expr;
-use sqlparser::ast::{BinaryOperator, DataType, Expr, Value};
+use sqlparser::ast::{BinaryOperator, Expr};
 
 /// Match the expanded tuple comparison, retaining bind identity in every prefix.
 pub(super) fn cursor(
@@ -9,7 +8,7 @@ pub(super) fn cursor(
     names: &[String],
     order_columns: &[String],
     order_ascending: &[Option<bool>],
-    transparent_int4_casts: bool,
+    int4_bindings: &super::super::Int4Bindings,
     recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<Cursor> {
     fn arms<'a>(expr: &'a Expr, out: &mut Vec<&'a Expr>) {
@@ -39,7 +38,7 @@ pub(super) fn cursor(
     // expanded cursor. OR order is semantically irrelevant, so normalize it
     // before checking the complete prefix chain.
     alternatives.sort_by_key(Vec::len);
-    let mut keys: Vec<(String, &Expr)> = Vec::new();
+    let mut keys: Vec<(String, super::super::bind_identity::Identity<'_>)> = Vec::new();
     let mut direction = None;
     for (index, terms) in alternatives.into_iter().enumerate() {
         if terms.len() != index + 1 {
@@ -54,60 +53,37 @@ pub(super) fn cursor(
             else {
                 return None;
             };
-            let (column_expr, bind_expr) = match (
-                column(left, names, recovered_placeholder_positions).is_some()
-                    && is_bind(right, recovered_placeholder_positions),
-                column(right, names, recovered_placeholder_positions).is_some()
-                    && is_bind(left, recovered_placeholder_positions),
-            ) {
-                (true, false) => (left, right),
-                (false, true) => (right, left),
-                _ => return None,
-            };
-            if column(column_expr, names, recovered_placeholder_positions).as_ref()
-                != Some(&keys[prefix].0)
-                || bind_identity(
-                    bind_expr,
-                    transparent_int4_casts,
-                    recovered_placeholder_positions,
-                )? != keys[prefix].1
-            {
+            let (column, identity, _) = operands(
+                left,
+                right,
+                names,
+                int4_bindings,
+                recovered_placeholder_positions,
+            )?;
+            if column != keys[prefix].0 || identity != keys[prefix].1 {
                 return None;
             }
         }
         let Expr::BinaryOp { left, op, right } = unwrap_expr(terms[index]) else {
             return None;
         };
-        let (column_expr, bind_expr, lower) = match (
-            column(left, names, recovered_placeholder_positions).is_some()
-                && is_bind(right, recovered_placeholder_positions),
-            column(right, names, recovered_placeholder_positions).is_some()
-                && is_bind(left, recovered_placeholder_positions),
-        ) {
-            (true, false) => match op {
-                BinaryOperator::Gt => (left, right, true),
-                BinaryOperator::Lt => (left, right, false),
-                _ => return None,
-            },
-            (false, true) => match op {
-                BinaryOperator::Gt => (right, left, false),
-                BinaryOperator::Lt => (right, left, true),
-                _ => return None,
-            },
+        let (column, identity, reversed) = operands(
+            left,
+            right,
+            names,
+            int4_bindings,
+            recovered_placeholder_positions,
+        )?;
+        let lower = match op {
+            BinaryOperator::Gt => !reversed,
+            BinaryOperator::Lt => reversed,
             _ => return None,
         };
         if direction.is_some_and(|direction| direction != lower) {
             return None;
         }
         direction = Some(lower);
-        keys.push((
-            column(column_expr, names, recovered_placeholder_positions)?,
-            bind_identity(
-                bind_expr,
-                transparent_int4_casts,
-                recovered_placeholder_positions,
-            )?,
-        ));
+        keys.push((column, identity));
     }
     // An expanded comparison is contiguous only in its ORDER BY key sequence. Mixed sort
     // directions need different range operators per arm, which this matcher does not accept.
@@ -129,56 +105,21 @@ pub(super) fn cursor(
     })
 }
 
-/// Keep an int4 bind's identity through built-in transparent spellings. Other casts retain
-/// their complete expression as an opaque identity, preserving an identical-bound comparison.
-fn bind_identity<'a>(
-    expr: &'a Expr,
-    transparent_int4_casts: bool,
-    recovered_placeholder_positions: &[(u32, u32)],
-) -> Option<&'a Expr> {
-    match unwrap_expr(expr) {
-        Expr::Value(value) if matches!(value.value, Value::Placeholder(_)) => {
-            Some(unwrap_expr(expr))
-        }
-        Expr::Identifier(ident)
-            if is_recovered_placeholder(ident, recovered_placeholder_positions) =>
-        {
-            Some(unwrap_expr(expr))
-        }
-        Expr::Tuple(items)
-            if !items.is_empty()
-                && items
-                    .iter()
-                    .all(|item| is_bind(item, recovered_placeholder_positions)) =>
-        {
-            Some(unwrap_expr(expr))
-        }
-        Expr::Cast {
-            expr: inner,
-            data_type,
-            ..
-        } if transparent_int4_casts && transparent_int4_cast(data_type) => {
-            let identity = bind_identity(
-                inner,
-                transparent_int4_casts,
-                recovered_placeholder_positions,
-            )?;
-            if matches!(identity, Expr::Cast { .. }) {
-                Some(unwrap_expr(expr))
-            } else {
-                Some(identity)
-            }
-        }
-        Expr::Cast { .. } if is_bind(expr, recovered_placeholder_positions) => {
-            Some(unwrap_expr(expr))
-        }
+/// Determine the column and normalized bind once for either comparison orientation.
+fn operands<'a>(
+    left: &'a Expr,
+    right: &'a Expr,
+    names: &[String],
+    bindings: &super::super::Int4Bindings,
+    positions: &[(u32, u32)],
+) -> Option<(String, super::super::bind_identity::Identity<'a>, bool)> {
+    let forward = column(left, names, positions)
+        .zip(super::super::bind_identity::of(right, bindings, positions));
+    let reversed = column(right, names, positions)
+        .zip(super::super::bind_identity::of(left, bindings, positions));
+    match (forward, reversed) {
+        (Some((column, identity)), None) => Some((column, identity, false)),
+        (None, Some((column, identity))) => Some((column, identity, true)),
         _ => None,
     }
-}
-
-fn transparent_int4_cast(data_type: &DataType) -> bool {
-    matches!(
-        data_type,
-        DataType::Int(_) | DataType::Int4(_) | DataType::Integer(_)
-    )
 }

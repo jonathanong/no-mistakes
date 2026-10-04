@@ -1,5 +1,7 @@
 //! Limit and key-walk facts for the bounded-iteration SQL shapes.
+mod bind_identity;
 mod conjuncts;
+use bind_identity::Int4Bindings;
 mod page;
 #[cfg(test)]
 mod tests;
@@ -7,7 +9,7 @@ mod tests;
 use super::limit::{is_empty_page, limit_site, Tokens};
 use super::{walk_executed, SqlLimitFact, SqlSweepFact};
 use crate::codebase::postgres::idents::ident_key;
-use sqlparser::ast::{DataType, Query, Statement, Visit, Visitor};
+use sqlparser::ast::{Query, Statement, Visit, Visitor};
 use std::collections::HashMap;
 use std::ops::ControlFlow;
 
@@ -23,7 +25,7 @@ pub(super) fn collect(
     for statement in statements {
         let mut executed = Vec::new();
         walk_executed(statement, &mut executed);
-        collector.transparent_int4_casts = transparent_int4_casts_safe(statement);
+        collector.int4_bindings = Int4Bindings::for_statement(statement);
         for statement in executed {
             let _ = statement.visit(&mut collector);
         }
@@ -35,29 +37,6 @@ pub(super) fn collect(
     (collector.limits, collector.sweeps)
 }
 
-/// A declared non-int4 parameter can change value when cast to int4. Keep casts opaque for
-/// that prepared statement rather than equating `$1::int` with `$1` in an expanded cursor.
-fn transparent_int4_casts_safe(statement: &Statement) -> bool {
-    match statement {
-        Statement::Prepare {
-            data_types,
-            statement,
-            ..
-        } => {
-            (data_types.is_empty()
-                || data_types.iter().all(|data_type| {
-                    matches!(
-                        data_type,
-                        DataType::Int(_) | DataType::Int4(_) | DataType::Integer(_)
-                    )
-                }))
-                && transparent_int4_casts_safe(statement)
-        }
-        Statement::Explain { statement, .. } => transparent_int4_casts_safe(statement),
-        _ => true,
-    }
-}
-
 struct Collector<'a, 'sql> {
     limits: Vec<SqlLimitFact>,
     sweeps: Vec<SqlSweepFact>,
@@ -67,7 +46,7 @@ struct Collector<'a, 'sql> {
     scopes: Vec<Vec<String>>,
     /// The names a CTE body sees, set when its WITH clause is entered and keyed by the body.
     bodies: HashMap<*const Query, Vec<String>>,
-    transparent_int4_casts: bool,
+    int4_bindings: Int4Bindings,
     recovered_placeholder_positions: &'a [(u32, u32)],
     embedded: bool,
 }
@@ -84,7 +63,7 @@ impl<'a, 'sql> Collector<'a, 'sql> {
             tokens,
             scopes: Vec::new(),
             bodies: HashMap::new(),
-            transparent_int4_casts: true,
+            int4_bindings: Int4Bindings::default(),
             recovered_placeholder_positions,
             embedded,
         }
@@ -144,7 +123,7 @@ impl Visitor for Collector<'_, '_> {
             if let Some(sweep) = page::sweep(
                 query,
                 visible,
-                self.transparent_int4_casts,
+                &self.int4_bindings,
                 self.recovered_placeholder_positions,
             ) {
                 self.sweeps.push(sweep);
