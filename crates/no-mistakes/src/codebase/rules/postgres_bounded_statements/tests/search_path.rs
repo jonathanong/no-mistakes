@@ -34,3 +34,32 @@ fn search_path_uses_only_explicit_schema_relation_evidence() {
         ["orders", "orders", "orders", "accounts", "accounts", "accounts", "accounts"]
     );
 }
+
+#[test]
+fn conditional_drop_and_rename_do_not_leave_stale_temporary_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-search-path-lifecycle.sql"
+    ));
+    let catalog = SchemaCatalog::from_json(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/schema-search-path-evidence.json"
+    )))
+    .unwrap();
+    assert_eq!(
+        crate::codebase::postgres::parse_postgres_sql(sql)
+            .unwrap()
+            .len(),
+        18
+    );
+    let names = extract_sql_statement_facts(sql)
+        .bounds
+        .iter()
+        .flat_map(|fact| offenders(fact, &catalog))
+        .map(|offender| offender.table)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        names,
+        ["accounts", "accounts", "accounts", "accounts", "orders"]
+    );
+}

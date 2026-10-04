@@ -31,7 +31,7 @@ pub(super) fn catalog_query_with_search_path(
             .join(", ");
         format!(
             " || jsonb_build_object('searchPathEvidence', (\
-             SELECT jsonb_object_agg(requested.name, CASE WHEN n.oid IS NULL THEN 'null'::jsonb \
+             SELECT jsonb_object_agg(requested.name, CASE WHEN n.oid IS NULL OR NOT has_schema_privilege(n.oid, 'USAGE') THEN 'null'::jsonb \
              ELSE COALESCE((SELECT jsonb_agg(c.relname ORDER BY c.relname) FROM pg_class c \
              WHERE c.relnamespace = n.oid), '[]'::jsonb) END) \
              FROM (VALUES {requested}) requested(name) \

@@ -1,7 +1,7 @@
 /** Which facts a generated catalog carries. It is stated in the catalog's `coverage` field. */
 export type PostgresCatalogCoverage = "complete" | "ordering";
-/** Explicit existence and complete relation names for only the requested search-path schemas. */
-export type PostgresSearchPathEvidence = Record<string, string[] | null>;
+/** Explicit accessible relation names for requested schemas; an unrequested key is absent. */
+export type PostgresSearchPathEvidence = Partial<Record<string, string[] | null>>;
 export interface PostgresCatalogOptions {
   /** Environment variable containing a PostgreSQL connection URL; never pass secrets as options. */
   connectionEnv: string;
@@ -12,7 +12,7 @@ export interface PostgresCatalogOptions {
    * `ordering` carries only what conflict and lock ordering need; other catalog rules reject it.
    */
   coverage?: PostgresCatalogCoverage;
-  /** Opt in to evidence for these exact schemas; absent schemas become null. */
+  /** Opt in to evidence for these exact schemas; absent or inaccessible schemas become null. */
   searchPathSchemas?: string[];
 }
 export interface PostgresOrderingCatalog {

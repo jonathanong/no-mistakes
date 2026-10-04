@@ -88,17 +88,28 @@ impl State {
         }
     }
     pub fn drop(&mut self, name: &str, cascade: bool) {
-        if self.contains(name) {
-            self.remove(BTreeSet::from([key(name)]), cascade);
-        } else if cascade {
-            let parts = decoded_parts(name);
-            let removed = self.relations.iter().filter(|(_, dependencies)| {
-                dependencies.iter().any(|dependency| {
-                    matches!(dependency, Dependency::Physical(source) if names_match(source, &parts))
-                })
-            }).map(|(name, _)| name.clone()).collect();
-            self.remove(removed, true);
+        let mut removed = BTreeSet::new();
+        let definite_temporary = self.contains(name);
+        // An unqualified name behind unknown earlier schemas may denote this temporary
+        // relation. Retire it conservatively: retaining it after a real DROP can hide a
+        // catalog read, while retiring it after a different DROP can only over-report.
+        if definite_temporary || self.possible_temporary(name).is_some() {
+            removed.insert(key(name));
         }
+        if cascade && !definite_temporary {
+            let parts = decoded_parts(name);
+            removed.extend(
+                self.relations
+                    .iter()
+                    .filter(|(_, dependencies)| {
+                        dependencies.iter().any(|dependency| {
+                            matches!(dependency, Dependency::Physical(source) if names_match(source, &parts))
+                        })
+                    })
+                    .map(|(name, _)| name.clone()),
+            );
+        }
+        self.remove(removed, cascade);
     }
     pub fn drop_schema(&mut self, name: &str) {
         let parts = decoded_parts(name);
@@ -172,6 +183,11 @@ impl State {
         }
     }
     pub fn rename(&mut self, old: &str, new: &str) {
+        if !self.contains(old) && self.possible_temporary(old).is_some() {
+            // A physical namesake may have been renamed instead. Never carry a possibly
+            // stale temporary identity into a later, more definite search path.
+            self.remove(BTreeSet::from([key(old)]), true);
+        }
         if !self.contains(old) {
             let old = decoded_parts(old);
             let new = key(new);

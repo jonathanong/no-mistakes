@@ -28,7 +28,7 @@ pub struct PostgresCatalogOptions {
     /// `complete` (the default) or `ordering`.
     #[serde(default)]
     pub coverage: PostgresCatalogCoverage,
-    /// Schemas whose existence and complete relation-name sets are needed for search_path.
+    /// Schemas whose accessibility and complete relation-name sets are needed for search_path.
     #[serde(default)]
     pub search_path_schemas: Vec<String>,
 }

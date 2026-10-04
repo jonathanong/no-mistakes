@@ -37,6 +37,7 @@ fn observed_catalog_preserves_postgres_ordering_state() {
     let connection = std::env::var("NO_MISTAKES_TEST_POSTGRES_URL").unwrap();
     for (file, success) in [
         ("setup.sql", true),
+        ("search-path-privileges.sql", true),
         ("invalid-index.sql", false),
         ("deferrable-conflict.sql", false),
     ] {
@@ -73,6 +74,7 @@ fn observed_catalog_preserves_postgres_ordering_state() {
         search_path_schemas: vec![
             "pg_catalog".into(),
             "Catalog.Test".into(),
+            "Catalog.Locked".into(),
             "no_mistakes_missing_search_path_schema".into(),
         ],
         ..options.clone()
@@ -84,9 +86,39 @@ fn observed_catalog_preserves_postgres_ordering_state() {
     assert!(with_evidence["searchPathEvidence"]["pg_catalog"]
         .as_array()
         .is_some_and(|names| names.iter().any(|name| name == "pg_class")));
+    assert!(with_evidence["searchPathEvidence"]["Catalog.Locked"]
+        .as_array()
+        .is_some_and(|names| names.iter().any(|name| name == "accounts")));
     assert!(
         with_evidence["searchPathEvidence"]["no_mistakes_missing_search_path_schema"].is_null()
     );
+    let restricted_query = format!(
+        "SET ROLE no_mistakes_catalog_no_usage;\n{}",
+        sql::catalog_query_with_search_path(
+            "Catalog.Test",
+            PostgresCatalogCoverage::Ordering,
+            &["Catalog.Locked".into()],
+        )
+    );
+    let mut restricted = Command::new("psql");
+    connection_environment(&connection, &mut restricted).unwrap();
+    let output = restricted
+        .args([
+            "-X",
+            "--quiet",
+            "--tuples-only",
+            "--no-align",
+            "--no-password",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            &restricted_query,
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "restricted catalog query failed");
+    let restricted: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(restricted["searchPathEvidence"]["Catalog.Locked"].is_null());
     let escaped = generate(&PostgresCatalogOptions {
         schema: "Catalog\\'Schema".into(),
         ..options.clone()

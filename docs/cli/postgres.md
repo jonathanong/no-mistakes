@@ -39,12 +39,13 @@ tells you to run this command.
 The async Node equivalent is `generatePostgresCatalog({ connectionEnv, schema,
 coverage, searchPathSchemas })`. It returns the catalog object; the caller owns writing it to disk.
 The optional `searchPathEvidence` output contains only requested schemas: `null` means a
-schema did not exist, and an array is its complete PostgreSQL relation-namespace inventory,
+schema did not exist or the catalog role lacked `USAGE`; an array is its complete PostgreSQL relation-namespace inventory,
 including views, foreign tables, sequences, partitions, and other names omitted from the
 rule's table model. An absent entry gives no evidence of absence. For a configured SQL
 `search_path`, request every schema before `pg_temp`. Include `pg_catalog` when omitted
 from the path because PostgreSQL searches it first. The bounded-statements rule uses
-this evidence to identify the relation an unqualified name reaches.
+this evidence to identify the relation an unqualified name reaches. Generate it with the
+same role that executes the analyzed SQL.
 
 ### Complete coverage
 
