@@ -508,3 +508,7 @@ fn scanning_requires_prepared_facts() {
         .contains("prepared PostgreSQL facts are required"));
 }
 mod set_operation_limits;
+
+mod nested_pins;
+
+mod pin_subqueries;

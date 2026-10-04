@@ -50,15 +50,15 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
         })
         .collect();
     // Whether each IN-subquery pin is itself bounded; the other pin sources need no evaluation.
-    let pin_subqueries: Vec<Vec<bool>> = query
+    let pin_subqueries: Vec<Vec<Option<Evaluation>>> = query
         .items
         .iter()
         .map(|item| {
             item.pins
                 .iter()
                 .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) => evaluate(inner, catalog).bounded,
-                    _ => true,
+                    SqlPinSource::Query(inner) => Some(evaluate(inner, catalog)),
+                    _ => None,
                 })
                 .collect()
         })
@@ -108,13 +108,19 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
     let mut offenders = Vec::new();
     if !query.capped {
         for (index, item) in query.items.iter().enumerate() {
-            if bounded[index] {
-                continue;
+            for pin in pin_subqueries[index].iter().flatten() {
+                offenders.extend(pin.offenders.iter().cloned());
             }
             if let Some(inner) = &nested[index] {
                 offenders.extend(inner.offenders.iter().cloned());
-            } else if let SqlBoundItemKind::Table(name) = &item.kind {
-                offenders.extend(table_offender(name, item.line, catalog));
+            }
+            if bounded[index] {
+                continue;
+            }
+            if nested[index].is_none() {
+                if let SqlBoundItemKind::Table(name) = &item.kind {
+                    offenders.extend(table_offender(name, item.line, catalog));
+                }
             }
         }
     }
@@ -139,7 +145,7 @@ fn table_offender(name: &str, line: usize, catalog: &SchemaCatalog) -> Option<Of
 /// the statement or its caller sizes.
 fn keyed(
     item: &SqlBoundItem,
-    subqueries: &[bool],
+    subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     bounded: &[bool],
     catalog: &SchemaCatalog,
@@ -158,7 +164,9 @@ fn keyed(
                 && match &pin.source {
                     SqlPinSource::Value => true,
                     SqlPinSource::Items(items) | SqlPinSource::Array { items, .. } => items.iter().all(|other| bounded[*other]),
-                    SqlPinSource::Query(_) => subqueries[index],
+                    SqlPinSource::Query(_) => subqueries[index]
+                        .as_ref()
+                        .is_some_and(|query| query.bounded),
                 }
         })
     };
