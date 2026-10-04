@@ -98,8 +98,11 @@ fn extract_from_parsed_and_sources(
                 &mut out,
             );
             if let Some(scope) = &scope {
+                let statement_start =
+                    table_tokens.and_then(|index| index.statement_start_at(statement.span().start));
                 let (first_bound, view_reads) = lifecycle.collect(
                     statement,
+                    statement_start,
                     scope,
                     placeholder_positions,
                     &temporary_relations,

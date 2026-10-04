@@ -106,3 +106,22 @@ fn long_chain_marker_lookups_have_logarithmic_comparison_counts() {
     assert_bounded_search(&cursor.operators, |marker| marker.at);
     assert_bounded_search(&cursor.froms, |marker| marker.at);
 }
+
+#[test]
+fn statement_origins_reuse_significant_token_segments() {
+    use super::TableTokenIndex;
+    use sqlparser::tokenizer::Location;
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/wrapped-statement-suppression.sql"),
+    )
+    .unwrap();
+    let tokens = Tokenizer::new(&PostgreSqlDialect {}, &sql)
+        .tokenize_with_location()
+        .unwrap();
+    let index = TableTokenIndex::new(&tokens);
+    assert_eq!(index.statement_start_at(Location::new(0, 0)), None);
+    assert_eq!(index.statement_start_at(Location::new(3, 1)), Some((2, 1)));
+    assert_eq!(index.statement_start_at(Location::new(7, 1)), Some((6, 1)));
+    assert_eq!(index.statement_start_at(Location::new(999, 1)), None);
+}

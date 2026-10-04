@@ -98,6 +98,22 @@ fn conditional_lifecycle_bounds_follow_embedded_source_lines() {
     let lifecycle = facts.lifecycle.as_ref().unwrap();
     assert_eq!(lifecycle.raw_bounds.len(), facts.bounds.len());
     assert!(lifecycle.raw_bounds.iter().all(|bound| bound.line >= 40));
+    assert!(lifecycle
+        .raw_bounds
+        .iter()
+        .all(|bound| bound.statement_start.is_some_and(|(line, _)| line >= 40)));
+    assert_eq!(
+        lifecycle
+            .raw_bounds
+            .iter()
+            .map(|bound| bound.statement_start)
+            .collect::<Vec<_>>(),
+        facts
+            .bounds
+            .iter()
+            .map(|bound| bound.statement_start)
+            .collect::<Vec<_>>()
+    );
     assert_eq!(
         lifecycle
             .raw_bounds

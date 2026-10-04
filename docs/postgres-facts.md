@@ -362,6 +362,10 @@ query or `CREATE [MATERIALIZED] VIEW` at that statement's line.
 For `UPDATE` and `DELETE`, a bound fact's location is the statement keyword,
 while its relation items retain their own locations. Embedded SQL maps both to
 physical source lines so a suppression on the statement start covers its findings.
+`statement_start` separately retains the outer statement position, including an
+executing `EXPLAIN ANALYZE` wrapper or a leading `WITH` clause. It comes from the
+prepared token index and survives catalog-dependent lifecycle projection and
+embedded source mapping; the inner write and relation positions remain unchanged.
 
 `SqlStatementFileFacts.bounds` holds one `SqlBoundFact` per executed `SELECT`,
 `UPDATE` and `DELETE`, including those in data-modifying CTEs (whose `RETURNING` rows are an

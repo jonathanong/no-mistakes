@@ -121,6 +121,7 @@ fn collect_query(
         kind: SqlBoundKind::Select,
         line,
         column,
+        statement_start: None,
         query: query::bound_body(query, &scope, positions),
         target: None,
     });

@@ -201,3 +201,12 @@ fn unanalyzable_sql_fails_closed_unless_ignored() {
     assert_eq!(findings("ignore-unanalyzable.yml"), []);
     assert!(check("ignore-unanalyzable.yml").status.success());
 }
+
+#[test]
+fn embedded_wrapped_statement_directives_keep_recovery_fixtures_isolated() {
+    expect(
+        "wrapped-statement-suppressions.yml",
+        "src/wrapped-statement-suppression.mts",
+        &[(9, "table:accounts"), (11, "table:accounts")],
+    );
+}

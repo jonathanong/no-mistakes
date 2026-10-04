@@ -57,6 +57,7 @@ mod shadow_drop;
 mod suppression;
 mod trigger_scope;
 mod view_dependencies;
+mod wrapped_suppression;
 mod xml_array;
 
 fn catalog() -> SchemaCatalog {

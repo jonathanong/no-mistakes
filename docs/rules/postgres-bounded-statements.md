@@ -377,7 +377,10 @@ A line directive covering the first line of a statement suppresses every relatio
 finding in that statement, including when its `FROM` or target is on a later line.
 Directives on a relation's own reported line also work. This applies to SQL files
 and SQL embedded in executor calls; statement-start directives use the physical
-source line of the SQL keyword.
+source line of the outer SQL keyword, including `WITH` and executing
+`EXPLAIN ANALYZE` wrappers. A directive on an inner write keyword remains valid.
+For concatenated embedded SQL, the operand containing the outer keyword owns
+that statement-start directive.
 
 ## Related rules
 

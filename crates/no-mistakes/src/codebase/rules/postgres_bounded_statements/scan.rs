@@ -65,7 +65,10 @@ pub(super) fn scan(
             for offender in offenders(bound, catalog) {
                 // Keep suppression and its audit in the shared layer. A directive
                 // on the statement start anchors all of that statement's findings.
-                let line = statement_directive_line(source.as_deref(), bound.line)
+                let line = bound
+                    .statement_start
+                    .and_then(|(line, _)| statement_directive_line(source.as_deref(), line))
+                    .or_else(|| statement_directive_line(source.as_deref(), bound.line))
                     .unwrap_or(offender.line)
                     .max(1);
                 findings.push(finding(
