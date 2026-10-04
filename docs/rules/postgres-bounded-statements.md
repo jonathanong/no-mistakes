@@ -66,7 +66,7 @@ partition transitions even though the strict PostgreSQL parser does not support 
 this also covers transitions inside `DO` blocks. Malformed transitions are skipped while
 other parseable statements are still checked. Attach recovery requires nonempty list
 and range expression entries, matching lower and upper range arity, and a valid hash
-`MODULUS`/`REMAINDER` pair; rejected bounds leave temporary ownership unchanged.
+`MODULUS`/`REMAINDER` pair in either order; rejected bounds leave temporary ownership unchanged.
 `CREATE TEMP TABLE IF NOT EXISTS child
 PARTITION OF parent` leaves an existing standalone child untouched.
 An attach to a non-partitioned temporary parent does not transfer ownership. A
