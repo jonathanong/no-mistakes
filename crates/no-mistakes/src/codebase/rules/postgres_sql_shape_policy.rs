@@ -193,6 +193,9 @@ mod tests;
 mod followup_tests;
 
 #[cfg(test)]
+mod implicit_fetch_tests;
+
+#[cfg(test)]
 mod review_fix_tests;
 
 #[cfg(test)]

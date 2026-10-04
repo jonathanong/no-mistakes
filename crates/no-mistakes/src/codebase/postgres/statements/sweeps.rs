@@ -6,7 +6,7 @@ mod page;
 #[cfg(test)]
 mod tests;
 
-use super::limit::{is_empty_page, limit_site, Tokens};
+use super::limit::{is_empty_page, limit_site_at, next_table_fetch, Tokens};
 use super::{walk_executed, SqlLimitFact, SqlSweepFact};
 use crate::codebase::postgres::idents::ident_key;
 use sqlparser::ast::{Query, Statement, Visit, Visitor};
@@ -49,6 +49,7 @@ struct Collector<'a, 'sql> {
     int4_bindings: Int4Bindings,
     recovered_placeholder_positions: &'a [(u32, u32)],
     embedded: bool,
+    table_fetch_cursor: usize,
 }
 
 impl<'a, 'sql> Collector<'a, 'sql> {
@@ -66,6 +67,7 @@ impl<'a, 'sql> Collector<'a, 'sql> {
             int4_bindings: Int4Bindings::default(),
             recovered_placeholder_positions,
             embedded,
+            table_fetch_cursor: 0,
         }
     }
 
@@ -105,7 +107,8 @@ impl Visitor for Collector<'_, '_> {
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         self.enter(query);
-        let site = limit_site(query, self.tokens);
+        let table_fetch = next_table_fetch(query, self.tokens, &mut self.table_fetch_cursor);
+        let site = limit_site_at(query, self.tokens, table_fetch);
         // Transparent casts/unary signs can preserve zero without being bare literals.
         let empty = is_empty_page(query);
         if let Some(site) = site {

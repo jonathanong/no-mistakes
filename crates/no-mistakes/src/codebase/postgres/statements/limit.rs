@@ -1,5 +1,6 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
 mod empty;
+mod fetch;
 mod fixed_count;
 use fixed_count::is_fixed_at;
 mod zero;
@@ -7,9 +8,10 @@ pub(super) use super::tokens::Tokens;
 use super::SqlLimitValue;
 use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
 pub(super) use empty::is_empty_page;
-use sqlparser::ast::{Expr, LimitClause, Query, SetExpr, Spanned, Value};
-use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::{Span, Token};
+use fetch::fetch_keyword;
+pub(super) use fetch::next_table_fetch;
+use sqlparser::ast::{Expr, LimitClause, Query, Spanned, Value};
+use sqlparser::tokenizer::Span;
 
 /// A query's row cap and where its count is written.
 pub(super) struct LimitSite {
@@ -65,7 +67,11 @@ pub(super) fn is_zero_limited(query: &Query) -> bool {
 
 /// The count a query writes after `LIMIT` or `FETCH FIRST`, whether or not it caps the rows,
 /// and where: the count itself, or the `FETCH` keyword when it writes none.
-pub(super) fn limit_site(query: &Query, tokens: &Tokens) -> Option<LimitSite> {
+pub(super) fn limit_site_at(
+    query: &Query,
+    tokens: &Tokens,
+    table_fetch: Option<(usize, usize)>,
+) -> Option<LimitSite> {
     if let Some(fetch) = &query.fetch {
         // `FETCH FIRST ROW ONLY` takes one row; a percentage is not a row count.
         let value = match (&fetch.quantity, fetch.percent) {
@@ -77,7 +83,7 @@ pub(super) fn limit_site(query: &Query, tokens: &Tokens) -> Option<LimitSite> {
             Some(quantity) => site(value, start(quantity.span())),
             None => site(
                 value,
-                fetch_keyword(query, tokens).unwrap_or_else(|| start(query.span())),
+                fetch_keyword(query, tokens, table_fetch).unwrap_or_else(|| start(query.span())),
             ),
         });
     }
@@ -94,64 +100,8 @@ pub(super) fn limit_site(query: &Query, tokens: &Tokens) -> Option<LimitSite> {
     }
 }
 
-/// Where this query's `FETCH` keyword starts: the first one after everything the query writes
-/// before it, so a `FETCH` inside a subquery or a comment is never mistaken for it.
-fn fetch_keyword(query: &Query, tokens: &Tokens) -> Option<(usize, usize)> {
-    let spans = [
-        Some(query.body.span()),
-        query.order_by.as_ref().map(Spanned::span),
-        query.limit_clause.as_ref().map(Spanned::span),
-    ];
-    let after = spans.into_iter().flatten().map(end).max()?;
-    // An implicit nested FETCH has an empty AST span, including when it ends an OFFSET
-    // subquery. Keep token nesting as well as spans so that clause cannot locate this query.
-    // A parenthesized body begins before its inner query's span. Account for those
-    // opening parentheses before scanning from the body start.
-    let body_start = start(query.body.span());
-    let mut depth = 0usize;
-    let mut body = query.body.as_ref();
-    while let SetExpr::Query(inner) = body {
-        depth += 1;
-        body = inner.body.as_ref();
-    }
-    // sqlparser does not give TABLE bodies a source span. The token scan cannot
-    // anchor its nesting to this query, so retain the span-only lookup in that case.
-    if matches!(body, SetExpr::Table(_)) {
-        return tokens.all().iter().find_map(|token| match &token.token {
-            Token::Word(word) if word.keyword == Keyword::FETCH && start(token.span) >= after => {
-                Some(start(token.span))
-            }
-            _ => None,
-        });
-    }
-    tokens
-        .all()
-        .iter()
-        .filter(|token| start(token.span) >= body_start)
-        .find_map(|token| match &token.token {
-            Token::LParen => {
-                depth += 1;
-                None
-            }
-            Token::RParen => {
-                depth = depth.saturating_sub(1);
-                None
-            }
-            Token::Word(word)
-                if word.keyword == Keyword::FETCH && depth == 0 && start(token.span) >= after =>
-            {
-                Some(start(token.span))
-            }
-            _ => None,
-        })
-}
-
 fn start(span: Span) -> (usize, usize) {
     (span.start.line as usize, span.start.column as usize)
-}
-
-fn end(span: Span) -> (usize, usize) {
-    (span.end.line as usize, span.end.column as usize)
 }
 
 fn site(value: SqlLimitValue, (line, column): (usize, usize)) -> LimitSite {
@@ -190,5 +140,7 @@ fn is_null(expr: &Expr) -> bool {
         _ => false,
     }
 }
+#[cfg(test)]
+mod fetch_tests;
 #[cfg(test)]
 mod tests;
