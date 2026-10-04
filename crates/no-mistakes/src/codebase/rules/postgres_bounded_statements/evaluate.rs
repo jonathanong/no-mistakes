@@ -1,10 +1,13 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use crate::codebase::postgres::statements::{
-    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
+    SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery,
+    SqlPinSource,
 };
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 
 mod possible_temporary;
+mod reads;
+use reads::table_offender;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,6 +15,7 @@ pub(super) struct Offender {
     /// The catalog's name for the table.
     pub(super) table: String,
     pub(super) line: usize,
+    blocking_input: bool,
 }
 
 struct Evaluation {
@@ -44,6 +48,13 @@ pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Off
 }
 
 fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
+    if query.input_mode == SqlBoundInputMode::Skipped {
+        return Evaluation {
+            bounded: true,
+            items: vec![true; query.items.len()],
+            offenders: Vec::new(),
+        };
+    }
     let nested: Vec<Option<Evaluation>> = query
         .items
         .iter()
@@ -110,40 +121,12 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             break;
         }
     }
-    let mut offenders = Vec::new();
-    if !query.capped {
-        for (index, item) in query.items.iter().enumerate() {
-            for pin in pin_subqueries[index].iter().flatten() {
-                offenders.extend(pin.offenders.iter().cloned());
-            }
-            if let Some(inner) = &nested[index] {
-                offenders.extend(inner.offenders.iter().cloned());
-            }
-            if bounded[index] {
-                continue;
-            }
-            if nested[index].is_none() {
-                if let SqlBoundItemKind::Table(name) = &item.kind {
-                    offenders.extend(table_offender(name, item.line, catalog));
-                }
-            }
-        }
-    }
-    // The same relation can be reached by several arms; keep the first report of each.
-    let mut seen = std::collections::HashSet::new();
-    offenders.retain(|offender| seen.insert((offender.table.clone(), offender.line)));
+    let offenders = reads::collect(query, &nested, &pin_subqueries, &bounded, catalog);
     Evaluation {
         bounded: query.capped || bounded.iter().all(|state| *state),
         items: bounded,
         offenders,
     }
-}
-
-fn table_offender(name: &str, line: usize, catalog: &SchemaCatalog) -> Option<Offender> {
-    Some(Offender {
-        table: catalog.relation(name)?.name.clone(),
-        line,
-    })
 }
 
 /// Whether the pins cover every column of a unique key (or the row identifier) with values

@@ -1,0 +1,43 @@
+-- Force CTE compaction without losing mandatory set inputs; zero still executes no inputs.
+WITH q0 AS (SELECT id FROM accounts WHERE id = $1 EXCEPT SELECT account_id FROM orders),
+q1 AS (SELECT left_q.* FROM q0 left_q CROSS JOIN q0 right_q),
+q2 AS (SELECT left_q.* FROM q1 left_q CROSS JOIN q1 right_q),
+q3 AS (SELECT left_q.* FROM q2 left_q CROSS JOIN q2 right_q),
+q4 AS (SELECT left_q.* FROM q3 left_q CROSS JOIN q3 right_q),
+q5 AS (SELECT left_q.* FROM q4 left_q CROSS JOIN q4 right_q),
+q6 AS (SELECT left_q.* FROM q5 left_q CROSS JOIN q5 right_q),
+q7 AS (SELECT left_q.* FROM q6 left_q CROSS JOIN q6 right_q),
+q8 AS (SELECT left_q.* FROM q7 left_q CROSS JOIN q7 right_q),
+q9 AS (SELECT left_q.* FROM q8 left_q CROSS JOIN q8 right_q),
+q10 AS (SELECT left_q.* FROM q9 left_q CROSS JOIN q9 right_q),
+q11 AS (SELECT left_q.* FROM q10 left_q CROSS JOIN q10 right_q),
+q12 AS (SELECT left_q.* FROM q11 left_q CROSS JOIN q11 right_q)
+SELECT * FROM q12 LIMIT 1;
+WITH q0 AS (SELECT id FROM accounts WHERE id = $1 EXCEPT SELECT account_id FROM orders),
+q1 AS (SELECT left_q.* FROM q0 left_q CROSS JOIN q0 right_q),
+q2 AS (SELECT left_q.* FROM q1 left_q CROSS JOIN q1 right_q),
+q3 AS (SELECT left_q.* FROM q2 left_q CROSS JOIN q2 right_q),
+q4 AS (SELECT left_q.* FROM q3 left_q CROSS JOIN q3 right_q),
+q5 AS (SELECT left_q.* FROM q4 left_q CROSS JOIN q4 right_q),
+q6 AS (SELECT left_q.* FROM q5 left_q CROSS JOIN q5 right_q),
+q7 AS (SELECT left_q.* FROM q6 left_q CROSS JOIN q6 right_q),
+q8 AS (SELECT left_q.* FROM q7 left_q CROSS JOIN q7 right_q),
+q9 AS (SELECT left_q.* FROM q8 left_q CROSS JOIN q8 right_q),
+q10 AS (SELECT left_q.* FROM q9 left_q CROSS JOIN q9 right_q),
+q11 AS (SELECT left_q.* FROM q10 left_q CROSS JOIN q10 right_q),
+q12 AS (SELECT left_q.* FROM q11 left_q CROSS JOIN q11 right_q)
+SELECT * FROM q12 LIMIT 0;
+WITH q0 AS ((SELECT id FROM accounts WHERE id = $1 EXCEPT SELECT account_id FROM orders) LIMIT 0),
+q1 AS (SELECT left_q.* FROM q0 left_q CROSS JOIN q0 right_q),
+q2 AS (SELECT left_q.* FROM q1 left_q CROSS JOIN q1 right_q),
+q3 AS (SELECT left_q.* FROM q2 left_q CROSS JOIN q2 right_q),
+q4 AS (SELECT left_q.* FROM q3 left_q CROSS JOIN q3 right_q),
+q5 AS (SELECT left_q.* FROM q4 left_q CROSS JOIN q4 right_q),
+q6 AS (SELECT left_q.* FROM q5 left_q CROSS JOIN q5 right_q),
+q7 AS (SELECT left_q.* FROM q6 left_q CROSS JOIN q6 right_q),
+q8 AS (SELECT left_q.* FROM q7 left_q CROSS JOIN q7 right_q),
+q9 AS (SELECT left_q.* FROM q8 left_q CROSS JOIN q8 right_q),
+q10 AS (SELECT left_q.* FROM q9 left_q CROSS JOIN q9 right_q),
+q11 AS (SELECT left_q.* FROM q10 left_q CROSS JOIN q10 right_q),
+q12 AS (SELECT left_q.* FROM q11 left_q CROSS JOIN q11 right_q)
+SELECT * FROM q12 LIMIT 1;

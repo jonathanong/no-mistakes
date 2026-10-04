@@ -721,6 +721,16 @@ visible alias and retains the physical column’s nullability. Multi-column
 legacy catalogs remain conservative; an alias named `ctid` does not prove the
 physical system column’s uniqueness. Stored array leaves remain unbounded.
 
+`SqlBoundQuery.input_mode` is a Rust fact contract exported as `SqlBoundInputMode`:
+`Streaming` permits an outer row cap to suppress ordinary input findings,
+`Blocking` identifies set operations that require complete inputs, and `Skipped`
+identifies input work excluded by an empty-row proof. The input policy is separate
+from `capped`: a derived or CTE wrapper may return one row while its blocking set
+inputs remain unbounded. Compaction retains mandatory inputs as nested canonical
+bound queries, including their locations and key facts; no alternate graph or
+catalog inference is introduced. CLI and async Node findings keep their existing
+JSON shape; these raw bound-query types are Rust-only.
+
 Correlated `IN` and `= ANY` subqueries retain their nested relation reads even
 when they cannot bound an outer key. The Rust `SqlPinSource::ReadQuery` variant
 records that read-only evidence separately from key-eligible `Query` pins.
