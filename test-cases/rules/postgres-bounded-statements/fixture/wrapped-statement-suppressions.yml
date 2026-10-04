@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: ['src/wrapped-statement-suppression.mts']
+      importSpecifier: '@example/db'
+      executorNames: [query]

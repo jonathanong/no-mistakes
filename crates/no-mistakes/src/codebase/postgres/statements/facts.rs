@@ -99,7 +99,7 @@ fn extract_from_parsed_and_sources(
             );
             if let Some(scope) = &scope {
                 let statement_start =
-                    source_index.and_then(|index| index.statement_start_at(statement.span().start));
+                    table_tokens.and_then(|index| index.statement_start_at(statement.span().start));
                 let (first_bound, view_reads) = lifecycle.collect(
                     statement,
                     statement_start,
