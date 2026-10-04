@@ -1,10 +1,9 @@
 //! Transaction and DDL transitions for prepared temporary identities.
+mod alter_table;
 use super::super::items;
 use super::{state, TemporaryRelations};
 use crate::codebase::postgres::idents::ident_key;
-use sqlparser::ast::{
-    AlterTableOperation, ContextModifier, ObjectType, RenameTableNameKind, Reset, Set, Statement,
-};
+use sqlparser::ast::{ContextModifier, ObjectType, Reset, Set, Statement};
 
 impl TemporaryRelations {
     pub(super) fn lifecycle(&mut self, statement: &Statement) {
@@ -55,6 +54,8 @@ impl TemporaryRelations {
                 object_type: sqlparser::ast::DiscardObject::TEMP,
             } => {
                 self.state.relations.clear();
+                self.state.partitions.clear();
+                self.state.partitioned.clear();
                 self.state.on_commit_drop.clear();
             }
             Statement::Discard {
@@ -87,16 +88,7 @@ impl TemporaryRelations {
                 }
             }
             Statement::AlterSchema(schema) => self.alter_schema(schema),
-            Statement::AlterTable(table) => {
-                for operation in &table.operations {
-                    if let AlterTableOperation::RenameTable { table_name } = operation {
-                        let (RenameTableNameKind::To(name) | RenameTableNameKind::As(name)) =
-                            table_name;
-                        self.state
-                            .rename(&items::sql_name(&table.name), &items::sql_name(name));
-                    }
-                }
-            }
+            Statement::AlterTable(table) => self.alter_table(table),
             Statement::Set(Set::SingleAssignment {
                 variable,
                 values,

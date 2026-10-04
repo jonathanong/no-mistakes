@@ -46,6 +46,21 @@ PostgreSQL does not support temporary materialized views. A materialized-view dr
 that resolves to a known temporary table or ordinary view fails for the wrong
 relation kind, so that temporary identity remains live if execution continues.
 
+Temporary partitions follow their temporary parent: `DROP TABLE parent` removes a
+partition created with `CREATE TEMP TABLE child PARTITION OF parent`, even without
+`CASCADE`. `ALTER TABLE parent DETACH PARTITION child` removes that ownership link,
+including the `CONCURRENTLY` and `FINALIZE` forms, so a later parent drop leaves the child
+and views over it intact; `ATTACH PARTITION child FOR VALUES ...` restores the link.
+PostgreSQL does not allow temporary and permanent tables in the same partition tree.
+For SQL sources containing these `ALTER TABLE` forms, the lenient parser recovers complete
+partition transitions even though the strict PostgreSQL parser does not support them;
+this also covers transitions inside `DO` blocks. Malformed transitions are skipped while
+other parseable statements are still checked. `CREATE TEMP TABLE IF NOT EXISTS child
+PARTITION OF parent` leaves an existing standalone child untouched.
+An attach to a non-partitioned temporary parent does not transfer ownership. A
+`DETACH PARTITION ... CONCURRENTLY` inside `DO` or an explicit transaction cannot
+run in PostgreSQL, so recovered SQL in those contexts leaves the partition attached.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`

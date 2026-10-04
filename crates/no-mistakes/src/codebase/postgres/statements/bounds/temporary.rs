@@ -49,14 +49,26 @@ impl TemporaryRelations {
         match statement {
             Statement::CreateTable(table) if table.temporary || temporary_name(&table.name) => {
                 let name = sql_name(&table.name);
-                if table.on_commit == Some(sqlparser::ast::OnCommit::Drop) {
-                    // Outside an explicit transaction, DROP takes effect at this statement's commit.
-                    if self.transaction.is_some() {
-                        self.insert(name.clone());
+                let parent = table.partition_of.as_ref().map(sql_name);
+                let on_commit_drop = table.on_commit == Some(sqlparser::ast::OnCommit::Drop);
+                // Outside an explicit transaction, DROP takes effect at this statement's commit.
+                if (!on_commit_drop || self.transaction.is_some())
+                    && !(table.if_not_exists
+                        && self.state.relations.contains_key(&state::key(&name)))
+                    && parent
+                        .as_ref()
+                        .is_none_or(|parent| self.state.partitioned_parent(parent))
+                {
+                    self.insert(name.clone());
+                    if table.partition_by.is_some() {
+                        self.state.partitioned.insert(state::key(&name));
+                    }
+                    if let Some(parent) = parent {
+                        self.state.attach_created_partition(&parent, &name);
+                    }
+                    if on_commit_drop {
                         self.state.on_commit_drop.insert(state::key(&name));
                     }
-                } else {
-                    self.insert(name);
                 }
             }
             Statement::CreateView(view)

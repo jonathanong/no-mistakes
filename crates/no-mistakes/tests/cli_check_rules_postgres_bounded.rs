@@ -142,6 +142,16 @@ fn only_the_configured_statement_kinds_are_judged() {
 }
 
 #[test]
+fn plain_partition_parent_drop_reveals_physical_namesake() {
+    // The attached child disappears even though the statement omits CASCADE.
+    expect(
+        "temporary-partition-drop.yml",
+        "sql/temporary-partition-drop.sql",
+        &[(6, "table:orders")],
+    );
+}
+
+#[test]
 fn executor_sql_is_judged_at_its_source_line() {
     expect("embedded.yml", "src/jobs.ts", &[(4, "table:invoices")]);
 }

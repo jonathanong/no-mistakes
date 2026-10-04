@@ -1,12 +1,21 @@
-use super::{keyword_of, next_non_ws, skip_ws};
+use super::{keyword_of, next_non_ws};
+mod bodies;
 mod locations;
+mod partition;
+pub(super) use bodies::concatenated_strings;
+use bodies::{peel_do_body, recover_chr_encoded};
+use partition::recover_partition_change;
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>, original: &[TokenWithSpan]) -> Vec<Statement> {
+pub(super) fn parse_chunks(
+    chunks: Vec<Vec<Token>>,
+    original: &[TokenWithSpan],
+    allow_concurrent_detach: bool,
+) -> Vec<Statement> {
     let mut located = original
         .split(|token| token.token == Token::SemiColon)
         .filter(|chunk| {
@@ -14,21 +23,42 @@ pub(super) fn parse_chunks(chunks: Vec<Vec<Token>>, original: &[TokenWithSpan]) 
                 .iter()
                 .any(|token| !matches!(token.token, Token::Whitespace(_)))
         });
-    chunks
-        .into_iter()
-        .flat_map(|chunk| {
-            let source = located
-                .next()
-                .map(|source| locations::align(&chunk, source));
-            parse_chunk(chunk, source.as_deref())
-        })
-        .collect()
+    let mut statements = Vec::new();
+    let mut transaction_open = false;
+    for chunk in chunks {
+        let source = located
+            .next()
+            .map(|source| locations::align(&chunk, source));
+        for statement in parse_chunk(
+            chunk,
+            source.as_deref(),
+            allow_concurrent_detach && !transaction_open,
+        ) {
+            match statement {
+                Statement::StartTransaction { .. } => transaction_open = true,
+                Statement::Commit { chain, .. }
+                | Statement::Rollback {
+                    savepoint: None,
+                    chain,
+                } => {
+                    transaction_open = chain;
+                }
+                _ => {}
+            }
+            statements.push(statement);
+        }
+    }
+    statements
 }
 
-fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
+fn parse_chunk(
+    chunk: Vec<Token>,
+    original: Option<&[TokenWithSpan]>,
+    allow_concurrent_detach: bool,
+) -> Vec<Statement> {
     if let Some(body) = peel_do_body(&chunk) {
         let body = locations::align_do_body(&body, original);
-        return super::parse_postgres_sql_lenient(&body)
+        return super::parse_with_concurrent_detach(&body, false)
             .into_iter()
             .filter(|statement| !is_begin_or_end(statement))
             .collect();
@@ -41,9 +71,16 @@ fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Sta
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => vec![statement],
         _ => {
-            let recovered = recover_chr_encoded(&chunk, original);
+            if let Some(partition_change) =
+                recover_partition_change(&chunk, original, allow_concurrent_detach)
+            {
+                return vec![partition_change];
+            }
+            let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {
-                recover_schema_ddl(&chunk, original).into_iter().collect()
+                recover_schema_ddl(&chunk, original, allow_concurrent_detach)
+                    .into_iter()
+                    .collect()
             } else {
                 recovered
             }
@@ -58,64 +95,21 @@ fn is_begin_or_end(statement: &Statement) -> bool {
     )
 }
 
-fn peel_do_body(tokens: &[Token]) -> Option<String> {
-    let mut index = skip_ws(tokens, 0);
-    if keyword_of(tokens.get(index)?) != Some(Keyword::DO) {
-        return None;
-    }
-    index = skip_ws(tokens, index + 1);
-    if keyword_of(tokens.get(index)?) == Some(Keyword::LANGUAGE) {
-        index = skip_ws(tokens, index + 1);
-        if !crate::codebase::postgres::parse::is_plpgsql_language(tokens.get(index)?) {
-            return None;
-        }
-        index = skip_ws(tokens, index + 1);
-    }
-    match tokens.get(index)? {
-        Token::DollarQuotedString(body) => {
-            let rest = skip_ws(tokens, index + 1);
-            (rest >= tokens.len()).then(|| body.value.clone())
-        }
-        _ => None,
-    }
-}
-
-fn recover_chr_encoded(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
-    let mut rewritten = tokens.to_vec();
-    super::rewrite_chr_tokens(&mut rewritten);
-    concatenated_strings(&rewritten)
-        .map(|sql| super::parse_postgres_sql_lenient(&locations::align_chr_sql(&sql, original)))
-        .unwrap_or_default()
-}
-
-pub(super) fn concatenated_strings(tokens: &[Token]) -> Option<String> {
-    let mut sql = String::new();
-    let mut expect_string = true;
-    let mut saw_string = false;
-    for token in tokens {
-        if matches!(token, Token::Whitespace(_)) {
-            continue;
-        }
-        match token {
-            Token::SingleQuotedString(value) if expect_string => {
-                sql.push_str(value);
-                expect_string = false;
-                saw_string = true;
-            }
-            Token::DollarQuotedString(value) if expect_string => {
-                sql.push_str(&value.value);
-                expect_string = false;
-                saw_string = true;
-            }
-            Token::StringConcat if !expect_string => expect_string = true,
-            _ => return None,
-        }
-    }
-    (saw_string && !expect_string && !sql.is_empty()).then_some(sql)
-}
-
-fn recover_schema_ddl(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> Option<Statement> {
+fn recover_schema_ddl(
+    tokens: &[Token],
+    original: Option<&[TokenWithSpan]>,
+    allow_concurrent_detach: bool,
+) -> Option<Statement> {
     let start = schema_ddl_start(tokens)?;
+    // PL/pgSQL wrappers can precede a complete partition transition. Apply the
+    // same narrow recovery to the DDL suffix before using the PostgreSQL parser.
+    if let Some(change) = recover_partition_change(
+        &tokens[start..],
+        original.map(|tokens| &tokens[start..]),
+        allow_concurrent_detach,
+    ) {
+        return Some(change);
+    }
     let dialect = PostgreSqlDialect {};
     let mut parser = match original {
         Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens[start..].to_vec()),

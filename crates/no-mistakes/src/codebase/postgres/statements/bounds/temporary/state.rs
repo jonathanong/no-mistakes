@@ -1,4 +1,5 @@
 //! Request-local SQL relation identities and dependency closure.
+mod ownership;
 use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 use std::collections::{BTreeMap, BTreeSet};
@@ -20,6 +21,9 @@ fn names_match(left: &[String], right: &[String]) -> bool {
 #[derive(Clone)]
 pub(super) struct State {
     pub relations: BTreeMap<String, BTreeSet<Dependency>>,
+    // A partition is owned by its parent even for DROP without CASCADE.
+    pub partitions: BTreeMap<String, String>,
+    pub partitioned: BTreeSet<String>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub local_path: Option<bool>,
@@ -28,6 +32,8 @@ impl Default for State {
     fn default() -> Self {
         Self {
             relations: BTreeMap::new(),
+            partitions: BTreeMap::new(),
+            partitioned: BTreeSet::new(),
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
             local_path: None,
@@ -38,6 +44,14 @@ pub(super) fn key(name: &str) -> String {
     decoded_parts(name).last().cloned().unwrap_or_default()
 }
 impl State {
+    pub fn dependency(&self, name: &str) -> Dependency {
+        if self.contains(name) {
+            Dependency::Temporary(key(name))
+        } else {
+            Dependency::Physical(decoded_parts(name))
+        }
+    }
+
     pub fn contains(&self, name: &str) -> bool {
         let parts = decoded_parts(name);
         (parts.len() == 1 && self.temp_first || parts.len() == 2 && parts[0] == "pg_temp")
@@ -47,11 +61,7 @@ impl State {
         for item in &query.items {
             match &item.kind {
                 SqlBoundItemKind::Table(name) => {
-                    out.insert(if self.contains(name) {
-                        Dependency::Temporary(key(name))
-                    } else {
-                        Dependency::Physical(decoded_parts(name))
-                    });
+                    out.insert(self.dependency(name));
                 }
                 SqlBoundItemKind::Query(query) => self.dependencies(query, out),
                 _ => {}
@@ -99,23 +109,29 @@ impl State {
         self.remove(removed, true);
     }
     fn remove(&mut self, mut removed: BTreeSet<String>, cascade: bool) {
-        if cascade {
-            loop {
-                let before = removed.len();
+        loop {
+            let before = removed.len();
+            for (child, parent) in &self.partitions {
+                if removed.contains(parent) {
+                    removed.insert(child.clone());
+                }
+            }
+            if cascade {
                 for (name, dependencies) in &self.relations {
-                    if dependencies
-                        .iter()
-                        .any(|dependency| matches!(dependency, Dependency::Temporary(name) if removed.contains(name)))
-                    {
+                    if dependencies.iter().any(|dependency| {
+                        matches!(dependency, Dependency::Temporary(parent) if removed.contains(parent))
+                    }) {
                         removed.insert(name.clone());
                     }
                 }
-                if before == removed.len() {
-                    break;
-                }
+            }
+            if before == removed.len() {
+                break;
             }
         }
         self.relations.retain(|name, _| !removed.contains(name));
+        self.partitions.retain(|child, _| !removed.contains(child));
+        self.partitioned.retain(|name| !removed.contains(name));
         self.on_commit_drop.retain(|name| !removed.contains(name));
     }
     pub fn rename_schema(&mut self, old: &str, new: &str) {
@@ -173,6 +189,17 @@ impl State {
         }
         let dependencies = self.relations.remove(&old).unwrap_or_default();
         self.relations.insert(new.clone(), dependencies);
+        if let Some(parent) = self.partitions.remove(&old) {
+            self.partitions.insert(new.clone(), parent);
+        }
+        if self.partitioned.remove(&old) {
+            self.partitioned.insert(new.clone());
+        }
+        for parent in self.partitions.values_mut() {
+            if *parent == old {
+                *parent = new.clone();
+            }
+        }
         for dependencies in self.relations.values_mut() {
             if dependencies.remove(&Dependency::Temporary(old.clone())) {
                 dependencies.insert(Dependency::Temporary(new.clone()));

@@ -2,6 +2,43 @@ use super::{peel_do_body, recover_schema_ddl, schema_ddl_start};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 
+#[test]
+fn recovers_only_complete_postgres_partition_transitions() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-parse-controls.sql"),
+    )
+    .unwrap();
+    assert!(crate::codebase::postgres::parse_postgres_sql(&sql).is_err());
+    let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
+    assert_eq!(statements.len(), 8);
+    let changes: Vec<_> = statements
+        .iter()
+        .filter_map(|statement| match statement {
+            sqlparser::ast::Statement::AlterTable(table) => table.operations.first(),
+            _ => None,
+        })
+        .collect();
+    assert!(matches!(
+        changes.as_slice(),
+        [
+            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
+            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
+            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AddColumn { .. }
+        ]
+    ));
+    let ordinary = sql
+        .lines()
+        .find(|line| line.starts_with("ALTER TABLE accounts ADD COLUMN"))
+        .unwrap();
+    assert!(super::partition::recover_partition_change(&tokens(ordinary), None, true).is_none());
+}
+
 fn tokens(sql: &str) -> Vec<Token> {
     Tokenizer::new(&PostgreSqlDialect {}, sql)
         .tokenize()
@@ -18,6 +55,19 @@ fn peel_do_body_reads_dollar_quote_and_optional_language() {
         peel_do_body(&tokens("DO LANGUAGE plpgsql $body$ SELECT 1; $body$")),
         Some(" SELECT 1; ".to_string())
     );
+}
+
+#[test]
+fn peel_do_body_accepts_only_complete_trailing_plpgsql_language() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-do-language-controls.sql"),
+    )
+    .unwrap();
+    let mut forms = sql.lines().filter(|line| line.starts_with("DO "));
+    let body = |line: &str| peel_do_body(&tokens(line.trim_end_matches(';')));
+    assert_eq!(body(forms.next().unwrap()), Some(" SELECT 1 ".to_string()));
+    assert!(forms.all(|line| body(line).is_none()));
 }
 
 #[test]
@@ -71,13 +121,18 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
     let parsed = recover_schema_ddl(
         &tokens("IF THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID"),
         None,
+        true,
     )
     .expect("alter");
     assert!(matches!(parsed, sqlparser::ast::Statement::AlterTable(_)));
-    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None).is_none());
+    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None, true).is_none());
     assert!(matches!(
-        recover_schema_ddl(&tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)"), None)
-            .expect("index"),
+        recover_schema_ddl(
+            &tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)"),
+            None,
+            true
+        )
+        .expect("index"),
         sqlparser::ast::Statement::CreateIndex(_)
     ));
 }
@@ -99,7 +154,7 @@ fn recover_chr_concatenations_as_sql() {
 #[test]
 fn parse_chunks_recovers_chr_encoded_schema_after_ordinary_parse_fails() {
     let sql = "chr(67)||chr(82)||chr(69)||chr(65)||chr(84)||chr(69)||' TABLE t (id int)'";
-    let statements = super::parse_chunks(vec![tokens(sql)], &[]);
+    let statements = super::parse_chunks(vec![tokens(sql)], &[], true);
     assert_eq!(statements.len(), 1, "{statements:#?}");
     assert!(matches!(
         statements[0],
@@ -120,8 +175,9 @@ fn parse_chunks_recovers_alter_when_begin_would_swallow_the_body() {
     let statements = super::parse_chunks(
         vec![tokens(
         "BEGIN IF NOT EXISTS (SELECT 1) THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID",
-    )],
+        )],
         &[],
+        true,
     );
     assert_eq!(statements.len(), 1, "{statements:#?}");
     assert!(matches!(

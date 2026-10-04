@@ -17,6 +17,7 @@ mod compact_aliases;
 mod compact_caller_arrays;
 mod materialized_drop;
 mod materialized_namesake;
+mod partitions;
 mod physical_cascade;
 mod recursive_forward;
 mod referential;
