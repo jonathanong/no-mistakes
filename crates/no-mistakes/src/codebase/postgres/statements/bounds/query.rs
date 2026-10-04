@@ -5,6 +5,7 @@ use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
 use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
 mod blocking;
 mod compact;
+mod outputs;
 mod recursive_order;
 mod set;
 mod with_scope;
@@ -144,5 +145,6 @@ pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
         capped: false,
         items: vec![items::other(at)],
+        outputs: Vec::new(),
     }
 }

@@ -1,3 +1,4 @@
+mod outputs;
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use super::correlated::{reads_outer_rows, Reads};
 use crate::codebase::postgres::catalog::decoded_parts;
@@ -7,6 +8,7 @@ use crate::codebase::postgres::idents::{
 use crate::codebase::postgres::statements::{
     SqlBareRead, SqlBoundItem, SqlBoundItemKind, SqlPinSource,
 };
+use outputs::caller_outputs;
 use sqlparser::ast::{Expr, FunctionArguments, Ident, ObjectName, Query};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -25,6 +27,8 @@ pub(in super::super) struct Resolver {
     names: Vec<(Option<String>, Option<String>)>,
     /// Only base relations take pins; a derived item is sized by its own query.
     tables: Vec<bool>,
+    /// Independently caller-sized projected values, keyed by the item's visible column names.
+    caller_outputs: Vec<BTreeSet<String>>,
     /// What each item answers to (its alias, else its table name): the qualifiers a subquery
     /// would use to read the row being checked.
     outer: BTreeSet<String>,
@@ -81,6 +85,7 @@ impl Resolver {
             }
         }
         Self {
+            caller_outputs: items.iter().map(caller_outputs).collect(),
             names,
             tables,
             outer,
@@ -164,8 +169,10 @@ impl Resolver {
             Expr::Identifier(ident)
                 if is_placeholder_ident_at(ident, self.positions.as_deref()) => {}
             expr @ (Expr::Identifier(_) | Expr::CompoundIdentifier(_)) => match self.column(expr) {
-                Some((item, _)) => {
-                    found.items.insert(item);
+                Some((item, column)) => {
+                    if !self.caller_outputs[item].contains(&column) {
+                        found.items.insert(item);
+                    }
                 }
                 None => found.unknown = true,
             },

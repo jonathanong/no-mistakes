@@ -73,6 +73,7 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
     let mut items: Vec<_> = found.into_values().collect();
     items.push(items::opaque(at));
     SqlBoundQuery {
+        outputs: bound.outputs.clone(),
         capped: bound.capped,
         items,
     }

@@ -371,6 +371,14 @@ recursive reference of a recursive CTE: never reported, and it bounds nothing pi
 it). A CTE reference without an alias is addressed by the CTE's name. Non-recursive CTE definitions read prior bindings, including a same-named base table; the new CTE output becomes visible after its definition. Recursive CTE names remain visible within their definitions. A `COPY (SELECT …)`
 query is a `Select` fact.
 
+Its `outputs` retain ordinal `SqlBoundOutput` records with an optional normalized `name`
+and a `caller_sized` value proof. A direct literal or bind, including a trusted builtin
+scalar cast, has finitely many possible output values even when an independent SRF
+repeats its row. CTE and derived-column aliases rename outputs by position; set operations
+require caller-sized proof at the same position in both arms. Wildcard widths, custom
+casts, functions, and row reads remain unknown. These syntactic Rust facts stay within
+the prepared analysis; the existing async Node check APIs expose the same rule findings.
+
 Each table, derived-query (including `LATERAL`), and `UNNEST` item retains positional `column_aliases` as syntax, so catalog consumers can avoid confusing renamed columns with base names. Unquoted aliases are folded and quoted aliases retain exact spelling. These names describe projected positions; they do not give a derived source catalog-key identity.
 
 Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an

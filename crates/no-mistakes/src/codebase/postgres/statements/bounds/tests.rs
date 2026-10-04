@@ -1,3 +1,4 @@
+mod caller_projection;
 mod explain_table;
 mod nonrecursive_ctes;
 mod recovered_table;

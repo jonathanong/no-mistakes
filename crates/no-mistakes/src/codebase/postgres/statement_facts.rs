@@ -2,8 +2,8 @@ mod bounds;
 mod iteration;
 mod writes;
 pub use bounds::{
-    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundPin,
-    SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
+    SqlBareRead, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind, SqlBoundOutput,
+    SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 use std::path::PathBuf;

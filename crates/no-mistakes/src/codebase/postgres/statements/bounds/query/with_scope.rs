@@ -31,7 +31,7 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope(
     for index in order {
         let cte = &with.cte_tables[index];
         let name = ident_key(&cte.alias.name);
-        let bound = if modifying_statement(&cte.query).is_some() {
+        let mut bound = if modifying_statement(&cte.query).is_some() {
             // `RETURNING` yields one row per modified row, which nothing in the text sizes: it
             // bounds nothing pinned to it. The statement inside is judged on its own.
             opaque(start(cte.query.span()))
@@ -52,6 +52,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope(
                 bound
             }
         };
+        for (output, alias) in bound.outputs.iter_mut().zip(&cte.alias.columns) {
+            output.name = Some(ident_key(&alias.name));
+        }
         let columns = if cte.alias.columns.is_empty() {
             super::super::pins::projection_columns(&cte.query)
         } else {
@@ -72,6 +75,7 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope(
 /// A body whose rows nothing proves bounded, and which is never reported either.
 fn opaque(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
+        outputs: Vec::new(),
         capped: false,
         items: vec![items::opaque(at)],
     }
