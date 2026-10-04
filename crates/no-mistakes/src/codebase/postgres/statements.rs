@@ -23,8 +23,6 @@ mod wrappers;
 mod writes;
 
 pub use crate::codebase::postgres::statement_facts::*;
-#[cfg(test)]
-pub(crate) use facts::extract_sql_statement_facts_with_bounds;
 pub(crate) use facts::{
     extract_from_parsed_with_recovered_placeholders,
     extract_sql_statement_facts_with_recovered_placeholders,
