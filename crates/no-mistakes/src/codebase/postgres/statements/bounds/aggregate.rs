@@ -123,6 +123,11 @@ fn projected(select: &Select) -> Vec<&Expr> {
 
 /// Whether a call that `test` accepts occurs in `expr` (subqueries are not looked into).
 fn contains_projection_call(expr: &Expr, test: &impl Fn(&Function) -> bool) -> bool {
+    // PostgreSQL forbids SRFs in CASE arms and conditions. This proves scalar
+    // cardinality only; independent column/source projections still traverse CASE.
+    if matches!(expr, Expr::Case { .. }) {
+        return false;
+    }
     if let Expr::Function(function) = expr {
         if test(function) {
             return true;
