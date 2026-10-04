@@ -7,6 +7,33 @@ fn parse_postgres_sql_accepts_create_table() {
 }
 
 #[test]
+fn table_only_normalization_leaves_create_table_name_intact() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-only-ddl-control.sql"
+    ));
+    let statements = parse_postgres_sql(sql).expect("CREATE TABLE only must parse");
+    assert_eq!(statements.len(), 1);
+    assert!(matches!(
+        &statements[0],
+        sqlparser::ast::Statement::CreateTable(table) if table.name.to_string() == "only"
+    ));
+}
+
+#[test]
+fn table_only_normalization_does_not_accept_unsupported_or_incomplete_queries() {
+    // Standalone TABLE awaits parser support; the other rows guard missing names and
+    // a TABLE token outside a query-arm position.
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-only-invalid.sql"
+    ));
+    for statement in sql.lines() {
+        assert!(parse_postgres_sql(statement).is_err(), "{statement}");
+    }
+}
+
+#[test]
 fn parse_postgres_sql_returns_error_for_unparseable_sql() {
     let error = parse_postgres_sql("CREATE TABLE broken (").expect_err("unparseable");
     assert!(!error.message.is_empty());

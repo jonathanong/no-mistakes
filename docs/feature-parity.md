@@ -635,3 +635,4 @@ See [Architecture](architecture.md) for the one-pass session rules,
 already require explicit package/project lists.
 
 PostgreSQL schema catalog generation (complete and ordering coverage) has Rust library, CLI and async Node/N-API parity; see [`postgres catalog`](cli/postgres.md).
+PostgreSQL bounded-statement analysis recognizes `TABLE ONLY name` query arms and retains quoted relation identity across strict and lenient parsing.

@@ -8,6 +8,7 @@ mod distinct_group;
 mod lenient;
 mod radix_numbers;
 mod sql_text;
+mod table_only;
 pub(super) use sql_text::normalize_copy_data;
 pub(crate) use sql_text::top_level_statements;
 pub(super) mod unicode;
@@ -53,7 +54,8 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
         .map_err(|error| PostgresParseError {
             message: error.to_string(),
         })?;
-    let tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
+    let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
+    table_only::normalize(&mut tokens);
     Parser::new(&PostgreSqlDialect {})
         .with_tokens_with_locations(tokens)
         .parse_statements()

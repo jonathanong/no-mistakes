@@ -42,10 +42,17 @@ impl TableTokenCursor {
             {
                 continue;
             }
-            let Some(Token::Word(first)) = words.get(index + 1).map(|token| &token.token) else {
+            let first_index = index
+                + if matches!(words.get(index + 1).map(|token| &token.token), Some(Token::Word(word)) if word.quote_style.is_none() && word.keyword == Keyword::ONLY)
+                {
+                    2
+                } else {
+                    1
+                };
+            let Some(Token::Word(first)) = words.get(first_index).map(|token| &token.token) else {
                 continue;
             };
-            let second = match (words.get(index + 2), words.get(index + 3)) {
+            let second = match (words.get(first_index + 1), words.get(first_index + 2)) {
                 (Some(dot), Some(name)) if matches!(dot.token, Token::Period) => {
                     let Token::Word(word) = &name.token else {
                         continue;
