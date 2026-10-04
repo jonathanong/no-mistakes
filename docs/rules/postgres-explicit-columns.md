@@ -29,6 +29,9 @@ column list is itself a reviewed contract.
 
 ## What it catches/requires
 
+A standalone `TABLE accounts` reads every column of `accounts`, so it is
+checked like `SELECT * FROM accounts` when that relation is configured.
+
 The rule reads star projections from the statement pass and column counts from
 the schema catalog. It reports a star when the catalog table has more than
 `maxColumns` columns, or when the relation is listed in `relations`.

@@ -69,6 +69,13 @@ fn invalid_examples_are_reported() {
 }
 
 #[test]
+fn standalone_table_order_checks_generated_columns() {
+    let found = messages("fail", SQL, &["sql/schema.sql", "sql/standalone-table.sql"]);
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(found[0].contains("ORDER BY orders.created_at"), "{found:?}");
+}
+
+#[test]
 fn valid_examples_are_quiet() {
     let body = messages(
         "pass",

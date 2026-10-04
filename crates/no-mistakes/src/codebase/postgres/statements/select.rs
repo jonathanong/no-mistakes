@@ -1,5 +1,6 @@
 mod collector;
 mod from;
+mod line;
 mod nested;
 mod shapes;
 mod stars;

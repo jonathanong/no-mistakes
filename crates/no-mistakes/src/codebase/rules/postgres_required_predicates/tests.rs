@@ -41,6 +41,20 @@ fn flags_missing_predicate() {
 }
 
 #[test]
+fn repeated_standalone_table_reads_have_distinct_finding_lines() {
+    let root = fixture("fail");
+    let findings =
+        check_with_files(&root, &config(), &[root.join("sql/standalone-table.sql")]).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [2, 3]
+    );
+}
+
+#[test]
 fn required_predicate_passes() {
     assert!(run_sql(&fixture("pass")).is_empty());
 }

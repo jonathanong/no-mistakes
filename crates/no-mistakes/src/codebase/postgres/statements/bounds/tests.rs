@@ -1,4 +1,5 @@
 mod nonrecursive_ctes;
+mod standalone_table;
 mod stored_array;
 mod table_only;
 use crate::codebase::postgres::statements::{

@@ -57,6 +57,20 @@ fn fail_fixture_reports_offset() {
 }
 
 #[test]
+fn standalone_table_offset_is_reported() {
+    let root = fixture("standalone-table");
+    let findings = check_with_files(
+        &root,
+        &config_with_options("sqlInclude: ['db/**/*.sql']"),
+        &[root.join("db/query.sql")],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 2);
+    assert_eq!(findings[0].target.as_deref(), Some("offset"));
+}
+
+#[test]
 fn interpolated_offset_is_reported() {
     let findings = findings_for("fail-placeholder");
     assert_eq!(findings.len(), 1, "{findings:#?}");

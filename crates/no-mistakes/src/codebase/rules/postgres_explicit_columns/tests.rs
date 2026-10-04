@@ -91,6 +91,16 @@ fn valid_examples_are_quiet() {
 }
 
 #[test]
+fn standalone_table_is_an_explicit_columns_violation() {
+    let found = messages("fail", SQL, &["sql/standalone-table.sql"]);
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(
+        found[0].contains("SELECT * reads all columns of accounts"),
+        "{found:?}"
+    );
+}
+
+#[test]
 fn max_columns_zero_reports_narrow_tables_and_skips_views() {
     let found = messages(
         "max-zero",
