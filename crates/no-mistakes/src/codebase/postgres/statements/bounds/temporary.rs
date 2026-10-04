@@ -34,11 +34,7 @@ impl TemporaryRelations {
             // The bound projection can omit relations in expressions that do not
             // constrain rows. They still determine a view's lifetime.
             for name in view_relations::names(&view.query) {
-                dependencies.insert(if self.state.contains(&name) {
-                    Dependency::Temporary(state::key(&name))
-                } else {
-                    Dependency::Physical(crate::codebase::postgres::decoded_parts(&name))
-                });
+                self.state.include_dependencies(&name, &mut dependencies);
             }
         }
         self.lifecycle(statement);
@@ -73,9 +69,12 @@ impl TemporaryRelations {
             }
             Statement::CreateView(view)
                 if view.temporary
-                    || dependencies
-                        .iter()
-                        .any(|dependency| matches!(dependency, Dependency::Temporary(_))) =>
+                    || dependencies.iter().any(|dependency| match dependency {
+                        Dependency::Temporary(name) => {
+                            !dependencies.contains(&Dependency::Physical(vec![name.clone()]))
+                        }
+                        Dependency::Physical(_) => false,
+                    }) =>
             {
                 self.state
                     .relations

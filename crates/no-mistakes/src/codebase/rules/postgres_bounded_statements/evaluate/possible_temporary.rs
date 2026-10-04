@@ -36,9 +36,10 @@ fn resolve(query: &mut SqlBoundQuery, catalog: &SchemaCatalog) {
         };
         if hidden {
             // A proven temporary source has no permanent catalog pins or array lengths.
+            // Its executed pin subqueries remain independent catalog reads.
             item.kind = SqlBoundItemKind::Opaque;
-            item.pins.clear();
-            continue;
+            item.pins
+                .retain(|pin| matches!(&pin.source, SqlPinSource::Query(_)));
         }
         if let SqlBoundItemKind::Query(inner) = &mut item.kind {
             resolve(inner, catalog);

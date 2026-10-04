@@ -48,11 +48,16 @@ pub(super) fn key(name: &str) -> String {
     decoded_parts(name).last().cloned().unwrap_or_default()
 }
 impl State {
-    pub fn dependency(&self, name: &str) -> Dependency {
+    pub fn include_dependencies(&self, name: &str, out: &mut BTreeSet<Dependency>) {
         if self.contains(name) {
-            Dependency::Temporary(key(name))
+            out.insert(Dependency::Temporary(key(name)));
         } else {
-            Dependency::Physical(decoded_parts(name))
+            out.insert(Dependency::Physical(decoded_parts(name)));
+            if self.possible_temporary(name).is_some() {
+                // An unknown earlier schema can make the source physical or temporary.
+                // Keep both possibilities so a later CASCADE cannot leave a stale view.
+                out.insert(Dependency::Temporary(key(name)));
+            }
         }
     }
 
@@ -75,7 +80,7 @@ impl State {
         for item in &query.items {
             match &item.kind {
                 SqlBoundItemKind::Table(name) => {
-                    out.insert(self.dependency(name));
+                    self.include_dependencies(name, out);
                 }
                 SqlBoundItemKind::Query(query) => self.dependencies(query, out),
                 _ => {}
