@@ -1,0 +1,1 @@
+{"formatVersion":2,"coverage":"complete","schema":"public","tables":{"topics":{"relationKind":"table","columns":{"id":{"dataType":"integer","nullable":false,"ordinalPosition":1}}},"Topics":{"relationKind":"table","columns":{"id":{"dataType":"integer","nullable":false,"ordinalPosition":1}}}}}
