@@ -30,7 +30,7 @@ pub(super) fn label_name(item: &SelectItem) -> Option<String> {
     }
 }
 
-/// Scalar built-in table functions expose a single column named by the alias or function.
+/// Scalar built-ins use their declared OUT name, or otherwise the alias/function name.
 /// Functions with unspecified record layouts remain unknown.
 pub(super) fn function_columns(
     name: &ObjectName,
@@ -66,11 +66,22 @@ pub(super) fn function_columns(
     {
         return None;
     }
+    let declared = matches!(
+        function.as_str(),
+        "json_array_elements"
+            | "json_array_elements_text"
+            | "jsonb_array_elements"
+            | "jsonb_array_elements_text"
+    );
     Some(
-        [alias
-            .as_ref()
-            .map(|alias| ident_key(&alias.name))
-            .unwrap_or(function)]
+        [if declared {
+            "value".to_string()
+        } else {
+            alias
+                .as_ref()
+                .map(|alias| ident_key(&alias.name))
+                .unwrap_or(function)
+        }]
         .into_iter()
         .collect(),
     )

@@ -382,6 +382,11 @@ recursive reference of a recursive CTE: never reported, and it bounds nothing pi
 it). A CTE reference without an alias is addressed by the CTE's name. Non-recursive CTE definitions read prior bindings, including a same-named base table; the new CTE output becomes visible after its definition. Recursive CTE names remain visible within their definitions. A `COPY (SELECT …)`
 query is a `Select` fact.
 
+Correlation facts recognize the declared `value` output of the four JSON array
+element functions, including with a relation alias. Explicit column aliases
+override the declared name. Other supported scalar table functions retain their
+alias-based output names; user-schema lookalikes do not gain builtin ownership.
+
 Its `outputs` retain ordinal `SqlBoundOutput` records with an optional normalized `name`
 and a `caller_sized` value proof. A direct literal or bind, including a trusted builtin
 scalar cast, has finitely many possible output values even when an independent SRF
