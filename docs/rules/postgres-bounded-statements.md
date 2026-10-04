@@ -392,6 +392,8 @@ Analysis recovers the spelling from the prepared source tokens and matches quote
 names exactly. If source tokens are unavailable, it conservatively checks both
 exact and folded spellings when they differ. A matching one-part CTE takes
 precedence for its spelling only.
+An unmatched quote in a `COPY ... FROM STDIN` data row does not hide later
+quoted `TABLE` names; the data row is excluded from SQL tokenization.
 
 Bare subquery columns belong to a derived table or CTE only when its explicit
 projection exposes that name. Function column alias lists and known scalar built-in

@@ -1,4 +1,15 @@
-use super::{parse_postgres_sql, parse_postgres_sql_lenient, PostgresParseError};
+use super::{parse_postgres_sql, parse_postgres_sql_lenient, PostgresParseError, PreparedSql};
+
+#[test]
+fn prepared_copy_source_keeps_lexical_errors_outside_copy_data() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-no-offset/fixture/review-followups/db/lexical-open-string.sql"
+    ));
+    let prepared = PreparedSql::new(sql);
+    assert!(prepared.parse().is_err());
+    assert!(prepared.tokens().is_empty());
+}
 
 mod derived_table_limit;
 
