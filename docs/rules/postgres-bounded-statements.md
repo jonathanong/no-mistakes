@@ -243,3 +243,5 @@ Temporary tables and views created earlier in the same SQL source shadow unquali
 catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.
 Temporary relations are unknown and bound no joined items; qualified permanent
 relations retain their catalog identity. State resets for every SQL source.
+
+Temporary `SELECT INTO` destinations are tracked through `UNION`, `INTERSECT`, and `EXCEPT`, including a parenthesized first input. The input reads are checked before the new temporary name shadows a permanent catalog relation.

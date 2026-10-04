@@ -410,3 +410,29 @@ fn on_commit_drop_removes_only_committed_temporary_identities() {
         .map(|(name, line)| (name.to_string(), line))
     );
 }
+
+#[test]
+fn temporary_into_set_operation_targets_shadow_later_reads() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-set-operations.sql"));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let catalog = super::catalog();
+    let findings: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| (finding.table, finding.line))
+        .collect();
+    assert_eq!(
+        findings,
+        [
+            ("orders", 4),
+            ("accounts", 7),
+            ("orders", 8),
+            ("orders", 11),
+            ("orders", 14),
+            ("accounts", 17)
+        ]
+        .map(|(table, line)| (table.to_string(), line))
+    );
+}
