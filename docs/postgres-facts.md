@@ -354,7 +354,7 @@ recursive reference of a recursive CTE: never reported, and it bounds nothing pi
 it). A CTE reference without an alias is addressed by the CTE's name. A `COPY (SELECT …)`
 query is a `Select` fact.
 
-Each item retains positional `column_aliases` as syntax, so catalog consumers can avoid confusing renamed columns with base names.
+Each table, derived-query (including `LATERAL`), and `UNNEST` item retains positional `column_aliases` as syntax, so catalog consumers can avoid confusing renamed columns with base names. Unquoted aliases are folded and quoted aliases retain exact spelling. These names describe projected positions; they do not give a derived source catalog-key identity.
 
 Each item lists the `pins` that top-level `AND` conjuncts impose on its columns: an
 equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)` or

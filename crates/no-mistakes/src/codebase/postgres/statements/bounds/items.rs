@@ -138,13 +138,7 @@ impl<'a> Builder<'a> {
                 };
                 // An unaliased relation is addressed by its own name: a CTE's, or a table's
                 // bare name (`orders.id` for `public.orders`).
-                let column_aliases = alias.as_ref().map_or_else(Vec::new, |alias| {
-                    alias
-                        .columns
-                        .iter()
-                        .map(|column| ident_key(&column.name))
-                        .collect()
-                });
+                let column_aliases = alias_columns(alias);
                 let alias = alias_key(alias).or_else(|| match &kind {
                     SqlBoundItemKind::Query(_) => Some(object_name_key(name)),
                     SqlBoundItemKind::Table(_) => object_name_ident(name).map(ident_key),
@@ -166,6 +160,7 @@ impl<'a> Builder<'a> {
                     alias_key(alias),
                     start(subquery.span()),
                 );
+                item.column_aliases = alias_columns(alias);
                 if *lateral {
                     let reads = pins::reads_items(subquery, &self.items, self.scope);
                     item.lateral = reads.certain;
@@ -179,12 +174,8 @@ impl<'a> Builder<'a> {
             // `unnest(…)` is its own table factor: sized by the arrays it is given.
             TableFactor::UNNEST {
                 array_exprs, alias, ..
-            } => self.push(
-                unnest_kind(array_exprs),
-                alias_key(alias),
-                start(factor.span()),
-            ),
-            other => self.push(SqlBoundItemKind::Opaque, None, start(other.span())),
+            } => self.push(unnest_kind(array_exprs), alias, start(factor.span())),
+            other => self.push(SqlBoundItemKind::Opaque, &None, start(other.span())),
         }
     }
 
@@ -201,11 +192,28 @@ impl<'a> Builder<'a> {
         }
     }
 
-    fn push(&mut self, kind: SqlBoundItemKind, alias: Option<String>, at: (usize, usize)) {
-        self.items.push(SqlBoundItem::new(kind, alias, at));
+    fn push(
+        &mut self,
+        kind: SqlBoundItemKind,
+        alias: &Option<sqlparser::ast::TableAlias>,
+        at: (usize, usize),
+    ) {
+        let mut item = SqlBoundItem::new(kind, alias_key(alias), at);
+        item.column_aliases = alias_columns(alias);
+        self.items.push(item);
     }
 }
 
 fn alias_key(alias: &Option<sqlparser::ast::TableAlias>) -> Option<String> {
     alias.as_ref().map(|alias| ident_key(&alias.name))
+}
+
+fn alias_columns(alias: &Option<sqlparser::ast::TableAlias>) -> Vec<String> {
+    alias.as_ref().map_or_else(Vec::new, |alias| {
+        alias
+            .columns
+            .iter()
+            .map(|column| ident_key(&column.name))
+            .collect()
+    })
 }
