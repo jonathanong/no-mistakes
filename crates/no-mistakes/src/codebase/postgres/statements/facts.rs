@@ -48,7 +48,9 @@ fn extract_from_parsed_and_sources(
     let need_table_tokens = collect_bounds || has_table_token;
     let table_index = need_table_tokens.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
+    let insert_sources = super::lines::InsertSources::new(sql);
     let mut out = FactOut {
+        insert_sources: &insert_sources,
         insert_n: &mut insert_n,
         trigger_n: &mut trigger_n,
         inserts: &mut inserts,
@@ -140,10 +142,7 @@ fn extract_from_parsed_and_sources(
         triggers,
         returning_stars,
         mutation_column_uses,
-        offset_uses: super::super::offset::offset_facts_prepared(
-            prepared_sql.normalized(),
-            statements,
-        ),
+        offset_uses: super::super::offset::offset_facts_prepared(prepared_sql, statements),
         bounds,
         lifecycle: lifecycle.finish(),
         limit_uses,

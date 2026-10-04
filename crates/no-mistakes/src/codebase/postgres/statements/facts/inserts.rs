@@ -5,7 +5,7 @@ use sqlparser::ast::{Query, SetExpr, Statement};
 mod tests;
 
 pub(super) fn collect_query_inserts(
-    sql: &str,
+    sources: &super::super::lines::InsertSources<'_>,
     query: &Query,
     insert_n: &mut usize,
     inserts: &mut Vec<SqlInsertFact>,
@@ -13,14 +13,26 @@ pub(super) fn collect_query_inserts(
 ) {
     if let Some(with) = &query.with {
         for cte in &with.cte_tables {
-            collect_query_inserts(sql, &cte.query, insert_n, inserts, placeholder_positions);
+            collect_query_inserts(
+                sources,
+                &cte.query,
+                insert_n,
+                inserts,
+                placeholder_positions,
+            );
         }
     }
-    collect_set_inserts(sql, &query.body, insert_n, inserts, placeholder_positions);
+    collect_set_inserts(
+        sources,
+        &query.body,
+        insert_n,
+        inserts,
+        placeholder_positions,
+    );
 }
 
 fn collect_set_inserts(
-    sql: &str,
+    sources: &super::super::lines::InsertSources<'_>,
     expr: &SetExpr,
     insert_n: &mut usize,
     inserts: &mut Vec<SqlInsertFact>,
@@ -31,18 +43,18 @@ fn collect_set_inserts(
             if matches!(statement, Statement::Insert(_)) {
                 *insert_n += 1;
                 if let Some(fact) =
-                    insert::from_statement_at(sql, statement, *insert_n, placeholder_positions)
+                    insert::from_statement_at(sources, statement, *insert_n, placeholder_positions)
                 {
                     inserts.push(fact);
                 }
             }
         }
         SetExpr::Query(query) => {
-            collect_query_inserts(sql, query, insert_n, inserts, placeholder_positions)
+            collect_query_inserts(sources, query, insert_n, inserts, placeholder_positions)
         }
         SetExpr::SetOperation { left, right, .. } => {
-            collect_set_inserts(sql, left, insert_n, inserts, placeholder_positions);
-            collect_set_inserts(sql, right, insert_n, inserts, placeholder_positions);
+            collect_set_inserts(sources, left, insert_n, inserts, placeholder_positions);
+            collect_set_inserts(sources, right, insert_n, inserts, placeholder_positions);
         }
         _ => {}
     }

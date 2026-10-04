@@ -1,15 +1,38 @@
-pub(super) fn nth_insert_line(sql: &str, n: usize) -> usize {
-    nth_keyword_pair_line(sql, "insert", "into", n)
+pub(super) struct InsertSources<'a> {
+    sql: &'a str,
+    pairs: std::cell::OnceCell<Vec<Word>>,
 }
 
-pub(super) fn nth_insert_source(sql: &str, n: usize) -> String {
-    let pairs = keyword_pair_words(sql, "insert", "into");
-    let start = pairs
-        .get(n.saturating_sub(1))
-        .map(|word| word.start)
-        .unwrap_or(0);
-    let end = pairs.get(n).map(|word| word.start).unwrap_or(sql.len());
-    sql.get(start..end).unwrap_or_default().to_string()
+impl<'a> InsertSources<'a> {
+    pub(super) fn new(sql: &'a str) -> Self {
+        Self {
+            sql,
+            pairs: std::cell::OnceCell::new(),
+        }
+    }
+
+    fn pairs(&self) -> &[Word] {
+        self.pairs
+            .get_or_init(|| keyword_pair_words(self.sql, "insert", "into"))
+    }
+
+    pub(super) fn line(&self, n: usize) -> usize {
+        self.pairs()
+            .get(n.saturating_sub(1))
+            .map_or(1, |word| word.line)
+    }
+
+    pub(super) fn source(&self, n: usize) -> &str {
+        let start = self
+            .pairs()
+            .get(n.saturating_sub(1))
+            .map_or(0, |word| word.start);
+        let end = self
+            .pairs()
+            .get(n)
+            .map_or(self.sql.len(), |word| word.start);
+        self.sql.get(start..end).unwrap_or_default()
+    }
 }
 
 pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usize) -> usize {

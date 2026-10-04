@@ -44,20 +44,31 @@ fn insert_and_trigger_from_statement_reject_unrelated_ast() {
         end: false,
         modifier: None,
     };
-    assert!(super::insert::from_statement_at("", &commit, 1, None).is_none());
+    assert!(super::insert::from_statement_at(
+        &super::lines::InsertSources::new(""),
+        &commit,
+        1,
+        None
+    )
+    .is_none());
     assert!(super::trigger::from_statement("", &commit, 1).is_none());
     let sql = "INSERT INTO items (id) VALUES (1)";
+    let sources = super::lines::InsertSources::new(sql);
     let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
     insert.table = TableObject::TableFunction(dummy_fn());
-    assert!(super::insert::from_insert_at(sql, &insert, 1, true, None)
-        .table
-        .is_empty());
+    assert!(
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None)
+            .table
+            .is_empty()
+    );
     insert.table = TableObject::TableQuery(Box::new(empty_query()));
-    assert!(super::insert::from_insert_at(sql, &insert, 1, true, None)
-        .table
-        .is_empty());
+    assert!(
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None)
+            .table
+            .is_empty()
+    );
 }
 
 #[test]
@@ -115,27 +126,31 @@ fn trigger_period_for_and_for_row_object() {
 #[test]
 fn insert_source_without_query_or_rows_is_unstable() {
     let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let sources = super::lines::InsertSources::new(sql);
     let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
     insert.source = None;
-    assert!(super::insert::from_insert_at(sql, &insert, 1, true, None)
-        .assignments
-        .is_empty());
+    assert!(
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None)
+            .assignments
+            .is_empty()
+    );
     insert.source = Some(Box::new(empty_query()));
     assert!(
-        super::insert::from_insert_at(sql, &insert, 1, true, None)
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None)
             .assignments
             .iter()
             .all(|assignment| assignment.form == super::SqlValueForm::Other),
         "{:#?}",
-        super::insert::from_insert_at(sql, &insert, 1, true, None).assignments
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None).assignments
     );
 }
 
 #[test]
 fn insert_set_assignments_are_kept() {
     let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let sources = super::lines::InsertSources::new(sql);
     let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
@@ -148,13 +163,13 @@ fn insert_set_assignments_are_kept() {
     };
     insert.assignments = update.assignments;
     assert!(
-        super::insert::from_insert_at(sql, &insert, 1, true, None)
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None)
             .assignments
             .iter()
             .any(|assignment| assignment.column == "seen"
                 && matches!(assignment.form, super::SqlValueForm::Volatile { .. })),
         "{:#?}",
-        super::insert::from_insert_at(sql, &insert, 1, true, None).assignments
+        super::insert::from_insert_prepared(&sources, &insert, 1, true, None).assignments
     );
 }
 
@@ -164,9 +179,11 @@ fn overriding_user_value_drops_source_forms() {
     let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
-    assert!(super::insert::from_insert_at(
-        "INSERT INTO items (id, seen) OVERRIDING /* skip */
-USER VALUE VALUES (1, 'a')",
+    assert!(super::insert::from_insert_prepared(
+        &super::lines::InsertSources::new(
+            "INSERT INTO items (id, seen) OVERRIDING /* skip */
+USER VALUE VALUES (1, 'a')"
+        ),
         &insert,
         1,
         true,
@@ -175,8 +192,8 @@ USER VALUE VALUES (1, 'a')",
     .assignments
     .is_empty());
 
-    assert!(super::insert::from_insert_at(
-        "INSERT INTO items (id, seen) OVERRIDING /* outer /* inner */ note */\nUSER VALUE VALUES (1, 'a')",
+    assert!(super::insert::from_insert_prepared(
+        &super::lines::InsertSources::new("INSERT INTO items (id, seen) OVERRIDING /* outer /* inner */ note */\nUSER VALUE VALUES (1, 'a')"),
         &insert,
         1,
         true,

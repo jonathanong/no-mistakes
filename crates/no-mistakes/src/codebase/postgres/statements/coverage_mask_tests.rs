@@ -148,8 +148,8 @@ fn unclosed_block_comment_does_not_drop_insert_assignments() {
     let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
-    assert!(!super::insert::from_insert_at(
-        "INSERT INTO items (id, seen) VALUES (1, 'a') /*",
+    assert!(!super::insert::from_insert_prepared(
+        &super::lines::InsertSources::new("INSERT INTO items (id, seen) VALUES (1, 'a') /*"),
         &insert,
         1,
         true,

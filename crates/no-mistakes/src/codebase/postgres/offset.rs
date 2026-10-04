@@ -28,7 +28,7 @@ pub struct SqlOffsetFact {
 pub fn sql_offset_uses(sql: &str) -> Result<Vec<OffsetUse>, PostgresParseError> {
     let prepared = PreparedSql::new(sql);
     let statements = prepared.parse()?;
-    Ok(offset_facts_prepared(prepared.normalized(), &statements)
+    Ok(offset_facts_prepared(&prepared, &statements)
         .into_iter()
         .map(|fact| fact.kind)
         .collect())
@@ -49,7 +49,7 @@ pub fn sql_file_offset_uses(sql: &str) -> Vec<(usize, OffsetUse)> {
 }
 
 pub(crate) fn offset_facts_prepared(
-    normalized: &str,
+    prepared: &PreparedSql<'_>,
     statements: &[Statement],
 ) -> Vec<SqlOffsetFact> {
     let mut collector = OffsetCollector::default();
@@ -63,7 +63,15 @@ pub(crate) fn offset_facts_prepared(
     if collector.uses.is_empty() {
         return Vec::new();
     }
-    let tokens = super::parse::unicode::tokenize_raw_unicode(normalized);
+    let normalized = prepared.normalized();
+    let recovered_tokens;
+    let tokens = if prepared.tokens().is_empty() || !prepared.tokens_preserve_source_positions() {
+        recovered_tokens = super::parse::unicode::tokenize_raw_unicode(normalized);
+        recovered_tokens.as_slice()
+    } else {
+        prepared.tokens()
+    };
+    let positions = locate::Positions::new(normalized);
     let keywords: Vec<_> = tokens
         .iter()
         .filter_map(|token| {
@@ -77,7 +85,7 @@ pub(crate) fn offset_facts_prepared(
         .collect();
     for (index, fact) in collector.uses.iter_mut().enumerate() {
         if let Some((line, column)) =
-            locate::resolve(normalized, &keywords, index, fact.line, fact.column)
+            locate::resolve(&positions, &keywords, index, fact.line, fact.column)
         {
             fact.line = line;
             fact.column = column;
