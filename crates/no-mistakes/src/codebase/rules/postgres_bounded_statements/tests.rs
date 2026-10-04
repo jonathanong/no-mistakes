@@ -3,6 +3,7 @@ mod caller_array_provenance;
 mod cardinality_basics;
 mod current_database;
 mod ddl_search_path;
+mod fetch_expressions;
 mod fixed_catalog_functions;
 mod fixture_configs;
 mod json_function_outputs;

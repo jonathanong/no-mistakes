@@ -1,0 +1,2 @@
+SELECT id FROM accounts LIMIT 10;
+SELECT id FROM accounts FETCH FIRST 10 ROWS ONLY;

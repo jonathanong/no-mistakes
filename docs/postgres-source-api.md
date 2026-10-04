@@ -115,3 +115,11 @@ compatibility token at the original expression boundary and restores the
 declared or default virtual mode in that same parsed AST before projecting
 facts. Explicit `STORED` remains stored, and original statement SQL and source
 positions remain unchanged. No alternate dialect or second AST parse is used.
+
+### Parenthesized FETCH counts
+
+The shared PostgreSQL parser accepts expression counts such as
+`FETCH FIRST (COALESCE(NULL, 100)) ROWS ONLY`. It preserves the original quantity
+AST, Unicode source coordinates, offsets, and `WITH TIES` policy. The prepared
+token adapter uses the same parser's LIMIT expression grammar and restores FETCH
+on that AST; it does not substitute a literal cap or parse the statement again.

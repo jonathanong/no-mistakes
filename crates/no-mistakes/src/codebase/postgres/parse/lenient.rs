@@ -52,6 +52,7 @@ fn parse_with_normalized_sources(
     let located = super::unicode::tokenize_with_location(&separated, false);
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
     super::normalize_table_queries(&mut located);
+    let fetch = super::fetch_expression::prepare(&mut located);
     if located.is_empty() {
         let chunks = super::top_level_statements(sql);
         if chunks.len() <= 1 {
@@ -82,6 +83,9 @@ fn parse_with_normalized_sources(
         &located,
         allow_concurrent_detach,
     );
+    for statement in &mut statements {
+        super::fetch_expression::restore(&mut statement.statement, &fetch);
+    }
     if fragment {
         let source: Arc<[TokenWithSpan]> = located.into();
         for statement in &mut statements {
