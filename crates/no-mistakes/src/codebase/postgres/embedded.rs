@@ -44,6 +44,8 @@ pub struct EmbeddedSqlFragment {
     /// `None` records a proven SQL-builder append whose argument cannot be
     /// recovered. Structural policies can then honor their fail-closed mode.
     pub sql_text: Option<String>,
+    /// SQL-local positions of generated interpolation markers in `sql_text`.
+    pub recovered_placeholder_positions: Vec<(u32, u32)>,
 }
 
 /// How executed SQL was recovered from TypeScript.
@@ -89,10 +91,11 @@ pub fn extract_embedded_sql_from_program(
     executor_bindings.sort();
     let (calls, mut fragments) = walk::collect_calls(program, source, &bindings);
     for fragment in &mut fragments {
-        fragment.sql_text = fragment
-            .sql_text
-            .take()
-            .map(placeholders::publish_placeholders);
+        if let Some(sql_text) = fragment.sql_text.take() {
+            let (sql_text, positions) = placeholders::publish_placeholders_with_positions(sql_text);
+            fragment.sql_text = Some(sql_text);
+            fragment.recovered_placeholder_positions = positions;
+        }
     }
     EmbeddedSqlFileFacts {
         path: path.to_path_buf(),

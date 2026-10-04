@@ -106,8 +106,8 @@ fn optional_extraction_preserves_every_existing_statement_field() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/prepared-demand/queries.sql"
     ));
     let enabled = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    let baseline =
-        crate::codebase::postgres::statements::extract_sql_statement_facts_with_bounds(sql, false);
+    let baseline = crate::codebase::postgres::statements::
+        extract_sql_statement_facts_with_recovered_placeholders(sql, false, &[]);
     assert_eq!(enabled.bounds.len(), 3);
     assert!(baseline.bounds.is_empty());
     assert_eq!(without_bounds(&[enabled]), [baseline]);
