@@ -517,3 +517,5 @@ fn a_dml_target_is_never_a_cte() {
         ["update: t ()"]
     );
 }
+
+mod order_by_kind;

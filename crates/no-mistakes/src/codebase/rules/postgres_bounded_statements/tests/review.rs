@@ -523,3 +523,12 @@ fn unnest_without_a_column_alias_exposes_its_function_or_alias_name() {
     ));
     assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
 }
+
+#[test]
+fn distinct_on_set_returning_aggregate_keys_keep_their_input_unbounded() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/distinct-on-order-srf.sql"
+    ));
+    assert_eq!(names(sql), ["orders"]);
+}

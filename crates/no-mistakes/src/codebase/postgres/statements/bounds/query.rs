@@ -57,6 +57,9 @@ fn bound_body_observed(
     observe: impl FnOnce(&BlockingStatuses),
 ) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
+    if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query) {
+        bound.capped = capped;
+    }
     if is_zero_limited(query) {
         bound.capped = true;
     } else if is_limited(query) {
@@ -85,15 +88,10 @@ fn blocking_statuses(set: &SetExpr) -> Option<BlockingStatuses> {
 fn contains_blocking(set: &SetExpr) -> bool {
     match set {
         SetExpr::SetOperation {
-            op,
-            set_quantifier,
-            left,
-            right,
-        } => {
-            *op != SetOperator::Union
-                || *set_quantifier != SetQuantifier::All
-                || contains_blocking(left)
-                || contains_blocking(right)
+            op, set_quantifier, ..
+        } if *op != SetOperator::Union || *set_quantifier != SetQuantifier::All => true,
+        SetExpr::SetOperation { left, right, .. } => {
+            contains_blocking(left) || contains_blocking(right)
         }
         SetExpr::Query(query) => contains_blocking(&query.body),
         _ => false,
