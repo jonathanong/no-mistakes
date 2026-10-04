@@ -1,6 +1,10 @@
 use super::Tokens;
 use sqlparser::tokenizer::{Location, Span};
 
+fn source_tokens(sql: &str) -> Tokens<'_> {
+    Tokens::with_prepared(sql, &[])
+}
+
 const RADIX_SQL: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../test-cases/rules/postgres-sql-shape-policy/fixture/radix-hex-literals/sql/pages.sql"
@@ -11,7 +15,7 @@ fn source_lookup_uses_unicode_scalar_columns() {
     let line = RADIX_SQL.lines().next().unwrap();
     let column = line.find("0xF_F").unwrap();
     let column = line[..column].chars().count() as u64 + 1;
-    let tokens = Tokens::new(RADIX_SQL);
+    let tokens = source_tokens(RADIX_SQL);
 
     assert_eq!(
         tokens.source_at(Span::new(
@@ -24,7 +28,7 @@ fn source_lookup_uses_unicode_scalar_columns() {
 
 #[test]
 fn source_lookup_rejects_unknown_or_out_of_range_positions() {
-    let tokens = Tokens::new(RADIX_SQL);
+    let tokens = source_tokens(RADIX_SQL);
     assert_eq!(tokens.source_at(Span::empty()), None);
     assert_eq!(
         tokens.source_at(Span::new(Location::new(100, 1), Location::new(100, 2))),
@@ -34,7 +38,7 @@ fn source_lookup_rejects_unknown_or_out_of_range_positions() {
 
 #[test]
 fn source_lookup_rejects_unavailable_end_and_reversed_spans() {
-    let tokens = Tokens::new(RADIX_SQL);
+    let tokens = source_tokens(RADIX_SQL);
     assert_eq!(
         tokens.source_at(Span::new(Location::new(1, 1), Location::new(100, 1))),
         None
@@ -47,7 +51,7 @@ fn source_lookup_rejects_unavailable_end_and_reversed_spans() {
 
 #[test]
 fn source_lookup_can_reach_the_saved_source_end() {
-    let tokens = Tokens::new(RADIX_SQL);
+    let tokens = source_tokens(RADIX_SQL);
     let end_line = RADIX_SQL.lines().count() as u64 + 1;
     assert_eq!(
         tokens.source_at(Span::new(
@@ -77,7 +81,7 @@ fn indexed_source_preserves_many_same_line_and_multiline_hex_caps() {
 
 #[test]
 fn source_lookup_rejects_zero_column_with_a_valid_line() {
-    let tokens = Tokens::new(RADIX_SQL);
+    let tokens = source_tokens(RADIX_SQL);
     assert_eq!(
         tokens.source_at(Span::new(Location::new(1, 0), Location::new(1, 1))),
         None
@@ -86,7 +90,7 @@ fn source_lookup_rejects_zero_column_with_a_valid_line() {
 
 #[test]
 fn source_lookup_rejects_columns_beyond_the_saved_line() {
-    let tokens = Tokens::new(RADIX_SQL);
+    let tokens = source_tokens(RADIX_SQL);
     assert_eq!(
         tokens.source_at(Span::new(
             Location::new(1, u64::MAX),
@@ -102,7 +106,7 @@ fn long_saved_source_uses_sparse_offsets_and_preserves_every_location() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-sql-shape-policy/fixture/radix-hex-literals/sql/many.sql"
     ));
-    let tokens = Tokens::new(sql);
+    let tokens = source_tokens(sql);
     let mut line = 1;
     let mut column = 1;
     for (offset, character) in sql.char_indices() {

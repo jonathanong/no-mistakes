@@ -1,13 +1,14 @@
 use sqlparser::ast::Statement;
-use sqlparser::dialect::PostgreSqlDialect;
-use sqlparser::parser::{Parser, ParserError};
+use sqlparser::parser::ParserError;
 use std::fmt;
 
 mod copy_data;
 mod derived_table;
 mod distinct_group;
 mod lenient;
+mod prepared;
 pub(crate) use lenient::LocatedStatement;
+pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
 mod sql_text;
 mod standalone_table;
@@ -50,19 +51,7 @@ impl From<ParserError> for PostgresParseError {
 
 /// Parse `sql` with the PostgreSQL dialect.
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
-    let normalized = normalize_copy_data(sql);
-    let separated = distinct_group::separate_distinct_grouping(&normalized);
-    let tokens = sqlparser::tokenizer::Tokenizer::new(&PostgreSqlDialect {}, &separated)
-        .tokenize_with_location()
-        .map_err(|error| PostgresParseError {
-            message: error.to_string(),
-        })?;
-    let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
-    normalize_table_queries(&mut tokens);
-    Parser::new(&PostgreSqlDialect {})
-        .with_tokens_with_locations(tokens)
-        .parse_statements()
-        .map_err(PostgresParseError::from)
+    PreparedSql::new(sql).parse()
 }
 
 fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>) {
@@ -86,8 +75,11 @@ pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     lenient::parse_postgres_sql_lenient(sql)
 }
 
-pub(crate) fn parse_postgres_sql_lenient_with_sources(sql: &str) -> Vec<LocatedStatement> {
-    lenient::parse_postgres_sql_lenient_with_sources(sql)
+pub(crate) fn parse_postgres_sql_lenient_with_sources(
+    sql: &str,
+    normalized: &str,
+) -> Vec<LocatedStatement> {
+    lenient::parse_postgres_sql_lenient_with_sources(sql, normalized)
 }
 
 pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {

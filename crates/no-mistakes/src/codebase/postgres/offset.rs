@@ -2,7 +2,7 @@ mod locate;
 #[cfg(test)]
 mod tests;
 
-use super::parse::{parse_postgres_sql, PostgresParseError};
+use super::parse::{PostgresParseError, PreparedSql};
 use super::statements::walk_executed;
 use sqlparser::ast::{Expr, LimitClause, Query, Spanned, Statement, Value, Visit, Visitor};
 use sqlparser::keywords::Keyword;
@@ -26,8 +26,9 @@ pub struct SqlOffsetFact {
 
 /// Parse `sql` and return every executed `OFFSET` clause in source order.
 pub fn sql_offset_uses(sql: &str) -> Result<Vec<OffsetUse>, PostgresParseError> {
-    let statements = parse_postgres_sql(sql)?;
-    Ok(offset_facts(sql, &statements)
+    let prepared = PreparedSql::new(sql);
+    let statements = prepared.parse()?;
+    Ok(offset_facts_prepared(prepared.normalized(), &statements)
         .into_iter()
         .map(|fact| fact.kind)
         .collect())
@@ -47,7 +48,10 @@ pub fn sql_file_offset_uses(sql: &str) -> Vec<(usize, OffsetUse)> {
         .collect()
 }
 
-pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffsetFact> {
+pub(crate) fn offset_facts_prepared(
+    normalized: &str,
+    statements: &[Statement],
+) -> Vec<SqlOffsetFact> {
     let mut collector = OffsetCollector::default();
     for statement in statements {
         let mut executed = Vec::new();
@@ -59,8 +63,7 @@ pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffset
     if collector.uses.is_empty() {
         return Vec::new();
     }
-    let normalized = super::parse::normalize_copy_data(sql);
-    let tokens = super::parse::unicode::tokenize_raw_unicode(&normalized);
+    let tokens = super::parse::unicode::tokenize_raw_unicode(normalized);
     let keywords: Vec<_> = tokens
         .iter()
         .filter_map(|token| {
@@ -74,7 +77,7 @@ pub(crate) fn offset_facts(sql: &str, statements: &[Statement]) -> Vec<SqlOffset
         .collect();
     for (index, fact) in collector.uses.iter_mut().enumerate() {
         if let Some((line, column)) =
-            locate::resolve(&normalized, &keywords, index, fact.line, fact.column)
+            locate::resolve(normalized, &keywords, index, fact.line, fact.column)
         {
             fact.line = line;
             fact.column = column;

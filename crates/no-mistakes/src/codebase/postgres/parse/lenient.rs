@@ -3,14 +3,14 @@ use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
 use std::sync::Arc;
 
+mod chr;
 mod recover;
 mod rewrite;
 mod source;
+pub(super) use chr::{expand_chr_encoded_sql, rewrite_chr_tokens};
 pub(crate) use source::LocatedStatement;
 
-use rewrite::{
-    rewrite_chr_calls, rewrite_drop_index_concurrently, rewrite_referential_set_column_lists,
-};
+use rewrite::{rewrite_drop_index_concurrently, rewrite_referential_set_column_lists};
 
 /// Tokenize, rewrite PG18 virtual generated columns,
 /// `ON DELETE` column lists on `SET NULL` / `SET DEFAULT`, and
@@ -26,8 +26,11 @@ pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
         .collect()
 }
 
-pub(super) fn parse_postgres_sql_lenient_with_sources(sql: &str) -> Vec<LocatedStatement> {
-    parse_with_sources(sql, false, true)
+pub(super) fn parse_postgres_sql_lenient_with_sources(
+    sql: &str,
+    normalized: &str,
+) -> Vec<LocatedStatement> {
+    parse_with_normalized_sources(sql, normalized, false, true)
 }
 
 fn parse_with_sources(
@@ -36,7 +39,16 @@ fn parse_with_sources(
     allow_concurrent_detach: bool,
 ) -> Vec<LocatedStatement> {
     let normalized = super::normalize_copy_data(sql);
-    let separated = super::distinct_group::separate_distinct_grouping(&normalized);
+    parse_with_normalized_sources(sql, &normalized, fragment, allow_concurrent_detach)
+}
+
+fn parse_with_normalized_sources(
+    sql: &str,
+    normalized: &str,
+    fragment: bool,
+    allow_concurrent_detach: bool,
+) -> Vec<LocatedStatement> {
+    let separated = super::distinct_group::separate_distinct_grouping(normalized);
     let located = super::unicode::tokenize_with_location(&separated, false);
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
     super::normalize_table_queries(&mut located);
@@ -79,29 +91,6 @@ fn parse_with_sources(
         }
     }
     statements
-}
-
-pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
-    if !looks_like_chr_call(sql) {
-        return None;
-    }
-    let mut tokens = super::unicode::tokenize(sql);
-    if tokens.is_empty() {
-        return None;
-    }
-    rewrite_chr_calls(&mut tokens);
-    recover::concatenated_strings(&tokens)
-}
-
-pub(super) fn rewrite_chr_tokens(tokens: &mut Vec<Token>) {
-    rewrite_chr_calls(tokens);
-}
-
-fn looks_like_chr_call(sql: &str) -> bool {
-    sql.to_ascii_lowercase()
-        .split_whitespace()
-        .collect::<String>()
-        .contains("chr(")
 }
 
 fn rewrite_virtual_generated_columns(tokens: &mut Vec<Token>) {

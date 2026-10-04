@@ -1,31 +1,26 @@
 //! Borrowed SQL tokens and source spans shared by row-cap fact consumers.
-use sqlparser::dialect::PostgreSqlDialect;
-use sqlparser::tokenizer::{Location, Span, TokenWithSpan, Tokenizer};
+use sqlparser::tokenizer::{Location, Span, TokenWithSpan};
 use std::cell::OnceCell;
 
-/// One source borrowed from prepared analysis: tokens are produced once on first use, and
-/// numeric literal identity is recovered directly from the same source.
+/// One source borrowed from prepared analysis. Parsing, row-bound identity, and sweeps
+/// inspect the same located tokens while literal text resolves against the original SQL.
 pub(super) struct Tokens<'a> {
     sql: &'a str,
-    tokens: OnceCell<Vec<TokenWithSpan>>,
+    prepared: &'a [TokenWithSpan],
     positions: OnceCell<Vec<SourceLine>>,
 }
 
 impl<'a> Tokens<'a> {
-    pub(super) fn new(sql: &'a str) -> Self {
+    pub(super) fn with_prepared(sql: &'a str, prepared: &'a [TokenWithSpan]) -> Self {
         Self {
             sql,
-            tokens: OnceCell::new(),
+            prepared,
             positions: OnceCell::new(),
         }
     }
 
     pub(super) fn all(&self) -> &[TokenWithSpan] {
-        self.tokens.get_or_init(|| {
-            Tokenizer::new(&PostgreSqlDialect {}, self.sql)
-                .tokenize_with_location()
-                .unwrap_or_default()
-        })
+        self.prepared
     }
 
     /// Sparse Unicode checkpoints bound every endpoint scan to 63 characters, including

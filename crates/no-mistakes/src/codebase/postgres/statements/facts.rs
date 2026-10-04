@@ -2,9 +2,7 @@ use super::tokens::Tokens;
 use super::*;
 mod collect;
 mod inserts;
-use crate::codebase::postgres::parse::{
-    parse_postgres_sql, parse_postgres_sql_lenient_with_sources,
-};
+use crate::codebase::postgres::parse::{parse_postgres_sql_lenient_with_sources, PreparedSql};
 use collect::{collect_one, FactOut};
 use sqlparser::ast::{Spanned, Statement};
 use sqlparser::tokenizer::TokenWithSpan;
@@ -45,24 +43,28 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     collect_bounds: bool,
     placeholder_positions: super::value::PlaceholderPositions<'_>,
 ) -> SqlStatementFileFacts {
-    let parsed = parse_postgres_sql(sql);
+    let prepared = PreparedSql::new(sql);
+    let parsed = prepared.parse();
     let parse_failed = parsed.is_err();
     match parsed {
-        Ok(statements) => extract_from_parsed_with_recovered_placeholders(
+        Ok(statements) => extract_from_parsed_and_sources(
             sql,
+            &prepared,
             &statements,
+            None,
             false,
             collect_bounds,
             placeholder_positions,
         ),
         Err(_) => {
             let (statements, sources): (Vec<_>, Vec<_>) =
-                parse_postgres_sql_lenient_with_sources(sql)
+                parse_postgres_sql_lenient_with_sources(sql, prepared.normalized())
                     .into_iter()
                     .map(|located| (located.statement, located.source))
                     .unzip();
             extract_from_parsed_and_sources(
                 sql,
+                &prepared,
                 &statements,
                 Some(&sources),
                 parse_failed,
@@ -75,6 +77,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
 
 pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     sql: &str,
+    prepared: &PreparedSql<'_>,
     statements: &[Statement],
     parse_failed: bool,
     collect_bounds: bool,
@@ -82,6 +85,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
 ) -> SqlStatementFileFacts {
     extract_from_parsed_and_sources(
         sql,
+        prepared,
         statements,
         None,
         parse_failed,
@@ -92,6 +96,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
 
 fn extract_from_parsed_and_sources(
     sql: &str,
+    prepared_sql: &PreparedSql<'_>,
     statements: &[Statement],
     sources: Option<&[Option<Arc<[TokenWithSpan]>>]>,
     parse_failed: bool,
@@ -111,7 +116,7 @@ fn extract_from_parsed_and_sources(
     let mut mutation_column_uses = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
-    let tokens = Tokens::new(sql);
+    let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
     let table_index = collect_bounds.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
     let mut out = FactOut {
@@ -182,7 +187,10 @@ fn extract_from_parsed_and_sources(
         triggers,
         returning_stars,
         mutation_column_uses,
-        offset_uses: super::super::offset::offset_facts(sql, statements),
+        offset_uses: super::super::offset::offset_facts_prepared(
+            prepared_sql.normalized(),
+            statements,
+        ),
         bounds,
         limit_uses,
         sweeps,

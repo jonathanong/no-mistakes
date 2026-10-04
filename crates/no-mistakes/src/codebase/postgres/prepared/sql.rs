@@ -33,19 +33,27 @@ pub(super) fn collect(
                 })
             });
             let parsed = source.as_ref().map(|source| {
-                let parsed = crate::codebase::postgres::parse::parse_postgres_sql(source);
+                let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
+                let parsed = prepared.parse();
                 let failed = parsed.is_err();
                 (
                     parsed.unwrap_or_else(|_| {
-                        crate::codebase::postgres::parse::parse_postgres_sql_lenient(source)
+                        crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
+                            source,
+                            prepared.normalized(),
+                        )
+                        .into_iter()
+                        .map(|located| located.statement)
+                        .collect()
                     }),
                     failed,
+                    prepared,
                 )
             });
             let schema = (plan.postgres_schema && schema_set.contains(path)).then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, _)| {
+                    .map(|(statements, _, _)| {
                         let mut value = crate::codebase::postgres::migration::extract_from_parsed(
                             source.as_ref().unwrap(),
                             statements,
@@ -58,9 +66,10 @@ pub(super) fn collect(
             let statements = plan.postgres_dml.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, failed)| {
+                    .map(|(statements, failed, prepared)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
+                            prepared,
                             statements,
                             *failed,
                             plan.postgres_bounds,

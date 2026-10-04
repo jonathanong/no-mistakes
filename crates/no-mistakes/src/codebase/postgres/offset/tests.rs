@@ -7,6 +7,11 @@ fn statement_offsets(statement: &sqlparser::ast::Statement, out: &mut Vec<Offset
 
 use super::{sql_has_offset_clause, sql_offset_uses, OffsetUse};
 
+fn offset_facts(sql: &str, statements: &[sqlparser::ast::Statement]) -> Vec<super::SqlOffsetFact> {
+    let normalized = super::super::parse::normalize_copy_data(sql);
+    super::offset_facts_prepared(&normalized, statements)
+}
+
 #[test]
 fn offset_keyword_is_detected() {
     assert!(sql_has_offset_clause("SELECT id FROM posts OFFSET 10").unwrap());
@@ -409,10 +414,10 @@ fn spanless_recovery_uses_offset_keyword_and_empty_source_is_safe() {
         .with_tokens(tokens)
         .parse_statements()
         .unwrap();
-    let facts = super::offset_facts(&sql, &statements);
+    let facts = offset_facts(&sql, &statements);
     assert_eq!(facts.len(), 1);
     assert_eq!((facts[0].line, facts[0].kind), (2, OffsetUse::Zero));
-    let facts = super::offset_facts("", &statements);
+    let facts = offset_facts("", &statements);
     assert_eq!(facts[0].line, 1);
 }
 
@@ -424,7 +429,7 @@ fn comment_separated_offset_keeps_the_keyword_column() {
         "SELECT id OFFSET /* outer /* inner */ x */ 1",
     ] {
         let statements = super::super::parse::parse_postgres_sql(sql).unwrap();
-        let facts = super::offset_facts(sql, &statements);
+        let facts = offset_facts(sql, &statements);
         let keyword = sql
             .lines()
             .enumerate()
