@@ -1,21 +1,23 @@
+<!-- cspell:ignore CODEGEN -->
+
 # PostgreSQL catalog lookup and bounded propagation
 
 The shared bounded-statement evaluator compiles catalog keys, visible column
 aliases, nullability, array proofs, and correlated-read evidence once per query.
 Each key keeps its required columns and the alternative item dependencies that
-can size each column. A request-local reverse dependency worklist computes the
+can size each column. A request-local reverse dependency queue computes the
 same least fixed point: unseeded cycles remain unbounded, while a caller seed
-can propagate through a reversed chain without rescanning every item's catalog
+can propagate through a reversed chain without checking every item's catalog
 keys on every round. Nested-query and pin-query evaluations retain their existing
 ownership and reporting behavior.
 
 Catalog relation fallback uses two in-memory indexes initialized together on
-the first nonexact lookup:
+the first fallback lookup:
 unique bare names across all schemas, and bare-keyed entries eligible for a
 qualified fallback. Exact normalized keys still win; explicit foreign schemas,
 quoted components, and ambiguous bare names retain their previous semantics.
 A request-local `OnceLock` shares initialization across parallel readers. Exact
-lookup and catalog loading do not construct the indexes. The first nonexact
+lookup and catalog loading do not construct the indexes. The first fallback
 lookup pays their one-time construction cost; subsequent lookups reuse them.
 They do not cache state across invocations.
 
@@ -23,7 +25,7 @@ They do not cache state across invocations.
 
 The baseline is `e7d7cb2b`, with the same benchmark adapter and saved fixtures
 added. Both executables use Rust 1.96.0 on the same x86_64 host, bench optimization,
-LTO disabled, 16 codegen units, two Rayon threads, and CPU affinity 22–23. The
+LTO disabled, 16 code generation units, two Rayon threads, and CPU affinity 22–23. The
 head package was explicitly rebuilt after copying the baseline executable; its
 dependency metadata identifies the head checkout. SQL extraction and catalog
 loading are outside the prepared-evaluation timing loop. All workloads validate
@@ -54,7 +56,7 @@ and two seconds of measurement per size:
 | 256 | 1.559 ms | 1.544 ms |
 
 Lazy fallback initialization avoids the eager prototype's measured 4–6% catalog
-loading overhead. Loading above excludes index initialization; first nonexact
+loading overhead. Loading above excludes index initialization; first fallback
 lookup still pays that setup cost once. Fallback and evaluation timings report
 steady reuse after the semantic preflight initialized the request-local indexes.
 
