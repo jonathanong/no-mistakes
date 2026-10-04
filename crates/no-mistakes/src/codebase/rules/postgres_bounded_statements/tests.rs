@@ -13,6 +13,7 @@ mod compact_caller_arrays;
 mod referential;
 mod repeated_begin;
 mod review;
+mod review_table;
 mod suppression;
 mod trigger_scope;
 mod xml_array;

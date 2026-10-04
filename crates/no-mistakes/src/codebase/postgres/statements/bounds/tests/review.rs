@@ -370,37 +370,6 @@ fn a_lateral_source_keeps_its_bare_reads_for_the_catalog() {
 }
 
 #[test]
-fn a_table_arm_names_a_cte_when_one_has_that_name() {
-    assert_eq!(
-        shape("WITH c AS (SELECT * FROM orders) SELECT 1 UNION ALL TABLE c"),
-        ["select: () ((orders))"]
-    );
-    // A schema-qualified name is the table, whatever the CTE is called.
-    assert_eq!(
-        shape("WITH c AS (SELECT * FROM orders) SELECT 1 UNION ALL TABLE public.c"),
-        ["select: () (public.c)"]
-    );
-}
-
-#[test]
-fn quoted_table_arms_keep_their_source_identity() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted.sql"
-    ));
-    let found = shape(sql);
-    assert!(found.contains(&"select: () (accounts)".to_string()));
-    assert!(found.contains(&"select: () (public.accounts)".to_string()));
-    assert_eq!(
-        found
-            .iter()
-            .filter(|shape| shape.contains("opaque"))
-            .count(),
-        6
-    );
-}
-
-#[test]
 fn an_explicit_collation_in_the_value_fixes_no_row() {
     assert_eq!(
         shape("SELECT 1 FROM accounts WHERE email = $1 COLLATE \"C\""),
@@ -502,3 +471,21 @@ fn catalog_set_returning_names_require_builtin_schema_identity() {
 }
 
 mod followups;
+
+#[test]
+fn stored_arrays_do_not_inherit_their_rows_bound() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/stored-array.sql"
+    ));
+    assert_eq!(
+        shape(sql),
+        [
+            "update: accounts orders[id=value]",
+            "update: accounts orders[id=value]",
+            "delete: accounts[id=value]",
+            "delete: accounts[id=value]",
+            "update: accounts[id=#1] orders[id=value account_id=#0]",
+        ]
+    );
+}
