@@ -36,6 +36,7 @@ mod review;
 mod review_table;
 mod schema_drop;
 mod schema_rename;
+mod shared_scopes;
 mod syntax_render;
 mod table_review;
 mod temporary_view;

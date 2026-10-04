@@ -92,3 +92,7 @@ required-features = ["test-instrumentation"]
 [[bench]]
 name = "sql_fetch"
 harness = false
+
+[[bench]]
+name = "sql_bound_scopes"
+harness = false

@@ -82,6 +82,9 @@ impl<'a> Builder<'a> {
         mut self,
         selection: Option<&Expr>,
     ) -> Vec<SqlBoundItem> {
+        if self.conditions.is_empty() && self.usings.is_empty() && selection.is_none() {
+            return self.items;
+        }
         let resolver = pins::Resolver::new(&self.items, self.scope.names(), self.positions);
         let all: Vec<usize> = (0..self.items.len()).collect();
         let mut found = Vec::new();

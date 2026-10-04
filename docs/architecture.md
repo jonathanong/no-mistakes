@@ -290,8 +290,11 @@ When adding a new analyzer:
 
 ## Performance regression suite
 
-`crates/no-mistakes/benches/core_analysis.rs` is the single checked-in
-Criterion-compatible harness. It uses `fixtures/performance/core-analysis`
+`crates/no-mistakes/benches/core_analysis.rs` is the CI
+Criterion-compatible harness. PostgreSQL scaling cases also have dedicated local
+bench targets for focused before/after comparisons; the same benchmark modules
+are registered in the core harness and run in its query shard.
+It uses `fixtures/performance/core-analysis`
 for the existing small in-process APIs and
 `fixtures/performance/graph-gates` for a larger checked-in synthetic graph.
 The 14-file core-analysis corpus is too small for honest visitor-fusion and

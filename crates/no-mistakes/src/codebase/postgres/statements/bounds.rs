@@ -29,16 +29,22 @@ use std::{cell::RefCell, rc::Rc};
 /// CTE names in scope, with the bound of each.
 #[derive(Clone, Default)]
 pub(super) struct Scope {
-    ctes: BTreeMap<String, SqlBoundQuery>,
-    columns: BTreeMap<String, Option<BTreeSet<String>>>,
+    frame: Rc<ScopeFrame>,
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
+}
+
+/// Immutable parent frames retain visible CTEs without copying their bound trees.
+#[derive(Clone, Default)]
+struct ScopeFrame {
+    parent: Option<Rc<ScopeFrame>>,
+    ctes: BTreeMap<String, Rc<SqlBoundQuery>>,
+    columns: BTreeMap<String, Option<BTreeSet<String>>>,
 }
 
 impl Scope {
     pub(super) fn with_table_tokens(tokens: TableTokenCursor) -> Self {
         Self {
-            ctes: BTreeMap::new(),
-            columns: BTreeMap::new(),
+            frame: Rc::default(),
             table_tokens: Some(Rc::new(RefCell::new(tokens))),
         }
     }
@@ -56,16 +62,59 @@ impl Scope {
     }
 
     fn get(&self, name: &str) -> Option<&SqlBoundQuery> {
-        self.ctes.get(name)
+        let mut frame = self.frame.as_ref();
+        loop {
+            if let Some(bound) = frame.ctes.get(name) {
+                return Some(bound.as_ref());
+            }
+            frame = frame.parent.as_deref()?;
+        }
     }
 
     fn names(&self) -> BTreeMap<String, Option<BTreeSet<String>>> {
-        self.columns.clone()
+        let mut frames = Vec::new();
+        let mut frame = Some(self.frame.as_ref());
+        while let Some(current) = frame {
+            frames.push(current);
+            frame = current.parent.as_deref();
+        }
+        let mut names = BTreeMap::new();
+        for frame in frames.into_iter().rev() {
+            names.extend(frame.columns.clone());
+        }
+        names
+    }
+
+    fn child(&self) -> Self {
+        Self {
+            frame: Rc::new(ScopeFrame {
+                parent: Some(Rc::clone(&self.frame)),
+                ..ScopeFrame::default()
+            }),
+            table_tokens: self.table_tokens.clone(),
+        }
+    }
+
+    fn set_columns(&mut self, name: String, columns: Option<BTreeSet<String>>) {
+        Rc::make_mut(&mut self.frame).columns.insert(name, columns);
+    }
+
+    fn column_names(&self, name: &str) -> Option<&Option<BTreeSet<String>>> {
+        let mut frame = self.frame.as_ref();
+        loop {
+            if let Some(columns) = frame.columns.get(name) {
+                return Some(columns);
+            }
+            frame = frame.parent.as_deref()?;
+        }
     }
 
     fn insert(&mut self, name: String, bound: SqlBoundQuery) {
-        self.columns.entry(name.clone()).or_insert(None);
-        self.ctes.insert(name, bound);
+        // Opaque recursive placeholders retain the metadata visible before replacement.
+        let columns = self.column_names(&name).cloned().unwrap_or_default();
+        let frame = Rc::make_mut(&mut self.frame);
+        frame.columns.entry(name.clone()).or_insert(columns);
+        frame.ctes.insert(name, Rc::new(bound));
     }
 }
 

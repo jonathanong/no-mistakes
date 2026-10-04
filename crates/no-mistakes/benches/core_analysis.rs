@@ -16,6 +16,8 @@ mod language_frontends;
 mod observer;
 #[path = "core_analysis/postgres_bounds.rs"]
 mod postgres_bounds;
+#[path = "core_analysis/postgres_scopes.rs"]
+mod postgres_scopes;
 #[path = "core_analysis/query_indexes.rs"]
 mod query_indexes;
 #[path = "core_analysis/react_traits.rs"]
@@ -63,6 +65,12 @@ fn bench_sql_fetch_fast_path(c: &mut criterion::Criterion) {
     }
 }
 
+fn bench_postgres_scopes(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        postgres_scopes::bench_scopes(c);
+    }
+}
+
 criterion_group!(
     benches,
     bench_sql_source_positions,
@@ -86,6 +94,7 @@ criterion_group!(
     bench_finite_set_membership,
     bench_impacted_checks,
     bench_observer_overhead,
+    bench_postgres_scopes,
     bench_relationship_projection,
     bench_sql_fetch_fast_path,
 );
