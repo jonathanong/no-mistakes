@@ -38,8 +38,10 @@ pub(super) fn cursor(
     // expanded cursor. OR order is semantically irrelevant, so normalize it
     // before checking the complete prefix chain.
     alternatives.sort_by_key(Vec::len);
+    let last_arm = alternatives.len().checked_sub(1)?;
     let mut keys: Vec<(String, super::super::bind_identity::Identity<'_>)> = Vec::new();
     let mut direction = None;
+    let mut first_lower = None;
     for (index, terms) in alternatives.into_iter().enumerate() {
         if terms.len() != index + 1 {
             return None;
@@ -77,30 +79,32 @@ pub(super) fn cursor(
         let lower = match op {
             BinaryOperator::Gt => !reversed,
             BinaryOperator::Lt => reversed,
+            BinaryOperator::GtEq if index == last_arm => !reversed,
+            BinaryOperator::LtEq if index == last_arm => reversed,
             _ => return None,
         };
-        if direction.is_some_and(|direction| direction != lower) {
+        let ascending = order_ascending.get(index).copied().flatten()?;
+        // Every arm must move the same way through its own ordered key. The public
+        // lower/upper bound still follows the first key, so opposite cursors form a window.
+        let forward = lower == ascending;
+        if direction.is_some_and(|direction| direction != forward) {
             return None;
         }
-        direction = Some(lower);
+        direction = Some(forward);
+        first_lower.get_or_insert(lower);
         keys.push((column, identity));
     }
-    // An expanded comparison is contiguous only in its ORDER BY key sequence. Mixed sort
-    // directions need different range operators per arm, which this matcher does not accept.
+    // An expanded comparison is contiguous only in its leading ORDER BY key sequence.
     if !keys
         .iter()
         .map(|key| &key.0)
         .eq(order_columns.iter().take(keys.len()))
-        || order_ascending
-            .iter()
-            .take(keys.len())
-            .any(|ascending| *ascending != order_ascending[0] || ascending.is_none())
     {
         return None;
     }
     Some(Cursor {
         columns: keys.into_iter().map(|key| key.0).collect(),
-        bound: bound(direction?),
+        bound: bound(first_lower?),
         optional: false,
     })
 }
