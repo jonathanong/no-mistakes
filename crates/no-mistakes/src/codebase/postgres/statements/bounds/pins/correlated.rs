@@ -175,7 +175,13 @@ impl Visitor for Scan {
         };
         match expr {
             Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-                frame.qualifiers.push(ident_key(&parts[parts.len() - 2]));
+                frame.qualifiers.push(
+                    parts[..parts.len() - 1]
+                        .iter()
+                        .map(ident_key)
+                        .collect::<Vec<_>>()
+                        .join("."),
+                );
             }
             Expr::Identifier(ident) if !is_placeholder_ident(&ident.value) => {
                 *frame.bare.entry(ident_key(ident)).or_default() += 1;
