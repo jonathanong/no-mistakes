@@ -60,3 +60,14 @@ fn finite_arrays_accept_fixed_scalar_boolean_expressions_only() {
         }
     }
 }
+
+#[test]
+fn semantically_invalid_boolean_array_elements_remain_opaque() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/finite-array-invalid-boolean.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert!(facts.bounds[0].query.items[0].pins.is_empty());
+}

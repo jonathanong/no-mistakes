@@ -6,8 +6,10 @@ use sqlparser::ast::{
     DataType, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, UnaryOperator, Value,
 };
 
+mod fixed_boolean;
 mod indexed;
 mod scalar;
+use fixed_boolean::fixed_scalar_boolean;
 pub(super) use indexed::indexed_base;
 
 pub(super) fn constructor(expr: &Expr) -> Option<&sqlparser::ast::Array> {
@@ -204,98 +206,6 @@ fn numeric_literal(expr: &Expr) -> bool {
             op: UnaryOperator::Plus | UnaryOperator::Minus,
             expr,
         } => numeric_literal(expr),
-        _ => false,
-    }
-}
-
-/// A boolean expression made only from scalar literals cannot expand an array's row count.
-/// Calls and column references stay opaque: even a familiar function name may be overridden.
-fn fixed_scalar_boolean(expr: &Expr) -> bool {
-    use sqlparser::ast::{BinaryOperator, Expr as SqlExpr};
-
-    match unwrap_expr(expr) {
-        SqlExpr::Value(value) if matches!(value.value, Value::Boolean(_) | Value::Null) => true,
-        SqlExpr::IsNull(inner)
-        | SqlExpr::IsNotNull(inner)
-        | SqlExpr::IsTrue(inner)
-        | SqlExpr::IsNotTrue(inner)
-        | SqlExpr::IsFalse(inner)
-        | SqlExpr::IsNotFalse(inner)
-        | SqlExpr::IsUnknown(inner)
-        | SqlExpr::IsNotUnknown(inner) => fixed_scalar_value(inner),
-        SqlExpr::UnaryOp {
-            op: UnaryOperator::Not,
-            expr,
-        } => fixed_scalar_boolean(expr),
-        SqlExpr::BinaryOp {
-            left,
-            op: BinaryOperator::And | BinaryOperator::Or | BinaryOperator::Xor,
-            right,
-        } => fixed_scalar_boolean(left) && fixed_scalar_boolean(right),
-        SqlExpr::BinaryOp {
-            left,
-            op:
-                BinaryOperator::Eq
-                | BinaryOperator::NotEq
-                | BinaryOperator::Gt
-                | BinaryOperator::GtEq
-                | BinaryOperator::Lt
-                | BinaryOperator::LtEq,
-            right,
-        }
-        | SqlExpr::IsDistinctFrom(left, right)
-        | SqlExpr::IsNotDistinctFrom(left, right) => {
-            fixed_scalar_value(left) && fixed_scalar_value(right)
-        }
-        _ => false,
-    }
-}
-
-fn fixed_scalar_value(expr: &Expr) -> bool {
-    use sqlparser::ast::Expr as SqlExpr;
-
-    match unwrap_expr(expr) {
-        SqlExpr::Value(_) | SqlExpr::Interval(_) | SqlExpr::TypedString(_) => true,
-        SqlExpr::Identifier(ident)
-            if super::super::super::value::is_placeholder_ident(&ident.value) =>
-        {
-            true
-        }
-        SqlExpr::UnaryOp {
-            op: UnaryOperator::Plus | UnaryOperator::Minus,
-            expr,
-        } => fixed_scalar_value(expr),
-        SqlExpr::UnaryOp {
-            op: UnaryOperator::Not,
-            ..
-        }
-        | SqlExpr::BinaryOp {
-            op:
-                sqlparser::ast::BinaryOperator::And
-                | sqlparser::ast::BinaryOperator::Or
-                | sqlparser::ast::BinaryOperator::Xor
-                | sqlparser::ast::BinaryOperator::Eq
-                | sqlparser::ast::BinaryOperator::NotEq
-                | sqlparser::ast::BinaryOperator::Gt
-                | sqlparser::ast::BinaryOperator::GtEq
-                | sqlparser::ast::BinaryOperator::Lt
-                | sqlparser::ast::BinaryOperator::LtEq,
-            ..
-        }
-        | SqlExpr::IsNull(_)
-        | SqlExpr::IsNotNull(_)
-        | SqlExpr::IsTrue(_)
-        | SqlExpr::IsNotTrue(_)
-        | SqlExpr::IsFalse(_)
-        | SqlExpr::IsNotFalse(_)
-        | SqlExpr::IsUnknown(_)
-        | SqlExpr::IsNotUnknown(_)
-        | SqlExpr::IsDistinctFrom(_, _)
-        | SqlExpr::IsNotDistinctFrom(_, _) => fixed_scalar_boolean(expr),
-        SqlExpr::BinaryOp { left, right, .. } => {
-            fixed_scalar_value(left) && fixed_scalar_value(right)
-        }
-        SqlExpr::Cast { expr, .. } => fixed_scalar_value(expr),
         _ => false,
     }
 }
