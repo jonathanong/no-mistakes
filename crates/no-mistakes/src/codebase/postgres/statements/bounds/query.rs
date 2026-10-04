@@ -49,7 +49,7 @@ fn bound_body_observed(
     observe: impl FnOnce(&BlockingStatuses),
 ) -> SqlBoundQuery {
     let mut bound = set::bound(&query.body, scope, positions);
-    if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query) {
+    if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query, positions) {
         bound.capped = capped;
     }
     if is_zero_limited(query) {

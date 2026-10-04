@@ -472,3 +472,8 @@ rejects set-returning functions in its conditions and arms. This boundary does
 not prove caller-owned values or remove reads from physical source tables.
 Unknown calls outside `CASE` remain conservative, including a custom function
 that wraps the entire `CASE` expression.
+
+An explicit caller-sized `LIMIT` or finite `FETCH` in a parenthesized SELECT
+continues to cap its rows when an outer `ORDER BY` expands an expression.
+This proof follows only that SELECT wrapper: it does not cap unrelated set
+operation arms, NULL or data-derived limits, or a query with no explicit cap.

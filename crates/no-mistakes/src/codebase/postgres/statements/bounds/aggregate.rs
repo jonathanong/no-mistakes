@@ -63,27 +63,36 @@ pub(super) fn orders_can_expand(query: &Query) -> bool {
         .any(|expression| contains_projection_call(&expression.expr, &projection_can_expand))
 }
 
-/// A predicate that removes the implicit group can cap a query whose ordering expands it.
-pub(super) fn order_expansion_predicates_reject(query: &Query) -> Option<bool> {
+/// Rejecting predicates or explicit nested caps constrain an expanding ORDER BY.
+pub(super) fn order_expansion_predicates_reject(
+    query: &Query,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> Option<bool> {
     if !orders_can_expand(query) {
         return None;
     }
-    let (select, nested_empty) = select_body(&query.body)?;
+    let (select, nested_capped) = select_body(&query.body, positions)?;
     Some(
-        nested_empty
+        nested_capped
             || super::predicate::rejects_groups(select.having.as_ref())
             || (!has_implicit_group(query, select)
                 && super::predicate::rejects_all(select.selection.as_ref())),
     )
 }
 
-fn select_body(set: &SetExpr) -> Option<(&Select, bool)> {
+fn select_body<'a>(
+    set: &'a SetExpr,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> Option<(&'a Select, bool)> {
     match set {
         SetExpr::Select(select) => Some((select, false)),
         SetExpr::Query(query) => {
-            let (select, empty) = select_body(&query.body)?;
-            // An outer SRF cannot expand a row that an inner zero limit removed.
-            Some((select, empty || super::super::limit::is_zero_limited(query)))
+            let (select, capped) = select_body(&query.body, positions)?;
+            // PostgreSQL retains this explicit cap across parenthesized ORDER BY.
+            Some((
+                select,
+                capped || super::super::limit::is_limited_at(query, positions),
+            ))
         }
         _ => None,
     }
