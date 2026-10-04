@@ -337,3 +337,34 @@ fn table_identity_rejects_other_candidates_and_accepts_an_empty_inventory() {
         ["app.customers", "app.orders", "other.orders"]
     );
 }
+
+#[test]
+fn scalar_table_views_retain_source_identity_and_original_spans() {
+    use super::super::PostgresSqlStatementKind;
+    let sql = super::fixture("scalar-table-views.sql");
+    let facts = super::facts("scalar-table-views.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 3);
+    for (statement, expected) in
+        facts
+            .statements
+            .iter()
+            .zip([vec!["\"Helper\""], vec!["pg_temp.\"Mixed.Helper\""], vec![]])
+    {
+        assert_eq!(
+            &sql[statement.span.start.offset..statement.span.end.offset],
+            statement.sql
+        );
+        let PostgresSqlStatementKind::CreateView { view } = &statement.facts else {
+            panic!("expected view")
+        };
+        assert!(view.dependencies_complete);
+        assert_eq!(
+            view.dependencies
+                .iter()
+                .map(|name| name.sql.as_str())
+                .collect::<Vec<_>>(),
+            expected
+        );
+    }
+}

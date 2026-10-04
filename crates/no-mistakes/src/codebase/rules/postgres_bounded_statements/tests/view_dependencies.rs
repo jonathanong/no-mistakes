@@ -29,3 +29,12 @@ fn table_function_name_keeps_view_independent_of_temporary_table() {
     ));
     assert_eq!(names(sql), ["accounts", "accounts"]);
 }
+
+#[test]
+fn scalar_table_view_dependencies_follow_exact_source_identities() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-view-scalar-table.sql"));
+    assert_eq!(
+        super::names(sql),
+        ["orders", "orders", "orders", "orders", "orders"]
+    );
+}

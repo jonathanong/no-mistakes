@@ -646,3 +646,5 @@ It also analyzes standalone `TABLE name` and `TABLE ONLY name` statements, inclu
 `EXPLAIN TABLE name` parses as a plan without execution, while `EXPLAIN ANALYZE TABLE name` contributes executed query facts with the same relation identity.
 Lenient PostgreSQL recovery retains exact TABLE-arm spelling inside DO bodies and reconstructed SQL fragments.
 Parenthesized PostgreSQL set operations retain a trailing LIMIT after an unqualified TABLE arm.
+
+Parenthesized PostgreSQL `TABLE relation` scalar subqueries retain quoted and qualified identity in view dependencies, including temporary-view and permanent-intermediary cascades; visible CTE aliases are excluded.
