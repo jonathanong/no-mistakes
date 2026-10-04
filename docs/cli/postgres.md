@@ -126,9 +126,13 @@ this rendering.
 ### Stable output
 
 Generating twice from the same database produces byte-identical output: object
-keys are sorted, and every list has an explicit order. The catalog contains no
-OIDs, timestamps, server version, host or database name, so it is safe to commit and
-to regenerate in CI after migrations.
+keys are sorted, and every list has an explicit order. The catalog records the
+connected database name in `currentDatabase`; byte-identical regeneration in CI
+requires the same database name. It excludes OIDs, timestamps, server version and
+host, so it can be committed and regenerated after migrations.
+
+Portable fixture comparisons validate `currentDatabase` separately, then omit
+only that field when comparing the remaining catalog bytes across database names.
 
 Some text is produced by PostgreSQL itself and can differ between major versions:
 `pg_get_functiondef`, `pg_get_viewdef`, `pg_get_constraintdef`, `pg_get_triggerdef`
