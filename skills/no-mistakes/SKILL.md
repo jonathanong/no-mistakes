@@ -139,4 +139,4 @@ Generate the catalog with the role that executes the analyzed SQL. An absent
 was missing or the role lacked `USAGE`. If a required inventory is unavailable,
 retain the rule's conservative findings and regenerate with appropriate schema
 access rather than treating unavailable evidence as an empty schema. Schema
-inventories remain explicit opt-in. See [catalog options](../../docs/cli/postgres.md).
+inventories remain explicit opt-in. See [catalog options](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/postgres.md).
