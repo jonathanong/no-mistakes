@@ -384,6 +384,62 @@ fn temporary_relation_identity_tracks_source_statement_order() {
 }
 
 #[test]
+fn quoted_table_arms_respect_temporary_identity_and_view_dependencies() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    // sqlparser rejects multiple TABLE arms in one parse; the supported lenient path still
+    // recovers each statement and must retain the original quoted source identity.
+    assert!(facts.parse_failed);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| (finding.table, finding.line))
+        .collect();
+    assert_eq!(
+        found,
+        [("accounts".to_string(), 5), ("accounts".to_string(), 6)]
+    );
+}
+
+#[test]
+fn quoted_table_arm_in_a_strictly_parsed_source_shadows_the_catalog() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-single.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    let catalog = super::catalog();
+    assert!(facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .next()
+        .is_none());
+}
+
+#[test]
+fn repeated_quoted_table_arms_do_not_consume_tokens_twice() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-repeat.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    let catalog = super::catalog();
+    assert!(facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .next()
+        .is_none());
+}
+
+#[test]
 fn on_commit_drop_removes_only_committed_temporary_identities() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

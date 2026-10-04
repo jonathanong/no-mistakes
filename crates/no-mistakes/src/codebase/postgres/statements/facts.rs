@@ -1,3 +1,4 @@
+use super::tokens::Tokens;
 use super::*;
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
 use sqlparser::ast::{Query, SetExpr, Statement};
@@ -54,6 +55,9 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
     let mut executed = Vec::new();
+    let tokens = Tokens::new(sql);
+    let table_scope = collect_bounds
+        .then(|| bounds::Scope::with_table_tokens(bounds::TableTokenCursor::new(tokens.all())));
     for statement in statements {
         wrappers::walk_executed(statement, &mut executed);
     }
@@ -74,12 +78,14 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         collect_one(sql, statement, &mut out);
         if collect_bounds {
             let first_bound = bounds.len();
-            bounds::collect(statement, &mut bounds);
-            temporary_relations.apply(statement, &mut bounds[first_bound..]);
+            let scope = table_scope.as_ref().expect("bounds scope is prepared");
+            bounds::collect(statement, scope, &mut bounds);
+            temporary_relations.apply(statement, &mut bounds[first_bound..], scope);
         }
     }
     dedupe::exists_set_operations(&mut selects);
-    let (limit_uses, sweeps) = sweeps::collect(sql, statements, recovered_placeholder_positions);
+    let (limit_uses, sweeps) =
+        sweeps::collect(&tokens, statements, recovered_placeholder_positions);
     SqlStatementFileFacts {
         path: Default::default(),
         writes,

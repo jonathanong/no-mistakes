@@ -13,6 +13,7 @@ mod pins;
 mod query;
 mod table;
 mod temporary;
+pub(super) use table::TableTokenCursor;
 pub(super) use temporary::TemporaryRelations;
 #[cfg(test)]
 mod tests;
@@ -21,15 +22,25 @@ mod using;
 use super::{SqlBoundFact, SqlBoundKind, SqlBoundQuery};
 use sqlparser::ast::{CopySource, Query, Spanned, Statement};
 use std::collections::{BTreeMap, BTreeSet};
+use std::{cell::RefCell, rc::Rc};
 
 /// CTE names in scope, with the bound of each.
 #[derive(Clone, Default)]
 pub(super) struct Scope {
     ctes: BTreeMap<String, SqlBoundQuery>,
     columns: BTreeMap<String, Option<BTreeSet<String>>>,
+    table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
 }
 
 impl Scope {
+    pub(super) fn with_table_tokens(tokens: TableTokenCursor) -> Self {
+        Self {
+            ctes: BTreeMap::new(),
+            columns: BTreeMap::new(),
+            table_tokens: Some(Rc::new(RefCell::new(tokens))),
+        }
+    }
+
     fn get(&self, name: &str) -> Option<&SqlBoundQuery> {
         self.ctes.get(name)
     }
@@ -44,8 +55,8 @@ impl Scope {
     }
 }
 
-pub(super) fn collect(statement: &Statement, out: &mut Vec<SqlBoundFact>) {
-    collect_in(statement, &Scope::default(), out);
+pub(super) fn collect(statement: &Statement, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
+    collect_in(statement, scope, out);
 }
 
 fn collect_in(statement: &Statement, scope: &Scope, out: &mut Vec<SqlBoundFact>) {

@@ -383,6 +383,24 @@ fn a_table_arm_names_a_cte_when_one_has_that_name() {
 }
 
 #[test]
+fn quoted_table_arms_keep_their_source_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted.sql"
+    ));
+    let found = shape(sql);
+    assert!(found.contains(&"select: () (accounts)".to_string()));
+    assert!(found.contains(&"select: () (public.accounts)".to_string()));
+    assert_eq!(
+        found
+            .iter()
+            .filter(|shape| shape.contains("opaque"))
+            .count(),
+        6
+    );
+}
+
+#[test]
 fn an_explicit_collation_in_the_value_fixes_no_row() {
     assert_eq!(
         shape("SELECT 1 FROM accounts WHERE email = $1 COLLATE \"C\""),
