@@ -49,8 +49,12 @@ An explicitly parsed `search_path` also limits which physical schemas a bare
 bare `accounts` leaves a temporary view over `other.accounts` intact. Qualified
 targets still match their exact schema, and transitive cascade nodes retain their
 identity after the path changes. Implicit `pg_catalog` and `pg_temp` remain eligible.
-Unknown paths, role substitution, `DEFAULT`, and unsupported quoted string lists
-retain conservative matching; membership alone does not prove which eligible
+Each SQL `SET search_path` value names one schema: `'empty,schema', pg_temp`
+keeps the comma in the first schema, while `'empty,schema, pg_temp'` names just
+one schema. String values retain case and embedded double quotes; directly
+quoted identifiers use SQL identifier escaping. Unknown paths, role
+substitution, `DEFAULT`, and unsupported expressions retain conservative
+matching; membership alone does not prove which eligible
 schema owns an ambiguous bare target. Transaction, savepoint, and `SET LOCAL`
 restoration retain the complete path proof.
 

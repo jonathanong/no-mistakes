@@ -27,7 +27,7 @@ fn assert_candidates(sql: &str, expected: &[bool], unbounded: &[usize]) {
 
 #[test]
 fn ddl_search_path_excludes_unreachable_qualified_dependencies() {
-    assert_candidates(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-ddl-search-path.sql")), &[false, true, true, true, false, true, false, false, false, false, false], &[0, 4, 6, 7, 8, 9, 10]);
+    assert_candidates(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-ddl-search-path.sql")), &[false, true, true, true, false, true, false, false, true, false, false], &[0, 4, 6, 7, 9, 10]);
 }
 
 #[test]

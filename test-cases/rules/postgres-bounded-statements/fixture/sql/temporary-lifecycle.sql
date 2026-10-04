@@ -50,7 +50,7 @@ ROLLBACK;
 -- LOCAL search-path changes expire at commit while committed temp tables remain.
 BEGIN;
 CREATE TEMP TABLE accounts(id uuid);
-SET LOCAL search_path TO 'public, pg_temp';
+SET LOCAL search_path TO public, pg_temp;
 SELECT * FROM accounts;
 COMMIT;
 SELECT * FROM accounts;
