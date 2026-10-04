@@ -22,6 +22,7 @@ mod review;
 mod review_table;
 mod scalar_call_array;
 mod schema_drop;
+mod schema_rename;
 mod suppression;
 mod trigger_scope;
 mod view_dependencies;
