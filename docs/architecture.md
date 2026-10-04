@@ -385,12 +385,12 @@ Initial and repeated comparisons used 30 samples, a one-second warmup, and three
 measurement; the adjacent reverse-order comparison used 50 samples, a
 two-second warmup, and five-second measurement for both binaries.
 
-| Comparison | Extract time change | Edges time change |
-| --- | --- | --- |
-| Original base → head | +7.60%, p < 0.05 | +3.63%, p = 0.23 |
-| Original base → same base again | +2.76%, p = 0.24 | +5.72%, within Criterion's noise threshold |
-| Original base → head again | +7.61%, p < 0.05 | +6.53%, p < 0.05 |
-| Adjacent head → base | −0.45%, p = 0.72 | +11.08%, p < 0.05 |
+| Comparison                      | Extract time change | Edges time change                          |
+| ------------------------------- | ------------------- | ------------------------------------------ |
+| Original base → head            | +7.60%, p < 0.05    | +3.63%, p = 0.23                           |
+| Original base → same base again | +2.76%, p = 0.24    | +5.72%, within Criterion's noise threshold |
+| Original base → head again      | +7.61%, p < 0.05    | +6.53%, p < 0.05                           |
+| Adjacent head → base            | −0.45%, p = 0.72    | +11.08%, p < 0.05                          |
 
 Positive values mean the second binary was slower. The adjacent extract
 comparison's 95% interval was −2.83% to +2.11%; the older base was slower for
@@ -425,11 +425,11 @@ binaries to the same two logical CPUs and used 30 samples, a two-second warmup,
 and four-second measurement. Both builds finished before the matched runs; the
 same saved executables supplied the repeat and reverse-order controls.
 
-| Comparison | Extract time change | Edges time change |
-| --- | --- | --- |
-| Base → head | +0.28%, p = 0.36 | +0.18%, p = 0.67 |
-| Base → same base again | −0.64%, p = 0.25 | +3.87%, p < 0.05 |
-| Adjacent head → base | +0.93%, within Criterion's noise threshold | −2.87%, p < 0.05 |
+| Comparison             | Extract time change                        | Edges time change |
+| ---------------------- | ------------------------------------------ | ----------------- |
+| Base → head            | +0.28%, p = 0.36                           | +0.18%, p = 0.67  |
+| Base → same base again | −0.64%, p = 0.25                           | +3.87%, p < 0.05  |
+| Adjacent head → base   | +0.93%, within Criterion's noise threshold | −2.87%, p < 0.05  |
 
 Positive values mean the second executable was slower. The forward comparison
 found no timing change; its 95% intervals were −0.25% to +0.85% for extract and
@@ -518,6 +518,11 @@ CodSpeed memory reports, establish a cause for their deltas, or measure every
 later PostgreSQL PR. No frontend code correction is justified by this evidence.
 For a future report, retain its exact expected-base and head executables and
 repeat the same instrument on the same runner before selecting a code change.
+
+The SQL visitor also uses shared preceding-scope snapshots to avoid copying
+accumulated relation records for each LATERAL factor. The
+[paired LATERAL experiment](performance/lateral-scope-snapshots.md) records
+allocation counts, timing controls, and reproduction probes for that change.
 
 ## Anti-Patterns
 

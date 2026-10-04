@@ -126,7 +126,7 @@ impl Visitor for Scan {
         // A bare name that is a relation's own is a whole-row reference, not a column.
         let own = frame.bare.iter().filter(|(name, count)| {
             **count > frame.labels.get(*name).copied().unwrap_or(0)
-                && !frame.scope.relations.contains(*name)
+                && !frame.scope.relations.contains(name)
         });
         let mut reads: Vec<SqlBareRead> = own
             .map(|(name, _)| SqlBareRead {
