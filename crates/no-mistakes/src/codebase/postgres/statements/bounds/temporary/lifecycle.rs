@@ -92,14 +92,7 @@ impl TemporaryRelations {
                     self.state.drop_schema(&items::sql_name(name));
                 }
             }
-            Statement::AlterSchema(schema) => {
-                for operation in &schema.operations {
-                    if let sqlparser::ast::AlterSchemaOperation::Rename { name } = operation {
-                        self.state
-                            .rename_schema(&items::sql_name(&schema.name), &items::sql_name(name));
-                    }
-                }
-            }
+            Statement::AlterSchema(schema) => self.alter_schema(schema),
             Statement::AlterTable(table) => {
                 for operation in &table.operations {
                     if let AlterTableOperation::RenameTable { table_name } = operation {
@@ -153,6 +146,15 @@ impl TemporaryRelations {
                 self.state.local_path = None;
             }
             _ => {}
+        }
+    }
+
+    fn alter_schema(&mut self, schema: &sqlparser::ast::AlterSchema) {
+        for operation in &schema.operations {
+            if let sqlparser::ast::AlterSchemaOperation::Rename { name } = operation {
+                self.state
+                    .rename_schema(&items::sql_name(&schema.name), &items::sql_name(name));
+            }
         }
     }
 }
