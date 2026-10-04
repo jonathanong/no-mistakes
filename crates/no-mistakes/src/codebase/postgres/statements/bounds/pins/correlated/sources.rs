@@ -56,7 +56,8 @@ impl Scan {
                 };
                 if args.is_some()
                     && *with_ordinality
-                    && function_columns(name, &None).is_some()
+                    && (function_columns(name, &None).is_some()
+                        || alias.as_ref().is_some_and(|alias| alias.columns.len() == 1))
                     && alias.as_ref().map_or(0, |alias| alias.columns.len()) < 2
                 {
                     if let Some(columns) = &mut columns {

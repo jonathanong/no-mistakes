@@ -278,7 +278,9 @@ projection exposes that name. Function column alias lists and known scalar built
 output names also determine ownership. Unknown functions and wildcard projections
 retain conservative unknown-column ownership.
 
-Known scalar table functions expose their default position column when requested. UNNEST column names are inferred only for syntactically proven scalar arrays; composite and unknown element layouts retain unknown ownership. Parenthesized joins with wrapper aliases also retain unknown ownership when the child labels cannot describe the renamed output.
+<!-- cspell:ignore ordinality -->
+
+Known scalar table functions expose their default position column when requested. With `WITH ORDINALITY`, one explicit ordinary-output alias leaves the appended `ordinality` column local even for a user-defined function: `SELECT ordinality FROM app.ids() WITH ORDINALITY AS f(value) LIMIT 1`. Without a known output width, multiple aliases may rename that appended column, so an unlisted `ordinality` name retains conservative ownership. UNNEST column names are inferred only for syntactically proven scalar arrays; composite and unknown element layouts retain unknown ownership. Parenthesized joins with wrapper aliases also retain unknown ownership when the child labels cannot describe the renamed output.
 
 Finite array constructors also accept explicitly known scalar builtin calls such as
 `ARRAY[pg_catalog.lower($1)]` when their arguments preserve finite leaves. Unknown
