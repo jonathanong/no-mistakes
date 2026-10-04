@@ -124,3 +124,19 @@ groups, limits, diffs, and deleted-file behavior.
   forms, confidence limits, and `rg` fallbacks.
 
 For the schema catalog that PostgreSQL rules read through `schemaCatalogPath`, use `postgres catalog --connection-env DATABASE_URL --schema public --output db/schema.json`. This reads PostgreSQL metadata directly and writes a complete catalog that every catalog rule accepts; add `--coverage ordering` for only the facts conflict and lock ordering need. It is the only catalog format no-mistakes reads, and it does not read application snapshots.
+
+When SQL searches schemas before `pg_temp`, request their complete relation-name
+inventories explicitly with repeated `--search-path-schema` options. Include
+`pg_catalog` when it is omitted from the configured path because PostgreSQL
+searches it first. For example, for `search_path = public, pg_temp`:
+
+```sh
+no-mistakes postgres catalog --connection-env DATABASE_URL --schema public --search-path-schema pg_catalog --search-path-schema public --output db/schema.json
+```
+
+Generate the catalog with the role that executes the analyzed SQL. An absent
+`searchPathEvidence` entry gives no evidence of absence; `null` means the schema
+was missing or the role lacked `USAGE`. If a required inventory is unavailable,
+retain the rule's conservative findings and regenerate with appropriate schema
+access rather than treating unavailable evidence as an empty schema. Schema
+inventories remain explicit opt-in. See [catalog options](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/postgres.md).

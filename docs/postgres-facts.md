@@ -417,7 +417,7 @@ recorded. `sweeps` lists each limited query (one that caps its rows: not `WITH T
 the `SELECT` are looked through) ordered only by plain columns of that table (a bare
 `ORDER BY` name that is an output alias means the aliased expression), at the line and
 `column` of the table, with its top-level `WHERE`
-conjuncts: each conjunct's text (lowercased, whitespace collapsed) and its
+conjuncts: each conjunct's token-normalized text and its
 `cursor_columns`, the columns it compares with a bind parameter, or an interpolation
 recovered from a template literal, as a keyset cursor
 (`id > $1`, `(a, b) > ($1, $2)`, or `($1 IS NULL OR id > $1)`; parentheses are
@@ -426,6 +426,15 @@ tells a window (`id >= $1 AND id < $2`) from a one-sided walk. A CTE body sees o
 `WITH RECURSIVE`), so a body's table named like a later CTE is still a table. The `literal-limit` and
 `keyset-only-sweep` shapes of `postgres-sql-shape-policy` consume them; the `LIMIT`
 definition is shared with the row-bound facts.
+
+`SqlConjunctFact.text` folds unquoted words to ASCII lowercase and collapses
+whitespace outside tokens. String literal bodies and quoted identifier contents
+retain their case and internal spacing. Escaped and Unicode string literals are
+rendered with safe delimiters and escapes; dollar-quote tags, hexadecimal digits,
+and numeric exponent markers normalize case without changing their values. This
+is token-aware comparison text, not a verbatim source slice or a lowercase copy
+of the entire expression. If tokenization fails, normalization returns the input
+unchanged.
 
 `SchemaCatalog::unique_keys(table)` returns those key column sets: valid, ready, live,
 immediate, non-partial unique or primary indexes whose keys are all plain columns, and
