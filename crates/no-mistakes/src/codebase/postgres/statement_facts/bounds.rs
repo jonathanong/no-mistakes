@@ -135,8 +135,9 @@ pub enum SqlPinSource {
     Value,
     /// An expression over columns of other items of the same statement (indexes into the items).
     Items(Vec<usize>),
-    /// An array expression read from statement rows. Indexes identify its source items;
-    /// even one source row can contain every key, so this never supplies finite-key proof.
+    /// An array expression with unproven caller cardinality, including stored columns
+    /// and unknown function results. Indexes retain known source items; this supplies
+    /// no finite-key proof, even when an owning row is bounded.
     StoredArray(Vec<usize>),
     /// A syntactically finite array constructor over other items. Every referenced column
     /// must be catalog-proven scalar before its row bound can size the flattened array.

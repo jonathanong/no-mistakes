@@ -5,7 +5,7 @@ mod resolver;
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{SqlBareRead, SqlBoundItem, SqlBoundPin, SqlPinSource};
-use array::{constructor, finite_array};
+use array::{caller_array, constructor, finite_array, scalar_subquery};
 use resolver::Sourced;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
 use std::collections::BTreeSet;
@@ -87,6 +87,18 @@ pub(super) fn extract(
                     Expr::Subquery(subquery) => {
                         Some(subquery_source(subquery, resolver, scope, positions))
                     }
+                    other if scalar_subquery(other).is_some() => {
+                        let mut sourced = subquery_source(
+                            scalar_subquery(other).unwrap(),
+                            resolver,
+                            scope,
+                            positions,
+                        );
+                        if let SqlPinSource::Query(query) = sourced.source {
+                            sourced.source = SqlPinSource::ReadQuery(query);
+                        }
+                        Some(sourced)
+                    }
                     other if constructor(other).is_some() => {
                         finite_array(&constructor(other).unwrap().elem, item, resolver, positions)
                     }
@@ -94,6 +106,7 @@ pub(super) fn extract(
                     other => resolver.stored_source(other).map(|mut sourced| {
                         if !matches!(sourced.source, SqlPinSource::Value)
                             || !sourced.reads.is_empty()
+                            || !caller_array(other)
                         {
                             let items = match sourced.source {
                                 SqlPinSource::Items(items) => items,

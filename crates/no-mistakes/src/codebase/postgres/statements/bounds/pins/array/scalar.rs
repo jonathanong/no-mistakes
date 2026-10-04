@@ -4,6 +4,14 @@ use sqlparser::ast::{Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgum
 /// Only explicitly qualified builtin calls preserve a constructor's finite cardinality.
 /// Unqualified names can resolve to custom overloads, even at a builtin's usual arity.
 pub(super) fn arguments(function: &Function) -> Option<Vec<&Expr>> {
+    arguments_for(function, SIGNATURES)
+}
+
+/// Shared explicit-builtin identity and signature validation for caller-only operations.
+pub(super) fn arguments_for<'a>(
+    function: &'a Function,
+    signatures: &[(&str, usize, usize)],
+) -> Option<Vec<&'a Expr>> {
     let parts = function
         .name
         .0
@@ -17,11 +25,19 @@ pub(super) fn arguments(function: &Function) -> Option<Vec<&Expr>> {
         return None;
     }
     let key = ident_key(name);
-    let (_, min, max) = SIGNATURES.iter().find(|(name, _, _)| *name == key)?;
+    let (_, min, max) = signatures.iter().find(|(name, _, _)| *name == key)?;
+    positional_arguments(function, *min, *max)
+}
+
+pub(super) fn positional_arguments(
+    function: &Function,
+    min: usize,
+    max: usize,
+) -> Option<Vec<&Expr>> {
     let FunctionArguments::List(arguments) = &function.args else {
         return None;
     };
-    if !(*min..=*max).contains(&arguments.args.len()) {
+    if !(min..=max).contains(&arguments.args.len()) {
         return None;
     }
     arguments

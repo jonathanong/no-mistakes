@@ -114,7 +114,7 @@ pub(super) fn projection_traversal_boundary(function: &Function) -> bool {
                 .is_some_and(|ident| ident_key(ident) == "coalesce"))
 }
 
-fn conditional_form(function: &Function) -> bool {
+pub(super) fn conditional_form(function: &Function) -> bool {
     function.name.0.len() == 1
         && object_name_ident(&function.name).is_some_and(|ident| {
             ident.quote_style.is_none()

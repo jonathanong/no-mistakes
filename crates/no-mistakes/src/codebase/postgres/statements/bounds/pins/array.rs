@@ -3,7 +3,9 @@ use super::{merge, Resolver, Sourced};
 use crate::codebase::postgres::SqlPinSource;
 use sqlparser::ast::Expr;
 
+mod caller_value;
 mod columns;
+pub(super) use caller_value::{caller_array, scalar_subquery};
 mod fixed_boolean;
 mod indexed;
 mod leaves;
