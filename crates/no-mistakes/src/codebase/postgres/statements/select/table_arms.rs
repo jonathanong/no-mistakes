@@ -20,6 +20,7 @@ pub(in crate::codebase::postgres::statements) fn collect(
                 query_arms(query, &[], true, false, cursor, out);
             }
         }
+        Statement::Update(_) | Statement::Delete(_) => nested(statement, &[], false, cursor, out),
         Statement::CreateView(view) => query_arms(&view.query, &[], false, false, cursor, out),
         Statement::CreateTable(table) => {
             if let Some(query) = table.query.as_deref() {
@@ -115,6 +116,9 @@ fn set_arms(
         SetExpr::Query(query) => query_arms(query, ctes, in_insert_select, in_exists, cursor, out),
         SetExpr::Select(select) => nested(select.as_ref(), ctes, in_insert_select, cursor, out),
         SetExpr::Values(values) => nested(values, ctes, in_insert_select, cursor, out),
+        SetExpr::Update(statement) | SetExpr::Delete(statement) => {
+            nested(statement, ctes, in_insert_select, cursor, out);
+        }
         SetExpr::Insert(Statement::Insert(insert)) => {
             if let Some(query) = insert.source.as_deref() {
                 query_arms(query, ctes, true, false, cursor, out);
@@ -183,3 +187,6 @@ impl Visitor for Nested<'_> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod mutation_tests;

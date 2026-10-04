@@ -247,6 +247,11 @@ standalone SQL without embedded interpolation provenance.
   stable form; `DEFAULT`, `CURRENT_TIMESTAMP`, `'now'`, `N'now'`, and `OVERRIDING USER
   VALUE` are unstable
 - `INSERT…SELECT` guarded by a conjunctive `WHERE NOT EXISTS`
+- Physical TABLE set-operation arms in UPDATE and DELETE subqueries reuse the
+  prepared token cursor, including assignments, FROM/USING, WHERE, and RETURNING.
+  Visible CTE aliases stay local, quoted names retain identity, and EXISTS arms
+  omit explicit-column stars. These Select facts share the CLI and async Node
+  rule projections without changing mutation predicates or bound facts.
 - SELECT FROM/JOIN relation names, predicate SQL, and `EXISTS` set-operation
   facts (`restricted` when every arm has a placeholder or literal bound;
   `correlated` when a qualified identifier is outside the subquery FROM/WITH;
