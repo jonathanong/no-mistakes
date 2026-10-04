@@ -20,7 +20,7 @@ pub(super) fn size(query: &SqlBoundQuery) -> usize {
                 .pins
                 .iter()
                 .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) => size(inner),
+                    SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) => size(inner),
                     _ => 0,
                 })
                 .sum();
@@ -37,6 +37,12 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
             return;
         }
         for item in &query.items {
+            // Discard pin eligibility separately from reads the pin expression executes.
+            for pin in &item.pins {
+                if let SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) = &pin.source {
+                    tables(inner, found);
+                }
+            }
             match &item.kind {
                 SqlBoundItemKind::Table(name) => {
                     // Only caller-sized values remain valid after the surrounding items are

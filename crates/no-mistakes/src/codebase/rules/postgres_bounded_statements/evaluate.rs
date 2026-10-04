@@ -60,7 +60,9 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             item.pins
                 .iter()
                 .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) => Some(evaluate(inner, catalog)),
+                    SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) => {
+                        Some(evaluate(inner, catalog))
+                    }
                     _ => None,
                 })
                 .collect()
@@ -166,7 +168,7 @@ fn keyed(
                 && (!pin.null_safe || catalog.column_is_not_null(name, physical))
                 && match &pin.source {
                     SqlPinSource::Value => true,
-                    SqlPinSource::StoredArray(_) => false,
+                    SqlPinSource::StoredArray(_) | SqlPinSource::ReadQuery(_) => false,
                     SqlPinSource::Items(items) | SqlPinSource::Array { items, .. } => items.iter().all(|other| bounded[*other]),
                     SqlPinSource::Query(_) => subqueries[index]
                         .as_ref()

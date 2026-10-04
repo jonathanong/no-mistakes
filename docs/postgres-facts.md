@@ -704,3 +704,10 @@ sole positional alias without ordinal metadata. Unique-key evaluation uses the
 visible alias and retains the physical column’s nullability. Multi-column
 legacy catalogs remain conservative; an alias named `ctid` does not prove the
 physical system column’s uniqueness. Stored array leaves remain unbounded.
+
+Correlated `IN` and `= ANY` subqueries retain their nested relation reads even
+when they cannot bound an outer key. The Rust `SqlPinSource::ReadQuery` variant
+records that read-only evidence separately from key-eligible `Query` pins.
+Oversized CTE summaries and temporary-source shadowing preserve uncapped
+nested reads; capped inner queries retain their existing bounded behavior.
+Original source locations and normal `no-mistakes` suppression still apply.

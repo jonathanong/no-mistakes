@@ -73,7 +73,7 @@ pub(super) fn extract(
             negated: false,
         } => pin(
             expr,
-            subquery_source(subquery, resolver, scope, positions),
+            Some(subquery_source(subquery, resolver, scope, positions)),
             false,
         ),
         Expr::AnyOp {
@@ -85,7 +85,7 @@ pub(super) fn extract(
             if let Some((item, _)) = resolver.column(left) {
                 let source = match unwrap_expr(right) {
                     Expr::Subquery(subquery) => {
-                        subquery_source(subquery, resolver, scope, positions)
+                        Some(subquery_source(subquery, resolver, scope, positions))
                     }
                     other if constructor(other).is_some() => {
                         finite_array(&constructor(other).unwrap().elem, item, resolver, positions)
@@ -129,12 +129,17 @@ fn subquery_source(
     resolver: &Resolver,
     scope: &Scope,
     positions: super::super::value::PlaceholderPositions<'_>,
-) -> Option<Sourced> {
+) -> Sourced {
     let reads = resolver.reads(subquery);
-    (!reads.certain).then(|| Sourced {
-        source: SqlPinSource::Query(query::bound_query(subquery, scope, positions)),
+    let query = query::bound_query(subquery, scope, positions);
+    Sourced {
+        source: if reads.certain {
+            SqlPinSource::ReadQuery(query)
+        } else {
+            SqlPinSource::Query(query)
+        },
         reads: reads.bare,
-    })
+    }
 }
 
 /// Pin either side of `left = right` that is a column of one item to the other side.

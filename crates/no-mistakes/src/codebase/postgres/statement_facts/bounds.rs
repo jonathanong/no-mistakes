@@ -147,6 +147,8 @@ pub enum SqlPinSource {
     },
     /// `IN (SELECT …)` or `= ANY (SELECT …)`: sized by the subquery.
     Query(SqlBoundQuery),
+    /// An executed correlated IN/ANY subquery: retain its reads, never grant key credit.
+    ReadQuery(SqlBoundQuery),
 }
 
 impl SqlBoundFact {
@@ -159,14 +161,16 @@ impl SqlBoundFact {
 }
 
 impl SqlBoundQuery {
-    fn map_lines(&mut self, map: &impl Fn(usize, usize) -> usize) {
+    // Borrow one callback through the recursive tree instead of specializing each traversal.
+    fn map_lines(&mut self, map: &dyn Fn(usize, usize) -> usize) {
         for item in &mut self.items {
             item.line = map(item.line, item.column);
             if let SqlBoundItemKind::Query(query) = &mut item.kind {
                 query.map_lines(map);
             }
             for pin in &mut item.pins {
-                if let SqlPinSource::Query(query) = &mut pin.source {
+                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &mut pin.source
+                {
                     query.map_lines(map);
                 }
             }
