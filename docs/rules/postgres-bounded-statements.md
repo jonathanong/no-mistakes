@@ -152,8 +152,11 @@ set operation). A statement is bounded when any of these holds:
   that reads a column of the row being checked (`a.id IN (SELECT a.id)`) is not a pin, whatever
   its own bound: every row finds itself in it. References are resolved one query level at a
   time, so a relation of a nested level never hides a reference of an outer one.
-  Schema-qualified references retain their schema: an inner `audit.accounts` cannot
-  hide a reference to the outer `public.accounts`. Quoted dots stay inside one identifier:
+  An explicit table alias hides the table's original name from nested scopes, even when
+  it repeats the table's bare name: `FROM public.accounts accounts` exposes `accounts`
+  as the alias but no longer exposes `public.accounts`. Schema-qualified references
+  retain their schema: an inner `audit.accounts` cannot hide a reference to the outer
+  `public.accounts`. Quoted dots stay inside one identifier:
   a table or alias named `"public.accounts"` cannot hide that schema-qualified reference. A bare column
   belongs to the first level whose tables have it, as PostgreSQL resolves it: in
   `a.id IN (SELECT id FROM currencies LIMIT 1)` the `id` is the account's own when the catalog's

@@ -362,7 +362,11 @@ physical source lines so a suppression on the statement start covers its finding
 is not a bound fact. A fact keeps the `kind`, its
 `line` and `column`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the
 `target` item. Every item keeps its own `line` and `column`, so SQL recovered from
-several source operands maps each relation to the operand that wrote it.
+several source operands maps each relation to the operand that wrote it. Its optional
+`alias` is normalized from SQL; for a base table without an alias it contains the table's
+bare name. `alias_explicit` distinguishes an alias written in SQL from that synthesized
+name. An explicit alias replaces the base relation's name for nested correlated scope
+resolution, even when the alias text matches the table's bare name.
 A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
 fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
 taken from a subquery or a column, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or

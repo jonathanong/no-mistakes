@@ -45,6 +45,8 @@ pub struct SqlBoundItem {
     pub possible_temporary: Option<SqlPossibleTemporary>,
     /// The name columns are qualified by: the alias, else the table's own (bare) name.
     pub alias: Option<String>,
+    /// Whether `alias` was written in SQL rather than filled from a relation name.
+    pub alias_explicit: bool,
     /// Positional column aliases as written; catalog column names are ambiguous when nonempty.
     pub column_aliases: Vec<String>,
     pub line: usize,
@@ -87,6 +89,7 @@ impl SqlBoundItem {
             kind,
             possible_temporary: None,
             alias,
+            alias_explicit: false,
             column_aliases: Vec::new(),
             line,
             column,
