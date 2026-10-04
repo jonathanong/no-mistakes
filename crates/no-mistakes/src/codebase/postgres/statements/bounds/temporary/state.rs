@@ -76,6 +76,24 @@ impl State {
             self.remove(removed, true);
         }
     }
+    pub fn drop_schema(&mut self, name: &str) {
+        let parts = decoded_parts(name);
+        let [schema] = parts.as_slice() else {
+            return;
+        };
+        let removed = self
+            .relations
+            .iter()
+            .filter(|(_, dependencies)| {
+                dependencies.iter().any(|dependency| {
+                    matches!(dependency, Dependency::Physical(source)
+                    if source.len() >= 2 && source[source.len() - 2] == *schema)
+                })
+            })
+            .map(|(name, _)| name.clone())
+            .collect();
+        self.remove(removed, true);
+    }
     pub fn commit(&mut self) {
         let removed = std::mem::take(&mut self.on_commit_drop);
         self.remove(removed, true);

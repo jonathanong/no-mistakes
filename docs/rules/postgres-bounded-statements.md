@@ -35,6 +35,13 @@ materialized view and their temporary dependents; `RESTRICT` preserves their
 identities. Schema-qualified materialized-view names remain distinct from
 temporary namesakes.
 
+`DROP SCHEMA ... CASCADE` retires temporary views depending on qualified physical
+relations in that schema, including transitive temporary dependents. Exact decoded
+schema identifiers preserve quoted case and dots; unrelated schemas stay live.
+Transaction and savepoint rollback restore the dependency state. Bare dependencies
+have no proven schema identity and retain conservative matching behavior. A schema
+drop without `CASCADE` does not retire these dependent temporary views.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`

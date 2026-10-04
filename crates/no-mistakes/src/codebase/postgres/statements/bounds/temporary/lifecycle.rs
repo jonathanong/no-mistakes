@@ -82,6 +82,16 @@ impl TemporaryRelations {
                     self.state.drop(&items::sql_name(name), *cascade);
                 }
             }
+            Statement::Drop {
+                object_type: ObjectType::Schema,
+                names,
+                cascade: true,
+                ..
+            } => {
+                for name in names {
+                    self.state.drop_schema(&items::sql_name(name));
+                }
+            }
             Statement::AlterTable(table) => {
                 for operation in &table.operations {
                     if let AlterTableOperation::RenameTable { table_name } = operation {
