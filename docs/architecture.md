@@ -451,6 +451,10 @@ allocation change or choosing a code correction.
 
 <!-- cspell:ignore RUSTFLAGS flamegraph taskset -->
 
+The [paired Swift corpus controls](performance/swift-corpus-measurement.md)
+compare the original and anonymized benchmark fixtures with one executable and
+an unchanged language frontend control.
+
 ### PostgreSQL finite-array allocation controls
 
 The remaining memory and allocation-call-path work for

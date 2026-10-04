@@ -1,0 +1,160 @@
+{
+  "environment": {
+    "source_commit": "efdcaa9f9874d6ea200a3adb041fd57b7b2838a5",
+    "machine": "x86_64",
+    "kernel": "7.0.0-31-generic",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0\nLLVM version: 22.1.2\n",
+    "rayon_threads": 2,
+    "timing_cpus": [22, 23],
+    "allocation_cpus": [22],
+    "profile": "release, workspace full LTO/codegen-units=1, force-frame-pointers=yes, incremental=0"
+  },
+  "corpora": [
+    {
+      "label": "original",
+      "commit": "93d48916558e11b29fce60ae7332320acb7959b4",
+      "files": 15,
+      "bytes": 4175,
+      "swift_files": 10,
+      "swift_bytes": 2529
+    },
+    {
+      "label": "anonymized",
+      "commit": "28d21f942b4b20a5b7e0a6396fa663a5e5d1371c",
+      "files": 15,
+      "bytes": 4206,
+      "swift_files": 10,
+      "swift_bytes": 2559
+    }
+  ],
+  "allocations": [
+    {
+      "run": "original",
+      "phase": "calibration",
+      "samples": 12,
+      "calls_median": 1.0,
+      "bytes_median": 4096.0,
+      "peak_median": 4096.0,
+      "peak_min": 4096,
+      "peak_max": 4096
+    },
+    {
+      "run": "original",
+      "phase": "swift",
+      "samples": 12,
+      "calls_median": 983.0,
+      "bytes_median": 82963.0,
+      "peak_median": 36484.0,
+      "peak_min": 36484,
+      "peak_max": 36484
+    },
+    {
+      "run": "original",
+      "phase": "extract",
+      "samples": 12,
+      "calls_median": 5709.5,
+      "bytes_median": 705673.0,
+      "peak_median": 209648.0,
+      "peak_min": 209648,
+      "peak_max": 209796
+    },
+    {
+      "run": "original",
+      "phase": "edges",
+      "samples": 12,
+      "calls_median": 10838.0,
+      "bytes_median": 1268482.0,
+      "peak_median": 231905.0,
+      "peak_min": 231689,
+      "peak_max": 232177
+    },
+    {
+      "run": "anonymized",
+      "phase": "calibration",
+      "samples": 12,
+      "calls_median": 1.0,
+      "bytes_median": 4096.0,
+      "peak_median": 4096.0,
+      "peak_min": 4096,
+      "peak_max": 4096
+    },
+    {
+      "run": "anonymized",
+      "phase": "swift",
+      "samples": 12,
+      "calls_median": 987.0,
+      "bytes_median": 83156.0,
+      "peak_median": 36576.0,
+      "peak_min": 36576,
+      "peak_max": 167902
+    },
+    {
+      "run": "anonymized",
+      "phase": "extract",
+      "samples": 12,
+      "calls_median": 5709.5,
+      "bytes_median": 705747.0,
+      "peak_median": 209722.0,
+      "peak_min": 209500,
+      "peak_max": 1787718
+    },
+    {
+      "run": "anonymized",
+      "phase": "edges",
+      "samples": 12,
+      "calls_median": 10838.0,
+      "bytes_median": 1268524.0,
+      "peak_median": 231903.0,
+      "peak_min": 231701,
+      "peak_max": 232121
+    },
+    {
+      "run": "original-repeat",
+      "phase": "calibration",
+      "samples": 12,
+      "calls_median": 1.0,
+      "bytes_median": 4096.0,
+      "peak_median": 4096.0,
+      "peak_min": 4096,
+      "peak_max": 4096
+    },
+    {
+      "run": "original-repeat",
+      "phase": "swift",
+      "samples": 12,
+      "calls_median": 983.0,
+      "bytes_median": 82963.0,
+      "peak_median": 36484.0,
+      "peak_min": 36484,
+      "peak_max": 167810
+    },
+    {
+      "run": "original-repeat",
+      "phase": "extract",
+      "samples": 12,
+      "calls_median": 5709.5,
+      "bytes_median": 705747.0,
+      "peak_median": 209722.0,
+      "peak_min": 209500,
+      "peak_max": 1978058
+    },
+    {
+      "run": "original-repeat",
+      "phase": "edges",
+      "samples": 12,
+      "calls_median": 10838.5,
+      "bytes_median": 1268672.0,
+      "peak_median": 232013.0,
+      "peak_min": 231753,
+      "peak_max": 232261
+    }
+  ],
+  "timing_changes": {
+    "swift_anonymized": [-0.5036, -0.0464, 0.3003],
+    "swift_original_repeat": [-1.8952, -1.4355, -1.0926],
+    "language_anonymized": [-3.0169, -2.3665, -1.8149],
+    "language_original_repeat": [-3.8324, -3.3043, -2.6628]
+  },
+  "timing_change_units": "percent; lower95, estimate, upper95",
+  "limitations": "Local x86_64 requested Rust heap measurements do not reproduce or explain ARM CodSpeed. Sparse stack samples are not whole-run attribution."
+}
