@@ -9,7 +9,7 @@ mod indexed;
 mod leaves;
 pub(super) use leaves::constructor;
 mod scalar;
-pub(super) use indexed::indexed_base;
+pub(super) use indexed::{argument_base, indexed_base};
 
 /// Literal/bind leaves are caller-sized; a column leaf requires catalog scalar evidence.
 /// Nested constructors flatten, so their leaves need the same proof rather than an arity guess.

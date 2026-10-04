@@ -371,6 +371,10 @@ consume an array-valued argument inside a finite constructor. Their scalar resul
 provides one candidate value; argument row dependencies still require the owner
 (`o`) to be bounded independently. Direct stored-array leaves remain unbounded,
 and unknown, unqualified, array-returning and set-returning calls remain opaque.
+Casts, domains and array slices inside those trusted reducers retain both their
+argument owner and slice-bound row dependencies. They do not impose scalar-leaf
+requirements on an argument whose shape cannot change the reducer result.
+The same wrappers used as direct constructor leaves remain conservative.
 
 Unknown SELECT-list function cardinality is opaque: a custom function can return
 a set of database rows even when its arguments are bind values. The rule trusts

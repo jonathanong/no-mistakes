@@ -5,6 +5,8 @@ use super::{
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, unwrap_expr};
 use sqlparser::ast::{DataType, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
 
+mod wrappers;
+
 pub(super) fn collect(
     expr: &Expr,
     resolver: &Resolver,
@@ -15,6 +17,18 @@ pub(super) fn collect(
     positions: super::super::super::super::value::PlaceholderPositions<'_>,
 ) -> Option<()> {
     match unwrap_expr(expr) {
+        Expr::Cast { expr, .. } if out.is_none() => {
+            collect(expr, resolver, None, indexed, types, caller_only, positions)
+        }
+        Expr::CompoundFieldAccess { root, access_chain } if out.is_none() => wrappers::collect(
+            root,
+            access_chain,
+            resolver,
+            indexed,
+            types,
+            caller_only,
+            positions,
+        ),
         Expr::Value(_) | Expr::Interval(_) => Some(()),
         expr if fixed_scalar_boolean(expr) => Some(()),
         Expr::TypedString(literal) if !matches!(literal.data_type, DataType::Array(_)) => {
