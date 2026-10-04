@@ -286,7 +286,7 @@ projection exposes that name. Function column alias lists and known scalar built
 output names also determine ownership. Unknown functions and wildcard projections
 retain conservative unknown-column ownership.
 
-Known scalar table functions expose their default position column when requested. UNNEST column names are inferred only for syntactically proven scalar arrays; composite and unknown element layouts retain unknown ownership. Parenthesized joins with wrapper aliases also retain unknown ownership when the child labels cannot describe the renamed output.
+Known scalar table functions expose their default position column when requested. UNNEST column names are inferred only for syntactically proven scalar arrays; composite and unknown element layouts retain unknown ownership. Parenthesized joins with a wrapper alias preserve the child tables' catalog column ownership when the alias does not rename output columns. For example, `id IN (SELECT id FROM (currencies c CROSS JOIN currencies d) j LIMIT 1)` remains correlated when neither child has `id`. Explicit output-column alias lists retain unknown ownership when the child labels cannot describe the renamed output.
 
 Finite array constructors also accept explicitly known scalar builtin calls such as
 `ARRAY[pg_catalog.lower($1)]` when their arguments preserve finite leaves. Unknown

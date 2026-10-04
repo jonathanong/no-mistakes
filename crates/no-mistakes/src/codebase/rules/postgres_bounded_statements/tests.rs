@@ -530,4 +530,5 @@ mod having_only;
 
 mod function_inputs;
 
+mod aliased_nested_joins;
 mod qualified_limit_functions;
