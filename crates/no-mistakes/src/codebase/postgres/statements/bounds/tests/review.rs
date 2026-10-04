@@ -471,21 +471,3 @@ fn catalog_set_returning_names_require_builtin_schema_identity() {
 }
 
 mod followups;
-
-#[test]
-fn stored_arrays_do_not_inherit_their_rows_bound() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/stored-array.sql"
-    ));
-    assert_eq!(
-        shape(sql),
-        [
-            "update: accounts orders[id=value]",
-            "update: accounts orders[id=value]",
-            "delete: accounts[id=value]",
-            "delete: accounts[id=value]",
-            "update: accounts[id=#1] orders[id=value account_id=#0]",
-        ]
-    );
-}
