@@ -74,3 +74,27 @@ fn joined_aliases_do_not_shadow_earlier_internal_reads() {
         assert_eq!(!names(query).is_empty(), unbounded, "{query}");
     }
 }
+
+#[test]
+fn a_later_join_child_cannot_shadow_an_earlier_on_outer_read() {
+    let sql = std::fs::read_to_string(fixture_root().join("sql/join-forward-alias.sql")).unwrap();
+    assert_eq!(
+        names(&sql),
+        ["accounts", "accounts", "accounts", "accounts"]
+    );
+}
+
+#[test]
+fn each_on_join_variant_keeps_its_earlier_namespace() {
+    let sql =
+        std::fs::read_to_string(fixture_root().join("sql/join-on-scope-controls.sql")).unwrap();
+    let queries: Vec<_> = sql
+        .lines()
+        .filter(|line| line.starts_with("DELETE"))
+        .collect();
+    let expected = [true, true, true, true, true, true, true, false];
+    assert_eq!(queries.len(), expected.len());
+    for (query, outward) in queries.into_iter().zip(expected) {
+        assert_eq!(!names(query).is_empty(), outward, "{query}");
+    }
+}

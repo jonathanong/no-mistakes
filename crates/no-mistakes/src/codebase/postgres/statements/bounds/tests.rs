@@ -508,3 +508,5 @@ mod query;
 
 mod conditional_table_function_inputs;
 mod wrapped_scalar_reducer_arrays;
+
+mod join_on_scope;

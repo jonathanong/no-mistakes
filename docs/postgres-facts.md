@@ -380,7 +380,7 @@ name. An explicit alias replaces the base relation's name for nested correlated 
 resolution, even when the alias text matches the table's bare name. A parenthesized
 join alias similarly projects only its own qualifier outward while preserving child
 names inside the join and physical child metadata for bare-column ownership. Internal
-`ON` reads retain the completed child namespace before the joined alias is exposed.
+`ON` reads retain the completed child namespace before the joined alias is exposed. Each `ON` uses only the children already visited at that join; a later child alias cannot shadow an earlier outward reference.
 `LATERAL` retains its preceding-source snapshot, so the joined alias or later children
 cannot retroactively hide its outward references.
 Subquery pins also retain `qualified_reads` when a qualified column did not match an inner

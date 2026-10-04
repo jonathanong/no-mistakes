@@ -176,7 +176,8 @@ set operation). A statement is bounded when any of these holds:
   An alias on an entire parenthesized join also hides its child table names and aliases
   from outward column and whole-row references. The children stay visible inside its
   `ON` and `LATERAL` expressions; nested derived queries retain their own namespaces.
-  The joined alias is unavailable inside its own `ON` or `LATERAL` body. A reference there
+  The joined alias is unavailable inside its own `ON` or `LATERAL` body.
+  A later join child is also unavailable in an earlier `ON`, so that alias cannot erase an outer write reference. A reference there
   to a matching outer write alias stays correlated even after the join exposes that alias.
   References retain their schema: an inner `audit.accounts` cannot hide a reference to the outer
   `public.accounts`. When the configured catalog explicitly selects `public`, an inner
