@@ -180,7 +180,9 @@ set operation). A statement is bounded when any of these holds:
   `a.id IN (SELECT id FROM currencies LIMIT 1)` the `id` is the account's own when the catalog's
   `currencies` has no `id` column, so that subquery is not a pin either. A column of a derived
   table, a function or a CTE is taken as that source's own, and so is any column of a table
-  the catalog does not describe. A `LATERAL` source that reads
+  the catalog does not describe. A derived-table column alias list renames only the leading
+  projected columns: `(SELECT status, id FROM orders) q(kind)` still exposes `id` locally.
+  A `LATERAL` source that reads
   earlier FROM items is sized per row of them, so it bounds nothing pinned to it; the
   relations inside it are still judged. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
