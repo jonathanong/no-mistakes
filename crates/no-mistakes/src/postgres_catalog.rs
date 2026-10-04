@@ -28,6 +28,9 @@ pub struct PostgresCatalogOptions {
     /// `complete` (the default) or `ordering`.
     #[serde(default)]
     pub coverage: PostgresCatalogCoverage,
+    /// Schemas whose existence and complete relation-name sets are needed for search_path.
+    #[serde(default)]
+    pub search_path_schemas: Vec<String>,
 }
 
 /// Observe committed database metadata in one repeatable-read, read-only transaction.
@@ -35,6 +38,13 @@ pub struct PostgresCatalogOptions {
 pub fn generate(options: &PostgresCatalogOptions) -> Result<serde_json::Value> {
     if options.schema.is_empty() || options.schema.contains('\0') {
         bail!("schema must be a non-empty PostgreSQL schema name");
+    }
+    if options
+        .search_path_schemas
+        .iter()
+        .any(|schema| schema.is_empty() || schema.contains('\0'))
+    {
+        bail!("searchPathSchemas must contain non-empty PostgreSQL schema names");
     }
     if options.connection_env.is_empty() || options.connection_env.contains(['=', '\0']) {
         bail!("connectionEnv must name an environment variable");
@@ -56,7 +66,11 @@ pub fn generate(options: &PostgresCatalogOptions) -> Result<serde_json::Value> {
         "--set",
         "ON_ERROR_STOP=1",
         "--command",
-        &sql::catalog_query(&options.schema, options.coverage),
+        &sql::catalog_query_with_search_path(
+            &options.schema,
+            options.coverage,
+            &options.search_path_schemas,
+        ),
     ]);
     let output = crate::invocation::command_output(&mut command)
         .context("failed to execute psql; install PostgreSQL client tools")?;

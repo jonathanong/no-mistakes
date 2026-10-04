@@ -56,6 +56,7 @@ fn catalog() -> SchemaCatalog {
         },
     );
     SchemaCatalog {
+        search_path_evidence: Default::default(),
         tables,
         ..Default::default()
     }

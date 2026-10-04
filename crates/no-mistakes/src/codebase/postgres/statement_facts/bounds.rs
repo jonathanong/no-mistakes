@@ -32,6 +32,8 @@ pub struct SqlBoundQuery {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundItem {
     pub kind: SqlBoundItemKind,
+    /// A request-local temporary relation whose identity needs catalog evidence.
+    pub possible_temporary: Option<SqlPossibleTemporary>,
     /// The name columns are qualified by: the alias, else the table's own (bare) name.
     pub alias: Option<String>,
     /// Positional column aliases as written; catalog column names are ambiguous when nonempty.
@@ -45,6 +47,14 @@ pub struct SqlBoundItem {
     /// Bare columns of a `LATERAL` source that none of its own relations is known to own: it
     /// reads the items before it when the catalog shows that none of their tables has them.
     pub lateral_reads: Vec<SqlBareRead>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlPossibleTemporary {
+    /// A three-part `database.pg_temp.name` declaration must match the current database.
+    pub database_qualifier: Option<String>,
+    /// Explicit search-path schemas before `pg_temp`, in PostgreSQL resolution order.
+    pub earlier_schemas: Vec<String>,
 }
 
 /// A bare column that a subquery reads, with the base tables that could own it.
@@ -66,6 +76,7 @@ impl SqlBoundItem {
     ) -> Self {
         Self {
             kind,
+            possible_temporary: None,
             alias,
             column_aliases: Vec::new(),
             line,

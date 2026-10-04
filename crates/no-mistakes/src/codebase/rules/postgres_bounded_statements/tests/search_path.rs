@@ -1,0 +1,36 @@
+use super::offenders;
+use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};
+
+#[test]
+fn search_path_uses_only_explicit_schema_relation_evidence() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-search-path-evidence.sql"
+    ));
+    let catalog = SchemaCatalog::from_json(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/schema-search-path-evidence.json"
+    )))
+    .unwrap();
+    let facts = extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    // An omitted pg_catalog precedes even an explicitly listed pg_temp.
+    assert_eq!(
+        facts.bounds[0].query.items[0]
+            .possible_temporary
+            .as_ref()
+            .unwrap()
+            .earlier_schemas,
+        ["pg_catalog", "missing_schema"]
+    );
+    let names = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| offenders(fact, &catalog))
+        .map(|offender| offender.table)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        names,
+        ["orders", "orders", "orders", "accounts", "accounts", "accounts", "accounts"]
+    );
+}

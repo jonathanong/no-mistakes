@@ -63,6 +63,12 @@ run in PostgreSQL, so recovered SQL in those contexts leaves the partition attac
 
 `PREPARE` analyzes a `SELECT INTO TEMP` without creating its destination. The temporary identity begins when its `EXECUTE` runs with the prepared argument count; `DEALLOCATE` before execution leaves the catalog relation visible. A duplicate `PREPARE` keeps the original definition because PostgreSQL rejects the duplicate.
 
+When an explicit `search_path` places schemas before `pg_temp`, a generated catalog can
+prove whether those schemas exist and which relation names they contain. Generate it
+with `--search-path-schema` for each earlier schema. A missing or incomplete evidence
+entry leaves the rule conservative; an earlier relation outside the selected catalog
+is treated as unknown, rather than as a namesake table from the selected schema.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`

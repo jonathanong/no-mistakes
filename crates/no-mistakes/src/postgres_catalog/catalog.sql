@@ -128,4 +128,5 @@ SELECT jsonb_build_object('formatVersion', 2, 'coverage', __COVERAGE__, 'schema'
     'enums', COALESCE((SELECT jsonb_object_agg(key, value) FROM enums), '{}'::jsonb),
     'views', COALESCE((SELECT jsonb_object_agg(key, value) FROM views), '{}'::jsonb)
   ) ELSE '{}'::jsonb END
+  __SEARCH_PATH_EVIDENCE__
 WHERE EXISTS (SELECT 1 FROM selected);

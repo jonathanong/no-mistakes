@@ -120,6 +120,9 @@ impl TemporaryRelations {
                     item.kind = SqlBoundItemKind::Opaque;
                     item.pins.clear();
                 }
+                SqlBoundItemKind::Table(name) => {
+                    item.possible_temporary = self.state.possible_temporary(name);
+                }
                 SqlBoundItemKind::Query(query) => self.query(query),
                 _ => {}
             }

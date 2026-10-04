@@ -1,7 +1,9 @@
 //! Request-local SQL relation identities and dependency closure.
 mod ownership;
 use crate::codebase::postgres::decoded_parts;
-use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
+use crate::codebase::postgres::statements::{
+    SqlBoundItemKind, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -26,7 +28,8 @@ pub(super) struct State {
     pub partitioned: BTreeSet<String>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
-    pub local_path: Option<bool>,
+    pub earlier_schemas: Option<Vec<String>>,
+    pub local_path: Option<(bool, Option<Vec<String>>)>,
 }
 impl Default for State {
     fn default() -> Self {
@@ -36,6 +39,7 @@ impl Default for State {
             partitioned: BTreeSet::new(),
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
+            earlier_schemas: None,
             local_path: None,
         }
     }
@@ -52,6 +56,16 @@ impl State {
         }
     }
 
+    pub fn possible_temporary(&self, name: &str) -> Option<SqlPossibleTemporary> {
+        let parts = decoded_parts(name);
+        (parts.len() == 1 && !self.temp_first && self.relations.contains_key(&parts[0]))
+            .then(|| self.earlier_schemas.clone())
+            .flatten()
+            .map(|earlier_schemas| SqlPossibleTemporary {
+                database_qualifier: None,
+                earlier_schemas,
+            })
+    }
     pub fn contains(&self, name: &str) -> bool {
         let parts = decoded_parts(name);
         (parts.len() == 1 && self.temp_first || parts.len() == 2 && parts[0] == "pg_temp")

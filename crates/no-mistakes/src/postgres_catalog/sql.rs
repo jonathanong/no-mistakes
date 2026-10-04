@@ -15,8 +15,29 @@ fn quote_literal(value: &str) -> String {
 /// `pg_catalog` leads `search_path`, so objects in the selected schema cannot shadow the built-ins
 /// this query calls. The selected schema follows, so its types render unqualified, the way the
 /// rules compare them, while types from other schemas stay qualified.
-pub(super) fn catalog_query(schema: &str, coverage: PostgresCatalogCoverage) -> String {
+pub(super) fn catalog_query_with_search_path(
+    schema: &str,
+    coverage: PostgresCatalogCoverage,
+    search_path_schemas: &[String],
+) -> String {
     let complete = coverage == PostgresCatalogCoverage::Complete;
+    let evidence = if search_path_schemas.is_empty() {
+        String::new()
+    } else {
+        let requested = search_path_schemas
+            .iter()
+            .map(|name| format!("({})", quote_literal(name)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            " || jsonb_build_object('searchPathEvidence', (\
+             SELECT jsonb_object_agg(requested.name, CASE WHEN n.oid IS NULL THEN 'null'::jsonb \
+             ELSE COALESCE((SELECT jsonb_agg(c.relname ORDER BY c.relname) FROM pg_class c \
+             WHERE c.relnamespace = n.oid), '[]'::jsonb) END) \
+             FROM (VALUES {requested}) requested(name) \
+             LEFT JOIN pg_namespace n ON n.nspname = requested.name))"
+        )
+    };
     // The schema is substituted last: its text must never be scanned for placeholders.
     let query = include_str!("catalog.sql")
         .replace(
@@ -24,6 +45,7 @@ pub(super) fn catalog_query(schema: &str, coverage: PostgresCatalogCoverage) -> 
             if complete { "'complete'" } else { "'ordering'" },
         )
         .replace("__COMPLETE__", if complete { "true" } else { "false" })
+        .replace("__SEARCH_PATH_EVIDENCE__", &evidence)
         .replace("__SCHEMA__", &quote_literal(schema));
     format!(
         "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\n\

@@ -70,7 +70,7 @@ const {
 
 ## PostgreSQL catalog generation
 
-`generatePostgresCatalog({ connectionEnv, schema, coverage })` asynchronously
+`generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live
 PostgreSQL schema. `coverage` is `"complete"` (the default; every catalog rule
 accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requires
@@ -651,4 +651,4 @@ addon avoids UTF-16 string copies at the N-API boundary.
   (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.
 
-`generatePostgresCatalog` is a runtime export. Its named public types are `PostgresCatalogOptions`, `PostgresCatalogCoverage`, `PostgresCompleteCatalog`, `PostgresOrderingCatalog` and their union `PostgresCatalog`. The overloads return `PostgresOrderingCatalog` for `coverage: "ordering"` and `PostgresCompleteCatalog` otherwise.
+`generatePostgresCatalog` is a runtime export. Its named public types are `PostgresCatalogOptions`, `PostgresCatalogCoverage`, `PostgresSearchPathEvidence`, `PostgresCompleteCatalog`, `PostgresOrderingCatalog` and their union `PostgresCatalog`. The overloads return `PostgresOrderingCatalog` for `coverage: "ordering"` and `PostgresCompleteCatalog` otherwise. `searchPathSchemas` opts into exact schema existence and relation-name evidence in `searchPathEvidence`; an omitted entry is unknown.

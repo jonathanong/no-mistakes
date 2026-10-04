@@ -43,8 +43,9 @@ impl TemporaryRelations {
                 self.state.commit();
                 self.transaction = None;
                 self.savepoints.clear();
-                if let Some(before) = self.state.local_path.take() {
-                    self.state.temp_first = before;
+                if let Some((temp_first, earlier_schemas)) = self.state.local_path.take() {
+                    self.state.temp_first = temp_first;
+                    self.state.earlier_schemas = earlier_schemas;
                 }
                 if *chain {
                     self.transaction = Some(self.state.clone());
@@ -96,7 +97,8 @@ impl TemporaryRelations {
                 ..
             }) if state::key(&items::sql_name(variable)) == "search_path" => {
                 if *scope == Some(ContextModifier::Local) && self.state.local_path.is_none() {
-                    self.state.local_path = Some(self.state.temp_first);
+                    self.state.local_path =
+                        Some((self.state.temp_first, self.state.earlier_schemas.clone()));
                 } else if *scope != Some(ContextModifier::Local) {
                     // A session assignment replaces a preceding LOCAL assignment at commit.
                     self.state.local_path = None;
@@ -116,19 +118,31 @@ impl TemporaryRelations {
                         _ => None,
                     })
                     .collect();
-                self.state.temp_first = names.is_some_and(|parts| {
-                    parts
-                        .into_iter()
-                        .flatten()
-                        .position(|name| name == "pg_temp")
-                        .is_none_or(|index| index == 0)
+                let path = names.map(|parts| parts.into_iter().flatten().collect::<Vec<_>>());
+                let pg_temp = path
+                    .as_ref()
+                    .and_then(|parts| parts.iter().position(|name| name == "pg_temp"));
+                let earlier = pg_temp.and_then(|index| {
+                    path.as_ref().map(|parts| {
+                        let mut earlier = parts[..index].to_vec();
+                        // PostgreSQL searches an omitted pg_catalog before even an explicitly
+                        // listed pg_temp. A catalog relation can therefore shadow a temp name.
+                        if !parts.iter().any(|name| name == "pg_catalog") {
+                            earlier.insert(0, "pg_catalog".into());
+                        }
+                        earlier
+                    })
                 });
+                self.state.temp_first =
+                    path.is_some() && earlier.as_ref().is_none_or(Vec::is_empty);
+                self.state.earlier_schemas = earlier.filter(|schemas| !schemas.is_empty());
             }
             Statement::Reset(reset)
                 if matches!(&reset.reset, Reset::ALL)
                     || matches!(&reset.reset, Reset::ConfigurationParameter(name) if state::key(&items::sql_name(name)) == "search_path") =>
             {
                 self.state.temp_first = true;
+                self.state.earlier_schemas = None;
                 self.state.local_path = None;
             }
             _ => {}
