@@ -845,6 +845,9 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
     index,
     /parsePostgresSql\(sources: PostgresSqlSource\[\]\): Promise<PostgresSqlFacts\[\]>;/,
   );
+  const drop = readFileSync(join(packageRoot, "postgres-drop-types.d.ts"), "utf8");
+  assert.match(drop, /export interface PostgresSqlDrop/);
+  assert.match(declarations, /export type \* from "\.\/postgres-drop-types";/);
   assert.match(declarations, /schemaVersion: 1;/);
   assert.match(declarations, /structuralIdentity: string;/);
   assert.match(declarations, /functions: PostgresSqlFunctionReference\[\];/);

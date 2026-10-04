@@ -1,3 +1,5 @@
+import type { PostgresSqlDrop } from "./postgres-drop-types";
+export type * from "./postgres-drop-types";
 import type {
   PostgresSqlConditionalBranch,
   PostgresSqlProceduralBlock,
@@ -123,16 +125,6 @@ export interface PostgresSqlView {
   dependencies: PostgresSqlName[];
   dependenciesComplete: boolean;
   functions: PostgresSqlFunctionReference[];
-}
-export interface PostgresSqlDrop {
-  objectType: string;
-  names: PostgresSqlName[];
-  table: PostgresSqlName | null;
-  signatures: string[];
-  ifExists: boolean;
-  cascade: boolean;
-  restrict: boolean;
-  temporary: boolean;
 }
 export interface PostgresSqlTriggerTransition {
   kind: string;
