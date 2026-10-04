@@ -17,6 +17,7 @@ mod numeric_literal;
 mod offset;
 mod on_conflict;
 mod parse;
+pub(crate) mod predicate_normalization;
 pub(crate) mod prepared;
 mod profiles;
 mod rule_options;

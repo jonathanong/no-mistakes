@@ -28,12 +28,9 @@ pub(super) fn of(
                 transparent_int4_casts,
             );
             SqlConjunctFact {
-                text: leaf
-                    .to_string()
-                    .to_ascii_lowercase()
-                    .split_whitespace()
-                    .collect::<Vec<_>>()
-                    .join(" "),
+                text: crate::codebase::postgres::predicate_normalization::normalize(
+                    &leaf.to_string(),
+                ),
                 cursor_columns: cursor
                     .as_ref()
                     .map_or_else(Vec::new, |cursor| cursor.columns.clone()),
