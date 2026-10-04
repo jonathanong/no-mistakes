@@ -46,8 +46,10 @@ edges before a later physical cascade. PostgreSQL's `ALTER TABLE ... RENAME TO`
 form also renames ordinary and materialized views: their declared node identities
 move with their dependency edges, so a later cascade still retires temporary
 dependents. Qualified names preserve their schema; ambiguous bare declarations
-retain both candidates. A rename onto another known qualified view is rejected
-and leaves the graph unchanged.
+retain both candidates. A rename onto another known qualified view preserves the
+colliding source identity and edges. With a bare source, each schema candidate is checked separately:
+a collision in a later schema does not prevent a valid earlier-schema rename.
+An exact qualified collision leaves the graph unchanged.
 
 An explicitly parsed `search_path` also limits which physical schemas a bare
 `DROP` or `RENAME` target can name. For example, with `public, pg_temp`, dropping
