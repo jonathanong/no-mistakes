@@ -138,7 +138,7 @@ fn executed_sql_suppression_matches_marker_provenance() {
     let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
         &path,
         &source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("", &["query".to_string()]),
     );
     let executed = embedded
         .calls
