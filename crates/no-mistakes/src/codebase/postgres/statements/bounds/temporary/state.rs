@@ -118,6 +118,29 @@ impl State {
         self.relations.retain(|name, _| !removed.contains(name));
         self.on_commit_drop.retain(|name| !removed.contains(name));
     }
+    pub fn rename_schema(&mut self, old: &str, new: &str) {
+        let old = decoded_parts(old);
+        let new = decoded_parts(new);
+        let ([old], [new]) = (old.as_slice(), new.as_slice()) else {
+            return;
+        };
+        for dependencies in self.relations.values_mut() {
+            *dependencies = dependencies
+                .iter()
+                .map(|dependency| match dependency {
+                    Dependency::Physical(parts)
+                        if parts.len() >= 2 && parts[parts.len() - 2] == *old =>
+                    {
+                        let mut renamed = parts.clone();
+                        let schema = renamed.len() - 2;
+                        renamed[schema] = new.to_string();
+                        Dependency::Physical(renamed)
+                    }
+                    other => other.clone(),
+                })
+                .collect();
+        }
+    }
     pub fn rename(&mut self, old: &str, new: &str) {
         if !self.contains(old) {
             let old = decoded_parts(old);

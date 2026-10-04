@@ -18,6 +18,7 @@ mod repeated_begin;
 mod review;
 mod review_table;
 mod schema_drop;
+mod schema_rename;
 mod table_review;
 mod temporary_view;
 
