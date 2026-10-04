@@ -1,4 +1,5 @@
 //! Temporary relation identity follows SQL source order, never crossing source boundaries.
+mod identity;
 mod lifecycle;
 mod state;
 pub(super) mod view_relations;
@@ -55,7 +56,10 @@ impl TemporaryRelations {
                         .as_ref()
                         .is_none_or(|parent| self.state.partitioned_parent(parent))
                 {
-                    self.insert(name.clone());
+                    let inherited = parent.as_ref().and_then(|parent| {
+                        self.state.possible_temporary(parent)?.database_qualifier
+                    });
+                    self.state.insert(&name, BTreeSet::new(), inherited);
                     if table.partition_by.is_some() {
                         self.state.partitioned.insert(state::key(&name));
                     }
@@ -70,14 +74,16 @@ impl TemporaryRelations {
             Statement::CreateView(view) => {
                 let name = sql_name(&view.name);
                 if view.temporary
+                    || temporary_name(&view.name)
                     || dependencies.iter().any(|dependency| match dependency {
-                        Dependency::Temporary(name) => {
+                        Dependency::Temporary(name) | Dependency::ConditionalTemporary(name, _) => {
                             !dependencies.contains(&Dependency::Physical(vec![name.clone()]))
                         }
                         Dependency::Physical(_) => false,
                     })
                 {
-                    self.state.relations.insert(state::key(&name), dependencies);
+                    let inherited = self.state.dependency_database(&dependencies);
+                    self.state.insert(&name, dependencies, inherited);
                 } else {
                     self.state.physical_views.insert(
                         crate::codebase::postgres::decoded_parts(&name),
@@ -112,9 +118,7 @@ impl TemporaryRelations {
     }
 
     fn insert(&mut self, name: String) {
-        self.state
-            .relations
-            .insert(state::key(&name), BTreeSet::new());
+        self.state.insert(&name, BTreeSet::new(), None);
     }
 
     fn query(&self, query: &mut SqlBoundQuery) {
@@ -152,4 +156,5 @@ fn first_select(expr: &SetExpr) -> Option<&sqlparser::ast::Select> {
 fn temporary_name(name: &ObjectName) -> bool {
     let parts = crate::codebase::postgres::decoded_parts(&sql_name(name));
     matches!(parts.as_slice(), [schema, _] if schema == "pg_temp")
+        || identity::database(&sql_name(name)).is_some()
 }

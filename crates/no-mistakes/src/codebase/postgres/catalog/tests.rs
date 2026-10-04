@@ -12,6 +12,7 @@ impl SchemaCatalog {
     }
 }
 
+mod current_database;
 mod edges;
 mod errors;
 mod expressions;

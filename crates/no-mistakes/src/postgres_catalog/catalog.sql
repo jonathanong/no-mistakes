@@ -122,6 +122,7 @@ WITH selected AS (
   FROM relations r WHERE r.relkind IN ('v', 'm')
 )
 SELECT jsonb_build_object('formatVersion', 2, 'coverage', __COVERAGE__, 'schema', __SCHEMA__,
+  'currentDatabase', current_database(),
   'tables', COALESCE((SELECT jsonb_object_agg(name, value) FROM tables), '{}'::jsonb))
   || CASE WHEN __COMPLETE__ THEN jsonb_build_object(
     'functions', COALESCE((SELECT jsonb_object_agg(key, value) FROM functions), '{}'::jsonb),

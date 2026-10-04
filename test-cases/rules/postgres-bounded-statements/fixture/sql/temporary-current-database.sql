@@ -1,0 +1,34 @@
+-- A database name with a quoted dot is one identity part, never a schema.
+CREATE TABLE "Audit.Database".pg_temp.accounts (id int);
+SELECT * FROM accounts;
+SELECT * FROM "Audit.Database".pg_temp.accounts;
+SELECT * FROM other.pg_temp.accounts;
+CREATE VIEW orders AS SELECT * FROM accounts;
+SELECT * FROM orders;
+ALTER TABLE "Audit.Database".pg_temp.accounts RENAME TO order_lines;
+SELECT * FROM accounts;
+SELECT * FROM order_lines;
+SELECT * FROM orders;
+DROP TABLE other.pg_temp.order_lines CASCADE;
+SELECT * FROM orders;
+DROP TABLE "Audit.Database".pg_temp.order_lines CASCADE;
+SELECT * FROM orders;
+BEGIN;
+CREATE TABLE "Audit.Database".pg_temp.accounts (id int);
+SAVEPOINT s;
+DROP TABLE "Audit.Database".pg_temp.accounts;
+SELECT * FROM accounts;
+ROLLBACK TO s;
+SELECT * FROM accounts;
+ROLLBACK;
+SELECT * FROM accounts;
+CREATE TABLE "Audit.Database".pg_temp.accounts (id int);
+DISCARD TEMP;
+SELECT * FROM accounts;
+-- These are different schema spellings, not pg_temp.
+CREATE TABLE "Audit.Database".pg_temp_like.accounts (id int);
+CREATE TABLE "Audit.Database"."pg_temp.accounts" (id int);
+SELECT * FROM accounts;
+CREATE TEMP TABLE pg_temp.accounts (id int);
+SELECT * FROM "Audit.Database".pg_temp.accounts;
+SELECT * FROM other.pg_temp.accounts;

@@ -1,3 +1,4 @@
+mod current_database;
 mod fixture_configs;
 mod nonrecursive_ctes;
 mod recovered_table;

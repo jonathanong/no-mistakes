@@ -790,6 +790,12 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
     /export interface PostgresOrderingCatalog \{\n  formatVersion: 2;\n  coverage: "ordering";/,
   );
   assert.match(types, /export type PostgresCatalog = /);
+  for (const kind of ["Ordering", "Complete"]) {
+    assert.match(
+      types,
+      new RegExp(`export interface Postgres${kind}Catalog \\{[^}]*currentDatabase\\?: string;`),
+    );
+  }
   for (const fact of ["functions", "enums", "views"]) {
     assert.match(types, new RegExp(`  ${fact}: Record<string, PostgresCatalog`));
   }

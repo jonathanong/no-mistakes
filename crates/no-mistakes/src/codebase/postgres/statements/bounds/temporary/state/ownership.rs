@@ -3,11 +3,11 @@ use super::{key, State};
 
 impl State {
     pub fn partitioned_parent(&self, parent: &str) -> bool {
-        self.contains(parent) && self.partitioned.contains(&key(parent))
+        self.matches_identity(parent) && self.partitioned.contains(&key(parent))
     }
 
     pub fn attach_partition(&mut self, parent: &str, child: &str) {
-        if self.partitioned_parent(parent) && self.contains(child) {
+        if self.partitioned_parent(parent) && self.matches_identity(child) {
             // PostgreSQL rejects attaching a relation that already belongs to a parent.
             self.partitions.entry(key(child)).or_insert(key(parent));
         }
@@ -19,7 +19,7 @@ impl State {
     }
 
     pub fn detach_partition(&mut self, parent: &str, child: &str) {
-        if self.contains(parent) && self.contains(child) {
+        if self.matches_identity(parent) && self.matches_identity(child) {
             let child = key(child);
             if self
                 .partitions

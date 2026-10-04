@@ -14,6 +14,7 @@ use crate::codebase::postgres::statements::{
 mod aliases;
 mod array_review;
 mod compact_aliases;
+mod current_database;
 mod lateral_review;
 mod materialized_drop;
 mod materialized_namesake;

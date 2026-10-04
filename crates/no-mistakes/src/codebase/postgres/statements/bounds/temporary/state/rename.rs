@@ -45,12 +45,12 @@ impl State {
     }
 
     pub fn rename(&mut self, old: &str, new: &str) {
-        if !self.contains(old) && self.possible_temporary(old).is_some() {
+        if !self.matches_identity(old) && self.possible_temporary(old).is_some() {
             // A physical namesake may have been renamed instead. Never carry a possibly
             // stale temporary identity into a later, more definite search path.
             self.remove(BTreeSet::from([key(old)]), true);
         }
-        if !self.contains(old) {
+        if !self.matches_identity(old) {
             let old = decoded_parts(old);
             let new = key(new);
             self.rename_physical(&old, &new);
@@ -80,6 +80,9 @@ impl State {
         if self.on_commit_drop.remove(&old) {
             self.on_commit_drop.insert(new.clone());
         }
+        if let Some(database) = self.databases.remove(&old) {
+            self.databases.insert(new.clone(), database);
+        }
         let dependencies = self.relations.remove(&old).unwrap_or_default();
         self.relations.insert(new.clone(), dependencies);
         if let Some(parent) = self.partitions.remove(&old) {
@@ -94,9 +97,18 @@ impl State {
             }
         }
         for dependencies in self.relations.values_mut() {
-            if dependencies.remove(&Dependency::Temporary(old.clone())) {
-                dependencies.insert(Dependency::Temporary(new.clone()));
-            }
+            *dependencies = dependencies
+                .iter()
+                .map(|dependency| match dependency {
+                    Dependency::Temporary(name) if name == &old => {
+                        Dependency::Temporary(new.clone())
+                    }
+                    Dependency::ConditionalTemporary(name, database) if name == &old => {
+                        Dependency::ConditionalTemporary(new.clone(), database.clone())
+                    }
+                    other => other.clone(),
+                })
+                .collect();
         }
     }
 }

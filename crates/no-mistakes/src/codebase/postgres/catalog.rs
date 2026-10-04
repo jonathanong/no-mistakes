@@ -70,6 +70,7 @@ pub struct SchemaCatalog {
     coverage: CatalogCoverage,
     schema: Option<String>,
     search_path_evidence: BTreeMap<String, Option<BTreeSet<String>>>,
+    current_database: Option<String>,
     tables: BTreeMap<String, ArbiterTable>,
     model_tables: BTreeMap<String, CatalogTable>,
     functions: BTreeMap<String, CatalogFunction>,
@@ -108,6 +109,11 @@ impl SchemaCatalog {
     }
     pub fn coverage(&self) -> CatalogCoverage {
         self.coverage
+    }
+
+    /// Exact connected database name, when explicitly supplied by the catalog producer.
+    pub fn current_database(&self) -> Option<&str> {
+        self.current_database.as_deref()
     }
 
     pub fn load(root: &Path, raw_path: &str, sources: &SourceStore) -> Result<Self> {

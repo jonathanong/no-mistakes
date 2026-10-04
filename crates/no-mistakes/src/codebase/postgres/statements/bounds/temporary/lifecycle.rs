@@ -58,6 +58,7 @@ impl TemporaryRelations {
                 self.state.partitions.clear();
                 self.state.partitioned.clear();
                 self.state.on_commit_drop.clear();
+                self.state.databases.clear();
             }
             Statement::Discard {
                 object_type: sqlparser::ast::DiscardObject::ALL,
@@ -179,7 +180,7 @@ impl TemporaryRelations {
         for name in names {
             let name = items::sql_name(name);
             // PostgreSQL has no temporary materialized views: this wrong-kind DROP fails.
-            if *kind == ObjectType::MaterializedView && self.state.contains(&name) {
+            if *kind == ObjectType::MaterializedView && self.state.matches_identity(&name) {
                 continue;
             }
             self.state.drop(&name, cascade);

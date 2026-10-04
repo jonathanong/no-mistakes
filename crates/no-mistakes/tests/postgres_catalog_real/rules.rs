@@ -25,19 +25,30 @@ fn generated_catalog_is_stable_and_matches_the_committed_fixture() {
         database.catalog_bytes("catalog_demo", None),
         "generating twice from one database must be byte-identical"
     );
-    let text = String::from_utf8(first.clone()).unwrap();
-    for leaked in [
-        database.query("SELECT current_database()").trim(),
-        "127.0.0.1",
-        "server_version",
-    ] {
+    let catalog: serde_json::Value = serde_json::from_slice(&first).unwrap();
+    let current_database = database.query("SELECT current_database()");
+    assert_eq!(
+        catalog["currentDatabase"],
+        current_database.trim(),
+        "the catalog must record the connected database"
+    );
+    // Only the connected database varies across throwaway test runs. Remove its
+    // exact generated line so the rest still compares byte-for-byte with the fixture.
+    let text = String::from_utf8(first).unwrap();
+    let database_field = format!(
+        "  \"currentDatabase\": {},\n",
+        serde_json::to_string(current_database.trim()).unwrap()
+    );
+    assert_eq!(text.matches(&database_field).count(), 1);
+    let portable = text.replacen(&database_field, "", 1);
+    for leaked in [current_database.trim(), "127.0.0.1", "server_version"] {
         assert!(
-            !text.contains(leaked),
+            !portable.contains(leaked),
             "the catalog must not name {leaked:?}"
         );
     }
     assert_eq!(
-        first,
+        portable.as_bytes(),
         std::fs::read(committed().join("schema.json")).unwrap(),
         "fixtures/postgres/catalog-generation/all-rules/schema.json drifted from schema.sql; \
          regenerate it with `no-mistakes postgres catalog --schema catalog_demo` on PostgreSQL 18"

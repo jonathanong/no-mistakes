@@ -69,6 +69,24 @@ fn observed_catalog_preserves_postgres_ordering_state() {
         "unchanged committed schema generates identical JSON"
     );
     assert_eq!(catalog["coverage"], "ordering");
+    let observed_database = {
+        let mut command = Command::new("psql");
+        connection_environment(&connection, &mut command).unwrap();
+        command
+            .args([
+                "-X",
+                "--no-password",
+                "-At",
+                "-c",
+                "SELECT current_database()",
+            ])
+            .output()
+            .unwrap()
+    };
+    assert!(observed_database.status.success());
+    let observed_database = String::from_utf8(observed_database.stdout).unwrap();
+    assert_eq!(catalog["currentDatabase"], observed_database.trim());
+
     assert!(catalog.get("searchPathEvidence").is_none());
     let with_evidence = generate(&PostgresCatalogOptions {
         search_path_schemas: vec![
@@ -415,6 +433,8 @@ fn the_query_quotes_the_schema_and_never_scans_it_for_placeholders() {
         placeholder.contains("'coverage', 'ordering'") && !placeholder.contains("__COVERAGE__")
     );
     assert!(query.contains("'coverage', 'complete'") && !query.contains("__SCHEMA__"));
+    assert!(query.contains("'currentDatabase', current_database()"));
+    assert!(placeholder.contains("'currentDatabase', current_database()"));
     assert!(query.contains("SET LOCAL statement_timeout = '30s';"));
     assert!(query.starts_with("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;"));
     assert!(query.ends_with("COMMIT;\n"));
