@@ -856,7 +856,7 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(procedural, /bodySpan: PostgresSqlSpan;/);
   assert.match(procedural, /export interface PostgresSqlConditionalBranch/);
   assert.match(procedural, /condition: PostgresSqlExpression \| null;/);
-  assert.match(declarations, /kind: "conditional"; branches: PostgresSqlConditionalBranch\[\];/);
+  assert.match(declarations, /kind: "conditional";\s+branches: PostgresSqlConditionalBranch\[\]/);
   assert.match(procedural, /statements: PostgresSqlStatement\[\];/);
   assert.match(procedural, /complete: boolean;/);
 });

@@ -103,7 +103,7 @@ pub(super) fn prepare(tokens: &mut [TokenWithSpan]) {
     for indices in significant.windows(3) {
         if matches!(&tokens[indices[0]].token, Token::Word(word) if word.keyword == Keyword::END)
             && tokens[indices[1]].token == Token::SemiColon
-            && matches!(&tokens[indices[2]].token, Token::Word(word) if ([Keyword::ELSE, Keyword::END].contains(&word.keyword) || word.value.eq_ignore_ascii_case("ELSIF")))
+            && matches!(&tokens[indices[2]].token, Token::Word(word) if word.quote_style.is_none() && ([Keyword::ELSE, Keyword::END].contains(&word.keyword) || word.value.eq_ignore_ascii_case("ELSIF")))
         {
             // The AST owns this nested BEGIN/END; retain the original delimiter span.
             tokens[indices[1]].token = Token::Whitespace(Whitespace::Space);
