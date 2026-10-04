@@ -243,6 +243,22 @@ fn embedded_marker_identifiers_keep_their_source_provenance() {
 }
 
 #[test]
+fn builder_fragments_preserve_interpolation_provenance() {
+    let root = fixture("builder-fragment-provenance");
+    let yaml = "include: ['src/**/*.mts']\nbannedShapes: [keyset-only-sweep]\n";
+    let findings =
+        check_with_files(&root, &config(yaml), &[root.join("src/fragments.mts")]).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.target.clone().unwrap()))
+            .collect::<Vec<_>>(),
+        at(&[(4, "keyset-only-sweep"), (13, "keyset-only-sweep")]),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn an_implicit_fetch_is_reported_at_the_fetch_clause() {
     // `FETCH FIRST ROW ONLY` writes no count, so the finding points at the FETCH keyword (a
     // line-level suppression beside it applies), not at the start of the query.

@@ -188,6 +188,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
 impl ScopeVisitor<'_> {
     fn push_fragment(&mut self, line: u32, sql_text: Option<String>) {
-        self.fragments.push(EmbeddedSqlFragment { line, sql_text });
+        self.fragments.push(EmbeddedSqlFragment {
+            line,
+            sql_text,
+            recovered_placeholder_positions: Vec::new(),
+        });
     }
 }
