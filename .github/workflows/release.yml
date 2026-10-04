@@ -341,9 +341,9 @@ jobs:
   build-native:
     name: Build native for ${{ matrix.target }}
     # Intel Mac used to force split CLI/N-API jobs plus a cache handoff (#809,
-    # #884). ARM macOS and Windows each already compile in ~20m, and the N-API
-    # job still spent another ~20m because cdylib + NO_MISTAKES_BUILD_NAPI missed
-    # the CLI cache. One rustc emitting rlib+cdylib matches native CI. Validate
+    # #884). The N-API job still spent another ~20m because cdylib plus
+    # NO_MISTAKES_BUILD_NAPI missed the CLI cache. One rustc emitting
+    # rlib+cdylib matches native CI. Validate
     # stays a publish gate, not a compile gate: the release commit is a version
     # bump on already-tested main.
     needs:
@@ -373,6 +373,13 @@ jobs:
     timeout-minutes: 80
     permissions:
       contents: read
+    # A cold ARM macOS build hit the 45-minute compile deadline with fat LTO
+    # and one codegen unit (run 37216235586). ThinLTO and multiple units let
+    # LLVM optimize in parallel. Set these before rust-cache so its CARGO env
+    # fingerprint also distinguishes the profile. Other targets keep full LTO.
+    env:
+      CARGO_PROFILE_RELEASE_LTO: ${{ matrix.target == 'aarch64-apple-darwin' && 'thin' || 'fat' }}
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.target == 'aarch64-apple-darwin' && '16' || '1' }}
     steps:
       - name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' }}
