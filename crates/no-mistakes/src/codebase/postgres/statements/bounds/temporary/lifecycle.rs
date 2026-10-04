@@ -95,7 +95,9 @@ impl TemporaryRelations {
                 values,
                 scope,
                 ..
-            }) if state::key(&items::sql_name(variable)) == "search_path" => {
+            }) if state::key(&items::sql_name(variable)) == "search_path"
+                && (*scope != Some(ContextModifier::Local) || self.transaction.is_some()) =>
+            {
                 if *scope == Some(ContextModifier::Local) && self.state.local_path.is_none() {
                     self.state.local_path =
                         Some((self.state.temp_first, self.state.earlier_schemas.clone()));
