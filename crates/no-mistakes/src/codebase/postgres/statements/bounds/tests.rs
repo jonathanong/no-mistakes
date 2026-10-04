@@ -1,4 +1,5 @@
 mod format;
+mod table_mixed_components;
 use format::item;
 mod caller_projection;
 mod explain_table;
