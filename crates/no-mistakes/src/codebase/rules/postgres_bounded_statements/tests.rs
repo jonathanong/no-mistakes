@@ -20,6 +20,7 @@ mod standalone_table;
 mod stored_array;
 mod table_derived_limit;
 mod table_only;
+mod temporary_bare_ownership;
 use super::evaluate::offenders;
 use super::{check_with_files, check_with_files_and_sources, RULE_ID};
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};

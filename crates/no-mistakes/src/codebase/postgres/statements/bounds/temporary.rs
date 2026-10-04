@@ -1,4 +1,5 @@
 //! Temporary relation identity follows SQL source order, never crossing source boundaries.
+mod bare_reads;
 mod identity;
 mod lifecycle;
 mod state;
@@ -165,6 +166,7 @@ impl TemporaryRelations {
 
     fn query(&self, query: &mut SqlBoundQuery) {
         for item in &mut query.items {
+            bare_reads::project(item, &self.state);
             match &mut item.kind {
                 SqlBoundItemKind::Table(name) if self.state.contains(name) => {
                     item.kind = SqlBoundItemKind::Opaque;

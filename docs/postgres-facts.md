@@ -703,6 +703,10 @@ Temporary tables and views created earlier in the same SQL source shadow unquali
 catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.
 Temporary relations are unknown and bound no joined items; qualified permanent
 relations retain their catalog identity. State resets for every SQL source.
+Bare-column ownership candidates for possible temporary sources also lose their
+permanent catalog identity. Their unknown column layout cannot prove an inner
+reference local, so correlated pins and lateral inputs retain conservative outer
+row dependence; explicit permanent qualification and DROP restoration still work.
 
 Rejecting `HAVING` (constant false or SQL NULL, including an AND conjunct)
 removes SELECT-list expansion evidence because the group never reaches that
