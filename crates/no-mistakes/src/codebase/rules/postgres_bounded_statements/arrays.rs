@@ -111,6 +111,7 @@ fn column_type<'a>(
 ) -> Option<&'a crate::codebase::postgres::CatalogColumn> {
     // Visible columns follow catalog ordinals; dropped-column gaps do not add alias slots.
     if !aliases.is_empty()
+        && table.columns.len() != 1
         && (table
             .columns
             .iter()
@@ -137,14 +138,21 @@ fn column_type<'a>(
     matches.next().is_none().then_some(column)
 }
 
-/// Keep existing key names only when a positional alias still denotes that catalog column.
-pub(super) fn key_unchanged(
+/// Resolve a key's visible name without guessing ambiguous legacy positions.
+pub(super) fn key_visible<'a>(
     table: &crate::codebase::postgres::CatalogTable,
-    aliases: &[String],
-    column: &str,
-) -> bool {
-    aliases.is_empty()
-        || column_type(table, aliases, column).is_some_and(|entry| entry.name == column)
+    aliases: &'a [String],
+    column: &'a str,
+) -> Option<&'a str> {
+    if aliases.is_empty() {
+        return Some(column);
+    }
+    if table.columns.len() == 1 && table.columns[0].name == column {
+        return aliases.first().map(String::as_str);
+    }
+    column_type(table, aliases, column)
+        .is_some_and(|entry| entry.name == column)
+        .then_some(column)
 }
 
 mod builtins;
