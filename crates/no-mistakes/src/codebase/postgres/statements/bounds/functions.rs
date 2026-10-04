@@ -28,6 +28,20 @@ use set_returning::SET_RETURNING;
 
 /// Catalog SRFs that return one row and therefore preserve a pure aggregate's cap.
 const FIXED_ONE_ROW: &[&str] = &["pg_stat_get_recovery_prefetch"];
+// These names became core builtins after PostgreSQL 12. Bare calls on older
+// servers can resolve to user code, so only catalog qualification proves identity.
+const LATER_SCALAR: &[&str] = &[
+    "gen_random_uuid",
+    "regexp_count",
+    "regexp_instr",
+    "regexp_substr",
+];
+/// Builtins introduced in PostgreSQL 18. Bare calls are not trusted without a configured server
+/// version; an explicitly qualified `pg_catalog` call cannot resolve to a user-defined function.
+const POSTGRES_18_SCALAR: &[&str] = &["uuidv4", "uuidv7"];
+
+mod scalar;
+use scalar::SCALAR;
 
 /// Functions whose result row count follows caller-provided argument values.
 #[rustfmt::skip]
@@ -63,7 +77,7 @@ fn named(name: &ObjectName, list: &[&str]) -> bool {
 }
 
 /// A built-in aggregate: the bare name, or `pg_catalog.<name>`. A function in any other schema
-/// that happens to share a name is an ordinary function, called once per row.
+/// that shares a name has unknown cardinality and may return a set.
 pub(super) fn is_aggregate(name: &ObjectName) -> bool {
     builtin(name, AGGREGATES)
 }
@@ -74,16 +88,60 @@ pub(super) fn is_set_returning(name: &ObjectName) -> bool {
     builtin(name, SET_RETURNING) && !builtin(name, FIXED_ONE_ROW)
 }
 
-/// A select-list SRF can introduce rows independently of FROM. Its output is caller-sized
+/// Unknown projection calls may return a set. Only documented builtin scalar cardinality
+/// (including aggregates) proves otherwise; spelling alone never trusts a user schema.
+pub(super) fn projection_can_expand(function: &Function) -> bool {
+    let name = &function.name;
+    if function.over.is_some()
+        || is_aggregate(name)
+        || builtin(name, FIXED_ONE_ROW)
+        || conditional_form(function)
+    {
+        return false;
+    }
+    is_set_returning(name)
+        || !(builtin(name, SCALAR) && (!builtin(name, LATER_SCALAR) || pg_catalog_qualified(name))
+            || (builtin(name, POSTGRES_18_SCALAR) && pg_catalog_qualified(name)))
+}
+
+/// Aggregate, window, and COALESCE calls reject or contain nested row expansion.
+pub(super) fn projection_traversal_boundary(function: &Function) -> bool {
+    function.over.is_some()
+        || is_aggregate(&function.name)
+        || builtin(&function.name, FIXED_ONE_ROW)
+        || (conditional_form(function)
+            && object_name_ident(&function.name)
+                .is_some_and(|ident| ident_key(ident) == "coalesce"))
+}
+
+fn conditional_form(function: &Function) -> bool {
+    function.name.0.len() == 1
+        && object_name_ident(&function.name).is_some_and(|ident| {
+            ident.quote_style.is_none()
+                && ["coalesce", "greatest", "least", "nullif"].contains(&ident_key(ident).as_str())
+        })
+}
+
+fn pg_catalog_qualified(name: &ObjectName) -> bool {
+    name.0.len() == 2
+        && name.0[0]
+            .as_ident()
+            .is_some_and(|schema| ident_key(schema) == "pg_catalog")
+}
+
+/// A projection call can introduce rows independently of FROM. Its output is caller-sized
 /// only for a known built-in whose arguments contain no database-backed values.
 pub(super) fn data_backed_projection(
     function: &Function,
     positions: PlaceholderPositions<'_>,
 ) -> bool {
-    if named(&function.name, SET_RETURNING) && !builtin(&function.name, SET_RETURNING) {
+    if function.over.is_none()
+        && named(&function.name, SET_RETURNING)
+        && !builtin(&function.name, SET_RETURNING)
+    {
         return true;
     }
-    if !is_set_returning(&function.name) {
+    if !projection_can_expand(function) {
         return false;
     }
     // Literal arguments do not size server-state SRFs such as pg_ls_dir or ts_stat.

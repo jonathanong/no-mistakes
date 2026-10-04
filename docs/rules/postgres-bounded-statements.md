@@ -350,3 +350,22 @@ consume an array-valued argument inside a finite constructor. Their scalar resul
 provides one candidate value; argument row dependencies still require the owner
 (`o`) to be bounded independently. Direct stored-array leaves remain unbounded,
 and unknown, unqualified, array-returning and set-returning calls remain opaque.
+
+Unknown SELECT-list function cardinality is opaque: a custom function can return
+a set of database rows even when its arguments are bind values. The rule trusts
+known PostgreSQL scalar builtins and aggregates by bare name or `pg_catalog`
+qualification, plus bare SQL scalar forms such as `COALESCE`. This builtin
+identity is a documented heuristic; a function in another schema
+with the same name stays unknown. Unlisted scalar builtins are conservative too.
+Use an explicit result `LIMIT` when the function's output must be bounded; known
+caller-sized set-returning builtins retain their argument-based bounds. Trusted
+scalar wrappers never hide unknown nested calls in their arguments.
+
+Analysis does not infer the target server version. Scalar names introduced after
+PostgreSQL 12 need explicit `pg_catalog` qualification: `gen_random_uuid` (PostgreSQL 13),
+`regexp_count`, `regexp_instr`, `regexp_substr` (PostgreSQL 15), and the PostgreSQL 18 UUID
+generators. Bare calls remain opaque because an older server can resolve them
+to user-defined set-returning functions. Known older scalar builtins retain their
+bare-name heuristic; an explicit `LIMIT` can still bound an unknown projection.
+See the [PostgreSQL 13 release notes](https://www.postgresql.org/docs/release/13.0/)
+and [PostgreSQL 15 release notes](https://www.postgresql.org/docs/15/release-15.htm).
