@@ -29,3 +29,28 @@ fn saved_negated_keysets_reverse_cursor_bounds() {
         vec!["id", "created_at"]
     );
 }
+
+#[test]
+fn saved_even_negations_preserve_optional_cursors() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-shape-policy/fixture/negated-keysets/sql/parity.sql"
+    ));
+    let facts = extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(
+        facts
+            .sweeps
+            .iter()
+            .map(|s| (s.conjuncts[0].cursor_bound, s.conjuncts[0].cursor_optional))
+            .collect::<Vec<_>>(),
+        vec![
+            (Some(SqlCursorBound::Lower), true),
+            (Some(SqlCursorBound::Lower), true),
+            (None, false),
+            (Some(SqlCursorBound::Lower), false),
+            (Some(SqlCursorBound::Upper), false),
+            (None, false),
+        ]
+    );
+}

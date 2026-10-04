@@ -1,6 +1,7 @@
 mod bind_guard;
 mod conditions;
 mod lexicographic;
+mod negated;
 mod placeholders;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
@@ -94,25 +95,16 @@ fn cursor(
         Expr::UnaryOp {
             op: UnaryOperator::Not,
             expr,
-        } => {
-            let mut cursor = cursor(
-                expr,
+        } => negated::of(expr, |inner| {
+            cursor(
+                inner,
                 names,
                 order_columns,
                 order_ascending,
                 transparent_int4_casts,
                 recovered_placeholder_positions,
-            )?;
-            // Negating a NULL-switchable OR is not merely reversing its comparison.
-            if cursor.optional {
-                return None;
-            }
-            cursor.bound = match cursor.bound {
-                SqlCursorBound::Lower => SqlCursorBound::Upper,
-                SqlCursorBound::Upper => SqlCursorBound::Lower,
-            };
-            Some(cursor)
-        }
+            )
+        }),
 
         Expr::BinaryOp {
             left,

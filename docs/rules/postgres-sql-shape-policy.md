@@ -320,4 +320,6 @@ strict and recovered SQL. Whitespace-separated aliases remain aliases.
 Negating a recognized keyset comparison reverses its bound (`NOT (id <= $1)`
 is a lower-bound cursor). It still walks a key range; combining it with an
 opposite upper bound forms a selective window. Arbitrary negated predicates and
-negated optional-cursor disjunctions remain outside this comparison proof.
+optional-cursor disjunctions with an odd number of negations remain outside this
+comparison proof. An even number of `NOT` operators preserves the original
+optional cursor, including its NULL-switchable whole-table case.
