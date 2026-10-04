@@ -4,8 +4,7 @@ use super::super::super::Resolver;
 use sqlparser::ast::{DataType, Expr};
 
 pub(super) fn collect(
-    expr: &Expr,
-    data_type: &DataType,
+    cast: (&Expr, &DataType),
     mut resolver_out: Option<&mut Vec<(usize, String)>>,
     resolver: &Resolver,
     indexed: &mut Vec<(usize, String)>,
@@ -13,6 +12,7 @@ pub(super) fn collect(
     caller_only: bool,
     positions: PlaceholderPositions<'_>,
 ) -> Option<()> {
+    let (expr, data_type) = cast;
     if resolver_out.is_none() {
         return super::collect(expr, resolver, None, indexed, types, caller_only, positions);
     }

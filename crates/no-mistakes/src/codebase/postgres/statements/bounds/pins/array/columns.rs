@@ -58,8 +58,7 @@ pub(super) fn collect(
         Expr::Cast {
             expr, data_type, ..
         } => casts::collect(
-            expr,
-            data_type,
+            (expr, data_type),
             out,
             resolver,
             indexed,
