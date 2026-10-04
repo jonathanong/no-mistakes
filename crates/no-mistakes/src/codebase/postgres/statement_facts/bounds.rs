@@ -76,6 +76,8 @@ pub struct SqlPossibleTemporary {
 /// PostgreSQL resolves a bare column in the innermost query whose relations have it, and
 /// otherwise in the query around it. The facts do not know a table's columns, so a subquery
 /// reads the enclosing row when the catalog shows that none of `tables` has `column`.
+/// Temporary-name projection removes possible temporary candidates because their column
+/// layout cannot be proved from a permanent catalog entry; an empty list proves no local owner.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SqlBareRead {
     pub column: String,
