@@ -78,7 +78,9 @@ omitting both selects none. See the
 
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](postgres-source-api.md). A source array returns
-facts in input order. This pure source API accepts no invocation-lock options.
+facts in input order. DO bodies expose typed IF/ELSIF/ELSE branch conditions
+and nested DDL source occurrences, without claiming that any branch executes.
+This pure source API accepts no invocation-lock options.
 
 `generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live

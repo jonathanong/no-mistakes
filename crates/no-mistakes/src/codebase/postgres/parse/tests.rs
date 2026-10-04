@@ -15,6 +15,7 @@ mod derived_table_limit;
 mod fetch_expressions;
 mod insert_table_only;
 mod multi_table_arms;
+mod table_boundaries;
 
 #[test]
 fn parse_postgres_sql_accepts_create_table() {

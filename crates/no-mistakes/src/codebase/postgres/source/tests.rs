@@ -1,3 +1,4 @@
+mod body;
 mod ddl;
 mod indexes;
 mod locations;

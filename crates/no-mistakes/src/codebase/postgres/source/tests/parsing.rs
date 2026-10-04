@@ -108,3 +108,49 @@ fn lexical_failure_and_empty_sources_return_structured_diagnostics() {
     assert!(batch[0].statements.is_empty());
     assert_eq!(batch[1].statements.len(), 2);
 }
+
+#[test]
+fn table_set_arm_retains_the_original_source_boundary() {
+    let sql = super::fixture("table-source-boundary.sql");
+    let result = super::facts("table-source-boundary.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 1);
+    let statement = &result.statements[0];
+    assert_eq!(statement.sql, sql.trim_end());
+    assert_eq!(
+        &sql[statement.span.start.offset..statement.span.end.offset],
+        statement.sql
+    );
+}
+
+#[test]
+fn table_arms_keep_neighbor_source_spans_and_view_dependencies() {
+    let sql = super::fixture("table-source-neighbors.sql");
+    let result = super::facts("table-source-neighbors.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 4);
+    for statement in &result.statements {
+        assert_eq!(
+            &sql[statement.span.start.offset..statement.span.end.offset],
+            statement.sql
+        );
+        assert!(statement.sql.ends_with(';'));
+    }
+    let super::super::PostgresSqlStatementKind::CreateView { view } = &result.statements[0].facts
+    else {
+        panic!()
+    };
+    assert!(view.dependencies_complete);
+    assert!(view
+        .dependencies
+        .iter()
+        .any(|name| name.parts[0].identity == "Topics" && name.parts[0].quoted));
+    assert!(matches!(
+        result.statements[1].facts,
+        super::super::PostgresSqlStatementKind::CreateTable { .. }
+    ));
+    assert!(matches!(
+        result.statements[3].facts,
+        super::super::PostgresSqlStatementKind::AlterTable { .. }
+    ));
+}

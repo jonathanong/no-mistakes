@@ -115,6 +115,9 @@ pub enum PostgresSqlStatementKind {
     DoBlock {
         block: PostgresSqlProceduralBlock,
     },
+    Conditional {
+        branches: Vec<PostgresSqlConditionalBranch>,
+    },
     Other,
 }
 
@@ -123,8 +126,26 @@ pub enum PostgresSqlStatementKind {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlProceduralBlock {
     pub language: String,
+    pub body_encoding: PostgresSqlBodyEncoding,
     pub body_span: PostgresSqlSpan,
     pub statements: Vec<PostgresSqlStatement>,
     pub diagnostics: Vec<PostgresSqlDiagnostic>,
     pub complete: bool,
+}
+
+/// Branch statements are source occurrences, not guaranteed execution.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlConditionalBranch {
+    pub condition: Option<PostgresSqlExpression>,
+    pub span: PostgresSqlSpan,
+    pub statements: Vec<PostgresSqlStatement>,
+}
+
+/// The source slice retains the enclosing literal's encoding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PostgresSqlBodyEncoding {
+    DollarQuoted,
+    SingleQuoted,
 }

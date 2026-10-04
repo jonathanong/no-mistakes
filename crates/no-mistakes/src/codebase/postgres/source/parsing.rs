@@ -39,7 +39,8 @@ pub(super) fn collect_program(
         } else {
             parser
                 .parse_statement()
-                .map(|mut statement| {
+                .map_err(|error| error.to_string())
+                .and_then(|mut statement| {
                     crate::codebase::postgres::parse::fetch_expression::restore(
                         &mut statement,
                         &fetch_expressions,
@@ -49,12 +50,22 @@ pub(super) fn collect_program(
                         &generated,
                         parser.token_at(parser.index().saturating_sub(1)).span.end,
                     );
-                    let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
-                        (start_index..parser.index()).map(|index| parser.token_at(index)),
-                    );
-                    project(&statement, locations, &tables)
+                    if let Statement::If(value) = &mut statement {
+                        if depth == 0 {
+                            return Err("Conditional statements require a procedural body".into());
+                        }
+                        let tokens = (start_index..parser.index())
+                            .map(|index| parser.token_at(index))
+                            .collect::<Vec<_>>();
+                        super::conditional::project(value, &tokens, source, locations, &generated)
+                    } else {
+                        let tables =
+                            crate::codebase::postgres::statements::TableTokenIndex::from_iter(
+                                (start_index..parser.index()).map(|index| parser.token_at(index)),
+                            );
+                        Ok(project(&statement, locations, &tables))
+                    }
                 })
-                .map_err(|error| error.to_string())
         };
         let complete = matches!(parser.peek_token().token, Token::SemiColon | Token::EOF);
         // Move projected facts once; cloning a nested program here repeats its subtree.
@@ -77,7 +88,14 @@ pub(super) fn collect_program(
         let end = if parser.peek_token().token == Token::SemiColon {
             parser.next_token().span.end
         } else {
-            parser.token_at(parser.index().saturating_sub(1)).span.end
+            (start_index..parser.index())
+                .filter_map(|index| {
+                    let token = parser.token_at(index);
+                    (!matches!(token.token, Token::Whitespace(_))).then_some(token.span.end)
+                })
+                .filter(|end| end.line > 0)
+                .max()
+                .unwrap_or(start)
         };
         let end = crate::codebase::postgres::parse::fetch_expression::source_end(
             &fetch_expressions,
@@ -124,7 +142,7 @@ pub(super) fn collect_program(
     result
 }
 
-fn project(
+pub(super) fn project(
     statement: &Statement,
     locations: &Locations<'_>,
     tables: &crate::codebase::postgres::statements::TableTokenIndex,

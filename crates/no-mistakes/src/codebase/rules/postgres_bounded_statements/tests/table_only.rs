@@ -5,8 +5,8 @@ fn table_only_arms_keep_temporary_and_permanent_names_separate() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-only.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    // sqlparser cannot strictly parse successive TABLE arms in one source.
-    assert!(facts.parse_failed);
+    // Successive TABLE arms retain both statement delimiters and catalog identity.
+    assert!(!facts.parse_failed);
     assert_eq!(facts.bounds.len(), 4);
     let catalog = super::catalog();
     let found: Vec<_> = facts

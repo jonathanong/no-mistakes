@@ -26,9 +26,6 @@ pub(super) fn collect(
         return Err("Expected a DO body".into());
     }
     let literal = parser.next_token();
-    let Token::DollarQuotedString(body) = literal.token else {
-        return Err("DO source facts currently require a dollar-quoted body".into());
-    };
     if parser.parse_keyword(Keyword::LANGUAGE) {
         if before {
             return Err("DO language may be specified only once".into());
@@ -38,12 +35,13 @@ pub(super) fn collect(
     let literal_span = locations
         .span(literal.span)
         .ok_or("DO body source span is unavailable")?;
-    let delimiter = body.tag.as_ref().map_or(2, |tag| tag.len() + 2);
-    let start = literal_span.start.offset + delimiter;
-    let end = literal_span.end.offset - delimiter;
+    let body = super::body::decode(&literal.token, &literal_span, &source.sql)?;
+    let start = body.start;
+    let end = body.end;
     let body_span = locations.range(start, end);
     let mut block = PostgresSqlProceduralBlock {
         language,
+        body_encoding: body.encoding,
         body_span: body_span.clone(),
         statements: Vec::new(),
         diagnostics: Vec::new(),
@@ -63,10 +61,7 @@ pub(super) fn collect(
         ));
         return Ok(PostgresSqlStatementKind::DoBlock { block });
     }
-    let sql = &source.sql[start..end];
-    if sql != body.value {
-        return Err("DO body spelling cannot be mapped to original source".into());
-    }
+    let sql = body.sql.as_ref();
     let mut prepared = crate::codebase::postgres::parse::prepare_postgres_tokens(sql);
     if let Some(error) = &prepared.lexical_error {
         // A lexical failure prevents proving the surrounding procedural grammar.
@@ -89,7 +84,7 @@ pub(super) fn collect(
         && significant
             .last()
             .is_some_and(|index| keyword(&prepared.tokens[*index].token, Keyword::END));
-    let control = significant.iter().any(|index| matches!(&prepared.tokens[*index].token, Token::Word(word) if word.quote_style.is_none() && ["IF", "ELSIF", "LOOP", "EXCEPTION", "DECLARE"].iter().any(|value| word.value.eq_ignore_ascii_case(value))));
+    let control = significant.iter().any(|index| matches!(&prepared.tokens[*index].token, Token::Word(word) if word.quote_style.is_none() && ["LOOP", "EXCEPTION", "DECLARE"].iter().any(|value| word.value.eq_ignore_ascii_case(value))));
     if !plain || control {
         block.diagnostics.push(diagnostic("Procedural control flow is unsupported; no nested DDL execution or occurrence is inferred", &body_span));
         return Ok(PostgresSqlStatementKind::DoBlock { block });
@@ -102,9 +97,10 @@ pub(super) fn collect(
         .enumerate()
         .filter_map(|(index, token)| (index > first && index < last).then_some(token))
         .collect();
+    super::conditional::prepare(&mut prepared.tokens);
     let local = Locations::new(sql);
     for token in &mut prepared.tokens {
-        relocate(token, &local, locations, start)?;
+        relocate(token, &local, locations, &body)?;
     }
     let nested = super::parsing::collect_program(source, prepared, locations, depth + 1);
     block.complete = nested.diagnostics.is_empty()
@@ -145,16 +141,22 @@ fn diagnostic(message: &str, span: &PostgresSqlSpan) -> PostgresSqlDiagnostic {
     }
 }
 
-fn relocate(
+pub(super) fn relocate(
     token: &mut TokenWithSpan,
     local: &Locations<'_>,
     original: &Locations<'_>,
-    base: usize,
+    body: &super::body::Body<'_>,
 ) -> Result<(), String> {
     let span = local
         .span(token.span)
         .ok_or("DO nested token span is unavailable")?;
-    let span = original.range(base + span.start.offset, base + span.end.offset);
+    let start = body
+        .offset(span.start.offset)
+        .ok_or("DO nested token start is unavailable")?;
+    let end = body
+        .offset(span.end.offset)
+        .ok_or("DO nested token end is unavailable")?;
+    let span = original.range(start, end);
     token.span.start = Location {
         line: span.start.line as u64,
         column: span.start.column as u64,

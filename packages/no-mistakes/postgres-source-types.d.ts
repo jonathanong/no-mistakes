@@ -1,4 +1,9 @@
-import type { PostgresSqlProceduralBlock } from "./postgres-procedural-types";
+import type { PostgresSqlDrop } from "./postgres-drop-types";
+export type * from "./postgres-drop-types";
+import type {
+  PostgresSqlConditionalBranch,
+  PostgresSqlProceduralBlock,
+} from "./postgres-procedural-types";
 export type * from "./postgres-procedural-types";
 /** Pure SQL source input. No repository, database, or filesystem options are needed. */
 export interface PostgresSqlSource {
@@ -121,16 +126,6 @@ export interface PostgresSqlView {
   dependenciesComplete: boolean;
   functions: PostgresSqlFunctionReference[];
 }
-export interface PostgresSqlDrop {
-  objectType: string;
-  names: PostgresSqlName[];
-  table: PostgresSqlName | null;
-  signatures: string[];
-  ifExists: boolean;
-  cascade: boolean;
-  restrict: boolean;
-  temporary: boolean;
-}
 export interface PostgresSqlTriggerTransition {
   kind: string;
   name: PostgresSqlName;
@@ -187,6 +182,7 @@ export type PostgresSqlStatementKind =
   | { kind: "createFunction"; function: PostgresSqlFunction }
   | { kind: "drop"; drop: PostgresSqlDrop }
   | { kind: "doBlock"; block: PostgresSqlProceduralBlock }
+  | { kind: "conditional"; branches: PostgresSqlConditionalBranch[] }
   | { kind: "other" };
 export type PostgresSqlStatement = PostgresSqlStatementKind & {
   ordinal: number;

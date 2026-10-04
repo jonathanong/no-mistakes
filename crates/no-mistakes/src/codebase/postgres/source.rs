@@ -1,7 +1,9 @@
 //! Standalone source facts: one prepared token inventory, one AST per statement.
 
 mod alter;
+mod body;
 mod columns;
+mod conditional;
 mod ddl;
 mod drop_facts;
 mod expressions;
