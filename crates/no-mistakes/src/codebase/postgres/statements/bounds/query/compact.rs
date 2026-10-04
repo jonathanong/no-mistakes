@@ -40,11 +40,15 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
             match &item.kind {
                 SqlBoundItemKind::Table(name) => {
                     // Only caller-sized values remain valid after the surrounding items are
-                    // removed. A repeated relation is bounded only by pins common to every read.
+                    // removed. Positional aliases cannot keep catalog-key credit once their
+                    // identity is discarded. Repeated reads retain only their common pins.
                     let pins: Vec<_> = item
                         .pins
                         .iter()
-                        .filter(|pin| matches!(pin.source, SqlPinSource::Value))
+                        .filter(|pin| {
+                            item.column_aliases.is_empty()
+                                && super::super::compact_pins::independent(&pin.source)
+                        })
                         .cloned()
                         .collect();
                     if let Some(previous) = found.get_mut(name) {

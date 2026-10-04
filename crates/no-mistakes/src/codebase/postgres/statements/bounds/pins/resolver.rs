@@ -121,6 +121,16 @@ impl Resolver {
                 found.reads.extend(reads.bare);
             }
             Expr::Exists { .. } => {}
+            Expr::CompoundFieldAccess { root, access_chain } => {
+                if let Some((base, indexes)) = super::array::indexed_base(root, access_chain) {
+                    self.refs(&base, found);
+                    for index in indexes {
+                        self.refs(index, found);
+                    }
+                } else {
+                    visit_child_exprs(expr, &mut |child| self.refs(child, found));
+                }
+            }
             // An explicit collation changes what `=` matches, whatever the key's own collation
             // (`email = $1 COLLATE "case_insensitive"`): the value fixes no row.
             Expr::Collate { .. } => found.unknown = true,
