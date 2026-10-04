@@ -1,5 +1,6 @@
 mod caller_projection;
 mod explain_table;
+mod nested_positive_order;
 mod nonrecursive_ctes;
 mod recovered_table;
 mod rejecting_having_projection;

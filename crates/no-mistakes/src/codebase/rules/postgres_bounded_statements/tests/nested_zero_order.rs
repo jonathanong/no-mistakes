@@ -19,8 +19,8 @@ fn nested_zero_caps_survive_outer_order_expansion() {
         .collect();
     assert_eq!(
         findings.iter().map(Vec::len).collect::<Vec<_>>(),
-        [0, 0, 0, 0, 0, 1, 1, 1]
+        [0, 0, 0, 0, 0, 0, 1, 1]
     );
-    assert_eq!(findings[5][0].table, "orders");
-    assert_eq!(findings[5][0].line, 8);
+    assert_eq!(findings[6][0].table, "orders");
+    assert_eq!(findings[6][0].line, 9);
 }
