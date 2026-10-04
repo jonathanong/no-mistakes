@@ -1,7 +1,9 @@
 mod current_database;
 mod fixture_configs;
+mod nested_zero_order;
 mod nonrecursive_ctes;
 mod recovered_table;
+mod rejecting_having_projection;
 mod scalar_reducer_arrays;
 mod standalone_table;
 mod stored_array;

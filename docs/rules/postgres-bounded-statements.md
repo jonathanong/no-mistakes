@@ -105,6 +105,9 @@ set operation). A statement is bounded when any of these holds:
   `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
   caller's cap: a caller that passes NULL at run time gets `LIMIT ALL`, which no statement
   text can rule out, so validate the number before the call, or write `COALESCE($1, 100)`.
+  An inner `LIMIT 0` or `FETCH FIRST 0 ROWS ONLY` stays empty when a surrounding
+  parenthesized query later applies a set-returning `ORDER BY` expression. Positive,
+  absent, and NULL inner caps do not establish an empty expanded result.
 - It is a pure aggregate: a built-in aggregate call such as `COUNT(*)` (bare or
   `pg_catalog.`-qualified), in the select list, in `HAVING` or in `ORDER BY`, with no
   `GROUP BY`, which returns one row. HAVING without an aggregate call also introduces
@@ -168,6 +171,11 @@ forms and builtin array casts. For example, `unnest(COALESCE($1::uuid[],
 ARRAY[]::uuid[]))` remains caller-sized. Columns, subqueries, custom calls or
 custom casts inside these forms remain opaque; qualifying or quoting the
 conditional name does not establish the special-form contract.
+A constant-false or SQL-NULL `HAVING` rejects the group before SELECT-list
+expansion. For example, `id IN (SELECT unnest(get_all_ids()) HAVING false)`
+adds no target keys. This removes only the unused projection expansion proof;
+uncapped physical source items remain in the facts. A `HAVING` result that is
+not known to reject the group does not establish an empty result.
 A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
