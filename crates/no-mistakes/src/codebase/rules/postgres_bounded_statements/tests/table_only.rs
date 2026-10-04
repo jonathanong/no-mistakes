@@ -7,7 +7,7 @@ fn table_only_arms_keep_temporary_and_permanent_names_separate() {
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
     // sqlparser cannot strictly parse successive TABLE arms in one source.
     assert!(facts.parse_failed);
-    assert_eq!(facts.bounds.len(), 3);
+    assert_eq!(facts.bounds.len(), 4);
     let catalog = super::catalog();
     let found: Vec<_> = facts
         .bounds
@@ -15,7 +15,7 @@ fn table_only_arms_keep_temporary_and_permanent_names_separate() {
         .flat_map(|fact| super::offenders(fact, &catalog))
         .map(|finding| finding.table)
         .collect();
-    assert_eq!(found, ["accounts"]);
+    assert_eq!(found, ["accounts", "accounts"]);
 }
 
 #[test]

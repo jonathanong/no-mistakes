@@ -11,7 +11,8 @@ fn table_only_arms_preserve_quoted_identity() {
         [
             "select: () (opaque)",
             "select: () (accounts)",
-            "select: () (public.\"Accounts\")"
+            "select: () (public.\"Accounts\")",
+            "select: () (accounts)"
         ]
     );
 }

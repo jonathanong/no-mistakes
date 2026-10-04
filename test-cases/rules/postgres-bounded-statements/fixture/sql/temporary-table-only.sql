@@ -3,3 +3,4 @@ CREATE TEMP TABLE "Accounts"(id uuid);
 SELECT NULL::uuid UNION ALL TABLE ONLY "Accounts";
 SELECT NULL::uuid UNION ALL TABLE ONLY Accounts;
 SELECT NULL::uuid UNION ALL TABLE ONLY public."Accounts";
+SELECT NULL::uuid UNION ALL TABLE Accounts;
