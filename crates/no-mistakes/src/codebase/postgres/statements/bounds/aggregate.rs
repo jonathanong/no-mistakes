@@ -45,6 +45,28 @@ pub(super) fn orders_can_expand(query: &Query) -> bool {
     })
 }
 
+/// A predicate that removes the implicit group can cap a query whose ordering expands it.
+pub(super) fn order_expansion_predicates_reject(query: &Query) -> Option<bool> {
+    if !orders_can_expand(query) {
+        return None;
+    }
+    let Some(select) = select_body(&query.body) else {
+        return None;
+    };
+    Some(
+        super::predicate::rejects_all(select.selection.as_ref())
+            || super::predicate::rejects_all(select.having.as_ref()),
+    )
+}
+
+fn select_body(set: &SetExpr) -> Option<&Select> {
+    match set {
+        SetExpr::Select(select) => Some(select),
+        SetExpr::Query(query) => select_body(&query.body),
+        _ => None,
+    }
+}
+
 /// Ungrouped, and with nothing in the select list that expands one row into many.
 fn one_group(select: &Select) -> bool {
     let ungrouped = matches!(

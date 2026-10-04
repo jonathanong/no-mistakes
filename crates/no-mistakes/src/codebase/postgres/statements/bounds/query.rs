@@ -4,7 +4,7 @@ use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::limit::{is_limited, is_zero_limited};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
 use crate::fx::{fx_map, FxHashMap};
-use sqlparser::ast::{Query, Select, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
+use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
 mod compact;
 #[cfg(test)]
 mod tests;
@@ -102,12 +102,8 @@ fn bound_body_observed(
     observe: impl FnOnce(&BlockingStatuses),
 ) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
-    if super::aggregate::orders_can_expand(query) {
-        if let Some(select) = select_body(&query.body) {
-            // Either predicate can reject the implicit group before ORDER BY expands it.
-            bound.capped = super::predicate::rejects_all(select.selection.as_ref())
-                || super::predicate::rejects_all(select.having.as_ref());
-        }
+    if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query) {
+        bound.capped = capped;
     }
     if is_zero_limited(query) {
         bound.capped = true;
@@ -121,14 +117,6 @@ fn bound_body_observed(
     }
     bound.capped |= orders_by_aggregate(query);
     bound
-}
-
-fn select_body(set: &SetExpr) -> Option<&Select> {
-    match set {
-        SetExpr::Select(select) => Some(select),
-        SetExpr::Query(query) => select_body(&query.body),
-        _ => None,
-    }
 }
 
 // A fully streaming query needs only its root cap and no status storage. Once a blocking
@@ -145,15 +133,10 @@ fn blocking_statuses(set: &SetExpr) -> Option<BlockingStatuses> {
 fn contains_blocking(set: &SetExpr) -> bool {
     match set {
         SetExpr::SetOperation {
-            op,
-            set_quantifier,
-            left,
-            right,
-        } => {
-            *op != SetOperator::Union
-                || *set_quantifier != SetQuantifier::All
-                || contains_blocking(left)
-                || contains_blocking(right)
+            op, set_quantifier, ..
+        } if *op != SetOperator::Union || *set_quantifier != SetQuantifier::All => true,
+        SetExpr::SetOperation { left, right, .. } => {
+            contains_blocking(left) || contains_blocking(right)
         }
         SetExpr::Query(query) => contains_blocking(&query.body),
         _ => false,
