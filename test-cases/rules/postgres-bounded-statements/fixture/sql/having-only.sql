@@ -12,6 +12,8 @@ SELECT 1 FROM orders HAVING true ORDER BY count(*), generate_series(1, 1000000);
 SELECT count(*) FROM orders HAVING false ORDER BY generate_series(1, 10);
 SELECT count(*) FROM orders HAVING true AND false ORDER BY generate_series(1, 10);
 SELECT count(*) FROM orders HAVING false OR true ORDER BY generate_series(1, 10);
+-- WHERE filters source rows before grouping, but the implicit aggregate group still feeds ORDER BY SRFs.
+SELECT count(*) FROM orders WHERE false ORDER BY generate_series(1, 1000000);
 -- A window call returns one value per grouped row, even when its name matches an SRF.
 SELECT count(*) FROM orders ORDER BY app.generate_series(1) OVER ();
 -- An outer ORDER BY SRF can expand a bounded SELECT wrapped in parentheses.

@@ -6,3 +6,7 @@ HAVING true;
 SELECT DISTINCT ON (1) count(*)
 FROM orders
 HAVING true;
+-- HAVING rejects the aggregate group before the DISTINCT ON expression is evaluated.
+SELECT DISTINCT ON (generate_series(1, count(*))) count(*)
+FROM orders
+HAVING false;

@@ -50,13 +50,8 @@ pub(super) fn order_expansion_predicates_reject(query: &Query) -> Option<bool> {
     if !orders_can_expand(query) {
         return None;
     }
-    let Some(select) = select_body(&query.body) else {
-        return None;
-    };
-    Some(
-        super::predicate::rejects_all(select.selection.as_ref())
-            || super::predicate::rejects_all(select.having.as_ref()),
-    )
+    let select = select_body(&query.body)?;
+    Some(super::predicate::rejects_all(select.having.as_ref()))
 }
 
 fn select_body(set: &SetExpr) -> Option<&Select> {
@@ -78,7 +73,7 @@ fn one_group(select: &Select) -> bool {
         && !projected(select)
             .iter()
             .any(|expr| contains_call(expr, &|function| is_set_returning(&function.name)))
-        && !distinct_on_expands(select)
+        && (!distinct_on_expands(select) || super::predicate::rejects_all(select.having.as_ref()))
 }
 
 /// DISTINCT ON evaluates its expressions against the grouped rows, including implicit groups.
