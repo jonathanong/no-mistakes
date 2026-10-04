@@ -1,4 +1,5 @@
 mod nonrecursive_ctes;
+mod recovered_table;
 mod scalar_reducer_arrays;
 mod standalone_table;
 mod stored_array;

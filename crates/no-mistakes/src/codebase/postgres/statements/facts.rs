@@ -1,9 +1,15 @@
 use super::tokens::Tokens;
 use super::*;
+mod collect;
 mod inserts;
-use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
-use inserts::collect_query_inserts;
+use crate::codebase::postgres::parse::{
+    parse_postgres_sql, parse_postgres_sql_lenient_with_sources,
+};
+use collect::{collect_one, FactOut};
 use sqlparser::ast::{Spanned, Statement};
+use sqlparser::tokenizer::TokenWithSpan;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 mod prepared;
 use prepared::PreparedStatements;
@@ -41,19 +47,53 @@ fn extract_sql_statement_facts_with_placeholder_positions(
 ) -> SqlStatementFileFacts {
     let parsed = parse_postgres_sql(sql);
     let parse_failed = parsed.is_err();
-    let statements = parsed.unwrap_or_else(|_| parse_postgres_sql_lenient(sql));
-    extract_from_parsed_with_recovered_placeholders(
+    match parsed {
+        Ok(statements) => extract_from_parsed_with_recovered_placeholders(
+            sql,
+            &statements,
+            false,
+            collect_bounds,
+            placeholder_positions,
+        ),
+        Err(_) => {
+            let (statements, sources): (Vec<_>, Vec<_>) =
+                parse_postgres_sql_lenient_with_sources(sql)
+                    .into_iter()
+                    .map(|located| (located.statement, located.source))
+                    .unzip();
+            extract_from_parsed_and_sources(
+                sql,
+                &statements,
+                Some(&sources),
+                parse_failed,
+                collect_bounds,
+                placeholder_positions,
+            )
+        }
+    }
+}
+
+pub(crate) fn extract_from_parsed_with_recovered_placeholders(
+    sql: &str,
+    statements: &[Statement],
+    parse_failed: bool,
+    collect_bounds: bool,
+    placeholder_positions: super::value::PlaceholderPositions<'_>,
+) -> SqlStatementFileFacts {
+    extract_from_parsed_and_sources(
         sql,
-        &statements,
+        statements,
+        None,
         parse_failed,
         collect_bounds,
         placeholder_positions,
     )
 }
 
-pub(crate) fn extract_from_parsed_with_recovered_placeholders(
+fn extract_from_parsed_and_sources(
     sql: &str,
     statements: &[Statement],
+    sources: Option<&[Option<Arc<[TokenWithSpan]>>]>,
     parse_failed: bool,
     collect_bounds: bool,
     placeholder_positions: super::value::PlaceholderPositions<'_>,
@@ -73,6 +113,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     let mut trigger_n = 0usize;
     let tokens = Tokens::new(sql);
     let table_index = collect_bounds.then(|| bounds::TableTokenIndex::new(tokens.all()));
+    let mut recovered_indexes = HashMap::new();
     let mut out = FactOut {
         insert_n: &mut insert_n,
         trigger_n: &mut trigger_n,
@@ -86,10 +127,22 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     };
     let mut temporary_relations = bounds::TemporaryRelations::default();
     let mut prepared = PreparedStatements::default();
-    for source_statement in statements {
-        let scope = table_index.as_ref().map(|index| {
-            bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
+    for (index, source_statement) in statements.iter().enumerate() {
+        let recovered_source = collect_bounds
+            .then(|| sources.and_then(|sources| sources.get(index)))
+            .flatten()
+            .and_then(Option::as_ref);
+        let source_index = recovered_source.map(|source| {
+            recovered_indexes
+                .entry(Arc::as_ptr(source) as *const () as usize)
+                .or_insert_with(|| bounds::TableTokenIndex::new(source))
         });
+        let scope = source_index
+            .map(|index| &*index)
+            .or(table_index.as_ref())
+            .map(|index| {
+                bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
+            });
         let mut executed = Vec::new();
         wrappers::walk_executed(source_statement, &mut executed);
         for statement in executed {
@@ -138,64 +191,6 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
         origin_line: 0,
     }
-}
-
-struct FactOut<'a> {
-    insert_n: &'a mut usize,
-    trigger_n: &'a mut usize,
-    inserts: &'a mut Vec<SqlInsertFact>,
-    selects: &'a mut Vec<SqlSelectFact>,
-    updates: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
-    deletes: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
-    triggers: &'a mut Vec<SqlTriggerFact>,
-    returning_stars: &'a mut Vec<SqlStarProjectionFact>,
-    mutation_column_uses: &'a mut Vec<SqlColumnUseFact>,
-}
-
-fn collect_one(
-    sql: &str,
-    statement: &Statement,
-    placeholder_positions: super::value::PlaceholderPositions<'_>,
-    out: &mut FactOut<'_>,
-) {
-    if let Statement::Insert(insert) = statement {
-        *out.insert_n += 1;
-        if let Some(fact) =
-            insert::from_statement_at(sql, statement, *out.insert_n, placeholder_positions)
-        {
-            out.inserts.push(fact);
-        }
-        if let Some(source) = insert.source.as_deref() {
-            collect_query_inserts(
-                sql,
-                source,
-                out.insert_n,
-                out.inserts,
-                placeholder_positions,
-            );
-        }
-    }
-    if matches!(statement, Statement::CreateTrigger(_)) {
-        *out.trigger_n += 1;
-        if let Some(fact) = trigger::from_statement(sql, statement, *out.trigger_n) {
-            out.triggers.push(fact);
-        }
-    }
-    if let Statement::Query(query) = statement {
-        collect_query_inserts(sql, query, out.insert_n, out.inserts, placeholder_positions);
-    }
-    select::collect_with_placeholder_positions(sql, statement, placeholder_positions, out.selects);
-    out.returning_stars
-        .extend(select::returning_stars(sql, statement));
-    mutations::collect(
-        sql,
-        statement,
-        out.updates,
-        out.deletes,
-        out.selects,
-        out.mutation_column_uses,
-        placeholder_positions,
-    );
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {

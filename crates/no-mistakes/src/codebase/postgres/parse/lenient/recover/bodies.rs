@@ -1,7 +1,7 @@
 //! Recover SQL carried by procedural bodies and concatenated string literals.
+use super::super::LocatedStatement;
 use super::super::{keyword_of, skip_ws};
 use super::locations;
-use sqlparser::ast::Statement;
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -42,13 +42,14 @@ pub(super) fn recover_chr_encoded(
     tokens: &[Token],
     original: Option<&[TokenWithSpan]>,
     allow_concurrent_detach: bool,
-) -> Vec<Statement> {
+) -> Vec<LocatedStatement> {
     let mut rewritten = tokens.to_vec();
     super::super::rewrite_chr_tokens(&mut rewritten);
     concatenated_strings(&rewritten)
         .map(|sql| {
-            super::super::parse_with_concurrent_detach(
+            super::super::parse_with_sources(
                 &locations::align_chr_sql(&sql, original),
+                true,
                 allow_concurrent_detach,
             )
         })

@@ -643,3 +643,4 @@ PostgreSQL schema catalog generation (complete and ordering coverage) has Rust l
 PostgreSQL bounded-statement analysis recognizes `TABLE ONLY name` query arms and retains quoted relation identity across strict and lenient parsing.
 It also analyzes standalone `TABLE name` and `TABLE ONLY name` statements, including an explicit inheritance `*` suffix, with the same catalog and temporary-relation semantics as a corresponding `SELECT * FROM name`.
 `EXPLAIN TABLE name` parses as a plan without execution, while `EXPLAIN ANALYZE TABLE name` contributes executed query facts with the same relation identity.
+Lenient PostgreSQL recovery retains exact TABLE-arm spelling inside DO bodies and reconstructed SQL fragments.

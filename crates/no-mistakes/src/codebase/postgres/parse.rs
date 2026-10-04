@@ -6,6 +6,7 @@ use std::fmt;
 mod copy_data;
 mod distinct_group;
 mod lenient;
+pub(crate) use lenient::LocatedStatement;
 mod radix_numbers;
 mod sql_text;
 mod standalone_table;
@@ -77,6 +78,10 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 /// constraint name stay. `ON UPDATE` column lists are left unchanged.
 pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     lenient::parse_postgres_sql_lenient(sql)
+}
+
+pub(crate) fn parse_postgres_sql_lenient_with_sources(sql: &str) -> Vec<LocatedStatement> {
+    lenient::parse_postgres_sql_lenient_with_sources(sql)
 }
 
 pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
