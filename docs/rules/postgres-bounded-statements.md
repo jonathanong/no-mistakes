@@ -42,7 +42,12 @@ remain ordinary catalog relations. Their dependency records let a physical
 identities intact; an unqualified view declaration has unknown schema ownership
 and is retired conservatively on a schema cascade.
 Schema renames update a declared permanent view's qualified identity and source
-edges before a later physical cascade.
+edges before a later physical cascade. PostgreSQL's `ALTER TABLE ... RENAME TO`
+form also renames ordinary and materialized views: their declared node identities
+move with their dependency edges, so a later cascade still retires temporary
+dependents. Qualified names preserve their schema; ambiguous bare declarations
+retain both candidates. A rename onto another known qualified view is rejected
+and leaves the graph unchanged.
 
 An explicitly parsed `search_path` also limits which physical schemas a bare
 `DROP` or `RENAME` target can name. For example, with `public, pg_temp`, dropping

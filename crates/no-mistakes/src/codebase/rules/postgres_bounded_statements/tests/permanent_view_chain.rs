@@ -23,3 +23,12 @@ fn ambiguous_source_rename_preserves_later_catalog_finding() {
     let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-permanent-view-ambiguous-rename.sql"));
     assert_eq!(names(sql), ["orders"]);
 }
+
+#[test]
+fn permanent_view_node_rename_preserves_cascade_identity_and_failed_ddl() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-permanent-view-node-rename.sql"));
+    assert_eq!(
+        names(sql),
+        ["orders", "orders", "orders", "orders", "orders", "orders"]
+    );
+}

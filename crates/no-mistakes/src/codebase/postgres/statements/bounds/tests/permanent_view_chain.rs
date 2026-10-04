@@ -46,3 +46,30 @@ fn ambiguous_source_rename_retains_original_permanent_view_edge() {
     assert!(!parsed.parse_failed);
     assert_eq!(shape(sql), ["select: orders"]);
 }
+
+#[test]
+fn permanent_view_node_rename_preserves_cascade_identity_and_failed_ddl() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-permanent-view-node-rename.sql"));
+    let parsed = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!parsed.parse_failed);
+    assert_eq!(parsed.bounds.len(), 14);
+    assert_eq!(
+        shape(sql),
+        [
+            "select: opaque",
+            "select: opaque",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders"
+        ]
+    );
+}
