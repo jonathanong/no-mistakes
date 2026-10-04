@@ -200,3 +200,6 @@ mod merge_tests;
 
 #[cfg(test)]
 mod prepared_tests;
+
+#[cfg(test)]
+mod table_sweep_tests;

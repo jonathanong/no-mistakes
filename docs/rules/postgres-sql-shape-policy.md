@@ -167,6 +167,12 @@ plain columns of that table, where every top-level `WHERE` conjunct is either a
 keyset cursor or a configured non-selective predicate. A cursor compares an `ORDER
 BY` column with a bind parameter using `>`, `>=`, `<` or `<=`: `id > $1`,
 `(created_at, id) > ($1, $2)`, or the optional form `($1::uuid IS NULL OR id > $1)`.
+A single-relation `TABLE orders ORDER BY id LIMIT $1` is also a whole-table page,
+with the same finding location and suppression support as its `SELECT * FROM`
+equivalent. To narrow the work, rewrite it as a `SELECT` with a selective predicate.
+CTE references, non-column order expressions, and zero or NULL caps retain their
+existing exclusions.
+
 With no `WHERE` at all the walk is whole-table too. Any other conjunct narrows the
 walk (a due timestamp, a parent id, `lease_expires_at IS NULL`), so the query is
 allowed: a background job should choose rows that need work, such as a work-item row,
