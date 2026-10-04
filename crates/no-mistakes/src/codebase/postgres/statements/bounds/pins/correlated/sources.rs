@@ -102,8 +102,9 @@ impl Scan {
                 alias: Some(alias), ..
             } => {
                 frame.scope.relations.insert(ident_key(&alias.name));
-                // Child columns no longer identify the wrapper's renamed output positions.
-                frame.scope.foreign = true;
+                // A relation alias alone preserves child output names. Only explicit
+                // column renaming makes their catalog ownership unavailable here.
+                frame.scope.foreign |= !alias.columns.is_empty();
             }
             TableFactor::NestedJoin { alias: None, .. } => {}
             _ => frame.scope.foreign = true,
