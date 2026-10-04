@@ -1,12 +1,11 @@
 use super::aggregate::{orders_by_aggregate, pure_aggregate};
 use super::{items, start, Scope};
 use crate::codebase::postgres::idents::ident_key;
-use crate::codebase::postgres::statements::limit::is_limited;
-use crate::codebase::postgres::statements::{
-    SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
-};
-use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
-use std::collections::BTreeMap;
+use crate::codebase::postgres::statements::limit::{is_limited, is_zero_limited};
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
+use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
+mod compact;
+use compact::{compact, size, MAX_BOUND_ITEMS};
 
 pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
     bound_body(query, &with_scope(query, scope))
@@ -46,76 +45,6 @@ pub(super) fn with_scope(query: &Query, outer: &Scope) -> Scope {
     scope
 }
 
-const MAX_BOUND_ITEMS: usize = 2048;
-
-/// The number of items in a bound, nested queries and subquery pins included.
-fn size(query: &SqlBoundQuery) -> usize {
-    query
-        .items
-        .iter()
-        .map(|item| {
-            let inner = match &item.kind {
-                SqlBoundItemKind::Query(inner) => size(inner),
-                _ => 0,
-            };
-            let pins: usize = item
-                .pins
-                .iter()
-                .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) => size(inner),
-                    _ => 0,
-                })
-                .sum();
-            1 + inner + pins
-        })
-        .sum()
-}
-
-/// Keep a fail-closed summary of oversized CTEs. Capped subqueries contribute no
-/// unbounded reads; an opaque item prevents this summary from sizing a later join.
-fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuery {
-    fn tables(query: &SqlBoundQuery, found: &mut BTreeMap<String, SqlBoundItem>) {
-        if query.capped {
-            return;
-        }
-        for item in &query.items {
-            match &item.kind {
-                SqlBoundItemKind::Table(name) => {
-                    // Only caller-sized values remain valid after the surrounding items are
-                    // removed. A repeated relation is bounded only by pins common to every read.
-                    let pins: Vec<_> = item
-                        .pins
-                        .iter()
-                        .filter(|pin| matches!(pin.source, SqlPinSource::Value))
-                        .cloned()
-                        .collect();
-                    if let Some(previous) = found.get_mut(name) {
-                        previous.pins.retain(|pin| pins.contains(pin));
-                    } else {
-                        let mut table = SqlBoundItem::new(
-                            SqlBoundItemKind::Table(name.clone()),
-                            None,
-                            (item.line, item.column),
-                        );
-                        table.pins = pins;
-                        found.insert(name.clone(), table);
-                    }
-                }
-                SqlBoundItemKind::Query(inner) => tables(inner, found),
-                _ => {}
-            }
-        }
-    }
-    let mut found = BTreeMap::new();
-    tables(bound, &mut found);
-    let mut items: Vec<_> = found.into_values().collect();
-    items.push(items::opaque(at));
-    SqlBoundQuery {
-        capped: bound.capped,
-        items,
-    }
-}
-
 /// The `INSERT` / `UPDATE` / `DELETE` / `MERGE` inside a data-modifying CTE.
 pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
     match &*query.body {
@@ -130,8 +59,58 @@ pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
 /// The body of `query` under `scope`, which already holds its CTEs.
 pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
     let mut bound = set_bound(&query.body, scope);
-    bound.capped |= is_limited(query) || orders_by_aggregate(query);
+    if is_zero_limited(query) {
+        bound.capped = true;
+    } else if is_limited(query) {
+        cap_streaming_arms(&query.body, &mut bound);
+    }
+    bound.capped |= orders_by_aggregate(query);
     bound
+}
+
+/// Non-streaming set operations must inspect their input arms before an outer LIMIT can
+/// produce the final rows; UNION ALL can stop as soon as that limit is satisfied.
+fn requires_complete_arms(set: &SetExpr) -> bool {
+    match set {
+        SetExpr::SetOperation {
+            op,
+            set_quantifier,
+            left,
+            right,
+        } => {
+            *op != SetOperator::Union
+                || *set_quantifier != SetQuantifier::All
+                || requires_complete_arms(left)
+                || requires_complete_arms(right)
+        }
+        SetExpr::Query(query) => requires_complete_arms(&query.body),
+        _ => false,
+    }
+}
+
+/// A UNION ALL limit caps each streaming sibling independently. A blocking subtree keeps
+/// its input findings even when another sibling can stop after the requested rows.
+fn cap_streaming_arms(set: &SetExpr, bound: &mut SqlBoundQuery) {
+    if !requires_complete_arms(set) {
+        bound.capped = true;
+        return;
+    }
+    match set {
+        SetExpr::SetOperation {
+            op: SetOperator::Union,
+            set_quantifier: SetQuantifier::All,
+            left,
+            right,
+        } => {
+            for (set, item) in [left, right].into_iter().zip(&mut bound.items) {
+                if let SqlBoundItemKind::Query(inner) = &mut item.kind {
+                    cap_streaming_arms(set, inner);
+                }
+            }
+        }
+        SetExpr::Query(query) => cap_streaming_arms(&query.body, bound),
+        _ => {}
+    }
 }
 
 fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
