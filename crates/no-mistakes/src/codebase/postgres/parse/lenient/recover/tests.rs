@@ -2,6 +2,41 @@ use super::{peel_do_body, recover_schema_ddl, schema_ddl_start};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 
+#[test]
+fn recovers_only_complete_postgres_partition_transitions() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-parse-controls.sql"),
+    )
+    .unwrap();
+    assert!(crate::codebase::postgres::parse_postgres_sql(&sql).is_err());
+    let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
+    assert_eq!(statements.len(), 6);
+    let changes: Vec<_> = statements
+        .iter()
+        .filter_map(|statement| match statement {
+            sqlparser::ast::Statement::AlterTable(table) => table.operations.first(),
+            _ => None,
+        })
+        .collect();
+    assert!(matches!(
+        changes.as_slice(),
+        [
+            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
+            sqlparser::ast::AlterTableOperation::AddColumn { .. }
+        ]
+    ));
+    let ordinary = sql
+        .lines()
+        .find(|line| line.starts_with("ALTER TABLE accounts ADD COLUMN"))
+        .unwrap();
+    assert!(super::partition::recover_partition_change(&tokens(ordinary), None).is_none());
+}
+
 fn tokens(sql: &str) -> Vec<Token> {
     Tokenizer::new(&PostgreSqlDialect {}, sql)
         .tokenize()

@@ -38,6 +38,14 @@ pub(super) fn key(name: &str) -> String {
     decoded_parts(name).last().cloned().unwrap_or_default()
 }
 impl State {
+    pub fn dependency(&self, name: &str) -> Dependency {
+        if self.contains(name) {
+            Dependency::Temporary(key(name))
+        } else {
+            Dependency::Physical(decoded_parts(name))
+        }
+    }
+
     pub fn contains(&self, name: &str) -> bool {
         let parts = decoded_parts(name);
         (parts.len() == 1 && self.temp_first || parts.len() == 2 && parts[0] == "pg_temp")
@@ -47,11 +55,7 @@ impl State {
         for item in &query.items {
             match &item.kind {
                 SqlBoundItemKind::Table(name) => {
-                    out.insert(if self.contains(name) {
-                        Dependency::Temporary(key(name))
-                    } else {
-                        Dependency::Physical(decoded_parts(name))
-                    });
+                    out.insert(self.dependency(name));
                 }
                 SqlBoundItemKind::Query(query) => self.dependencies(query, out),
                 _ => {}
@@ -176,6 +180,22 @@ impl State {
         for dependencies in self.relations.values_mut() {
             if dependencies.remove(&Dependency::Temporary(old.clone())) {
                 dependencies.insert(Dependency::Temporary(new.clone()));
+            }
+        }
+    }
+
+    pub fn attach_partition(&mut self, parent: &str, child: &str) {
+        let parent = self.dependency(parent);
+        if self.contains(child) {
+            self.relations.entry(key(child)).or_default().insert(parent);
+        }
+    }
+
+    pub fn detach_partition(&mut self, parent: &str, child: &str) {
+        let parent = self.dependency(parent);
+        if self.contains(child) {
+            if let Some(dependencies) = self.relations.get_mut(&key(child)) {
+                dependencies.remove(&parent);
             }
         }
     }

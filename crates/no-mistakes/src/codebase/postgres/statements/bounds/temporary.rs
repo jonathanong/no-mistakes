@@ -49,14 +49,24 @@ impl TemporaryRelations {
         match statement {
             Statement::CreateTable(table) if table.temporary || temporary_name(&table.name) => {
                 let name = sql_name(&table.name);
-                if table.on_commit == Some(sqlparser::ast::OnCommit::Drop) {
-                    // Outside an explicit transaction, DROP takes effect at this statement's commit.
-                    if self.transaction.is_some() {
-                        self.insert(name.clone());
+                let parent = table
+                    .partition_of
+                    .as_ref()
+                    .map(|parent| self.state.dependency(&sql_name(parent)));
+                let on_commit_drop = table.on_commit == Some(sqlparser::ast::OnCommit::Drop);
+                // Outside an explicit transaction, DROP takes effect at this statement's commit.
+                if !on_commit_drop || self.transaction.is_some() {
+                    self.insert(name.clone());
+                    if let Some(parent) = parent {
+                        self.state
+                            .relations
+                            .entry(state::key(&name))
+                            .or_default()
+                            .insert(parent);
+                    }
+                    if on_commit_drop {
                         self.state.on_commit_drop.insert(state::key(&name));
                     }
-                } else {
-                    self.insert(name);
                 }
             }
             Statement::CreateView(view)

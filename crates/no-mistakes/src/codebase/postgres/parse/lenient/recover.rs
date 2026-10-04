@@ -1,5 +1,7 @@
 use super::{keyword_of, next_non_ws, skip_ws};
 mod locations;
+mod partition;
+use partition::recover_partition_change;
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
@@ -41,6 +43,9 @@ fn parse_chunk(chunk: Vec<Token>, original: Option<&[TokenWithSpan]>) -> Vec<Sta
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => vec![statement],
         _ => {
+            if let Some(partition_change) = recover_partition_change(&chunk, original) {
+                return vec![partition_change];
+            }
             let recovered = recover_chr_encoded(&chunk, original);
             if recovered.is_empty() {
                 recover_schema_ddl(&chunk, original).into_iter().collect()

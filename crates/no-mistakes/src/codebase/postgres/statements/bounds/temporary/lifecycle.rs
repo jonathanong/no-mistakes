@@ -3,7 +3,8 @@ use super::super::items;
 use super::{state, TemporaryRelations};
 use crate::codebase::postgres::idents::ident_key;
 use sqlparser::ast::{
-    AlterTableOperation, ContextModifier, ObjectType, RenameTableNameKind, Reset, Set, Statement,
+    AlterTableOperation, ContextModifier, Expr, ObjectName, ObjectNamePart, ObjectType, Partition,
+    RenameTableNameKind, Reset, Set, Statement,
 };
 
 impl TemporaryRelations {
@@ -89,11 +90,26 @@ impl TemporaryRelations {
             Statement::AlterSchema(schema) => self.alter_schema(schema),
             Statement::AlterTable(table) => {
                 for operation in &table.operations {
-                    if let AlterTableOperation::RenameTable { table_name } = operation {
-                        let (RenameTableNameKind::To(name) | RenameTableNameKind::As(name)) =
-                            table_name;
-                        self.state
-                            .rename(&items::sql_name(&table.name), &items::sql_name(name));
+                    match operation {
+                        AlterTableOperation::RenameTable { table_name } => {
+                            let (RenameTableNameKind::To(name) | RenameTableNameKind::As(name)) =
+                                table_name;
+                            self.state
+                                .rename(&items::sql_name(&table.name), &items::sql_name(name));
+                        }
+                        AlterTableOperation::AttachPartition { partition } => {
+                            if let Some(child) = partition_name(partition) {
+                                self.state
+                                    .attach_partition(&items::sql_name(&table.name), &child);
+                            }
+                        }
+                        AlterTableOperation::DetachPartition { partition } => {
+                            if let Some(child) = partition_name(partition) {
+                                self.state
+                                    .detach_partition(&items::sql_name(&table.name), &child);
+                            }
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -177,4 +193,20 @@ impl TemporaryRelations {
             self.state.drop(&name, cascade);
         }
     }
+}
+
+fn partition_name(partition: &Partition) -> Option<String> {
+    let Partition::Expr(expression) = partition else {
+        return None;
+    };
+    let parts = match expression {
+        Expr::Identifier(ident) => vec![ObjectNamePart::Identifier(ident.clone())],
+        Expr::CompoundIdentifier(idents) => idents
+            .iter()
+            .cloned()
+            .map(ObjectNamePart::Identifier)
+            .collect(),
+        _ => return None,
+    };
+    Some(items::sql_name(&ObjectName(parts)))
 }
