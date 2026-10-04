@@ -65,6 +65,8 @@ pub(in super::super) fn reads_outer_rows(
 /// What one query level mentions, until its relations are all known.
 #[derive(Default)]
 struct Frame {
+    /// Restore the enclosing query's CTE names when this scope unwinds.
+    previous_ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     scope: Scope,
     /// A set operation's SELECT arms have independent aliases and projected columns.
     split_selects: bool,
@@ -106,7 +108,13 @@ impl Scan {
 
 impl Scan {
     fn finish_frame(&mut self, query: &Query) -> ControlFlow<()> {
+        let previous_ctes = self
+            .stack
+            .last()
+            .map(|frame| frame.previous_ctes.clone())
+            .unwrap_or_default();
         let result = self.finish_frame_without_query();
+        self.ctes = previous_ctes;
         self.complete_cte(query);
         result
     }
