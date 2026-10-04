@@ -33,3 +33,30 @@ fn positional_aliases_preserve_pins_and_nested_query_facts() {
         matches!(&facts.bounds[4].query.items[0].pins[0].source, crate::codebase::postgres::SqlPinSource::Query(inner) if matches!(&inner.items[0].kind, crate::codebase::postgres::SqlBoundItemKind::Table(name) if name == "orders"))
     );
 }
+
+#[test]
+fn finite_arrays_accept_fixed_scalar_boolean_expressions_only() {
+    use crate::codebase::postgres::SqlPinSource;
+
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/finite-array.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+
+    let cases = &facts.bounds[facts.bounds.len() - 23..];
+    let expected = [true; 20].into_iter().chain([false; 3]);
+    for (fact, expected) in cases.iter().zip(expected) {
+        let pins = &fact.query.items[0].pins;
+        if expected {
+            assert!(
+                matches!(pins.as_slice(), [pin] if pin.column == "enabled" && matches!(pin.source, SqlPinSource::Value)),
+                "expected a finite enabled pin at line {}",
+                fact.line
+            );
+        } else {
+            assert!(pins.is_empty(), "unexpected pin at line {}", fact.line);
+        }
+    }
+}

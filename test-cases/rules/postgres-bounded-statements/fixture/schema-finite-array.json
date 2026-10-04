@@ -20,6 +20,11 @@
           "dataType": "text",
           "nullable": false,
           "ordinalPosition": 3
+        },
+        "enabled": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 4
         }
       },
       "primaryKey": {
@@ -61,6 +66,24 @@
             {
               "column": "email",
               "expression": "email"
+            }
+          ]
+        },
+        "accounts_enabled_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_enabled_key",
+          "keys": [
+            {
+              "column": "enabled",
+              "expression": "enabled"
             }
           ]
         }
