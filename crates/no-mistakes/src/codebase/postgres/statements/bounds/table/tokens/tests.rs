@@ -1,4 +1,4 @@
-use super::TableTokenCursor;
+use super::{first_after, TableTokenCursor};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 
@@ -67,4 +67,42 @@ fn long_union_advances_each_outer_from_past_nested_sources() {
         assert_eq!(cursor.names[cursor.next].name, "public.accounts");
         cursor.next += 1;
     }
+}
+
+#[test]
+fn long_chain_marker_lookups_have_logarithmic_comparison_counts() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/table-long-from.sql"),
+    )
+    .unwrap();
+    let tokens = Tokenizer::new(&PostgreSqlDialect {}, &sql)
+        .tokenize_with_location()
+        .unwrap();
+    let cursor = TableTokenCursor::new(&tokens);
+
+    // These are the same marker arrays and lookup helper used by arm advancement.
+    // Count only lookup comparisons, not one-time tokenization or index construction.
+    fn assert_bounded_search<T>(items: &[T], at: impl Fn(&T) -> (usize, usize)) {
+        assert!(items.len() >= 63);
+        // slice::partition_point may probe one extra element at its boundary.
+        let budget = (usize::BITS - items.len().leading_zeros()) as usize + 1;
+        for (index, item) in items.iter().enumerate() {
+            let mut comparisons = 0;
+            let found = first_after(items, at(item), |candidate| {
+                comparisons += 1;
+                at(candidate)
+            });
+            assert_eq!(found, index + 1);
+            assert!(
+                comparisons <= budget,
+                "lookup inspected {comparisons} of {} markers; budget {budget}",
+                items.len()
+            );
+        }
+    }
+
+    assert_bounded_search(&cursor.depths, |marker| marker.at);
+    assert_bounded_search(&cursor.operators, |marker| marker.at);
+    assert_bounded_search(&cursor.froms, |marker| marker.at);
 }

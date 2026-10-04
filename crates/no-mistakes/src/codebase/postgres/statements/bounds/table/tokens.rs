@@ -75,6 +75,10 @@ fn location(at: Location) -> (u64, u64) {
     (at.line, at.column)
 }
 
+fn first_after<T, K: Ord + Copy>(items: &[T], at: K, mut position: impl FnMut(&T) -> K) -> usize {
+    items.partition_point(|item| position(item) <= at)
+}
+
 /// Source spellings for TABLE query arms. sqlparser's `Table` AST stores only word values,
 /// so a quoted mixed-case name needs the already prepared token stream to retain identity.
 #[derive(Default)]
@@ -116,11 +120,11 @@ impl TableTokenCursor {
     /// A scalar query can contain its own FROM, so match only the SELECT's nesting depth.
     pub(in super::super::super) fn advance_to_from(&mut self, select_start: Location) {
         let start = (select_start.line as usize, select_start.column as usize);
-        let depth_before = self.depths.partition_point(|source| source.at <= start);
+        let depth_before = first_after(&self.depths, start, |source| source.at);
         let depth = depth_before
             .checked_sub(1)
             .map_or(0, |index| self.depths[index].depth);
-        let first_from = self.froms.partition_point(|from| from.at <= start);
+        let first_from = first_after(&self.froms, start, |from| from.at);
         let Some(from) = self.froms[first_from..]
             .iter()
             .find(|from| from.depth == depth)
@@ -153,16 +157,14 @@ impl TableTokenCursor {
         let (from, max_depth) = if start == (0, 0) {
             (self.last_at.unwrap_or(start), self.last_depth)
         } else {
-            let depth_before = self.depths.partition_point(|source| source.at <= start);
+            let depth_before = first_after(&self.depths, start, |source| source.at);
             let depth = depth_before
                 .checked_sub(1)
                 .map_or(0, |index| self.depths[index].depth);
             (start.max(self.last_at.unwrap_or(start)), depth)
         };
         let from = from.max(self.last_operator.unwrap_or(from));
-        let first_operator = self
-            .operators
-            .partition_point(|operator| operator.at <= from);
+        let first_operator = first_after(&self.operators, from, |operator| operator.at);
         let Some(operator) = self.operators[first_operator..]
             .iter()
             .find(|operator| operator.depth <= max_depth)
