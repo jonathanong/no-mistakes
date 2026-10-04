@@ -4,6 +4,35 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
 #[test]
+fn long_union_advances_to_quoted_table_arm() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/table-long-union.sql"),
+    )
+    .unwrap();
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 1);
+    let mut names = Vec::new();
+    collect_table_names(&facts.bounds[0].query, &mut names);
+    assert_eq!(names, ["\"Final_Arm\""]);
+}
+
+fn collect_table_names(
+    query: &crate::codebase::postgres::statements::SqlBoundQuery,
+    names: &mut Vec<String>,
+) {
+    use crate::codebase::postgres::statements::SqlBoundItemKind;
+    for item in &query.items {
+        match &item.kind {
+            SqlBoundItemKind::Table(name) => names.push(name.clone()),
+            SqlBoundItemKind::Query(query) => collect_table_names(query, names),
+            _ => {}
+        }
+    }
+}
+
+#[test]
 fn table_arms_recover_the_source_identifier_spelling() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
