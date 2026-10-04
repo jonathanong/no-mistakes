@@ -74,3 +74,9 @@ fn joined_aliases_do_not_shadow_earlier_internal_reads() {
         assert_eq!(!names(query).is_empty(), unbounded, "{query}");
     }
 }
+
+#[test]
+fn a_later_join_child_cannot_shadow_an_earlier_on_outer_read() {
+    let sql = std::fs::read_to_string(fixture_root().join("sql/join-forward-alias.sql")).unwrap();
+    assert_eq!(names(&sql), ["accounts"]);
+}
