@@ -142,6 +142,7 @@ pub struct SqlConflictWhereProof {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlSelectFact {
     pub line: usize,
+    /// Physical relations, excluding visible CTE aliases (all siblings for recursive WITH).
     pub tables: Vec<String>,
     pub predicate_sql: String,
     pub exists_set_operations: Vec<SqlExistsSetOpFact>,

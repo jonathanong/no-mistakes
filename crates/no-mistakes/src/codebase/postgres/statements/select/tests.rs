@@ -1,3 +1,4 @@
+mod recursive_forward;
 use sqlparser::ast::{BinaryOperator, Expr, Ident, JoinConstraint, JoinOperator};
 
 fn ident_eq() -> Expr {

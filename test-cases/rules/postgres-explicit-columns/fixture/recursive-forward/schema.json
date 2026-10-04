@@ -1,0 +1,9 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {"columns": {"id": {"dataType": "integer", "nullable": false, "ordinalPosition": 1}}},
+    "later_cte": {"columns": {"id": {"dataType": "integer", "nullable": false, "ordinalPosition": 1}}}
+  }
+}
