@@ -1,4 +1,5 @@
 mod cast_context;
+mod directional;
 mod select_all;
 
 use crate::codebase::postgres::statements::{
@@ -489,7 +490,7 @@ fn expanded_lexicographic_cursors() {
         ("a > $1 OR b > $2", vec![]),
         ("a > $1 OR (a > $1 AND b > $2)", vec![]),
         ("a > $1 OR (c = $1 AND b > $2)", vec![]),
-        ("a > $1 OR (a = $1 AND b >= $2)", vec![]),
+        ("a > $1 OR (a = $1 AND b >= $2)", vec!["a", "b"]),
         ("a > $1 OR (a = $1 AND b > 2)", vec![]),
         ("a > $1 OR (TRUE AND b > $2)", vec![]),
         ("a > $1 OR (a = $1 AND TRUE)", vec![]),

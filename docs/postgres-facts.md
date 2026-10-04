@@ -455,6 +455,11 @@ int4 casts, including the exact `pg_catalog.int4` type, are transparent when the
 referenced prepared parameter is declared integer; unrelated parameter types do
 not affect that decision. Missing declarations and value-changing casts retain
 their complete expression identity. Quoted type names preserve their meaning.
+Each expanded range arm follows its own leading `ORDER BY` key direction, so
+mixed ascending/descending sorts are supported when all arms move consistently
+forward or backward. Only the final arm may include equality. The public
+`cursor_bound` keeps the first key's lower/upper direction, including for mixed
+sorts, so opposite cursor predicates still form a window.
 
 `SqlConjunctFact.text` folds unquoted words to ASCII lowercase and collapses
 whitespace outside tokens. String literal bodies and quoted identifier contents
