@@ -282,7 +282,8 @@ position. Only keys whose aliased positions keep their original names retain cat
 (`FROM accounts AS a`) retain key matching. This also applies to join conditions and
 `USING` pins.
 
-For `TABLE` set-operation arms, including `TABLE ONLY name`, the SQL parser omits identifier quote information.
+Standalone `TABLE name` and `TABLE ONLY name` statements are analyzed as queries,
+including after temporary-table declarations. For `TABLE` set-operation arms, including `TABLE ONLY name`, the SQL parser omits identifier quote information.
 Analysis recovers the spelling from the prepared source tokens and matches quoted
 names exactly. If source tokens are unavailable, it conservatively checks both
 exact and folded spellings when they differ. A matching one-part CTE takes

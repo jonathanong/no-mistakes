@@ -22,8 +22,7 @@ fn table_only_normalization_leaves_create_table_name_intact() {
 
 #[test]
 fn table_only_normalization_does_not_accept_unsupported_or_incomplete_queries() {
-    // Standalone TABLE awaits parser support; the other rows guard missing names and
-    // a TABLE token outside a query-arm position.
+    // Incomplete query arms and TABLE outside a query-arm position stay invalid.
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-only-invalid.sql"

@@ -22,6 +22,7 @@ pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     let located = super::unicode::tokenize_with_location(&separated, false);
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
     super::table_only::normalize(&mut located);
+    super::standalone_table::normalize(&mut located);
     if located.is_empty() {
         let chunks = super::top_level_statements(sql);
         if chunks.len() <= 1 {
