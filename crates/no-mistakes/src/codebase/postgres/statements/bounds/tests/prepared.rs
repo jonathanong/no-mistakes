@@ -91,3 +91,37 @@ fn partial_prepared_types_infer_total_execute_arity() {
         ]
     );
 }
+
+#[test]
+fn prepared_name_truncation_preserves_utf8_and_quoted_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-name-truncation.sql"
+    ));
+    assert_eq!(
+        crate::codebase::postgres::parse_postgres_sql(sql)
+            .unwrap()
+            .len(),
+        33
+    );
+    assert_eq!(
+        shape(sql),
+        [
+            "select: capped orders",
+            "select: opaque",
+            "select: accounts",
+            "select: capped orders",
+            "select: capped orders",
+            "select: accounts",
+            "select: capped orders",
+            "select: accounts",
+            "select: opaque",
+            "select: capped orders",
+            "select: opaque",
+            "select: accounts",
+            "select: capped orders",
+            "select: accounts",
+            "select: opaque"
+        ]
+    );
+}
