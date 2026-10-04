@@ -1,5 +1,5 @@
 //! Rename relation and schema dependencies without changing request ownership.
-use super::{key, names::names_match, Dependency, State};
+use super::{key, physical::rename_dependencies, Dependency, State};
 use crate::codebase::postgres::decoded_parts;
 use std::collections::BTreeSet;
 
@@ -51,27 +51,12 @@ impl State {
             self.remove(BTreeSet::from([key(old)]), true);
         }
         if !self.matches_identity(old) {
+            let targets = self.ddl_names(old);
             let old = decoded_parts(old);
             let new = key(new);
-            self.rename_physical(&old, &new);
+            self.rename_physical(&old, &new, &targets);
             for dependencies in self.relations.values_mut() {
-                *dependencies = dependencies
-                    .iter()
-                    .flat_map(|dependency| match dependency {
-                        Dependency::Physical(parts) if names_match(parts, &old) => {
-                            let mut renamed = parts.clone();
-                            renamed.pop();
-                            renamed.push(new.clone());
-                            let mut candidates = vec![Dependency::Physical(renamed)];
-                            // Without an exact schema match the rename may refer to a namesake.
-                            if parts.len() == 1 || parts != &old {
-                                candidates.push(dependency.clone());
-                            }
-                            candidates
-                        }
-                        other => vec![other.clone()],
-                    })
-                    .collect();
+                *dependencies = rename_dependencies(dependencies, &old, &new, &targets);
             }
             return;
         }

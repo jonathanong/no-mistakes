@@ -50,9 +50,9 @@ impl State {
             .retain(|view, _| !dropped.iter().any(|name| names_match(view, name)));
     }
 
-    pub fn rename_physical(&mut self, old: &[String], new: &str) {
+    pub fn rename_physical(&mut self, old: &[String], new: &str, targets: &BTreeSet<Vec<String>>) {
         for dependencies in self.physical_views.values_mut() {
-            *dependencies = rename_dependencies(dependencies, old, new);
+            *dependencies = rename_dependencies(dependencies, old, new, targets);
         }
     }
 }
@@ -61,11 +61,14 @@ pub(super) fn rename_dependencies(
     dependencies: &BTreeSet<Dependency>,
     old: &[String],
     new: &str,
+    targets: &BTreeSet<Vec<String>>,
 ) -> BTreeSet<Dependency> {
     dependencies
         .iter()
         .flat_map(|dependency| match dependency {
-            Dependency::Physical(parts) if names_match(parts, old) => {
+            Dependency::Physical(parts)
+                if targets.iter().any(|target| names_match(parts, target)) =>
+            {
                 let mut renamed = parts.clone();
                 renamed.pop();
                 renamed.push(new.to_owned());
