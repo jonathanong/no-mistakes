@@ -12,12 +12,14 @@ mod array_review;
 mod compact_aliases;
 mod compact_caller_arrays;
 mod physical_cascade;
+mod recursive_forward;
 mod referential;
 mod repeated_begin;
 mod review;
 mod review_table;
 mod suppression;
 mod trigger_scope;
+mod view_dependencies;
 mod xml_array;
 
 fn catalog() -> SchemaCatalog {
