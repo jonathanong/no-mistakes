@@ -13,6 +13,7 @@ pub(super) fn sweep(
     query: &Query,
     ctes: &[String],
     transparent_int4_casts: bool,
+    recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<SqlSweepFact> {
     let (select, order) = page_of(query)?;
     let [from] = select.from.as_slice() else {
@@ -44,13 +45,15 @@ pub(super) fn sweep(
     // The relation answers to its last name part as written, a quoted dot included.
     let mut names: Vec<String> = object_name_ident(name).map(ident_key).into_iter().collect();
     names.extend(alias.as_ref().map(|alias| ident_key(&alias.name)));
-    let (order_columns, order_ascending) = order_columns(order, select, &names)?;
+    let (order_columns, order_ascending) =
+        order_columns(order, select, &names, recovered_placeholder_positions)?;
     let conjuncts = conjuncts::of(
         select.selection.as_ref(),
         &names,
         &order_columns,
         &order_ascending,
         transparent_int4_casts,
+        recovered_placeholder_positions,
     );
     let at = name.span().start;
     Some(SqlSweepFact {
@@ -108,6 +111,7 @@ fn order_columns(
     order: &OrderBy,
     select: &Select,
     names: &[String],
+    recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<(Vec<String>, Vec<Option<bool>>)> {
     let OrderByKind::Expressions(expressions) = &order.kind else {
         return None;
@@ -116,12 +120,16 @@ fn order_columns(
         .projection
         .iter()
         .filter_map(|item| match item {
-            SelectItem::ExprWithAlias { expr, alias } => {
-                Some((ident_key(alias), conjuncts::column(expr, names)))
-            }
-            SelectItem::UnnamedExpr(expr) => {
-                implicit_label(expr).map(|label| (label, conjuncts::column(expr, names)))
-            }
+            SelectItem::ExprWithAlias { expr, alias } => Some((
+                ident_key(alias),
+                conjuncts::column(expr, names, recovered_placeholder_positions),
+            )),
+            SelectItem::UnnamedExpr(expr) => implicit_label(expr).map(|label| {
+                (
+                    label,
+                    conjuncts::column(expr, names, recovered_placeholder_positions),
+                )
+            }),
             _ => None,
         })
         .collect();
@@ -130,9 +138,9 @@ fn order_columns(
         .map(|expression| match &expression.expr {
             Expr::Identifier(ident) => match aliases.get(&ident_key(ident)) {
                 Some(underlying) => underlying.clone(),
-                None => conjuncts::column(&expression.expr, names),
+                None => conjuncts::column(&expression.expr, names, recovered_placeholder_positions),
             },
-            other => conjuncts::column(other, names),
+            other => conjuncts::column(other, names, recovered_placeholder_positions),
         })
         .collect();
     let ascending = expressions

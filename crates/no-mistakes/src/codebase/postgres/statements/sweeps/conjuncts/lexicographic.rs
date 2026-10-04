@@ -1,4 +1,5 @@
-use super::{bound, column, flatten, is_bind, is_placeholder_ident, Cursor};
+use super::placeholders::is_recovered_placeholder;
+use super::{bound, column, flatten, is_bind, Cursor};
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{BinaryOperator, DataType, Expr, Value};
 
@@ -9,6 +10,7 @@ pub(super) fn cursor(
     order_columns: &[String],
     order_ascending: &[Option<bool>],
     transparent_int4_casts: bool,
+    recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<Cursor> {
     fn arms<'a>(expr: &'a Expr, out: &mut Vec<&'a Expr>) {
         match unwrap_expr(expr) {
@@ -53,15 +55,22 @@ pub(super) fn cursor(
                 return None;
             };
             let (column_expr, bind_expr) = match (
-                column(left, names).is_some() && is_bind(right),
-                column(right, names).is_some() && is_bind(left),
+                column(left, names, recovered_placeholder_positions).is_some()
+                    && is_bind(right, recovered_placeholder_positions),
+                column(right, names, recovered_placeholder_positions).is_some()
+                    && is_bind(left, recovered_placeholder_positions),
             ) {
                 (true, false) => (left, right),
                 (false, true) => (right, left),
                 _ => return None,
             };
-            if column(column_expr, names).as_ref() != Some(&keys[prefix].0)
-                || bind_identity(bind_expr, transparent_int4_casts)? != keys[prefix].1
+            if column(column_expr, names, recovered_placeholder_positions).as_ref()
+                != Some(&keys[prefix].0)
+                || bind_identity(
+                    bind_expr,
+                    transparent_int4_casts,
+                    recovered_placeholder_positions,
+                )? != keys[prefix].1
             {
                 return None;
             }
@@ -70,8 +79,10 @@ pub(super) fn cursor(
             return None;
         };
         let (column_expr, bind_expr, lower) = match (
-            column(left, names).is_some() && is_bind(right),
-            column(right, names).is_some() && is_bind(left),
+            column(left, names, recovered_placeholder_positions).is_some()
+                && is_bind(right, recovered_placeholder_positions),
+            column(right, names, recovered_placeholder_positions).is_some()
+                && is_bind(left, recovered_placeholder_positions),
         ) {
             (true, false) => match op {
                 BinaryOperator::Gt => (left, right, true),
@@ -90,8 +101,12 @@ pub(super) fn cursor(
         }
         direction = Some(lower);
         keys.push((
-            column(column_expr, names)?,
-            bind_identity(bind_expr, transparent_int4_casts)?,
+            column(column_expr, names, recovered_placeholder_positions)?,
+            bind_identity(
+                bind_expr,
+                transparent_int4_casts,
+                recovered_placeholder_positions,
+            )?,
         ));
     }
     // An expanded comparison is contiguous only in its ORDER BY key sequence. Mixed sort
@@ -116,13 +131,26 @@ pub(super) fn cursor(
 
 /// Keep an int4 bind's identity through built-in transparent spellings. Other casts retain
 /// their complete expression as an opaque identity, preserving an identical-bound comparison.
-fn bind_identity(expr: &Expr, transparent_int4_casts: bool) -> Option<&Expr> {
+fn bind_identity<'a>(
+    expr: &'a Expr,
+    transparent_int4_casts: bool,
+    recovered_placeholder_positions: &[(u32, u32)],
+) -> Option<&'a Expr> {
     match unwrap_expr(expr) {
         Expr::Value(value) if matches!(value.value, Value::Placeholder(_)) => {
             Some(unwrap_expr(expr))
         }
-        Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => Some(unwrap_expr(expr)),
-        Expr::Tuple(items) if !items.is_empty() && items.iter().all(is_bind) => {
+        Expr::Identifier(ident)
+            if is_recovered_placeholder(ident, recovered_placeholder_positions) =>
+        {
+            Some(unwrap_expr(expr))
+        }
+        Expr::Tuple(items)
+            if !items.is_empty()
+                && items
+                    .iter()
+                    .all(|item| is_bind(item, recovered_placeholder_positions)) =>
+        {
             Some(unwrap_expr(expr))
         }
         Expr::Cast {
@@ -130,14 +158,20 @@ fn bind_identity(expr: &Expr, transparent_int4_casts: bool) -> Option<&Expr> {
             data_type,
             ..
         } if transparent_int4_casts && transparent_int4_cast(data_type) => {
-            let identity = bind_identity(inner, transparent_int4_casts)?;
+            let identity = bind_identity(
+                inner,
+                transparent_int4_casts,
+                recovered_placeholder_positions,
+            )?;
             if matches!(identity, Expr::Cast { .. }) {
                 Some(unwrap_expr(expr))
             } else {
                 Some(identity)
             }
         }
-        Expr::Cast { .. } if is_bind(expr) => Some(unwrap_expr(expr)),
+        Expr::Cast { .. } if is_bind(expr, recovered_placeholder_positions) => {
+            Some(unwrap_expr(expr))
+        }
         _ => None,
     }
 }
