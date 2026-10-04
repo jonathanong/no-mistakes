@@ -54,7 +54,9 @@ impl State {
             let targets = self.ddl_names(old);
             let old = decoded_parts(old);
             let new = key(new);
-            self.rename_physical(&old, &new, &targets);
+            if !self.rename_physical(&old, &new, &targets) {
+                return;
+            }
             for dependencies in self.relations.values_mut() {
                 *dependencies = rename_dependencies(dependencies, &old, &new, &targets);
             }
