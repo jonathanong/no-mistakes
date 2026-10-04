@@ -1,4 +1,4 @@
-use super::parse_postgres_sql;
+use super::super::parse_postgres_sql;
 use sqlparser::ast::{SetExpr, Statement, TableFactor};
 
 fn derived_query(sql: &str) -> Box<sqlparser::ast::Query> {

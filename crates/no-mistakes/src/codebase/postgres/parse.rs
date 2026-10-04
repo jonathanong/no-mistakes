@@ -5,8 +5,6 @@ use std::fmt;
 
 mod copy_data;
 mod derived_table;
-#[cfg(test)]
-mod derived_table_limit;
 mod distinct_group;
 mod lenient;
 pub(crate) use lenient::LocatedStatement;

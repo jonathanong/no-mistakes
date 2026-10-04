@@ -1,5 +1,7 @@
 use super::{parse_postgres_sql, parse_postgres_sql_lenient, PostgresParseError};
 
+mod derived_table_limit;
+
 #[test]
 fn parse_postgres_sql_accepts_create_table() {
     let statements = parse_postgres_sql("CREATE TABLE t (id int);").expect("parse");
