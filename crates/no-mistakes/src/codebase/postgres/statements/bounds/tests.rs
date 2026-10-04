@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{
 };
 
 mod array_review;
+mod aliases;
 mod compact_aliases;
 mod review;
 
