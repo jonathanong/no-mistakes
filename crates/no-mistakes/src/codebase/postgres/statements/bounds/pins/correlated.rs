@@ -1,6 +1,7 @@
 mod columns;
 mod ctes;
 mod joins;
+mod on;
 use joins::JoinScope;
 mod scalar_arrays;
 mod scope;
@@ -102,6 +103,7 @@ struct Frame {
     join_qualifiers: Vec<Qualified>,
     join_reads: Vec<SqlBareRead>,
     qualifiers: Vec<Qualified>,
+    on_conditions: FxHashMap<usize, Option<on::OnReads>>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
     bare: BTreeMap<String, usize>,

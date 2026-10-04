@@ -52,6 +52,11 @@ impl Visitor for Scan {
             }
             self.stack.push(frame);
         }
+        if let Some(frame) = self.stack.last_mut() {
+            for from in &select.from {
+                on::register(frame, from);
+            }
+        }
         ControlFlow::Continue(())
     }
 
@@ -79,6 +84,14 @@ impl Visitor for Scan {
             self.derived_scopes
                 .insert(&**subquery as *const Query as usize, scope);
         }
+        if let TableFactor::NestedJoin {
+            table_with_joins, ..
+        } = factor
+        {
+            if let Some(frame) = self.stack.last_mut() {
+                on::register(frame, table_with_joins);
+            }
+        }
         if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
             if let Some(frame) = self.stack.last_mut() {
                 self.join_scopes.push(JoinScope::begin(frame));
@@ -103,6 +116,7 @@ impl Visitor for Scan {
         let Some(frame) = self.stack.last_mut() else {
             return ControlFlow::Continue(());
         };
+        on::begin(frame, expr);
         match expr {
             Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
                 frame.qualifiers.push(super::Qualified {
@@ -121,6 +135,13 @@ impl Visitor for Scan {
                 *frame.bare.entry(ident_key(ident)).or_default() += 1;
             }
             _ => {}
+        }
+        ControlFlow::Continue(())
+    }
+
+    fn post_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
+        if let Some(frame) = self.stack.last_mut() {
+            on::finish(frame, expr);
         }
         ControlFlow::Continue(())
     }
