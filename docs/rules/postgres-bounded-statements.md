@@ -329,6 +329,9 @@ including after temporary-table declarations. For `TABLE` set-operation arms, in
 `EXPLAIN TABLE name` is parsed as a plan without an executed query fact;
 `EXPLAIN ANALYZE TABLE name` executes the query and retains the same quoted
 or folded relation identity as standalone `TABLE name`.
+When lenient parsing recovers SQL from a `DO` body or a reconstructed string,
+TABLE arms use the recovered fragment's source tokens to distinguish quoted
+identifiers from their unquoted catalog namesakes.
 Analysis recovers the spelling from the prepared source tokens and matches quoted
 names exactly. If source tokens are unavailable, it conservatively checks both
 exact and folded spellings when they differ. A matching one-part CTE takes

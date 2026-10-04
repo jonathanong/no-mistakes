@@ -1,4 +1,4 @@
-use super::{keyword_of, next_non_ws};
+use super::{keyword_of, next_non_ws, LocatedStatement};
 mod bodies;
 mod locations;
 mod partition;
@@ -11,11 +11,11 @@ use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-pub(super) fn parse_chunks(
+pub(super) fn parse_chunks_with_sources(
     chunks: Vec<Vec<Token>>,
     original: &[TokenWithSpan],
     allow_concurrent_detach: bool,
-) -> Vec<Statement> {
+) -> Vec<LocatedStatement> {
     let mut located = original
         .split(|token| token.token == Token::SemiColon)
         .filter(|chunk| {
@@ -34,14 +34,14 @@ pub(super) fn parse_chunks(
             source.as_deref(),
             allow_concurrent_detach && !transaction_open,
         ) {
-            match statement {
+            match &statement.statement {
                 Statement::StartTransaction { .. } => transaction_open = true,
                 Statement::Commit { chain, .. }
                 | Statement::Rollback {
                     savepoint: None,
                     chain,
                 } => {
-                    transaction_open = chain;
+                    transaction_open = *chain;
                 }
                 _ => {}
             }
@@ -55,12 +55,12 @@ fn parse_chunk(
     chunk: Vec<Token>,
     original: Option<&[TokenWithSpan]>,
     allow_concurrent_detach: bool,
-) -> Vec<Statement> {
+) -> Vec<LocatedStatement> {
     if let Some(body) = peel_do_body(&chunk) {
         let body = locations::align_do_body(&body, original);
-        return super::parse_with_concurrent_detach(&body, false)
+        return super::parse_with_sources(&body, true, false)
             .into_iter()
-            .filter(|statement| !is_begin_or_end(statement))
+            .filter(|located| !is_begin_or_end(&located.statement))
             .collect();
     }
     let dialect = PostgreSqlDialect {};
@@ -69,16 +69,19 @@ fn parse_chunk(
         None => Parser::new(&dialect).with_tokens(chunk.clone()),
     };
     match parser.parse_statement() {
-        Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => vec![statement],
+        Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => {
+            vec![LocatedStatement::plain(statement)]
+        }
         _ => {
             if let Some(partition_change) =
                 recover_partition_change(&chunk, original, allow_concurrent_detach)
             {
-                return vec![partition_change];
+                return vec![LocatedStatement::plain(partition_change)];
             }
             let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {
                 recover_schema_ddl(&chunk, original, allow_concurrent_detach)
+                    .map(LocatedStatement::plain)
                     .into_iter()
                     .collect()
             } else {

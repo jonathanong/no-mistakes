@@ -1,9 +1,12 @@
 use sqlparser::ast::Statement;
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::{Token, Word};
+use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
+use std::sync::Arc;
 
 mod recover;
 mod rewrite;
+mod source;
+pub(crate) use source::LocatedStatement;
 
 use rewrite::{
     rewrite_chr_calls, rewrite_drop_index_concurrently, rewrite_referential_set_column_lists,
@@ -17,10 +20,21 @@ use rewrite::{
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, `CREATE [UNIQUE] INDEX`, and DML after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    parse_with_concurrent_detach(sql, true)
+    parse_with_sources(sql, false, true)
+        .into_iter()
+        .map(|located| located.statement)
+        .collect()
 }
 
-fn parse_with_concurrent_detach(sql: &str, allow_concurrent_detach: bool) -> Vec<Statement> {
+pub(super) fn parse_postgres_sql_lenient_with_sources(sql: &str) -> Vec<LocatedStatement> {
+    parse_with_sources(sql, false, true)
+}
+
+fn parse_with_sources(
+    sql: &str,
+    fragment: bool,
+    allow_concurrent_detach: bool,
+) -> Vec<LocatedStatement> {
     let normalized = super::normalize_copy_data(sql);
     let separated = super::distinct_group::separate_distinct_grouping(&normalized);
     let located = super::unicode::tokenize_with_location(&separated, false);
@@ -43,10 +57,7 @@ fn parse_with_concurrent_detach(sql: &str, allow_concurrent_detach: bool) -> Vec
                 let chunk = format!("{}{}", "\n".repeat(line.saturating_sub(1)), text);
                 *line += text.bytes().filter(|byte| *byte == b'\n').count();
                 *offset = start + text.len();
-                Some(parse_with_concurrent_detach(
-                    &chunk,
-                    allow_concurrent_detach,
-                ))
+                Some(parse_with_sources(&chunk, true, allow_concurrent_detach))
             })
             .flatten()
             .collect();
@@ -55,11 +66,20 @@ fn parse_with_concurrent_detach(sql: &str, allow_concurrent_detach: bool) -> Vec
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_referential_set_column_lists(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
-    recover::parse_chunks(
+    let mut statements = recover::parse_chunks_with_sources(
         split_statement_tokens(tokens),
         &located,
         allow_concurrent_detach,
-    )
+    );
+    if fragment {
+        let source: Arc<[TokenWithSpan]> = located.into();
+        for statement in &mut statements {
+            if statement.source.is_none() {
+                statement.source = Some(Arc::clone(&source));
+            }
+        }
+    }
+    statements
 }
 
 pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
