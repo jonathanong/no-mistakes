@@ -11,7 +11,7 @@ fn prepared_select_into_creates_temporary_identity_only_on_execute() {
         crate::codebase::postgres::parse_postgres_sql(sql)
             .unwrap()
             .len(),
-        15
+        20
     );
     assert_eq!(
         shape(sql),
@@ -24,7 +24,9 @@ fn prepared_select_into_creates_temporary_identity_only_on_execute() {
             "select: accounts",
             "select: capped orders",
             "select: capped orders",
-            "select: opaque"
+            "select: opaque",
+            "select: capped orders",
+            "select: accounts"
         ]
     );
 }

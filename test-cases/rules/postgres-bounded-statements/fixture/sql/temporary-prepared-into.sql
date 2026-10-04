@@ -18,3 +18,10 @@ DEALLOCATE ALL;
 PREPARE final_accounts AS SELECT id INTO TEMP accounts FROM orders LIMIT 1;
 EXECUTE final_accounts;
 SELECT * FROM accounts;
+
+-- DISCARD ALL deallocates definitions; an invalid later EXECUTE must not replay one.
+DROP TABLE accounts;
+PREPARE discarded AS SELECT id INTO TEMP accounts FROM orders LIMIT 1;
+DISCARD ALL;
+EXECUTE discarded;
+SELECT * FROM accounts;

@@ -1,7 +1,7 @@
 //! Prepared statements project facts at declaration and create destinations at execution.
 use super::super::{bounds, SqlBoundFact};
 use crate::codebase::postgres::idents::ident_key;
-use sqlparser::ast::Statement;
+use sqlparser::ast::{DiscardObject, Statement};
 use std::collections::BTreeMap;
 
 #[derive(Default)]
@@ -57,6 +57,12 @@ impl<'a> PreparedStatements<'a> {
             }
             Statement::Deallocate { name, .. } => {
                 self.statements.remove(&ident_key(name));
+            }
+            Statement::Discard {
+                object_type: DiscardObject::ALL,
+                ..
+            } => {
+                self.statements.clear();
             }
             _ => {}
         }
