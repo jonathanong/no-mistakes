@@ -8,6 +8,7 @@ use super::super::super::value::is_placeholder_ident;
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBareRead;
+use crate::fx::FxHashMap;
 use columns::output_names;
 pub(in super::super) use columns::projection_columns;
 use sqlparser::ast::{Expr, ObjectName, Query, TableFactor, Visit, Visitor};
@@ -81,7 +82,7 @@ struct Scan {
     /// AST identity is used only during this visitor run; no sources are reparsed.
     derived_scopes: BTreeMap<usize, Scope>,
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
-    pending_ctes: BTreeMap<usize, (String, Option<BTreeSet<String>>)>,
+    pending_ctes: FxHashMap<usize, (String, Option<BTreeSet<String>>)>,
     /// Qualifiers and bare reads that no level of the query resolved.
     unresolved: Vec<String>,
     reads: Vec<SqlBareRead>,
