@@ -198,3 +198,22 @@ fn reversed_hash_bound_attaches_temporary_child() {
     assert_eq!(facts(&sql).len(), 1);
     assert_eq!(shape(&sql), ["select: child"]);
 }
+
+#[test]
+fn restrict_blocked_parent_drop_preserves_partition_child() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-restrict-drop.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 4);
+    assert_eq!(
+        shape(&sql),
+        [
+            "select: opaque",
+            "select: opaque",
+            "select: orders",
+            "select: spare",
+        ]
+    );
+}

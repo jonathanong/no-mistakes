@@ -67,7 +67,11 @@ relation kind, so that temporary identity remains live if execution continues.
 
 Temporary partitions follow their temporary parent: `DROP TABLE parent` removes a
 partition created with `CREATE TEMP TABLE child PARTITION OF parent`, even without
-`CASCADE`. `ALTER TABLE parent DETACH PARTITION child` removes that ownership link,
+`CASCADE` when the drop succeeds. A known temporary view depending on the child
+blocks a non-cascading parent drop; the whole rejected `DROP` leaves temporary
+relations intact, including other named targets. Failures needing a live catalog
+cannot always be inferred from source SQL.
+`ALTER TABLE parent DETACH PARTITION child` removes that ownership link,
 including the `CONCURRENTLY` and `FINALIZE` forms, so a later parent drop leaves the child
 and views over it intact; `ATTACH PARTITION child FOR VALUES ...` restores the link.
 PostgreSQL does not allow temporary and permanent tables in the same partition tree.
