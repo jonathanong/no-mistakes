@@ -538,3 +538,5 @@ mod versioned_scalar_projection;
 
 mod conditional_table_function_inputs;
 mod wrapped_scalar_reducer_arrays;
+
+mod table_source_association;
