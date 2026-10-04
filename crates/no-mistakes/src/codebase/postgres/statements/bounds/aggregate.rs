@@ -1,7 +1,7 @@
 use super::functions::{is_aggregate, is_set_returning};
 use crate::codebase::postgres::idents::visit_child_exprs;
 use sqlparser::ast::{
-    Expr, Function, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
+    Distinct, Expr, Function, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
 };
 
 /// An aggregate with no `GROUP BY` returns exactly one row, unless a set-returning function in
@@ -56,6 +56,19 @@ fn one_group(select: &Select) -> bool {
         && !projected(select)
             .iter()
             .any(|expr| contains_call(expr, &|function| is_set_returning(&function.name)))
+        && !distinct_on_expands(select)
+}
+
+/// DISTINCT ON evaluates its expressions against the grouped rows, including implicit groups.
+/// A set-returning call there can expand the single aggregate row just like a projected call.
+fn distinct_on_expands(select: &Select) -> bool {
+    matches!(
+        &select.distinct,
+        Some(Distinct::On(expressions))
+            if expressions.iter().any(|expr| contains_call(expr, &|function| {
+                function.over.is_none() && is_set_returning(&function.name)
+            }))
+    )
 }
 
 fn projected(select: &Select) -> Vec<&Expr> {
