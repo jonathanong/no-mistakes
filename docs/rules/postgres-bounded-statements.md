@@ -363,8 +363,9 @@ column aliases. Aliased reads lose pin credit because compaction discards the al
 identity needed to prove that a visible name still names the catalog key.
 
 Built-in set-returning functions, including `jsonb_path_query`, expand aggregate
-select-list rows. In `FROM`, only functions whose arguments size their result
-(`jsonb_path_query($1::jsonb, '$[*]')`, for example) bound joined items. Functions
+select-list rows. In `FROM`, functions whose arguments size their result
+(`jsonb_path_query($1::jsonb, '$[*]')`, for example) and the fixed catalog
+contract described below bound joined items. Functions
 that inspect server state, parser metadata, or execute SQL (`pg_ls_dir`,
 `pg_listening_channels`, `ts_token_type`, `ts_stat`) remain opaque even with fixed
 arguments. The real PostgreSQL test lane checks this inventory against the
@@ -376,7 +377,14 @@ when its snapshot is supplied directly by the caller. A snapshot returned by
 The same caller-supplied requirement applies to other caller-sized set-returning
 functions, including calls with PostgreSQL named arguments. Catalog functions
 known to return one row, such as `pg_stat_get_recovery_prefetch()`, preserve a
-pure aggregate's one-row cap.
+pure aggregate's one-row cap. In `FROM`, the zero-argument call
+`pg_catalog.pg_stat_get_recovery_prefetch()` also bounds a keyed join because its
+catalog contract returns exactly one row. For example, joining `accounts.email`
+to `p.stats_reset::text` from that call is bounded. Bare calls, other schemas,
+and unsupported argument signatures remain opaque: this function was added after
+the rule's conservative PostgreSQL version floor. Qualify it with `pg_catalog`
+to establish catalog ownership; arbitrary server-state functions remain opaque.
+Normal file and line suppression directives still apply to reported controls.
 
 Temporary tables and views created earlier in the same SQL source shadow unqualified
 catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.

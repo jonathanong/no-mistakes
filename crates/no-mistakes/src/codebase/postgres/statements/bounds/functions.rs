@@ -168,7 +168,11 @@ pub(super) fn function_kind_at(
         .args
         .iter()
         .all(|arg| caller_supplied_argument(arg, positions));
-    if given && builtin(name, CALLER_SIZED) {
+    // This catalog function was added after the supported PostgreSQL version floor.
+    // Bare spelling cannot prove catalog ownership on older servers.
+    let fixed_catalog_row =
+        name.0.len() == 2 && builtin(name, FIXED_ONE_ROW) && args.args.is_empty();
+    if fixed_catalog_row || (given && builtin(name, CALLER_SIZED)) {
         SqlBoundItemKind::Other
     } else {
         SqlBoundItemKind::Opaque
