@@ -42,6 +42,10 @@ Transaction and savepoint rollback restore the dependency state. Bare dependenci
 have no proven schema identity and retain conservative matching behavior. A schema
 drop without `CASCADE` does not retire these dependent temporary views.
 
+PostgreSQL does not support temporary materialized views. A materialized-view drop
+that resolves to a known temporary table or ordinary view fails for the wrong
+relation kind, so that temporary identity remains live if execution continues.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`

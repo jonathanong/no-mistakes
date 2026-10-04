@@ -12,6 +12,7 @@ mod array_review;
 mod compact_aliases;
 mod lateral_review;
 mod materialized_drop;
+mod materialized_namesake;
 mod physical_cascade;
 mod recursive_forward;
 mod repeated_begin;

@@ -65,14 +65,16 @@ impl TemporaryRelations {
                 self.savepoints.clear();
             }
             Statement::Drop {
-                object_type: ObjectType::Table | ObjectType::View | ObjectType::MaterializedView,
+                object_type,
                 names,
                 cascade,
                 ..
-            } => {
-                for name in names {
-                    self.state.drop(&items::sql_name(name), *cascade);
-                }
+            } if matches!(
+                object_type,
+                ObjectType::Table | ObjectType::View | ObjectType::MaterializedView
+            ) =>
+            {
+                self.drop_relations(object_type, names, *cascade)
             }
             Statement::Drop {
                 object_type: ObjectType::Schema,
@@ -157,6 +159,22 @@ impl TemporaryRelations {
                 self.state
                     .rename_schema(&items::sql_name(&schema.name), &items::sql_name(name));
             }
+        }
+    }
+
+    fn drop_relations(
+        &mut self,
+        kind: &ObjectType,
+        names: &[sqlparser::ast::ObjectName],
+        cascade: bool,
+    ) {
+        for name in names {
+            let name = items::sql_name(name);
+            // PostgreSQL has no temporary materialized views: this wrong-kind DROP fails.
+            if *kind == ObjectType::MaterializedView && self.state.contains(&name) {
+                continue;
+            }
+            self.state.drop(&name, cascade);
         }
     }
 }
