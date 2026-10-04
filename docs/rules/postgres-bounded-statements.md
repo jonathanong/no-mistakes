@@ -279,7 +279,7 @@ Known scalar table functions expose their default position column when requested
 Finite array constructors also accept explicitly known scalar builtin calls such as
 `ARRAY[pg_catalog.lower($1)]` when their arguments preserve finite leaves. Unknown
 calls, user-schema lookalikes, set-returning or array-returning functions, windows,
-and expressions reading unbounded rows remain conservative. The analysis assumes
-unqualified inventory names denote PostgreSQL builtins; PostgreSQL 15 additions
-`regexp_count`, `regexp_instr`, and `regexp_substr` require `pg_catalog` qualification
-because the configured catalog does not declare a server version.
+and expressions reading unbounded rows remain conservative. Calls require explicit
+`pg_catalog` qualification and a supported builtin arity, including variadic minima.
+Unqualified names remain opaque because application overloads can differ in volatility
+or return shape even when their name and argument count match a builtin.

@@ -15,8 +15,12 @@ fn scalar_calls_preserve_finite_array_leaves_without_trusting_unknown_results() 
     }
     assert_eq!(
         unbounded(sql),
-        (6..=20)
-            .chain([22, 23, 25, 27])
+        [3, 4]
+            .into_iter()
+            .chain(6..=20)
+            .chain(22..=27)
+            .chain(30..=33)
+            .chain(35..=40)
             .map(|line| ("accounts".to_string(), line))
             .collect::<Vec<_>>()
     );
