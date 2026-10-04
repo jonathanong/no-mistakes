@@ -142,3 +142,44 @@ fn recovered_do_body_table_arm_uses_its_source_tokens_even_without_bounds() {
         assert_eq!(facts.bounds.is_empty(), !collect_bounds);
     }
 }
+
+#[test]
+fn table_arm_query_body_dispatches_insert_and_ignores_other_mutations() {
+    use crate::codebase::postgres::{parse::PreparedSql, statements::bounds::TableTokenIndex};
+    use sqlparser::ast::{SetExpr, Statement};
+
+    // sqlparser permits mutation statements as query bodies. Keep the TABLE source
+    // spelling from the saved INSERT while projecting only its SELECT source.
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/table-select-ast-dispatch.sql"),
+    )
+    .unwrap();
+    let prepared = PreparedSql::new(&sql);
+    let statements = prepared.parse().unwrap();
+    let Statement::Insert(insert) = &statements[0] else {
+        panic!("saved INSERT");
+    };
+    let mut query = insert.source.as_deref().unwrap().clone();
+    *query.body = SetExpr::Insert(statements[0].clone());
+    let index = TableTokenIndex::new(prepared.tokens());
+    let mut cursor = index.cursor_at(prepared.tokens()[0].span.start);
+    let mut out = Vec::new();
+    super::query_arms(&query, &[], false, false, &mut cursor, &mut out);
+    assert!(out.iter().any(|fact| fact.tables == ["\"Topics\""]));
+
+    let update_sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/table-select-ast-update.sql"),
+    )
+    .unwrap();
+    let update = PreparedSql::new(&update_sql)
+        .parse()
+        .unwrap()
+        .pop()
+        .unwrap();
+    *query.body = SetExpr::Update(update);
+    let mut ignored = Vec::new();
+    super::query_arms(&query, &[], false, false, &mut cursor, &mut ignored);
+    assert!(ignored.is_empty());
+}
