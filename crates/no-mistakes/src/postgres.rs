@@ -21,6 +21,9 @@ enum PostgresCommand {
         /// `complete` carries every fact; `ordering` only what conflict and lock ordering need.
         #[arg(long, value_enum, default_value_t)]
         coverage: PostgresCatalogCoverage,
+        /// Include explicit schema/relations evidence for these search_path schemas.
+        #[arg(long = "search-path-schema")]
+        search_path_schemas: Vec<String>,
         #[arg(long)]
         output: PathBuf,
     },
@@ -30,12 +33,14 @@ pub fn run(args: PostgresArgs) -> Result<ExitCode> {
         connection_env,
         schema,
         coverage,
+        search_path_schemas,
         output,
     } = args.command;
     let catalog = generate(&PostgresCatalogOptions {
         connection_env,
         schema,
         coverage,
+        search_path_schemas,
     })?;
     let json = format!("{catalog:#}\n");
     publish_catalog(&output, &mut |file| file.write_all(json.as_bytes()))

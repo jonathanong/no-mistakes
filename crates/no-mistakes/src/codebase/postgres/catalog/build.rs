@@ -21,6 +21,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
     Ok(SchemaCatalog {
         coverage: snapshot.coverage,
         schema: snapshot.schema,
+        search_path_evidence: snapshot.search_path_evidence,
         tables,
         model_tables,
         functions: functions(snapshot.functions),

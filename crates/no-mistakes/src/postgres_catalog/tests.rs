@@ -17,6 +17,7 @@ fn rejects_invalid_options_without_accessing_connection_secrets() {
             connection_env: connection_env.into(),
             schema: schema.into(),
             coverage: PostgresCatalogCoverage::Complete,
+            search_path_schemas: Vec::new(),
         })
         .is_err());
     }
@@ -36,6 +37,7 @@ fn observed_catalog_preserves_postgres_ordering_state() {
     let connection = std::env::var("NO_MISTAKES_TEST_POSTGRES_URL").unwrap();
     for (file, success) in [
         ("setup.sql", true),
+        ("search-path-privileges.sql", true),
         ("invalid-index.sql", false),
         ("deferrable-conflict.sql", false),
     ] {
@@ -58,6 +60,7 @@ fn observed_catalog_preserves_postgres_ordering_state() {
         connection_env: "NO_MISTAKES_TEST_POSTGRES_URL".into(),
         schema: "Catalog.Test".into(),
         coverage: PostgresCatalogCoverage::Ordering,
+        search_path_schemas: Vec::new(),
     };
     let catalog = generate(&options).unwrap();
     assert_eq!(
@@ -66,6 +69,56 @@ fn observed_catalog_preserves_postgres_ordering_state() {
         "unchanged committed schema generates identical JSON"
     );
     assert_eq!(catalog["coverage"], "ordering");
+    assert!(catalog.get("searchPathEvidence").is_none());
+    let with_evidence = generate(&PostgresCatalogOptions {
+        search_path_schemas: vec![
+            "pg_catalog".into(),
+            "Catalog.Test".into(),
+            "Catalog.Locked".into(),
+            "no_mistakes_missing_search_path_schema".into(),
+        ],
+        ..options.clone()
+    })
+    .unwrap();
+    assert!(with_evidence["searchPathEvidence"]["Catalog.Test"]
+        .as_array()
+        .is_some_and(|names| names.iter().any(|name| name == "Items")));
+    assert!(with_evidence["searchPathEvidence"]["pg_catalog"]
+        .as_array()
+        .is_some_and(|names| names.iter().any(|name| name == "pg_class")));
+    assert!(with_evidence["searchPathEvidence"]["Catalog.Locked"]
+        .as_array()
+        .is_some_and(|names| names.iter().any(|name| name == "accounts")));
+    assert!(
+        with_evidence["searchPathEvidence"]["no_mistakes_missing_search_path_schema"].is_null()
+    );
+    let restricted_query = format!(
+        "SET ROLE no_mistakes_catalog_no_usage;\n{}",
+        sql::catalog_query_with_search_path(
+            "Catalog.Test",
+            PostgresCatalogCoverage::Ordering,
+            &["Catalog.Locked".into()],
+        )
+    );
+    let mut restricted = Command::new("psql");
+    connection_environment(&connection, &mut restricted).unwrap();
+    let output = restricted
+        .args([
+            "-X",
+            "--quiet",
+            "--tuples-only",
+            "--no-align",
+            "--no-password",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            &restricted_query,
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "restricted catalog query failed");
+    let restricted: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(restricted["searchPathEvidence"]["Catalog.Locked"].is_null());
     let escaped = generate(&PostgresCatalogOptions {
         schema: "Catalog\\'Schema".into(),
         ..options.clone()
@@ -348,10 +401,12 @@ fn url_can_use_libpq_defaults_for_omitted_components() {
 #[test]
 fn the_query_quotes_the_schema_and_never_scans_it_for_placeholders() {
     // Every character that needs quoting, and a name that spells a placeholder.
-    let query = sql::catalog_query("a\"b'c\\d", PostgresCatalogCoverage::Complete);
+    let query =
+        sql::catalog_query_with_search_path("a\"b'c\\d", PostgresCatalogCoverage::Complete, &[]);
     assert!(query.contains("SET LOCAL search_path = pg_catalog, \"a\"\"b'c\\d\";"));
     assert!(query.contains("nspname = E'a\"b''c\\\\d'"));
-    let placeholder = sql::catalog_query("__COMPLETE__", PostgresCatalogCoverage::Ordering);
+    let placeholder =
+        sql::catalog_query_with_search_path("__COMPLETE__", PostgresCatalogCoverage::Ordering, &[]);
     assert!(placeholder.contains("nspname = E'__COMPLETE__'"));
     assert!(placeholder.contains("'schema', E'__COMPLETE__'"));
     // `pg_catalog` leads the path so the selected schema cannot shadow a built-in.
@@ -363,6 +418,13 @@ fn the_query_quotes_the_schema_and_never_scans_it_for_placeholders() {
     assert!(query.contains("SET LOCAL statement_timeout = '30s';"));
     assert!(query.starts_with("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;"));
     assert!(query.ends_with("COMMIT;\n"));
+    let evidence = sql::catalog_query_with_search_path(
+        "public",
+        PostgresCatalogCoverage::Complete,
+        &["a'b\\c".to_string()],
+    );
+    assert!(evidence.contains("(E'a''b\\\\c')"));
+    assert!(!evidence.contains("__SEARCH_PATH_EVIDENCE__"));
 }
 
 #[test]
@@ -370,6 +432,10 @@ fn options_default_to_complete_coverage_and_reject_unknown_values() {
     let parse = |json: &str| serde_json::from_str::<PostgresCatalogOptions>(json);
     let default = parse(r#"{"connectionEnv": "DATABASE_URL", "schema": "public"}"#).unwrap();
     assert_eq!(default.coverage, PostgresCatalogCoverage::Complete);
+    assert!(default.search_path_schemas.is_empty());
+    let scoped =
+        parse(r#"{"connectionEnv":"A","schema":"s","searchPathSchemas":["audit"]}"#).unwrap();
+    assert_eq!(scoped.search_path_schemas, ["audit"]);
     let ordering =
         parse(r#"{"connectionEnv": "A", "schema": "s", "coverage": "ordering"}"#).unwrap();
     assert_eq!(ordering.coverage, PostgresCatalogCoverage::Ordering);

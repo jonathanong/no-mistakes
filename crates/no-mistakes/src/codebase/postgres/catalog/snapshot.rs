@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 
@@ -9,6 +9,9 @@ pub(super) struct Snapshot {
     pub(super) coverage: super::CatalogCoverage,
     #[serde(default)]
     pub(super) schema: Option<String>,
+    /// Only explicitly requested schemas are authoritative; a missing key is unknown.
+    #[serde(default)]
+    pub(super) search_path_evidence: BTreeMap<String, Option<BTreeSet<String>>>,
     #[serde(default)]
     pub(super) tables: BTreeMap<String, SnapshotTable>,
     #[serde(default)]

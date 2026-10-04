@@ -639,7 +639,7 @@ See [Architecture](architecture.md) for the one-pass session rules,
 [Tests and selectors](configuration/tests.md) for how Swift and .NET
 already require explicit package/project lists.
 
-PostgreSQL schema catalog generation (complete and ordering coverage) has Rust library, CLI and async Node/N-API parity; see [`postgres catalog`](cli/postgres.md).
+PostgreSQL schema catalog generation (complete and ordering coverage) has Rust library, CLI and async Node/N-API parity, including opt-in search-path schema evidence; see [`postgres catalog`](cli/postgres.md).
 PostgreSQL bounded-statement analysis recognizes `TABLE ONLY name` query arms and retains quoted relation identity across strict and lenient parsing.
 It also analyzes standalone `TABLE name` and `TABLE ONLY name` statements, including an explicit inheritance `*` suffix, with the same catalog and temporary-relation semantics as a corresponding `SELECT * FROM name`.
 `EXPLAIN TABLE name` parses as a plan without execution, while `EXPLAIN ANALYZE TABLE name` contributes executed query facts with the same relation identity.

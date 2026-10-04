@@ -4,6 +4,8 @@ use crate::codebase::postgres::statements::{
 };
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 
+mod possible_temporary;
+
 /// A catalog relation that a statement can read or change in unbounded numbers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Offender {
@@ -23,15 +25,16 @@ struct Evaluation {
 /// The relations that make `fact` unbounded. A relation the catalog does not know is not
 /// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
 pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
-    let evaluation = evaluate(&fact.query, catalog);
+    let query = possible_temporary::project(&fact.query, catalog);
+    let evaluation = evaluate(&query, catalog);
     let Some(target) = fact.target else {
         return evaluation.offenders;
     };
     // An UPDATE or DELETE changes each target row at most once, so only the target must be bounded.
-    if fact.query.capped || evaluation.items[target] {
+    if query.capped || evaluation.items[target] {
         return Vec::new();
     }
-    let item = &fact.query.items[target];
+    let item = &query.items[target];
     match &item.kind {
         SqlBoundItemKind::Table(name) => table_offender(name, item.line, catalog)
             .into_iter()

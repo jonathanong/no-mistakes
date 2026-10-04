@@ -17,6 +17,7 @@ no-mistakes postgres catalog --connection-env DATABASE_URL --schema public --out
 | `--connection-env <NAME>`       | Environment variable that holds a PostgreSQL connection URL.                                                                         |
 | `--schema <NAME>`               | Exact schema name, including case. It is not an SQL expression. A missing schema is an error, not an empty catalog.                  |
 | `--coverage complete\|ordering` | `complete` (the default) carries every schema fact. `ordering` carries only what conflict and lock ordering need.                    |
+| `--search-path-schema <NAME>`    | Include existence and complete relation-name evidence for this exact schema. Repeat for each schema that can precede `pg_temp`.    |
 | `--output <PATH>`               | Where to write the JSON. The file is written to a temporary name and renamed, so a failure leaves the previous catalog untouched.    |
 
 Set the named environment variable to a PostgreSQL connection URL. The connection
@@ -36,7 +37,15 @@ catalog states its `coverage`, and a file that does not is a load error that
 tells you to run this command.
 
 The async Node equivalent is `generatePostgresCatalog({ connectionEnv, schema,
-coverage })`. It returns the catalog object; the caller owns writing it to disk.
+coverage, searchPathSchemas })`. It returns the catalog object; the caller owns writing it to disk.
+The optional `searchPathEvidence` output contains only requested schemas: `null` means a
+schema did not exist or the catalog role lacked `USAGE`; an array is its complete PostgreSQL relation-namespace inventory,
+including views, foreign tables, sequences, partitions, and other names omitted from the
+rule's table model. An absent entry gives no evidence of absence. For a configured SQL
+`search_path`, request every schema before `pg_temp`. Include `pg_catalog` when omitted
+from the path because PostgreSQL searches it first. The bounded-statements rule uses
+this evidence to identify the relation an unqualified name reaches. Generate it with the
+same role that executes the analyzed SQL.
 
 ### Complete coverage
 
