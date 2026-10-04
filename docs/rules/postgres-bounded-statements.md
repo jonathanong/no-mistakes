@@ -100,7 +100,8 @@ uncapped read of that relation, or of the CTE it names), a derived table or CTE 
 and a `VALUES` list or a set-returning built-in (bare or `pg_catalog.`-qualified) over
 arguments the statement supplies (`unnest($1)`, `generate_series(1, 10)`) is sized by the
 caller. Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
-whose arguments read a column or a query (`unnest(ARRAY[a.id])`), an array taken from a query
+whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
+`unnest(get_all_account_ids())`), an array taken from a query
 (`ANY(ARRAY(SELECT …))`) and the recursive reference of a `WITH RECURSIVE` are opaque: never
 reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
