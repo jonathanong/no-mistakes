@@ -220,12 +220,14 @@ sqlparser AST:
 For SQL returned by `extract_embedded_sql_from_source`, pass its
 `EmbeddedSqlCall` to `extract_sql_statement_facts_for_embedded_call(&call)`.
 This composition API preserves the exact positions of generated interpolation
-markers, so a user-written identifier such as `sql_placeholder_1` remains a
-column while the generated marker is treated as a bind. It returns `None` when
-the call has no recovered SQL. Fact line and column locations are relative to
-the recovered SQL text; `Dynamic` calls can contain only a verified leading
-fragment. Use `extract_sql_statement_facts(sql)` for standalone SQL without
-embedded interpolation provenance.
+markers for sweep and cursor-bind facts, so a user-written identifier such as
+`sql_placeholder_1` remains a column while the generated marker is treated as a
+bind. Other statement-fact projections still use marker-spelling heuristics;
+broader provenance support is tracked in [issue #1340](https://github.com/jonathanong/no-mistakes/issues/1340).
+It returns `None` when the call has no recovered SQL. Fact line and column
+locations are relative to the recovered SQL text; `Dynamic` calls can contain
+only a verified leading fragment. Use `extract_sql_statement_facts(sql)` for
+standalone SQL without embedded interpolation provenance.
 
 - executed `INSERT` (EXPLAIN without ANALYZE is skipped; PREPARE inner
   statements are treated as executed; CREATE FUNCTION/PROCEDURE bodies are not)
