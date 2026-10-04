@@ -65,18 +65,23 @@ pub(super) fn order_expansion_predicates_reject(query: &Query) -> Option<bool> {
     if !orders_can_expand(query) {
         return None;
     }
-    let select = select_body(&query.body)?;
+    let (select, nested_empty) = select_body(&query.body)?;
     Some(
-        super::predicate::rejects_all(select.having.as_ref())
+        nested_empty
+            || super::predicate::rejects_all(select.having.as_ref())
             || (!has_implicit_group(query, select)
                 && super::predicate::rejects_all(select.selection.as_ref())),
     )
 }
 
-fn select_body(set: &SetExpr) -> Option<&Select> {
+fn select_body(set: &SetExpr) -> Option<(&Select, bool)> {
     match set {
-        SetExpr::Select(select) => Some(select),
-        SetExpr::Query(query) => select_body(&query.body),
+        SetExpr::Select(select) => Some((select, false)),
+        SetExpr::Query(query) => {
+            let (select, empty) = select_body(&query.body)?;
+            // An outer SRF cannot expand a row that an inner zero limit removed.
+            Some((select, empty || super::super::limit::is_zero_limited(query)))
+        }
         _ => None,
     }
 }

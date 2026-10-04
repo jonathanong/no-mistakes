@@ -1,4 +1,5 @@
 mod fixture_configs;
+mod nested_zero_order;
 mod nonrecursive_ctes;
 mod recovered_table;
 mod scalar_reducer_arrays;
