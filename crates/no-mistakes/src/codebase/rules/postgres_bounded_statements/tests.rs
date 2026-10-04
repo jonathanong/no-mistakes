@@ -1,3 +1,4 @@
+mod caller_array_provenance;
 mod cardinality_basics;
 mod current_database;
 mod ddl_search_path;

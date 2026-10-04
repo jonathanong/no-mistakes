@@ -389,6 +389,22 @@ that inspect server state, parser metadata, or execute SQL (`pg_ls_dir`,
 arguments. The real PostgreSQL test lane checks this inventory against the
 PostgreSQL function catalog.
 
+An `ANY` array must also have caller-owned cardinality. Unknown calls such as
+`id = ANY(get_ids($1))` remain unbounded: a function can return every stored key.
+Explicit supported catalog array operations, including
+`pg_catalog.array_append($1::uuid[], $2::uuid)`, retain caller-sized credit when
+all their inputs are proven caller values. Custom schemas, unknown calls inside
+those inputs, and unsupported signatures receive no credit. Use a caller-supplied
+array or a finite constructor to establish the bound.
+
+A cast scalar subquery such as
+`id = ANY((SELECT account_ids FROM orders WHERE id = $1)::uuid[])` also receives
+no key credit. One uniquely selected row can hold an arbitrarily large array.
+Its nested reads remain available for SELECT read diagnostics; UPDATE and DELETE
+continue to judge their target rows. Row-valued `ANY(SELECT account_id FROM orders
+WHERE id = $1)` retains its ordinary query-row proof. Normal suppression directives
+apply to these findings.
+
 Snapshot expansion (`pg_snapshot_xip`, `txid_snapshot_xip`) is caller-sized only
 when its snapshot is supplied directly by the caller. A snapshot returned by
 `pg_current_snapshot()`, `txid_current_snapshot()`, or another SQL function is opaque.
