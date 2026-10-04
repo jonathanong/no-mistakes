@@ -81,6 +81,18 @@ remains an alternative because it avoids waiting for an already-held row lock.
 unset; set it to a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md) to enable the catalog
 exact-prefix requirement.
 
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
 ## Valid example
 
 ```ts
@@ -123,15 +135,3 @@ in the JSON but fail closed for canonical proof. Deferrable unique indexes canno
 be conflict arbiters, although supported valid keys can still prove lock order.
 An ordering catalog declares its coverage and cannot satisfy rules requiring
 complete schema metadata; a complete catalog satisfies every catalog rule.
-
-### Executor configuration
-
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-
-With both options omitted, executor calls (including `.query`) are not scanned.
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
-their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

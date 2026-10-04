@@ -121,6 +121,18 @@ scopes are not tracked.
 Unknown `bannedShapes` values are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error). `importSpecifier` has no default. `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
 ## Bounded iteration shapes
 
 Two opt-in shapes flag background-job SQL that signals unbounded work.
@@ -328,15 +340,3 @@ Unquoted catalog-qualified numeric casts such as `LIMIT 0::pg_catalog.int8` also
 prove an empty page. Application-schema types, quoted custom type spellings, and
 casts through nonnumeric intermediate types stay conservative. This semantic check does not change
 `literal-limit` classification: cast or unary expressions remain non-literal.
-
-### Executor configuration
-
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-
-With both options omitted, executor calls (including `.query`) are not scanned.
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
-their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

@@ -119,6 +119,18 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   An entry that matches no column is a stale finding. `[]` leaves today's
   generated-column findings unchanged.
 
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
 ## Valid example
 
 ```sql
@@ -239,15 +251,3 @@ use the final catalog. `CREATE TABLE ... AS`, `LIKE`, `INHERITS`, and partition
 tables keep an unknown positional column order, so positional `INSERT` values are
 not attributed to later `ALTER ... ADD COLUMN` generated columns. Quoted and
 unquoted column names that differ in case are distinct during `ALTER` replay.
-
-### Executor configuration
-
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-
-With both options omitted, executor calls (including `.query`) are not scanned.
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
-their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

@@ -64,6 +64,18 @@ error. `allowWholeRowFunctions` defaults to `row_to_json`, `to_json`,
 list means no function is exempt. An empty or duplicate name is a config error.
 `checkReturning` defaults to `true`.
 
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
 ## Valid example
 
 ```sql
@@ -115,15 +127,3 @@ suppression applies at the affected query.
 `postgres-required-predicates` requires predicates on named columns.
 `postgres-sql-shape-policy` bans selected query shapes. This rule only cares
 about star projections and `RETURNING *`.
-
-### Executor configuration
-
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-
-With both options omitted, executor calls (including `.query`) are not scanned.
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
-their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
