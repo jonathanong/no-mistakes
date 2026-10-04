@@ -106,7 +106,7 @@ UPDATE orders SET status = 'paid' WHERE account_id = $1 AND id = $2;
 
 `INNER JOIN` `ON` predicates constrain both sides. Outer-join `ON` predicates count only for the non-preserved side; `FULL JOIN` does not constrain either side.
 A schema-qualified `public.events` matches `events`. A CTE named `events` is
-not the partitioned table. Quoted CTE and column names preserve their case; recursive CTE names are visible inside their bodies. Nested reads in query expressions, VALUES, RETURNING, and data-modifying CTEs are checked.
+not the partitioned table. Quoted CTE and column names preserve their case; all sibling recursive CTE names are visible inside every body. Non-recursive bodies see only earlier CTE aliases; schema-qualified physical relations remain checked. Nested reads in query expressions, VALUES, RETURNING, and data-modifying CTEs are checked.
 
 ## Counterexample
 

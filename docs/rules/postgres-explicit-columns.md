@@ -41,7 +41,9 @@ the schema catalog. It reports a star when the catalog table has more than
 
 It does not report `EXISTS (SELECT *)`, `NOT EXISTS (SELECT *)`, `COUNT(*)`, a
 star inside `allowWholeRowFunctions`, or a star over a CTE or derived-table
-alias. The inner `SELECT *` of that CTE or subquery is still checked. One
+alias. Recursive WITH makes every sibling alias local in each body; non-recursive
+WITH makes an alias local only after its definition. Schema-qualified physical
+relations remain checked. The inner `SELECT *` of that CTE or subquery is still checked. One
 finding is emitted per star and relation. `RETURNING *` uses the same rule when
 `checkReturning` is true, including data-modifying CTEs. Bare RETURNING stars
 expand the mutation target; qualified stars can also refer to UPDATE FROM or

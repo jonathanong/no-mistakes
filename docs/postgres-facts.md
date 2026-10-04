@@ -268,7 +268,9 @@ standalone SQL without embedded interpolation provenance.
   `postgres-sql-shape-policy` reads both when those shapes are banned.
   `star_projections` records each bare `*` (one fact per base FROM relation) and
   each `alias.*` (that alias's base relation). Stars inside `EXISTS` / `NOT EXISTS`,
-  `COUNT(*)`, CTEs, and derived-table aliases are omitted. A star passed to a
+  `COUNT(*)`, CTEs, and derived-table aliases are omitted. Recursive WITH exposes
+  every sibling CTE alias within every body; non-recursive bodies see only earlier
+  aliases. Schema-qualified names still identify physical relations. A star passed to a
   function records `within_function` so `postgres-explicit-columns` can apply
   `allowWholeRowFunctions` without parsing SQL again.
   `returning_stars` on the file facts records `RETURNING *` / `RETURNING t.*`

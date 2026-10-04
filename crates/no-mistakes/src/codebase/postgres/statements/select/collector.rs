@@ -21,11 +21,14 @@ pub(in crate::codebase::postgres::statements) fn collect_query_at(
 ) {
     let mut ctes = outer_ctes.to_vec();
     if let Some(with) = &query.with {
+        if with.recursive {
+            ctes.extend(
+                with.cte_tables
+                    .iter()
+                    .map(|cte| crate::codebase::postgres::idents::ident_key(&cte.alias.name)),
+            );
+        }
         for cte in &with.cte_tables {
-            let name = crate::codebase::postgres::idents::ident_key(&cte.alias.name);
-            if with.recursive {
-                ctes.push(name.clone());
-            }
             collect_query_at(
                 sql,
                 &cte.query,
@@ -36,7 +39,9 @@ pub(in crate::codebase::postgres::statements) fn collect_query_at(
                 out,
             );
             if !with.recursive {
-                ctes.push(name);
+                ctes.push(crate::codebase::postgres::idents::ident_key(
+                    &cte.alias.name,
+                ));
             }
         }
     }
