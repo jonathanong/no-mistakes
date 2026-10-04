@@ -197,8 +197,10 @@ fn is_row_variant(name: &ObjectName) -> bool {
 }
 
 fn qualified(parts: &[Ident]) -> Option<(String, String)> {
-    let [.., qualifier, column] = parts else {
-        return None;
-    };
-    Some((ident_key(qualifier), ident_key(column)))
+    parts
+        .iter()
+        .rev()
+        .nth(1)
+        .zip(parts.last())
+        .map(|(qualifier, column)| (ident_key(qualifier), ident_key(column)))
 }
