@@ -24,7 +24,7 @@ fn finite_array_constructors_require_bounded_scalar_catalog_leaves() {
         found,
         [
             5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20, 27, 28, 29, 30, 33, 35, 36, 40, 43, 46,
-            49, 52, 53, 54
+            49, 52, 53, 54, 77, 78, 79
         ]
         .map(|line| ("accounts".to_string(), line))
     );

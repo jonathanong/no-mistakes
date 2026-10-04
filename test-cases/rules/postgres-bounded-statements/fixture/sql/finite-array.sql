@@ -53,3 +53,27 @@ UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY(ARRAY[o.enum_ambiguous]::text[]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY(ARRAY[o.enum_missing]::text[]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY(ARRAY[o.enum_bare_key]::text[]);
+-- Fixed scalar boolean expressions are one array value, but a row or function can vary.
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[NULL IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[NULL IS NOT NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[TRUE IS TRUE]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[NOT (NULL IS NOT NULL)]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[(1 = 1) AND (2 > 1)]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[(NULL::text) IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[(1 = 1) IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[TRUE AND FALSE]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[TRUE IS NOT TRUE]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[TRUE IS FALSE]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[TRUE IS NOT FALSE]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[NULL IS UNKNOWN]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[NULL IS NOT UNKNOWN]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[1 IS DISTINCT FROM 2]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[2 IS NOT DISTINCT FROM 2]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[DATE '2026-01-01' IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[INTERVAL '1 day' IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[-1 IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[(1 + 1) IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[sql_placeholder_2 IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[enabled IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[unknown_boolean() IS NULL]);
+DELETE FROM accounts WHERE enabled = ANY(ARRAY[generate_series(1, 2) IS NULL]);

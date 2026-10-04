@@ -6,8 +6,10 @@ use sqlparser::ast::{
     DataType, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, UnaryOperator, Value,
 };
 
+mod fixed_boolean;
 mod indexed;
 mod scalar;
+use fixed_boolean::fixed_scalar_boolean;
 pub(super) use indexed::indexed_base;
 
 pub(super) fn constructor(expr: &Expr) -> Option<&sqlparser::ast::Array> {
@@ -39,6 +41,7 @@ pub(super) fn finite_array(
     ) -> Option<()> {
         match unwrap_expr(expr) {
             Expr::Value(_) | Expr::Interval(_) => Some(()),
+            expr if fixed_scalar_boolean(expr) => Some(()),
             Expr::TypedString(literal) if !matches!(literal.data_type, DataType::Array(_)) => {
                 // Parser-custom names such as XML still need catalog scalar evidence.
                 if matches!(literal.data_type, DataType::Custom(_, _)) {
