@@ -35,8 +35,11 @@ impl State {
         self.matches_identity(parent) && self.partitioned.contains(&key(parent))
     }
 
-    pub fn attach_partition(&mut self, parent: &str, child: &str) {
-        if self.partitioned_parent(parent) && self.matches_identity(child) {
+    pub fn attach_partition(&mut self, parent: &str, child: &str, catalog: Option<&SchemaCatalog>) {
+        if self.partitioned.contains(&key(parent))
+            && self.resolves_temporary(parent, catalog)
+            && self.resolves_temporary(child, catalog)
+        {
             // PostgreSQL rejects attaching a relation that already belongs to a parent.
             self.partitions.entry(key(child)).or_insert(key(parent));
         }
@@ -47,8 +50,8 @@ impl State {
         self.partitions.insert(key(child), key(parent));
     }
 
-    pub fn detach_partition(&mut self, parent: &str, child: &str) {
-        if self.matches_identity(parent) && self.matches_identity(child) {
+    pub fn detach_partition(&mut self, parent: &str, child: &str, catalog: Option<&SchemaCatalog>) {
+        if self.resolves_temporary(parent, catalog) && self.resolves_temporary(child, catalog) {
             let child = key(child);
             if self
                 .partitions

@@ -4,6 +4,7 @@ use super::super::items;
 use super::{state, TemporaryRelations};
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::SchemaCatalog;
+pub(super) use alter_table::partition_name;
 use sqlparser::ast::{ContextModifier, ObjectType, Reset, Set, Statement};
 
 impl TemporaryRelations {
@@ -95,7 +96,7 @@ impl TemporaryRelations {
                 }
             }
             Statement::AlterSchema(schema) => self.alter_schema(schema),
-            Statement::AlterTable(table) => self.alter_table(table),
+            Statement::AlterTable(table) => self.alter_table(table, catalog),
             Statement::Set(Set::SingleAssignment {
                 variable,
                 values,

@@ -85,6 +85,12 @@ cannot always be inferred from source SQL.
 `ALTER TABLE parent DETACH PARTITION child` removes that ownership link,
 including the `CONCURRENTLY` and `FINALIZE` forms, so a later parent drop leaves the child
 and views over it intact; `ATTACH PARTITION child FOR VALUES ...` restores the link.
+When an explicit `search_path` puts schemas before `pg_temp`, catalog evidence
+resolves both the parent and child of an unqualified `ATTACH` or `DETACH`. An
+earlier schema proven empty permits the temporary transition; an earlier
+physical namesake selects the physical tree instead. Unknown earlier schemas
+leave temporary ownership conservative, while explicit `pg_temp` names select
+the temporary tree. Transaction rollback restores its prior ownership.
 PostgreSQL does not allow temporary and permanent tables in the same partition tree.
 For SQL sources containing these `ALTER TABLE` forms, the lenient parser recovers complete
 partition transitions even though the strict PostgreSQL parser does not support them;
