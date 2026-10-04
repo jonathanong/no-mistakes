@@ -1,16 +1,17 @@
 use super::aggregate::orders_by_aggregate;
 use super::{items, start, Scope};
-use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::limit::is_zero_limited;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
-use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
+use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
 mod blocking;
 mod compact;
+mod recursive_order;
 mod set;
+mod with_scope;
+pub(super) use with_scope::with_scope;
 #[cfg(test)]
 mod tests;
 use blocking::BlockingStatuses;
-use compact::{compact, size, MAX_BOUND_ITEMS};
 
 pub(super) fn bound_query(
     query: &Query,
@@ -18,56 +19,6 @@ pub(super) fn bound_query(
     positions: super::super::value::PlaceholderPositions<'_>,
 ) -> SqlBoundQuery {
     bound_body(query, &with_scope(query, scope, positions), positions)
-}
-
-/// The scope after this query's own `WITH` clause.
-pub(super) fn with_scope(
-    query: &Query,
-    outer: &Scope,
-    positions: super::super::value::PlaceholderPositions<'_>,
-) -> Scope {
-    let mut scope = outer.clone();
-    let Some(with) = &query.with else {
-        return scope;
-    };
-    for cte in &with.cte_tables {
-        let name = ident_key(&cte.alias.name);
-        let bound = if modifying_statement(&cte.query).is_some() {
-            // `RETURNING` yields one row per modified row, which nothing in the text sizes: it
-            // bounds nothing pinned to it. The statement inside is judged on its own.
-            opaque(start(cte.query.span()))
-        } else {
-            let mut inner = scope.clone();
-            if with.recursive {
-                // A recursive reference is whatever the recursion has produced so far: it
-                // bounds nothing joined to it.
-                inner.insert(name.clone(), opaque(start(cte.query.span())));
-            }
-            let bound = bound_query(&cte.query, &inner, positions);
-            // Each reference clones the CTE's bound, so a chain of CTEs that each read the one
-            // before twice grows exponentially. Compact oversized bounds conservatively,
-            // retaining the distinct uncapped relations instead of hiding their reads.
-            if size(&bound) > MAX_BOUND_ITEMS {
-                compact(&bound, start(cte.query.span()))
-            } else {
-                bound
-            }
-        };
-        let columns = if cte.alias.columns.is_empty() {
-            super::pins::projection_columns(&cte.query)
-        } else {
-            Some(
-                cte.alias
-                    .columns
-                    .iter()
-                    .map(|column| ident_key(&column.name))
-                    .collect(),
-            )
-        };
-        scope.columns.insert(name.clone(), columns);
-        scope.insert(name, bound);
-    }
-    scope
 }
 
 /// The `INSERT` / `UPDATE` / `DELETE` / `MERGE` inside a data-modifying CTE.
@@ -193,13 +144,5 @@ pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
         capped: false,
         items: vec![items::other(at)],
-    }
-}
-
-/// A body whose rows nothing proves bounded, and which is never reported either.
-fn opaque(at: (usize, usize)) -> SqlBoundQuery {
-    SqlBoundQuery {
-        capped: false,
-        items: vec![items::opaque(at)],
     }
 }
