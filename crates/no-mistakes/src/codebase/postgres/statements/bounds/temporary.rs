@@ -7,7 +7,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use sqlparser::ast::{Expr, ObjectName, ObjectNamePart, SetExpr, Statement};
-use state::State;
+use state::{Dependency, State};
 use std::collections::BTreeSet;
 
 #[derive(Default)]
@@ -25,9 +25,6 @@ impl TemporaryRelations {
         scope: &super::Scope,
     ) {
         let mut dependencies = BTreeSet::new();
-        for fact in facts.iter() {
-            self.state.dependencies(&fact.query, &mut dependencies);
-        }
         if let Statement::CreateView(view) = statement {
             // View declarations have no executed bound fact; collect their source fact here once.
             let declaration = super::query::bound_query(&view.query, scope);
@@ -51,7 +48,12 @@ impl TemporaryRelations {
                     self.insert(name);
                 }
             }
-            Statement::CreateView(view) if view.temporary || !dependencies.is_empty() => {
+            Statement::CreateView(view)
+                if view.temporary
+                    || dependencies
+                        .iter()
+                        .any(|dependency| matches!(dependency, Dependency::Temporary(_))) =>
+            {
                 self.state
                     .relations
                     .insert(state::key(&sql_name(&view.name)), dependencies);

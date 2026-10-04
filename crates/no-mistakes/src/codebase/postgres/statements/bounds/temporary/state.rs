@@ -3,9 +3,23 @@ use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(super) enum Dependency {
+    Temporary(String),
+    Physical(Vec<String>),
+}
+
+// An unqualified reference has no schema identity here: invalidate possible dependents
+// conservatively. Fully qualified identities must still agree on their schema.
+fn names_match(left: &[String], right: &[String]) -> bool {
+    let count = left.len().min(right.len());
+    // decoded_parts always returns at least one part, even for an empty spelling.
+    left[left.len() - count..] == right[right.len() - count..]
+}
+
 #[derive(Clone)]
 pub(super) struct State {
-    pub relations: BTreeMap<String, BTreeSet<String>>,
+    pub relations: BTreeMap<String, BTreeSet<Dependency>>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub local_path: Option<bool>,
@@ -29,11 +43,15 @@ impl State {
         (parts.len() == 1 && self.temp_first || parts.len() == 2 && parts[0] == "pg_temp")
             && self.relations.contains_key(&key(name))
     }
-    pub fn dependencies(&self, query: &SqlBoundQuery, out: &mut BTreeSet<String>) {
+    pub fn dependencies(&self, query: &SqlBoundQuery, out: &mut BTreeSet<Dependency>) {
         for item in &query.items {
             match &item.kind {
-                SqlBoundItemKind::Table(name) if self.contains(name) => {
-                    out.insert(key(name));
+                SqlBoundItemKind::Table(name) => {
+                    out.insert(if self.contains(name) {
+                        Dependency::Temporary(key(name))
+                    } else {
+                        Dependency::Physical(decoded_parts(name))
+                    });
                 }
                 SqlBoundItemKind::Query(query) => self.dependencies(query, out),
                 _ => {}
@@ -46,10 +64,17 @@ impl State {
         }
     }
     pub fn drop(&mut self, name: &str, cascade: bool) {
-        if !self.contains(name) {
-            return;
+        if self.contains(name) {
+            self.remove(BTreeSet::from([key(name)]), cascade);
+        } else if cascade {
+            let parts = decoded_parts(name);
+            let removed = self.relations.iter().filter(|(_, dependencies)| {
+                dependencies.iter().any(|dependency| {
+                    matches!(dependency, Dependency::Physical(source) if names_match(source, &parts))
+                })
+            }).map(|(name, _)| name.clone()).collect();
+            self.remove(removed, true);
         }
-        self.remove(BTreeSet::from([key(name)]), cascade);
     }
     pub fn commit(&mut self) {
         let removed = std::mem::take(&mut self.on_commit_drop);
@@ -62,7 +87,7 @@ impl State {
                 for (name, dependencies) in &self.relations {
                     if dependencies
                         .iter()
-                        .any(|dependency| removed.contains(dependency))
+                        .any(|dependency| matches!(dependency, Dependency::Temporary(name) if removed.contains(name)))
                     {
                         removed.insert(name.clone());
                     }
@@ -77,6 +102,27 @@ impl State {
     }
     pub fn rename(&mut self, old: &str, new: &str) {
         if !self.contains(old) {
+            let old = decoded_parts(old);
+            let new = key(new);
+            for dependencies in self.relations.values_mut() {
+                *dependencies = dependencies
+                    .iter()
+                    .flat_map(|dependency| match dependency {
+                        Dependency::Physical(parts) if names_match(parts, &old) => {
+                            let mut renamed = parts.clone();
+                            renamed.pop();
+                            renamed.push(new.clone());
+                            let mut candidates = vec![Dependency::Physical(renamed)];
+                            // Without an exact schema match the rename may refer to a namesake.
+                            if parts.len() == 1 || parts != &old {
+                                candidates.push(dependency.clone());
+                            }
+                            candidates
+                        }
+                        other => vec![other.clone()],
+                    })
+                    .collect();
+            }
             return;
         }
         let old = key(old);
@@ -87,8 +133,8 @@ impl State {
         let dependencies = self.relations.remove(&old).unwrap_or_default();
         self.relations.insert(new.clone(), dependencies);
         for dependencies in self.relations.values_mut() {
-            if dependencies.remove(&old) {
-                dependencies.insert(new.clone());
+            if dependencies.remove(&Dependency::Temporary(old.clone())) {
+                dependencies.insert(Dependency::Temporary(new.clone()));
             }
         }
     }
