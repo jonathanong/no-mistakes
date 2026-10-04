@@ -138,3 +138,59 @@ fn argumentless_function_ast_cannot_prove_a_fixed_count() {
     function.args = FunctionArguments::None;
     assert!(!super::fixed_count::is_fixed_at(expr, None));
 }
+
+#[test]
+fn spanless_table_fetches_are_located_per_query() {
+    use sqlparser::{
+        ast::{Query, Statement, Visit, Visitor},
+        dialect::PostgreSqlDialect,
+        parser::Parser,
+        tokenizer::Tokenizer,
+    };
+    use std::ops::ControlFlow;
+
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-shape-policy/fixture/review-followups/sql/unspanned-table-fetches.sql"
+    ));
+    let prepared = Tokenizer::new(&PostgreSqlDialect {}, sql)
+        .tokenize_with_location()
+        .unwrap();
+    let statements = Parser::new(&PostgreSqlDialect {})
+        .with_tokens_with_locations(prepared.clone())
+        .parse_statements()
+        .unwrap();
+    let tokens = super::Tokens::with_prepared(sql, &prepared);
+    struct Locations<'a, 'sql> {
+        tokens: &'a super::Tokens<'sql>,
+        positions: Vec<(usize, usize)>,
+        table_fetch_cursor: usize,
+    }
+    impl Visitor for Locations<'_, '_> {
+        type Break = ();
+
+        fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
+            let table_fetch =
+                super::next_table_fetch(query, self.tokens, &mut self.table_fetch_cursor);
+            if let Some(site) = super::limit_site_at(query, self.tokens, table_fetch) {
+                self.positions.push((site.line, site.column));
+            }
+            ControlFlow::Continue(())
+        }
+    }
+    let mut locations = Locations {
+        tokens: &tokens,
+        positions: Vec::new(),
+        table_fetch_cursor: 0,
+    };
+    let mut query_count = 0;
+    for statement in &statements {
+        let Statement::Query(query) = statement else {
+            continue;
+        };
+        query_count += 1;
+        let _ = query.visit(&mut locations);
+    }
+    assert_eq!(query_count, 2);
+    assert_eq!(locations.positions, [(6, 3), (15, 3)]);
+}
