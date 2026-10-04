@@ -2,6 +2,33 @@ use super::offenders;
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};
 
 #[test]
+fn explicit_database_temp_source_survives_ambiguous_namesake_in_same_view() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-mixed-current-database-view.sql"
+    ));
+    let raw = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/schema-current-database.json"
+    ));
+    let facts = extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 1);
+    for (database, expected) in [("Audit.Database", vec!["accounts"]), ("other", vec![])] {
+        let mut snapshot: serde_json::Value = serde_json::from_str(raw).unwrap();
+        snapshot["currentDatabase"] = database.into();
+        let catalog = SchemaCatalog::from_json(&snapshot.to_string()).unwrap();
+        let names = facts
+            .bounds
+            .iter()
+            .flat_map(|fact| offenders(fact, &catalog))
+            .map(|offender| offender.table)
+            .collect::<Vec<_>>();
+        assert_eq!(names, expected, "database={database}");
+    }
+}
+
+#[test]
 fn temporary_database_identity_requires_explicit_catalog_match() {
     let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-current-database.sql"));
     let raw = include_str!(concat!(

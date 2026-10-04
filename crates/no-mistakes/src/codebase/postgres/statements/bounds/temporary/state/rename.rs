@@ -106,6 +106,9 @@ impl State {
                     Dependency::ConditionalTemporary(name, database) if name == &old => {
                         Dependency::ConditionalTemporary(new.clone(), database.clone())
                     }
+                    Dependency::PossibleTemporary(name) if name == &old => {
+                        Dependency::PossibleTemporary(new.clone())
+                    }
                     other => other.clone(),
                 })
                 .collect();

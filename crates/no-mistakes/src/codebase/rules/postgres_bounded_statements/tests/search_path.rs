@@ -115,3 +115,43 @@ fn local_search_path_only_applies_inside_an_explicit_transaction() {
         .collect::<Vec<_>>();
     assert_eq!(names, ["accounts", "accounts"]);
 }
+
+#[test]
+fn mixed_definite_and_ambiguous_view_sources_cannot_borrow_catalog_key() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-mixed-view-dependencies.sql"
+    ));
+    let catalog = SchemaCatalog::from_json(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/schema-search-path-evidence.json"
+    )))
+    .unwrap();
+    let names = extract_sql_statement_facts(sql)
+        .bounds
+        .iter()
+        .flat_map(|fact| offenders(fact, &catalog))
+        .map(|offender| offender.table)
+        .collect::<Vec<_>>();
+    assert_eq!(names, ["accounts"]);
+}
+
+#[test]
+fn renamed_mixed_view_reveals_catalog_namesake_after_cascade() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-mixed-view-rename.sql"
+    ));
+    let catalog = SchemaCatalog::from_json(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/schema-search-path-evidence.json"
+    )))
+    .unwrap();
+    let names = extract_sql_statement_facts(sql)
+        .bounds
+        .iter()
+        .flat_map(|fact| offenders(fact, &catalog))
+        .map(|offender| offender.table)
+        .collect::<Vec<_>>();
+    assert_eq!(names, ["orders"]);
+}
