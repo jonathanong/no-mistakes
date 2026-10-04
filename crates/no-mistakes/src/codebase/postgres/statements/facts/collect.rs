@@ -2,6 +2,7 @@ use super::inserts::collect_query_inserts;
 use super::*;
 
 pub(super) struct FactOut<'a> {
+    pub(super) insert_sources: &'a super::lines::InsertSources<'a>,
     pub(super) insert_n: &'a mut usize,
     pub(super) trigger_n: &'a mut usize,
     pub(super) inserts: &'a mut Vec<SqlInsertFact>,
@@ -22,14 +23,17 @@ pub(super) fn collect_one(
 ) {
     if let Statement::Insert(insert) = statement {
         *out.insert_n += 1;
-        if let Some(fact) =
-            insert::from_statement_at(sql, statement, *out.insert_n, placeholder_positions)
-        {
+        if let Some(fact) = insert::from_statement_at(
+            out.insert_sources,
+            statement,
+            *out.insert_n,
+            placeholder_positions,
+        ) {
             out.inserts.push(fact);
         }
         if let Some(source) = insert.source.as_deref() {
             collect_query_inserts(
-                sql,
+                out.insert_sources,
                 source,
                 out.insert_n,
                 out.inserts,
@@ -44,7 +48,13 @@ pub(super) fn collect_one(
         }
     }
     if let Statement::Query(query) = statement {
-        collect_query_inserts(sql, query, out.insert_n, out.inserts, placeholder_positions);
+        collect_query_inserts(
+            out.insert_sources,
+            query,
+            out.insert_n,
+            out.inserts,
+            placeholder_positions,
+        );
     }
     select::collect_with_placeholder_positions(sql, statement, placeholder_positions, out.selects);
     select::collect_table_arms(statement, table_cursor, out.selects);

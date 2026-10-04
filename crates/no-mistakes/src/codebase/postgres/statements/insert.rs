@@ -3,19 +3,21 @@ use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{Insert, OnConflictAction, OnInsert, Statement, TableObject};
 
 pub(super) fn from_statement_at(
-    sql: &str,
+    sources: &super::lines::InsertSources<'_>,
     statement: &Statement,
     n: usize,
     positions: super::value::PlaceholderPositions<'_>,
 ) -> Option<SqlInsertFact> {
     match statement {
-        Statement::Insert(insert) => Some(from_insert_at(sql, insert, n, true, positions)),
+        Statement::Insert(insert) => {
+            Some(from_insert_prepared(sources, insert, n, true, positions))
+        }
         _ => None,
     }
 }
 
-pub(super) fn from_insert_at(
-    sql: &str,
+pub(super) fn from_insert_prepared(
+    sources: &super::lines::InsertSources<'_>,
     insert: &Insert,
     n: usize,
     executed: bool,
@@ -27,7 +29,7 @@ pub(super) fn from_insert_at(
     };
     SqlInsertFact {
         table,
-        line: super::lines::nth_insert_line(sql, n),
+        line: sources.line(n),
         executed,
         guarded_select: insert
             .source
@@ -37,7 +39,7 @@ pub(super) fn from_insert_at(
             Some(OnInsert::OnConflict(conflict)) => Some(from_conflict(conflict, positions)),
             _ => None,
         },
-        assignments: insert_assignments(sql, insert, n, positions),
+        assignments: insert_assignments(sources, insert, n, positions),
     }
 }
 
@@ -67,12 +69,12 @@ fn from_conflict(
 }
 
 fn insert_assignments(
-    sql: &str,
+    sources: &super::lines::InsertSources<'_>,
     insert: &Insert,
     n: usize,
     positions: super::value::PlaceholderPositions<'_>,
 ) -> Vec<super::SqlAssignmentFact> {
-    if has_overriding_user_value(sql, n) {
+    if has_overriding_user_value(sources, n) {
         return Vec::new();
     }
     let set: Vec<_> = insert
@@ -87,8 +89,8 @@ fn insert_assignments(
     }
 }
 
-fn has_overriding_user_value(sql: &str, n: usize) -> bool {
-    let masked = super::fallback::mask_quoted_sql(&super::lines::nth_insert_source(sql, n));
+fn has_overriding_user_value(sources: &super::lines::InsertSources<'_>, n: usize) -> bool {
+    let masked = super::fallback::mask_quoted_sql(sources.source(n));
     let tokens = masked
         .split_whitespace()
         .map(str::to_ascii_lowercase)

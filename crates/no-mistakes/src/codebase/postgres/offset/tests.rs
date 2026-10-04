@@ -8,8 +8,8 @@ fn statement_offsets(statement: &sqlparser::ast::Statement, out: &mut Vec<Offset
 use super::{sql_has_offset_clause, sql_offset_uses, OffsetUse};
 
 fn offset_facts(sql: &str, statements: &[sqlparser::ast::Statement]) -> Vec<super::SqlOffsetFact> {
-    let normalized = super::super::parse::normalize_copy_data(sql);
-    super::offset_facts_prepared(&normalized, statements)
+    let prepared = super::super::parse::PreparedSql::new(sql);
+    super::offset_facts_prepared(&prepared, statements)
 }
 
 #[test]
@@ -445,9 +445,18 @@ fn comment_separated_offset_keeps_the_keyword_column() {
 fn unclosed_separator_does_not_attach_an_earlier_keyword() {
     let keyword = "SELECT id OFFSET".find("OFFSET").unwrap() + 1;
     for sql in ["SELECT id OFFSET /* note", "SELECT id OFFSET -- note"] {
-        assert!(super::locate::resolve(sql, &[(1, keyword)], 0, 1, sql.len()).is_none());
+        assert!(super::locate::resolve(
+            &super::locate::Positions::new(sql),
+            &[(1, keyword)],
+            0,
+            1,
+            sql.len()
+        )
+        .is_none());
     }
-    assert!(super::locate::resolve("SELECT 1", &[], 0, 1, 0).is_none());
+    assert!(
+        super::locate::resolve(&super::locate::Positions::new("SELECT 1"), &[], 0, 1, 0).is_none()
+    );
 }
 
 #[test]
@@ -475,4 +484,37 @@ fn recovered_statements_keep_the_outer_offset_keyword() {
         assert_eq!(fact.column, line.find("OFFSET").unwrap() + 1);
     }
     assert!(facts.offset_uses[3].column >= 1);
+}
+
+#[test]
+fn prepared_offsets_preserve_unicode_columns_and_comment_separators() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/postgres/source-positions/fixture/offsets.sql"
+    ));
+    let facts = super::super::statements::extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(
+        facts
+            .offset_uses
+            .iter()
+            .map(|fact| (fact.line, fact.column))
+            .collect::<Vec<_>>(),
+        vec![(2, 12), (3, 12), (5, 18)]
+    );
+}
+
+#[test]
+fn rewritten_grouping_tokens_are_not_reused_for_source_locations() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/postgres/source-positions/fixture/grouping.sql"
+    ));
+    let prepared = super::super::parse::PreparedSql::new(sql);
+    assert!(prepared.parse().is_ok());
+    assert!(!prepared.tokens_preserve_source_positions());
+    let facts = super::super::statements::extract_sql_statement_facts(sql);
+    assert_eq!(facts.offset_uses.len(), 1);
+    assert_eq!(facts.offset_uses[0].line, 2);
+    assert_eq!(facts.offset_uses[0].kind, OffsetUse::Other);
 }

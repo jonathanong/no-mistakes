@@ -83,3 +83,8 @@ napi-build = "2.3.2"
 name = "core_analysis"
 harness = false
 required-features = ["test-instrumentation"]
+
+[[bench]]
+name = "sql_source_positions"
+harness = false
+required-features = ["test-instrumentation"]

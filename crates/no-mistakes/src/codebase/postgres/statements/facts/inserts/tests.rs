@@ -7,7 +7,7 @@ fn ignores_set_expression_that_is_not_an_insert_statement() {
     let mut inserts: Vec<SqlInsertFact> = Vec::new();
     let mut insert_n = 0;
     collect_set_inserts(
-        "",
+        &super::super::super::lines::InsertSources::new(""),
         &SetExpr::Insert(Statement::Commit {
             chain: false,
             end: false,

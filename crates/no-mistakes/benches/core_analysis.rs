@@ -24,6 +24,8 @@ mod relationships;
 mod reports;
 #[path = "core_analysis/shard.rs"]
 mod shard;
+#[path = "core_analysis/sql_source_positions.rs"]
+mod sql_source_positions;
 
 use aggregate::{
     bench_aggregate_and_multi_report, bench_finite_set_membership, bench_impacted_checks,
@@ -46,8 +48,15 @@ use react_traits::bench_react_traits;
 use relationships::bench_relationship_projection;
 use reports::{bench_symbols, bench_workspace};
 
+fn bench_sql_source_positions(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        sql_source_positions::bench_sql_source_positions(c);
+    }
+}
+
 criterion_group!(
     benches,
+    bench_sql_source_positions,
     bench_lazy_traversal,
     bench_import_only_vs_workspace_relationships,
     bench_callable_file_index_construction,
