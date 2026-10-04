@@ -30,7 +30,8 @@ fn scalar_reducers_keep_argument_row_bounds_without_scalar_argument_types() {
             ("accounts", 11),
             ("accounts", 13),
             ("accounts", 16),
-            ("accounts", 17)
+            ("accounts", 17),
+            ("accounts", 18)
         ]
         .map(|(table, line)| (table.to_string(), line))
     );

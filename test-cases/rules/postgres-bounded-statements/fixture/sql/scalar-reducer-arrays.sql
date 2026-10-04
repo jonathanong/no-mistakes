@@ -15,3 +15,4 @@ UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(AR
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[ARRAY[o.account_id, $2]::uuid[]]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[ARRAY[o.account_ids]::uuid[][]]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[ARRAY[app.lookup($2)]::uuid[]]);
+UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[COALESCE(o.account_ids, $2::uuid[])]); -- COALESCE can return the whole stored array.

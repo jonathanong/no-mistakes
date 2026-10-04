@@ -3,7 +3,7 @@ use super::{
     constructor, fixed_boolean::fixed_scalar_boolean, indexed_base, leaves::numeric_literal, scalar,
 };
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, unwrap_expr};
-use sqlparser::ast::{DataType, Expr, FunctionArg, FunctionArgExpr, FunctionArguments};
+use sqlparser::ast::{DataType, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
 
 pub(super) fn collect(
     expr: &Expr,
@@ -111,31 +111,15 @@ pub(super) fn collect(
             }
             Some(())
         }
-        Expr::Function(function)
-            if function.name.0.len() == 1
-                && object_name_ident(&function.name).is_some_and(|name| {
-                    name.quote_style.is_none()
-                        && ["coalesce", "least", "greatest"].contains(&ident_key(name).as_str())
-                }) =>
-        {
-            let FunctionArguments::List(arguments) = &function.args else {
-                return None;
-            };
-            for argument in &arguments.args {
-                let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = argument else {
-                    return None;
-                };
-                collect(expr, resolver, None, indexed, types, caller_only, positions)?;
-            }
-            Some(())
-        }
-        Expr::Function(function) => {
-            // The result is scalar; source extraction still retains argument row dependencies.
-            for expr in scalar::arguments(function)? {
-                collect(expr, resolver, None, indexed, types, caller_only, positions)?;
-            }
-            Some(())
-        }
+        Expr::Function(function) => function_columns(
+            function,
+            resolver,
+            out,
+            indexed,
+            types,
+            caller_only,
+            positions,
+        ),
         Expr::Array(array) => {
             for element in &array.elem {
                 collect(
@@ -152,4 +136,46 @@ pub(super) fn collect(
         }
         _ => None,
     }
+}
+
+// COALESCE-like syntax can retain array-valued leaves; trusted scalar reducers cannot.
+fn function_columns(
+    function: &Function,
+    resolver: &Resolver,
+    mut out: Option<&mut Vec<(usize, String)>>,
+    indexed: &mut Vec<(usize, String)>,
+    types: &mut Vec<String>,
+    caller_only: bool,
+    positions: super::super::super::super::value::PlaceholderPositions<'_>,
+) -> Option<()> {
+    if function.name.0.len() == 1
+        && object_name_ident(&function.name).is_some_and(|name| {
+            name.quote_style.is_none()
+                && ["coalesce", "least", "greatest"].contains(&ident_key(name).as_str())
+        })
+    {
+        let FunctionArguments::List(arguments) = &function.args else {
+            return None;
+        };
+        for argument in &arguments.args {
+            let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = argument else {
+                return None;
+            };
+            collect(
+                expr,
+                resolver,
+                out.as_deref_mut(),
+                indexed,
+                types,
+                caller_only,
+                positions,
+            )?;
+        }
+    } else {
+        // Result scalarity does not remove any argument's row dependency.
+        for expr in scalar::arguments(function)? {
+            collect(expr, resolver, None, indexed, types, caller_only, positions)?;
+        }
+    }
+    Some(())
 }

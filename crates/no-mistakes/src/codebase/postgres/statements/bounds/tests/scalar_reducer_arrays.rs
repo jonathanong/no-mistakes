@@ -7,7 +7,7 @@ fn scalar_result_proofs_retain_argument_items_and_direct_leaf_requirements() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/scalar-reducer-arrays.sql"
     )));
-    assert_eq!(facts.len(), 15);
+    assert_eq!(facts.len(), 16);
     for index in [0, 1, 2] {
         let SqlPinSource::Array {
             items,
@@ -21,7 +21,12 @@ fn scalar_result_proofs_retain_argument_items_and_direct_leaf_requirements() {
         assert!(scalar_columns.is_empty());
     }
     // A direct constructor leaf still requires scalar catalog evidence.
-    for (index, column) in [(10, "status"), (11, "account_ids"), (13, "account_ids")] {
+    for (index, column) in [
+        (10, "status"),
+        (11, "account_ids"),
+        (13, "account_ids"),
+        (15, "account_ids"),
+    ] {
         let SqlPinSource::Array {
             items,
             scalar_columns,

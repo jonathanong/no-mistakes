@@ -1,6 +1,6 @@
 mod nonrecursive_ctes;
-mod standalone_table;
 mod scalar_reducer_arrays;
+mod standalone_table;
 mod stored_array;
 mod table_only;
 use super::evaluate::offenders;
