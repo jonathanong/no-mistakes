@@ -27,7 +27,7 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
                     format!("{}{operator}array#{items:?}:{scalar_columns:?}", pin.column)
                 }
                 SqlPinSource::Query(bound) => {
-                    format!("{}{operator}({})", pin.column, query(&bound))
+                    format!("{}{operator}({})", pin.column, query(bound))
                 }
                 // This formatter describes key-credit proof; raw fixtures test read metadata.
                 SqlPinSource::ReadQuery(_) => String::new(),
@@ -42,7 +42,7 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
     };
     match &item.kind {
         SqlBoundItemKind::Table(table) => format!("{table}{pins}"),
-        SqlBoundItemKind::Query(bound) => format!("({}){pins}", query(&bound)),
+        SqlBoundItemKind::Query(bound) => format!("({}){pins}", query(bound)),
         SqlBoundItemKind::Other => format!("other{pins}"),
         SqlBoundItemKind::Opaque => format!("opaque{pins}"),
     }

@@ -35,3 +35,11 @@ fn an_unknown_inner_relation_keeps_qualified_reads_conservative() {
         std::fs::read_to_string(fixture_root().join("sql/qualified-catalog-unknown.sql")).unwrap();
     assert_eq!(names(&sql), ["accounts"]);
 }
+
+#[test]
+fn an_explicit_inner_alias_does_not_make_a_qualified_outer_read_local() {
+    let sql =
+        std::fs::read_to_string(fixture_root().join("sql/qualified-catalog-aliased-inner.sql"))
+            .unwrap();
+    assert_eq!(names(&sql), ["accounts"]);
+}

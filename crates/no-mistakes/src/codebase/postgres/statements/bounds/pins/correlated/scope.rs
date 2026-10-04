@@ -71,6 +71,9 @@ pub(super) struct Scope {
     pub(super) whole_rows: Names,
     /// The base tables of the level, as SQL names.
     pub(super) tables: Tables,
+    /// Base names visible to qualified SQL references. An explicit table alias removes its
+    /// base name from this lexical namespace while `tables` still helps resolve bare columns.
+    pub(super) qualified_tables: Tables,
     /// A relation that is not a base table: a derived table, a function, a CTE.
     pub(super) foreign: bool,
     /// Known projected columns of derived/CTE/function sources in this level.
@@ -80,7 +83,7 @@ pub(super) struct Scope {
 impl Scope {
     pub(super) fn qualified_candidates(&self) -> SqlQualifiedScope {
         SqlQualifiedScope {
-            tables: self.tables.visible(),
+            tables: self.qualified_tables.visible(),
             unknown: self.foreign,
         }
     }
