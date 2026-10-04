@@ -39,6 +39,22 @@ fn recovers_only_complete_postgres_partition_transitions() {
     assert!(super::partition::recover_partition_change(&tokens(ordinary), None, true).is_none());
 }
 
+#[test]
+fn recovers_only_structurally_valid_partition_bounds() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-bound-controls.sql"),
+    )
+    .unwrap();
+    let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
+    assert_eq!(statements.len(), 5);
+    assert!(statements.iter().all(|statement| matches!(
+        statement,
+        sqlparser::ast::Statement::AlterTable(table)
+            if matches!(table.operations.as_slice(), [sqlparser::ast::AlterTableOperation::AttachPartition { .. }])
+    )));
+}
+
 fn tokens(sql: &str) -> Vec<Token> {
     Tokenizer::new(&PostgreSqlDialect {}, sql)
         .tokenize()

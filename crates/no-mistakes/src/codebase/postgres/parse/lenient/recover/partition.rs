@@ -70,33 +70,71 @@ fn partition_bound_suffix(parser: &mut Parser) -> bool {
     }
     let valid = match keyword_of(&parser.next_token().token) {
         Some(Keyword::FROM) => {
-            parenthesized_bound(parser)
+            let lower = bound_expressions(parser, true);
+            lower.is_some()
                 && keyword_of(&parser.next_token().token) == Some(Keyword::TO)
-                && parenthesized_bound(parser)
+                && bound_expressions(parser, true) == lower
         }
-        Some(Keyword::IN | Keyword::WITH) => parenthesized_bound(parser),
+        Some(Keyword::IN) => bound_expressions(parser, false).is_some(),
+        Some(Keyword::WITH) => hash_bound(parser),
         _ => false,
     };
     valid && matches!(parser.peek_token().token, Token::EOF)
 }
 
-fn parenthesized_bound(parser: &mut Parser) -> bool {
+// Parse complete comma-separated bound expressions instead of treating balanced
+// parentheses as proof that PostgreSQL could execute the ownership transition.
+fn bound_expressions(parser: &mut Parser, allow_sentinels: bool) -> Option<usize> {
     if parser.next_token().token != Token::LParen {
+        return None;
+    }
+    let mut count = 0;
+    loop {
+        match keyword_of(&parser.peek_token().token) {
+            Some(Keyword::MINVALUE | Keyword::MAXVALUE) if allow_sentinels => {
+                parser.next_token();
+            }
+            Some(Keyword::MINVALUE | Keyword::MAXVALUE) => return None,
+            _ => {
+                parser.parse_expr().ok()?;
+            }
+        }
+        count += 1;
+        match parser.next_token().token {
+            Token::Comma => continue,
+            Token::RParen => return Some(count),
+            _ => return None,
+        }
+    }
+}
+
+fn hash_bound(parser: &mut Parser) -> bool {
+    if parser.next_token().token != Token::LParen
+        || keyword_of(&parser.next_token().token) != Some(Keyword::MODULUS)
+    {
         return false;
     }
-    let mut depth = 1;
-    let mut content = false;
-    loop {
-        match parser.next_token().token {
-            Token::LParen => depth += 1,
-            Token::RParen => {
-                depth -= 1;
-                if depth == 0 {
-                    return content;
-                }
-            }
-            Token::EOF => return false,
-            _ => content = true,
-        }
+    let Some(modulus) = positive_integer(parser.next_token().token) else {
+        return false;
+    };
+    if parser.next_token().token != Token::Comma
+        || keyword_of(&parser.next_token().token) != Some(Keyword::REMAINDER)
+    {
+        return false;
+    }
+    let Some(remainder) = nonnegative_integer(parser.next_token().token) else {
+        return false;
+    };
+    remainder < modulus && parser.next_token().token == Token::RParen
+}
+
+fn positive_integer(token: Token) -> Option<i32> {
+    nonnegative_integer(token).filter(|value| *value > 0)
+}
+
+fn nonnegative_integer(token: Token) -> Option<i32> {
+    match token {
+        Token::Number(raw, _) => raw.parse::<i32>().ok().filter(|value| *value >= 0),
+        _ => None,
     }
 }

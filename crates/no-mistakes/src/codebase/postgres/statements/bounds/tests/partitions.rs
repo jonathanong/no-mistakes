@@ -172,3 +172,14 @@ fn failed_concurrent_detach_keeps_child_owned_in_do_and_transaction() {
         ["select: child", "select: child", "select: child"]
     );
 }
+
+#[test]
+fn rejected_partition_bounds_leave_standalone_temp_children_alive() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-invalid-bound-lifecycle.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 2);
+    assert_eq!(shape(&sql), ["select: opaque", "select: opaque"]);
+}
