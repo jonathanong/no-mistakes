@@ -549,3 +549,5 @@ mod server_state_projection;
 mod set_arm_alias_scope;
 mod unknown_projection_cardinality;
 mod versioned_scalar_projection;
+
+mod conditional_table_function_inputs;
