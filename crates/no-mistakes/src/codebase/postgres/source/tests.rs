@@ -2,6 +2,7 @@ mod ddl;
 mod indexes;
 mod locations;
 mod parsing;
+mod procedural;
 mod schema;
 mod schema_virtual;
 

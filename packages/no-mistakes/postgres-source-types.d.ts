@@ -1,3 +1,5 @@
+import type { PostgresSqlProceduralBlock } from "./postgres-procedural-types";
+export type * from "./postgres-procedural-types";
 /** Pure SQL source input. No repository, database, or filesystem options are needed. */
 export interface PostgresSqlSource {
   sql: string;
@@ -184,6 +186,7 @@ export type PostgresSqlStatementKind =
   | { kind: "createTrigger"; trigger: PostgresSqlTrigger }
   | { kind: "createFunction"; function: PostgresSqlFunction }
   | { kind: "drop"; drop: PostgresSqlDrop }
+  | { kind: "doBlock"; block: PostgresSqlProceduralBlock }
   | { kind: "other" };
 export type PostgresSqlStatement = PostgresSqlStatementKind & {
   ordinal: number;

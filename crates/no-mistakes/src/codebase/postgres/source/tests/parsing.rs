@@ -21,15 +21,22 @@ fn missing_delimiters_are_diagnostics_and_empty_statements_have_no_ordinal() {
 }
 
 #[test]
-fn procedural_consumer_bodies_have_explicit_diagnostics_not_invented_ddl() {
+fn procedural_consumer_bodies_preserve_occurrences_without_execution_claims() {
     let facts = facts("unsupported.sql");
-    assert!(!facts.diagnostics.is_empty());
-    assert_eq!(facts.statements.len(), 1);
-    assert_eq!(facts.statements[0].span.start.line, 6);
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 2);
+    let PostgresSqlStatementKind::DoBlock { block } = &facts.statements[0].facts else {
+        panic!()
+    };
+    assert!(block.complete);
+    assert_eq!(block.statements.len(), 2);
+    assert_eq!(block.statements[0].span.start.line, 3);
+    assert_eq!(block.statements[1].span.start.line, 4);
     assert!(matches!(
-        facts.statements[0].facts,
-        PostgresSqlStatementKind::CreateTable { .. }
+        block.statements[0].facts,
+        PostgresSqlStatementKind::AlterTable { .. }
     ));
+    assert_eq!(facts.statements[1].span.start.line, 6);
 }
 
 #[test]

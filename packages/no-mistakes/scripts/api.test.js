@@ -850,6 +850,12 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(declarations, /functions: PostgresSqlFunctionReference\[\];/);
   assert.match(declarations, /kind: "validateConstraint"; name: PostgresSqlIdentifier/);
   assert.match(declarations, /dependenciesComplete: boolean;/);
+  assert.match(declarations, /kind: "doBlock"; block: PostgresSqlProceduralBlock/);
+  const procedural = readFileSync(join(packageRoot, "postgres-procedural-types.d.ts"), "utf8");
+  assert.match(procedural, /export interface PostgresSqlProceduralBlock/);
+  assert.match(procedural, /bodySpan: PostgresSqlSpan;/);
+  assert.match(procedural, /statements: PostgresSqlStatement\[\];/);
+  assert.match(procedural, /complete: boolean;/);
 });
 
 test("resolveCheck declarations mirror its mutually exclusive runtime inputs", () => {

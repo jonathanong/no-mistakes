@@ -33,7 +33,7 @@ the package declarations, including `PostgresSqlStatement`,
 `PostgresSqlStatementKind`, `PostgresSqlColumn`, `PostgresSqlType`,
 `PostgresSqlConstraint`, `PostgresSqlAlterOperation`, `PostgresSqlIndex`,
 `PostgresSqlView`, `PostgresSqlTrigger`, `PostgresSqlFunction`, and
-`PostgresSqlDrop`. Statements use a discriminated `kind`; consumers do not need
+`PostgresSqlDrop` and `PostgresSqlProceduralBlock`. Statements use a discriminated `kind`; consumers do not need
 raw parser nodes or internal imports.
 
 - CREATE TABLE columns retain quoted/qualified type names, array dimensions,
@@ -82,16 +82,27 @@ neighboring statements. Lexical errors preserve the valid prefix and report the
 remaining invalid source. Diagnostics are not thrown as a single file-wide
 failure. Invalid API input still rejects the promise.
 
-This API follows the existing PostgreSQL parser grammar. Unsupported procedural
-`DO` bodies are reported explicitly; it does not silently claim nested DDL has
-been collected. A parser compatibility normalization with a source boundary that cannot be mapped (for
-example a synthetic COPY-data terminator) produces a diagnostic rather than
-fabricated source positions. Valid neighboring statements remain available.
-Existing unqualified TABLE-arm parser limitations also produce
-diagnostics. Saved consumer characterization fixtures protect these boundaries.
-Consumers that still need those shapes must retain that functionality until
-the corresponding parser support lands; this API does not claim their complete
-retirement today.
+Dollar-quoted plain `DO ... BEGIN ... END` bodies in the built-in `plpgsql`
+language expose a `doBlock` fact. Its `bodySpan` identifies the original body;
+nested statements retain their original global source coordinates and lexical
+order. These are **procedural source occurrences**, never proof that a statement
+executes or a constraint is installed or validated. Consumers choose migration
+policy separately. Each distinct body owns one token inventory and each nested
+SQL statement is parsed once with the same SQL parser. Nested programs have a
+bounded parser safety limit.
+
+`PostgresSqlProceduralBlock.complete` is false when body facts are incomplete,
+including an incomplete nested program. Inspect its `diagnostics` before using
+its occurrence list. Conditional blocks, declarations, other procedural
+languages and non-dollar-quoted bodies remain explicitly unsupported; no nested
+DDL is guessed behind unsupported control flow. Ordinary syntax errors preserve
+parseable neighboring body statements. Function bodies remain opaque.
+
+A parser compatibility normalization with a source boundary that cannot be
+mapped (for example a synthetic COPY-data terminator) produces a diagnostic
+rather than fabricated source positions. Existing unqualified TABLE-arm parser
+limitations also produce diagnostics. Consumers needing unsupported grammar
+must retain that functionality until its corresponding support lands.
 
 Rust callers use `parse_postgres_source(&PostgresSqlSource)` or
 `parse_postgres_sources(&[PostgresSqlSource])`. Node callers use the async public
@@ -99,7 +110,8 @@ export rather than shelling out or dispatching on raw AST kinds.
 
 PostgreSQL 18 permits `GENERATED ALWAYS AS (...) VIRTUAL` and makes virtual storage
 the default ([generated-column documentation](https://www.postgresql.org/docs/18/ddl-generated-columns.html)).
-The selected sqlparser PostgreSQL dialect currently requires `STORED`; valid
-`VIRTUAL` or omitted-storage declarations therefore produce parser diagnostics.
-The typed projection preserves virtual storage when present in an AST, but the
-public API does not switch dialects to conceal this PostgreSQL grammar gap.
+The selected parser requires a stored-mode token. The source API prepares a
+compatibility token at the original expression boundary and restores the
+declared or default virtual mode in that same parsed AST before projecting
+facts. Explicit `STORED` remains stored, and original statement SQL and source
+positions remain unchanged. No alternate dialect or second AST parse is used.

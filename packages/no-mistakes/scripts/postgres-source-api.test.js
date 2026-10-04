@@ -34,3 +34,31 @@ test(
     await assert.rejects(api.parsePostgresSql({ fileName: "missing.sql" }));
   },
 );
+
+test(
+  "compiled source API exposes procedural origin and original generated storage",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const facts = await api.parsePostgresSql({ sql: fixture("unsupported.sql") });
+    assert.deepEqual(facts.diagnostics, []);
+    const block = facts.statements[0].block;
+    assert.equal(facts.statements[0].kind, "doBlock");
+    assert.equal(block.language, "plpgsql");
+    assert.equal(block.complete, true);
+    assert.deepEqual(
+      block.statements.map((statement) => statement.kind),
+      ["alterTable", "alterTable"],
+    );
+    assert.equal(block.statements[0].span.start.line, 3);
+    const virtual = await api.parsePostgresSql({ sql: fixture("schema-virtual.sql") });
+    assert.deepEqual(virtual.diagnostics, []);
+    assert.equal(virtual.statements[0].columns[1].generated.storage, "VIRTUAL");
+    const empty = await api.parsePostgresSql({ sql: fixture("generated-empty.sql") });
+    assert.deepEqual(empty.diagnostics, []);
+    assert.deepEqual(
+      empty.statements[0].columns.map((column) => column.generated.storage),
+      ["VIRTUAL", "STORED", "VIRTUAL"],
+    );
+  },
+);
