@@ -68,6 +68,12 @@ const {
 })();
 ````
 
+PostgreSQL rules invoked through `check()` or an `analyzeProject()` check query
+use the same explicit executor configuration as the CLI. Set `importSpecifier`
+or `executorNames` in the rule options to select embedded executor calls;
+omitting both selects none. See the
+[executor migration notes](migrations/explicit-postgres-executors.md).
+
 ## PostgreSQL catalog generation
 
 `generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas })` asynchronously
