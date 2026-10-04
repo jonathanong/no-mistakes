@@ -10,13 +10,13 @@ from a statement that can match many rows.
 rules:
   - rule: postgres-bounded-statements
     options:
-      include: ['src/**/*.ts']
-      exclude: ['**/*.test.ts']
+      include: ["src/**/*.ts"]
+      exclude: ["**/*.test.ts"]
       schemaCatalogPath: db/schema.json
       statements: [select, update, delete]
       allow:
-        - object: 'table:currencies'
-          reason: 'Fixed lookup table of under 200 rows'
+        - object: "table:currencies"
+          reason: "Fixed lookup table of under 200 rows"
 ```
 
 ## Why and when
@@ -71,7 +71,11 @@ set operation). A statement is bounded when any of these holds:
   table, a function or a CTE is taken as that source's own, and so is any column of a table
   the catalog does not describe. A `LATERAL` source that reads
   earlier FROM items is sized per row of them, so it bounds nothing pinned to it; the
-  relations inside it are still judged.
+  relations inside it are still judged. A derived query cannot resolve its own reads against
+  the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
+LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
+  only preceding FROM sources; a later source with the same column name cannot hide that
+  outer read.
 - A column compared with a column of another bounded relation is pinned too, so a bound
   propagates across joins on unique keys to a fixed point: with `o.id = $1`, the account
   `a.id = o.account_id` is bounded, and its profile `p.account_id = a.id` after it. A join on

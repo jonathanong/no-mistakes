@@ -30,9 +30,9 @@ impl Scan {
                     .as_ref()
                     .map(|alias| ident_key(&alias.name))
                     .or_else(|| object_name_ident(name).map(ident_key));
-                frame.relations.extend(own);
+                frame.scope.relations.extend(own);
                 if alias.is_none() && args.is_none() {
-                    frame.relations.insert(object_name_key(name));
+                    frame.scope.relations.insert(object_name_key(name));
                 }
                 let mut columns = if let Some(alias) =
                     alias.as_ref().filter(|alias| !alias.columns.is_empty())
@@ -51,7 +51,7 @@ impl Scan {
                             && !args.args.iter().all(|argument| matches!(argument, FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if scalar_array(expr)))
                         { None } else { function_columns(name, alias) }
                 } else {
-                    frame.tables.push(sql_name(name));
+                    frame.scope.tables.push(sql_name(name));
                     return;
                 };
                 if args.is_some()
@@ -64,15 +64,15 @@ impl Scan {
                     }
                 }
                 match columns {
-                    Some(columns) => frame.columns.extend(columns),
-                    None => frame.foreign = true,
+                    Some(columns) => frame.scope.columns.extend(columns),
+                    None => frame.scope.foreign = true,
                 }
             }
             TableFactor::Derived {
                 subquery, alias, ..
             } => {
                 if let Some(alias) = alias {
-                    frame.relations.insert(ident_key(&alias.name));
+                    frame.scope.relations.insert(ident_key(&alias.name));
                 }
                 let columns = match alias.as_ref().filter(|alias| !alias.columns.is_empty()) {
                     Some(alias) => Some(
@@ -85,8 +85,8 @@ impl Scan {
                     None => projection_columns(subquery),
                 };
                 match columns {
-                    Some(columns) => frame.columns.extend(columns),
-                    None => frame.foreign = true,
+                    Some(columns) => frame.scope.columns.extend(columns),
+                    None => frame.scope.foreign = true,
                 }
             }
             TableFactor::UNNEST {
@@ -101,12 +101,12 @@ impl Scan {
             TableFactor::NestedJoin {
                 alias: Some(alias), ..
             } => {
-                frame.relations.insert(ident_key(&alias.name));
+                frame.scope.relations.insert(ident_key(&alias.name));
                 // Child columns no longer identify the wrapper's renamed output positions.
-                frame.foreign = true;
+                frame.scope.foreign = true;
             }
             TableFactor::NestedJoin { alias: None, .. } => {}
-            _ => frame.foreign = true,
+            _ => frame.scope.foreign = true,
         }
     }
 }

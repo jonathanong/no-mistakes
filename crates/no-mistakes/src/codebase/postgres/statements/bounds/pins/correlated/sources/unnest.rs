@@ -12,7 +12,7 @@ impl Frame {
         with_ordinality: bool,
     ) {
         let own = alias.as_ref().map(|alias| ident_key(&alias.name));
-        self.relations.extend(own.clone());
+        self.scope.relations.extend(own.clone());
         let columns: Vec<_> = alias
             .as_ref()
             .map(|alias| {
@@ -25,8 +25,8 @@ impl Frame {
             .unwrap_or_default();
         if !array_exprs.iter().all(scalar_array) {
             // Composite attributes and undeclared suffix columns remain unknown.
-            self.columns.extend(columns);
-            self.foreign = true;
+            self.scope.columns.extend(columns);
+            self.scope.foreign = true;
             return;
         }
         let mut exposed: Vec<_> = (0..array_exprs.len())
@@ -44,6 +44,6 @@ impl Frame {
         for (column, name) in exposed.iter_mut().zip(columns) {
             *column = name;
         }
-        self.columns.extend(exposed);
+        self.scope.columns.extend(exposed);
     }
 }
