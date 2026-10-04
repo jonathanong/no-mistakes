@@ -41,31 +41,7 @@ pub(super) fn finite_array(
     ) -> Option<()> {
         match unwrap_expr(expr) {
             Expr::Value(_) | Expr::Interval(_) => Some(()),
-            Expr::IsNull(_)
-            | Expr::IsNotNull(_)
-            | Expr::IsTrue(_)
-            | Expr::IsNotTrue(_)
-            | Expr::IsFalse(_)
-            | Expr::IsNotFalse(_)
-            | Expr::IsUnknown(_)
-            | Expr::IsNotUnknown(_)
-            | Expr::IsDistinctFrom(_, _)
-            | Expr::IsNotDistinctFrom(_, _)
-                if fixed_scalar_boolean(expr) =>
-            {
-                Some(())
-            }
-            Expr::UnaryOp {
-                op: UnaryOperator::Not,
-                ..
-            }
-            | Expr::BinaryOp {
-                op:
-                    sqlparser::ast::BinaryOperator::And
-                    | sqlparser::ast::BinaryOperator::Or
-                    | sqlparser::ast::BinaryOperator::Xor,
-                ..
-            } if fixed_scalar_boolean(expr) => Some(()),
+            expr if fixed_scalar_boolean(expr) => Some(()),
             Expr::TypedString(literal) if !matches!(literal.data_type, DataType::Array(_)) => {
                 // Parser-custom names such as XML still need catalog scalar evidence.
                 if matches!(literal.data_type, DataType::Custom(_, _)) {
