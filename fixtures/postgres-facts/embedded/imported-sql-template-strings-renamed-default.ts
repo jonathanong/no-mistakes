@@ -3,7 +3,7 @@ import tag from "sql-template-strings";
 import type DefaultSql from "untrusted-tag-library";
 import { type sql } from "other-untrusted";
 import "sql-template-strings";
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function load(id: number) {
   return query(tag`SELECT * FROM topics WHERE id = ${id}`);

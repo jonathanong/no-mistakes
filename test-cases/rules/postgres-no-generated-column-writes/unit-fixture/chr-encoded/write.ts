@@ -1,4 +1,4 @@
-import { write } from '@data-stores/psql'
+import { write } from '@example/db'
 
 export function touchCreatedAt() {
   return write(

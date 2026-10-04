@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 // postgres-conflict-ordering: the batch is not ordered by the conflict key.
 export function insertAccounts(ids: string[], emails: string[]) {

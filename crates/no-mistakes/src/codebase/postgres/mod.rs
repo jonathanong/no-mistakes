@@ -93,6 +93,6 @@ pub use types::{
 };
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 pub(crate) use collect::collect_prepared_schema_facts;

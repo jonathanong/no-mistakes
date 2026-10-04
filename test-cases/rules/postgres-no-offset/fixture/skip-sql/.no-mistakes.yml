@@ -2,4 +2,5 @@ rules:
   - rule: postgres-no-offset
     scope: repository
     options:
+      importSpecifier: "@example/db"
       sqlInclude: ["db/views/**/*.sql"]

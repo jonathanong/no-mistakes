@@ -46,8 +46,7 @@ Numeric digit separators in literal limits are decoded (`LIMIT 1_000` is `LIMIT 
 `literal-limit` and `keyset-only-sweep` are opt-in. Unknown `bannedShapes` values
 are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error).
-`importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
-`[query, read, write]`.
+`importSpecifier` has no default; `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 Counterexample: correlated `EXISTS` wrapping `UNION ALL`.
 
@@ -120,8 +119,19 @@ scopes are not tracked.
 `[correlated-exists-set-operation]`. Also accepted, and off unless listed:
 `not-in-subquery`, `count-for-existence`, `literal-limit`, `keyset-only-sweep`.
 Unknown `bannedShapes` values are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
-other values are a configuration error). `importSpecifier` defaults to
-`@data-stores/psql`. `executorNames` defaults to `[query, read, write]`.
+other values are a configuration error). `importSpecifier` has no default. `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
 
 ## Bounded iteration shapes
 

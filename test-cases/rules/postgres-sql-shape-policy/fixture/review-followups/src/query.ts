@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 // Shape lines must be rebased to this declaration.
 const statement = `SELECT id FROM accounts

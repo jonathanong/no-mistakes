@@ -1,5 +1,5 @@
 import sql from "sql-template-strings";
-import { write } from "@data-stores/psql";
+import { write } from "@example/db";
 
 function buildExpireItemsQuery() {
   const query = sql`WITH logged AS (

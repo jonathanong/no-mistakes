@@ -40,8 +40,8 @@ fn public_extractors_are_callable_from_the_module_root() {
     assert_eq!(schema.indexes[0].leading_column.as_deref(), Some("id"));
     let facts = extract_embedded_sql_from_source(
         std::path::Path::new("root.ts"),
-        "import { query } from '@data-stores/psql'\nquery('SELECT 1')\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery('SELECT 1')\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 1"));
     assert_eq!(
@@ -51,4 +51,17 @@ fn public_extractors_are_callable_from_the_module_root() {
     let locks =
         extract_locking_select_metadata("SELECT * FROM t WHERE id = ANY($1) FOR UPDATE").unwrap();
     assert!(locks[0].has_multi_row_predicate);
+}
+
+/// Existing behavior fixtures select their database explicitly; omission tests
+/// deliberately construct rule options without this helper.
+pub(crate) fn fixture_rule_options(yaml: &str) -> serde_yaml::Value {
+    let mut options: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+    if options.is_null() {
+        options = serde_yaml::Value::Mapping(Default::default());
+    }
+    let map = options.as_mapping_mut().expect("fixture options mapping");
+    map.entry(serde_yaml::Value::String("importSpecifier".into()))
+        .or_insert_with(|| serde_yaml::Value::String("@example/db".into()));
+    options
 }

@@ -39,7 +39,7 @@ fn config_with_options(yaml: &str) -> NoMistakesConfig {
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
         scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str(yaml).unwrap(),
+        options: crate::codebase::postgres::tests::fixture_rule_options(yaml),
         ..Default::default()
     });
     config

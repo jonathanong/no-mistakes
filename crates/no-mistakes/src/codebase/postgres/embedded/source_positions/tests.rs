@@ -7,7 +7,7 @@ fn saved_escape_encodings_keep_offsets_on_the_physical_source_line() {
     let facts = super::super::extract_embedded_sql_from_source(
         &path,
         &source,
-        &super::super::EmbeddedSqlOptions::default(),
+        &super::super::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls.len(), 10);
     for call in facts.calls {
@@ -89,7 +89,7 @@ fn multiline_placeholder_and_following_quasi_have_distinct_physical_lines() {
     let facts = super::super::extract_embedded_sql_from_source(
         &path,
         &source,
-        &super::super::EmbeddedSqlOptions::default(),
+        &super::super::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     let call = &facts.calls[0];
     let sql = call.sql_text.as_deref().unwrap();
@@ -113,7 +113,7 @@ fn bound_static_appends_retain_their_own_physical_origins() {
     let facts = super::super::extract_embedded_sql_from_source(
         &path,
         &source,
-        &super::super::EmbeddedSqlOptions::default(),
+        &super::super::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls.len(), 6);
     assert_eq!(
@@ -138,7 +138,7 @@ fn composed_initializers_map_each_operand_to_its_physical_line() {
     let facts = super::super::extract_embedded_sql_from_source(
         &path,
         &source,
-        &super::super::EmbeddedSqlOptions::default(),
+        &super::super::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls.len(), 6);
     for (call, marker) in facts.calls.iter().zip([

@@ -62,6 +62,18 @@ list, an empty name, a duplicate, or an unknown value is a config error.
 `sourceColumn`, or a duplicate table and column, is a config error. An entry
 that names a generated column already found in schema SQL is a stale finding.
 
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+
 ## Valid example
 
 ```sql

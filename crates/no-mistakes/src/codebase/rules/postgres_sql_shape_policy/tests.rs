@@ -36,7 +36,7 @@ fn config_yaml(yaml: &str) -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(yaml).unwrap(),
+            options: crate::codebase::postgres::tests::fixture_rule_options(yaml),
             ..Default::default()
         }],
         ..Default::default()
@@ -214,7 +214,7 @@ fn flags_correlated_exists_unions_recovered_from_sql_builders() {
     let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
         &builders,
         &source,
-        &crate::codebase::postgres::EmbeddedSqlOptions::default(),
+        &crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert!(embedded.fragments.iter().any(|fragment| {
         fragment.sql_text.as_deref().is_some_and(|sql| {
@@ -253,7 +253,7 @@ fn reports_an_unsafe_fluent_builder_once() {
     let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
         &builders,
         &source,
-        &crate::codebase::postgres::EmbeddedSqlOptions::default(),
+        &crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(embedded.fragments.len(), 1, "{:#?}", embedded.fragments);
     let findings = check_with_files(&root, &config_yaml("{}"), &[builders]).unwrap();
@@ -268,7 +268,7 @@ fn reports_a_multiline_builder_overlap_once() {
     let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
         &builders,
         &source,
-        &crate::codebase::postgres::EmbeddedSqlOptions::default(),
+        &crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(embedded.fragments.len(), 1, "{:#?}", embedded.fragments);
     let findings = check_with_files(&root, &config_yaml("{}"), &[builders]).unwrap();

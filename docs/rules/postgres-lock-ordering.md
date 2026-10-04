@@ -15,14 +15,13 @@ rules:
     options:
       include: ["src/**/*.ts"]
       exclude: ["src/generated/**"]
-      importSpecifier: "@data-stores/psql"
+      importSpecifier: "@example/db"
       executorNames: [query, read, write]
       safeDirective: deadlock-safe
       schemaCatalogPath: db/schema.json
 ```
 
-`importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
-`query`, `read`, and `write`. `safeDirective` defaults to `deadlock-safe`.
+`importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured. `safeDirective` defaults to `deadlock-safe`.
 `schemaCatalogPath` is optional; when present it must be a repository-relative
 catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md).
 
@@ -31,7 +30,7 @@ without `ORDER BY` or `SKIP LOCKED`. Unparseable `FOR UPDATE` SQL is a
 separate diagnostic so lock statements stay parseable.
 
 ```ts
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function lockRows(ids: string[]) {
   return query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE`);
@@ -77,11 +76,22 @@ remains an alternative because it avoids waiting for an already-held row lock.
 
 ## Options and defaults
 
-`include` and `exclude` select source files. `importSpecifier` defaults to
-`@data-stores/psql`, `executorNames` defaults to `[query, read, write]`, and
+`include` and `exclude` select source files. `importSpecifier` has no default, `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured, and
 `safeDirective` defaults to `deadlock-safe`. `schemaCatalogPath` defaults to
 unset; set it to a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md) to enable the catalog
 exact-prefix requirement.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
 
 ## Valid example
 

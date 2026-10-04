@@ -1,4 +1,4 @@
-import { read, write } from '@data-stores/psql';
+import { read, write } from '@example/db';
 
 export async function doTooMuch(id: string) {
   await read(sql`/* a */ SELECT * FROM users WHERE id = $1`, [id]);

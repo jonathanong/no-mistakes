@@ -106,7 +106,12 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         }
         resolve::apply_append(self, call);
         if let Some(callee) = callee_name(call, self.bindings) {
-            self.calls.push(resolve::executor_call(self, call, callee));
+            if self.query_members
+                || !crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee)
+                    .is_member_expression()
+            {
+                self.calls.push(resolve::executor_call(self, call, callee));
+            }
         }
         walk::walk_call_expression(self, call);
     }

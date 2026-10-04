@@ -11,7 +11,7 @@ fn fragment_demand_is_explicit_and_equal_text_shares_a_statement_projection() {
             .join("../../test-cases/rules/postgres-sql-shape-policy/fixture/prepared"),
     );
     let file = root.join("src/builders.ts");
-    let profile = EmbeddedSqlOptions::default();
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
     let mut plan = CheckFactPlan {
         embedded_sql: true,
@@ -138,7 +138,7 @@ fn executed_sql_suppression_matches_marker_provenance() {
     let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
         &path,
         &source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("", &["query".to_string()]),
     );
     let executed = embedded
         .calls

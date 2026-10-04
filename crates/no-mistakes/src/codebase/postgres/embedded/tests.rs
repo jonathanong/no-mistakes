@@ -22,7 +22,7 @@ fn extract(name: &str) -> super::EmbeddedSqlFileFacts {
     extract_embedded_sql_from_source(
         &fixture(name),
         &read_fixture(name),
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
 }
 
@@ -192,11 +192,11 @@ fn custom_specifier_and_executor_names() {
 
 #[test]
 fn default_and_namespace_imports_are_ignored() {
-    let source = "import db, * as all from '@data-stores/psql'\ndb('x')\nall.query('y')\n";
+    let source = "import db, * as all from '@example/db'\ndb('x')\nall.query('y')\n";
     let facts = extract_embedded_sql_from_source(
         Path::new("ns.ts"),
         source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert!(facts.executor_bindings.is_empty());
     assert_eq!(facts.calls.len(), 1);
@@ -206,20 +206,27 @@ fn default_and_namespace_imports_are_ignored() {
 #[test]
 fn is_database_call_and_bindings_from_program() {
     let allocator = Allocator::default();
-    let source = "import { query } from '@data-stores/psql'\nquery('SELECT 1')\nfoo.bar('no')\n";
+    let source = "import { query } from '@example/db'\nquery('SELECT 1')\nclient.query('SELECT 2')\nfoo.bar('no')\n";
     let parsed = crate::ast::parse(Path::new("db.ts"), &allocator, source, SourceType::ts());
-    let bindings = executor_bindings(&parsed.program, &EmbeddedSqlOptions::default());
+    let bindings = executor_bindings(
+        &parsed.program,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
     assert!(bindings.contains("query"));
+    assert!(bindings.contains(super::bindings::MEMBER_QUERY_OPT_IN));
     let empty = HashSet::new();
+    let mut saw_member = false;
     for statement in &parsed.program.body {
         if let oxc_ast::ast::Statement::ExpressionStatement(expr) = statement {
             if let Expression::CallExpression(call) = &expr.expression {
-                if is_database_call(call, &bindings) {
-                    assert!(!is_database_call(call, &empty) || call.callee.is_member_expression());
+                if call.callee.is_member_expression() && is_database_call(call, &bindings) {
+                    saw_member = true;
+                    assert!(!is_database_call(call, &empty));
                 }
             }
         }
     }
+    assert!(saw_member);
 }
 
 #[test]
@@ -231,11 +238,11 @@ fn parse_expr_helper_keeps_allocator_alive() {
 
 #[test]
 fn type_only_and_empty_imports_do_not_bind() {
-    let source = "import type { query } from '@data-stores/psql'\nimport { type read } from '@data-stores/psql'\nimport '@data-stores/psql'\nquery('SELECT 1')\n";
+    let source = "import type { query } from '@example/db'\nimport { type read } from '@example/db'\nimport '@example/db'\nquery('SELECT 1')\n";
     let facts = extract_embedded_sql_from_source(
         Path::new("types.ts"),
         source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert!(facts.executor_bindings.is_empty());
     assert!(facts.calls.is_empty());
@@ -243,11 +250,11 @@ fn type_only_and_empty_imports_do_not_bind() {
 
 #[test]
 fn spread_and_non_query_members_are_ignored() {
-    let source = "import { query } from '@data-stores/psql'\nquery(...sql)\nfoo.bar('no')\nclient['other']('no')\nclient[key]('no')\n";
+    let source = "import { query } from '@example/db'\nquery(...sql)\nfoo.bar('no')\nclient['other']('no')\nclient[key]('no')\n";
     let facts = extract_embedded_sql_from_source(
         Path::new("spread.ts"),
         source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls.len(), 1);
     assert!(facts.calls[0].sql_text.is_none());
@@ -259,7 +266,7 @@ fn computed_template_query_key_is_detected() {
     let facts = extract_embedded_sql_from_source(
         Path::new("computed.ts"),
         source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 9"));
 }
@@ -268,19 +275,19 @@ fn computed_template_query_key_is_detected() {
 fn unknown_extension_falls_back_to_typescript() {
     let facts = extract_embedded_sql_from_source(
         Path::new("no-extension"),
-        "import { query } from '@data-stores/psql'\nquery('SELECT 5')\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery('SELECT 5')\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 5"));
 }
 
 #[test]
 fn destructured_bindings_and_exported_consts_are_recorded() {
-    let source = "import { query } from '@data-stores/psql'\nexport const q = 'SELECT exported'\nconst { skipped } = { skipped: 'no' }\nquery(q)\n";
+    let source = "import { query } from '@example/db'\nexport const q = 'SELECT exported'\nconst { skipped } = { skipped: 'no' }\nquery(q)\n";
     let facts = extract_embedded_sql_from_source(
         Path::new("export.ts"),
         source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT exported"));
 }
@@ -289,13 +296,13 @@ fn destructured_bindings_and_exported_consts_are_recorded() {
 fn extract_from_program_matches_source_entry() {
     let allocator = Allocator::default();
     let path = Path::new("prog.ts");
-    let source = "import { write } from '@data-stores/psql'\nwrite('SELECT 8')\n";
+    let source = "import { write } from '@example/db'\nwrite('SELECT 8')\n";
     let parsed = crate::ast::parse(path, &allocator, source, SourceType::ts());
     let facts = super::extract_embedded_sql_from_program(
         path,
         &parsed.program,
         source,
-        &EmbeddedSqlOptions::default(),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(facts.executor_bindings, ["write"]);
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 8"));
@@ -423,32 +430,32 @@ fn append_non_static_and_non_append_members_are_dynamic_or_unchanged() {
 fn inline_tagged_and_interpolated_calls_are_not_identifier_bindings() {
     let tagged = extract_embedded_sql_from_source(
         Path::new("inline-tagged.ts"),
-        "import { query } from '@data-stores/psql'\nquery(sql`SELECT 1`)\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery(sql`SELECT 1`)\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(tagged.calls[0].kind, super::EmbeddedSqlKind::Inline);
     let interpolated = extract_embedded_sql_from_source(
         Path::new("inline-template.ts"),
-        "import { query } from '@data-stores/psql'\nquery(`SELECT ${id}`)\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery(`SELECT ${id}`)\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(interpolated.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
     let raw = extract_embedded_sql_from_source(
         Path::new("inline-raw.ts"),
-        "import { query } from '@data-stores/psql'\nquery(String.raw`SELECT ${table}`)\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery(String.raw`SELECT ${table}`)\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(raw.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
     let raw_static = extract_embedded_sql_from_source(
         Path::new("inline-raw-static.ts"),
-        "import { query } from '@data-stores/psql'\nquery(String.raw`SELECT 1`)\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery(String.raw`SELECT 1`)\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(raw_static.calls[0].kind, super::EmbeddedSqlKind::Inline);
     let raw_escaped = extract_embedded_sql_from_source(
         Path::new("inline-raw-escaped.ts"),
-        "import { query } from '@data-stores/psql'\nquery(String.raw`SELECT 1\\nFROM topics`)\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery(String.raw`SELECT 1\\nFROM topics`)\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(raw_escaped.calls[0].kind, super::EmbeddedSqlKind::Inline);
     assert_eq!(
@@ -457,8 +464,34 @@ fn inline_tagged_and_interpolated_calls_are_not_identifier_bindings() {
     );
     let sql_param = extract_embedded_sql_from_source(
         Path::new("inline-sql-param.ts"),
-        "import { query } from '@data-stores/psql'\nquery(sql`SELECT ${id}`)\n",
-        &EmbeddedSqlOptions::default(),
+        "import { query } from '@example/db'\nquery(sql`SELECT ${id}`)\n",
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert_eq!(sql_param.calls[0].kind, super::EmbeddedSqlKind::Inline);
+}
+
+#[test]
+fn unconfigured_executors_and_members_are_not_selected() {
+    let path = fixture("executor-opt-in.ts");
+    let source = read_fixture("executor-opt-in.ts");
+    for (options, count) in [
+        (EmbeddedSqlOptions::default(), 0),
+        (EmbeddedSqlOptions::configured("", &["read".into()]), 1),
+        (EmbeddedSqlOptions::configured("", &["query".into()]), 5),
+        (EmbeddedSqlOptions::configured("@example/db", &[]), 6),
+        (
+            EmbeddedSqlOptions {
+                import_specifier: "@example/db".into(),
+                ..EmbeddedSqlOptions::default()
+            },
+            6,
+        ),
+        (
+            EmbeddedSqlOptions::configured("@example/db", &["run".into()]),
+            4,
+        ),
+    ] {
+        let facts = extract_embedded_sql_from_source(&path, &source, &options);
+        assert_eq!(facts.calls.len(), count, "{options:?}");
+    }
 }

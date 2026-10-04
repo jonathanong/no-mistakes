@@ -1,4 +1,4 @@
-import { query, read, write } from "@data-stores/psql";
+import { query, read, write } from "@example/db";
 
 declare function assembleWriter(): string;
 

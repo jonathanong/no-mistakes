@@ -1,4 +1,4 @@
-import { write } from '@data-stores/psql'
+import { write } from '@example/db'
 
 export function ok(id: string, seenAt: string) {
   write(`UPDATE orders SET status = 'paid' WHERE id = $1`)

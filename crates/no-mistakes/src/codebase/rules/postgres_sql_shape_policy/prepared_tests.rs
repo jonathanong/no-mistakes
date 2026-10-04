@@ -41,7 +41,7 @@ fn missing_prepared_projections_and_bad_sql_globs_report_errors() {
         vec![],
         CheckFactPlan {
             embedded_sql: true,
-            embedded_sql_options: vec![EmbeddedSqlOptions::default()],
+            embedded_sql_options: vec![EmbeddedSqlOptions::configured("@example/db", &[])],
             ..Default::default()
         },
         None,
@@ -68,7 +68,7 @@ fn config_yaml(yaml: &str) -> crate::config::v2::NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.into(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(yaml).unwrap(),
+            options: crate::codebase::postgres::tests::fixture_rule_options(yaml),
             ..Default::default()
         }],
         ..Default::default()

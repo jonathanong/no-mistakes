@@ -11,7 +11,11 @@ fn fixture(name: &str) -> PathBuf {
 
 fn extract(name: &str) -> EmbeddedSqlFileFacts {
     let source = std::fs::read_to_string(fixture(name)).expect("fixture");
-    extract_embedded_sql_from_source(&fixture(name), &source, &EmbeddedSqlOptions::default())
+    extract_embedded_sql_from_source(
+        &fixture(name),
+        &source,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    )
 }
 
 #[test]

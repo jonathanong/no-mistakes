@@ -148,16 +148,10 @@ fn trigger_columns(values: &[String]) -> Result<Vec<String>> {
 }
 
 fn embedded_options(opts: &Options) -> EmbeddedSqlOptions {
-    let mut embedded = EmbeddedSqlOptions::default();
-    if let Some(specifier) = opts.import_specifier.as_deref() {
-        if !specifier.is_empty() {
-            embedded.import_specifier = specifier.to_string();
-        }
-    }
-    if !opts.executor_names.is_empty() {
-        embedded.executor_names = opts.executor_names.clone();
-    }
-    embedded
+    EmbeddedSqlOptions::configured(
+        opts.import_specifier.as_deref().unwrap_or_default(),
+        &opts.executor_names,
+    )
 }
 
 fn is_default_dml_path(path: &Path) -> bool {

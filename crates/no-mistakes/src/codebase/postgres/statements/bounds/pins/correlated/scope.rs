@@ -1,18 +1,19 @@
 use crate::codebase::postgres::statements::SqlBareRead;
 use crate::fx::FxHashMap;
 use std::cell::RefCell;
+use std::hash::Hash;
 use std::rc::Rc;
 
 /// Snapshots share insertion records but retain their preceding-only visibility.
 /// Only the query's owning scope appends; enclosing snapshots are read-only.
 #[derive(Clone, Default)]
-pub(super) struct Names {
-    entries: Option<Rc<RefCell<FxHashMap<String, usize>>>>,
+pub(super) struct Names<K = String> {
+    entries: Option<Rc<RefCell<FxHashMap<K, usize>>>>,
     visible: usize,
 }
 
-impl Names {
-    pub(super) fn insert(&mut self, name: String) {
+impl<K: Eq + Hash> Names<K> {
+    pub(super) fn insert(&mut self, name: K) {
         let entries = self.entries.get_or_insert_with(Default::default);
         let mut entries = entries.borrow_mut();
         let order = entries.len();
@@ -20,7 +21,10 @@ impl Names {
         self.visible = entries.len();
     }
 
-    pub(super) fn contains(&self, name: &str) -> bool {
+    pub(super) fn contains<Q: Eq + Hash + ?Sized>(&self, name: &Q) -> bool
+    where
+        K: std::borrow::Borrow<Q>,
+    {
         self.entries.as_ref().is_some_and(|entries| {
             entries
                 .borrow()
@@ -30,8 +34,8 @@ impl Names {
     }
 }
 
-impl Extend<String> for Names {
-    fn extend<T: IntoIterator<Item = String>>(&mut self, names: T) {
+impl<K: Eq + Hash> Extend<K> for Names<K> {
+    fn extend<T: IntoIterator<Item = K>>(&mut self, names: T) {
         for name in names {
             self.insert(name);
         }
@@ -55,7 +59,9 @@ impl Tables {
 
 #[derive(Clone, Default)]
 pub(super) struct Scope {
-    pub(super) relations: Names,
+    /// Identifier components distinguish quoted dots from path separators.
+    pub(super) relations: Names<Vec<String>>,
+    pub(super) whole_rows: Names,
     /// The base tables of the level, as SQL names.
     pub(super) tables: Tables,
     /// A relation that is not a base table: a derived table, a function, a CTE.

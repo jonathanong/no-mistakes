@@ -1,3 +1,4 @@
+mod fixture_configs;
 mod nonrecursive_ctes;
 mod recovered_table;
 mod scalar_reducer_arrays;
@@ -466,7 +467,7 @@ fn config(yaml: &str) -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(yaml).unwrap(),
+            options: crate::codebase::postgres::tests::fixture_rule_options(yaml),
             ..Default::default()
         }],
         ..Default::default()
@@ -544,6 +545,7 @@ mod function_inputs;
 mod aliased_nested_joins;
 mod nested_cte_scope;
 mod qualified_limit_functions;
+mod quoted_qualifier_paths;
 
 mod caller_projection_keys;
 mod select_list_srf;

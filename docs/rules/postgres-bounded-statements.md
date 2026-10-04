@@ -117,7 +117,8 @@ set operation). A statement is bounded when any of these holds:
   its own bound: every row finds itself in it. References are resolved one query level at a
   time, so a relation of a nested level never hides a reference of an outer one.
   Schema-qualified references retain their schema: an inner `audit.accounts` cannot
-  hide a reference to the outer `public.accounts`. A bare column
+  hide a reference to the outer `public.accounts`. Quoted dots stay inside one identifier:
+  a table or alias named `"public.accounts"` cannot hide that schema-qualified reference. A bare column
   belongs to the first level whose tables have it, as PostgreSQL resolves it: in
   `a.id IN (SELECT id FROM currencies LIMIT 1)` the `id` is the account's own when the catalog's
   `currencies` has no `id` column, so that subquery is not a pin either. A column of a derived
@@ -241,6 +242,18 @@ a configuration error. `allow` defaults to `[]`: each entry is `{object, reason}
 with an object such as `table:currencies`. An empty reason, an object that is not a
 catalog ref, or a duplicate is a configuration error, and an entry that suppresses
 nothing is reported as stale. The catalog's name for the table is the object ref.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
 
 ## Valid example
 

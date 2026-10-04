@@ -37,7 +37,7 @@ pub(in super::super) struct Reads {
 /// table (assumed to have it); for base tables the candidates are returned for the catalog.
 pub(in super::super) fn reads_outer_rows(
     query: &Query,
-    outer: &BTreeSet<String>,
+    outer: &BTreeSet<Vec<String>>,
     ctes: &BTreeMap<String, Option<BTreeSet<String>>>,
     positions: PlaceholderPositions<'_>,
 ) -> Reads {
@@ -74,9 +74,9 @@ struct Frame {
     select_frame: bool,
     /// Derived queries resolve against preceding sources, never their own output.
     enclosing: Option<Scope>,
-    escaping_qualifiers: Vec<String>,
+    escaping_qualifiers: Vec<Vec<String>>,
     escaping_reads: Vec<SqlBareRead>,
-    qualifiers: Vec<String>,
+    qualifiers: Vec<Vec<String>>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
     bare: BTreeMap<String, usize>,
@@ -93,7 +93,7 @@ struct Scan {
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     pending_ctes: FxHashMap<usize, (String, Option<BTreeSet<String>>)>,
     /// Qualifiers and bare reads that no level of the query resolved.
-    unresolved: Vec<String>,
+    unresolved: Vec<Vec<String>>,
     reads: Vec<SqlBareRead>,
     positions: Option<Vec<(u32, u32)>>,
 }
@@ -121,7 +121,7 @@ impl Scan {
 
     fn finish_frame_without_query(&mut self) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
-        let mut up: Vec<String> = frame
+        let mut up: Vec<Vec<String>> = frame
             .qualifiers
             .into_iter()
             .filter(|qualifier| !frame.scope.relations.contains(qualifier))
@@ -129,7 +129,7 @@ impl Scan {
         // A bare name that is a relation's own is a whole-row reference, not a column.
         let own = frame.bare.iter().filter(|(name, count)| {
             **count > frame.labels.get(*name).copied().unwrap_or(0)
-                && !frame.scope.relations.contains(name)
+                && !frame.scope.whole_rows.contains(*name)
         });
         let mut reads: Vec<SqlBareRead> = own
             .map(|(name, _)| SqlBareRead {

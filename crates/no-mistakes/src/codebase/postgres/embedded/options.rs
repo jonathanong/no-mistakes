@@ -1,44 +1,29 @@
-const DEFAULT_IMPORT_SPECIFIER: &str = "@data-stores/psql";
 const DEFAULT_EXECUTOR_NAMES: &[&str] = &["query", "read", "write"];
 
-/// Configurable executor import matching.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Configurable executor import matching. Empty defaults select no executors.
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EmbeddedSqlOptions {
     pub import_specifier: String,
     pub executor_names: Vec<String>,
 }
 
 impl EmbeddedSqlOptions {
-    /// Apply the public defaults and canonicalize executor names so the same
-    /// configured projection has one request-scoped identity.
+    /// A configured module enables standard executor names. Without a module,
+    /// names must be explicit and may match named imports from any module.
     pub fn configured(import_specifier: &str, executor_names: &[String]) -> Self {
-        let defaults = Self::default();
-        let mut options = Self {
-            import_specifier: if import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                import_specifier.to_string()
-            },
-            executor_names: if executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                executor_names.to_vec()
-            },
-        };
-        options.executor_names.sort();
-        options.executor_names.dedup();
-        options
-    }
-}
-
-impl Default for EmbeddedSqlOptions {
-    fn default() -> Self {
-        Self {
-            import_specifier: DEFAULT_IMPORT_SPECIFIER.to_string(),
-            executor_names: DEFAULT_EXECUTOR_NAMES
+        let mut names = if executor_names.is_empty() && !import_specifier.is_empty() {
+            DEFAULT_EXECUTOR_NAMES
                 .iter()
                 .map(|name| (*name).to_string())
-                .collect(),
+                .collect()
+        } else {
+            executor_names.to_vec()
+        };
+        names.sort();
+        names.dedup();
+        Self {
+            import_specifier: import_specifier.to_string(),
+            executor_names: names,
         }
     }
 }
