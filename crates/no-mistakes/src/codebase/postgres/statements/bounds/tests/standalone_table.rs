@@ -91,3 +91,17 @@ fn standalone_table_locking_clauses_remain_queries() {
     assert!(!super::extract_sql_statement_facts(sql).parse_failed);
     assert_eq!(shape(sql), ["select: accounts", "select: accounts"]);
 }
+
+#[test]
+fn standalone_table_explicit_descendants_remain_queries() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/standalone-table-inheritance-star.sql"
+    ));
+    assert!(
+        crate::codebase::postgres::parse_postgres_sql(sql).is_ok(),
+        "{:?}",
+        crate::codebase::postgres::parse_postgres_sql(sql).err()
+    );
+    assert_eq!(shape(sql), ["select: accounts", "select: accounts"]);
+}

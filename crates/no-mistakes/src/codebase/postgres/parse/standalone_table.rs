@@ -8,6 +8,7 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
         return;
     }
     let mut rewrite_at = Vec::new();
+    let mut omit_star_at = Vec::new();
     let mut at_statement_start = true;
     for (index, token) in tokens.iter().enumerate() {
         match &token.token {
@@ -16,19 +17,26 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
             Token::Word(word)
                 if at_statement_start
                     && word.quote_style.is_none()
-                    && word.keyword == Keyword::TABLE
-                    && starts_table_query(tokens, index) =>
+                    && word.keyword == Keyword::TABLE =>
             {
-                rewrite_at.push(index);
+                if let Some(star_at) = table_query(tokens, index) {
+                    rewrite_at.push(index);
+                    omit_star_at.extend(star_at);
+                }
                 at_statement_start = false;
             }
             _ => at_statement_start = false,
         }
     }
     let mut rewrite_at = rewrite_at.into_iter().peekable();
+    let mut omit_star_at = omit_star_at.into_iter().peekable();
     let mut result = Vec::with_capacity(tokens.len());
     let mut at_statement_start = true;
     for (index, token) in tokens.drain(..).enumerate() {
+        if omit_star_at.peek() == Some(&index) {
+            omit_star_at.next();
+            continue;
+        }
         match &token.token {
             Token::Whitespace(_) => result.push(token),
             Token::SemiColon => {
@@ -70,7 +78,7 @@ fn has_standalone_table(tokens: &[TokenWithSpan]) -> bool {
                 if at_statement_start
                     && word.quote_style.is_none()
                     && word.keyword == Keyword::TABLE
-                    && starts_table_query(tokens, index) =>
+                    && table_query(tokens, index).is_some() =>
             {
                 return true;
             }
@@ -80,26 +88,35 @@ fn has_standalone_table(tokens: &[TokenWithSpan]) -> bool {
     false
 }
 
-fn starts_table_query(tokens: &[TokenWithSpan], at: usize) -> bool {
+/// Valid TABLE prefix, with the optional inheritance `*` token to omit from
+/// sqlparser's equivalent SELECT form. None means the original SQL must parse as-is.
+fn table_query(tokens: &[TokenWithSpan], at: usize) -> Option<Option<usize>> {
     let mut after = tokens[at + 1..]
         .iter()
-        .filter(|token| !matches!(token.token, Token::Whitespace(_)));
+        .enumerate()
+        .filter(|(_, token)| !matches!(token.token, Token::Whitespace(_)))
+        .map(|(index, token)| (at + index + 1, &token.token));
     // TABLE takes a relation name, optionally qualified by a schema. A SELECT-only
     // clause after that name must remain a parse error, not become valid SELECT.
-    let Some(Token::Word(_)) = after.next().map(|token| &token.token) else {
-        return false;
+    let Some((_, Token::Word(_))) = after.next() else {
+        return None;
     };
-    let mut next = after.next().map(|token| &token.token);
-    if matches!(next, Some(Token::Period)) {
-        if !matches!(after.next().map(|token| &token.token), Some(Token::Word(_))) {
-            return false;
+    let mut next = after.next();
+    if matches!(next, Some((_, Token::Period))) {
+        if !matches!(after.next(), Some((_, Token::Word(_)))) {
+            return None;
         }
-        next = after.next().map(|token| &token.token);
+        next = after.next();
     }
+    let star_at = if let Some((index, Token::Mul)) = next {
+        next = after.next();
+        Some(index)
+    } else {
+        None
+    };
     matches!(
-        next,
-        None | Some(Token::SemiColon)
-            | Some(Token::RParen)
+        next.map(|(_, token)| token),
+        None | Some(Token::SemiColon | Token::RParen)
             | Some(Token::Word(Word {
                 keyword: Keyword::UNION
                     | Keyword::INTERSECT
@@ -112,6 +129,7 @@ fn starts_table_query(tokens: &[TokenWithSpan], at: usize) -> bool {
                 ..
             }))
     )
+    .then_some(star_at)
 }
 
 fn word_token(value: &str, keyword: Keyword) -> Token {
