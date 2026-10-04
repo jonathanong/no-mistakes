@@ -173,8 +173,9 @@ set operation). A statement is bounded when any of these holds:
   An explicit table alias hides the table's original name from nested scopes, even when
   it repeats the table's bare name: `FROM public.accounts accounts` exposes `accounts`
   as the alias but no longer exposes `public.accounts`.
-  An alias on an entire parenthesized join also hides its child base names from
-  catalog-qualified locality; nested derived queries retain their own namespaces.
+  An alias on an entire parenthesized join also hides its child table names and aliases
+  from outward column and whole-row references. The children stay visible inside its
+  `ON` and `LATERAL` expressions; nested derived queries retain their own namespaces.
   References retain their schema: an inner `audit.accounts` cannot hide a reference to the outer
   `public.accounts`. When the configured catalog explicitly selects `public`, an inner
   `FROM accounts` with no alias can resolve to that same `public.accounts`; without that catalog

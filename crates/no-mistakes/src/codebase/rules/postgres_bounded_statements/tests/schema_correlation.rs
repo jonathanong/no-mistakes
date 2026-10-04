@@ -51,3 +51,12 @@ fn a_join_alias_hides_its_children_from_catalog_qualified_locality() {
             .unwrap();
     assert_eq!(names(&sql), ["accounts", "accounts"]);
 }
+
+#[test]
+fn hidden_join_two_part_qualifier_keeps_outer_write_unbounded() {
+    let sql = std::fs::read_to_string(fixture_root().join("sql/hidden-join-two-part.sql")).unwrap();
+    assert_eq!(
+        names(&sql),
+        ["accounts", "accounts", "accounts", "accounts", "accounts", "accounts", "accounts"]
+    );
+}

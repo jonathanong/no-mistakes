@@ -67,3 +67,36 @@ fn empty_snapshot_keeps_its_empty_visibility_after_owner_appends() {
     scope.resolve_reads(&mut reads);
     assert!(reads.is_empty());
 }
+
+#[test]
+fn joined_namespaces_keep_internal_visibility_without_resurrecting_hidden_children() {
+    let mut scope = Scope::default();
+    scope.relations.insert(vec!["preceding".into()]);
+    scope.whole_rows.insert("preceding".into());
+    scope.record_base_table("preceding".into(), false);
+    let before = scope.clone();
+    scope.relations.insert(vec!["after_snapshot".into()]);
+    let isolated = before.relations.isolated();
+    assert!(isolated.contains(&vec!["preceding".into()]));
+    assert!(!isolated.contains(&vec!["after_snapshot".into()]));
+    let outside = scope.begin_join();
+    scope.relations.insert(vec!["hidden".into()]);
+    scope.whole_rows.insert("hidden".into());
+    scope.record_base_table("hidden".into(), false);
+    let internal = scope.clone();
+    scope.finish_join(outside);
+    scope.relations.insert(vec!["later".into()]);
+    scope.whole_rows.insert("later".into());
+    scope.record_base_table("later".into(), false);
+    assert!(!scope.relations.contains(&vec!["hidden".into()]));
+    assert!(!scope.whole_rows.contains("hidden"));
+    assert!(internal.relations.contains(&vec!["hidden".into()]));
+    assert!(internal.whole_rows.contains("hidden"));
+    assert!(!internal.relations.contains(&vec!["later".into()]));
+    assert_eq!(scope.qualified_candidates().tables, ["preceding", "later"]);
+    assert_eq!(
+        internal.qualified_candidates().tables,
+        ["preceding", "hidden"]
+    );
+    assert_eq!(scope.tables.visible(), ["preceding", "hidden", "later"]);
+}

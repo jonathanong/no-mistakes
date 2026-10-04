@@ -105,11 +105,18 @@ struct Frame {
     reads: Vec<SqlBareRead>,
 }
 
+struct JoinScope {
+    outside: Scope,
+    qualifiers: usize,
+    escaping_qualifiers: usize,
+    bare: BTreeMap<String, usize>,
+}
+
 #[derive(Default)]
 struct Scan {
     stack: Vec<Frame>,
-    /// Aliased join children hide base qualifiers only in the owning query frame.
-    hidden_join_scopes: Vec<usize>,
+    /// An aliased join exposes its child namespace internally, then projects its own alias.
+    join_scopes: Vec<JoinScope>,
     /// AST identity is used only during this visitor run; no sources are reparsed.
     derived_scopes: BTreeMap<usize, Scope>,
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
