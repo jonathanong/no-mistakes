@@ -2,6 +2,8 @@ use sqlparser::ast::Table;
 use sqlparser::tokenizer::{Location, Token, TokenWithSpan};
 
 mod scan;
+#[cfg(test)]
+mod tests;
 
 /// Query-arm spellings grouped by their original top-level SQL statement. A skipped DDL
 /// statement must never supply a name to a later analyzed TABLE arm.
@@ -114,15 +116,14 @@ impl TableTokenCursor {
     /// A scalar query can contain its own FROM, so match only the SELECT's nesting depth.
     pub(in super::super::super) fn advance_to_from(&mut self, select_start: Location) {
         let start = (select_start.line as usize, select_start.column as usize);
-        let depth = self
-            .depths
+        let depth_before = self.depths.partition_point(|source| source.at <= start);
+        let depth = depth_before
+            .checked_sub(1)
+            .map_or(0, |index| self.depths[index].depth);
+        let first_from = self.froms.partition_point(|from| from.at <= start);
+        let Some(from) = self.froms[first_from..]
             .iter()
-            .rfind(|source| source.at <= start)
-            .map_or(0, |source| source.depth);
-        let Some(from) = self
-            .froms
-            .iter()
-            .find(|from| from.at > start && from.depth == depth)
+            .find(|from| from.depth == depth)
         else {
             return;
         };
@@ -152,18 +153,19 @@ impl TableTokenCursor {
         let (from, max_depth) = if start == (0, 0) {
             (self.last_at.unwrap_or(start), self.last_depth)
         } else {
-            let depth = self
-                .depths
-                .iter()
-                .rfind(|source| source.at <= start)
-                .map_or(0, |source| source.depth);
+            let depth_before = self.depths.partition_point(|source| source.at <= start);
+            let depth = depth_before
+                .checked_sub(1)
+                .map_or(0, |index| self.depths[index].depth);
             (start.max(self.last_at.unwrap_or(start)), depth)
         };
         let from = from.max(self.last_operator.unwrap_or(from));
-        let Some(operator) = self
+        let first_operator = self
             .operators
+            .partition_point(|operator| operator.at <= from);
+        let Some(operator) = self.operators[first_operator..]
             .iter()
-            .find(|operator| operator.at > from && operator.depth <= max_depth)
+            .find(|operator| operator.depth <= max_depth)
         else {
             return;
         };
