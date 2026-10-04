@@ -6,7 +6,7 @@ fn positional_alias_facts_cover_derived_and_function_items() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/derived-alias-facts.sql"
     )));
-    assert_eq!(all.len(), 7);
+    assert_eq!(all.len(), 9);
     let aliases: Vec<Vec<&str>> = all
         .iter()
         .map(|fact| {
@@ -30,6 +30,8 @@ fn positional_alias_facts_cover_derived_and_function_items() {
             vec!["account_id"],
             vec!["item"],
             vec!["account_id"],
+            vec![],
+            vec![],
         ]
     );
 }

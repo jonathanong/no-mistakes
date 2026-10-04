@@ -3,8 +3,8 @@ use crate::codebase::postgres::statements::{
     SqlBoundQuery, SqlPinSource,
 };
 
-mod array_review;
 mod aliases;
+mod array_review;
 mod compact_aliases;
 mod review;
 
