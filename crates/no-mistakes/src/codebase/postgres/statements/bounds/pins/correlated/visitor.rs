@@ -52,10 +52,9 @@ impl Visitor for Scan {
             }
             self.stack.push(frame);
         }
-        if let Some(frame) = self.stack.last_mut() {
-            for from in &select.from {
-                on::register(frame, from);
-            }
+        // This visitor starts at a Query, which owns every SELECT and expression frame.
+        for from in &select.from {
+            on::register(self.stack.last_mut().unwrap(), from);
         }
         ControlFlow::Continue(())
     }
@@ -88,9 +87,7 @@ impl Visitor for Scan {
             table_with_joins, ..
         } = factor
         {
-            if let Some(frame) = self.stack.last_mut() {
-                on::register(frame, table_with_joins);
-            }
+            on::register(self.stack.last_mut().unwrap(), table_with_joins);
         }
         if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
             if let Some(frame) = self.stack.last_mut() {
@@ -140,9 +137,7 @@ impl Visitor for Scan {
     }
 
     fn post_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if let Some(frame) = self.stack.last_mut() {
-            on::finish(frame, expr);
-        }
+        on::finish(self.stack.last_mut().unwrap(), expr);
         ControlFlow::Continue(())
     }
 }
