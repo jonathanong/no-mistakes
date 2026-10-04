@@ -6,7 +6,7 @@ use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
 use conditions::{flatten, is_constant_true};
 use placeholders::is_recovered_placeholder;
-use sqlparser::ast::{BinaryOperator, Expr, Value};
+use sqlparser::ast::{BinaryOperator, Expr, UnaryOperator, Value};
 
 /// The top-level `AND` conjuncts of a WHERE clause.
 pub(super) fn of(
@@ -90,7 +90,30 @@ fn cursor(
     transparent_int4_casts: bool,
     recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<Cursor> {
-    match expr {
+    match unwrap_expr(expr) {
+        Expr::UnaryOp {
+            op: UnaryOperator::Not,
+            expr,
+        } => {
+            let mut cursor = cursor(
+                expr,
+                names,
+                order_columns,
+                order_ascending,
+                transparent_int4_casts,
+                recovered_placeholder_positions,
+            )?;
+            // Negating a NULL-switchable OR is not merely reversing its comparison.
+            if cursor.optional {
+                return None;
+            }
+            cursor.bound = match cursor.bound {
+                SqlCursorBound::Lower => SqlCursorBound::Upper,
+                SqlCursorBound::Upper => SqlCursorBound::Lower,
+            };
+            Some(cursor)
+        }
+
         Expr::BinaryOp {
             left,
             op:
