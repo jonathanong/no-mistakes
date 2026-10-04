@@ -54,7 +54,9 @@ and views over it intact; `ATTACH PARTITION child FOR VALUES ...` restores the l
 PostgreSQL does not allow temporary and permanent tables in the same partition tree.
 For SQL sources containing these `ALTER TABLE` forms, the lenient parser recovers complete
 partition transitions even though the strict PostgreSQL parser does not support them;
-malformed transitions are skipped while other parseable statements are still checked.
+this also covers transitions inside `DO` blocks. Malformed transitions are skipped while
+other parseable statements are still checked. `CREATE TEMP TABLE IF NOT EXISTS child
+PARTITION OF parent` leaves an existing standalone child untouched.
 
 ## What it catches/requires
 

@@ -52,7 +52,10 @@ impl TemporaryRelations {
                 let parent = table.partition_of.as_ref().map(sql_name);
                 let on_commit_drop = table.on_commit == Some(sqlparser::ast::OnCommit::Drop);
                 // Outside an explicit transaction, DROP takes effect at this statement's commit.
-                if !on_commit_drop || self.transaction.is_some() {
+                if (!on_commit_drop || self.transaction.is_some())
+                    && !(table.if_not_exists
+                        && self.state.relations.contains_key(&state::key(&name)))
+                {
                     self.insert(name.clone());
                     if let Some(parent) = parent {
                         self.state.attach_partition(&parent, &name);

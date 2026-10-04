@@ -121,6 +121,13 @@ pub(super) fn concatenated_strings(tokens: &[Token]) -> Option<String> {
 
 fn recover_schema_ddl(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> Option<Statement> {
     let start = schema_ddl_start(tokens)?;
+    // PL/pgSQL wrappers can precede a complete partition transition. Apply the
+    // same narrow recovery to the DDL suffix before using the PostgreSQL parser.
+    if let Some(change) =
+        recover_partition_change(&tokens[start..], original.map(|tokens| &tokens[start..]))
+    {
+        return Some(change);
+    }
     let dialect = PostgreSqlDialect {};
     let mut parser = match original {
         Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens[start..].to_vec()),
