@@ -259,8 +259,10 @@ position. Only keys whose aliased positions keep their original names retain cat
 `USING` pins.
 
 For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
-Analysis conservatively checks both exact and folded spellings when they differ;
-a matching one-part CTE takes precedence over catalog relations.
+Analysis recovers the spelling from the prepared source tokens and matches quoted
+names exactly. If source tokens are unavailable, it conservatively checks both
+exact and folded spellings when they differ. A matching one-part CTE takes
+precedence for its spelling only.
 
 Bare subquery columns belong to a derived table or CTE only when its explicit
 projection exposes that name. Function column alias lists and known scalar built-in
