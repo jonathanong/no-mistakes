@@ -527,6 +527,7 @@ mod schema_correlation;
 
 mod function_scope;
 
+mod false_predicates;
 mod having_only;
 
 mod function_inputs;

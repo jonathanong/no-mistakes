@@ -521,3 +521,9 @@ fn a_dml_target_is_never_a_cte() {
 }
 
 mod order_by_kind;
+
+mod aggregate;
+
+mod dml;
+
+mod query;

@@ -1,8 +1,10 @@
-use super::functions::{is_aggregate, is_set_returning};
+use super::functions::is_set_returning;
 use crate::codebase::postgres::idents::visit_child_exprs;
-use sqlparser::ast::{
-    Distinct, Expr, Function, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
-};
+use sqlparser::ast::{Distinct, Expr, Function, OrderByKind, Query, Select, SelectItem, SetExpr};
+
+mod implicit_group;
+use implicit_group::contains_plain_aggregate;
+pub(super) use implicit_group::has_implicit_group;
 
 /// An aggregate with no `GROUP BY` returns exactly one row, unless a set-returning function in
 /// the select list expands it. HAVING itself introduces implicit single-group grouping.
@@ -10,7 +12,7 @@ pub(super) fn pure_aggregate(select: &Select) -> bool {
     one_group(select)
         && (projected(select)
             .iter()
-            .any(|expr| contains_call(expr, &is_plain_aggregate))
+            .any(|expr| contains_plain_aggregate(expr))
             || select.having.is_some())
 }
 
@@ -27,7 +29,7 @@ pub(super) fn orders_by_aggregate(query: &Query) -> bool {
         && !orders_can_expand(query)
         && expressions
             .iter()
-            .any(|expression| contains_call(&expression.expr, &is_plain_aggregate))
+            .any(|expression| contains_plain_aggregate(&expression.expr))
 }
 
 /// ORDER BY expressions can expand the same implicit group as SELECT-list SRFs.
@@ -51,7 +53,11 @@ pub(super) fn order_expansion_predicates_reject(query: &Query) -> Option<bool> {
         return None;
     }
     let select = select_body(&query.body)?;
-    Some(super::predicate::rejects_all(select.having.as_ref()))
+    Some(
+        super::predicate::rejects_all(select.having.as_ref())
+            || (!has_implicit_group(query, select)
+                && super::predicate::rejects_all(select.selection.as_ref())),
+    )
 }
 
 fn select_body(set: &SetExpr) -> Option<&Select> {
@@ -64,12 +70,7 @@ fn select_body(set: &SetExpr) -> Option<&Select> {
 
 /// Ungrouped, and with nothing in the select list that expands one row into many.
 fn one_group(select: &Select) -> bool {
-    let ungrouped = matches!(
-        &select.group_by,
-        GroupByExpr::Expressions(expressions, modifiers)
-            if expressions.is_empty() && modifiers.is_empty()
-    );
-    ungrouped
+    implicit_group::ungrouped(select)
         && !projected(select)
             .iter()
             .any(|expr| contains_call(expr, &|function| is_set_returning(&function.name)))
@@ -97,10 +98,6 @@ fn projected(select: &Select) -> Vec<&Expr> {
             _ => None,
         })
         .collect()
-}
-
-fn is_plain_aggregate(function: &Function) -> bool {
-    function.over.is_none() && is_aggregate(&function.name)
 }
 
 /// Whether a call that `test` accepts occurs in `expr` (subqueries are not looked into).

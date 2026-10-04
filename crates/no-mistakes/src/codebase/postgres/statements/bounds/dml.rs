@@ -20,7 +20,7 @@ pub(super) fn update(
         SqlBoundKind::Update,
         super::start(update.update_token.0.span),
         builder.finish(update.selection.as_ref()),
-        update.limit.is_some(),
+        update.limit.is_some() || super::predicate::rejects_all(update.selection.as_ref()),
         out,
     );
 }
@@ -41,7 +41,7 @@ pub(super) fn delete(
         SqlBoundKind::Delete,
         super::start(delete.delete_token.0.span),
         builder.finish(delete.selection.as_ref()),
-        delete.limit.is_some(),
+        delete.limit.is_some() || super::predicate::rejects_all(delete.selection.as_ref()),
         out,
     );
 }
