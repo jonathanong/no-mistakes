@@ -1,7 +1,6 @@
 //! `LIMIT` / `FETCH FIRST` facts, shared by every rule that reads a query's row cap.
 mod zero;
 pub(super) use super::tokens::Tokens;
-use super::value::is_placeholder_ident;
 use super::SqlLimitValue;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::numeric_literal::integer as numeric_literal;
@@ -24,16 +23,24 @@ pub(super) struct LimitSite {
 /// do not cap, and neither does a count taken from the data (`LIMIT (SELECT count(*) …)`),
 /// `FETCH FIRST n ROWS WITH TIES` (every row tied with the last is also returned) or a
 /// `PERCENT` count (a share of the rows, not a number).
-pub(super) fn is_limited(query: &Query) -> bool {
+pub(super) fn is_limited_at(
+    query: &Query,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> bool {
     if let Some(fetch) = &query.fetch {
         // `FETCH FIRST ROW ONLY` writes no count: it takes one row.
-        return !fetch.with_ties && !fetch.percent && fetch.quantity.as_ref().is_none_or(is_fixed);
+        return !fetch.with_ties
+            && !fetch.percent
+            && fetch
+                .quantity
+                .as_ref()
+                .is_none_or(|expr| is_fixed_at(expr, positions));
     }
     match &query.limit_clause {
         Some(LimitClause::LimitOffset {
             limit: Some(limit), ..
         })
-        | Some(LimitClause::OffsetCommaLimit { limit, .. }) => is_fixed(limit),
+        | Some(LimitClause::OffsetCommaLimit { limit, .. }) => is_fixed_at(limit, positions),
         _ => false,
     }
 }
@@ -41,13 +48,15 @@ pub(super) fn is_limited(query: &Query) -> bool {
 /// A count the statement text or its caller decides: a literal, a bind (`$1`, or an
 /// interpolation recovered from a template literal) or an expression of them. NULL means no
 /// limit, and a subquery or a column can return any number.
-fn is_fixed(expr: &Expr) -> bool {
+fn is_fixed_at(expr: &Expr, positions: super::value::PlaceholderPositions<'_>) -> bool {
     match expr {
-        Expr::Nested(inner) => is_fixed(inner),
+        Expr::Nested(inner) => is_fixed_at(inner, positions),
         Expr::Value(value) => !matches!(value.value, Value::Null),
-        Expr::Identifier(ident) => is_placeholder_ident(&ident.value),
-        Expr::Cast { expr, .. } | Expr::UnaryOp { expr, .. } => is_fixed(expr),
-        Expr::BinaryOp { left, right, .. } => is_fixed(left) && is_fixed(right),
+        Expr::Identifier(ident) => super::value::is_placeholder_ident_at(ident, positions),
+        Expr::Cast { expr, .. } | Expr::UnaryOp { expr, .. } => is_fixed_at(expr, positions),
+        Expr::BinaryOp { left, right, .. } => {
+            is_fixed_at(left, positions) && is_fixed_at(right, positions)
+        }
         // Only the functions that return NULL for nothing but NULL arguments: `NULLIF(1, 1)`,
         // like any function that can produce NULL from fixed inputs, is `LIMIT ALL`.
         Expr::Function(function) => {
@@ -56,7 +65,9 @@ fn is_fixed(expr: &Expr) -> bool {
             });
             pick && match &function.args {
                 FunctionArguments::List(list) => list.args.iter().all(|arg| match arg {
-                    FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => is_fixed(expr),
+                    FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => {
+                        is_fixed_at(expr, positions)
+                    }
                     _ => false,
                 }),
                 _ => false,

@@ -6,6 +6,22 @@ use sqlparser::ast::{
     Ident, ObjectNamePart, UnaryOperator, Value, ValueWithSpan,
 };
 
+pub(super) type PlaceholderPositions<'a> = Option<&'a [(u32, u32)]>;
+
+/// Whether this identifier is a bind for the current source mode.
+///
+/// Standalone SQL has only the legacy spelling heuristic. Embedded SQL has exact recovered
+/// positions, so a marker-shaped user identifier is a column unless its source location was
+/// generated. Quoted identifiers are never interpolation binds.
+pub(super) fn is_placeholder_ident_at(ident: &Ident, positions: PlaceholderPositions<'_>) -> bool {
+    if let Some(positions) = positions {
+        return ident.quote_style.is_none()
+            && is_placeholder_ident(&ident.value)
+            && positions.contains(&(ident.span.start.line as u32, ident.span.start.column as u32));
+    }
+    is_placeholder_ident(&ident.value)
+}
+
 #[rustfmt::skip]
 const VOLATILE: &[&str] = &[
     "gen_random_uuid", "random", "nextval", "uuidv7", "uuid_generate_v1",
@@ -14,23 +30,26 @@ const VOLATILE: &[&str] = &[
     "current_date", "current_time", "localtime", "localtimestamp",
 ];
 
-pub(super) fn from_assignment(assignment: &Assignment) -> SqlAssignmentFact {
+pub(super) fn from_assignment_at(
+    assignment: &Assignment,
+    positions: PlaceholderPositions<'_>,
+) -> SqlAssignmentFact {
     SqlAssignmentFact {
         column: assignment_column(&assignment.target),
-        form: from_expr(&assignment.value),
+        form: from_expr_at(&assignment.value, positions),
     }
 }
 
-pub(super) fn from_expr(expr: &Expr) -> SqlValueForm {
+pub(super) fn from_expr_at(expr: &Expr, positions: PlaceholderPositions<'_>) -> SqlValueForm {
     match unwrap_expr(expr) {
         Expr::Value(value) => from_value(value),
-        Expr::Identifier(ident) => ident_form(ident),
+        Expr::Identifier(ident) => ident_form(ident, positions),
         Expr::CompoundIdentifier(parts) => compound_form(parts),
-        Expr::Function(function) => from_function(function),
+        Expr::Function(function) => from_function(function, positions),
         Expr::UnaryOp {
             op: UnaryOperator::Plus | UnaryOperator::Minus,
             expr,
-        } => signed_literal(expr),
+        } => signed_literal(expr, positions),
         Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. } => SqlValueForm::Subquery,
         _ => SqlValueForm::Other,
     }
@@ -55,13 +74,13 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
     }
 }
 
-fn ident_form(ident: &Ident) -> SqlValueForm {
+fn ident_form(ident: &Ident, positions: PlaceholderPositions<'_>) -> SqlValueForm {
     if ident.quote_style.is_some() {
         return SqlValueForm::SelfRef {
             column: ident.value.clone(),
         };
     }
-    if is_placeholder_ident(&ident.value) {
+    if is_placeholder_ident_at(ident, positions) {
         return SqlValueForm::Placeholder;
     }
     if is_volatile_name(&ident.value) {
@@ -77,8 +96,8 @@ fn ident_form(ident: &Ident) -> SqlValueForm {
     }
 }
 
-fn signed_literal(expr: &Expr) -> SqlValueForm {
-    match from_expr(expr) {
+fn signed_literal(expr: &Expr, positions: PlaceholderPositions<'_>) -> SqlValueForm {
+    match from_expr_at(expr, positions) {
         SqlValueForm::Literal | SqlValueForm::Null => SqlValueForm::Literal,
         form => form,
     }
@@ -102,7 +121,7 @@ fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {
     }
 }
 
-fn from_function(function: &Function) -> SqlValueForm {
+fn from_function(function: &Function, positions: PlaceholderPositions<'_>) -> SqlValueForm {
     let Some(ident) = builtin_function_ident(function) else {
         return SqlValueForm::Other;
     };
@@ -112,7 +131,7 @@ fn from_function(function: &Function) -> SqlValueForm {
     }
     let args = function_arg_exprs(function)
         .into_iter()
-        .map(from_expr)
+        .map(|expr| from_expr_at(expr, positions))
         .collect();
     match name.as_str() {
         "coalesce" => SqlValueForm::Coalesce { args },
@@ -161,15 +180,21 @@ fn assignment_column(target: &AssignmentTarget) -> String {
     }
 }
 
-pub(super) fn self_ref_column(expr: &Expr) -> Option<String> {
-    match from_expr(expr) {
+pub(super) fn self_ref_column_at(
+    expr: &Expr,
+    positions: PlaceholderPositions<'_>,
+) -> Option<String> {
+    match from_expr_at(expr, positions) {
         SqlValueForm::SelfRef { column } => Some(column),
         _ => None,
     }
 }
 
-pub(super) fn excluded_column(expr: &Expr) -> Option<String> {
-    match from_expr(expr) {
+pub(super) fn excluded_column_at(
+    expr: &Expr,
+    positions: PlaceholderPositions<'_>,
+) -> Option<String> {
+    match from_expr_at(expr, positions) {
         SqlValueForm::Excluded { column } => Some(column),
         _ => None,
     }

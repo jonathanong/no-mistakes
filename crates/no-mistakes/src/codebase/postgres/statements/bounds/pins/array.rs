@@ -30,6 +30,7 @@ pub(super) fn finite_array(
     elements: &[Expr],
     pinned: usize,
     resolver: &Resolver,
+    positions: super::super::super::value::PlaceholderPositions<'_>,
 ) -> Option<Sourced> {
     fn columns(
         expr: &Expr,
@@ -38,6 +39,7 @@ pub(super) fn finite_array(
         indexed: &mut Vec<(usize, String)>,
         types: &mut Vec<String>,
         caller_only: bool,
+        positions: super::super::super::value::PlaceholderPositions<'_>,
     ) -> Option<()> {
         match unwrap_expr(expr) {
             Expr::Value(_) | Expr::Interval(_) => Some(()),
@@ -51,7 +53,7 @@ pub(super) fn finite_array(
             }
             Expr::UnaryOp { .. } if numeric_literal(expr) => Some(()),
             Expr::Identifier(ident)
-                if super::super::super::value::is_placeholder_ident(&ident.value) =>
+                if super::super::super::value::is_placeholder_ident_at(ident, positions) =>
             {
                 Some(())
             }
@@ -75,10 +77,18 @@ pub(super) fn finite_array(
                 // A scalar text column can decode an arbitrarily large array.
                 if let Some(array) = constructor(expr) {
                     for element in &array.elem {
-                        columns(element, resolver, out, indexed, types, caller_only)?;
+                        columns(
+                            element,
+                            resolver,
+                            out,
+                            indexed,
+                            types,
+                            caller_only,
+                            positions,
+                        )?;
                     }
                 } else {
-                    columns(expr, resolver, out, indexed, types, true)?;
+                    columns(expr, resolver, out, indexed, types, true, positions)?;
                 }
                 Some(())
             }
@@ -89,7 +99,7 @@ pub(super) fn finite_array(
             } => {
                 types.push(data_type.to_string());
                 if caller_only {
-                    columns(expr, resolver, out, indexed, types, true)?;
+                    columns(expr, resolver, out, indexed, types, true, positions)?;
                 }
                 Some(())
             }
@@ -97,7 +107,7 @@ pub(super) fn finite_array(
                 expr, data_type, ..
             } if !matches!(data_type, DataType::Array(_) | DataType::Custom(_, _)) => {
                 if caller_only {
-                    columns(expr, resolver, out, indexed, types, true)?;
+                    columns(expr, resolver, out, indexed, types, true, positions)?;
                 }
                 Some(())
             }
@@ -115,7 +125,7 @@ pub(super) fn finite_array(
                     let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = argument else {
                         return None;
                     };
-                    columns(expr, resolver, out, indexed, types, caller_only)?;
+                    columns(expr, resolver, out, indexed, types, caller_only, positions)?;
                 }
                 Some(())
             }
@@ -127,7 +137,15 @@ pub(super) fn finite_array(
             }
             Expr::Array(array) => {
                 for element in &array.elem {
-                    columns(element, resolver, out, indexed, types, caller_only)?;
+                    columns(
+                        element,
+                        resolver,
+                        out,
+                        indexed,
+                        types,
+                        caller_only,
+                        positions,
+                    )?;
                 }
                 Some(())
             }
@@ -147,6 +165,7 @@ pub(super) fn finite_array(
                 &mut indexed_columns,
                 &mut cast_types,
                 false,
+                positions,
             )?;
             resolver.source(element, pinned)
         })

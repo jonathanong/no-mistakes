@@ -3,8 +3,13 @@ use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
 use sqlparser::ast::{Delete, FromTable, Update, UpdateTableFromKind};
 
 /// An `UPDATE` is bounded when the relation it changes is: other FROM items only feed it values.
-pub(super) fn update(update: &Update, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
-    let mut builder = Builder::new(scope);
+pub(super) fn update(
+    update: &Update,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlBoundFact>,
+) {
+    let mut builder = Builder::new(scope, positions);
     builder.target_tables(std::slice::from_ref(&update.table));
     if let Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) =
         &update.from
@@ -20,8 +25,13 @@ pub(super) fn update(update: &Update, scope: &Scope, out: &mut Vec<SqlBoundFact>
     );
 }
 
-pub(super) fn delete(delete: &Delete, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
-    let mut builder = Builder::new(scope);
+pub(super) fn delete(
+    delete: &Delete,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlBoundFact>,
+) {
+    let mut builder = Builder::new(scope, positions);
     let (FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables)) = &delete.from;
     builder.target_tables(tables);
     if let Some(using) = &delete.using {

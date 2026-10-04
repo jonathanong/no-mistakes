@@ -1,7 +1,10 @@
 use super::{compile_sql_include, matches_sql_include, read_source};
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFileFacts, EmbeddedSqlKind};
 use crate::codebase::postgres::statement_facts::SqlStatementFileFacts;
-use crate::codebase::postgres::statements::extract_sql_statement_facts_with_recovered_placeholders;
+use crate::codebase::postgres::statements::{
+    extract_sql_statement_facts_with_bounds,
+    extract_sql_statement_facts_with_recovered_placeholders,
+};
 use crate::codebase::postgres::types::{PostgresFactError, PostgresSchemaOptions};
 use crate::codebase::ts_source::SourceStore;
 use rayon::prelude::*;
@@ -21,11 +24,7 @@ pub(super) fn collect(
         .filter(|path| matches_sql_include(root, path, &globs))
         .map(|path| {
             let source = read_source(path, sources)?;
-            let mut file = extract_sql_statement_facts_with_recovered_placeholders(
-                &source,
-                collect_bounds,
-                &[],
-            );
+            let mut file = extract_sql_statement_facts_with_bounds(&source, collect_bounds);
             file.path = path.clone();
             Ok(file)
         })

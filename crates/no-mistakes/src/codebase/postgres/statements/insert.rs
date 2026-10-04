@@ -2,14 +2,25 @@ use super::SqlInsertFact;
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{Insert, OnConflictAction, OnInsert, Statement, TableObject};
 
-pub(super) fn from_statement(sql: &str, statement: &Statement, n: usize) -> Option<SqlInsertFact> {
+pub(super) fn from_statement_at(
+    sql: &str,
+    statement: &Statement,
+    n: usize,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> Option<SqlInsertFact> {
     match statement {
-        Statement::Insert(insert) => Some(from_insert(sql, insert, n, true)),
+        Statement::Insert(insert) => Some(from_insert_at(sql, insert, n, true, positions)),
         _ => None,
     }
 }
 
-pub(super) fn from_insert(sql: &str, insert: &Insert, n: usize, executed: bool) -> SqlInsertFact {
+pub(super) fn from_insert_at(
+    sql: &str,
+    insert: &Insert,
+    n: usize,
+    executed: bool,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> SqlInsertFact {
     let table = match &insert.table {
         TableObject::TableName(name) => relation_name(name),
         _ => String::new(),
@@ -23,14 +34,17 @@ pub(super) fn from_insert(sql: &str, insert: &Insert, n: usize, executed: bool) 
             .as_deref()
             .is_some_and(super::not_exists::query_is_guarded),
         on_conflict: match &insert.on {
-            Some(OnInsert::OnConflict(conflict)) => Some(from_conflict(conflict)),
+            Some(OnInsert::OnConflict(conflict)) => Some(from_conflict(conflict, positions)),
             _ => None,
         },
-        assignments: insert_assignments(sql, insert, n),
+        assignments: insert_assignments(sql, insert, n, positions),
     }
 }
 
-fn from_conflict(conflict: &sqlparser::ast::OnConflict) -> super::SqlOnConflictFact {
+fn from_conflict(
+    conflict: &sqlparser::ast::OnConflict,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> super::SqlOnConflictFact {
     let arbiter = super::conflict::arbiter(&conflict.conflict_target);
     match &conflict.action {
         OnConflictAction::DoNothing => super::SqlOnConflictFact {
@@ -45,24 +59,29 @@ fn from_conflict(conflict: &sqlparser::ast::OnConflict) -> super::SqlOnConflictF
             assignments: update
                 .assignments
                 .iter()
-                .map(super::value::from_assignment)
+                .map(|assignment| super::value::from_assignment_at(assignment, positions))
                 .collect(),
-            where_proof: super::conflict::where_proof(update.selection.as_ref()),
+            where_proof: super::conflict::where_proof_at(update.selection.as_ref(), positions),
         },
     }
 }
 
-fn insert_assignments(sql: &str, insert: &Insert, n: usize) -> Vec<super::SqlAssignmentFact> {
+fn insert_assignments(
+    sql: &str,
+    insert: &Insert,
+    n: usize,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> Vec<super::SqlAssignmentFact> {
     if has_overriding_user_value(sql, n) {
         return Vec::new();
     }
     let set: Vec<_> = insert
         .assignments
         .iter()
-        .map(super::value::from_assignment)
+        .map(|assignment| super::value::from_assignment_at(assignment, positions))
         .collect();
     if set.is_empty() {
-        super::insert_source::from_insert(insert)
+        super::insert_source::from_insert_at(insert, positions)
     } else {
         set
     }

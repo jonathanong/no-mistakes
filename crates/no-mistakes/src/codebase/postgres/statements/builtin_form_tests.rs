@@ -44,10 +44,14 @@ fn national_now_qualified_coalesce_quoted_placeholder_and_scoped_overriding() {
     let Statement::Insert(second) = parse_postgres_sql(second_sql).unwrap().pop().unwrap() else {
         panic!("second");
     };
-    assert!(!super::insert::from_insert(combined, &first, 1, true)
-        .assignments
-        .is_empty());
-    assert!(super::insert::from_insert(combined, &second, 2, true)
-        .assignments
-        .is_empty());
+    assert!(
+        !super::insert::from_insert_at(combined, &first, 1, false, None)
+            .assignments
+            .is_empty()
+    );
+    assert!(
+        super::insert::from_insert_at(combined, &second, 2, false, None)
+            .assignments
+            .is_empty()
+    );
 }

@@ -44,37 +44,24 @@ fn insert_and_trigger_from_statement_reject_unrelated_ast() {
         end: false,
         modifier: None,
     };
-    assert!(super::insert::from_statement("", &commit, 1).is_none());
+    assert!(super::insert::from_statement_at("", &commit, 1, None).is_none());
     assert!(super::trigger::from_statement("", &commit, 1).is_none());
     let sql = "INSERT INTO items (id) VALUES (1)";
     let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
     insert.table = TableObject::TableFunction(dummy_fn());
-    assert!(super::insert::from_insert(sql, &insert, 1, true)
+    assert!(super::insert::from_insert_at(sql, &insert, 1, true, None)
         .table
         .is_empty());
     insert.table = TableObject::TableQuery(Box::new(empty_query()));
-    assert!(super::insert::from_insert(sql, &insert, 1, true)
+    assert!(super::insert::from_insert_at(sql, &insert, 1, true, None)
         .table
         .is_empty());
 }
 
 #[test]
 fn set_expr_insert_non_insert_and_missing_keyword_lines() {
-    let mut inserts = Vec::new();
-    let mut insert_n = 0usize;
-    super::facts::collect_set_inserts(
-        "",
-        &SetExpr::Insert(Statement::Commit {
-            chain: false,
-            end: false,
-            modifier: None,
-        }),
-        &mut insert_n,
-        &mut inserts,
-    );
-    assert!(inserts.is_empty());
     assert_eq!(
         super::lines::nth_keyword_pair_line("SELECT 1", "create", "trigger", 1),
         1
@@ -86,7 +73,7 @@ fn select_collect_explain_copy_and_outer_joins() {
     let sql = "EXPLAIN SELECT id FROM items WHERE id = 1";
     let statement = parse_postgres_sql(sql).unwrap().pop().unwrap();
     let mut selects = Vec::new();
-    super::select::collect(sql, &statement, &mut selects);
+    super::select::collect_with_placeholder_positions(sql, &statement, None, &mut selects);
     assert!(selects
         .iter()
         .any(|select| select.tables.contains(&"items".to_string())));
@@ -132,17 +119,17 @@ fn insert_source_without_query_or_rows_is_unstable() {
         panic!("insert");
     };
     insert.source = None;
-    assert!(super::insert::from_insert(sql, &insert, 1, true)
+    assert!(super::insert::from_insert_at(sql, &insert, 1, true, None)
         .assignments
         .is_empty());
     insert.source = Some(Box::new(empty_query()));
     assert!(
-        super::insert::from_insert(sql, &insert, 1, true)
+        super::insert::from_insert_at(sql, &insert, 1, true, None)
             .assignments
             .iter()
             .all(|assignment| assignment.form == super::SqlValueForm::Other),
         "{:#?}",
-        super::insert::from_insert(sql, &insert, 1, true).assignments
+        super::insert::from_insert_at(sql, &insert, 1, true, None).assignments
     );
 }
 
@@ -161,13 +148,13 @@ fn insert_set_assignments_are_kept() {
     };
     insert.assignments = update.assignments;
     assert!(
-        super::insert::from_insert(sql, &insert, 1, true)
+        super::insert::from_insert_at(sql, &insert, 1, true, None)
             .assignments
             .iter()
             .any(|assignment| assignment.column == "seen"
                 && matches!(assignment.form, super::SqlValueForm::Volatile { .. })),
         "{:#?}",
-        super::insert::from_insert(sql, &insert, 1, true).assignments
+        super::insert::from_insert_at(sql, &insert, 1, true, None).assignments
     );
 }
 
@@ -177,21 +164,23 @@ fn overriding_user_value_drops_source_forms() {
     let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("insert");
     };
-    assert!(super::insert::from_insert(
+    assert!(super::insert::from_insert_at(
         "INSERT INTO items (id, seen) OVERRIDING /* skip */
 USER VALUE VALUES (1, 'a')",
         &insert,
         1,
         true,
+        None,
     )
     .assignments
     .is_empty());
 
-    assert!(super::insert::from_insert(
+    assert!(super::insert::from_insert_at(
         "INSERT INTO items (id, seen) OVERRIDING /* outer /* inner */ note */\nUSER VALUE VALUES (1, 'a')",
         &insert,
         1,
         true,
+        None,
     )
     .assignments
     .is_empty());

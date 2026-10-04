@@ -1,38 +1,73 @@
-use super::aggregate::{orders_by_aggregate, pure_aggregate};
+use super::aggregate::orders_by_aggregate;
 use super::{items, start, Scope};
-use crate::codebase::postgres::statements::limit::{is_limited, is_zero_limited};
-use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
-use crate::fx::{fx_map, FxHashMap};
+use crate::codebase::postgres::idents::ident_key;
+use crate::codebase::postgres::statements::limit::is_zero_limited;
+use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
 use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
+mod blocking;
 mod compact;
-mod recursive_order;
+mod set;
 #[cfg(test)]
 mod tests;
-mod with_scope;
-pub(super) use with_scope::with_scope;
+use blocking::BlockingStatuses;
+use compact::{compact, size, MAX_BOUND_ITEMS};
 
-struct BlockingStatuses {
-    // Keys point into the borrowed query AST; this map is dropped before bound_body returns.
-    by_set: FxHashMap<*const SetExpr, bool>,
-    visits: usize,
+pub(super) fn bound_query(
+    query: &Query,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> SqlBoundQuery {
+    bound_body(query, &with_scope(query, scope, positions), positions)
 }
 
-impl BlockingStatuses {
-    fn new() -> Self {
-        Self {
-            by_set: fx_map(),
-            visits: 0,
-        }
+/// The scope after this query's own `WITH` clause.
+pub(super) fn with_scope(
+    query: &Query,
+    outer: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> Scope {
+    let mut scope = outer.clone();
+    let Some(with) = &query.with else {
+        return scope;
+    };
+    for cte in &with.cte_tables {
+        let name = ident_key(&cte.alias.name);
+        let bound = if modifying_statement(&cte.query).is_some() {
+            // `RETURNING` yields one row per modified row, which nothing in the text sizes: it
+            // bounds nothing pinned to it. The statement inside is judged on its own.
+            opaque(start(cte.query.span()))
+        } else {
+            let mut inner = scope.clone();
+            if with.recursive {
+                // A recursive reference is whatever the recursion has produced so far: it
+                // bounds nothing joined to it.
+                inner.insert(name.clone(), opaque(start(cte.query.span())));
+            }
+            let bound = bound_query(&cte.query, &inner, positions);
+            // Each reference clones the CTE's bound, so a chain of CTEs that each read the one
+            // before twice grows exponentially. Compact oversized bounds conservatively,
+            // retaining the distinct uncapped relations instead of hiding their reads.
+            if size(&bound) > MAX_BOUND_ITEMS {
+                compact(&bound, start(cte.query.span()))
+            } else {
+                bound
+            }
+        };
+        let columns = if cte.alias.columns.is_empty() {
+            super::pins::projection_columns(&cte.query)
+        } else {
+            Some(
+                cte.alias
+                    .columns
+                    .iter()
+                    .map(|column| ident_key(&column.name))
+                    .collect(),
+            )
+        };
+        scope.columns.insert(name.clone(), columns);
+        scope.insert(name, bound);
     }
-
-    fn complete(&mut self, set: &SetExpr) -> bool {
-        self.visits += 1;
-        self.by_set[&(set as *const SetExpr)]
-    }
-}
-
-pub(super) fn bound_query(query: &Query, scope: &Scope) -> SqlBoundQuery {
-    bound_body(query, &with_scope(query, scope))
+    scope
 }
 
 /// The `INSERT` / `UPDATE` / `DELETE` / `MERGE` inside a data-modifying CTE.
@@ -47,22 +82,27 @@ pub(super) fn modifying_statement(query: &Query) -> Option<&Statement> {
 }
 
 /// The body of `query` under `scope`, which already holds its CTEs.
-pub(super) fn bound_body(query: &Query, scope: &Scope) -> SqlBoundQuery {
-    bound_body_observed(query, scope, |_| {})
+pub(super) fn bound_body(
+    query: &Query,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> SqlBoundQuery {
+    bound_body_observed(query, scope, positions, |_| {})
 }
 
 fn bound_body_observed(
     query: &Query,
     scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
     observe: impl FnOnce(&BlockingStatuses),
 ) -> SqlBoundQuery {
-    let mut bound = set_bound(&query.body, scope);
+    let mut bound = set::bound(&query.body, scope, positions);
     if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query) {
         bound.capped = capped;
     }
     if is_zero_limited(query) {
         bound.capped = true;
-    } else if is_limited(query) {
+    } else if super::super::limit::is_limited_at(query, positions) {
         if let Some(mut blocking) = blocking_statuses(&query.body) {
             cap_streaming_arms(&query.body, &mut bound, &mut blocking);
             observe(&blocking);
@@ -148,38 +188,18 @@ fn cap_streaming_arms(set: &SetExpr, bound: &mut SqlBoundQuery, blocking: &mut B
     }
 }
 
-fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
-    match set {
-        SetExpr::Select(select) => SqlBoundQuery {
-            capped: pure_aggregate(select),
-            items: items::from_select(select, scope),
-        },
-        SetExpr::Query(query) => bound_query(query, scope),
-        // A set operation returns the rows of both arms, so both must be bounded.
-        SetExpr::SetOperation { left, right, .. } => SqlBoundQuery {
-            capped: false,
-            items: {
-                let left_bound = arm(left, scope);
-                // The left arm can contain TABLE syntax in projections that do not determine
-                // its bound. Keep those tokens from lending a name to the right arm.
-                scope.advance_table_tokens_to_right_arm(left.span().start);
-                vec![left_bound, arm(right, scope)]
-            },
-        },
-        SetExpr::Table(table) => super::table::bound(table, scope, start(set.span())),
-        _ => sized_by_itself(start(set.span())),
-    }
-}
-
-fn arm(set: &SetExpr, scope: &Scope) -> SqlBoundItem {
-    let kind = SqlBoundItemKind::Query(set_bound(set, scope));
-    SqlBoundItem::new(kind, None, start(set.span()))
-}
-
 /// A body whose size nothing in the statement text decides: it adds no unbounded relation.
 pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
         capped: false,
         items: vec![items::other(at)],
+    }
+}
+
+/// A body whose rows nothing proves bounded, and which is never reported either.
+fn opaque(at: (usize, usize)) -> SqlBoundQuery {
+    SqlBoundQuery {
+        capped: false,
+        items: vec![items::opaque(at)],
     }
 }

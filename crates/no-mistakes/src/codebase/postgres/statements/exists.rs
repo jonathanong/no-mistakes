@@ -6,32 +6,42 @@ use sqlparser::ast::{
 };
 use sqlparser::tokenizer::Location;
 
-pub(super) fn collect_from_select(sql: &str, select: &Select, out: &mut Vec<SqlExistsSetOpFact>) {
-    collect_exists(sql, select.selection.as_ref(), out);
-    collect_exists(sql, select.having.as_ref(), out);
+pub(super) fn collect_from_select_at(
+    sql: &str,
+    select: &Select,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlExistsSetOpFact>,
+) {
+    collect_exists_at(sql, select.selection.as_ref(), positions, out);
+    collect_exists_at(sql, select.having.as_ref(), positions, out);
     for item in &select.projection {
         match item {
             SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => {
-                collect_exists(sql, Some(expr), out);
+                collect_exists_at(sql, Some(expr), positions, out);
             }
             _ => {}
         }
     }
     if let GroupByExpr::Expressions(exprs, _) = &select.group_by {
         for expr in exprs {
-            collect_exists(sql, Some(expr), out);
+            collect_exists_at(sql, Some(expr), positions, out);
         }
     }
     for table in &select.from {
         for join in &table.joins {
             if let Some(expr) = join_on_expr(&join.join_operator) {
-                collect_exists(sql, Some(expr), out);
+                collect_exists_at(sql, Some(expr), positions, out);
             }
         }
     }
 }
 
-pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlExistsSetOpFact>) {
+pub(super) fn collect_exists_at(
+    sql: &str,
+    expr: Option<&Expr>,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlExistsSetOpFact>,
+) {
     let Some(expr) = expr else {
         return;
     };
@@ -40,17 +50,17 @@ pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlEx
             if set_expr_has_set_op(&subquery.body) {
                 let (line, column) = exists_position(sql, subquery.span().start);
                 out.push(SqlExistsSetOpFact {
-                    restricted: set_expr_restricted(&subquery.body),
+                    restricted: set_expr_restricted_at(&subquery.body, positions),
                     correlated: super::exists_correlation::query_is_correlated(subquery),
                     line,
                     column,
                 });
             }
-            collect_query_exists(sql, subquery, out);
+            collect_query_exists_at(sql, subquery, positions, out);
         }
-        Expr::Subquery(query) => collect_query_exists(sql, query, out),
+        Expr::Subquery(query) => collect_query_exists_at(sql, query, positions, out),
         other => crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
-            collect_exists(sql, Some(child), out);
+            collect_exists_at(sql, Some(child), positions, out);
         }),
     }
 }
@@ -87,17 +97,27 @@ fn first_exists_position(sql: &str) -> (usize, usize) {
     found
 }
 
-fn collect_query_exists(sql: &str, query: &Query, out: &mut Vec<SqlExistsSetOpFact>) {
-    collect_exists_from_set(sql, &query.body, out);
+fn collect_query_exists_at(
+    sql: &str,
+    query: &Query,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlExistsSetOpFact>,
+) {
+    collect_exists_from_set_at(sql, &query.body, positions, out);
 }
 
-fn collect_exists_from_set(sql: &str, expr: &SetExpr, out: &mut Vec<SqlExistsSetOpFact>) {
+fn collect_exists_from_set_at(
+    sql: &str,
+    expr: &SetExpr,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlExistsSetOpFact>,
+) {
     match expr {
-        SetExpr::Select(select) => collect_from_select(sql, select, out),
-        SetExpr::Query(query) => collect_query_exists(sql, query, out),
+        SetExpr::Select(select) => collect_from_select_at(sql, select, positions, out),
+        SetExpr::Query(query) => collect_query_exists_at(sql, query, positions, out),
         SetExpr::SetOperation { left, right, .. } => {
-            collect_exists_from_set(sql, left, out);
-            collect_exists_from_set(sql, right, out);
+            collect_exists_from_set_at(sql, left, positions, out);
+            collect_exists_from_set_at(sql, right, positions, out);
         }
         _ => {}
     }
@@ -121,48 +141,61 @@ fn set_expr_has_set_op(expr: &SetExpr) -> bool {
         || matches!(expr, SetExpr::Query(query) if set_expr_has_set_op(&query.body))
 }
 
-fn set_expr_restricted(expr: &SetExpr) -> bool {
+fn set_expr_restricted_at(
+    expr: &SetExpr,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> bool {
     match expr {
-        SetExpr::Select(select) => select.selection.as_ref().is_some_and(expr_is_restricted),
-        SetExpr::Query(query) => set_expr_restricted(&query.body),
+        SetExpr::Select(select) => select
+            .selection
+            .as_ref()
+            .is_some_and(|expr| expr_is_restricted_at(expr, positions)),
+        SetExpr::Query(query) => set_expr_restricted_at(&query.body, positions),
         SetExpr::SetOperation { left, right, .. } => {
-            set_expr_restricted(left) && set_expr_restricted(right)
+            set_expr_restricted_at(left, positions) && set_expr_restricted_at(right, positions)
         }
         _ => false,
     }
 }
 
-fn expr_is_restricted(expr: &Expr) -> bool {
+fn expr_is_restricted_at(expr: &Expr, positions: super::value::PlaceholderPositions<'_>) -> bool {
     match unwrap_expr(expr) {
         Expr::BinaryOp {
             left,
             op: BinaryOperator::And,
             right,
-        } => expr_is_restricted(left) || expr_is_restricted(right),
+        } => expr_is_restricted_at(left, positions) || expr_is_restricted_at(right, positions),
         Expr::BinaryOp {
             left,
             op: BinaryOperator::Or,
             right,
-        } => expr_is_restricted(left) && expr_is_restricted(right),
-        Expr::BinaryOp { left, right, .. } => column_bound_to_const(left, right),
+        } => expr_is_restricted_at(left, positions) && expr_is_restricted_at(right, positions),
+        Expr::BinaryOp { left, right, .. } => column_bound_to_const_at(left, right, positions),
         _ => false,
     }
 }
 
-fn column_bound_to_const(left: &Expr, right: &Expr) -> bool {
-    (is_relation_column(left) && is_const_or_placeholder(right))
-        || (is_relation_column(right) && is_const_or_placeholder(left))
+fn column_bound_to_const_at(
+    left: &Expr,
+    right: &Expr,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> bool {
+    (is_relation_column_at(left, positions) && is_const_or_placeholder_at(right, positions))
+        || (is_relation_column_at(right, positions) && is_const_or_placeholder_at(left, positions))
 }
 
-fn is_relation_column(expr: &Expr) -> bool {
+fn is_relation_column_at(expr: &Expr, positions: super::value::PlaceholderPositions<'_>) -> bool {
     match unwrap_expr(expr) {
-        Expr::Identifier(ident) => !super::value::is_placeholder_ident(&ident.value),
+        Expr::Identifier(ident) => !super::value::is_placeholder_ident_at(ident, positions),
         Expr::CompoundIdentifier(_) => true,
         _ => false,
     }
 }
 
-fn is_const_or_placeholder(expr: &Expr) -> bool {
+fn is_const_or_placeholder_at(
+    expr: &Expr,
+    positions: super::value::PlaceholderPositions<'_>,
+) -> bool {
     match unwrap_expr(expr) {
         Expr::Value(ValueWithSpan { value, .. }) => matches!(
             value,
@@ -171,7 +204,7 @@ fn is_const_or_placeholder(expr: &Expr) -> bool {
                 | Value::SingleQuotedString(_)
                 | Value::Boolean(_)
         ),
-        Expr::Identifier(ident) => super::value::is_placeholder_ident(&ident.value),
+        Expr::Identifier(ident) => super::value::is_placeholder_ident_at(ident, positions),
         _ => false,
     }
 }

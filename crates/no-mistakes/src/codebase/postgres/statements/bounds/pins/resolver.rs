@@ -1,4 +1,4 @@
-use super::super::super::value::is_placeholder_ident;
+use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use super::correlated::{reads_outer_rows, Reads};
 use crate::codebase::postgres::catalog::decoded_parts;
 use crate::codebase::postgres::idents::{
@@ -30,6 +30,7 @@ pub(in super::super) struct Resolver {
     outer: BTreeSet<String>,
     /// The CTE names in scope: a one-part table name that is one is not a base table.
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
+    positions: Option<Vec<(u32, u32)>>,
 }
 
 /// What an expression refers to among the FROM items.
@@ -52,6 +53,7 @@ impl Resolver {
     pub(in super::super) fn new(
         items: &[SqlBoundItem],
         ctes: BTreeMap<String, Option<BTreeSet<String>>>,
+        positions: PlaceholderPositions<'_>,
     ) -> Self {
         let names: Vec<(Option<String>, Option<String>)> = items
             .iter()
@@ -83,6 +85,7 @@ impl Resolver {
             tables,
             outer,
             ctes,
+            positions: positions.map(<[(u32, u32)]>::to_vec),
         }
     }
 
@@ -92,14 +95,18 @@ impl Resolver {
 
     /// What `query` reads of these items, so how far it depends on the row checked.
     pub(in super::super) fn reads(&self, query: &Query) -> Reads {
-        reads_outer_rows(query, &self.outer, &self.ctes)
+        reads_outer_rows(query, &self.outer, &self.ctes, self.positions.as_deref())
     }
 
     /// The item and column when `expr` is a bare column of one FROM item.
     pub(super) fn column(&self, expr: &Expr) -> Option<(usize, String)> {
         match unwrap_expr(expr) {
             // A recovered `${…}` interpolation is a bind, never a column.
-            Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => None,
+            Expr::Identifier(ident)
+                if is_placeholder_ident_at(ident, self.positions.as_deref()) =>
+            {
+                None
+            }
             Expr::Identifier(ident) => (self.names.len() == 1).then(|| (0, ident_key(ident))),
             Expr::CompoundIdentifier(parts) => {
                 let (qualifier, column) = qualified(parts)?;
@@ -154,7 +161,8 @@ impl Resolver {
                 found.unknown = true
             }
             // A bind, whether `$1` or an interpolation recovered from a template literal.
-            Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => {}
+            Expr::Identifier(ident)
+                if is_placeholder_ident_at(ident, self.positions.as_deref()) => {}
             expr @ (Expr::Identifier(_) | Expr::CompoundIdentifier(_)) => match self.column(expr) {
                 Some((item, _)) => {
                     found.items.insert(item);

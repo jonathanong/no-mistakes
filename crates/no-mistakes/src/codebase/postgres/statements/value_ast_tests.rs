@@ -1,3 +1,7 @@
+fn from_expr(expr: &Expr) -> super::SqlValueForm {
+    super::value::from_expr_at(expr, None)
+}
+
 use super::{extract_sql_statement_facts, SqlValueForm};
 use sqlparser::ast::{
     DollarQuotedString, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgumentList,
@@ -52,7 +56,7 @@ fn value_forms_cover_named_args_and_function_name_parts() {
         }),
     );
     assert_eq!(
-        super::value::from_expr(&named),
+        from_expr(&named),
         SqlValueForm::Coalesce {
             args: vec![SqlValueForm::SelfRef {
                 column: "note".into()
@@ -72,7 +76,7 @@ fn value_forms_cover_named_args_and_function_name_parts() {
         }),
     );
     assert_eq!(
-        super::value::from_expr(&expr_named),
+        from_expr(&expr_named),
         SqlValueForm::Coalesce {
             args: vec![SqlValueForm::SelfRef {
                 column: "note".into()
@@ -83,7 +87,7 @@ fn value_forms_cover_named_args_and_function_name_parts() {
         ObjectName(vec![ObjectNamePart::Identifier(Ident::new("current_user"))]),
         FunctionArguments::None,
     );
-    assert_eq!(super::value::from_expr(&none_args), SqlValueForm::Other);
+    assert_eq!(from_expr(&none_args), SqlValueForm::Other);
     let part = function_expr(
         ObjectName(vec![ObjectNamePart::Function(
             sqlparser::ast::ObjectNamePartFunction {
@@ -93,7 +97,7 @@ fn value_forms_cover_named_args_and_function_name_parts() {
         )]),
         FunctionArguments::Subquery(Box::new(empty_query())),
     );
-    assert_eq!(super::value::from_expr(&part), SqlValueForm::Other);
+    assert_eq!(from_expr(&part), SqlValueForm::Other);
     let wildcard = function_expr(
         ObjectName(vec![ObjectNamePart::Identifier(Ident::new("count"))]),
         FunctionArguments::List(FunctionArgumentList {
@@ -102,7 +106,7 @@ fn value_forms_cover_named_args_and_function_name_parts() {
             clauses: Vec::new(),
         }),
     );
-    assert_eq!(super::value::from_expr(&wildcard), SqlValueForm::Other);
+    assert_eq!(from_expr(&wildcard), SqlValueForm::Other);
 }
 
 #[test]
@@ -164,21 +168,21 @@ fn insert_value_stability_is_literals_nulls_and_placeholders() {
 #[test]
 fn datetime_idents_and_quoted_now_are_unstable_forms() {
     assert!(matches!(
-        super::value::from_expr(&Expr::Identifier(Ident::new("CURRENT_TIMESTAMP"))),
+        from_expr(&Expr::Identifier(Ident::new("CURRENT_TIMESTAMP"))),
         SqlValueForm::Volatile { name } if name == "current_timestamp"
     ));
     assert_eq!(
-        super::value::from_expr(&Expr::Identifier(Ident::new("DEFAULT"))),
+        from_expr(&Expr::Identifier(Ident::new("DEFAULT"))),
         SqlValueForm::Other
     );
     assert_eq!(
-        super::value::from_expr(&Expr::Value(
+        from_expr(&Expr::Value(
             Value::EscapedStringLiteral("now".into()).with_empty_span()
         )),
         SqlValueForm::Other
     );
     assert_eq!(
-        super::value::from_expr(&Expr::Value(
+        from_expr(&Expr::Value(
             Value::DollarQuotedString(DollarQuotedString {
                 value: "today".into(),
                 tag: None,
@@ -188,7 +192,7 @@ fn datetime_idents_and_quoted_now_are_unstable_forms() {
         SqlValueForm::Other
     );
     assert_eq!(
-        super::value::from_expr(&Expr::Value(
+        from_expr(&Expr::Value(
             Value::UnicodeStringLiteral("now".into()).with_empty_span()
         )),
         SqlValueForm::Other

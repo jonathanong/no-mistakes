@@ -17,12 +17,13 @@ pub(super) fn collect_derived_queries(
     from: &[TableWithJoins],
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     for table in from {
-        collect_derived_factor(sql, &table.relation, ctes, in_insert_select, out);
+        collect_derived_factor(sql, &table.relation, ctes, in_insert_select, positions, out);
         for join in &table.joins {
-            collect_derived_factor(sql, &join.relation, ctes, in_insert_select, out);
+            collect_derived_factor(sql, &join.relation, ctes, in_insert_select, positions, out);
         }
     }
 }
@@ -32,11 +33,12 @@ fn collect_derived_factor(
     table: &TableFactor,
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     match table {
         TableFactor::Derived { subquery, .. } => {
-            super::collect_query(sql, subquery, ctes, in_insert_select, false, out);
+            super::collect_query_at(sql, subquery, ctes, in_insert_select, false, positions, out);
         }
         TableFactor::NestedJoin {
             table_with_joins, ..
@@ -45,6 +47,7 @@ fn collect_derived_factor(
             std::slice::from_ref(table_with_joins),
             ctes,
             in_insert_select,
+            positions,
             out,
         ),
         _ => {}

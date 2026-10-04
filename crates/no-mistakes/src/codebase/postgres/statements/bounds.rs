@@ -69,36 +69,51 @@ impl Scope {
     }
 }
 
-pub(super) fn collect(statement: &Statement, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
-    collect_in(statement, scope, out);
+pub(super) fn collect(
+    statement: &Statement,
+    scope: &Scope,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlBoundFact>,
+) {
+    collect_in(statement, scope, positions, out);
 }
 
-fn collect_in(statement: &Statement, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
+fn collect_in(
+    statement: &Statement,
+    scope: &Scope,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlBoundFact>,
+) {
     match statement {
-        Statement::Query(query) => collect_query(query, scope, out),
+        Statement::Query(query) => collect_query(query, scope, positions, out),
         // `COPY (SELECT …) TO` runs the query like any other.
         Statement::Copy {
             source: CopySource::Query(query),
             ..
-        } => collect_query(query, scope, out),
-        Statement::Update(update) => dml::update(update, scope, out),
-        Statement::Delete(delete) => dml::delete(delete, scope, out),
+        } => collect_query(query, scope, positions, out),
+        Statement::Update(update) => dml::update(update, scope, positions, out),
+        Statement::Delete(delete) => dml::delete(delete, scope, positions, out),
         _ => {}
     }
 }
 
-fn collect_query(query: &Query, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
-    let scope = query::with_scope(query, scope);
+fn collect_query(
+    query: &Query,
+    scope: &Scope,
+    positions: super::value::PlaceholderPositions<'_>,
+    out: &mut Vec<SqlBoundFact>,
+) {
+    let scope = query::with_scope(query, scope, positions);
     if let Some(with) = &query.with {
         for cte in &with.cte_tables {
             if let Some(statement) = query::modifying_statement(&cte.query) {
-                collect_in(statement, &scope, out);
+                collect_in(statement, &scope, positions, out);
             }
         }
     }
     // `WITH … UPDATE` parses as a query whose body is the statement.
     if let Some(statement) = query::modifying_statement(query) {
-        collect_in(statement, &scope, out);
+        collect_in(statement, &scope, positions, out);
         return;
     }
     let (line, column) = start(query.span());
@@ -106,7 +121,7 @@ fn collect_query(query: &Query, scope: &Scope, out: &mut Vec<SqlBoundFact>) {
         kind: SqlBoundKind::Select,
         line,
         column,
-        query: query::bound_body(query, &scope),
+        query: query::bound_body(query, &scope, positions),
         target: None,
     });
 }

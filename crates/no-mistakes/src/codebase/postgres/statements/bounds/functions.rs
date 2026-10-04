@@ -1,5 +1,5 @@
 //! The built-in functions the bound facts reason about, by name.
-use super::super::value::is_placeholder_ident;
+use super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBoundItemKind;
 use sqlparser::ast::{
@@ -73,7 +73,11 @@ pub(super) fn is_set_returning(name: &ObjectName) -> bool {
 
 /// A table function is sized by the caller only when it is a set-returning built-in over
 /// arguments the text provides; any other function can return rows from anywhere.
-pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlBoundItemKind {
+pub(super) fn function_kind_at(
+    name: &ObjectName,
+    args: &TableFunctionArgs,
+    positions: PlaceholderPositions<'_>,
+) -> SqlBoundItemKind {
     // A nested function can obtain server data even when its visible arguments are fixed.
     let given = args.args.iter().all(|arg| match arg {
         FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
@@ -84,7 +88,7 @@ pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlB
         | FunctionArg::ExprNamed {
             arg: FunctionArgExpr::Expr(expr),
             ..
-        } => !depends_on_data(expr),
+        } => !input_depends_on_data_at(expr, true, positions),
         _ => false,
     });
     if given && builtin(name, CALLER_SIZED) {
@@ -96,18 +100,27 @@ pub(super) fn function_kind(name: &ObjectName, args: &TableFunctionArgs) -> SqlB
 
 /// `unnest(…)` as a table factor is sized by its arrays, unless one is taken from a query or
 /// from another FROM item (the table factor is then evaluated per row of that item).
-pub(super) fn unnest_kind(arrays: &[Expr]) -> SqlBoundItemKind {
-    if arrays.iter().any(depends_on_data) {
+pub(super) fn unnest_kind_at(
+    arrays: &[Expr],
+    positions: PlaceholderPositions<'_>,
+) -> SqlBoundItemKind {
+    if arrays
+        .iter()
+        .any(|expr| input_depends_on_data_at(expr, false, positions))
+    {
         SqlBoundItemKind::Opaque
     } else {
         SqlBoundItemKind::Other
     }
 }
 
-/// Whether `expr` holds a subquery, column, or function result: values whose source
-/// is not proven to be the statement or caller. An arbitrary call may read the database.
-pub(super) fn depends_on_data(expr: &Expr) -> bool {
-    struct Found(bool);
+/// Whether `expr` holds a subquery or a column: values the statement text does not provide.
+fn input_depends_on_data_at(
+    expr: &Expr,
+    reject_calls: bool,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
+    struct Found(bool, bool, Option<Vec<(u32, u32)>>);
     impl Visitor for Found {
         type Break = ();
         fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
@@ -116,8 +129,9 @@ pub(super) fn depends_on_data(expr: &Expr) -> bool {
         }
         fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
             let column = match expr {
-                Expr::Identifier(ident) => !is_placeholder_ident(&ident.value),
-                Expr::CompoundIdentifier(_) | Expr::Function(_) => true,
+                Expr::Identifier(ident) => !is_placeholder_ident_at(ident, self.2.as_deref()),
+                Expr::CompoundIdentifier(_) => true,
+                Expr::Function(_) if self.1 => true,
                 _ => false,
             };
             if column {
@@ -127,9 +141,14 @@ pub(super) fn depends_on_data(expr: &Expr) -> bool {
             ControlFlow::Continue(())
         }
     }
-    let mut found = Found(false);
+    let mut found = Found(false, reject_calls, positions.map(<[(u32, u32)]>::to_vec));
     let _ = expr.visit(&mut found);
     found.0
+}
+
+/// Whether an ordinary function expression may read data from a source.
+pub(super) fn depends_on_data(expr: &Expr) -> bool {
+    input_depends_on_data_at(expr, true, None)
 }
 
 #[cfg(test)]
