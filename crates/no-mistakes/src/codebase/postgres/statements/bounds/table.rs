@@ -14,6 +14,8 @@ struct SourceSegment {
     start: (u64, u64),
     end: (u64, u64),
     names: Vec<SourceTable>,
+    operators: Vec<SourceOperator>,
+    depths: Vec<SourceDepth>,
 }
 
 impl TableTokenIndex {
@@ -27,10 +29,13 @@ impl TableTokenIndex {
                 let last = segment
                     .iter()
                     .rfind(|token| !matches!(token.token, Token::Whitespace(_)))?;
+                let cursor = TableTokenCursor::new(segment);
                 Some(SourceSegment {
                     start: location(first.span.start),
                     end: location(last.span.end),
-                    names: TableTokenCursor::new(segment).names,
+                    names: cursor.names,
+                    operators: cursor.operators,
+                    depths: cursor.depths,
                 })
             })
             .collect();
@@ -52,7 +57,12 @@ impl TableTokenIndex {
         }
         TableTokenCursor {
             names: segment.names.clone(),
+            operators: segment.operators.clone(),
+            depths: segment.depths.clone(),
             next: 0,
+            last_at: None,
+            last_depth: 0,
+            last_operator: None,
         }
     }
 }
@@ -66,7 +76,24 @@ fn location(at: Location) -> (u64, u64) {
 #[derive(Default)]
 pub(in super::super) struct TableTokenCursor {
     names: Vec<SourceTable>,
+    operators: Vec<SourceOperator>,
+    depths: Vec<SourceDepth>,
     next: usize,
+    last_at: Option<(usize, usize)>,
+    last_depth: usize,
+    last_operator: Option<(usize, usize)>,
+}
+
+#[derive(Clone)]
+struct SourceOperator {
+    at: (usize, usize),
+    depth: usize,
+}
+
+#[derive(Clone)]
+struct SourceDepth {
+    at: (usize, usize),
+    depth: usize,
 }
 
 #[derive(Clone)]
@@ -76,6 +103,7 @@ struct SourceTable {
     name: String,
     key: String,
     at: (usize, usize),
+    depth: usize,
 }
 
 impl TableTokenCursor {
@@ -85,10 +113,30 @@ impl TableTokenCursor {
             .filter(|token| !matches!(token.token, Token::Whitespace(_)))
             .collect();
         let mut names = Vec::new();
+        let mut operators = Vec::new();
+        let mut depths = Vec::new();
+        let mut depth: usize = 0;
         for (index, token) in words.iter().enumerate() {
+            if token.token == Token::RParen {
+                depth = depth.saturating_sub(1);
+            }
+            let at = (
+                token.span.start.line as usize,
+                token.span.start.column as usize,
+            );
+            depths.push(SourceDepth { at, depth });
+            if token.token == Token::LParen {
+                depth += 1;
+            }
             let Token::Word(keyword) = &token.token else {
                 continue;
             };
+            if matches!(
+                keyword.keyword,
+                Keyword::UNION | Keyword::INTERSECT | Keyword::EXCEPT
+            ) {
+                operators.push(SourceOperator { at, depth });
+            }
             if keyword.keyword != Keyword::TABLE
                 || !query_table_context(words.get(index.wrapping_sub(1)).copied())
             {
@@ -126,13 +174,19 @@ impl TableTokenCursor {
                     table.value.to_ascii_lowercase()
                 },
                 name,
-                at: (
-                    token.span.start.line as usize,
-                    token.span.start.column as usize,
-                ),
+                at,
+                depth,
             });
         }
-        Self { names, next: 0 }
+        Self {
+            names,
+            operators,
+            depths,
+            next: 0,
+            last_at: None,
+            last_depth: 0,
+            last_operator: None,
+        }
     }
 
     fn take(&mut self, table: &Table) -> Option<SourceTable> {
@@ -142,7 +196,39 @@ impl TableTokenCursor {
         })?;
         let source = self.names[self.next + found].clone();
         self.next += found + 1;
+        self.last_at = Some(source.at);
+        self.last_depth = source.depth;
         Some(source)
+    }
+
+    pub(super) fn advance_to_right_arm(&mut self, left_start: Location) {
+        let start = (left_start.line as usize, left_start.column as usize);
+        let (from, max_depth) = if start == (0, 0) {
+            (self.last_at.unwrap_or(start), self.last_depth)
+        } else {
+            let depth = self
+                .depths
+                .iter()
+                .rfind(|source| source.at <= start)
+                .map_or(0, |source| source.depth);
+            (start.max(self.last_at.unwrap_or(start)), depth)
+        };
+        let from = from.max(self.last_operator.unwrap_or(from));
+        let Some(operator) = self
+            .operators
+            .iter()
+            .find(|operator| operator.at > from && operator.depth <= max_depth)
+        else {
+            return;
+        };
+        self.last_operator = Some(operator.at);
+        while self
+            .names
+            .get(self.next)
+            .is_some_and(|source| source.at < operator.at)
+        {
+            self.next += 1;
+        }
     }
 }
 

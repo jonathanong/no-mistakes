@@ -460,6 +460,45 @@ fn skipped_create_table_arm_cannot_supply_a_later_query_identity() {
 }
 
 #[test]
+fn ignored_scalar_table_arm_cannot_supply_an_outer_arm_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-nested.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert_eq!(facts.bounds.len(), 1);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| finding.table)
+        .collect();
+    assert_eq!(found, ["accounts"]);
+}
+
+#[test]
+fn ignored_scalar_table_arm_does_not_steal_a_quoted_outer_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-nested-reverse.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert_eq!(facts.bounds.len(), 1);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| finding.table)
+        .collect();
+    assert!(
+        found.is_empty(),
+        "quoted outer TABLE must read the temporary relation"
+    );
+}
+
+#[test]
 fn on_commit_drop_removes_only_committed_temporary_identities() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
