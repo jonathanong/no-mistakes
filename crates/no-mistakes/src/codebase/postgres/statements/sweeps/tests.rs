@@ -1,6 +1,7 @@
 mod cast_context;
 mod directional;
 mod select_all;
+mod table_pages;
 
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, extract_sql_statement_facts_with_recovered_placeholders,
