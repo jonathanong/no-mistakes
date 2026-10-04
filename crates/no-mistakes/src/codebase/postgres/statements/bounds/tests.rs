@@ -9,6 +9,7 @@ mod array_review;
 mod compact_aliases;
 mod repeated_begin;
 mod review;
+mod review_table;
 mod table_review;
 
 fn query(bound: &SqlBoundQuery) -> String {

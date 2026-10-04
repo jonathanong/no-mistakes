@@ -2,6 +2,9 @@ use super::{query, Scope};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
 use sqlparser::ast::Table;
 
+mod tokens;
+pub(in super::super) use tokens::{TableTokenCursor, TableTokenIndex};
+
 /// `TABLE name` is `SELECT * FROM name`: it returns every row of the relation.
 pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoundQuery {
     let name: Vec<&str> = [table.schema_name.as_deref(), table.table_name.as_deref()]
@@ -11,15 +14,7 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
     if name.is_empty() {
         return query::sized_by_itself(at);
     }
-    // sqlparser loses TABLE identifier quoting. Conservatively retain both spellings
-    // when folding changes a name; catalog resolution selects the relation that exists.
-    let exact = name
-        .iter()
-        .map(|part| format!("\"{}\"", part.replace('"', "\"\"")))
-        .collect::<Vec<_>>()
-        .join(".");
-    let folded = name.join(".").to_ascii_lowercase();
-    let item = |relation: String, cte_name: &str| {
+    let item = |relation: String, cte_name: &str, at| {
         let cte = table
             .schema_name
             .is_none()
@@ -34,14 +29,29 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
             at,
         )
     };
-    // A possible CTE spelling resolves only that interpretation; it cannot hide the other one.
-    let mut items = vec![item(folded.clone(), &folded)];
-    if name
-        .iter()
-        .any(|part| part.to_ascii_lowercase() != *part || part.contains(' '))
-    {
-        items.push(item(exact, &name.join(".")));
-    }
+    let recovered = scope
+        .table_tokens
+        .as_ref()
+        .and_then(|cursor| cursor.borrow_mut().take(table));
+    let items = if let Some(source) = recovered {
+        vec![item(source.name, &source.key, source.at)]
+    } else {
+        // When source tokens are unavailable, retain both plausible spellings as main did.
+        let exact = name
+            .iter()
+            .map(|part| format!("\"{}\"", part.replace('"', "\"\"")))
+            .collect::<Vec<_>>()
+            .join(".");
+        let folded = name.join(".").to_ascii_lowercase();
+        let mut items = vec![item(folded.clone(), &folded, at)];
+        if name
+            .iter()
+            .any(|part| part.to_ascii_lowercase() != *part || part.contains(' '))
+        {
+            items.push(item(exact, &name.join("."), at));
+        }
+        items
+    };
     SqlBoundQuery {
         capped: false,
         items,

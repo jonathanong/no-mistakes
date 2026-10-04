@@ -28,7 +28,7 @@ holds its locks longer and buffers more. Pick a batch with a `LIMIT` (for an `UP
 or `DELETE`, in a CTE or subquery that chooses the target rows) and run it in a loop
 with a cap. Enable the rule on job and repository code where those sweeps live.
 
-Temporary relations are tracked within each SQL source in statement order. Tables declared `ON COMMIT DROP` lose their temporary identity at commit, including after a rename; `ON COMMIT DELETE ROWS` retains the identity. Transaction rollback and savepoints restore their identities; repeating `BEGIN` preserves the active transaction and its savepoints. Renames, drops, and cascading drops update temporary view dependencies. A view over temporary relations is itself temporary. Explicit `search_path` order controls whether an unqualified name shadows the catalog relation, while `pg_temp` qualification selects the temporary identity.
+Temporary relations are tracked within each SQL source in statement order. Tables declared `ON COMMIT DROP` lose their temporary identity at commit, including after a rename; `ON COMMIT DELETE ROWS` retains the identity. Transaction rollback and savepoints restore their identities; repeating `BEGIN` preserves the active transaction and its savepoints. Renames, drops, and cascading drops update temporary view dependencies. A view over temporary relations is itself temporary. Quoted `TABLE "Accounts"` arms retain their case-sensitive identity, including inside a view; unquoted `TABLE Accounts` arms use the folded `accounts` identity. Explicit `search_path` order controls whether an unqualified name shadows the catalog relation, while `pg_temp` qualification selects the temporary identity.
 
 ## What it catches/requires
 
@@ -264,8 +264,10 @@ position. Only keys whose aliased positions keep their original names retain cat
 `USING` pins.
 
 For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
-Analysis conservatively checks both exact and folded spellings when they differ;
-a matching one-part CTE takes precedence over catalog relations.
+Analysis recovers the spelling from the prepared source tokens and matches quoted
+names exactly. If source tokens are unavailable, it conservatively checks both
+exact and folded spellings when they differ. A matching one-part CTE takes
+precedence for its spelling only.
 
 Bare subquery columns belong to a derived table or CTE only when its explicit
 projection exposes that name. Function column alias lists and known scalar built-in

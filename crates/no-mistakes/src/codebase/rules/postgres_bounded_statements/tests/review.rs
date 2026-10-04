@@ -460,20 +460,14 @@ fn base_table_column_alias_lists_supply_no_catalog_key_pins() {
 }
 
 #[test]
-fn table_arms_retain_possible_quoted_identifiers_and_cte_precedence() {
+fn table_arms_use_exact_quoted_identifiers_and_cte_precedence() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/table-quoting.sql"
     ));
     assert_eq!(
         names(sql),
-        [
-            "\"Order Items\"",
-            "\"Order Items\"",
-            "accounts",
-            "accounts",
-            "accounts"
-        ]
+        ["\"Order Items\"", "\"Order Items\"", "accounts", "accounts"]
     );
 }
 

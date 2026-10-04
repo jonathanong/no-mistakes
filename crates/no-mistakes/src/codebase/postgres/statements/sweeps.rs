@@ -14,11 +14,11 @@ use std::ops::ControlFlow;
 /// Every `LIMIT` / `FETCH FIRST` in the executed statements, and each limited single-table
 /// query ordered by plain columns.
 pub(super) fn collect(
-    sql: &str,
+    tokens: &Tokens<'_>,
     statements: &[Statement],
     recovered_placeholder_positions: &[(u32, u32)],
 ) -> (Vec<SqlLimitFact>, Vec<SqlSweepFact>) {
-    let mut collector = Collector::new(sql, recovered_placeholder_positions);
+    let mut collector = Collector::new(tokens, recovered_placeholder_positions);
     for statement in statements {
         let mut executed = Vec::new();
         walk_executed(statement, &mut executed);
@@ -57,10 +57,10 @@ fn transparent_int4_casts_safe(statement: &Statement) -> bool {
     }
 }
 
-struct Collector<'a> {
+struct Collector<'a, 'sql> {
     limits: Vec<SqlLimitFact>,
     sweeps: Vec<SqlSweepFact>,
-    tokens: Tokens<'a>,
+    tokens: &'a Tokens<'sql>,
     /// The CTE names visible inside each open query: those of its enclosing queries, plus its own
     /// WITH clause for everything but the CTE bodies.
     scopes: Vec<Vec<String>>,
@@ -70,12 +70,12 @@ struct Collector<'a> {
     recovered_placeholder_positions: &'a [(u32, u32)],
 }
 
-impl<'a> Collector<'a> {
-    fn new(sql: &'a str, recovered_placeholder_positions: &'a [(u32, u32)]) -> Self {
+impl<'a, 'sql> Collector<'a, 'sql> {
+    fn new(tokens: &'a Tokens<'sql>, recovered_placeholder_positions: &'a [(u32, u32)]) -> Self {
         Self {
             limits: Vec::new(),
             sweeps: Vec::new(),
-            tokens: Tokens::new(sql),
+            tokens,
             scopes: Vec::new(),
             bodies: HashMap::new(),
             transparent_int4_casts: true,
@@ -114,12 +114,12 @@ impl<'a> Collector<'a> {
     }
 }
 
-impl Visitor for Collector<'_> {
+impl Visitor for Collector<'_, '_> {
     type Break = ();
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         self.enter(query);
-        let site = limit_site(query, &self.tokens);
+        let site = limit_site(query, self.tokens);
         // `LIMIT 0` returns nothing: it is a cap, but no page of a walk.
         let empty = site
             .as_ref()

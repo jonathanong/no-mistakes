@@ -205,7 +205,13 @@ fn set_bound(set: &SetExpr, scope: &Scope) -> SqlBoundQuery {
         // A set operation returns the rows of both arms, so both must be bounded.
         SetExpr::SetOperation { left, right, .. } => SqlBoundQuery {
             capped: false,
-            items: vec![arm(left, scope), arm(right, scope)],
+            items: {
+                let left_bound = arm(left, scope);
+                // The left arm can contain TABLE syntax in projections that do not determine
+                // its bound. Keep those tokens from lending a name to the right arm.
+                scope.advance_table_tokens_to_right_arm(left.span().start);
+                vec![left_bound, arm(right, scope)]
+            },
         },
         SetExpr::Table(table) => super::table::bound(table, scope, start(set.span())),
         _ => sized_by_itself(start(set.span())),

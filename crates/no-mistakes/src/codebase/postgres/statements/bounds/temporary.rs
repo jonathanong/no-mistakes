@@ -18,14 +18,19 @@ pub(in super::super) struct TemporaryRelations {
 }
 
 impl TemporaryRelations {
-    pub(in super::super) fn apply(&mut self, statement: &Statement, facts: &mut [SqlBoundFact]) {
+    pub(in super::super) fn apply(
+        &mut self,
+        statement: &Statement,
+        facts: &mut [SqlBoundFact],
+        scope: &super::Scope,
+    ) {
         let mut dependencies = BTreeSet::new();
         for fact in facts.iter() {
             self.state.dependencies(&fact.query, &mut dependencies);
         }
         if let Statement::CreateView(view) = statement {
             // View declarations have no executed bound fact; collect their source fact here once.
-            let declaration = super::query::bound_query(&view.query, &super::Scope::default());
+            let declaration = super::query::bound_query(&view.query, scope);
             self.state.dependencies(&declaration, &mut dependencies);
         }
         self.lifecycle(statement);
