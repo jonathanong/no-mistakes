@@ -129,7 +129,12 @@ set operation). A statement is bounded when any of these holds:
 
 - It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` whose count is fixed: a literal, a bind
   (`$1`, `${size}`) or an expression of them using `COALESCE`, `LEAST` or `GREATEST`
-  (`LEAST($1, 100)`). These conditional constructs must be unqualified and unquoted;
+  (`LEAST($1, 100)`). Literal NULL arguments are allowed when another supported
+  argument supplies a guaranteed non-NULL count: `COALESCE(NULL, 100)`,
+  `LEAST(NULL, 100)`, and `GREATEST(100, NULL)` stay capped. An all-NULL result or
+  `COALESCE($1, NULL)` does not cap; unknown or data-derived arguments remain
+  conservative even after a known fallback. These conditional constructs must
+  be unqualified and unquoted;
   qualified or quoted function lookalikes may return NULL and are not fixed caps. `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
   a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
   `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
