@@ -1,23 +1,17 @@
 //! Request-local SQL relation identities and dependency closure.
+mod names;
 mod ownership;
 use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{
     SqlBoundItemKind, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
 };
+use names::names_match;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum Dependency {
     Temporary(String),
     Physical(Vec<String>),
-}
-
-// An unqualified reference has no schema identity here: invalidate possible dependents
-// conservatively. Fully qualified identities must still agree on their schema.
-fn names_match(left: &[String], right: &[String]) -> bool {
-    let count = left.len().min(right.len());
-    // decoded_parts always returns at least one part, even for an empty spelling.
-    left[left.len() - count..] == right[right.len() - count..]
 }
 
 #[derive(Clone)]
