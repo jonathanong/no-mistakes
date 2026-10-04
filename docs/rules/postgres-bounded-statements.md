@@ -402,6 +402,8 @@ position. Only keys whose aliased positions keep their original names retain cat
 Standalone `TABLE name`, `TABLE ONLY name`, and forms with the optional
 inheritance `*` after the name are analyzed as queries,
 including after temporary-table declarations. For `TABLE` set-operation arms, including `TABLE ONLY name`, the SQL parser omits identifier quote information.
+`INSERT INTO target TABLE ONLY source` also retains the source relation's quoted
+or folded identity after a target alias, column list, or identity override.
 `EXPLAIN TABLE name` is parsed as a plan without an executed query fact;
 `EXPLAIN ANALYZE TABLE name` executes the query and retains the same quoted
 or folded relation identity as standalone `TABLE name`.
