@@ -3,7 +3,7 @@ use super::{names::names_match, Dependency, State};
 use std::collections::{BTreeMap, BTreeSet};
 
 impl State {
-    pub fn drop_physical(&mut self, mut dropped: BTreeSet<Vec<String>>, cascade: bool) {
+    pub fn drop_physical(&mut self, mut dropped: BTreeSet<Vec<String>>, cascade: bool) -> bool {
         if !cascade
             && self
                 .relations
@@ -16,7 +16,7 @@ impl State {
                 })
         {
             // PostgreSQL rejects RESTRICT while a known view still depends on the target.
-            return;
+            return false;
         }
         if cascade {
             loop {
@@ -48,6 +48,7 @@ impl State {
         }
         self.physical_views
             .retain(|view, _| !dropped.iter().any(|name| names_match(view, name)));
+        true
     }
 
     pub fn rename_physical(

@@ -8,10 +8,33 @@ use std::collections::BTreeSet;
 pub(super) type Snapshot = (bool, Option<Vec<String>>, Option<Vec<String>>);
 
 impl State {
+    pub fn restore_physical(&mut self, name: &str) {
+        let parts = decoded_parts(name);
+        let Some(relation) = parts.last() else {
+            return;
+        };
+        let schema = (parts.len() >= 2).then(|| &parts[parts.len() - 2]);
+        if let Some(schema) = schema {
+            self.removed_shadows
+                .remove(&(schema.clone(), relation.clone()));
+        }
+        if self.relations.contains_key(relation)
+            && self
+                .earlier_schemas
+                .as_ref()
+                .is_some_and(|earlier| schema.is_none_or(|schema| earlier.contains(schema)))
+        {
+            // A physical CREATE can restore a shadow after the snapshot. Its success
+            // and namespace are not catalog facts, so keep later temp reads uncertain.
+            self.uncertain_relations.insert(relation.clone());
+        }
+    }
+
     pub fn record_path(&mut self, values: &[Expr]) -> Option<Vec<String>> {
-        let known = values.iter().all(|value| {
-            matches!(value, Expr::Identifier(_))
-                || matches!(value, Expr::Value(value) if matches!(value.value, Value::SingleQuotedString(_)))
+        let known = values.iter().all(|value| match value {
+            Expr::Identifier(ident) => ident.value != "$user",
+            Expr::Value(value) => matches!(value.value, Value::SingleQuotedString(_)),
+            _ => false,
         });
         let path = values
             .iter()
@@ -49,6 +72,9 @@ fn path_value(value: &Expr) -> Option<Vec<String>> {
         {
             Some(vec![ident_key(ident)])
         }
+        // This placeholder expands to the session user's schema, which a catalog
+        // without role evidence cannot prove absent before pg_temp.
+        Expr::Identifier(ident) if ident.value == "$user" => Some(vec!["$user".into()]),
         Expr::Value(value) => match &value.value {
             // SET parses a quoted SQL value as one schema name, even if it contains
             // commas or double quotes. Only commas between SQL values separate paths.

@@ -22,6 +22,7 @@ mod order;
 mod partition;
 mod paths;
 mod resolve;
+mod search_path;
 mod snapshot;
 #[cfg(test)]
 mod tests;
@@ -42,6 +43,7 @@ pub use model::{
 pub(crate) use order::{canonical_order_keys, order_by_ascending};
 use paths::catalog_path;
 pub(crate) use paths::normalize_catalog_path;
+pub(crate) use search_path::SearchPathResolution;
 use snapshot::Snapshot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -78,6 +80,7 @@ pub struct SchemaCatalog {
     views: BTreeMap<String, CatalogView>,
     column_lines: BTreeMap<(String, String), usize>,
 }
+
 #[derive(Debug, Clone, Default)]
 struct ArbiterTable {
     indexes: Vec<CanonicalIndex>,

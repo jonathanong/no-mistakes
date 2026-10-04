@@ -66,6 +66,9 @@ pub struct SqlPossibleTemporary {
     pub database_qualifier: Option<String>,
     /// Explicit search-path schemas before `pg_temp`, in PostgreSQL resolution order.
     pub earlier_schemas: Vec<String>,
+    /// An earlier DDL target was unknown: the table may be temporary, so its
+    /// catalog keys cannot safely bound another relation.
+    pub uncertain_lifetime: bool,
 }
 
 /// A bare column that a subquery reads, with the base tables that could own it.

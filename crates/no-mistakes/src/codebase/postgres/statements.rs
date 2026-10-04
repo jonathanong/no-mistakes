@@ -26,7 +26,7 @@ mod writes;
 pub use crate::codebase::postgres::statement_facts::*;
 pub(crate) use facts::{
     extract_from_parsed_with_recovered_placeholders, extract_sql_statement_facts_with_bounds,
-    extract_sql_statement_facts_with_recovered_placeholders,
+    extract_sql_statement_facts_with_recovered_placeholders, project_bounds,
 };
 pub use facts::{extract_sql_statement_facts, has_top_level_not_exists_in};
 pub use fallback::{insert_keyword_count, mask_quoted_sql};

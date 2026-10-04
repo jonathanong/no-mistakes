@@ -113,6 +113,11 @@ prove whether those schemas exist and which relation names they contain. Generat
 with `--search-path-schema` for each earlier schema. A missing or incomplete evidence
 entry leaves the rule conservative; an earlier relation outside the selected catalog
 is treated as unknown, rather than as a namesake table from the selected schema.
+If an unqualified `DROP` removes a proven earlier physical relation, a surviving
+temporary namesake becomes visible to later reads, including after `RESET search_path`.
+Complete evidence that earlier schemas lack the name instead makes the drop reach
+the temporary relation. With incomplete evidence, the rule does not use catalog
+unique keys from a possibly temporary source to bound a joined table.
 
 ## What it catches/requires
 

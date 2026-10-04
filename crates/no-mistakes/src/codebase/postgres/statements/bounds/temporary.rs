@@ -8,6 +8,7 @@ use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
+use crate::codebase::postgres::{SchemaCatalog, SqlViewReads};
 use sqlparser::ast::{Expr, ObjectName, ObjectNamePart, SetExpr, Statement};
 use state::{Dependency, State};
 use std::collections::BTreeSet;
@@ -20,25 +21,54 @@ pub(in super::super) struct TemporaryRelations {
 }
 
 impl TemporaryRelations {
+    pub(in super::super) fn conditional(&self, statement: &Statement) -> bool {
+        if self.state.earlier_schemas.is_none() {
+            return false;
+        }
+        match statement {
+            Statement::Drop { names, .. } => names
+                .iter()
+                .any(|name| self.state.possible_temporary(&sql_name(name)).is_some()),
+            Statement::AlterTable(table) => self
+                .state
+                .possible_temporary(&sql_name(&table.name))
+                .is_some(),
+            _ => false,
+        }
+    }
+
+    pub(in super::super) fn view_reads(
+        statement: &Statement,
+        scope: &super::Scope,
+        positions: super::super::value::PlaceholderPositions<'_>,
+    ) -> Option<SqlViewReads> {
+        let Statement::CreateView(view) = statement else {
+            return None;
+        };
+        Some(SqlViewReads {
+            query: super::query::bound_query(&view.query, scope, positions),
+            names: view_relations::names(&view.query),
+        })
+    }
+
     pub(in super::super) fn apply(
         &mut self,
         statement: &Statement,
         facts: &mut [SqlBoundFact],
-        scope: &super::Scope,
-        positions: super::super::value::PlaceholderPositions<'_>,
+        view_reads: Option<&SqlViewReads>,
+        catalog: Option<&SchemaCatalog>,
     ) {
         let mut dependencies = BTreeSet::new();
-        if let Statement::CreateView(view) = statement {
+        if let Some(reads) = view_reads {
             // View declarations have no executed bound fact; collect their source fact here once.
-            let declaration = super::query::bound_query(&view.query, scope, positions);
-            self.state.dependencies(&declaration, &mut dependencies);
+            self.state.dependencies(&reads.query, &mut dependencies);
             // The bound projection can omit relations in expressions that do not
             // constrain rows. They still determine a view's lifetime.
-            for name in view_relations::names(&view.query) {
-                self.state.include_dependencies(&name, &mut dependencies);
+            for name in &reads.names {
+                self.state.include_dependencies(name, &mut dependencies);
             }
         }
-        self.lifecycle(statement);
+        self.lifecycle(statement, catalog);
         // SELECT INTO's source is resolved before its destination is created.
         for fact in facts {
             self.query(&mut fact.query);
@@ -71,6 +101,9 @@ impl TemporaryRelations {
                     }
                 }
             }
+            Statement::CreateTable(table) => {
+                self.state.restore_physical(&sql_name(&table.name));
+            }
             Statement::CreateView(view) => {
                 let name = sql_name(&view.name);
                 if view.temporary
@@ -83,6 +116,7 @@ impl TemporaryRelations {
                     let inherited = self.state.dependency_database(&dependencies);
                     self.state.insert(&name, dependencies, inherited);
                 } else {
+                    self.state.restore_physical(&name);
                     self.state.physical_views.insert(
                         crate::codebase::postgres::decoded_parts(&name),
                         dependencies,

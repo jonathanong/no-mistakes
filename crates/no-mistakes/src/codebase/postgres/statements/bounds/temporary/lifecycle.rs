@@ -3,10 +3,11 @@ mod alter_table;
 use super::super::items;
 use super::{state, TemporaryRelations};
 use crate::codebase::postgres::idents::ident_key;
+use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::{ContextModifier, ObjectType, Reset, Set, Statement};
 
 impl TemporaryRelations {
-    pub(super) fn lifecycle(&mut self, statement: &Statement) {
+    pub(super) fn lifecycle(&mut self, statement: &Statement, catalog: Option<&SchemaCatalog>) {
         match statement {
             // PostgreSQL warns on repeated BEGIN without replacing the active transaction.
             Statement::StartTransaction { .. } if self.transaction.is_none() => {
@@ -62,6 +63,7 @@ impl TemporaryRelations {
                 self.state.partitioned.clear();
                 self.state.on_commit_drop.clear();
                 self.state.databases.clear();
+                self.state.uncertain_relations.clear();
             }
             Statement::Discard {
                 object_type: sqlparser::ast::DiscardObject::ALL,
@@ -80,7 +82,7 @@ impl TemporaryRelations {
                 ObjectType::Table | ObjectType::View | ObjectType::MaterializedView
             ) =>
             {
-                self.drop_relations(object_type, names, *cascade)
+                self.drop_relations(object_type, names, *cascade, catalog)
             }
             Statement::Drop {
                 object_type: ObjectType::Schema,
@@ -168,9 +170,10 @@ impl TemporaryRelations {
         kind: &ObjectType,
         names: &[sqlparser::ast::ObjectName],
         cascade: bool,
+        catalog: Option<&SchemaCatalog>,
     ) {
         let names: Vec<_> = names.iter().map(items::sql_name).collect();
-        if !cascade && self.state.restrict_blocks_drop(&names) {
+        if !cascade && self.state.restrict_blocks_drop(&names, catalog) {
             return;
         }
         for name in names {
@@ -178,7 +181,7 @@ impl TemporaryRelations {
             if *kind == ObjectType::MaterializedView && self.state.matches_identity(&name) {
                 continue;
             }
-            self.state.drop(&name, cascade);
+            self.state.drop(&name, cascade, catalog);
         }
     }
 }
