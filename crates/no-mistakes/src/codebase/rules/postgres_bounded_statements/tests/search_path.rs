@@ -117,6 +117,58 @@ fn local_search_path_only_applies_inside_an_explicit_transaction() {
 }
 
 #[test]
+fn quoted_string_path_components_keep_commas_and_escaped_quotes() {
+    let root = crate::test_support::rule_fixture_root("postgres-bounded-statements");
+    let sql = std::fs::read_to_string(root.join("sql/temporary-quoted-search-path.sql")).unwrap();
+    let catalog = SchemaCatalog::from_json(
+        &std::fs::read_to_string(root.join("schema-quoted-search-path-evidence.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        crate::codebase::postgres::parse_postgres_sql(&sql)
+            .unwrap()
+            .len(),
+        19
+    );
+    let facts = extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 7);
+    assert_eq!(
+        facts.bounds[0].query.items[0]
+            .possible_temporary
+            .as_ref()
+            .unwrap()
+            .earlier_schemas,
+        ["pg_catalog", "empty,schema"]
+    );
+    assert_eq!(
+        facts.bounds[1].query.items[0]
+            .possible_temporary
+            .as_ref()
+            .unwrap()
+            .earlier_schemas,
+        ["pg_catalog", "odd\"schema"]
+    );
+    assert_eq!(
+        facts.bounds[2].query.items[0]
+            .possible_temporary
+            .as_ref()
+            .unwrap()
+            .earlier_schemas,
+        ["pg_catalog", "MiXeD"]
+    );
+    // This entire quoted value names one schema; its comma is not a path separator.
+    assert!(facts.bounds[4].query.items[0].possible_temporary.is_none());
+    let names = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| offenders(fact, &catalog))
+        .map(|offender| offender.table)
+        .collect::<Vec<_>>();
+    assert_eq!(names, ["accounts", "accounts"]);
+}
+
+#[test]
 fn mixed_definite_and_ambiguous_view_sources_cannot_borrow_catalog_key() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

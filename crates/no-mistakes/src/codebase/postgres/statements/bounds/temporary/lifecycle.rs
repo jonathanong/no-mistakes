@@ -112,23 +112,7 @@ impl TemporaryRelations {
                     // A session assignment replaces a preceding LOCAL assignment at commit.
                     self.state.local_path = None;
                 }
-                let names: Option<Vec<Vec<String>>> = values
-                    .iter()
-                    .map(|value| match value {
-                        sqlparser::ast::Expr::Identifier(ident) => Some(vec![ident_key(ident)]),
-                        sqlparser::ast::Expr::Value(sqlparser::ast::ValueWithSpan {
-                            value: sqlparser::ast::Value::SingleQuotedString(raw),
-                            ..
-                        }) => Some(raw.split(',').map(state::key).collect()),
-                        sqlparser::ast::Expr::Value(sqlparser::ast::ValueWithSpan {
-                            value: sqlparser::ast::Value::Number(raw, _),
-                            ..
-                        }) => Some(vec![raw.clone()]),
-                        _ => None,
-                    })
-                    .collect();
-                let path = names.map(|parts| parts.into_iter().flatten().collect::<Vec<_>>());
-                self.state.record_path(values, &path);
+                let path = self.state.record_path(values);
                 let pg_temp = path
                     .as_ref()
                     .and_then(|parts| parts.iter().position(|name| name == "pg_temp"));

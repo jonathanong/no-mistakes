@@ -26,7 +26,7 @@ SET search_path = public, pg_temp, other;
 CREATE TEMP VIEW orders AS SELECT * FROM other.accounts;
 DROP TABLE accounts CASCADE;
 SELECT * FROM orders;
--- Quoted string syntax and role substitution remain unknown to this narrow proof.
+-- A whole list inside one SQL literal names one schema, excluding other.
 SET search_path = '"other,public", pg_temp';
 CREATE TEMP VIEW orders AS SELECT * FROM other.accounts;
 DROP TABLE accounts CASCADE;

@@ -16,8 +16,8 @@ SET search_path = '';
 CREATE TEMP VIEW orders AS SELECT * FROM other.accounts;
 DROP TABLE accounts CASCADE;
 SELECT * FROM orders;
--- Simple string lists and directly quoted identifiers have known membership.
-SET search_path = 'public, pg_temp';
+-- SQL values separated by commas and directly quoted identifiers have known membership.
+SET search_path = public, pg_temp;
 CREATE TEMP VIEW orders AS SELECT * FROM other.accounts;
 DROP TABLE accounts CASCADE;
 SELECT * FROM orders;

@@ -1,0 +1,39 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "keys": [{ "expression": "id" }]
+        }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      },
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "keys": [{ "expression": "id" }]
+        }
+      }
+    }
+  },
+  "searchPathEvidence": {
+    "pg_catalog": ["pg_class"],
+    "empty,schema": [],
+    "odd\"schema": [],
+    "MiXeD": [],
+    "empty_schema": [],
+    "public": ["accounts"]
+  }
+}
