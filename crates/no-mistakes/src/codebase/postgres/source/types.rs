@@ -112,5 +112,19 @@ pub enum PostgresSqlStatementKind {
     Drop {
         drop: PostgresSqlDrop,
     },
+    DoBlock {
+        block: PostgresSqlProceduralBlock,
+    },
     Other,
+}
+
+/// Nested statements are procedural source occurrences, not guaranteed execution.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlProceduralBlock {
+    pub language: String,
+    pub body_span: PostgresSqlSpan,
+    pub statements: Vec<PostgresSqlStatement>,
+    pub diagnostics: Vec<PostgresSqlDiagnostic>,
+    pub complete: bool,
 }

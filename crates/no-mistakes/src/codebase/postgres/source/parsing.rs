@@ -4,8 +4,17 @@ use sqlparser::{ast::Statement, dialect::PostgreSqlDialect, parser::Parser, toke
 
 pub(super) fn collect(
     source: &PostgresSqlSource,
+    prepared: PreparedPostgresTokens,
+    locations: &Locations<'_>,
+) -> PostgresSqlFacts {
+    collect_program(source, prepared, locations, 0)
+}
+
+pub(super) fn collect_program(
+    source: &PostgresSqlSource,
     mut prepared: PreparedPostgresTokens,
     locations: &Locations<'_>,
+    depth: usize,
 ) -> PostgresSqlFacts {
     let mut result = PostgresSqlFacts {
         schema_version: 1,
@@ -14,6 +23,7 @@ pub(super) fn collect(
         diagnostics: Vec::new(),
     };
     ddl::prepare_trigger_arguments(&mut prepared.tokens);
+    let generated = super::generated::prepare(&mut prepared.tokens);
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
@@ -22,22 +32,37 @@ pub(super) fn collect(
         }
         let start = parser.peek_token().span.start;
         let start_index = parser.index();
-        let parsed = parser.parse_statement();
+        let parsed = if super::procedural::starts(&parser) {
+            super::procedural::collect(&mut parser, source, locations, depth)
+        } else {
+            parser
+                .parse_statement()
+                .map(|mut statement| {
+                    super::generated::restore(
+                        &mut statement,
+                        &generated,
+                        parser.token_at(parser.index().saturating_sub(1)).span.end,
+                    );
+                    let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
+                        (start_index..parser.index()).map(|index| parser.token_at(index)),
+                    );
+                    project(&statement, locations, &tables)
+                })
+                .map_err(|error| error.to_string())
+        };
         let complete = matches!(parser.peek_token().token, Token::SemiColon | Token::EOF);
-        let facts = parsed.as_ref().ok().filter(|_| complete).map(|statement| {
-            let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
-                (start_index..parser.index()).map(|index| parser.token_at(index)),
-            );
-            project(statement, locations, &tables)
-        });
-        let error = parsed.err().map(|error| error.to_string()).or_else(|| {
-            (!complete).then(|| {
-                format!(
+        // Move projected facts once; cloning a nested program here repeats its subtree.
+        let (facts, error) = match parsed {
+            Ok(facts) if complete => (Some(facts), None),
+            Ok(_) => (
+                None,
+                Some(format!(
                     "Expected statement delimiter, found {}",
                     parser.peek_token().token
-                )
-            })
-        });
+                )),
+            ),
+            Err(error) => (None, Some(error)),
+        };
         if error.is_some() {
             while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
                 parser.next_token();
