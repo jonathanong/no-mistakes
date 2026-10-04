@@ -369,6 +369,41 @@ fn rule_docs_use_supported_option_examples() {
     }
 }
 
+fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
+    ignore::WalkBuilder::new(root)
+        .hidden(false)
+        .parents(false)
+        .git_global(false)
+        .git_exclude(false)
+        .git_ignore(true)
+        .require_git(false)
+        .build()
+        .filter_map(|entry| {
+            let entry =
+                entry.unwrap_or_else(|err| panic!("failed to walk {}: {err}", root.display()));
+            entry
+                .file_type()
+                .is_some_and(|kind| kind.is_file())
+                .then(|| entry.into_path())
+        })
+        .collect()
+}
+
+#[test]
+fn identifier_inventory_includes_root_and_agent_documents() {
+    // Saved root/agent documents protect scan scope; ignored build output stays out.
+    let root = repo_root().join("test-cases/docs/identifier-inventory/fixture");
+    assert!(root.join("ignored.md").is_file());
+    let paths: BTreeSet<_> = consumer_identifier_paths(&root)
+        .into_iter()
+        .map(|path| path.strip_prefix(&root).unwrap().to_owned())
+        .collect();
+    assert!(paths.contains(Path::new("README.md")));
+    assert!(paths.contains(Path::new("skills/no-mistakes/SKILL.md")));
+    assert!(paths.contains(Path::new("skills/no-mistakes/references/example.md")));
+    assert!(!paths.contains(Path::new("ignored.md")));
+}
+
 #[test]
 fn consumer_identifiers_stay_outside_the_denylist() {
     const CONSUMER_TOKENS: &[&str] = &["voucha", "@data-stores/valkey", "voucha.ai"];
@@ -391,36 +426,25 @@ fn consumer_identifiers_stay_outside_the_denylist() {
     }
 
     let mut violations = Vec::new();
-    for tree in ["crates", "fixtures", "test-cases", "docs", "packages"] {
-        for entry in ignore::WalkBuilder::new(root.join(tree))
-            .hidden(false)
-            .git_ignore(true)
-            .build()
-        {
-            let entry = entry.unwrap_or_else(|err| panic!("failed to walk {tree}: {err}"));
-            if !entry.file_type().is_some_and(|kind| kind.is_file()) {
-                continue;
-            }
-            let path = entry.path();
-            let relative = path.strip_prefix(&root).unwrap_or(path);
-            let bytes = std::fs::read(path)
-                .unwrap_or_else(|err| panic!("failed to read {}: {err}", relative.display()));
-            let Ok(text) = String::from_utf8(bytes) else {
-                continue;
-            };
-            let lower = text.to_ascii_lowercase();
-            if relative == Path::new(DENYLIST_FILE) {
-                continue;
-            }
-            for (line, contents) in lower.lines().enumerate() {
-                for token in CONSUMER_TOKENS {
-                    if contents.contains(token) {
-                        violations.push(format!(
-                            "{}:{} contains a forbidden consumer identifier",
-                            relative.display(),
-                            line + 1
-                        ));
-                    }
+    for path in consumer_identifier_paths(&root) {
+        let relative = path.strip_prefix(&root).unwrap_or(&path);
+        let bytes = std::fs::read(&path)
+            .unwrap_or_else(|err| panic!("failed to read {}: {err}", relative.display()));
+        let Ok(text) = String::from_utf8(bytes) else {
+            continue;
+        };
+        let lower = text.to_ascii_lowercase();
+        if relative == Path::new(DENYLIST_FILE) {
+            continue;
+        }
+        for (line, contents) in lower.lines().enumerate() {
+            for token in CONSUMER_TOKENS {
+                if contents.contains(token) {
+                    violations.push(format!(
+                        "{}:{} contains a forbidden consumer identifier",
+                        relative.display(),
+                        line + 1
+                    ));
                 }
             }
         }
