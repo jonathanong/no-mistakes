@@ -5,6 +5,9 @@ use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_le
 use inserts::collect_query_inserts;
 use sqlparser::ast::{Spanned, Statement};
 
+mod prepared;
+use prepared::PreparedStatements;
+
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
     extract_sql_statement_facts_with_bounds(sql, true)
@@ -82,25 +85,31 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         mutation_column_uses: &mut mutation_column_uses,
     };
     let mut temporary_relations = bounds::TemporaryRelations::default();
-    for statement in statements {
-        let scope = table_index
-            .as_ref()
-            .map(|index| bounds::Scope::with_table_tokens(index.cursor_at(statement.span().start)));
+    let mut prepared = PreparedStatements::default();
+    for source_statement in statements {
+        let scope = table_index.as_ref().map(|index| {
+            bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
+        });
         let mut executed = Vec::new();
-        wrappers::walk_executed(statement, &mut executed);
+        wrappers::walk_executed(source_statement, &mut executed);
         for statement in executed {
             writes::collect(statement, &mut writes);
             collect_one(sql, statement, placeholder_positions, &mut out);
             if let Some(scope) = &scope {
                 let first_bound = bounds.len();
                 bounds::collect(statement, scope, placeholder_positions, &mut bounds);
-                temporary_relations.apply(
+                prepared.apply(
+                    source_statement,
                     statement,
+                    &mut temporary_relations,
                     &mut bounds[first_bound..],
                     scope,
                     placeholder_positions,
                 );
             }
+        }
+        if scope.is_some() {
+            prepared.record(source_statement);
         }
     }
     dedupe::exists_set_operations(&mut selects);
