@@ -7,10 +7,9 @@ use super::super::super::value::is_placeholder_ident;
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBareRead;
+use columns::output_names;
 pub(in super::super) use columns::projection_columns;
-use sqlparser::ast::{
-    Expr, GroupByExpr, ObjectName, OrderByKind, Query, SetExpr, TableFactor, Visit, Visitor,
-};
+use sqlparser::ast::{Expr, ObjectName, Query, TableFactor, Visit, Visitor};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::ControlFlow;
 
@@ -215,29 +214,4 @@ impl Visitor for Scan {
         }
         ControlFlow::Continue(())
     }
-}
-
-/// The names written alone as an `ORDER BY` or `GROUP BY` item: PostgreSQL reads each as an
-/// output column's name before it reads it as a column of a relation.
-fn output_names(query: &Query) -> Vec<String> {
-    let mut items: Vec<&Expr> = Vec::new();
-    if let Some(order) = &query.order_by {
-        if let OrderByKind::Expressions(expressions) = &order.kind {
-            items.extend(expressions.iter().map(|expression| &expression.expr));
-        }
-    }
-    if let SetExpr::Select(select) = &*query.body {
-        if let GroupByExpr::Expressions(expressions, _) = &select.group_by {
-            items.extend(expressions);
-        }
-    }
-    items
-        .into_iter()
-        .filter_map(|item| match item {
-            Expr::Identifier(ident) if !is_placeholder_ident(&ident.value) => {
-                Some(ident_key(ident))
-            }
-            _ => None,
-        })
-        .collect()
 }
