@@ -19,6 +19,7 @@ pub(super) fn extract(
     resolver: &Resolver,
     restricted: &[usize],
     scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<(usize, SqlBoundPin)>,
 ) {
     let mut pin = |column: &Expr, sourced: Option<Sourced>, null_safe: bool| {
@@ -44,8 +45,8 @@ pub(super) fn extract(
             op: BinaryOperator::And,
             right,
         } => {
-            extract(left, resolver, restricted, scope, out);
-            extract(right, resolver, restricted, scope, out);
+            extract(left, resolver, restricted, scope, positions, out);
+            extract(right, resolver, restricted, scope, positions, out);
         }
         Expr::BinaryOp {
             left,
@@ -70,7 +71,11 @@ pub(super) fn extract(
             expr,
             subquery,
             negated: false,
-        } => pin(expr, subquery_source(subquery, resolver, scope), false),
+        } => pin(
+            expr,
+            subquery_source(subquery, resolver, scope, positions),
+            false,
+        ),
         Expr::AnyOp {
             left,
             compare_op: BinaryOperator::Eq,
@@ -79,9 +84,11 @@ pub(super) fn extract(
         } => {
             if let Some((item, _)) = resolver.column(left) {
                 let source = match unwrap_expr(right) {
-                    Expr::Subquery(subquery) => subquery_source(subquery, resolver, scope),
+                    Expr::Subquery(subquery) => {
+                        subquery_source(subquery, resolver, scope, positions)
+                    }
                     other if constructor(other).is_some() => {
-                        finite_array(&constructor(other).unwrap().elem, item, resolver)
+                        finite_array(&constructor(other).unwrap().elem, item, resolver, positions)
                     }
                     // Retain stored-array syntax without crediting its owning row's bound.
                     other => resolver.stored_source(other).map(|mut sourced| {
@@ -105,17 +112,27 @@ pub(super) fn extract(
 }
 
 /// What a `LATERAL` source reads of the FROM items before it.
-pub(super) fn reads_items(subquery: &Query, items: &[SqlBoundItem], scope: &Scope) -> Reads {
-    Resolver::new(items, scope.names()).reads(subquery)
+pub(super) fn reads_items(
+    subquery: &Query,
+    items: &[SqlBoundItem],
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> Reads {
+    Resolver::new(items, scope.names(), positions).reads(subquery)
 }
 
 /// A subquery sizes the values it yields, unless it reads the row being checked: then every
 /// row can find itself among them, whatever the subquery's own bound. A bare column that only
 /// the catalog can place is kept with the pin.
-fn subquery_source(subquery: &Query, resolver: &Resolver, scope: &Scope) -> Option<Sourced> {
+fn subquery_source(
+    subquery: &Query,
+    resolver: &Resolver,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> Option<Sourced> {
     let reads = resolver.reads(subquery);
     (!reads.certain).then(|| Sourced {
-        source: SqlPinSource::Query(query::bound_query(subquery, scope)),
+        source: SqlPinSource::Query(query::bound_query(subquery, scope, positions)),
         reads: reads.bare,
     })
 }

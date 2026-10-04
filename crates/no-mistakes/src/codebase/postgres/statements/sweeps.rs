@@ -4,7 +4,7 @@ mod page;
 #[cfg(test)]
 mod tests;
 
-use super::limit::{is_limited, limit_site, Tokens};
+use super::limit::{limit_site, Tokens};
 use super::{walk_executed, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 use crate::codebase::postgres::idents::ident_key;
 use sqlparser::ast::{DataType, Query, Statement, Visit, Visitor};
@@ -17,8 +17,9 @@ pub(super) fn collect(
     tokens: &Tokens<'_>,
     statements: &[Statement],
     recovered_placeholder_positions: &[(u32, u32)],
+    embedded: bool,
 ) -> (Vec<SqlLimitFact>, Vec<SqlSweepFact>) {
-    let mut collector = Collector::new(tokens, recovered_placeholder_positions);
+    let mut collector = Collector::new(tokens, recovered_placeholder_positions, embedded);
     for statement in statements {
         let mut executed = Vec::new();
         walk_executed(statement, &mut executed);
@@ -68,10 +69,15 @@ struct Collector<'a, 'sql> {
     bodies: HashMap<*const Query, Vec<String>>,
     transparent_int4_casts: bool,
     recovered_placeholder_positions: &'a [(u32, u32)],
+    embedded: bool,
 }
 
 impl<'a, 'sql> Collector<'a, 'sql> {
-    fn new(tokens: &'a Tokens<'sql>, recovered_placeholder_positions: &'a [(u32, u32)]) -> Self {
+    fn new(
+        tokens: &'a Tokens<'sql>,
+        recovered_placeholder_positions: &'a [(u32, u32)],
+        embedded: bool,
+    ) -> Self {
         Self {
             limits: Vec::new(),
             sweeps: Vec::new(),
@@ -80,6 +86,7 @@ impl<'a, 'sql> Collector<'a, 'sql> {
             bodies: HashMap::new(),
             transparent_int4_casts: true,
             recovered_placeholder_positions,
+            embedded,
         }
     }
 
@@ -131,7 +138,10 @@ impl Visitor for Collector<'_, '_> {
                 value: site.value,
             });
         }
-        if is_limited(query) && !empty {
+        let positions = self
+            .embedded
+            .then_some(self.recovered_placeholder_positions);
+        if super::limit::is_limited_at(query, positions) && !empty {
             let visible = self.scopes.last().map_or(&[][..], Vec::as_slice);
             if let Some(sweep) = page::sweep(
                 query,

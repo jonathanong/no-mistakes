@@ -28,6 +28,7 @@ struct Ctx<'a> {
     index: usize,
     from_items: usize,
     all_base: bool,
+    positions: Option<&'a [(u32, u32)]>,
 }
 
 pub(super) fn constrain(
@@ -35,6 +36,7 @@ pub(super) fn constrain(
     selection: Option<&Expr>,
     from_items: usize,
     all_base: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
 ) -> Vec<(Vec<String>, Vec<String>)> {
     instances
         .iter()
@@ -45,6 +47,7 @@ pub(super) fn constrain(
                 index,
                 from_items,
                 all_base,
+                positions,
             };
             let mut cols = Cols::default();
             if instance.joined {
@@ -142,6 +145,13 @@ struct Hit {
 
 fn column_hit(expr: &Expr, ctx: &Ctx<'_>) -> Option<Hit> {
     match unwrap_expr(expr) {
+        Expr::Identifier(ident)
+            if ctx.positions.is_some_and(|positions| {
+                super::super::value::is_placeholder_ident_at(ident, Some(positions))
+            }) =>
+        {
+            None
+        }
         Expr::Identifier(ident) => {
             let column = crate::codebase::postgres::idents::ident_key(ident);
             if ctx.from_items <= 1 {

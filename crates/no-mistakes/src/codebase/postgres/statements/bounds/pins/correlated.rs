@@ -4,7 +4,7 @@ mod scalar_arrays;
 mod scope;
 use scope::Scope;
 mod sources;
-use super::super::super::value::is_placeholder_ident;
+use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBareRead;
@@ -38,9 +38,11 @@ pub(in super::super) fn reads_outer_rows(
     query: &Query,
     outer: &BTreeSet<String>,
     ctes: &BTreeMap<String, Option<BTreeSet<String>>>,
+    positions: PlaceholderPositions<'_>,
 ) -> Reads {
     let mut scan = Scan {
         ctes: ctes.clone(),
+        positions: positions.map(<[(u32, u32)]>::to_vec),
         ..Scan::default()
     };
     let _ = query.visit(&mut scan);
@@ -86,6 +88,7 @@ struct Scan {
     /// Qualifiers and bare reads that no level of the query resolved.
     unresolved: Vec<String>,
     reads: Vec<SqlBareRead>,
+    positions: Option<Vec<(u32, u32)>>,
 }
 
 impl Scan {
@@ -106,7 +109,7 @@ impl Visitor for Scan {
                 .remove(&(query as *const Query as usize)),
             ..Frame::default()
         };
-        for name in output_names(query) {
+        for name in output_names(query, self.positions.as_deref()) {
             *frame.labels.entry(name).or_default() += 1;
         }
         self.prepare_ctes(query);
@@ -196,7 +199,9 @@ impl Visitor for Scan {
                         .join("."),
                 );
             }
-            Expr::Identifier(ident) if !is_placeholder_ident(&ident.value) => {
+            Expr::Identifier(ident)
+                if !is_placeholder_ident_at(ident, self.positions.as_deref()) =>
+            {
                 *frame.bare.entry(ident_key(ident)).or_default() += 1;
             }
             _ => {}

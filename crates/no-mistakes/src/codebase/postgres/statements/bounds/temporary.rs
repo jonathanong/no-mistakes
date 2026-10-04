@@ -24,11 +24,12 @@ impl TemporaryRelations {
         statement: &Statement,
         facts: &mut [SqlBoundFact],
         scope: &super::Scope,
+        positions: super::super::value::PlaceholderPositions<'_>,
     ) {
         let mut dependencies = BTreeSet::new();
         if let Statement::CreateView(view) = statement {
             // View declarations have no executed bound fact; collect their source fact here once.
-            let declaration = super::query::bound_query(&view.query, scope);
+            let declaration = super::query::bound_query(&view.query, scope, positions);
             self.state.dependencies(&declaration, &mut dependencies);
             // The bound projection can omit relations in expressions that do not
             // constrain rows. They still determine a view's lifetime.

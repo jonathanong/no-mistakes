@@ -14,7 +14,7 @@ fn long_mixed_union_chain_checks_each_set_node_once() {
         panic!("expected one query");
     };
     let mut visits = 0;
-    let bound = bound_body_observed(query, &Scope::default(), |blocking| {
+    let bound = bound_body_observed(query, &Scope::default(), None, |blocking| {
         visits = blocking.visits;
     });
     assert!(!bound.capped, "the blocking first arm must remain uncapped");

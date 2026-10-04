@@ -6,10 +6,13 @@ pub(super) fn walk_factor(
     factor: &TableFactor,
     ctes: &[String],
     selects: &mut Vec<SqlSelectFact>,
+    positions: super::super::value::PlaceholderPositions<'_>,
 ) {
     match factor {
         TableFactor::Derived { subquery, .. } => {
-            super::super::select::collect_query(sql, subquery, ctes, false, false, selects);
+            super::super::select::collect_query_at(
+                sql, subquery, ctes, false, false, positions, selects,
+            );
         }
         TableFactor::NestedJoin {
             table_with_joins, ..
@@ -19,37 +22,55 @@ pub(super) fn walk_factor(
             None,
             ctes,
             selects,
+            positions,
         ),
         TableFactor::UNNEST { array_exprs, .. } => {
-            walk_table_exprs(sql, array_exprs, ctes, selects);
+            walk_table_exprs(sql, array_exprs, ctes, positions, selects);
         }
         TableFactor::Table {
             args: Some(args), ..
         } => {
             crate::codebase::postgres::idents::visit_function_args(&args.args, &mut |expr| {
-                record_table_expr(sql, expr, ctes, selects);
+                record_table_expr(sql, expr, ctes, positions, selects);
             });
         }
         _ => {}
     }
 }
 
-fn walk_table_exprs(sql: &str, exprs: &[Expr], ctes: &[String], selects: &mut Vec<SqlSelectFact>) {
+fn walk_table_exprs(
+    sql: &str,
+    exprs: &[Expr],
+    ctes: &[String],
+    positions: super::super::value::PlaceholderPositions<'_>,
+    selects: &mut Vec<SqlSelectFact>,
+) {
     for expr in exprs {
-        record_table_expr(sql, expr, ctes, selects);
+        record_table_expr(sql, expr, ctes, positions, selects);
     }
 }
 
-fn record_table_expr(sql: &str, expr: &Expr, ctes: &[String], selects: &mut Vec<SqlSelectFact>) {
+fn record_table_expr(
+    sql: &str,
+    expr: &Expr,
+    ctes: &[String],
+    positions: super::super::value::PlaceholderPositions<'_>,
+    selects: &mut Vec<SqlSelectFact>,
+) {
     super::super::select::collect_predicate_shapes(expr, selects);
-    collect_exists_facts(sql, expr, selects);
-    super::super::select::walk_expr(sql, expr, ctes, false, selects);
+    collect_exists_facts(sql, expr, positions, selects);
+    super::super::select::walk_expr_at(sql, expr, ctes, false, positions, selects);
 }
 
 /// Record `EXISTS (... UNION ...)` wrappers that sit outside a SELECT.
-pub(super) fn collect_exists_facts(sql: &str, expr: &Expr, selects: &mut Vec<SqlSelectFact>) {
+pub(super) fn collect_exists_facts(
+    sql: &str,
+    expr: &Expr,
+    positions: super::super::value::PlaceholderPositions<'_>,
+    selects: &mut Vec<SqlSelectFact>,
+) {
     let mut exists_set_operations = Vec::new();
-    super::super::exists::collect_exists(sql, Some(expr), &mut exists_set_operations);
+    super::super::exists::collect_exists_at(sql, Some(expr), positions, &mut exists_set_operations);
     if exists_set_operations.is_empty() {
         return;
     }

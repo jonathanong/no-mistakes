@@ -1,49 +1,66 @@
 use super::super::SqlSelectFact;
 use sqlparser::ast::{Expr, GroupByExpr, Select, SelectItem};
 
-pub(super) fn collect(
+pub(super) fn collect_at(
     sql: &str,
     select: &Select,
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
-    walk_optional(sql, select.selection.as_ref(), ctes, in_insert_select, out);
-    walk_optional(sql, select.having.as_ref(), ctes, in_insert_select, out);
+    walk_optional_at(
+        sql,
+        select.selection.as_ref(),
+        ctes,
+        in_insert_select,
+        positions,
+        out,
+    );
+    walk_optional_at(
+        sql,
+        select.having.as_ref(),
+        ctes,
+        in_insert_select,
+        positions,
+        out,
+    );
     for item in &select.projection {
         if let SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } = item {
-            walk_expr(sql, expr, ctes, in_insert_select, out);
+            walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
         }
     }
     if let GroupByExpr::Expressions(exprs, _) = &select.group_by {
         for expr in exprs {
-            walk_expr(sql, expr, ctes, in_insert_select, out);
+            walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
         }
     }
     for table in &select.from {
         for join in &table.joins {
             if let Some(expr) = super::join_expr(&join.join_operator) {
-                walk_expr(sql, expr, ctes, in_insert_select, out);
+                walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
             }
         }
     }
 }
 
-pub(super) fn walk_expr(
+pub(in crate::codebase::postgres::statements) fn walk_expr_at(
     sql: &str,
     expr: &Expr,
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
-    walk_node(sql, expr, ctes, in_insert_select, out);
+    walk_node_at(sql, expr, ctes, in_insert_select, positions, out);
 }
 
-pub(in crate::codebase::postgres::statements) fn walk_node<T: sqlparser::ast::Visit>(
+pub(in crate::codebase::postgres::statements) fn walk_node_at<T: sqlparser::ast::Visit>(
     sql: &str,
     node: &T,
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     let _ = node.visit(&mut Queries {
@@ -53,6 +70,7 @@ pub(in crate::codebase::postgres::statements) fn walk_node<T: sqlparser::ast::Vi
         out,
         depth: 0,
         in_exists: false,
+        positions,
     });
 }
 
@@ -63,6 +81,7 @@ struct Queries<'a> {
     out: &'a mut Vec<SqlSelectFact>,
     depth: usize,
     in_exists: bool,
+    positions: super::super::value::PlaceholderPositions<'a>,
 }
 
 impl sqlparser::ast::Visitor for Queries<'_> {
@@ -75,12 +94,13 @@ impl sqlparser::ast::Visitor for Queries<'_> {
     }
     fn pre_visit_query(&mut self, query: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
         if self.depth == 0 {
-            super::collect_query(
+            super::collect_query_at(
                 self.sql,
                 query,
                 self.ctes,
                 self.in_insert_select,
                 self.in_exists,
+                self.positions,
                 self.out,
             );
         }
@@ -93,11 +113,12 @@ impl sqlparser::ast::Visitor for Queries<'_> {
     }
 }
 
-pub(super) fn collect_query_expressions(
+pub(super) fn collect_query_expressions_at(
     sql: &str,
     query: &sqlparser::ast::Query,
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     use sqlparser::ast::Visit;
@@ -108,20 +129,22 @@ pub(super) fn collect_query_expressions(
         out,
         depth: 0,
         in_exists: false,
+        positions,
     };
     let _ = query.order_by.visit(&mut visitor);
     let _ = query.limit_clause.visit(&mut visitor);
     let _ = query.fetch.visit(&mut visitor);
 }
 
-fn walk_optional(
+fn walk_optional_at(
     sql: &str,
     expr: Option<&Expr>,
     ctes: &[String],
     in_insert_select: bool,
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     if let Some(expr) = expr {
-        walk_expr(sql, expr, ctes, in_insert_select, out);
+        walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
     }
 }

@@ -1,4 +1,4 @@
-use super::is_placeholder_ident;
+use super::super::super::super::value::is_placeholder_ident_at;
 use crate::codebase::postgres::idents::ident_key;
 use sqlparser::ast::{
     Expr, GroupByExpr, ObjectName, ObjectNamePart, OrderByKind, Query, SelectItem, SetExpr,
@@ -79,7 +79,7 @@ pub(super) fn function_columns(
 
 /// The names written alone as an `ORDER BY` or `GROUP BY` item: PostgreSQL reads each as an
 /// output column's name before it reads it as a column of a relation.
-pub(super) fn output_names(query: &Query) -> Vec<String> {
+pub(super) fn output_names(query: &Query, positions: Option<&[(u32, u32)]>) -> Vec<String> {
     let mut items: Vec<&Expr> = Vec::new();
     if let Some(order) = &query.order_by {
         if let OrderByKind::Expressions(expressions) = &order.kind {
@@ -94,7 +94,7 @@ pub(super) fn output_names(query: &Query) -> Vec<String> {
     items
         .into_iter()
         .filter_map(|item| match item {
-            Expr::Identifier(ident) if !is_placeholder_ident(&ident.value) => {
+            Expr::Identifier(ident) if !is_placeholder_ident_at(ident, positions) => {
                 Some(ident_key(ident))
             }
             _ => None,

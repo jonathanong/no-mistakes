@@ -1,7 +1,9 @@
 use super::tokens::Tokens;
 use super::*;
+mod inserts;
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
-use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
+use inserts::collect_query_inserts;
+use sqlparser::ast::{Spanned, Statement};
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
@@ -13,7 +15,7 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
     sql: &str,
     collect_bounds: bool,
 ) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_recovered_placeholders(sql, collect_bounds, &[])
+    extract_sql_statement_facts_with_placeholder_positions(sql, collect_bounds, None)
 }
 
 /// Extract facts while identifying the SQL-local positions of recovered interpolation markers.
@@ -21,6 +23,18 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
     sql: &str,
     collect_bounds: bool,
     recovered_placeholder_positions: &[(u32, u32)],
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        Some(recovered_placeholder_positions),
+    )
+}
+
+fn extract_sql_statement_facts_with_placeholder_positions(
+    sql: &str,
+    collect_bounds: bool,
+    placeholder_positions: super::value::PlaceholderPositions<'_>,
 ) -> SqlStatementFileFacts {
     let parsed = parse_postgres_sql(sql);
     let parse_failed = parsed.is_err();
@@ -30,7 +44,7 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         &statements,
         parse_failed,
         collect_bounds,
-        recovered_placeholder_positions,
+        placeholder_positions,
     )
 }
 
@@ -39,7 +53,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     statements: &[Statement],
     parse_failed: bool,
     collect_bounds: bool,
-    recovered_placeholder_positions: &[(u32, u32)],
+    placeholder_positions: super::value::PlaceholderPositions<'_>,
 ) -> SqlStatementFileFacts {
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
@@ -76,17 +90,26 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         wrappers::walk_executed(statement, &mut executed);
         for statement in executed {
             writes::collect(statement, &mut writes);
-            collect_one(sql, statement, &mut out);
+            collect_one(sql, statement, placeholder_positions, &mut out);
             if let Some(scope) = &scope {
                 let first_bound = bounds.len();
-                bounds::collect(statement, scope, &mut bounds);
-                temporary_relations.apply(statement, &mut bounds[first_bound..], scope);
+                bounds::collect(statement, scope, placeholder_positions, &mut bounds);
+                temporary_relations.apply(
+                    statement,
+                    &mut bounds[first_bound..],
+                    scope,
+                    placeholder_positions,
+                );
             }
         }
     }
     dedupe::exists_set_operations(&mut selects);
-    let (limit_uses, sweeps) =
-        sweeps::collect(&tokens, statements, recovered_placeholder_positions);
+    let (limit_uses, sweeps) = sweeps::collect(
+        &tokens,
+        statements,
+        placeholder_positions.unwrap_or_default(),
+        placeholder_positions.is_some(),
+    );
     SqlStatementFileFacts {
         path: Default::default(),
         writes,
@@ -120,14 +143,27 @@ struct FactOut<'a> {
     mutation_column_uses: &'a mut Vec<SqlColumnUseFact>,
 }
 
-fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
+fn collect_one(
+    sql: &str,
+    statement: &Statement,
+    placeholder_positions: super::value::PlaceholderPositions<'_>,
+    out: &mut FactOut<'_>,
+) {
     if let Statement::Insert(insert) = statement {
         *out.insert_n += 1;
-        if let Some(fact) = insert::from_statement(sql, statement, *out.insert_n) {
+        if let Some(fact) =
+            insert::from_statement_at(sql, statement, *out.insert_n, placeholder_positions)
+        {
             out.inserts.push(fact);
         }
         if let Some(source) = insert.source.as_deref() {
-            collect_query_inserts(sql, source, out.insert_n, out.inserts);
+            collect_query_inserts(
+                sql,
+                source,
+                out.insert_n,
+                out.inserts,
+                placeholder_positions,
+            );
         }
     }
     if matches!(statement, Statement::CreateTrigger(_)) {
@@ -137,9 +173,9 @@ fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
         }
     }
     if let Statement::Query(query) = statement {
-        collect_query_inserts(sql, query, out.insert_n, out.inserts);
+        collect_query_inserts(sql, query, out.insert_n, out.inserts, placeholder_positions);
     }
-    select::collect(sql, statement, out.selects);
+    select::collect_with_placeholder_positions(sql, statement, placeholder_positions, out.selects);
     out.returning_stars
         .extend(select::returning_stars(sql, statement));
     mutations::collect(
@@ -149,45 +185,8 @@ fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
         out.deletes,
         out.selects,
         out.mutation_column_uses,
+        placeholder_positions,
     );
-}
-
-fn collect_query_inserts(
-    sql: &str,
-    query: &Query,
-    insert_n: &mut usize,
-    inserts: &mut Vec<SqlInsertFact>,
-) {
-    if let Some(with) = &query.with {
-        for cte in &with.cte_tables {
-            collect_query_inserts(sql, &cte.query, insert_n, inserts);
-        }
-    }
-    collect_set_inserts(sql, &query.body, insert_n, inserts);
-}
-
-pub(super) fn collect_set_inserts(
-    sql: &str,
-    expr: &SetExpr,
-    insert_n: &mut usize,
-    inserts: &mut Vec<SqlInsertFact>,
-) {
-    match expr {
-        SetExpr::Insert(statement) => {
-            if matches!(statement, Statement::Insert(_)) {
-                *insert_n += 1;
-                if let Some(fact) = insert::from_statement(sql, statement, *insert_n) {
-                    inserts.push(fact);
-                }
-            }
-        }
-        SetExpr::Query(query) => collect_query_inserts(sql, query, insert_n, inserts),
-        SetExpr::SetOperation { left, right, .. } => {
-            collect_set_inserts(sql, left, insert_n, inserts);
-            collect_set_inserts(sql, right, insert_n, inserts);
-        }
-        _ => {}
-    }
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {

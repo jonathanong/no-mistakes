@@ -38,7 +38,12 @@ impl<'a> Using<'a> {
     }
 
     /// Each restricted base table is pinned on the columns to the other side.
-    pub(super) fn pins(&self, resolver: &Resolver, out: &mut Vec<(usize, SqlBoundPin)>) {
+    pub(super) fn pins(
+        &self,
+        resolver: &Resolver,
+        _positions: super::super::value::PlaceholderPositions<'_>,
+        out: &mut Vec<(usize, SqlBoundPin)>,
+    ) {
         for (pinned, other) in [(self.left, self.right), (self.right, self.left)] {
             if !self.restricted.contains(&pinned) || !resolver.is_table(pinned) {
                 continue;

@@ -10,6 +10,7 @@ use sqlparser::ast::{Query, Spanned};
 pub(in crate::codebase::postgres::statements::bounds) fn with_scope(
     query: &Query,
     outer: &Scope,
+    positions: super::super::super::value::PlaceholderPositions<'_>,
 ) -> Scope {
     let mut scope = outer.clone();
     let Some(with) = &query.with else {
@@ -41,7 +42,7 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope(
                 // bounds nothing joined to it.
                 inner.insert(name.clone(), opaque(start(cte.query.span())));
             }
-            let bound = bound_query(&cte.query, &inner);
+            let bound = bound_query(&cte.query, &inner, positions);
             // Each reference clones the CTE's bound, so a chain of CTEs that each read the one
             // before twice grows exponentially. Compact oversized bounds conservatively,
             // retaining the distinct uncapped relations instead of hiding their reads.
