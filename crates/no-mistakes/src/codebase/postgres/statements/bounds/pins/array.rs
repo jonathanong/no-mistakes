@@ -131,7 +131,7 @@ pub(super) fn finite_array(
             }
             Expr::Function(function) => {
                 for expr in scalar::arguments(function)? {
-                    columns(expr, resolver, out, indexed, types, caller_only)?;
+                    columns(expr, resolver, out, indexed, types, caller_only, positions)?;
                 }
                 Some(())
             }
