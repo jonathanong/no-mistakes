@@ -39,8 +39,9 @@ pub(super) fn mutation_column_uses(
     tables: &[sqlparser::ast::TableWithJoins],
     selection: Option<&sqlparser::ast::Expr>,
     ctes: &[String],
+    positions: super::value::PlaceholderPositions<'_>,
 ) -> Vec<super::SqlColumnUseFact> {
-    uses::collect_mutation(tables, selection, ctes)
+    uses::collect_mutation(tables, selection, ctes, positions)
 }
 
 pub(super) fn returning_stars(sql: &str, statement: &Statement) -> Vec<SqlStarProjectionFact> {

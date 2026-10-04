@@ -53,6 +53,7 @@ impl Collector<'_, '_, '_> {
                     &tables,
                     update.selection.as_ref(),
                     ctes,
+                    self.positions,
                 ));
                 push_group(
                     self.sql,
@@ -97,6 +98,7 @@ impl Collector<'_, '_, '_> {
                     &tables,
                     delete.selection.as_ref(),
                     ctes,
+                    self.positions,
                 ));
                 push_group(
                     self.sql,

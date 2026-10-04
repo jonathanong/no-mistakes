@@ -4,7 +4,10 @@ use sqlparser::ast::{
     BinaryOperator, Expr, OrderByExpr, Select, SelectItem, Spanned, TableWithJoins,
 };
 
+mod columns;
 mod scope;
+use super::super::value::PlaceholderPositions;
+use columns::{bare, resolve};
 use scope::{base_relations, push_factor, BaseRel};
 
 pub(super) fn collect(
@@ -12,11 +15,19 @@ pub(super) fn collect(
     order: &[OrderByExpr],
     ctes: &[String],
     line: usize,
+    positions: PlaceholderPositions<'_>,
 ) -> Vec<SqlColumnUseFact> {
     let rels = base_relations(&select.from, ctes);
     let mut out = Vec::new();
     if let Some(selection) = &select.selection {
-        walk(selection, SqlColumnClause::Where, &rels, line, &mut out);
+        walk(
+            selection,
+            SqlColumnClause::Where,
+            &rels,
+            line,
+            &mut out,
+            positions,
+        );
     }
     for table in &select.from {
         let mut visible = Vec::new();
@@ -24,13 +35,20 @@ pub(super) fn collect(
         for join in &table.joins {
             push_factor(&join.relation, ctes, &mut visible);
             if let Some(expr) = super::join_expr(&join.join_operator) {
-                walk(expr, SqlColumnClause::Join, &visible, line, &mut out);
+                walk(
+                    expr,
+                    SqlColumnClause::Join,
+                    &visible,
+                    line,
+                    &mut out,
+                    positions,
+                );
             }
         }
     }
     for item in order {
         let expr = match peel(&item.expr) {
-            Expr::Identifier(alias) => select
+            Expr::Identifier(alias) if !columns::is_recovered_bind(alias, positions) => select
                 .projection
                 .iter()
                 .find_map(|projection| {
@@ -44,7 +62,14 @@ pub(super) fn collect(
             _ => &item.expr,
         };
         let start = out.len();
-        record(expr, SqlColumnClause::OrderBy, &rels, line, &mut out);
+        record(
+            expr,
+            SqlColumnClause::OrderBy,
+            &rels,
+            line,
+            &mut out,
+            positions,
+        );
         for use_ in &mut out[start..] {
             use_.line = expression_line(&item.expr, line);
         }
@@ -56,11 +81,12 @@ pub(super) fn collect_mutation(
     tables: &[TableWithJoins],
     selection: Option<&Expr>,
     ctes: &[String],
+    positions: PlaceholderPositions<'_>,
 ) -> Vec<SqlColumnUseFact> {
     let rels = base_relations(tables, ctes);
     let mut out = Vec::new();
     if let Some(expr) = selection {
-        walk(expr, SqlColumnClause::Where, &rels, 1, &mut out);
+        walk(expr, SqlColumnClause::Where, &rels, 1, &mut out, positions);
     }
     for table in tables {
         let mut visible = Vec::new();
@@ -68,7 +94,14 @@ pub(super) fn collect_mutation(
         for join in &table.joins {
             push_factor(&join.relation, ctes, &mut visible);
             if let Some(expr) = super::join_expr(&join.join_operator) {
-                walk(expr, SqlColumnClause::Join, &visible, 1, &mut out);
+                walk(
+                    expr,
+                    SqlColumnClause::Join,
+                    &visible,
+                    1,
+                    &mut out,
+                    positions,
+                );
             }
         }
     }
@@ -81,25 +114,26 @@ fn walk(
     rels: &[BaseRel],
     line: usize,
     out: &mut Vec<SqlColumnUseFact>,
+    positions: PlaceholderPositions<'_>,
 ) {
     let expr = peel(expr);
     match expr {
         Expr::BinaryOp { left, op, right } if is_logic(op) => {
-            walk(left, clause, rels, line, out);
-            walk(right, clause, rels, line, out);
+            walk(left, clause, rels, line, out, positions);
+            walk(right, clause, rels, line, out, positions);
         }
         Expr::BinaryOp { left, op, right } if is_comparison(op) => {
-            record(left, clause, rels, line, out);
-            record(right, clause, rels, line, out);
+            record(left, clause, rels, line, out, positions);
+            record(right, clause, rels, line, out, positions);
         }
-        Expr::Between { expr, .. } => record(expr, clause, rels, line, out),
+        Expr::Between { expr, .. } => record(expr, clause, rels, line, out, positions),
         Expr::InList { expr, .. } | Expr::InSubquery { expr, .. } => {
-            record(expr, clause, rels, line, out);
+            record(expr, clause, rels, line, out, positions);
         }
         Expr::UnaryOp {
             op: sqlparser::ast::UnaryOperator::Not,
             expr,
-        } => walk(expr, clause, rels, line, out),
+        } => walk(expr, clause, rels, line, out, positions),
         _ => {}
     }
 }
@@ -110,8 +144,9 @@ fn record(
     rels: &[BaseRel],
     line: usize,
     out: &mut Vec<SqlColumnUseFact>,
+    positions: PlaceholderPositions<'_>,
 ) {
-    let Some((qualifier, column)) = bare(expr) else {
+    let Some((qualifier, column)) = bare(expr, positions) else {
         return;
     };
     let Some(table) = resolve(rels, qualifier.as_deref()) else {
@@ -125,40 +160,6 @@ fn record(
         clause,
         line: expression_line(expr, line),
     });
-}
-
-fn bare(expr: &Expr) -> Option<(Option<String>, String)> {
-    match peel(expr) {
-        Expr::Identifier(ident) => Some((None, ident_key(ident))),
-        Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-            let column = ident_key(parts.last()?);
-            let qualifier = parts[..parts.len() - 1]
-                .iter()
-                .map(ident_key)
-                .collect::<Vec<_>>()
-                .join(".");
-            Some((Some(qualifier), column))
-        }
-        _ => None,
-    }
-}
-
-fn resolve(rels: &[BaseRel], qualifier: Option<&str>) -> Option<String> {
-    let Some(qualifier) = qualifier else {
-        return if rels.len() == 1 && !rels[0].unknown {
-            Some(rels[0].table.clone())
-        } else {
-            Some(String::new())
-        };
-    };
-    rels.iter()
-        .find(|rel| rel.alias.as_deref() == Some(qualifier))
-        .or_else(|| {
-            rels.iter().find(|rel| {
-                rel.table == qualifier || rel.table.rsplit('.').next() == Some(qualifier)
-            })
-        })
-        .map(|rel| rel.table.clone())
 }
 
 fn peel(expr: &Expr) -> &Expr {

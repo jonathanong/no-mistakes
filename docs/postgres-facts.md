@@ -271,7 +271,10 @@ standalone SQL without embedded interpolation provenance.
   `column_uses` records bare column references from comparisons in WHERE and
   JOIN ON, and from ORDER BY. An empty `table` means the name was unqualified
   across more than one base relation. `postgres-generated-column-predicates`
-  reads these facts together with migration schema facts.
+  reads these facts together with migration schema facts. Recovered embedded binds
+  are omitted using their SQL-local source positions before resolving ORDER BY
+  projection aliases. Literal and quoted marker-shaped identifiers remain ordinary
+  columns, including in standalone SQL.
 - `CREATE TRIGGER` table, function, period, row/statement, and events
 
 Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`

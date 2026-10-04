@@ -141,7 +141,7 @@ impl Collector<'_, '_, '_> {
         } else {
             stars::collect(select, ctes, line)
         };
-        let column_uses = uses::collect(select, order, ctes, line);
+        let column_uses = uses::collect(select, order, ctes, line, positions);
         if tables.is_empty()
             && exists_set_operations.is_empty()
             && relations.is_empty()
