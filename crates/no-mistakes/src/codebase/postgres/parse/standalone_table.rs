@@ -107,7 +107,8 @@ fn starts_table_query(tokens: &[TokenWithSpan], at: usize) -> bool {
                     | Keyword::ORDER
                     | Keyword::LIMIT
                     | Keyword::OFFSET
-                    | Keyword::FETCH,
+                    | Keyword::FETCH
+                    | Keyword::FOR,
                 ..
             }))
     )

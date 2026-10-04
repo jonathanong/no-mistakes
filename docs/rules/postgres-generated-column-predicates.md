@@ -41,6 +41,9 @@ SELECT-list use, `IS NULL` / `IS NOT NULL`, a column wrapped in a function, or
 `GROUP BY`. An unqualified name that matches more than one joined relation is
 not reported.
 
+A standalone `TABLE orders ORDER BY created_at` is a query over `orders`, so
+its ordering of a generated column is checked like a SELECT query.
+
 With no options, the rule still tracks `uuid_extract_timestamp` of a
 single-column primary key and checks `where`, `join`, and `order-by`. It
 reports nothing until schema SQL defines such a column and a query uses it.

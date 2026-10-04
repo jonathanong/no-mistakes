@@ -81,3 +81,13 @@ fn repeated_standalone_table_facts_keep_distinct_lines() {
         [2, 3]
     );
 }
+
+#[test]
+fn standalone_table_locking_clauses_remain_queries() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/standalone-table-locking.sql"
+    ));
+    assert!(!super::extract_sql_statement_facts(sql).parse_failed);
+    assert_eq!(shape(sql), ["select: accounts", "select: accounts"]);
+}
