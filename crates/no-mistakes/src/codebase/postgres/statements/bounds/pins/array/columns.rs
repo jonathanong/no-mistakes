@@ -1,9 +1,10 @@
 use super::super::Resolver;
-use super::{
-    constructor, fixed_boolean::fixed_scalar_boolean, indexed_base, leaves::numeric_literal, scalar,
-};
+use super::{fixed_boolean::fixed_scalar_boolean, indexed_base, leaves::numeric_literal, scalar};
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, unwrap_expr};
 use sqlparser::ast::{DataType, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
+
+mod casts;
+mod wrappers;
 
 pub(super) fn collect(
     expr: &Expr,
@@ -15,6 +16,15 @@ pub(super) fn collect(
     positions: super::super::super::super::value::PlaceholderPositions<'_>,
 ) -> Option<()> {
     match unwrap_expr(expr) {
+        Expr::CompoundFieldAccess { root, access_chain } if out.is_none() => wrappers::collect(
+            root,
+            access_chain,
+            resolver,
+            indexed,
+            types,
+            caller_only,
+            positions,
+        ),
         Expr::Value(_) | Expr::Interval(_) => Some(()),
         expr if fixed_scalar_boolean(expr) => Some(()),
         Expr::TypedString(literal) if !matches!(literal.data_type, DataType::Array(_)) => {
@@ -46,71 +56,16 @@ pub(super) fn collect(
             Some(())
         }
         Expr::Cast {
-            expr,
-            data_type: DataType::Array(_),
-            ..
-        } => {
-            // A scalar text column can decode an arbitrarily large array.
-            if let Some(array) = constructor(expr) {
-                for element in &array.elem {
-                    collect(
-                        element,
-                        resolver,
-                        out.as_deref_mut(),
-                        indexed,
-                        types,
-                        caller_only,
-                        positions,
-                    )?;
-                }
-            } else {
-                collect(
-                    expr,
-                    resolver,
-                    out.as_deref_mut(),
-                    indexed,
-                    types,
-                    true,
-                    positions,
-                )?;
-            }
-            Some(())
-        }
-        Expr::Cast {
-            expr,
-            data_type: data_type @ DataType::Custom(_, _),
-            ..
-        } => {
-            types.push(data_type.to_string());
-            if caller_only {
-                collect(
-                    expr,
-                    resolver,
-                    out.as_deref_mut(),
-                    indexed,
-                    types,
-                    true,
-                    positions,
-                )?;
-            }
-            Some(())
-        }
-        Expr::Cast {
             expr, data_type, ..
-        } if !matches!(data_type, DataType::Array(_) | DataType::Custom(_, _)) => {
-            if caller_only {
-                collect(
-                    expr,
-                    resolver,
-                    out.as_deref_mut(),
-                    indexed,
-                    types,
-                    true,
-                    positions,
-                )?;
-            }
-            Some(())
-        }
+        } => casts::collect(
+            (expr, data_type),
+            out,
+            resolver,
+            indexed,
+            types,
+            caller_only,
+            positions,
+        ),
         Expr::Function(function) => function_columns(
             function,
             resolver,

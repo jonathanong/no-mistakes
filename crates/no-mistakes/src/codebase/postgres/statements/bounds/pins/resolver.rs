@@ -145,7 +145,7 @@ impl Resolver {
             }
             Expr::Exists { .. } => {}
             Expr::CompoundFieldAccess { root, access_chain } => {
-                if let Some((base, indexes)) = super::array::indexed_base(root, access_chain) {
+                if let Some((base, indexes)) = super::array::argument_base(root, access_chain) {
                     self.refs(&base, found);
                     for index in indexes {
                         self.refs(index, found);
