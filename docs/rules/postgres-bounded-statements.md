@@ -35,6 +35,15 @@ materialized view and their temporary dependents; `RESTRICT` preserves their
 identities. Schema-qualified materialized-view names remain distinct from
 temporary namesakes.
 
+Permanent-only views and materialized views declared earlier in the same SQL source
+remain ordinary catalog relations. Their dependency records let a physical
+`DROP ... CASCADE` retire temporary views through several permanent intermediaries.
+`RESTRICT` and a drop of a differently qualified namesake leave those temporary
+identities intact; an unqualified view declaration has unknown schema ownership
+and is retired conservatively on a schema cascade.
+Schema renames update a declared permanent view's qualified identity and source
+edges before a later physical cascade.
+
 `DROP SCHEMA ... CASCADE` retires temporary views depending on qualified physical
 relations in that schema, including transitive temporary dependents. Exact decoded
 schema identifiers preserve quoted case and dots; unrelated schemas stay live.

@@ -67,18 +67,23 @@ impl TemporaryRelations {
                     }
                 }
             }
-            Statement::CreateView(view)
+            Statement::CreateView(view) => {
+                let name = sql_name(&view.name);
                 if view.temporary
                     || dependencies.iter().any(|dependency| match dependency {
                         Dependency::Temporary(name) => {
                             !dependencies.contains(&Dependency::Physical(vec![name.clone()]))
                         }
                         Dependency::Physical(_) => false,
-                    }) =>
-            {
-                self.state
-                    .relations
-                    .insert(state::key(&sql_name(&view.name)), dependencies);
+                    })
+                {
+                    self.state.relations.insert(state::key(&name), dependencies);
+                } else {
+                    self.state.physical_views.insert(
+                        crate::codebase::postgres::decoded_parts(&name),
+                        dependencies,
+                    );
+                }
             }
             Statement::Query(query) => {
                 if let Some(select) = first_select(&query.body) {

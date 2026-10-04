@@ -1,13 +1,13 @@
 //! Request-local SQL relation identities and dependency closure.
 mod names;
 mod ownership;
+mod physical;
 mod rename;
 mod schema;
 use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{
     SqlBoundItemKind, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
 };
-use names::names_match;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -19,6 +19,8 @@ pub(super) enum Dependency {
 #[derive(Clone)]
 pub(super) struct State {
     pub relations: BTreeMap<String, BTreeSet<Dependency>>,
+    // Permanent-only views are dependency nodes, never temporary identities.
+    pub physical_views: BTreeMap<Vec<String>, BTreeSet<Dependency>>,
     // A partition is owned by its parent even for DROP without CASCADE.
     pub partitions: BTreeMap<String, String>,
     pub partitioned: BTreeSet<String>,
@@ -31,6 +33,7 @@ impl Default for State {
     fn default() -> Self {
         Self {
             relations: BTreeMap::new(),
+            physical_views: BTreeMap::new(),
             partitions: BTreeMap::new(),
             partitioned: BTreeSet::new(),
             on_commit_drop: BTreeSet::new(),
@@ -97,18 +100,8 @@ impl State {
         if definite_temporary || self.possible_temporary(name).is_some() {
             removed.insert(key(name));
         }
-        if cascade && !definite_temporary {
-            let parts = decoded_parts(name);
-            removed.extend(
-                self.relations
-                    .iter()
-                    .filter(|(_, dependencies)| {
-                        dependencies.iter().any(|dependency| {
-                            matches!(dependency, Dependency::Physical(source) if names_match(source, &parts))
-                        })
-                    })
-                    .map(|(name, _)| name.clone()),
-            );
+        if !definite_temporary {
+            self.drop_physical(BTreeSet::from([decoded_parts(name)]), cascade);
         }
         self.remove(removed, cascade);
     }

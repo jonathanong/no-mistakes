@@ -18,6 +18,7 @@ mod compact_caller_arrays;
 mod materialized_drop;
 mod materialized_namesake;
 mod partitions;
+mod permanent_view_chain;
 mod physical_cascade;
 mod prepared;
 mod recursive_forward;
