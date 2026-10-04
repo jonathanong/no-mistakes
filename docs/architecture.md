@@ -449,7 +449,7 @@ That is a possible explanation, not a result of this local timing experiment.
 Use matching memory profiles and repeated controls before attributing an
 allocation change or choosing a code correction.
 
-<!-- cspell:ignore RUSTFLAGS flamegraph -->
+<!-- cspell:ignore RUSTFLAGS flamegraph taskset -->
 
 ### PostgreSQL finite-array allocation controls
 
@@ -470,10 +470,16 @@ full LTO and one code generation unit, no incremental compilation, and frame
 pointers. Both runs used two Rayon threads pinned to logical CPUs 22 and 23.
 [The probe source](performance/frontend-allocation-probe.rs) is a reproduction
 asset: copy it to `crates/no-mistakes/examples/allocation_probe_1327.rs` in an
-isolated checkout. Build with `cargo build --release -p no-mistakes
---features test-instrumentation --example allocation_probe_1327 --jobs 3`. Run
-the same source on both commits with `RUSTFLAGS='-C force-frame-pointers=yes'` and
-`RAYON_NUM_THREADS=2`; keep the thread count, affinity, and fixture identical.
+isolated checkout. Apply compiler flags during the build and thread settings
+when executing the resulting binary:
+
+```sh
+RUSTFLAGS='-C force-frame-pointers=yes' cargo build --release -p no-mistakes --features test-instrumentation --example allocation_probe_1327 --jobs 3
+RAYON_NUM_THREADS=2 taskset -c 22,23 target/release/examples/allocation_probe_1327
+```
+
+Build the same probe source on both commits. Keep the toolchain, thread count,
+affinity, and fixture identical; choose CPU indices available on your host.
 Remove the example and build artifacts after the paired experiment.
 
 The table reports median peak additional Rust heap bytes, with the observed
