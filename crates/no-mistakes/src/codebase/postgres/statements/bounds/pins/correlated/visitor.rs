@@ -80,7 +80,15 @@ impl Visitor for Scan {
                 .insert(&**subquery as *const Query as usize, scope);
         }
         if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
-            self.hidden_join_scopes.push(self.stack.len());
+            if let Some(frame) = self.stack.last_mut() {
+                self.join_scopes.push(JoinScope {
+                    outside: frame.scope.begin_join(),
+                    qualifiers: frame.qualifiers.len(),
+                    escaping_qualifiers: frame.escaping_qualifiers.len(),
+                    bare: frame.bare.clone(),
+                });
+            }
+            return ControlFlow::Continue(());
         }
         self.add_factor(factor);
         ControlFlow::Continue(())
@@ -88,7 +96,31 @@ impl Visitor for Scan {
 
     fn post_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
         if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
-            self.hidden_join_scopes.pop();
+            if let (Some(frame), Some(scope)) = (self.stack.last_mut(), self.join_scopes.pop()) {
+                // ON and LATERAL reads use the child namespace before the join alias hides it.
+                let internal = frame.qualifiers.split_off(scope.qualifiers);
+                frame.qualifiers.extend(
+                    internal
+                        .into_iter()
+                        .filter(|read| !frame.scope.relations.contains(&read.key)),
+                );
+                let escaping = frame
+                    .escaping_qualifiers
+                    .split_off(scope.escaping_qualifiers);
+                frame.escaping_qualifiers.extend(
+                    escaping
+                        .into_iter()
+                        .filter(|read| !frame.scope.relations.contains(&read.key)),
+                );
+                frame.bare.retain(|name, count| {
+                    if frame.scope.whole_rows.contains(name) {
+                        *count = scope.bare.get(name).copied().unwrap_or(0);
+                    }
+                    *count > 0
+                });
+                frame.scope.finish_join(scope.outside);
+                self.add_factor(factor);
+            }
         }
         ControlFlow::Continue(())
     }

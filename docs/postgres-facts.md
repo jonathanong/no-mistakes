@@ -368,7 +368,9 @@ several source operands maps each relation to the operand that wrote it. Its opt
 `alias` is normalized from SQL; for a base table without an alias it contains the table's
 bare name. `alias_explicit` distinguishes an alias written in SQL from that synthesized
 name. An explicit alias replaces the base relation's name for nested correlated scope
-resolution, even when the alias text matches the table's bare name.
+resolution, even when the alias text matches the table's bare name. A parenthesized
+join alias similarly projects only its own qualifier outward while preserving child
+names inside the join and physical child metadata for bare-column ownership.
 Subquery pins also retain `qualified_reads` when a qualified column did not match an inner
 relation name syntactically. Each read keeps its quoted SQL qualifier and the base table names
 in each inner scope. The rule uses the selected schema catalog to determine whether a

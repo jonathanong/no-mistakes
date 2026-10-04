@@ -34,6 +34,24 @@ impl<K: Eq + Hash> Names<K> {
     }
 }
 
+impl<K: Eq + Hash + Clone> Names<K> {
+    /// Isolate only the joined namespace; ordinary preceding-source snapshots stay shallow.
+    fn isolated(&self) -> Self {
+        let mut names = Self {
+            entries: None,
+            visible: 0,
+        };
+        if let Some(entries) = &self.entries {
+            for (name, order) in entries.borrow().iter() {
+                if *order < self.visible {
+                    names.insert(name.clone());
+                }
+            }
+        }
+        names
+    }
+}
+
 impl<K: Eq + Hash> Extend<K> for Names<K> {
     fn extend<T: IntoIterator<Item = K>>(&mut self, names: T) {
         for name in names {
@@ -81,10 +99,29 @@ pub(super) struct Scope {
 }
 
 impl Scope {
+    /// Child names remain visible to ON/LATERAL inside the join but cannot leak outside it.
+    pub(super) fn begin_join(&mut self) -> Self {
+        let outside = self.clone();
+        self.relations = self.relations.isolated();
+        self.whole_rows = self.whole_rows.isolated();
+        let mut qualified_tables = Tables::default();
+        for table in self.qualified_tables.visible() {
+            qualified_tables.push(table);
+        }
+        self.qualified_tables = qualified_tables;
+        outside
+    }
+
+    pub(super) fn finish_join(&mut self, outside: Self) {
+        self.relations = outside.relations;
+        self.whole_rows = outside.whole_rows;
+        self.qualified_tables = outside.qualified_tables;
+    }
+
     /// Keep physical ownership separate from names visible through SQL qualifiers.
-    pub(super) fn record_base_table(&mut self, table: String, aliased: bool, hidden_by_join: bool) {
+    pub(super) fn record_base_table(&mut self, table: String, aliased: bool) {
         self.tables.push(table.clone());
-        if !aliased && !hidden_by_join {
+        if !aliased {
             self.qualified_tables.push(table);
         }
     }
