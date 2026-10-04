@@ -379,7 +379,10 @@ bare name. `alias_explicit` distinguishes an alias written in SQL from that synt
 name. An explicit alias replaces the base relation's name for nested correlated scope
 resolution, even when the alias text matches the table's bare name. A parenthesized
 join alias similarly projects only its own qualifier outward while preserving child
-names inside the join and physical child metadata for bare-column ownership.
+names inside the join and physical child metadata for bare-column ownership. Internal
+`ON` reads retain the completed child namespace before the joined alias is exposed.
+`LATERAL` retains its preceding-source snapshot, so the joined alias or later children
+cannot retroactively hide its outward references.
 Subquery pins also retain `qualified_reads` when a qualified column did not match an inner
 relation name syntactically. Each read keeps its quoted SQL qualifier and the base table names
 in each inner scope. The rule uses the selected schema catalog to determine whether a

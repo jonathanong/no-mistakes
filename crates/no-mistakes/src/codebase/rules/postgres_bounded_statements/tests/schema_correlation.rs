@@ -60,3 +60,17 @@ fn hidden_join_two_part_qualifier_keeps_outer_write_unbounded() {
         ["accounts", "accounts", "accounts", "accounts", "accounts", "accounts", "accounts"]
     );
 }
+
+#[test]
+fn joined_aliases_do_not_shadow_earlier_internal_reads() {
+    let sql = std::fs::read_to_string(fixture_root().join("sql/joined-alias-timing.sql")).unwrap();
+    let expected = [true, false, true, false, true, true, true, false, true];
+    let queries: Vec<_> = sql
+        .lines()
+        .filter(|line| line.starts_with("DELETE"))
+        .collect();
+    assert_eq!(queries.len(), expected.len());
+    for (query, unbounded) in queries.into_iter().zip(expected) {
+        assert_eq!(!names(query).is_empty(), unbounded, "{query}");
+    }
+}
