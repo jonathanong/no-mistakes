@@ -6,6 +6,7 @@ use crate::codebase::postgres::statements::{
 mod array_review;
 mod compact_aliases;
 mod review;
+mod table_review;
 
 fn query(bound: &SqlBoundQuery) -> String {
     let items: Vec<String> = bound.items.iter().map(item).collect();
