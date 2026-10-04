@@ -24,6 +24,8 @@ pub(super) fn collect_program(
     };
     ddl::prepare_trigger_arguments(&mut prepared.tokens);
     let generated = super::generated::prepare(&mut prepared.tokens);
+    let fetch_expressions =
+        crate::codebase::postgres::parse::fetch_expression::prepare(&mut prepared.tokens);
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
@@ -38,6 +40,10 @@ pub(super) fn collect_program(
             parser
                 .parse_statement()
                 .map(|mut statement| {
+                    crate::codebase::postgres::parse::fetch_expression::restore(
+                        &mut statement,
+                        &fetch_expressions,
+                    );
                     super::generated::restore(
                         &mut statement,
                         &generated,
@@ -73,6 +79,11 @@ pub(super) fn collect_program(
         } else {
             parser.token_at(parser.index().saturating_sub(1)).span.end
         };
+        let end = crate::codebase::postgres::parse::fetch_expression::source_end(
+            &fetch_expressions,
+            start,
+            end,
+        );
         let Some(span) = locations.span(sqlparser::tokenizer::Span { start, end }) else {
             // Parser compatibility rewrites can introduce synthetic token positions.
             // Do not expose a fabricated source slice when their boundary is unmappable.

@@ -566,3 +566,8 @@ records that read-only evidence separately from key-eligible `Query` pins.
 Oversized CTE summaries and temporary-source shadowing preserve uncapped
 nested reads; capped inner queries retain their existing bounded behavior.
 Original source locations and normal `no-mistakes` suppression still apply.
+
+Parenthesized FETCH counts follow the same fixed-count rules as LIMIT. For example,
+`FETCH FIRST (COALESCE(NULL, 100)) ROWS ONLY` supplies a fixed cap, while an all-NULL
+count or a data-derived subquery does not. `WITH TIES` retains its existing
+conservative policy even when the count expression is fixed.

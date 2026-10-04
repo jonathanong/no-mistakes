@@ -62,3 +62,25 @@ test(
     );
   },
 );
+
+test(
+  "compiled source API preserves FETCH expressions and procedural source ownership",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const sql = fixture("fetch-no-delimiter.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements[0].sql, sql.slice(sql.indexOf("SELECT")));
+    assert.equal(facts.statements[0].span.end.offset, Buffer.byteLength(sql));
+    const nested = await api.parsePostgresSql({ sql: fixture("fetch-procedural.sql") });
+    assert.deepEqual(nested.diagnostics, []);
+    assert.equal(nested.statements[0].kind, "doBlock");
+    assert.equal(nested.statements[0].block.complete, true);
+    assert.deepEqual(nested.statements[0].block.diagnostics, []);
+    assert.match(
+      nested.statements[0].block.statements[0].view.query,
+      /FETCH FIRST \(COALESCE\(NULL, 100\)\) ROWS ONLY/,
+    );
+  },
+);

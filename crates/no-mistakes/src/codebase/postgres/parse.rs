@@ -6,6 +6,7 @@ use std::fmt;
 mod copy_data;
 mod derived_table;
 mod distinct_group;
+pub(super) mod fetch_expression;
 mod lenient;
 mod prepared;
 pub(crate) use lenient::LocatedStatement;

@@ -33,10 +33,13 @@ impl<'a> PreparedSql<'a> {
         let located = self.located().map_err(Clone::clone)?;
         let mut tokens = super::radix_numbers::repair(located).unwrap_or_else(|| located.clone());
         normalize_table_queries(&mut tokens);
-        Parser::new(&PostgreSqlDialect {})
+        let fetch = super::fetch_expression::prepare(&mut tokens);
+        let mut statements = Parser::new(&PostgreSqlDialect {})
             .with_tokens_with_locations(tokens)
             .parse_statements()
-            .map_err(PostgresParseError::from)
+            .map_err(PostgresParseError::from)?;
+        super::fetch_expression::restore(&mut statements, &fetch);
+        Ok(statements)
     }
 
     fn located(&self) -> Result<&Vec<TokenWithSpan>, &PostgresParseError> {
