@@ -183,3 +183,18 @@ fn rejected_partition_bounds_leave_standalone_temp_children_alive() {
     assert_eq!(facts(&sql).len(), 2);
     assert_eq!(shape(&sql), ["select: opaque", "select: opaque"]);
 }
+
+#[test]
+fn reversed_hash_bound_attaches_temporary_child() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-reversed-hash.sql"),
+    )
+    .unwrap();
+    assert_eq!(
+        crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql).len(),
+        6
+    );
+    assert_eq!(facts(&sql).len(), 1);
+    assert_eq!(shape(&sql), ["select: child"]);
+}

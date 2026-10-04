@@ -47,7 +47,7 @@ fn recovers_only_structurally_valid_partition_bounds() {
     )
     .unwrap();
     let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
-    assert_eq!(statements.len(), 5);
+    assert_eq!(statements.len(), 6);
     assert!(statements.iter().all(|statement| matches!(
         statement,
         sqlparser::ast::Statement::AlterTable(table)

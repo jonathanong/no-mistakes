@@ -109,23 +109,34 @@ fn bound_expressions(parser: &mut Parser, allow_sentinels: bool) -> Option<usize
 }
 
 fn hash_bound(parser: &mut Parser) -> bool {
-    if parser.next_token().token != Token::LParen
-        || keyword_of(&parser.next_token().token) != Some(Keyword::MODULUS)
-    {
+    if parser.next_token().token != Token::LParen {
         return false;
     }
-    let Some(modulus) = positive_integer(parser.next_token().token) else {
-        return false;
-    };
-    if parser.next_token().token != Token::Comma
-        || keyword_of(&parser.next_token().token) != Some(Keyword::REMAINDER)
-    {
-        return false;
+    let mut modulus = None;
+    let mut remainder = None;
+    hash_option(parser, &mut modulus, &mut remainder)
+        && parser.next_token().token == Token::Comma
+        && hash_option(parser, &mut modulus, &mut remainder)
+        && parser.next_token().token == Token::RParen
+        && matches!((modulus, remainder), (Some(modulus), Some(remainder)) if remainder < modulus)
+}
+
+fn hash_option(
+    parser: &mut Parser,
+    modulus: &mut Option<i32>,
+    remainder: &mut Option<i32>,
+) -> bool {
+    match keyword_of(&parser.next_token().token) {
+        Some(Keyword::MODULUS) if modulus.is_none() => {
+            *modulus = positive_integer(parser.next_token().token);
+            modulus.is_some()
+        }
+        Some(Keyword::REMAINDER) if remainder.is_none() => {
+            *remainder = nonnegative_integer(parser.next_token().token);
+            remainder.is_some()
+        }
+        _ => false,
     }
-    let Some(remainder) = nonnegative_integer(parser.next_token().token) else {
-        return false;
-    };
-    remainder < modulus && parser.next_token().token == Token::RParen
 }
 
 fn positive_integer(token: Token) -> Option<i32> {
