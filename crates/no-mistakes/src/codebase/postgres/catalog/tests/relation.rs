@@ -126,3 +126,18 @@ fn indexed_catalog_preserves_unknown_search_path_and_load_failures() {
         .contains("is empty"));
     assert!(super::load_fixture("../outside.json").is_err());
 }
+
+#[test]
+fn exact_only_catalog_access_does_not_build_fallback_indexes() {
+    let catalog = super::load_fixture("relation-index.json").unwrap();
+    assert!(catalog.relation_fallback.get().is_none());
+    assert!(catalog.relation("public.orders").is_some());
+    assert!(catalog.relation("foreign.orders").is_none());
+    assert!(catalog.relation_fallback.get().is_none());
+    assert!(catalog.relation("orders").is_some());
+    assert!(catalog.relation_fallback.get().is_some());
+    assert_eq!(
+        catalog.clone().relation("orders").unwrap().name,
+        "public.orders"
+    );
+}

@@ -6,6 +6,7 @@ use std::path::Path;
 mod build;
 mod enums;
 mod expressions;
+mod fallback;
 mod findings;
 mod function;
 mod function_body;
@@ -76,8 +77,7 @@ pub struct SchemaCatalog {
     current_database: Option<String>,
     tables: BTreeMap<String, ArbiterTable>,
     model_tables: BTreeMap<String, CatalogTable>,
-    bare_relations: BTreeMap<String, Option<String>>,
-    bare_key_relations: BTreeMap<String, String>,
+    relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
@@ -201,10 +201,13 @@ impl SchemaCatalog {
         }
         // Qualification only falls back to a bare catalog key; unqualified names require
         // exactly one candidate across all schemas. The indexes retain that distinction.
+        let fallback = self
+            .relation_fallback
+            .get_or_init(|| fallback::build(&self.model_tables));
         let key = if qualifier.is_some() {
-            self.bare_key_relations.get(&bare)?
+            fallback.bare_keys.get(&bare)?
         } else {
-            self.bare_relations.get(&bare)?.as_ref()?
+            fallback.unique.get(&bare)?.as_ref()?
         };
         self.model_tables.get(key)
     }

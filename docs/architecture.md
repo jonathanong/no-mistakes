@@ -309,6 +309,10 @@ checks, reused multi-report analysis, impacted checks,
 disabled/timings/verbose observer overhead, composed language-frontend
 extract/edges/queue-glob matching on `fixtures/lang-frontends`, full-domain
 fact extract on graph-gates, and an aggregate `check` of that same fixture.
+The `query` shard also measures prepared PostgreSQL bound evaluation and catalog
+fallback/load costs using `fixtures/performance/postgres-bounds`. Reversed pin
+chains and unseeded cycles at 16, 64, and 256 items protect both scaling and the
+least-fixed-point contract; SQL parsing is outside the evaluation timing loop.
 Every workload runs a preflight that validates stable, fixture-specific
 output invariants before the measured loop.
 
