@@ -5,6 +5,7 @@ use crate::codebase::postgres::statements::{
 
 mod array_review;
 mod compact_aliases;
+mod repeated_begin;
 mod review;
 
 fn query(bound: &SqlBoundQuery) -> String {

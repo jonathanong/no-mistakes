@@ -11,6 +11,7 @@ mod array_review;
 mod compact_aliases;
 mod compact_caller_arrays;
 mod referential;
+mod repeated_begin;
 mod review;
 mod suppression;
 mod trigger_scope;

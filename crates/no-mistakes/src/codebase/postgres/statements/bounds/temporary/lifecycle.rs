@@ -9,7 +9,8 @@ use sqlparser::ast::{
 impl TemporaryRelations {
     pub(super) fn lifecycle(&mut self, statement: &Statement) {
         match statement {
-            Statement::StartTransaction { .. } => {
+            // PostgreSQL warns on repeated BEGIN without replacing the active transaction.
+            Statement::StartTransaction { .. } if self.transaction.is_none() => {
                 self.transaction = Some(self.state.clone());
                 self.savepoints.clear();
             }
