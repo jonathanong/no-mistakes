@@ -17,13 +17,13 @@ mod stored_array;
 mod table_derived_limit;
 mod table_only;
 use super::evaluate::offenders;
-use super::{check_with_files, check_with_files_and_sources, compile_options, Options, RULE_ID};
+use super::{check_with_files, check_with_files_and_sources, RULE_ID};
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 mod array_review;
 mod compact_aliases;
@@ -36,6 +36,7 @@ mod partitions;
 mod permanent_view_chain;
 mod physical_cascade;
 mod prepared;
+mod prepared_inputs;
 mod recursive_forward;
 mod referential;
 mod repeated_begin;
@@ -45,6 +46,7 @@ mod scalar_call_array;
 mod schema_drop;
 mod schema_rename;
 mod search_path;
+mod shadow_drop;
 mod suppression;
 mod trigger_scope;
 mod view_dependencies;
@@ -499,18 +501,6 @@ fn sql_that_cannot_be_analyzed_fails_closed_unless_ignored() {
         .is_empty());
 }
 
-#[test]
-fn scanning_requires_prepared_facts() {
-    let options: Options = serde_yaml::from_str("schemaCatalogPath: schema.json").unwrap();
-    let compiled = compile_options(&options).unwrap();
-    let sources = crate::codebase::rules::source_store_for_files(&[]);
-    let error = super::scan::scan(Path::new("."), &compiled, &[], &sources, None)
-        .err()
-        .unwrap();
-    assert!(error
-        .to_string()
-        .contains("prepared PostgreSQL facts are required"));
-}
 mod set_operation_limits;
 
 mod nested_pins;

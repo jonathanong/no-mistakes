@@ -24,6 +24,9 @@ mod rule_options;
 mod schema;
 mod source;
 mod statement_facts;
+pub use statement_facts::SqlLifecycleFacts;
+pub(crate) use statement_facts::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewReads};
+pub(crate) use statements::project_bounds as project_sql_bounds;
 pub mod statements;
 mod types;
 
@@ -32,6 +35,7 @@ pub(crate) use catalog::canonical_order_keys;
 pub(crate) use catalog::decoded_parts;
 pub(crate) use catalog::normalize_catalog_path as normalize_schema_catalog_path;
 pub(crate) use catalog::order_by_ascending;
+pub(crate) use catalog::SearchPathResolution;
 pub use catalog::{
     catalog_finding, expression_matches, order_prefix_matches, parse_postgres_expression,
     require_catalog_path, AllowEntry, AllowList, CanonicalIndex, CanonicalOrderKey, CatalogCheck,

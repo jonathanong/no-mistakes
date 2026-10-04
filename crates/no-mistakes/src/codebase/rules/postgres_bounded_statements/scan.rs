@@ -57,8 +57,8 @@ pub(super) fn scan(
             ));
             continue;
         }
-        for bound in file
-            .bounds
+        let projected = crate::codebase::postgres::project_sql_bounds(file, catalog);
+        for bound in projected
             .iter()
             .filter(|bound| opts.statements.contains(&bound.kind))
         {

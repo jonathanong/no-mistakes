@@ -6,8 +6,39 @@ pub use bounds::{
     SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
+use sqlparser::ast::Statement;
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 pub use writes::{SqlWriteColumns, SqlWriteFact};
+
+/// Prepared, source-ordered lifecycle inputs for catalog-dependent SQL bounds.
+/// The SQL AST and view reads are collected once; each catalog only projects them.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[doc(hidden)]
+pub struct SqlLifecycleFacts {
+    pub(crate) raw_bounds: Vec<SqlBoundFact>,
+    pub(crate) batches: Vec<SqlLifecycleBatch>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SqlLifecycleBatch {
+    pub source: Statement,
+    pub steps: Vec<SqlLifecycleStep>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SqlLifecycleStep {
+    pub statement: Statement,
+    pub first_bound: usize,
+    pub last_bound: usize,
+    pub view_reads: Option<SqlViewReads>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SqlViewReads {
+    pub query: SqlBoundQuery,
+    pub names: BTreeSet<String>,
+}
 
 /// Statement facts for one SQL source (file or embedded call).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -30,6 +61,9 @@ pub struct SqlStatementFileFacts {
     pub offset_uses: Vec<super::offset::SqlOffsetFact>,
     /// Row-count bounds of each executed SELECT, UPDATE and DELETE.
     pub bounds: Vec<SqlBoundFact>,
+    /// Present only when a lifecycle decision needs per-catalog evidence.
+    #[doc(hidden)]
+    pub lifecycle: Option<SqlLifecycleFacts>,
     /// Every `LIMIT` / `FETCH FIRST` in the executed statements, in source order.
     pub limit_uses: Vec<SqlLimitFact>,
     /// Limited single-table queries ordered by plain columns: pages of a key walk.

@@ -1,12 +1,13 @@
 //! Partition ownership transitions within one SQL source.
 use super::{key, Dependency, State};
+use crate::codebase::postgres::SchemaCatalog;
 use std::collections::BTreeSet;
 
 impl State {
-    pub fn restrict_blocks_drop(&self, names: &[String]) -> bool {
+    pub fn restrict_blocks_drop(&self, names: &[String], catalog: Option<&SchemaCatalog>) -> bool {
         let mut removed: BTreeSet<_> = names
             .iter()
-            .filter(|name| self.contains(name))
+            .filter(|name| self.resolves_temporary(name, catalog))
             .map(|name| key(name))
             .collect();
         // A partition is owned by its parent even without CASCADE. A view on any

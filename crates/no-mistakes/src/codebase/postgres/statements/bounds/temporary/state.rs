@@ -7,6 +7,7 @@ mod rename;
 mod schema;
 use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
+use crate::codebase::postgres::{SchemaCatalog, SearchPathResolution};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -27,6 +28,10 @@ pub(super) struct State {
     pub partitions: BTreeMap<String, String>,
     pub partitioned: BTreeSet<String>,
     pub databases: BTreeMap<String, String>,
+    /// Catalog-unknown DDL may have removed a temporary relation.
+    pub uncertain_relations: BTreeSet<String>,
+    /// A proven physical shadow removed during this SQL source's lifetime.
+    pub removed_shadows: BTreeSet<(String, String)>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub earlier_schemas: Option<Vec<String>>,
@@ -41,6 +46,8 @@ impl Default for State {
             partitions: BTreeMap::new(),
             partitioned: BTreeSet::new(),
             databases: BTreeMap::new(),
+            uncertain_relations: BTreeSet::new(),
+            removed_shadows: BTreeSet::new(),
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
             earlier_schemas: None,
@@ -69,7 +76,40 @@ impl State {
             }
         }
     }
-    pub fn drop(&mut self, name: &str, cascade: bool) {
+    pub fn drop(&mut self, name: &str, cascade: bool, catalog: Option<&SchemaCatalog>) {
+        if let (Some(catalog), Some(candidate)) = (catalog, self.possible_temporary(name)) {
+            let relation = key(name);
+            if candidate.uncertain_lifetime {
+                return;
+            }
+            if let Some(database) = candidate.database_qualifier.as_deref() {
+                match catalog.current_database() {
+                    Some(current) if current != database => return,
+                    None => {
+                        self.uncertain_relations.insert(relation);
+                        return;
+                    }
+                    Some(_) => {}
+                }
+            }
+            match catalog.resolve_before_temp(&candidate.earlier_schemas, name) {
+                SearchPathResolution::Physical(schema) => {
+                    let target = BTreeSet::from([vec![schema.clone(), relation.clone()]]);
+                    if self.drop_physical(target, cascade) {
+                        self.removed_shadows.insert((schema, relation));
+                    }
+                    return;
+                }
+                SearchPathResolution::Unknown => {
+                    self.uncertain_relations.insert(relation);
+                    return;
+                }
+                SearchPathResolution::Temporary => {
+                    self.remove(BTreeSet::from([relation]), cascade);
+                    return;
+                }
+            }
+        }
         let mut removed = BTreeSet::new();
         let definite_temporary = self.matches_identity(name);
         // An unqualified name behind unknown earlier schemas may denote this temporary
@@ -113,5 +153,7 @@ impl State {
         self.partitioned.retain(|name| !removed.contains(name));
         self.on_commit_drop.retain(|name| !removed.contains(name));
         self.databases.retain(|name, _| !removed.contains(name));
+        self.uncertain_relations
+            .retain(|name| !removed.contains(name));
     }
 }

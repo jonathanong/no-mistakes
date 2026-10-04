@@ -144,6 +144,11 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
     for bound in &mut facts.bounds {
         bound.map_lines(&source_line);
     }
+    if let Some(lifecycle) = &mut facts.lifecycle {
+        for bound in &mut lifecycle.raw_bounds {
+            bound.map_lines(&source_line);
+        }
+    }
 }
 
 #[cfg(test)]

@@ -29,11 +29,19 @@ fn resolve(query: &mut SqlBoundQuery, catalog: &SchemaCatalog) {
     for item in &mut query.items {
         let hidden = match (&item.kind, &item.possible_temporary) {
             (SqlBoundItemKind::Table(name), Some(candidate)) => {
-                candidate
-                    .database_qualifier
-                    .as_deref()
-                    .is_none_or(|database| catalog.current_database() == Some(database))
-                    && catalog.hides_selected_relation(&candidate.earlier_schemas, name)
+                if candidate.uncertain_lifetime {
+                    // Either the temporary source survived, or the catalog source did.
+                    // Neither branch may lend catalog keys or array lengths to a join.
+                    item.pins
+                        .retain(|pin| matches!(&pin.source, SqlPinSource::Query(_)));
+                    false
+                } else {
+                    candidate
+                        .database_qualifier
+                        .as_deref()
+                        .is_none_or(|database| catalog.current_database() == Some(database))
+                        && catalog.hides_selected_relation(&candidate.earlier_schemas, name)
+                }
             }
             _ => false,
         };

@@ -1,6 +1,7 @@
 //! Prepared statements project facts at declaration and create destinations at execution.
 use super::super::{bounds, SqlBoundFact};
 use crate::codebase::postgres::idents::ident_key;
+use crate::codebase::postgres::{SchemaCatalog, SqlViewReads};
 use sqlparser::ast::{visit_expressions, DiscardObject, Expr, Statement, Value};
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -22,14 +23,16 @@ impl<'a> PreparedStatements<'a> {
         executed: &Statement,
         temporary: &mut bounds::TemporaryRelations,
         facts: &mut [SqlBoundFact],
-        scope: &bounds::Scope,
-        positions: super::super::value::PlaceholderPositions<'_>,
+        view_reads: Option<&SqlViewReads>,
+        catalog: Option<&SchemaCatalog>,
     ) {
         if matches!(source, Statement::Prepare { .. }) {
             // PREPARE analyzes the query, but its SELECT INTO runs only at EXECUTE.
-            temporary.clone().apply(executed, facts, scope, positions);
+            temporary
+                .clone()
+                .apply(executed, facts, view_reads, catalog);
         } else {
-            temporary.apply(executed, facts, scope, positions);
+            temporary.apply(executed, facts, view_reads, catalog);
         }
         if let Statement::Execute {
             name: Some(name),
@@ -45,7 +48,7 @@ impl<'a> PreparedStatements<'a> {
                 {
                     if prepared.parameter_count == Some(parameters.len()) {
                         // Replay only the destination transition, without a second fact pass.
-                        temporary.apply(prepared.statement, &mut [], scope, positions);
+                        temporary.apply(prepared.statement, &mut [], None, catalog);
                     }
                 }
             }

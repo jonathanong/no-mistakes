@@ -2,8 +2,17 @@ use super::tokens::Tokens;
 use super::*;
 mod collect;
 mod inserts;
-use crate::codebase::postgres::parse::{parse_postgres_sql_lenient_with_sources, PreparedSql};
+mod lifecycle;
+mod parse;
+use crate::codebase::postgres::parse::PreparedSql;
 use collect::{collect_one, FactOut};
+pub(crate) use lifecycle::project_bounds;
+use lifecycle::LifecycleBuilder;
+pub use parse::extract_sql_statement_facts;
+pub(crate) use parse::{
+    extract_from_parsed_with_recovered_placeholders, extract_sql_statement_facts_with_bounds,
+    extract_sql_statement_facts_with_recovered_placeholders,
+};
 use sqlparser::ast::{Spanned, Statement};
 use sqlparser::tokenizer::TokenWithSpan;
 use std::collections::HashMap;
@@ -11,88 +20,6 @@ use std::sync::Arc;
 
 mod prepared;
 use prepared::PreparedStatements;
-
-/// Extract INSERT/SELECT/trigger facts from one SQL source.
-pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_bounds(sql, true)
-}
-
-/// Extract the requested SQL projections without reparsing for row bounds.
-pub(crate) fn extract_sql_statement_facts_with_bounds(
-    sql: &str,
-    collect_bounds: bool,
-) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_placeholder_positions(sql, collect_bounds, None)
-}
-
-/// Extract facts while identifying the SQL-local positions of recovered interpolation markers.
-pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
-    sql: &str,
-    collect_bounds: bool,
-    recovered_placeholder_positions: &[(u32, u32)],
-) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_placeholder_positions(
-        sql,
-        collect_bounds,
-        Some(recovered_placeholder_positions),
-    )
-}
-
-fn extract_sql_statement_facts_with_placeholder_positions(
-    sql: &str,
-    collect_bounds: bool,
-    placeholder_positions: super::value::PlaceholderPositions<'_>,
-) -> SqlStatementFileFacts {
-    let prepared = PreparedSql::new(sql);
-    let parsed = prepared.parse();
-    let parse_failed = parsed.is_err();
-    match parsed {
-        Ok(statements) => extract_from_parsed_and_sources(
-            sql,
-            &prepared,
-            &statements,
-            None,
-            false,
-            collect_bounds,
-            placeholder_positions,
-        ),
-        Err(_) => {
-            let (statements, sources): (Vec<_>, Vec<_>) =
-                parse_postgres_sql_lenient_with_sources(sql, prepared.normalized())
-                    .into_iter()
-                    .map(|located| (located.statement, located.source))
-                    .unzip();
-            extract_from_parsed_and_sources(
-                sql,
-                &prepared,
-                &statements,
-                Some(&sources),
-                parse_failed,
-                collect_bounds,
-                placeholder_positions,
-            )
-        }
-    }
-}
-
-pub(crate) fn extract_from_parsed_with_recovered_placeholders(
-    sql: &str,
-    prepared: &PreparedSql<'_>,
-    statements: &[Statement],
-    parse_failed: bool,
-    collect_bounds: bool,
-    placeholder_positions: super::value::PlaceholderPositions<'_>,
-) -> SqlStatementFileFacts {
-    extract_from_parsed_and_sources(
-        sql,
-        prepared,
-        statements,
-        None,
-        parse_failed,
-        collect_bounds,
-        placeholder_positions,
-    )
-}
 
 fn extract_from_parsed_and_sources(
     sql: &str,
@@ -132,6 +59,7 @@ fn extract_from_parsed_and_sources(
     };
     let mut temporary_relations = bounds::TemporaryRelations::default();
     let mut prepared = PreparedStatements::default();
+    let mut lifecycle = LifecycleBuilder::default();
     for (index, source_statement) in statements.iter().enumerate() {
         let recovered_source = collect_bounds
             .then(|| sources.and_then(|sources| sources.get(index)))
@@ -154,20 +82,26 @@ fn extract_from_parsed_and_sources(
             writes::collect(statement, &mut writes);
             collect_one(sql, statement, placeholder_positions, &mut out);
             if let Some(scope) = &scope {
-                let first_bound = bounds.len();
-                bounds::collect(statement, scope, placeholder_positions, &mut bounds);
+                let (first_bound, view_reads) = lifecycle.collect(
+                    statement,
+                    scope,
+                    placeholder_positions,
+                    &temporary_relations,
+                    &mut bounds,
+                );
                 prepared.apply(
                     source_statement,
                     statement,
                     &mut temporary_relations,
                     &mut bounds[first_bound..],
-                    scope,
-                    placeholder_positions,
+                    view_reads.as_ref(),
+                    None,
                 );
             }
         }
         if scope.is_some() {
             prepared.record(source_statement);
+            lifecycle.finish_batch(source_statement);
         }
     }
     dedupe::exists_set_operations(&mut selects);
@@ -192,6 +126,7 @@ fn extract_from_parsed_and_sources(
             statements,
         ),
         bounds,
+        lifecycle: lifecycle.finish(),
         limit_uses,
         sweeps,
         parse_failed,
