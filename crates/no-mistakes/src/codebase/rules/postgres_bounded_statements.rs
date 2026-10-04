@@ -163,3 +163,16 @@ fn statement_kinds(configured: Option<&[String]>) -> Result<Vec<SqlBoundKind>> {
 mod options_tests;
 #[cfg(test)]
 mod tests;
+
+/// Unstable adapter for the prepared evaluator's Criterion harness.
+#[cfg(feature = "test-instrumentation")]
+pub(crate) fn benchmark_offenders(
+    facts: &crate::codebase::postgres::SqlStatementFileFacts,
+    catalog: &crate::codebase::postgres::SchemaCatalog,
+) -> usize {
+    facts
+        .bounds
+        .iter()
+        .map(|fact| evaluate::offenders(fact, catalog).len())
+        .sum()
+}

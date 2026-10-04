@@ -88,3 +88,56 @@ fn relation_identity_needs_explicit_schema_evidence_for_bare_names() {
     assert!(anonymous.same_relation("accounts", "accounts"));
     assert!(!anonymous.same_relation("public.accounts", "accounts"));
 }
+
+#[test]
+fn fallback_index_preserves_exact_precedence_ambiguity_and_quoted_components() {
+    let catalog = super::load_fixture("relation-index.json").unwrap();
+    for (name, expected) in [
+        ("accounts", Some("accounts")),
+        ("public.accounts", Some("public.accounts")),
+        ("audit.accounts", Some("audit.accounts")),
+        ("orders", Some("public.orders")),
+        ("events", None),
+        ("other.accounts", None),
+        ("public.events", Some("public.events")),
+        ("\"Order.Items\"", Some("\"Sales.Zone\".\"Order.Items\"")),
+        ("\"MixedCase\"", Some("public.\"MixedCase\"")),
+        ("mixedcase", None),
+    ] {
+        assert_eq!(
+            catalog.relation(name).map(|table| table.name.as_str()),
+            expected,
+            "{name}"
+        );
+    }
+    // A qualified fallback can select the bare key even though the unqualified tail
+    // is ambiguous; exact qualified keys still take precedence.
+    let mut catalog = catalog;
+    catalog.schema = Some("other".to_owned());
+    assert_eq!(catalog.relation("other.accounts").unwrap().name, "accounts");
+}
+
+#[test]
+fn indexed_catalog_preserves_unknown_search_path_and_load_failures() {
+    let catalog = super::load_fixture("relation-index.json").unwrap();
+    assert!(!catalog.hides_selected_relation(&["$user".to_owned()], "orders"));
+    assert!(super::load_fixture("empty.json")
+        .unwrap_err()
+        .contains("is empty"));
+    assert!(super::load_fixture("../outside.json").is_err());
+}
+
+#[test]
+fn exact_only_catalog_access_does_not_build_fallback_indexes() {
+    let catalog = super::load_fixture("relation-index.json").unwrap();
+    assert!(catalog.relation_fallback.get().is_none());
+    assert!(catalog.relation("public.orders").is_some());
+    assert!(catalog.relation("foreign.orders").is_none());
+    assert!(catalog.relation_fallback.get().is_none());
+    assert!(catalog.relation("orders").is_some());
+    assert!(catalog.relation_fallback.get().is_some());
+    assert_eq!(
+        catalog.clone().relation("orders").unwrap().name,
+        "public.orders"
+    );
+}

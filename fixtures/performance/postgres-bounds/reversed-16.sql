@@ -1,0 +1,2 @@
+-- Reverse-order dependencies require propagation from the final item.
+SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = $1;

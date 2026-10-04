@@ -14,6 +14,8 @@ mod graph_gates;
 mod language_frontends;
 #[path = "core_analysis/observer.rs"]
 mod observer;
+#[path = "core_analysis/postgres_bounds.rs"]
+mod postgres_bounds;
 #[path = "core_analysis/query_indexes.rs"]
 mod query_indexes;
 #[path = "core_analysis/react_traits.rs"]
@@ -58,6 +60,7 @@ criterion_group!(
     benches,
     bench_sql_source_positions,
     bench_lazy_traversal,
+    postgres_bounds::bench_postgres_bounds,
     bench_import_only_vs_workspace_relationships,
     bench_callable_file_index_construction,
     bench_call_site_membership,

@@ -25,6 +25,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         current_database: snapshot.current_database,
         tables,
         model_tables,
+        relation_fallback: Default::default(),
         functions: functions(snapshot.functions),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),

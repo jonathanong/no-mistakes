@@ -44,6 +44,7 @@ mod permanent_view_chain;
 mod physical_cascade;
 mod prepared;
 mod prepared_inputs;
+mod propagation;
 mod recursive_forward;
 mod referential;
 mod repeated_begin;

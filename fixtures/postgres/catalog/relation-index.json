@@ -1,0 +1,13 @@
+{
+ "formatVersion": 2, "coverage": "complete", "schema": "public",
+ "tables": {
+  "public.accounts": {"columns": {}},
+  "audit.accounts": {"columns": {}},
+  "accounts": {"columns": {}},
+  "public.orders": {"columns": {}},
+  "audit.events": {"columns": {}},
+  "public.events": {"columns": {}},
+  "\"Sales.Zone\".\"Order.Items\"": {"columns": {}},
+  "public.\"MixedCase\"": {"columns": {}}
+ }
+}

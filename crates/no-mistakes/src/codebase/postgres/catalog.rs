@@ -6,6 +6,7 @@ use std::path::Path;
 mod build;
 mod enums;
 mod expressions;
+mod fallback;
 mod findings;
 mod function;
 mod function_body;
@@ -76,6 +77,7 @@ pub struct SchemaCatalog {
     current_database: Option<String>,
     tables: BTreeMap<String, ArbiterTable>,
     model_tables: BTreeMap<String, CatalogTable>,
+    relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
@@ -197,13 +199,17 @@ impl SchemaCatalog {
                 return None;
             }
         }
-        // A qualified name that is not an exact key can only mean a bare-keyed table.
-        let mut matches = self.model_tables.iter().filter(|(key, _)| {
-            let (key_qualifier, key_bare) = names::split_key(key);
-            key_bare == bare && (qualifier.is_none() || key_qualifier.is_none())
-        });
-        let (_, table) = matches.next()?;
-        matches.next().is_none().then_some(table)
+        // Qualification only falls back to a bare catalog key; unqualified names require
+        // exactly one candidate across all schemas. The indexes retain that distinction.
+        let fallback = self
+            .relation_fallback
+            .get_or_init(|| fallback::build(&self.model_tables));
+        let key = if qualifier.is_some() {
+            fallback.bare_keys.get(&bare)?
+        } else {
+            fallback.unique.get(&bare)?.as_ref()?
+        };
+        self.model_tables.get(key)
     }
 
     pub fn functions(&self) -> impl Iterator<Item = &CatalogFunction> {
