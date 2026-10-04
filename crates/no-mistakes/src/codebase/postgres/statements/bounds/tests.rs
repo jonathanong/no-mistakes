@@ -16,6 +16,7 @@ mod recursive_forward;
 mod repeated_begin;
 mod review;
 mod review_table;
+mod schema_drop;
 mod table_review;
 mod temporary_view;
 
