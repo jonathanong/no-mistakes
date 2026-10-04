@@ -15,28 +15,18 @@ having loaded it.
 
 ## Current results
 
-**Description:** the one in `skills/no-mistakes/SKILL.md` today — #981's
-rework plus #985's validation clauses
-([history](HISTORY.md#the-after-edit-regression-981-shipped)).
-**Measured:** 2026-09-21, the [full
-re-baseline](HISTORY.md#the-full-re-baseline): all eleven routine flows,
-`runs: 3`, both arms, Opus agent / Sonnet judge, 318 runs, $52.60, zero
-errored runs.
-
-> [!NOTE]
-> The `description:` line is unchanged since that run, but the skill body is
-> not: #1139 added the PostgreSQL catalog paragraph to `SKILL.md` and #1041
-> added six lines to `references/playwright.md`. Neither is in the trigger
-> surface, so the trigger counts below should still describe today's skill —
-> but a new control arm must be built from today's skill, not reused
-> ([why](METHODOLOGY.md#what-the-control-cost-to-get-right-and-the-trap-it-exposed)).
+**Description:** the `description:` line in `skills/no-mistakes/SKILL.md`
+today. **Measured:** 2026-09-21, all eleven routine flows, `runs: 3`, both
+arms, Opus agent / Sonnet judge, 318 runs, zero errored runs. The `heldout`
+flow is not measured for this description; cases 07-09 are reserved, unrun,
+for the next candidate.
 
 | flow | trigger (with-arm) | should-fire Δ | negatives Δ |
 | --- | --- | --- | --- |
 | `before-edit` | **14/18 (78%)** | +0.14 | +0.00 |
 | `after-edit` | **10/12 (83%)** | +0.19 | +0.00 |
 | `lang-graph` ⚠️ synthetic fixture | **10/12 (83%)** | +0.50 | +0.00 |
-| `signature` | **7/12 (58%)** — 9/12 the same day | +0.31 | −0.33 |
+| `signature` | **7/12 (58%)** | +0.31 | −0.33 |
 | `usage` | **5/12 (42%)** | +0.28 | — |
 | `queues` | **3/12 (25%)** | +0.08 | +0.00 |
 | `ci` | **2/12 (17%)** | +0.00 | −0.33 |
@@ -44,31 +34,33 @@ errored runs.
 | `safety` | **0/6** | +0.00 | −0.33 |
 | `napi` | **0/12** | +0.06 | +0.00 |
 | `neg-hard` — over-trigger guard, lower is better | **0/12** | n/a | +0.00 |
-| `heldout` — never tuned against | **not measured** for this description | | |
 
 Δ is the mean weighted grader score per run, with-skill minus without-skill,
-`skill-fired` excluded. The full with/without scores are in
-[HISTORY](HISTORY.md#the-full-re-baseline).
+`skill-fired` excluded. On `neg-hard` the skill never fired, but 4 of the 12
+non-firing plans invented a `no-mistakes` command that does not exist.
 
-**The holdout is the number that generalizes, and it is not current.** Its
-last measurement was **5/9 (56%)** on the three live cases, against #981's
-description — the one before today's
-([held-out confirmation](HISTORY.md#held-out-confirmation)). It was not
-re-run after #985 because `after-edit` became tuning-visible, and cases 07-09
-have never been run: they are reserved for the next candidate description.
-No tuned-flow figure above should be quoted as a generalization rate.
+The skill body has changed since this run (the PostgreSQL catalog paragraph in
+`SKILL.md`, six lines in `references/playwright.md`); the `description:` line
+has not. Build any new control arm from today's skill
+([why](METHODOLOGY.md#what-the-control-cost-to-get-right-and-the-trap-it-exposed)).
+
+Earlier descriptions, their scores, and how this one was chosen are in
+[HISTORY.md](HISTORY.md).
 
 ## How to read these numbers
 
 - **Differences under ~4 counts are not results.** At `runs: 3` two runs of
-  the *identical* description differ by ≥2 in 44% of pairs; `signature`
-  scored 9/12 and 7/12 hours apart. A gate must tolerate a wrong-way gap of
-  **4** on `before-edit`, **3** on `signature` and `after-edit`, **2** on
-  `neg-hard` ([derivation](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025)).
+  the *identical* description differ by ≥2 in 44% of pairs. A gate must
+  tolerate a wrong-way gap of **4** on `before-edit`, **3** on `signature` and
+  `after-edit`, **2** on `neg-hard`
+  ([derivation](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025)).
   Run [`power.py`](power.py) before writing any gate.
 - **A zero is not certain.** The exact one-sided 95% upper bounds on
   `duplication` 0/9, `safety` 0/6 and `napi` 0/12 are 28%, 39% and 22%. A zero
   rules out a high rate, nothing more.
+- **Tuned flows overstate generalization.** The description was written
+  against these flows; only a held-out case measures how it generalizes, and
+  none is current.
 - **Trigger counts are an upper bound on real-session behaviour.** Cases run
   in an empty sandbox, so the agent cannot grep instead — compare counts
   *between descriptions*, never read them as absolute rates
@@ -79,35 +71,25 @@ No tuned-flow figure above should be quoted as a generalization rate.
   reading is "the skill got used", not "the plan got better".
 - **Negative-case Δ of −0.33** (`ci`, `safety`, `signature`) is one run
   flipping on one case at n=3 — a thing to re-measure, not a finding.
-- **Every number is Claude's.** Codex reads the same `description:`
-  ([why](HISTORY.md#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)),
-  but the suite has no Codex arm.
+- **Every number is Claude's.** Codex reads the same `description:`, but the
+  suite has no Codex arm.
 
-## What the runs established
+## What the measurements support
 
-Each links to the evidence in [HISTORY.md](HISTORY.md).
+Rules for changing the description. The evidence for each is in
+[HISTORY.md](HISTORY.md).
 
-- **Naming a subject reaches it; not naming one is a coin flip.** Adding a
-  clause lifted signatures 25–33% → 83%, post-edit validation 25% → 100%, and
-  queues 25% → 100%. Removing one — #981 dropped "after editing to validate" —
-  took `after-edit` 75% → 25%. Unnamed subjects are unpredictable rather than
-  dead ([evidence](HISTORY.md#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)).
-- **A description is a budget.** Rewording reallocates coverage; any change
-  must be measured on every flow whose subject it removes, not just the ones
-  it targets ([evidence](HISTORY.md#the-after-edit-regression-981-shipped)).
-- **Whether one more clause is affordable is unanswered.** The queue clause
-  took `queues` to 12/12 and was rejected on a `signature` gap the instrument
-  could not resolve ([evidence](HISTORY.md#the-gate-cannot-resolve-the-difference-it-was-built-on)).
-- **Gate against a same-day control, never a stored number.** Absolute floors
-  compare across time, which is what manufactured a phantom regression
-  ([evidence](HISTORY.md#but-the-floors-are-cross-time-and-that-is-a-defect-in-the-gate)).
-- **Replacing the general framing beat keeping it**
-  ([evidence](HISTORY.md#candidate-screening)).
-- **A non-firing run is worse than a silent one.** When the skill does not
-  load, the plan often invents a command (`no-mistakes roleHas`); across every
-  description and flow, a non-firing run has named a real subcommand **zero**
-  times. On `neg-hard` the current description still invents one in 4 of 12
-  non-firing runs ([evidence](HISTORY.md#what-a-non-firing-run-actually-produces)).
+- **Name the subjects that matter.** A subject the description names is
+  reached reliably; one it does not name may or may not be, and nothing
+  predicts which.
+- **Treat the description as a budget.** Rewording reallocates coverage, so
+  measure every flow whose subject a change removes, not only the flows it
+  targets.
+- **Prefer concrete question forms over general framing.**
+- **Gate against a same-day control arm, never a stored number**
+  ([procedure](METHODOLOGY.md#gating-a-description-change)).
+- **Read `neg-hard` as two numbers:** `skill-fired`, plus invented commands in
+  the non-firing runs. A non-firing plan has never named a real subcommand.
 
 ## What this suite measures
 
