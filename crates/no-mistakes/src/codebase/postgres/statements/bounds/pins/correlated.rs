@@ -1,4 +1,5 @@
 mod columns;
+mod ctes;
 mod scalar_arrays;
 mod scope;
 use scope::Scope;
@@ -80,6 +81,7 @@ struct Scan {
     /// AST identity is used only during this visitor run; no sources are reparsed.
     derived_scopes: BTreeMap<usize, Scope>,
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
+    pending_ctes: BTreeMap<usize, (String, Option<BTreeSet<String>>)>,
     /// Qualifiers and bare reads that no level of the query resolved.
     unresolved: Vec<String>,
     reads: Vec<SqlBareRead>,
@@ -106,29 +108,14 @@ impl Visitor for Scan {
         for name in output_names(query) {
             *frame.labels.entry(name).or_default() += 1;
         }
-        if let Some(with) = &query.with {
-            for cte in &with.cte_tables {
-                let columns = if cte.alias.columns.is_empty() {
-                    projection_columns(&cte.query)
-                } else {
-                    Some(
-                        cte.alias
-                            .columns
-                            .iter()
-                            .map(|column| ident_key(&column.name))
-                            .collect(),
-                    )
-                };
-                self.ctes.insert(ident_key(&cte.alias.name), columns);
-            }
-        }
+        self.prepare_ctes(query);
         self.stack.push(frame);
         ControlFlow::Continue(())
     }
 
     /// The relations of a level are complete only after it has been visited (the projection comes
     /// before FROM), so its references are resolved here and what remains moves up a level.
-    fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
+    fn post_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
         let mut up: Vec<String> = frame
             .qualifiers
@@ -170,6 +157,7 @@ impl Visitor for Scan {
                 self.reads = reads;
             }
         }
+        self.complete_cte(query);
         ControlFlow::Continue(())
     }
 

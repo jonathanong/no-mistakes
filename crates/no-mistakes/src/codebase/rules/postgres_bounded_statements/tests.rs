@@ -1,3 +1,4 @@
+mod nonrecursive_ctes;
 mod stored_array;
 mod table_only;
 use super::evaluate::offenders;

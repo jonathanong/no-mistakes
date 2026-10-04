@@ -363,7 +363,7 @@ in the select list), and lists its FROM `items`. An item is a base `Table`, a `Q
 operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`
 over arguments the statement supplies), or `Opaque` (any other table function, and the
 recursive reference of a recursive CTE: never reported, and it bounds nothing pinned to
-it). A CTE reference without an alias is addressed by the CTE's name. A `COPY (SELECT …)`
+it). A CTE reference without an alias is addressed by the CTE's name. Non-recursive CTE definitions read prior bindings, including a same-named base table; the new CTE output becomes visible after its definition. Recursive CTE names remain visible within their definitions. A `COPY (SELECT …)`
 query is a `Select` fact.
 
 Each table, derived-query (including `LATERAL`), and `UNNEST` item retains positional `column_aliases` as syntax, so catalog consumers can avoid confusing renamed columns with base names. Unquoted aliases are folded and quoted aliases retain exact spelling. These names describe projected positions; they do not give a derived source catalog-key identity.
