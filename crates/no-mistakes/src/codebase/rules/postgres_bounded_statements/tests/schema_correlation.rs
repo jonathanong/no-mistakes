@@ -43,3 +43,11 @@ fn an_explicit_inner_alias_does_not_make_a_qualified_outer_read_local() {
             .unwrap();
     assert_eq!(names(&sql), ["accounts"]);
 }
+
+#[test]
+fn a_join_alias_hides_its_children_from_catalog_qualified_locality() {
+    let sql =
+        std::fs::read_to_string(fixture_root().join("sql/qualified-catalog-aliased-join.sql"))
+            .unwrap();
+    assert_eq!(names(&sql), ["accounts", "accounts"]);
+}

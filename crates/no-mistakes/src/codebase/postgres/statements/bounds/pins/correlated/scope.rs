@@ -82,9 +82,9 @@ pub(super) struct Scope {
 
 impl Scope {
     /// Keep physical ownership separate from names visible through SQL qualifiers.
-    pub(super) fn record_base_table(&mut self, table: String, aliased: bool) {
+    pub(super) fn record_base_table(&mut self, table: String, aliased: bool, hidden_by_join: bool) {
         self.tables.push(table.clone());
-        if !aliased {
+        if !aliased && !hidden_by_join {
             self.qualified_tables.push(table);
         }
     }

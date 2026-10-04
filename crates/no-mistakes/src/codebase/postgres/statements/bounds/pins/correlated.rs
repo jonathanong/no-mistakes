@@ -108,6 +108,8 @@ struct Frame {
 #[derive(Default)]
 struct Scan {
     stack: Vec<Frame>,
+    /// Aliased join children hide base qualifiers only in the owning query frame.
+    hidden_join_scopes: Vec<usize>,
     /// AST identity is used only during this visitor run; no sources are reparsed.
     derived_scopes: BTreeMap<usize, Scope>,
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,

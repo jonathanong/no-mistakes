@@ -172,8 +172,10 @@ set operation). A statement is bounded when any of these holds:
   time, so a relation of a nested level never hides a reference of an outer one.
   An explicit table alias hides the table's original name from nested scopes, even when
   it repeats the table's bare name: `FROM public.accounts accounts` exposes `accounts`
-  as the alias but no longer exposes `public.accounts`. Schema-qualified references
-  retain their schema: an inner `audit.accounts` cannot hide a reference to the outer
+  as the alias but no longer exposes `public.accounts`.
+  An alias on an entire parenthesized join also hides its child base names from
+  catalog-qualified locality; nested derived queries retain their own namespaces.
+  References retain their schema: an inner `audit.accounts` cannot hide a reference to the outer
   `public.accounts`. When the configured catalog explicitly selects `public`, an inner
   `FROM accounts` with no alias can resolve to that same `public.accounts`; without that catalog
   evidence the rule keeps the qualified reference conservative. Quoted dots stay inside one

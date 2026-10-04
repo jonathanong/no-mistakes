@@ -79,7 +79,17 @@ impl Visitor for Scan {
             self.derived_scopes
                 .insert(&**subquery as *const Query as usize, scope);
         }
+        if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
+            self.hidden_join_scopes.push(self.stack.len());
+        }
         self.add_factor(factor);
+        ControlFlow::Continue(())
+    }
+
+    fn post_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
+        if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
+            self.hidden_join_scopes.pop();
+        }
         ControlFlow::Continue(())
     }
 
