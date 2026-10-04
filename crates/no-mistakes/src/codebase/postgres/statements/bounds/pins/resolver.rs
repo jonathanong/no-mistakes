@@ -78,8 +78,9 @@ impl Resolver {
             .filter_map(|(alias, table)| alias.clone().or_else(|| table.clone()))
             .map(|name| vec![name])
             .collect();
-        for (item, (alias, bare)) in items.iter().zip(&names) {
-            if alias.is_none() || alias == bare {
+        for item in items {
+            // Even an alias matching the table's bare name hides its schema-qualified name.
+            if !item.alias_explicit {
                 if let SqlBoundItemKind::Table(name) = &item.kind {
                     outer.insert(decoded_parts(name));
                 }
@@ -220,3 +221,6 @@ fn qualified(parts: &[Ident]) -> Option<(String, String)> {
         .zip(parts.last())
         .map(|(qualifier, column)| (ident_key(qualifier), ident_key(column)))
 }
+
+#[cfg(test)]
+mod tests;

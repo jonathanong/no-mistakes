@@ -131,6 +131,7 @@ impl<'a> Builder<'a> {
                 };
                 // An unaliased relation is addressed by its own name: a CTE's, or a table's
                 // bare name (`orders.id` for `public.orders`).
+                let alias_explicit = alias.is_some();
                 let column_aliases = alias_columns(alias);
                 let alias = alias_key(alias).or_else(|| match &kind {
                     SqlBoundItemKind::Query(_) => Some(object_name_key(name)),
@@ -138,6 +139,7 @@ impl<'a> Builder<'a> {
                     _ => None,
                 });
                 let mut item = SqlBoundItem::new(kind, alias, start(name.span()));
+                item.alias_explicit = alias_explicit;
                 item.column_aliases = column_aliases;
                 self.items.push(item);
             }
@@ -153,6 +155,7 @@ impl<'a> Builder<'a> {
                     alias_key(alias),
                     start(subquery.span()),
                 );
+                item.alias_explicit = alias.is_some();
                 item.column_aliases = alias_columns(alias);
                 if *lateral {
                     let reads =
@@ -197,6 +200,7 @@ impl<'a> Builder<'a> {
         at: (usize, usize),
     ) {
         let mut item = SqlBoundItem::new(kind, alias_key(alias), at);
+        item.alias_explicit = alias.is_some();
         item.column_aliases = alias_columns(alias);
         self.items.push(item);
     }

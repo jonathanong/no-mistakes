@@ -25,6 +25,7 @@ mod array_review;
 mod compact_aliases;
 mod compact_caller_arrays;
 mod copy_quoted_table;
+mod explicit_self_alias;
 mod materialized_drop;
 mod materialized_namesake;
 mod partitions;
