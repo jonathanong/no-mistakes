@@ -88,3 +88,7 @@ required-features = ["test-instrumentation"]
 name = "sql_source_positions"
 harness = false
 required-features = ["test-instrumentation"]
+
+[[bench]]
+name = "sql_fetch"
+harness = false
