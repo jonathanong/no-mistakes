@@ -72,3 +72,15 @@ fn ordinary_limit_and_literal_fetch_are_unchanged() {
         .to_string()
         .contains("FETCH FIRST 10 ROWS ONLY"));
 }
+
+#[test]
+fn quoted_fetch_words_take_the_ordinary_parse_path() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/sql-fetch-no-candidate.sql"
+    ));
+    let statements = parse_postgres_sql(sql).expect("FETCH in a string is not a clause");
+    assert_eq!(statements.len(), 1);
+    assert!(statements[0].to_string().contains("LIMIT 50"));
+    assert!(statements[0].to_string().contains("FETCH FIRST (ignored)"));
+}

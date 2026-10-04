@@ -14,6 +14,14 @@ pub(in crate::codebase::postgres) struct Clause {
 }
 
 pub(in crate::codebase::postgres) fn prepare(tokens: &mut [TokenWithSpan]) -> Vec<Clause> {
+    // FETCH expressions are uncommon; avoid allocating the significant-token list and
+    // parenthesis index for the overwhelmingly common statement with no FETCH keyword.
+    if !tokens
+        .iter()
+        .any(|token| keyword(&token.token, Keyword::FETCH))
+    {
+        return Vec::new();
+    }
     let significant = tokens
         .iter()
         .enumerate()
@@ -103,6 +111,9 @@ pub(in crate::codebase::postgres) fn prepare(tokens: &mut [TokenWithSpan]) -> Ve
 }
 
 pub(in crate::codebase::postgres) fn restore<T: VisitMut>(tree: &mut T, clauses: &[Clause]) {
+    if clauses.is_empty() {
+        return;
+    }
     struct Restore<'a>(&'a [Clause]);
     impl VisitorMut for Restore<'_> {
         type Break = ();

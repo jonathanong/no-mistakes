@@ -24,6 +24,8 @@ mod relationships;
 mod reports;
 #[path = "core_analysis/shard.rs"]
 mod shard;
+#[path = "core_analysis/sql_fetch.rs"]
+mod sql_fetch;
 #[path = "core_analysis/sql_source_positions.rs"]
 mod sql_source_positions;
 
@@ -47,10 +49,15 @@ use query_indexes::{
 use react_traits::bench_react_traits;
 use relationships::bench_relationship_projection;
 use reports::{bench_symbols, bench_workspace};
-
 fn bench_sql_source_positions(c: &mut criterion::Criterion) {
     if shard::should_run(shard::QUERY) {
         sql_source_positions::bench_sql_source_positions(c);
+    }
+}
+
+fn bench_sql_fetch_fast_path(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        sql_fetch::bench_sql_fetch_fast_path(c);
     }
 }
 
@@ -77,5 +84,6 @@ criterion_group!(
     bench_impacted_checks,
     bench_observer_overhead,
     bench_relationship_projection,
+    bench_sql_fetch_fast_path,
 );
 criterion_main!(benches);
