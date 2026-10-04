@@ -6,7 +6,7 @@
     python3 evals/power.py --subsample <deep-report.json>
 
 Exists because #1025: the same description scored `signature` 9/12 and 7/12
-hours apart, and every gate in `evals/README.md` was written in two-run units.
+hours apart, and every gate in `evals/HISTORY.md` was written in two-run units.
 A gate only means something when its margin exceeds the spread of the statistic
 it reads, so that spread has to be a number rather than an assumption.
 
@@ -180,7 +180,7 @@ def _diff_sd(cases, m: int) -> float:
 def _draw(cases, m, rng, shift=0.0, up=False, conditional=False) -> int:
     """One signed regression statistic: how far the candidate moved the wrong way.
 
-    **Directional, not two-sided.** Every gate in the README rejects in one
+    **Directional, not two-sided.** Every gate in `evals/METHODOLOGY.md` rejects in one
     direction only — a should-fire flow rejects a *drop*, an over-trigger
     guard rejects a *rise*. Scoring `abs(X - Y)` spends the 5% error budget on
     a tail no gate ever looks at, which inflates the margin by about one count
@@ -224,7 +224,7 @@ def _null_margin(cases, m, alpha=ALPHA, trials=TRIALS, up=False,
     """Smallest wrong-way difference whose one-sided null tail is <= alpha.
 
     Returns `(reject_at, tail)`. The *allowed* margin a gate should carry is
-    `reject_at - 1`: the README writes gates as `candidate >= control - k`,
+    `reject_at - 1`: METHODOLOGY.md writes gates as `candidate >= control - k`,
     which passes on equality and first fails at `k + 1`.
     """
     rng = random.Random(SEED)

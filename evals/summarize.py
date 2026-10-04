@@ -20,7 +20,7 @@ Two things it does that reading the HTML report does not:
     the failure. That is the single number standing for "the description
     carries the agent on its own". Every case runs `claude-opus-5`, so it is a
     Claude number; Codex reads the same description but is never evaluated
-    here (see `evals/README.md`, "Codex reads the same description").
+    here (see `evals/HISTORY.md`, "Codex reads the same description").
 
 It also refuses to let a failed run pass as a result. A run that errors — a
 session limit, a timeout — scores 0 in **both** arms, so the case renders as a
