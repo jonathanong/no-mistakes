@@ -271,6 +271,12 @@ jobs:
     permissions:
       contents: read
       actions: read
+    env:
+      # The macOS test-name filter still compiles the full lib-test binary.
+      # Match build/test profiles to preserve Windows rlib reuse, without
+      # disabling debug assertions or changing the platform test deadlines.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
     strategy:
       fail-fast: false
       matrix:
