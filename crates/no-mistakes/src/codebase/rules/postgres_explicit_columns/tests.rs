@@ -101,6 +101,19 @@ fn standalone_table_is_an_explicit_columns_violation() {
 }
 
 #[test]
+fn table_set_arms_are_explicit_columns_violations() {
+    let found = messages(
+        "fail",
+        SQL,
+        &["sql/table-right-arm.sql", "sql/table-left-arm.sql"],
+    );
+    assert_eq!(found.len(), 2, "{found:?}");
+    assert!(found
+        .iter()
+        .all(|message| message.contains("SELECT * reads all columns of accounts")));
+}
+
+#[test]
 fn max_columns_zero_reports_narrow_tables_and_skips_views() {
     let found = messages(
         "max-zero",

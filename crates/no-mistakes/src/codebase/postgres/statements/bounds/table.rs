@@ -3,7 +3,7 @@ use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlB
 use sqlparser::ast::Table;
 
 mod tokens;
-pub(in super::super) use tokens::TableTokenCursor;
+pub(in crate::codebase::postgres) use tokens::TableTokenCursor;
 pub(in crate::codebase::postgres) use tokens::TableTokenIndex;
 
 /// `TABLE name` is `SELECT * FROM name`: it returns every row of the relation.
