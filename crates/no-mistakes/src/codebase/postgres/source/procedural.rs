@@ -89,7 +89,7 @@ pub(super) fn collect(
         && significant
             .last()
             .is_some_and(|index| keyword(&prepared.tokens[*index].token, Keyword::END));
-    let control = significant.iter().any(|index| matches!(&prepared.tokens[*index].token, Token::Word(word) if word.quote_style.is_none() && ["IF", "ELSIF", "LOOP", "EXCEPTION", "DECLARE"].iter().any(|value| word.value.eq_ignore_ascii_case(value))));
+    let control = significant.iter().any(|index| matches!(&prepared.tokens[*index].token, Token::Word(word) if word.quote_style.is_none() && ["LOOP", "EXCEPTION", "DECLARE"].iter().any(|value| word.value.eq_ignore_ascii_case(value))));
     if !plain || control {
         block.diagnostics.push(diagnostic("Procedural control flow is unsupported; no nested DDL execution or occurrence is inferred", &body_span));
         return Ok(PostgresSqlStatementKind::DoBlock { block });
@@ -102,6 +102,7 @@ pub(super) fn collect(
         .enumerate()
         .filter_map(|(index, token)| (index > first && index < last).then_some(token))
         .collect();
+    super::conditional::prepare(&mut prepared.tokens);
     let local = Locations::new(sql);
     for token in &mut prepared.tokens {
         relocate(token, &local, locations, start)?;

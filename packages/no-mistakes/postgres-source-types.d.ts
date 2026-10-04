@@ -1,4 +1,7 @@
-import type { PostgresSqlProceduralBlock } from "./postgres-procedural-types";
+import type {
+  PostgresSqlConditionalBranch,
+  PostgresSqlProceduralBlock,
+} from "./postgres-procedural-types";
 export type * from "./postgres-procedural-types";
 /** Pure SQL source input. No repository, database, or filesystem options are needed. */
 export interface PostgresSqlSource {
@@ -187,6 +190,7 @@ export type PostgresSqlStatementKind =
   | { kind: "createFunction"; function: PostgresSqlFunction }
   | { kind: "drop"; drop: PostgresSqlDrop }
   | { kind: "doBlock"; block: PostgresSqlProceduralBlock }
+  | { kind: "conditional"; branches: PostgresSqlConditionalBranch[] }
   | { kind: "other" };
 export type PostgresSqlStatement = PostgresSqlStatementKind & {
   ordinal: number;

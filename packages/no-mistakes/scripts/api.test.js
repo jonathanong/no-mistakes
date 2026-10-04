@@ -854,6 +854,9 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   const procedural = readFileSync(join(packageRoot, "postgres-procedural-types.d.ts"), "utf8");
   assert.match(procedural, /export interface PostgresSqlProceduralBlock/);
   assert.match(procedural, /bodySpan: PostgresSqlSpan;/);
+  assert.match(procedural, /export interface PostgresSqlConditionalBranch/);
+  assert.match(procedural, /condition: PostgresSqlExpression \| null;/);
+  assert.match(declarations, /kind: "conditional"; branches: PostgresSqlConditionalBranch\[\];/);
   assert.match(procedural, /statements: PostgresSqlStatement\[\];/);
   assert.match(procedural, /complete: boolean;/);
 });

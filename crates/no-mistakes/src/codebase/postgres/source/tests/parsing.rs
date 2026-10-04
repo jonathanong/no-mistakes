@@ -108,3 +108,17 @@ fn lexical_failure_and_empty_sources_return_structured_diagnostics() {
     assert!(batch[0].statements.is_empty());
     assert_eq!(batch[1].statements.len(), 2);
 }
+
+#[test]
+fn table_set_arm_retains_the_original_source_boundary() {
+    let sql = super::fixture("table-source-boundary.sql");
+    let result = super::facts("table-source-boundary.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 1);
+    let statement = &result.statements[0];
+    assert_eq!(statement.sql, sql.trim_end());
+    assert_eq!(
+        &sql[statement.span.start.offset..statement.span.end.offset],
+        statement.sql
+    );
+}

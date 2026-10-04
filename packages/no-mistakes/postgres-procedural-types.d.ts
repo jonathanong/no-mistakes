@@ -1,5 +1,6 @@
 import type {
   PostgresSqlDiagnostic,
+  PostgresSqlExpression,
   PostgresSqlSpan,
   PostgresSqlStatement,
 } from "./postgres-source-types";
@@ -10,4 +11,11 @@ export interface PostgresSqlProceduralBlock {
   statements: PostgresSqlStatement[];
   diagnostics: PostgresSqlDiagnostic[];
   complete: boolean;
+}
+
+/** Branch DDL describes source occurrences, never guaranteed execution. */
+export interface PostgresSqlConditionalBranch {
+  condition: PostgresSqlExpression | null;
+  span: PostgresSqlSpan;
+  statements: PostgresSqlStatement[];
 }

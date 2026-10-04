@@ -2,6 +2,7 @@
 
 mod alter;
 mod columns;
+mod conditional;
 mod ddl;
 mod drop_facts;
 mod expressions;

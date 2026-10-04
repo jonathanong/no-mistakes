@@ -5,14 +5,14 @@ native async worker without repository discovery, filesystem reads, invocation
 locks, PostgreSQL connections, or a database catalog.
 
 ```js
-import { parsePostgresSql } from 'no-mistakes';
+import { parsePostgresSql } from "no-mistakes";
 
 const facts = await parsePostgresSql({
-  sql: 'CREATE TABLE app.accounts (id uuid PRIMARY KEY);',
-  fileName: 'migration.sql',
+  sql: "CREATE TABLE app.accounts (id uuid PRIMARY KEY);",
+  fileName: "migration.sql",
 });
 for (const statement of facts.statements) {
-  if (statement.kind === 'createTable') {
+  if (statement.kind === "createTable") {
     console.log(statement.table, statement.columns, statement.constraints);
   }
 }
@@ -82,7 +82,7 @@ neighboring statements. Lexical errors preserve the valid prefix and report the
 remaining invalid source. Diagnostics are not thrown as a single file-wide
 failure. Invalid API input still rejects the promise.
 
-Dollar-quoted plain `DO ... BEGIN ... END` bodies in the built-in `plpgsql`
+Dollar-quoted `DO ... BEGIN ... END` bodies in the built-in `plpgsql`
 language expose a `doBlock` fact. Its `bodySpan` identifies the original body;
 nested statements retain their original global source coordinates and lexical
 order. These are **procedural source occurrences**, never proof that a statement
@@ -93,9 +93,13 @@ bounded parser safety limit.
 
 `PostgresSqlProceduralBlock.complete` is false when body facts are incomplete,
 including an incomplete nested program. Inspect its `diagnostics` before using
-its occurrence list. Conditional blocks, declarations, other procedural
-languages and non-dollar-quoted bodies remain explicitly unsupported; no nested
-DDL is guessed behind unsupported control flow. Ordinary syntax errors preserve
+its occurrence list. Typed `IF`, `ELSIF`, and `ELSE` blocks expose a `conditional`
+fact with ordered `PostgresSqlConditionalBranch` entries. A branch retains its
+condition expression (null for ELSE), source span, and nested statement facts.
+All branches describe possible source occurrences; the API does not evaluate
+conditions or claim that their DDL executes. Declarations, loops, exception
+handlers, other procedural languages and non-dollar-quoted bodies remain
+explicitly unsupported; no DDL is guessed behind unsupported control flow. Ordinary syntax errors preserve
 parseable neighboring body statements. Function bodies remain opaque.
 
 A parser compatibility normalization with a source boundary that cannot be

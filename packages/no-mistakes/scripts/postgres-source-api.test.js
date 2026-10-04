@@ -84,3 +84,33 @@ test(
     );
   },
 );
+
+test(
+  "compiled source API preserves conditional occurrence provenance",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const sql = fixture("conditional.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(facts.diagnostics, []);
+    const block = facts.statements[0].block;
+    assert.equal(block.complete, true);
+    const conditional = block.statements[0];
+    assert.equal(conditional.kind, "conditional");
+    assert.equal(conditional.branches.length, 3);
+    assert.equal(conditional.branches[2].condition, null);
+    for (const branch of conditional.branches) {
+      const statement = branch.statements[0];
+      assert.equal(statement.kind, "alterTable");
+      assert.equal(
+        Buffer.from(sql)
+          .subarray(statement.span.start.offset, statement.span.end.offset)
+          .toString(),
+        statement.sql,
+      );
+    }
+    const table = await api.parsePostgresSql({ sql: fixture("table-source-boundary.sql") });
+    assert.deepEqual(table.diagnostics, []);
+    assert.equal(table.statements.length, 1);
+  },
+);

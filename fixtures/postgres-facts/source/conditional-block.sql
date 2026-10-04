@@ -1,0 +1,7 @@
+DO $$ BEGIN
+IF true THEN BEGIN
+  ALTER TABLE children ADD COLUMN parent_note text;
+END; ELSIF false THEN BEGIN
+END; ELSE BEGIN
+END; END IF;
+END $$;

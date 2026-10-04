@@ -115,6 +115,9 @@ pub enum PostgresSqlStatementKind {
     DoBlock {
         block: PostgresSqlProceduralBlock,
     },
+    Conditional {
+        branches: Vec<PostgresSqlConditionalBranch>,
+    },
     Other,
 }
 
@@ -127,4 +130,13 @@ pub struct PostgresSqlProceduralBlock {
     pub statements: Vec<PostgresSqlStatement>,
     pub diagnostics: Vec<PostgresSqlDiagnostic>,
     pub complete: bool,
+}
+
+/// Branch statements are source occurrences, not guaranteed execution.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlConditionalBranch {
+    pub condition: Option<PostgresSqlExpression>,
+    pub span: PostgresSqlSpan,
+    pub statements: Vec<PostgresSqlStatement>,
 }
