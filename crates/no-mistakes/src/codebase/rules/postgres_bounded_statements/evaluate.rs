@@ -1,13 +1,14 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use crate::codebase::postgres::statements::{
-    SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery,
-    SqlPinSource,
+    SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
-use crate::codebase::postgres::{RelationKind, SchemaCatalog};
+use crate::codebase::postgres::SchemaCatalog;
 
 mod possible_temporary;
 mod reads;
 use reads::table_offender;
+mod keys;
+mod propagation;
 mod qualified;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
@@ -102,93 +103,21 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             SqlBoundItemKind::Opaque => false,
         })
         .collect();
-    // Bounded items bound the relations pinned to them: iterate to the least fixed point.
-    loop {
-        let mut changed = false;
-        for (index, item) in query.items.iter().enumerate() {
-            if !bounded[index]
-                && keyed(
-                    item,
-                    &pin_subqueries[index],
-                    &pin_arrays[index],
-                    &bounded,
-                    catalog,
-                )
-            {
-                bounded[index] = true;
-                changed = true;
-            }
-        }
-        if !changed {
-            break;
-        }
-    }
+    let keys: Vec<_> = query
+        .items
+        .iter()
+        .enumerate()
+        .map(|(index, item)| {
+            keys::prepare(item, &pin_subqueries[index], &pin_arrays[index], catalog)
+        })
+        .collect();
+    propagation::bound(&keys, &mut bounded);
     let offenders = reads::collect(query, &nested, &pin_subqueries, &bounded, catalog);
     Evaluation {
         bounded: query.capped || bounded.iter().all(|state| *state),
         items: bounded,
         offenders,
     }
-}
-
-/// Whether the pins cover every column of a unique key (or the row identifier) with values
-/// the statement or its caller sizes.
-fn keyed(
-    item: &SqlBoundItem,
-    subqueries: &[Option<Evaluation>],
-    arrays: &[bool],
-    bounded: &[bool],
-    catalog: &SchemaCatalog,
-) -> bool {
-    let SqlBoundItemKind::Table(name) = &item.kind else {
-        return false;
-    };
-    let usable = |column: &str, physical: &str| {
-        item.pins.iter().enumerate().any(|(index, pin)| {
-            pin.column == column
-                && arrays[index]
-                // A subquery in the value that reads the row checked sizes nothing.
-                && !reads_outer(&pin.reads, catalog)
-                && !qualified::reads_outer(&pin.qualified_reads, catalog)
-                // `IS NOT DISTINCT FROM $1` also matches NULL, which a unique key may repeat.
-                && (!pin.null_safe || catalog.column_is_not_null(name, physical))
-                && match &pin.source {
-                    SqlPinSource::Value => true,
-                    SqlPinSource::StoredArray(_) | SqlPinSource::ReadQuery(_) => false,
-                    SqlPinSource::Items(items) | SqlPinSource::Array { items, .. } => items.iter().all(|other| bounded[*other]),
-                    SqlPinSource::Query(_) => subqueries[index]
-                        .as_ref()
-                        .is_some_and(|query| query.bounded),
-                }
-        })
-    };
-    // Preserve physical nullability while matching pins against visible aliases.
-    let mut keys: Vec<_> = catalog
-        .unique_keys(name)
-        .into_iter()
-        .filter_map(|key| {
-            key.into_iter()
-                .map(|column| {
-                    let table = catalog.relation(name)?;
-                    let visible = super::arrays::key_visible(table, &item.column_aliases, &column)?;
-                    Some((visible.to_owned(), column))
-                })
-                .collect::<Option<Vec<_>>>()
-        })
-        .collect();
-    // Every row has a `ctid`, so `ctid IN (SELECT ctid … LIMIT n)` bounds a statement. It is
-    // only unique within one physical table: the leaves of a partitioned table repeat values,
-    // and a relation the catalog does not describe may be one.
-    let plain = catalog
-        .relation(name)
-        .is_some_and(|table| table.relation_kind != RelationKind::PartitionedTable);
-    if plain && !item.column_aliases.iter().any(|alias| alias == "ctid") {
-        keys.push(vec![("ctid".to_string(), "ctid".to_string())]);
-    }
-    keys.iter().any(|key| {
-        key.iter()
-            .all(|(visible, physical)| usable(visible, physical))
-    })
 }
 
 /// Columns every table has without the catalog listing them.

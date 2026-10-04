@@ -18,6 +18,18 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         tables.insert(normalize_table_name(&name), arbiter::arbiter_table(&table));
         model_tables.insert(normalize_table_name(&name), model);
     }
+    let mut bare_relations = BTreeMap::new();
+    let mut bare_key_relations = BTreeMap::new();
+    for key in model_tables.keys() {
+        let (qualifier, bare) = super::names::split_key(key);
+        bare_relations
+            .entry(bare.clone())
+            .and_modify(|value| *value = None)
+            .or_insert_with(|| Some(key.clone()));
+        if qualifier.is_none() {
+            bare_key_relations.insert(bare, key.clone());
+        }
+    }
     Ok(SchemaCatalog {
         coverage: snapshot.coverage,
         schema: snapshot.schema,
@@ -25,6 +37,8 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         current_database: snapshot.current_database,
         tables,
         model_tables,
+        bare_relations,
+        bare_key_relations,
         functions: functions(snapshot.functions),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),

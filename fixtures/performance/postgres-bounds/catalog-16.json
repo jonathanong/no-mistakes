@@ -1,0 +1,423 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "public.t0": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t1": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t2": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t3": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t4": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t5": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t6": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t7": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t8": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t9": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t10": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t11": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t12": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t13": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t14": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    },
+    "public.t15": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "id_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "expression": "id",
+              "column": "id"
+            }
+          ],
+          "accessMethod": "btree"
+        }
+      },
+      "relationKind": "table"
+    }
+  }
+}
