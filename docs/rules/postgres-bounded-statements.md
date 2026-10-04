@@ -397,3 +397,18 @@ arm cannot turn an outer column reference into a local reference.
 Within a set-operation arm, a bare `GROUP BY` name is treated as an output label
 only when that arm actually projects the label. `SELECT 1 GROUP BY id` retains an
 outer `id` read; `SELECT $1 AS id GROUP BY id` groups its own output instead.
+
+A caller-sized projected key keeps its own value proof beside an independent SRF:
+
+```sql
+UPDATE accounts a SET name = 'x'
+FROM (SELECT $1::uuid AS id, pg_ls_dir('.') AS entry) s
+WHERE a.id = s.id;
+```
+
+With a unique key on `accounts.id`, repeated directory rows still select at most
+one account. Selecting `s.entry` as the key remains opaque. The same proof applies
+through CTEs, positional aliases, and corresponding set-operation outputs; custom
+casts, unknown functions, wildcard widths, and row-dependent keys remain conservative.
+Use an explicit finite key value or bounded source to fix those cases. Existing
+`no-mistakes` file and line suppression directives retain their normal behavior.

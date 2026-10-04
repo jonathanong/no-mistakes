@@ -26,6 +26,15 @@ pub struct SqlBoundQuery {
     /// A `LIMIT` / `FETCH FIRST`, or a pure aggregate (no `GROUP BY`).
     pub capped: bool,
     pub items: Vec<SqlBoundItem>,
+    /// Output columns in ordinal order; caller-sized values stay finite despite repeated rows.
+    pub outputs: Vec<SqlBoundOutput>,
+}
+
+/// Syntactic value provenance for one projected column, independent of query row cardinality.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlBoundOutput {
+    pub name: Option<String>,
+    pub caller_sized: bool,
 }
 
 /// One FROM item and the columns the statement pins on it.

@@ -57,7 +57,11 @@ fn push(
         kind,
         line,
         column,
-        query: SqlBoundQuery { capped, items },
+        query: SqlBoundQuery {
+            capped,
+            items,
+            outputs: Vec::new(),
+        },
         target: Some(0),
     });
 }
