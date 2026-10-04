@@ -369,3 +369,10 @@ to user-defined set-returning functions. Known older scalar builtins retain thei
 bare-name heuristic; an explicit `LIMIT` can still bound an unknown projection.
 See the [PostgreSQL 13 release notes](https://www.postgresql.org/docs/release/13.0/)
 and [PostgreSQL 15 release notes](https://www.postgresql.org/docs/15/release-15.htm).
+
+Each set-operation arm owns its relation aliases. An alias declared in a sibling
+arm cannot turn an outer column reference into a local reference.
+
+Within a set-operation arm, a bare `GROUP BY` name is treated as an output label
+only when that arm actually projects the label. `SELECT 1 GROUP BY id` retains an
+outer `id` read; `SELECT $1 AS id GROUP BY id` groups its own output instead.

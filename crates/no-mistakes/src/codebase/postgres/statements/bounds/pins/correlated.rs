@@ -4,6 +4,7 @@ mod scalar_arrays;
 mod scope;
 use scope::Scope;
 mod sources;
+mod visitor;
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
@@ -11,7 +12,7 @@ use crate::codebase::postgres::statements::SqlBareRead;
 use crate::fx::FxHashMap;
 use columns::output_names;
 pub(in super::super) use columns::projection_columns;
-use sqlparser::ast::{Expr, ObjectName, Query, TableFactor, Visit, Visitor};
+use sqlparser::ast::{ObjectName, Query, SetExpr, Visit};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::ControlFlow;
 
@@ -65,6 +66,10 @@ pub(in super::super) fn reads_outer_rows(
 #[derive(Default)]
 struct Frame {
     scope: Scope,
+    /// A set operation's SELECT arms have independent aliases and projected columns.
+    split_selects: bool,
+    /// This frame belongs to one SELECT arm and must finish at `post_visit_select`.
+    select_frame: bool,
     /// Derived queries resolve against preceding sources, never their own output.
     enclosing: Option<Scope>,
     escaping_qualifiers: Vec<String>,
@@ -99,27 +104,14 @@ impl Scan {
     }
 }
 
-impl Visitor for Scan {
-    type Break = ();
-
-    fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        let mut frame = Frame {
-            enclosing: self
-                .derived_scopes
-                .remove(&(query as *const Query as usize)),
-            ..Frame::default()
-        };
-        for name in output_names(query, self.positions.as_deref()) {
-            *frame.labels.entry(name).or_default() += 1;
-        }
-        self.prepare_ctes(query);
-        self.stack.push(frame);
-        ControlFlow::Continue(())
+impl Scan {
+    fn finish_frame(&mut self, query: &Query) -> ControlFlow<()> {
+        let result = self.finish_frame_without_query();
+        self.complete_cte(query);
+        result
     }
 
-    /// The relations of a level are complete only after it has been visited (the projection comes
-    /// before FROM), so its references are resolved here and what remains moves up a level.
-    fn post_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
+    fn finish_frame_without_query(&mut self) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
         let mut up: Vec<String> = frame
             .qualifiers
@@ -160,51 +152,6 @@ impl Visitor for Scan {
                 self.unresolved.extend(up);
                 self.reads = reads;
             }
-        }
-        self.complete_cte(query);
-        ControlFlow::Continue(())
-    }
-
-    fn pre_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
-        if let TableFactor::Derived {
-            subquery, lateral, ..
-        } = factor
-        {
-            let scope = if *lateral {
-                self.stack
-                    .last()
-                    .map(|frame| frame.scope.clone())
-                    .unwrap_or_default()
-            } else {
-                Scope::default()
-            };
-            self.derived_scopes
-                .insert(&**subquery as *const Query as usize, scope);
-        }
-        self.add_factor(factor);
-        ControlFlow::Continue(())
-    }
-
-    fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        let Some(frame) = self.stack.last_mut() else {
-            return ControlFlow::Continue(());
-        };
-        match expr {
-            Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-                frame.qualifiers.push(
-                    parts[..parts.len() - 1]
-                        .iter()
-                        .map(ident_key)
-                        .collect::<Vec<_>>()
-                        .join("."),
-                );
-            }
-            Expr::Identifier(ident)
-                if !is_placeholder_ident_at(ident, self.positions.as_deref()) =>
-            {
-                *frame.bare.entry(ident_key(ident)).or_default() += 1;
-            }
-            _ => {}
         }
         ControlFlow::Continue(())
     }
