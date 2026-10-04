@@ -59,3 +59,41 @@ fn physical_ids(
         }
     }
 }
+
+#[test]
+fn physical_table_arms_belong_to_their_original_derived_join_sources() {
+    use crate::codebase::postgres::{SqlBoundItemKind, SqlPinSource};
+    let sql =
+        std::fs::read_to_string(fixture_root().join("sql/table-source-association.sql")).unwrap();
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 5);
+    for (fact, expected) in facts
+        .bounds
+        .iter()
+        .take(4)
+        .zip([vec![6], vec![13], vec![], vec![]])
+    {
+        let target = &fact.query.items[fact.target.unwrap()];
+        let input = target
+            .pins
+            .iter()
+            .find_map(|pin| match &pin.source {
+                SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) => Some(query),
+                _ => None,
+            })
+            .expect("saved DELETE keeps its IN subquery");
+        let later = input
+            .items
+            .iter()
+            .find(|item| item.alias.as_deref() == Some("later"))
+            .expect("derived joined source retains its explicit alias");
+        let SqlBoundItemKind::Query(query) = &later.kind else {
+            panic!("derived joined source must retain query ownership");
+        };
+        let mut lines = std::collections::BTreeSet::new();
+        physical_ids(query, &mut lines);
+        // A global line set could pass even if this arm moved into the ON pin.
+        assert_eq!(lines.into_iter().collect::<Vec<_>>(), expected);
+    }
+}
