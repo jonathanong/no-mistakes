@@ -9,6 +9,15 @@ use napi_derive::napi;
 // JavaScript names explicit at the registration site. Defined before the
 // child modules so their registrations use the same declarative boundary.
 macro_rules! json_binding {
+    ($rust_name:ident, $js_name:literal, $implementation:path, pure) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(
+            options_json: napi::bindgen_prelude::Buffer,
+        ) -> AsyncTask<async_task::PureJsonTask> {
+            AsyncTask::new(async_task::PureJsonTask::new(options_json, $implementation))
+        }
+    };
     ($rust_name:ident, $js_name:literal, $implementation:path) => {
         json_binding!($rust_name, $js_name, $implementation, value);
     };
@@ -42,6 +51,9 @@ mod lockfile_diff;
 #[cfg(feature = "mermaid-validation")]
 mod mermaid;
 pub(crate) mod options;
+mod postgres_source;
+#[cfg(not(coverage))]
+pub use postgres_source::parse_postgres_sql_json;
 mod project;
 pub mod queries;
 

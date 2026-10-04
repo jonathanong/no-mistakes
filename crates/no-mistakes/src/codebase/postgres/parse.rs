@@ -1,4 +1,5 @@
 use sqlparser::ast::Statement;
+use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::ParserError;
 use std::fmt;
 
@@ -52,6 +53,27 @@ impl From<ParserError> for PostgresParseError {
 /// Parse `sql` with the PostgreSQL dialect.
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
     PreparedSql::new(sql).parse()
+}
+
+pub(super) struct PreparedPostgresTokens {
+    pub tokens: Vec<sqlparser::tokenizer::TokenWithSpan>,
+    pub lexical_error: Option<sqlparser::tokenizer::TokenizerError>,
+}
+
+/// One token inventory shared by strict parsing and standalone source facts.
+pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
+    let normalized = normalize_copy_data(sql);
+    let separated = distinct_group::separate_distinct_grouping(&normalized);
+    let mut tokens = Vec::new();
+    let lexical_error = sqlparser::tokenizer::Tokenizer::new(&PostgreSqlDialect {}, &separated)
+        .tokenize_with_location_into_buf(&mut tokens)
+        .err();
+    let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
+    normalize_table_queries(&mut tokens);
+    PreparedPostgresTokens {
+        tokens,
+        lexical_error,
+    }
 }
 
 fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>) {

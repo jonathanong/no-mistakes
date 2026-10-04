@@ -1,5 +1,8 @@
 use napi::bindgen_prelude::Buffer;
 use napi::{Env, Task};
+mod pure;
+#[cfg(not(coverage))]
+pub use pure::PureJsonTask;
 
 #[cfg_attr(not(test), allow(dead_code))]
 pub struct JsonTask {

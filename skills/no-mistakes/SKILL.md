@@ -116,6 +116,8 @@ groups, limits, diffs, and deleted-file behavior.
   explain output, and runner commands.
 - [playwright.md](references/playwright.md): selector, route, and assertion
   coverage commands.
+- [postgres-source.md](references/postgres-source.md): pure async SQL source
+  facts, partial diagnostics, and dependency completeness.
 - [impact-recipes.md](references/impact-recipes.md): selector, API shape,
   package-entrypoint, workflow, test-deletion, and queue recipes.
 - [monorepo-resolution.md](references/monorepo-resolution.md): workspace

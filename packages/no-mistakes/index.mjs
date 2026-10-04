@@ -21,6 +21,7 @@ export const {
   fetches,
   flow,
   generatePostgresCatalog,
+  parsePostgresSql,
   impactedChecks,
   importUsages,
   importers,

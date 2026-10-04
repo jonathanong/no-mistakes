@@ -5,7 +5,11 @@
 work. Check rules consume these facts instead of re-parsing SQL or
 TypeScript.
 
-These extractors are library APIs. There is no CLI command or N-API dump.
+The existing prepared repository extractors below are Rust library APIs.
+For standalone SQL text, the public async Node
+[`parsePostgresSql`](postgres-source-api.md) exposes versioned typed source
+facts without a repository scan or database. It shares the same parser and
+publishes partial diagnostics and source coordinates.
 `postgres-conflict-ordering`, `postgres-lock-ordering`,
 `postgres-column-requires-trigger`, `postgres-required-comments`,
 `postgres-duplicate-function-body`, `postgres-table-shape`,

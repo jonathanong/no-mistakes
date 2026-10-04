@@ -48,7 +48,7 @@ serde_json = { version = "1", features = ["raw_value"] }
 serde_path_to_error = "0.1"
 serde_yaml = "0.9"
 self_cell = "1.2.2"
-sqlparser = { version = "0.63", features = ["visitor"] }
+sqlparser = { version = "0.63", features = ["visitor", "serde"] }
 syn = { version = "3", features = ["full", "visit"] }
 toml = "1.1"
 unicode-id-start = "1.4.0"
