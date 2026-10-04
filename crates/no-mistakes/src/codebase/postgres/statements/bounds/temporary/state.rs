@@ -1,6 +1,7 @@
 //! Request-local SQL relation identities and dependency closure.
 mod names;
 mod ownership;
+mod path;
 mod physical;
 mod rename;
 mod schema;
@@ -29,7 +30,8 @@ pub(super) struct State {
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub earlier_schemas: Option<Vec<String>>,
-    pub local_path: Option<(bool, Option<Vec<String>>)>,
+    pub search_path: Option<Vec<String>>,
+    pub local_path: Option<path::Snapshot>,
 }
 impl Default for State {
     fn default() -> Self {
@@ -42,6 +44,7 @@ impl Default for State {
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
             earlier_schemas: None,
+            search_path: None,
             local_path: None,
         }
     }
@@ -76,7 +79,7 @@ impl State {
             removed.insert(key(name));
         }
         if !definite_temporary {
-            self.drop_physical(BTreeSet::from([decoded_parts(name)]), cascade);
+            self.drop_physical(self.ddl_names(name), cascade);
         }
         self.remove(removed, cascade);
     }

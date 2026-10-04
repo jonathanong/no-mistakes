@@ -43,9 +43,12 @@ impl TemporaryRelations {
                 self.state.commit();
                 self.transaction = None;
                 self.savepoints.clear();
-                if let Some((temp_first, earlier_schemas)) = self.state.local_path.take() {
+                if let Some((temp_first, earlier_schemas, search_path)) =
+                    self.state.local_path.take()
+                {
                     self.state.temp_first = temp_first;
                     self.state.earlier_schemas = earlier_schemas;
+                    self.state.search_path = search_path;
                 }
                 if *chain {
                     self.transaction = Some(self.state.clone());
@@ -100,8 +103,11 @@ impl TemporaryRelations {
                 && (*scope != Some(ContextModifier::Local) || self.transaction.is_some()) =>
             {
                 if *scope == Some(ContextModifier::Local) && self.state.local_path.is_none() {
-                    self.state.local_path =
-                        Some((self.state.temp_first, self.state.earlier_schemas.clone()));
+                    self.state.local_path = Some((
+                        self.state.temp_first,
+                        self.state.earlier_schemas.clone(),
+                        self.state.search_path.clone(),
+                    ));
                 } else if *scope != Some(ContextModifier::Local) {
                     // A session assignment replaces a preceding LOCAL assignment at commit.
                     self.state.local_path = None;
@@ -122,6 +128,7 @@ impl TemporaryRelations {
                     })
                     .collect();
                 let path = names.map(|parts| parts.into_iter().flatten().collect::<Vec<_>>());
+                self.state.record_path(values, &path);
                 let pg_temp = path
                     .as_ref()
                     .and_then(|parts| parts.iter().position(|name| name == "pg_temp"));
@@ -146,6 +153,7 @@ impl TemporaryRelations {
             {
                 self.state.temp_first = true;
                 self.state.earlier_schemas = None;
+                self.state.search_path = None;
                 self.state.local_path = None;
             }
             _ => {}
