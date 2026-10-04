@@ -9,12 +9,8 @@ fn group_and_order_keywords_do_not_create_correlated_column_reads() {
     let sqlparser::ast::Statement::Query(query) = &statements[0] else {
         panic!("saved fixture is a query");
     };
-    let reads = super::super::reads_outer_rows(
-        query,
-        &Default::default(),
-        &Default::default(),
-        None,
-    );
+    let reads =
+        super::super::reads_outer_rows(query, &Default::default(), &Default::default(), None);
     assert!(!reads.certain);
     assert!(reads.bare.is_empty());
 }

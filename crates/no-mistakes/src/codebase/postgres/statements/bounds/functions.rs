@@ -106,7 +106,7 @@ pub(super) fn unnest_kind_at(
 ) -> SqlBoundItemKind {
     if arrays
         .iter()
-        .any(|expr| input_depends_on_data_at(expr, false, positions))
+        .any(|expr| input_depends_on_data_at(expr, true, positions))
     {
         SqlBoundItemKind::Opaque
     } else {
@@ -144,11 +144,6 @@ fn input_depends_on_data_at(
     let mut found = Found(false, reject_calls, positions.map(<[(u32, u32)]>::to_vec));
     let _ = expr.visit(&mut found);
     found.0
-}
-
-/// Whether an ordinary function expression may read data from a source.
-pub(super) fn depends_on_data(expr: &Expr) -> bool {
-    input_depends_on_data_at(expr, true, None)
 }
 
 #[cfg(test)]
