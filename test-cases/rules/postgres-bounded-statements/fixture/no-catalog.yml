@@ -3,5 +3,6 @@ rules:
   - rule: postgres-bounded-statements
     scope: repository
     options:
+      importSpecifier: "@example/db"
       exclude: ['src/**']
       sqlInclude: ['sql/invalid.sql']

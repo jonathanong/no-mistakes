@@ -1,4 +1,4 @@
-import { withTransaction } from "@data-stores/psql";
+import { withTransaction } from "@example/db";
 
 export function insert(ids: string[]) {
   return withTransaction(async () => query(`

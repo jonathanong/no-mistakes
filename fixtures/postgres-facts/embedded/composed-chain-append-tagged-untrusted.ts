@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const suffix = "1";
 const sql = "SELECT id FROM topics".append(raw` AND id = ${suffix}`);

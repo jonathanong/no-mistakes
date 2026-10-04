@@ -19,7 +19,7 @@ fn config() -> NoMistakesConfig {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
             options: serde_yaml::from_str(
-                "sqlInclude: [\"sql/**/*.sql\"]\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]",
+                "importSpecifier: '@example/db'\nsqlInclude: [\"sql/**/*.sql\"]\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]",
             )
             .unwrap(),
             ..Default::default()

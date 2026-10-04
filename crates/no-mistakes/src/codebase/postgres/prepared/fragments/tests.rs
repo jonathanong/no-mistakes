@@ -11,7 +11,7 @@ fn fragment_demand_is_explicit_and_equal_text_shares_a_statement_projection() {
             .join("../../test-cases/rules/postgres-sql-shape-policy/fixture/prepared"),
     );
     let file = root.join("src/builders.ts");
-    let profile = EmbeddedSqlOptions::default();
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
     let mut plan = CheckFactPlan {
         embedded_sql: true,

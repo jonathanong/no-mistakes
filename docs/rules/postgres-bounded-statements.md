@@ -398,3 +398,14 @@ arm cannot turn an outer column reference into a local reference.
 Within a set-operation arm, a bare `GROUP BY` name is treated as an output label
 only when that arm actually projects the label. `SELECT 1 GROUP BY id` retains an
 outer `id` read; `SELECT $1 AS id GROUP BY id` groups its own output instead.
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

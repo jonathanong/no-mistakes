@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const text = sql`SELECT * FROM topics WHERE id = ${1}`.append(sql` AND status = ${2}`);
 

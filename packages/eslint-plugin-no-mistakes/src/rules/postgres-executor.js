@@ -2,7 +2,7 @@
 
 const { quasiText, sqlText, unwrapTs } = require("./postgres-query-text");
 
-const DEFAULT_IMPORT_SPECIFIER = "@data-stores/psql";
+const DEFAULT_IMPORT_SPECIFIER = "";
 const DEFAULT_EXECUTOR_NAMES = ["query", "read", "write"];
 const DEFAULT_CHUNK_FUNCTION_NAMES = ["chunkArray"];
 const TRANSACTION_IMPORTS = new Set(["withTransaction", "withTransactionOptions"]);
@@ -12,7 +12,7 @@ const TRANSACTION_COMMAND = /^\s*(?:BEGIN|COMMIT|ROLLBACK)\b/i;
 function executorOptionDefaults(options = {}) {
   return {
     importSpecifier: options.importSpecifier ?? DEFAULT_IMPORT_SPECIFIER,
-    executorNames: options.executorNames ?? DEFAULT_EXECUTOR_NAMES,
+    executorNames: options.executorNames ?? (options.importSpecifier ? DEFAULT_EXECUTOR_NAMES : []),
     owners: options.owners ?? [],
     chunkFunctionNames: options.chunkFunctionNames ?? DEFAULT_CHUNK_FUNCTION_NAMES,
   };
@@ -39,15 +39,16 @@ function importedName(specifier) {
 function executorBindings(program, options = {}) {
   const bindings = new Set();
   const { importSpecifier, executorNames } = executorOptionDefaults(options);
+  bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
     if (statement.importKind === "type") continue;
-    if (statement.source?.value !== importSpecifier) continue;
+    if (importSpecifier && statement.source?.value !== importSpecifier) continue;
     for (const specifier of statement.specifiers ?? []) {
       if (specifier.type !== "ImportSpecifier") continue;
       if (specifier.importKind === "type") continue;
       const imported = importedName(specifier);
-      if (TRANSACTION_IMPORTS.has(imported)) bindings.add(QUERY_PROPERTY);
+      if (importSpecifier && TRANSACTION_IMPORTS.has(imported)) bindings.add(QUERY_PROPERTY);
       if (imported && executorNames.includes(imported)) bindings.add(specifier.local.name);
     }
   }
@@ -75,7 +76,11 @@ function calleeName(call, bindings) {
   const callee = unwrapTs(call?.callee);
   if (!callee) return null;
   if (callee.type === "Identifier" && bindings?.has(callee.name)) return callee.name;
-  if (callee.type === "MemberExpression" && memberPropertyName(callee) === QUERY_PROPERTY) {
+  if (
+    bindings?.queryMembers !== false &&
+    callee.type === "MemberExpression" &&
+    memberPropertyName(callee) === QUERY_PROPERTY
+  ) {
     return QUERY_PROPERTY;
   }
   return null;

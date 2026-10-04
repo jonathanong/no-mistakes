@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const parts: string[] = [];
 const sql = "SELECT id FROM topics".append(...parts);

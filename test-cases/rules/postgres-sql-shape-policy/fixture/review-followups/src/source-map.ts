@@ -1,4 +1,4 @@
-import { query } from '@data-stores/psql';
+import { query } from '@example/db';
 const shared = "SELECT id FROM orders\nWHERE id NOT IN (SELECT id FROM bans)";
 query(shared);
 const below =

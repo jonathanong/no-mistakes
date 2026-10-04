@@ -1,4 +1,4 @@
-import { query } from '@data-stores/psql';
+import { query } from '@example/db';
 const shared = "SELECT id FROM orders\nOFFSET 0";
 export const declaration = () => query(shared);
 export const multiline = () => query(

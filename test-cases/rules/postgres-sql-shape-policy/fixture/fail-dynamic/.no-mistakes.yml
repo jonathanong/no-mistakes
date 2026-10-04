@@ -1,3 +1,5 @@
 rules:
   - rule: postgres-sql-shape-policy
     scope: repository
+    options:
+      importSpecifier: "@example/db"

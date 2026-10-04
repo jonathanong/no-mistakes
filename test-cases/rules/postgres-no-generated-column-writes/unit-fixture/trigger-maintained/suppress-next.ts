@@ -1,4 +1,4 @@
-import { write } from '@data-stores/psql'
+import { write } from '@example/db'
 
 export function next() {
   // no-mistakes-disable-next-line postgres-no-generated-column-writes

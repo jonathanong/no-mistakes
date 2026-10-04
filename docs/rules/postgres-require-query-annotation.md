@@ -16,17 +16,16 @@ rules:
     options:
       include: ["src/**/*.ts"]
       exclude: ["src/generated/**"]
-      importSpecifier: "@data-stores/psql"
+      importSpecifier: "@example/db"
       executorNames: [query, read, write]
 ```
 
-`importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
-`query`, `read`, and `write`.
+`importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
 
 Counterexample: `query(\`SELECT id FROM posts\`)`.
 
 ```ts
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function list() {
   return query(`SELECT id FROM posts ORDER BY id DESC`);
@@ -55,8 +54,7 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
 
 ## Options and defaults
 
-`include` and `exclude` select source files. `importSpecifier` defaults to
-`@data-stores/psql`, and `executorNames` defaults to `[query, read, write]`.
+`include` and `exclude` select source files. `importSpecifier` has no default, and `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 ## Valid example
 
@@ -86,3 +84,15 @@ administrative script.
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
 [`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row
 locks.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

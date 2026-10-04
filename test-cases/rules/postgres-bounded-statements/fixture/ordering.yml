@@ -3,6 +3,7 @@ rules:
   - rule: postgres-bounded-statements
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema-ordering.json
       exclude: ['src/**']
       sqlInclude: ['sql/invalid.sql']

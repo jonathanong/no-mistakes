@@ -3,4 +3,5 @@ rules:
   - rule: postgres-conflict-ordering
     scope: repository
     options:
+      importSpecifier: "@example/db"
       schemaCatalogPath: schema.json

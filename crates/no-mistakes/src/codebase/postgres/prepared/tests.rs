@@ -13,10 +13,7 @@ fn projections_are_prepared_once_and_borrowed_for_repeated_consumers() {
     let root = root();
     let sql = root.join("sql/locations.sql");
     let ts = root.join("queries.ts");
-    let profiles = vec![EmbeddedSqlOptions {
-        import_specifier: "@db".into(),
-        ..Default::default()
-    }];
+    let profiles = vec![EmbeddedSqlOptions::configured("@db", &[])];
     let sources = crate::codebase::rules::source_store_for_files(&[sql.clone(), ts.clone()]);
     let facts =
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
@@ -61,7 +58,10 @@ fn projections_are_prepared_once_and_borrowed_for_repeated_consumers() {
         .to_string()
         .contains("prepared PostgreSQL facts are missing"));
     assert!(facts
-        .postgres_statements(&ts, Some(&EmbeddedSqlOptions::default()))
+        .postgres_statements(
+            &ts,
+            Some(&EmbeddedSqlOptions::configured("@example/db", &[]))
+        )
         .is_err());
     let custom = crate::codebase::postgres::postgres_sql_paths(
         &root,
@@ -139,16 +139,21 @@ fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
             postgres_dml: true,
             postgres_fragments: true,
             postgres_sql_include: vec!["**/*.sql".into()],
-            embedded_sql_options: vec![EmbeddedSqlOptions::default()],
+            embedded_sql_options: vec![EmbeddedSqlOptions::configured("@example/db", &[])],
             ..Default::default()
         },
         &CheckFactMap::default(),
     );
     assert!(dml.schema.is_empty());
-    assert!(dml.fragments(&ts, &EmbeddedSqlOptions::default()).is_err());
+    assert!(dml
+        .fragments(&ts, &EmbeddedSqlOptions::configured("@example/db", &[]))
+        .is_err());
     assert!(dml.statements(&sql, None).is_ok());
     assert!(dml
-        .statements(&ts, Some(&EmbeddedSqlOptions::default()))
+        .statements(
+            &ts,
+            Some(&EmbeddedSqlOptions::configured("@example/db", &[]))
+        )
         .unwrap_err()
         .to_string()
         .contains("prepared facts are missing"));

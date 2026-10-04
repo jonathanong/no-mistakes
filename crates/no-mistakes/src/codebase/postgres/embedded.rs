@@ -87,9 +87,19 @@ pub fn extract_embedded_sql_from_program(
     options: &EmbeddedSqlOptions,
 ) -> EmbeddedSqlFileFacts {
     let bindings = executor_bindings(program, options);
-    let mut executor_bindings: Vec<String> = bindings.iter().cloned().collect();
+    let mut executor_bindings: Vec<String> = bindings
+        .iter()
+        .filter(|binding| binding.as_str() != self::bindings::MEMBER_QUERY_OPT_IN)
+        .cloned()
+        .collect();
     executor_bindings.sort();
-    let (calls, mut fragments) = walk::collect_calls(program, source, &bindings);
+    let (calls, mut fragments) = walk::collect_calls(
+        program,
+        source,
+        &bindings,
+        !options.import_specifier.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
+    );
     for fragment in &mut fragments {
         if let Some(sql_text) = fragment.sql_text.take() {
             let (sql_text, positions) = placeholders::publish_placeholders_with_positions(sql_text);

@@ -1,4 +1,4 @@
-import { query, read } from '@data-stores/psql'
+import { query, read } from '@example/db'
 
 export function run(id: string) {
   const q = `SELECT name FROM users WHERE id = ${id}`

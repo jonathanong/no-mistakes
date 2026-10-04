@@ -1,4 +1,4 @@
-import { query } from '@data-stores/psql';
+import { query } from '@example/db';
 // Escapes and physical continuations must agree even for unpaired surrogates.
 query("SELECT '\x41' FROM orders\n \
 OFFSET 1");

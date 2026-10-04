@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const across = "SELECT id FROM posts" +
   " OFFSET 1";

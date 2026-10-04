@@ -8,6 +8,10 @@ use std::collections::HashSet;
 
 const TRANSACTION_IMPORTS: &[&str] = &["withTransaction", "withTransactionOptions"];
 const QUERY_PROPERTY: &str = "query";
+// `executor_bindings` is a long-standing public `HashSet<String>` helper. Keep
+// member-query selection in that value without confusing it with a local JS
+// identifier (NUL cannot occur in one), and filter it from reported facts.
+pub(super) const MEMBER_QUERY_OPT_IN: &str = "\0no-mistakes:member-query";
 const SQL_TEMPLATE_STRINGS: &str = "sql-template-strings";
 const SQL_STATEMENT: &str = "SQLStatement";
 
@@ -36,6 +40,10 @@ pub(super) fn sql_statement_type_bindings(program: &Program<'_>) -> HashSet<Stri
 }
 
 /// Local identifiers bound as SQL executors by the configured specifier.
+///
+/// The set also carries a reserved non-identifier marker when `.query()`
+/// member calls are enabled by the options. Use [`is_database_call`] rather
+/// than inspecting the marker directly.
 pub fn executor_bindings(program: &Program<'_>, options: &EmbeddedSqlOptions) -> HashSet<String> {
     let mut bindings = HashSet::new();
     for statement in &program.body {
@@ -44,7 +52,25 @@ pub fn executor_bindings(program: &Program<'_>, options: &EmbeddedSqlOptions) ->
         };
         collect_import_bindings(import, options, &mut bindings);
     }
+    if member_query_enabled(options) {
+        bindings.insert(MEMBER_QUERY_OPT_IN.to_string());
+    }
     bindings
+}
+
+fn member_query_enabled(options: &EmbeddedSqlOptions) -> bool {
+    !options.import_specifier.is_empty()
+        || options
+            .executor_names
+            .iter()
+            .any(|name| name == QUERY_PROPERTY)
+}
+
+fn executor_name_enabled(options: &EmbeddedSqlOptions, imported: &str) -> bool {
+    options.executor_names.iter().any(|name| name == imported)
+        || (options.executor_names.is_empty()
+            && !options.import_specifier.is_empty()
+            && ["query", "read", "write"].contains(&imported))
 }
 
 fn collect_import_bindings(
@@ -53,7 +79,8 @@ fn collect_import_bindings(
     bindings: &mut HashSet<String>,
 ) {
     if import.import_kind == ImportOrExportKind::Type
-        || import.source.value.as_str() != options.import_specifier
+        || (!options.import_specifier.is_empty()
+            && import.source.value.as_str() != options.import_specifier)
     {
         return;
     }
@@ -68,10 +95,11 @@ fn collect_import_bindings(
             continue;
         }
         let imported = module_export_name(&named.imported);
-        if TRANSACTION_IMPORTS.contains(&imported.as_str()) {
+        if !options.import_specifier.is_empty() && TRANSACTION_IMPORTS.contains(&imported.as_str())
+        {
             bindings.insert(QUERY_PROPERTY.to_string());
         }
-        if options.executor_names.iter().any(|name| name == &imported) {
+        if executor_name_enabled(options, &imported) {
             bindings.insert(named.local.name.to_string());
         }
     }
@@ -81,7 +109,7 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
     name.name().as_str().to_string()
 }
 
-/// True when `call` is a bound executor or a `.query` member call.
+/// True when `call` is a bound executor or an opted-in `.query` member call.
 pub fn is_database_call(call: &CallExpression<'_>, bindings: &HashSet<String>) -> bool {
     callee_name(call, bindings).is_some()
 }
@@ -91,12 +119,14 @@ pub(super) fn callee_name(call: &CallExpression<'_>, bindings: &HashSet<String>)
         Expression::Identifier(ident) if bindings.contains(ident.name.as_str()) => {
             Some(ident.name.to_string())
         }
-        Expression::StaticMemberExpression(member) if member.property.name == QUERY_PROPERTY => {
+        Expression::StaticMemberExpression(member)
+            if member.property.name == QUERY_PROPERTY && bindings.contains(MEMBER_QUERY_OPT_IN) =>
+        {
             Some(QUERY_PROPERTY.to_string())
         }
-        Expression::ComputedMemberExpression(member) => {
-            static_query_key(&member.expression).then(|| QUERY_PROPERTY.to_string())
-        }
+        Expression::ComputedMemberExpression(member) => (bindings.contains(MEMBER_QUERY_OPT_IN)
+            && static_query_key(&member.expression))
+        .then(|| QUERY_PROPERTY.to_string()),
         _ => None,
     }
 }

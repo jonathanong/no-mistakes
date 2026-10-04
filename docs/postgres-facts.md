@@ -160,18 +160,19 @@ from a runtime-query helper, which joins quasis with `?`.
 
 Imports decide which local identifiers execute SQL:
 
-| knob              | default                  |
-| ----------------- | ------------------------ |
-| `importSpecifier` | `@data-stores/psql`      |
-| `executorNames`   | `query`, `read`, `write` |
+| knob | default |
+| --- | --- |
+| `importSpecifier` | Empty; configure your database module explicitly |
+| `executorNames` | Empty without a module; `query`, `read`, `write` with a module |
 
-Importing `withTransaction` or `withTransactionOptions` also binds `query`.
-A missing specifier produces no executor bindings.
+Without a module, only explicitly configured names match named imports from
+any module. With neither option set, no executor calls are collected.
+A configured module's `withTransaction` and `withTransactionOptions` imports
+also bind `query`. Member calls named `query` are collected when a module is configured or `query`
+is explicitly enabled in the executor names. Existing SQL-builder fragment recovery is
+independent of executor selection.
 
-A call is a database call when:
-
-- the callee is an identifier in the binding set, or
-- the callee is a member expression whose property is `query`
+See [the breaking-change migration](migrations/explicit-postgres-executors.md).
 
 `collect_postgres_facts` runs these extractors when
 `CheckFactPlan.postgres_schema`, `CheckFactPlan.embedded_sql`, or

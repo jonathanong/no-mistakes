@@ -77,8 +77,8 @@ error. `allow` defaults to `[]` and suppresses catalog findings by object ref
 (`table:<name>`); an invalid object reference, an empty reason, or a duplicate object is
 a configuration error, and an unmatched entry is reported stale.
 `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
-configuration error). `importSpecifier` defaults to `@data-stores/psql`.
-`executorNames` defaults to `[query, read, write]`.
+configuration error). `importSpecifier` has no default.
+`executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 ## Valid example
 
@@ -120,3 +120,15 @@ with `allow: [{object, reason}]`, for example `object: table:events`. For a qual
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated
 `EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
+
+### Executor configuration
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
+| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+With both options omitted, executor calls (including `.query`) are not scanned.
+A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

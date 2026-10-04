@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 const buildSql = () => "SELECT id FROM topics".append(" WHERE id = 1");
 

@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
 export function page(offset: number) {
   // no-mistakes-disable-next-line postgres-no-offset: audited cursor window
