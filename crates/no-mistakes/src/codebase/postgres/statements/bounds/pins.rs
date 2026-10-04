@@ -10,7 +10,7 @@ use resolver::Sourced;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
 use std::collections::BTreeSet;
 
-pub(super) use correlated::Reads;
+pub(super) use correlated::{projection_columns, Reads};
 pub(super) use resolver::Resolver;
 
 /// Collect the pins that the conjuncts of `expr` impose on the `restricted` items.

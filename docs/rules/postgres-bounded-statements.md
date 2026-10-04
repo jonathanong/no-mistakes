@@ -261,3 +261,10 @@ position. Only keys whose aliased positions keep their original names retain cat
 For `TABLE` set-operation arms, the SQL parser omits identifier quote information.
 Analysis conservatively checks both exact and folded spellings when they differ;
 a matching one-part CTE takes precedence over catalog relations.
+
+Bare subquery columns belong to a derived table or CTE only when its explicit
+projection exposes that name. Function column alias lists and known scalar built-in
+output names also determine ownership. Unknown functions and wildcard projections
+retain conservative unknown-column ownership.
+
+Known scalar table functions expose their default position column when requested. UNNEST column names are inferred only for syntactically proven scalar arrays; composite and unknown element layouts retain unknown ownership. Parenthesized joins with wrapper aliases also retain unknown ownership when the child labels cannot describe the renamed output.

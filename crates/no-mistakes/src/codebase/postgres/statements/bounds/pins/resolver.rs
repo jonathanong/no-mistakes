@@ -7,7 +7,7 @@ use crate::codebase::postgres::statements::{
     SqlBareRead, SqlBoundItem, SqlBoundItemKind, SqlPinSource,
 };
 use sqlparser::ast::{Expr, FunctionArguments, Ident, ObjectName, Query};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Built-in functions that return a different value for each row they are evaluated for, so an
 /// equality against one picks out no fixed row. A function that is not listed (a user-defined
@@ -28,7 +28,7 @@ pub(in super::super) struct Resolver {
     /// would use to read the row being checked.
     outer: BTreeSet<String>,
     /// The CTE names in scope: a one-part table name that is one is not a base table.
-    ctes: BTreeSet<String>,
+    ctes: BTreeMap<String, Option<BTreeSet<String>>>,
 }
 
 /// What an expression refers to among the FROM items.
@@ -48,7 +48,10 @@ pub(super) struct Sourced {
 }
 
 impl Resolver {
-    pub(in super::super) fn new(items: &[SqlBoundItem], ctes: BTreeSet<String>) -> Self {
+    pub(in super::super) fn new(
+        items: &[SqlBoundItem],
+        ctes: BTreeMap<String, Option<BTreeSet<String>>>,
+    ) -> Self {
         let names: Vec<(Option<String>, Option<String>)> = items
             .iter()
             .map(|item| {

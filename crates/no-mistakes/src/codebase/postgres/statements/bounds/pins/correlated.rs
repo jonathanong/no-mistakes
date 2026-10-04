@@ -1,7 +1,11 @@
+mod columns;
+mod scalar_arrays;
+mod sources;
 use super::super::super::value::is_placeholder_ident;
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBareRead;
+pub(in super::super) use columns::projection_columns;
 use sqlparser::ast::{
     Expr, GroupByExpr, ObjectName, OrderByKind, Query, SetExpr, TableFactor, Visit, Visitor,
 };
@@ -30,7 +34,7 @@ pub(in super::super) struct Reads {
 pub(in super::super) fn reads_outer_rows(
     query: &Query,
     outer: &BTreeSet<String>,
-    ctes: &BTreeSet<String>,
+    ctes: &BTreeMap<String, Option<BTreeSet<String>>>,
 ) -> Reads {
     let mut scan = Scan {
         ctes: ctes.clone(),
@@ -60,6 +64,8 @@ struct Frame {
     tables: Vec<String>,
     /// A relation that is not a base table: a derived table, a function, a CTE.
     foreign: bool,
+    /// Known projected columns of derived/CTE/function sources in this level.
+    columns: BTreeSet<String>,
     qualifiers: Vec<String>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
@@ -72,7 +78,7 @@ struct Frame {
 #[derive(Default)]
 struct Scan {
     stack: Vec<Frame>,
-    ctes: BTreeSet<String>,
+    ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     /// Qualifiers and bare reads that no level of the query resolved.
     unresolved: Vec<String>,
     reads: Vec<SqlBareRead>,
@@ -81,7 +87,8 @@ struct Scan {
 impl Scan {
     fn is_cte(&self, name: &ObjectName) -> bool {
         name.0.len() == 1
-            && object_name_ident(name).is_some_and(|ident| self.ctes.contains(&ident_key(ident)))
+            && object_name_ident(name)
+                .is_some_and(|ident| self.ctes.contains_key(&ident_key(ident)))
     }
 }
 
@@ -95,7 +102,18 @@ impl Visitor for Scan {
         }
         if let Some(with) = &query.with {
             for cte in &with.cte_tables {
-                self.ctes.insert(ident_key(&cte.alias.name));
+                let columns = if cte.alias.columns.is_empty() {
+                    projection_columns(&cte.query)
+                } else {
+                    Some(
+                        cte.alias
+                            .columns
+                            .iter()
+                            .map(|column| ident_key(&column.name))
+                            .collect(),
+                    )
+                };
+                self.ctes.insert(ident_key(&cte.alias.name), columns);
             }
         }
         self.stack.push(frame);
@@ -125,6 +143,8 @@ impl Visitor for Scan {
             .collect();
         if frame.foreign {
             reads.clear();
+        } else {
+            reads.retain(|read| !frame.columns.contains(&read.column));
         }
         for read in &mut reads {
             read.tables.extend(frame.tables.iter().cloned());
@@ -145,35 +165,7 @@ impl Visitor for Scan {
     }
 
     fn pre_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
-        let cte = matches!(factor, TableFactor::Table { name, .. } if self.is_cte(name));
-        let Some(frame) = self.stack.last_mut() else {
-            return ControlFlow::Continue(());
-        };
-        match factor {
-            TableFactor::Table {
-                name, alias, args, ..
-            } => {
-                let own = alias
-                    .as_ref()
-                    .map(|alias| ident_key(&alias.name))
-                    .or_else(|| object_name_ident(name).map(ident_key));
-                frame.relations.extend(own);
-                if args.is_some() || cte {
-                    frame.foreign = true;
-                } else {
-                    frame.tables.push(sql_name(name));
-                }
-            }
-            TableFactor::Derived {
-                alias: Some(alias), ..
-            } => {
-                frame.relations.insert(ident_key(&alias.name));
-                frame.foreign = true;
-            }
-            // The factors inside a parenthesized join are visited on their own.
-            TableFactor::NestedJoin { .. } => {}
-            _ => frame.foreign = true,
-        }
+        self.add_factor(factor);
         ControlFlow::Continue(())
     }
 
