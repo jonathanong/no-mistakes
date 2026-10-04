@@ -1,6 +1,7 @@
 //! Request-local SQL relation identities and dependency closure.
 mod names;
 mod ownership;
+mod rename;
 mod schema;
 use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{
@@ -140,82 +141,5 @@ impl State {
         self.partitions.retain(|child, _| !removed.contains(child));
         self.partitioned.retain(|name| !removed.contains(name));
         self.on_commit_drop.retain(|name| !removed.contains(name));
-    }
-    pub fn rename_schema(&mut self, old: &str, new: &str) {
-        let old = decoded_parts(old);
-        let new = decoded_parts(new);
-        let ([old], [new]) = (old.as_slice(), new.as_slice()) else {
-            return;
-        };
-        for dependencies in self.relations.values_mut() {
-            *dependencies = dependencies
-                .iter()
-                .map(|dependency| match dependency {
-                    Dependency::Physical(parts)
-                        if parts.len() >= 2 && parts[parts.len() - 2] == *old =>
-                    {
-                        let mut renamed = parts.clone();
-                        let schema = renamed.len() - 2;
-                        renamed[schema] = new.to_string();
-                        Dependency::Physical(renamed)
-                    }
-                    other => other.clone(),
-                })
-                .collect();
-        }
-    }
-    pub fn rename(&mut self, old: &str, new: &str) {
-        if !self.contains(old) && self.possible_temporary(old).is_some() {
-            // A physical namesake may have been renamed instead. Never carry a possibly
-            // stale temporary identity into a later, more definite search path.
-            self.remove(BTreeSet::from([key(old)]), true);
-        }
-        if !self.contains(old) {
-            let old = decoded_parts(old);
-            let new = key(new);
-            for dependencies in self.relations.values_mut() {
-                *dependencies = dependencies
-                    .iter()
-                    .flat_map(|dependency| match dependency {
-                        Dependency::Physical(parts) if names_match(parts, &old) => {
-                            let mut renamed = parts.clone();
-                            renamed.pop();
-                            renamed.push(new.clone());
-                            let mut candidates = vec![Dependency::Physical(renamed)];
-                            // Without an exact schema match the rename may refer to a namesake.
-                            if parts.len() == 1 || parts != &old {
-                                candidates.push(dependency.clone());
-                            }
-                            candidates
-                        }
-                        other => vec![other.clone()],
-                    })
-                    .collect();
-            }
-            return;
-        }
-        let old = key(old);
-        let new = key(new);
-        if self.on_commit_drop.remove(&old) {
-            self.on_commit_drop.insert(new.clone());
-        }
-        let dependencies = self.relations.remove(&old).unwrap_or_default();
-        self.relations.insert(new.clone(), dependencies);
-        if let Some(parent) = self.partitions.remove(&old) {
-            self.partitions.insert(new.clone(), parent);
-        }
-        if self.partitioned.remove(&old) {
-            self.partitioned.insert(new.clone());
-        }
-        for parent in self.partitions.values_mut() {
-            if *parent == old {
-                *parent = new.clone();
-            }
-        }
-        for dependencies in self.relations.values_mut() {
-            if dependencies.remove(&Dependency::Temporary(old.clone())) {
-                dependencies.insert(Dependency::Temporary(new.clone()));
-            }
-        }
     }
 }
