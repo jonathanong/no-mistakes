@@ -436,3 +436,12 @@ fn temporary_into_set_operation_targets_shadow_later_reads() {
         .map(|(table, line)| (table.to_string(), line))
     );
 }
+
+#[test]
+fn temporary_schema_create_without_temp_keyword_shadows_catalog() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-schema-create.sql"));
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "accounts", "accounts", "accounts"]
+    );
+}

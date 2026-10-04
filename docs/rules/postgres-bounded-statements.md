@@ -245,3 +245,5 @@ Temporary relations are unknown and bound no joined items; qualified permanent
 relations retain their catalog identity. State resets for every SQL source.
 
 Temporary `SELECT INTO` destinations are tracked through `UNION`, `INTERSECT`, and `EXCEPT`, including a parenthesized first input. The input reads are checked before the new temporary name shadows a permanent catalog relation.
+
+`CREATE TABLE pg_temp.name` creates a temporary identity even without the `TEMP` keyword. Quoted schema names retain PostgreSQL case and component boundaries, so a different schema or a literal dot in one identifier does not acquire temporary identity.

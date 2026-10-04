@@ -34,7 +34,7 @@ impl TemporaryRelations {
             self.query(&mut fact.query);
         }
         match statement {
-            Statement::CreateTable(table) if table.temporary => {
+            Statement::CreateTable(table) if table.temporary || temporary_name(&table.name) => {
                 let name = sql_name(&table.name);
                 if table.on_commit == Some(sqlparser::ast::OnCommit::Drop) {
                     // Outside an explicit transaction, DROP takes effect at this statement's commit.
@@ -110,4 +110,9 @@ fn first_select(expr: &SetExpr) -> Option<&sqlparser::ast::Select> {
         SetExpr::Query(query) => first_select(&query.body),
         _ => None,
     }
+}
+
+fn temporary_name(name: &ObjectName) -> bool {
+    let parts = crate::codebase::postgres::decoded_parts(&sql_name(name));
+    matches!(parts.as_slice(), [schema, _] if schema == "pg_temp")
 }
