@@ -1,3 +1,4 @@
+mod stored_array;
 use super::evaluate::offenders;
 use super::{check_with_files, check_with_files_and_sources, compile_options, Options, RULE_ID};
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};

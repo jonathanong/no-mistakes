@@ -83,11 +83,27 @@ pub(super) fn extract(
                     other if constructor(other).is_some() => {
                         finite_array(&constructor(other).unwrap().elem, item, resolver)
                     }
-                    // A stored array can contain every key even when its owning row is pinned.
-                    // Only a caller-sized array value supplies a finite key set.
-                    other => resolver.source(other, item).filter(|sourced| {
-                        matches!(sourced.source, SqlPinSource::Value) && sourced.reads.is_empty()
-                    }),
+                    // Retain stored-array syntax without crediting its owning row's bound.
+                    other => resolver
+                        .source(other, item)
+                        .map(|mut sourced| {
+                            if !matches!(sourced.source, SqlPinSource::Value)
+                                || !sourced.reads.is_empty()
+                            {
+                                let items = match sourced.source {
+                                    SqlPinSource::Items(items) => items,
+                                    _ => Vec::new(),
+                                };
+                                sourced.source = SqlPinSource::StoredArray(items);
+                            }
+                            sourced
+                        })
+                        .or_else(|| {
+                            resolver.column(other).map(|(source, _)| Sourced {
+                                source: SqlPinSource::StoredArray(vec![source]),
+                                reads: Vec::new(),
+                            })
+                        }),
                 };
                 pin(left, source, false);
             }
