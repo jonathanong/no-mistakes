@@ -97,8 +97,9 @@ reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERS
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
 INTERSECT or duplicate-eliminating UNION; UNION ALL can stream until its cap.
-A zero cap skips every input, including zero inside parentheses, unary signs, or
-built-in numeric casts such as `CAST(0 AS bigint)`. Custom casts do not prove zero.
+A zero cap skips every input, including `FETCH FIRST 0 ROWS WITH TIES` and zero
+inside parentheses, unary signs, or built-in numeric casts such as
+`CAST(0 AS bigint)`. Custom casts do not prove zero.
 A chain of CTEs whose bounds grow past a few thousand items is compacted to its
 distinct uncapped base-relation reads plus an opaque source. This retains findings
 while preventing the summary from bounding another relation, so pathological generated

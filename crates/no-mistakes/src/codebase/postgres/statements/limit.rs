@@ -69,7 +69,8 @@ fn is_fixed(expr: &Expr) -> bool {
 /// A literal zero row cap prevents even non-streaming set-operation inputs from running.
 pub(super) fn is_zero_limited(query: &Query) -> bool {
     let count = if let Some(fetch) = &query.fetch {
-        if fetch.with_ties || fetch.percent {
+        // A zero count skips the input before tie handling can occur.
+        if fetch.percent {
             return false;
         }
         fetch.quantity.as_ref()

@@ -11,6 +11,8 @@ SELECT id FROM accounts WHERE id = $1 UNION ALL (SELECT id FROM accounts WHERE i
 -- A literal zero skips every input; do not remove this unconditional work bound.
 SELECT id FROM accounts EXCEPT SELECT account_id FROM orders LIMIT 0;
 SELECT id FROM accounts INTERSECT SELECT account_id FROM orders FETCH FIRST 0 ROWS ONLY;
+-- WITH TIES still reads no input when its count is zero.
+SELECT id FROM accounts EXCEPT SELECT account_id FROM orders ORDER BY 1 FETCH FIRST 0 ROWS WITH TIES;
 -- Only the blocking subtree remains unbounded, not its ordinary streaming sibling.
 (SELECT id FROM accounts WHERE id = $1 EXCEPT SELECT account_id FROM orders) UNION ALL SELECT id FROM accounts LIMIT 1;
 SELECT id FROM accounts UNION ALL (SELECT id FROM accounts WHERE id = $1 INTERSECT SELECT account_id FROM orders) LIMIT 1;
