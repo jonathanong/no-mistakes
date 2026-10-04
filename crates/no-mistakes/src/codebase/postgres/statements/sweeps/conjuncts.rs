@@ -2,7 +2,7 @@ mod bind_guard;
 mod conditions;
 mod lexicographic;
 mod negated;
-mod placeholders;
+pub(super) mod placeholders;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlConjunctFact, SqlCursorBound};
 use conditions::{flatten, is_constant_true};
@@ -15,7 +15,7 @@ pub(super) fn of(
     names: &[String],
     order_columns: &[String],
     order_ascending: &[Option<bool>],
-    transparent_int4_casts: bool,
+    int4_bindings: &super::Int4Bindings,
     recovered_placeholder_positions: &[(u32, u32)],
 ) -> Vec<SqlConjunctFact> {
     let mut leaves = Vec::new();
@@ -30,7 +30,7 @@ pub(super) fn of(
                 names,
                 order_columns,
                 order_ascending,
-                transparent_int4_casts,
+                int4_bindings,
                 recovered_placeholder_positions,
             );
             SqlConjunctFact {
@@ -88,7 +88,7 @@ fn cursor(
     names: &[String],
     order_columns: &[String],
     order_ascending: &[Option<bool>],
-    transparent_int4_casts: bool,
+    int4_bindings: &super::Int4Bindings,
     recovered_placeholder_positions: &[(u32, u32)],
 ) -> Option<Cursor> {
     match unwrap_expr(expr) {
@@ -101,7 +101,7 @@ fn cursor(
                 names,
                 order_columns,
                 order_ascending,
-                transparent_int4_casts,
+                int4_bindings,
                 recovered_placeholder_positions,
             )
         }),
@@ -145,7 +145,7 @@ fn cursor(
                     names,
                     order_columns,
                     order_ascending,
-                    transparent_int4_casts,
+                    int4_bindings,
                     recovered_placeholder_positions,
                 )
                 .map(|cursor| Cursor {
@@ -158,7 +158,7 @@ fn cursor(
                 names,
                 order_columns,
                 order_ascending,
-                transparent_int4_casts,
+                int4_bindings,
                 recovered_placeholder_positions,
             ),
         },
