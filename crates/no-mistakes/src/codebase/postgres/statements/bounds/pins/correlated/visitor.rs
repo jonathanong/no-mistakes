@@ -6,6 +6,7 @@ impl Visitor for Scan {
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         let mut frame = Frame {
+            previous_ctes: self.ctes.clone(),
             split_selects: matches!(&*query.body, SetExpr::SetOperation { .. }),
             enclosing: self
                 .derived_scopes

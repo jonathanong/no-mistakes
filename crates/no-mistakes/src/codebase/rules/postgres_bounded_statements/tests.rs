@@ -542,6 +542,7 @@ mod having_only;
 mod function_inputs;
 
 mod aliased_nested_joins;
+mod nested_cte_scope;
 mod qualified_limit_functions;
 
 mod select_list_srf;

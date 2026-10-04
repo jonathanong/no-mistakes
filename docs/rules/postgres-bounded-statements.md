@@ -172,6 +172,8 @@ reports each relation that makes a statement unbounded, once, at that relation's
 An uncapped SELECT also reports unbounded relations read by its IN-subquery pins,
 even when another predicate pins the outer table. UPDATE and DELETE retain target-only
 reporting.
+Nested CTE names remain visible only within their query scope. A nested `WITH`
+clause cannot hide a parent base relation when checking outer column references.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
 `RETURNING` rows is not unbounded because of it. Those rows are opaque, though: one row per
