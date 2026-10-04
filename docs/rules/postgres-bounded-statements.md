@@ -291,6 +291,9 @@ position. Only keys whose aliased positions keep their original names retain cat
 Standalone `TABLE name`, `TABLE ONLY name`, and forms with the optional
 inheritance `*` after the name are analyzed as queries,
 including after temporary-table declarations. For `TABLE` set-operation arms, including `TABLE ONLY name`, the SQL parser omits identifier quote information.
+`EXPLAIN TABLE name` is parsed as a plan without an executed query fact;
+`EXPLAIN ANALYZE TABLE name` executes the query and retains the same quoted
+or folded relation identity as standalone `TABLE name`.
 Analysis recovers the spelling from the prepared source tokens and matches quoted
 names exactly. If source tokens are unavailable, it conservatively checks both
 exact and folded spellings when they differ. A matching one-part CTE takes

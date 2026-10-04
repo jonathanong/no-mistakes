@@ -9,83 +9,91 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
     }
     let mut rewrite_at = Vec::new();
     let mut omit_star_at = Vec::new();
-    let mut at_statement_start = true;
+    let mut leading = Leading::Start;
     for (index, token) in tokens.iter().enumerate() {
-        match &token.token {
-            Token::Whitespace(_) => {}
-            Token::SemiColon => at_statement_start = true,
-            Token::Word(word)
-                if at_statement_start
-                    && word.quote_style.is_none()
-                    && word.keyword == Keyword::TABLE =>
-            {
-                if let Some(star_at) = table_query(tokens, index) {
-                    rewrite_at.push(index);
-                    omit_star_at.extend(star_at);
-                }
-                at_statement_start = false;
+        if leading_table(&mut leading, &token.token) {
+            if let Some(star_at) = table_query(tokens, index) {
+                rewrite_at.push(index);
+                omit_star_at.extend(star_at);
             }
-            _ => at_statement_start = false,
         }
     }
     let mut rewrite_at = rewrite_at.into_iter().peekable();
     let mut omit_star_at = omit_star_at.into_iter().peekable();
     let mut result = Vec::with_capacity(tokens.len());
-    let mut at_statement_start = true;
     for (index, token) in tokens.drain(..).enumerate() {
         if omit_star_at.peek() == Some(&index) {
             omit_star_at.next();
             continue;
         }
-        match &token.token {
-            Token::Whitespace(_) => result.push(token),
-            Token::SemiColon => {
-                result.push(token);
-                at_statement_start = true;
-            }
-            Token::Word(word)
-                if at_statement_start
-                    && word.quote_style.is_none()
-                    && word.keyword == Keyword::TABLE
-                    && rewrite_at.peek() == Some(&index) =>
-            {
-                rewrite_at.next();
-                let span = token.span;
-                result.push(TokenWithSpan::new(
-                    word_token("SELECT", Keyword::SELECT),
-                    span,
-                ));
-                result.push(TokenWithSpan::new(Token::Mul, span));
-                result.push(TokenWithSpan::new(word_token("FROM", Keyword::FROM), span));
-                at_statement_start = false;
-            }
-            _ => {
-                result.push(token);
-                at_statement_start = false;
-            }
+        if rewrite_at.peek() == Some(&index) {
+            rewrite_at.next();
+            let span = token.span;
+            result.push(TokenWithSpan::new(
+                word_token("SELECT", Keyword::SELECT),
+                span,
+            ));
+            result.push(TokenWithSpan::new(Token::Mul, span));
+            result.push(TokenWithSpan::new(word_token("FROM", Keyword::FROM), span));
+        } else {
+            result.push(token);
         }
     }
     *tokens = result;
 }
 
 fn has_standalone_table(tokens: &[TokenWithSpan]) -> bool {
-    let mut at_statement_start = true;
+    let mut leading = Leading::Start;
     for (index, token) in tokens.iter().enumerate() {
-        match &token.token {
-            Token::Whitespace(_) => {}
-            Token::SemiColon => at_statement_start = true,
-            Token::Word(word)
-                if at_statement_start
-                    && word.quote_style.is_none()
-                    && word.keyword == Keyword::TABLE
-                    && table_query(tokens, index).is_some() =>
-            {
-                return true;
-            }
-            _ => at_statement_start = false,
+        if leading_table(&mut leading, &token.token) && table_query(tokens, index).is_some() {
+            return true;
         }
     }
     false
+}
+
+#[derive(Clone, Copy)]
+enum Leading {
+    Start,
+    Explain,
+    Body,
+}
+
+fn leading_table(state: &mut Leading, token: &Token) -> bool {
+    match token {
+        Token::Whitespace(_) => false,
+        Token::SemiColon => {
+            *state = Leading::Start;
+            false
+        }
+        Token::Word(word)
+            if matches!(*state, Leading::Start)
+                && word.quote_style.is_none()
+                && word.keyword == Keyword::EXPLAIN =>
+        {
+            *state = Leading::Explain;
+            false
+        }
+        Token::Word(word)
+            if matches!(*state, Leading::Explain)
+                && word.quote_style.is_none()
+                && matches!(word.keyword, Keyword::ANALYZE | Keyword::VERBOSE) =>
+        {
+            false
+        }
+        Token::Word(word)
+            if !matches!(*state, Leading::Body)
+                && word.quote_style.is_none()
+                && word.keyword == Keyword::TABLE =>
+        {
+            *state = Leading::Body;
+            true
+        }
+        _ => {
+            *state = Leading::Body;
+            false
+        }
+    }
 }
 
 /// Valid TABLE prefix, with the optional inheritance `*` token to omit from
