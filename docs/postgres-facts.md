@@ -674,3 +674,9 @@ Rejecting `HAVING` (constant false or SQL NULL, including an AND conjunct)
 removes SELECT-list expansion evidence because the group never reaches that
 projection. Physical FROM items retain their original bounds; this does not
 turn an uncapped relation read into a capped query.
+
+An executable PostgreSQL `CASE` expression has scalar cardinality: PostgreSQL
+rejects set-returning functions in its conditions and arms. This boundary does
+not prove caller-owned values or remove reads from physical source tables.
+Unknown calls outside `CASE` remain conservative, including a custom function
+that wraps the entire `CASE` expression.

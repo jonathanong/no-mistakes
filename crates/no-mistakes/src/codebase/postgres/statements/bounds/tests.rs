@@ -3,6 +3,7 @@ mod explain_table;
 mod nonrecursive_ctes;
 mod recovered_table;
 mod rejecting_having_projection;
+mod scalar_case;
 mod scalar_reducer_arrays;
 mod standalone_table;
 mod stored_array;

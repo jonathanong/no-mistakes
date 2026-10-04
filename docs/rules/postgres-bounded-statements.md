@@ -452,3 +452,9 @@ through CTEs, positional aliases, and corresponding set-operation outputs; custo
 casts, unknown functions, wildcard widths, and row-dependent keys remain conservative.
 Use an explicit finite key value or bounded source to fix those cases. Existing
 `no-mistakes` file and line suppression directives retain their normal behavior.
+
+An executable PostgreSQL `CASE` expression has scalar cardinality: PostgreSQL
+rejects set-returning functions in its conditions and arms. This boundary does
+not prove caller-owned values or remove reads from physical source tables.
+Unknown calls outside `CASE` remain conservative, including a custom function
+that wraps the entire `CASE` expression.
