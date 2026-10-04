@@ -44,6 +44,11 @@ language CLIs are not started.
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
 
+PostgreSQL bounded-statement checks share prepared SQL facts across the CLI and
+async Node API. Temporary view lifetimes include cascading drops of physical
+materialized views, qualified namesake separation, and transaction or savepoint
+rollback. Materialized views retain their physical relation identity.
+
 tRPC procedures are a TypeScript-only opt-in graph: configured
 `projects.*.trpc.routers` globs plus static `router({ user: { get: procedure.query() } })`
 and `trpc.user.get.query()` calls emit `trpc-call` / `trpc-procedure` edges
