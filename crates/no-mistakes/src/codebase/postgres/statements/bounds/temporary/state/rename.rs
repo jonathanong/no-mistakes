@@ -10,7 +10,11 @@ impl State {
         let ([old], [new]) = (old.as_slice(), new.as_slice()) else {
             return;
         };
-        for dependencies in self.relations.values_mut() {
+        for dependencies in self
+            .relations
+            .values_mut()
+            .chain(self.physical_views.values_mut())
+        {
             *dependencies = dependencies
                 .iter()
                 .map(|dependency| match dependency {
@@ -26,6 +30,18 @@ impl State {
                 })
                 .collect();
         }
+        let mut moved = std::collections::BTreeMap::new();
+        for (mut name, dependencies) in std::mem::take(&mut self.physical_views) {
+            if name.len() >= 2 && name[name.len() - 2] == *old {
+                let schema = name.len() - 2;
+                name[schema] = new.to_string();
+            }
+            moved
+                .entry(name)
+                .or_insert_with(BTreeSet::new)
+                .extend(dependencies);
+        }
+        self.physical_views = moved;
     }
 
     pub fn rename(&mut self, old: &str, new: &str) {
@@ -37,6 +53,7 @@ impl State {
         if !self.contains(old) {
             let old = decoded_parts(old);
             let new = key(new);
+            self.rename_physical(&old, &new);
             for dependencies in self.relations.values_mut() {
                 *dependencies = dependencies
                     .iter()
