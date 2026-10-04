@@ -297,8 +297,12 @@ fn a_bare_column_is_kept_with_the_tables_that_could_own_it() {
 
 #[test]
 fn a_bare_column_a_relation_other_than_a_base_table_may_own_is_not_an_outer_read() {
+    // The derived output is local, but its query's bare read still needs catalog resolution.
+    assert_eq!(
+        pin_reads("DELETE FROM accounts WHERE id IN (SELECT id FROM (SELECT id FROM currencies) c LIMIT 1)"),
+        ["id@currencies"]
+    );
     for sql in [
-        "DELETE FROM accounts WHERE id IN (SELECT id FROM (SELECT id FROM currencies) c LIMIT 1)",
         "DELETE FROM accounts WHERE id IN (SELECT id FROM generate_series(1, 3) id LIMIT 1)",
         "DELETE FROM accounts WHERE id IN (SELECT id FROM currencies, LATERAL (SELECT 1) l LIMIT 1)",
         "WITH c AS (SELECT 1 AS id) DELETE FROM accounts WHERE id IN (SELECT id FROM c LIMIT 1)",

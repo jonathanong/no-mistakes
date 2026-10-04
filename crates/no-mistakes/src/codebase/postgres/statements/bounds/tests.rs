@@ -7,6 +7,7 @@ use crate::codebase::postgres::statements::{
 mod aliases;
 mod array_review;
 mod compact_aliases;
+mod lateral_review;
 mod physical_cascade;
 mod recursive_forward;
 mod repeated_begin;

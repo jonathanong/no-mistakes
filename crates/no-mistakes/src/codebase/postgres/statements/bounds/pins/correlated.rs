@@ -1,14 +1,15 @@
 mod columns;
 mod scalar_arrays;
+mod scope;
+use scope::Scope;
 mod sources;
 use super::super::super::value::is_placeholder_ident;
 use super::super::items::sql_name;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBareRead;
+use columns::output_names;
 pub(in super::super) use columns::projection_columns;
-use sqlparser::ast::{
-    Expr, GroupByExpr, ObjectName, OrderByKind, Query, SetExpr, TableFactor, Visit, Visitor,
-};
+use sqlparser::ast::{Expr, ObjectName, Query, TableFactor, Visit, Visitor};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::ControlFlow;
 
@@ -59,13 +60,11 @@ pub(in super::super) fn reads_outer_rows(
 /// What one query level mentions, until its relations are all known.
 #[derive(Default)]
 struct Frame {
-    relations: BTreeSet<String>,
-    /// The base tables of the level, as SQL names.
-    tables: Vec<String>,
-    /// A relation that is not a base table: a derived table, a function, a CTE.
-    foreign: bool,
-    /// Known projected columns of derived/CTE/function sources in this level.
-    columns: BTreeSet<String>,
+    scope: Scope,
+    /// Derived queries resolve against preceding sources, never their own output.
+    enclosing: Option<Scope>,
+    escaping_qualifiers: Vec<String>,
+    escaping_reads: Vec<SqlBareRead>,
     qualifiers: Vec<String>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
@@ -78,6 +77,8 @@ struct Frame {
 #[derive(Default)]
 struct Scan {
     stack: Vec<Frame>,
+    /// AST identity is used only during this visitor run; no sources are reparsed.
+    derived_scopes: BTreeMap<usize, Scope>,
     ctes: BTreeMap<String, Option<BTreeSet<String>>>,
     /// Qualifiers and bare reads that no level of the query resolved.
     unresolved: Vec<String>,
@@ -96,7 +97,12 @@ impl Visitor for Scan {
     type Break = ();
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        let mut frame = Frame::default();
+        let mut frame = Frame {
+            enclosing: self
+                .derived_scopes
+                .remove(&(query as *const Query as usize)),
+            ..Frame::default()
+        };
         for name in output_names(query) {
             *frame.labels.entry(name).or_default() += 1;
         }
@@ -124,15 +130,15 @@ impl Visitor for Scan {
     /// before FROM), so its references are resolved here and what remains moves up a level.
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
         let frame = self.stack.pop().unwrap_or_default();
-        let up: Vec<String> = frame
+        let mut up: Vec<String> = frame
             .qualifiers
             .into_iter()
-            .filter(|qualifier| !frame.relations.contains(qualifier))
+            .filter(|qualifier| !frame.scope.relations.contains(qualifier))
             .collect();
         // A bare name that is a relation's own is a whole-row reference, not a column.
         let own = frame.bare.iter().filter(|(name, count)| {
             **count > frame.labels.get(*name).copied().unwrap_or(0)
-                && !frame.relations.contains(*name)
+                && !frame.scope.relations.contains(*name)
         });
         let mut reads: Vec<SqlBareRead> = own
             .map(|(name, _)| SqlBareRead {
@@ -141,20 +147,23 @@ impl Visitor for Scan {
             })
             .chain(frame.reads)
             .collect();
-        if frame.foreign {
-            reads.clear();
-        } else {
-            reads.retain(|read| !frame.columns.contains(&read.column));
-        }
-        for read in &mut reads {
-            read.tables.extend(frame.tables.iter().cloned());
-            read.tables.sort();
-            read.tables.dedup();
+        frame.scope.resolve_reads(&mut reads);
+        up.extend(frame.escaping_qualifiers);
+        reads.extend(frame.escaping_reads);
+        if let Some(enclosing) = &frame.enclosing {
+            up.retain(|qualifier| !enclosing.relations.contains(qualifier));
+            enclosing.resolve_reads(&mut reads);
         }
         match self.stack.last_mut() {
             Some(parent) => {
-                parent.qualifiers.extend(up);
-                parent.reads.extend(reads);
+                if frame.enclosing.is_some() {
+                    // The derived relation's columns are not visible inside its own query.
+                    parent.escaping_qualifiers.extend(up);
+                    parent.escaping_reads.extend(reads);
+                } else {
+                    parent.qualifiers.extend(up);
+                    parent.reads.extend(reads);
+                }
             }
             None => {
                 self.unresolved.extend(up);
@@ -165,6 +174,21 @@ impl Visitor for Scan {
     }
 
     fn pre_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
+        if let TableFactor::Derived {
+            subquery, lateral, ..
+        } = factor
+        {
+            let scope = if *lateral {
+                self.stack
+                    .last()
+                    .map(|frame| frame.scope.clone())
+                    .unwrap_or_default()
+            } else {
+                Scope::default()
+            };
+            self.derived_scopes
+                .insert(&**subquery as *const Query as usize, scope);
+        }
         self.add_factor(factor);
         ControlFlow::Continue(())
     }
@@ -190,29 +214,4 @@ impl Visitor for Scan {
         }
         ControlFlow::Continue(())
     }
-}
-
-/// The names written alone as an `ORDER BY` or `GROUP BY` item: PostgreSQL reads each as an
-/// output column's name before it reads it as a column of a relation.
-fn output_names(query: &Query) -> Vec<String> {
-    let mut items: Vec<&Expr> = Vec::new();
-    if let Some(order) = &query.order_by {
-        if let OrderByKind::Expressions(expressions) = &order.kind {
-            items.extend(expressions.iter().map(|expression| &expression.expr));
-        }
-    }
-    if let SetExpr::Select(select) = &*query.body {
-        if let GroupByExpr::Expressions(expressions, _) = &select.group_by {
-            items.extend(expressions);
-        }
-    }
-    items
-        .into_iter()
-        .filter_map(|item| match item {
-            Expr::Identifier(ident) if !is_placeholder_ident(&ident.value) => {
-                Some(ident_key(ident))
-            }
-            _ => None,
-        })
-        .collect()
 }
