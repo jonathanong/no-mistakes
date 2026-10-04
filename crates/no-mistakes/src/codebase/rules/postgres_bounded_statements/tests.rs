@@ -1,6 +1,7 @@
 mod cardinality_basics;
 mod current_database;
 mod ddl_search_path;
+mod fixed_catalog_functions;
 mod fixture_configs;
 mod json_function_outputs;
 mod legacy_single_column;
