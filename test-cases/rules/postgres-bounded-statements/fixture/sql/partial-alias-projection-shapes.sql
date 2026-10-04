@@ -13,3 +13,5 @@ SELECT id FROM (SELECT status, 1 + 1 FROM orders) AS q(kind);
 SELECT id FROM (VALUES (1, 2)) AS q(kind);
 -- An invalid alias list longer than the projection remains unknown.
 SELECT key FROM (SELECT id FROM orders) AS q(key, extra);
+-- TABLE query bodies have no projection labels available to this resolver.
+SELECT key FROM (TABLE public.orders) AS q(kind);

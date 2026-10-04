@@ -53,6 +53,7 @@ fn partial_table_aliases_preserve_only_known_projection_suffixes() {
         None,
         None,
         None,
+        None,
     ];
     assert_eq!(statements.len(), expected.len());
     for (index, (statement, expected)) in statements.iter().zip(expected).enumerate() {

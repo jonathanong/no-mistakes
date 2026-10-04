@@ -37,17 +37,14 @@ fn projection_suffix(set: &SetExpr, hidden: usize) -> Option<BTreeSet<String>> {
             }) {
                 return None;
             }
-            select
-                .projection
-                .get(hidden..)?
-                .iter()
-                .map(label_name)
-                .collect()
+            // The prefix lookup above proves this start index is in bounds.
+            select.projection[hidden..].iter().map(label_name).collect()
         }
         SetExpr::Query(query) => projection_suffix(&query.body, hidden),
         SetExpr::SetOperation { left, .. } => projection_suffix(left, hidden),
         SetExpr::Values(values) => {
-            let width = values.rows.first()?.len();
+            // The SQL parser only constructs VALUES with at least one row.
+            let width = values.rows[0].len();
             (width == hidden).then(BTreeSet::new)
         }
         _ => None,
