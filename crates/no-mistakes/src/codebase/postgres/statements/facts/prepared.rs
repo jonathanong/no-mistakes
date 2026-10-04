@@ -41,7 +41,7 @@ impl<'a> PreparedStatements<'a> {
             if let [part] = name.0.as_slice() {
                 if let Some(prepared) = part
                     .as_ident()
-                    .and_then(|ident| self.statements.get(&ident_key(ident)))
+                    .and_then(|ident| self.statements.get(&prepared_key(ident)))
                 {
                     if prepared.parameter_count == Some(parameters.len()) {
                         // Replay only the destination transition, without a second fact pass.
@@ -61,7 +61,7 @@ impl<'a> PreparedStatements<'a> {
             } => {
                 // PostgreSQL rejects a duplicate name and retains its original definition.
                 self.statements
-                    .entry(ident_key(name))
+                    .entry(prepared_key(name))
                     .or_insert_with(|| Prepared {
                         statement,
                         parameter_count: parameter_count(statement, data_types.len()),
@@ -73,7 +73,7 @@ impl<'a> PreparedStatements<'a> {
                 self.statements.clear();
             }
             Statement::Deallocate { name, .. } => {
-                self.statements.remove(&ident_key(name));
+                self.statements.remove(&prepared_key(name));
             }
             Statement::Discard {
                 object_type: DiscardObject::ALL,
@@ -106,4 +106,15 @@ fn parameter_count(statement: &Statement, declared: usize) -> Option<usize> {
         ControlFlow::Continue(())
     });
     valid.then_some(declared.max(inferred))
+}
+
+fn prepared_key(ident: &sqlparser::ast::Ident) -> String {
+    let mut key = ident_key(ident);
+    // PostgreSQL's default identifier limit is 63 bytes; never split a UTF-8 character.
+    let mut end = key.len().min(63);
+    while !key.is_char_boundary(end) {
+        end -= 1;
+    }
+    key.truncate(end);
+    key
 }

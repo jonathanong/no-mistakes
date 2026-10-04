@@ -73,7 +73,7 @@ An attach to a non-partitioned temporary parent does not transfer ownership. A
 `DETACH PARTITION ... CONCURRENTLY` inside `DO` or an explicit transaction cannot
 run in PostgreSQL, so recovered SQL in those contexts leaves the partition attached.
 
-`PREPARE` analyzes a `SELECT INTO TEMP` without creating its destination. The temporary identity begins when its `EXECUTE` runs with the prepared argument count; `DEALLOCATE` before execution leaves the catalog relation visible. A duplicate `PREPARE` keeps the original definition because PostgreSQL rejects the duplicate. A type list may declare only a prefix: later `$n` parameters extend the execution arity, while unused declared types still count. Wrong-arity executions and malformed placeholders do not create a temporary destination.
+`PREPARE` analyzes a `SELECT INTO TEMP` without creating its destination. The temporary identity begins when its `EXECUTE` runs with the prepared argument count; `DEALLOCATE` before execution leaves the catalog relation visible. A duplicate `PREPARE` keeps the original definition because PostgreSQL rejects the duplicate. A type list may declare only a prefix: later `$n` parameters extend the execution arity, while unused declared types still count. Wrong-arity executions and malformed placeholders do not create a temporary destination. Prepared-statement names use PostgreSQL's default 63-byte identifier limit without splitting UTF-8 characters, consistently across declaration, execution, and deallocation; quoted case remains significant.
 
 Three-part temporary names such as `"Audit.Database".pg_temp.accounts` retain
 their database qualifier in prepared facts. They shadow a permanent catalog

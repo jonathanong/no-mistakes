@@ -32,3 +32,15 @@ fn partial_prepared_types_keep_wrong_arity_catalog_reads_visible() {
     ));
     assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
 }
+
+#[test]
+fn prepared_name_truncation_limits_catalog_reads_to_nonmatching_executions() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-name-truncation.sql"
+    ));
+    assert_eq!(
+        names(sql),
+        ["accounts", "accounts", "accounts", "accounts", "accounts"]
+    );
+}
