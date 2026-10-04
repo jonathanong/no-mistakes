@@ -199,6 +199,12 @@ expansion. For example, `id IN (SELECT unnest(get_all_ids()) HAVING false)`
 adds no target keys. This removes only the unused projection expansion proof;
 uncapped physical source items remain in the facts. A `HAVING` result that is
 not known to reject the group does not establish an empty result.
+The JSON array functions `json_array_elements`, `json_array_elements_text`,
+`jsonb_array_elements`, and `jsonb_array_elements_text` retain their declared
+output column `value` when given only a relation alias. An explicit column alias
+list overrides that name. For example, `id IN (SELECT value::uuid FROM
+jsonb_array_elements_text($1::jsonb) AS item)` reads the local function output
+and can bound the target key; a function in another schema remains opaque.
 A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one

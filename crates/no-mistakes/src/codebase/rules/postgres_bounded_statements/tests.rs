@@ -1,6 +1,7 @@
 mod current_database;
 mod ddl_search_path;
 mod fixture_configs;
+mod json_function_outputs;
 mod legacy_single_column;
 mod nested_positive_order;
 mod nested_zero_order;
