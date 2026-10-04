@@ -10,7 +10,8 @@ pub(super) fn bound(
 ) -> SqlBoundQuery {
     match set {
         SetExpr::Select(select) => SqlBoundQuery {
-            capped: aggregate::pure_aggregate(select),
+            capped: aggregate::pure_aggregate(select)
+                || super::super::predicate::rejects_all(select.selection.as_ref()),
             items: items::from_select(select, scope, positions),
         },
         SetExpr::Query(query) => super::bound_query(query, scope, positions),
