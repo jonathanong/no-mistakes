@@ -2,27 +2,16 @@
 use super::{merge, Resolver, Sourced};
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, unwrap_expr};
 use crate::codebase::postgres::SqlPinSource;
-use sqlparser::ast::{
-    DataType, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, UnaryOperator, Value,
-};
+use sqlparser::ast::{DataType, Expr, FunctionArg, FunctionArgExpr, FunctionArguments};
 
 mod fixed_boolean;
 mod indexed;
+mod leaves;
+pub(super) use leaves::constructor;
+use leaves::numeric_literal;
 mod scalar;
 use fixed_boolean::fixed_scalar_boolean;
 pub(super) use indexed::indexed_base;
-
-pub(super) fn constructor(expr: &Expr) -> Option<&sqlparser::ast::Array> {
-    match unwrap_expr(expr) {
-        Expr::Array(array) => Some(array),
-        Expr::Cast {
-            expr,
-            data_type: DataType::Array(_),
-            ..
-        } => constructor(expr),
-        _ => None,
-    }
-}
 
 /// Literal/bind leaves are caller-sized; a column leaf requires catalog scalar evidence.
 /// Nested constructors flatten, so their leaves need the same proof rather than an arity guess.
@@ -91,7 +80,15 @@ pub(super) fn finite_array(
                         )?;
                     }
                 } else {
-                    columns(expr, resolver, out.as_deref_mut(), indexed, types, true, positions)?;
+                    columns(
+                        expr,
+                        resolver,
+                        out.as_deref_mut(),
+                        indexed,
+                        types,
+                        true,
+                        positions,
+                    )?;
                 }
                 Some(())
             }
@@ -102,7 +99,15 @@ pub(super) fn finite_array(
             } => {
                 types.push(data_type.to_string());
                 if caller_only {
-                    columns(expr, resolver, out.as_deref_mut(), indexed, types, true, positions)?;
+                    columns(
+                        expr,
+                        resolver,
+                        out.as_deref_mut(),
+                        indexed,
+                        types,
+                        true,
+                        positions,
+                    )?;
                 }
                 Some(())
             }
@@ -110,7 +115,15 @@ pub(super) fn finite_array(
                 expr, data_type, ..
             } if !matches!(data_type, DataType::Array(_) | DataType::Custom(_, _)) => {
                 if caller_only {
-                    columns(expr, resolver, out.as_deref_mut(), indexed, types, true, positions)?;
+                    columns(
+                        expr,
+                        resolver,
+                        out.as_deref_mut(),
+                        indexed,
+                        types,
+                        true,
+                        positions,
+                    )?;
                 }
                 Some(())
             }
@@ -195,16 +208,4 @@ pub(super) fn finite_array(
         };
     }
     Some(sourced)
-}
-
-// Numeric signs do not change scalar cardinality; arbitrary overloaded operators need proof.
-fn numeric_literal(expr: &Expr) -> bool {
-    match unwrap_expr(expr) {
-        Expr::Value(value) => matches!(&value.value, Value::Number(..)),
-        Expr::UnaryOp {
-            op: UnaryOperator::Plus | UnaryOperator::Minus,
-            expr,
-        } => numeric_literal(expr),
-        _ => false,
-    }
 }
