@@ -1,12 +1,17 @@
 //! ALTER TABLE transitions for temporary partition ownership.
 use super::super::super::items;
 use super::super::TemporaryRelations;
+use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::{
     AlterTableOperation, Expr, ObjectName, ObjectNamePart, Partition, RenameTableNameKind,
 };
 
 impl TemporaryRelations {
-    pub(super) fn alter_table(&mut self, table: &sqlparser::ast::AlterTable) {
+    pub(super) fn alter_table(
+        &mut self,
+        table: &sqlparser::ast::AlterTable,
+        catalog: Option<&SchemaCatalog>,
+    ) {
         for operation in &table.operations {
             match operation {
                 AlterTableOperation::RenameTable { table_name } => {
@@ -18,13 +23,13 @@ impl TemporaryRelations {
                 AlterTableOperation::AttachPartition { partition } => {
                     if let Some(child) = partition_name(partition) {
                         self.state
-                            .attach_partition(&items::sql_name(&table.name), &child);
+                            .attach_partition(&items::sql_name(&table.name), &child, catalog);
                     }
                 }
                 AlterTableOperation::DetachPartition { partition } => {
                     if let Some(child) = partition_name(partition) {
                         self.state
-                            .detach_partition(&items::sql_name(&table.name), &child);
+                            .detach_partition(&items::sql_name(&table.name), &child, catalog);
                     }
                 }
                 _ => {}
@@ -33,7 +38,7 @@ impl TemporaryRelations {
     }
 }
 
-fn partition_name(partition: &Partition) -> Option<String> {
+pub(in super::super) fn partition_name(partition: &Partition) -> Option<String> {
     let Partition::Expr(expression) = partition else {
         return None;
     };
