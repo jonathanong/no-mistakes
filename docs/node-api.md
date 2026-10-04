@@ -76,6 +76,10 @@ omitting both selects none. See the
 
 ## PostgreSQL catalog generation
 
+For SQL text without a database or repository, use async
+[`parsePostgresSql(source)`](postgres-source-api.md). A source array returns
+facts in input order. This pure source API accepts no invocation-lock options.
+
 `generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live
 PostgreSQL schema. `coverage` is `"complete"` (the default; every catalog rule
@@ -102,6 +106,7 @@ database name; older catalogs omit it and preserve conservative analysis.
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
 | `postgres catalog` | `generatePostgresCatalog(options)` |
+| Source-only library capability | `parsePostgresSql(sourceOrSources)` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
@@ -216,6 +221,7 @@ does not have a one-to-one CLI command:
 | `effects` | `effects(options)` |
 | `exportsOf` | `exportsOf(options)` |
 | `generatePostgresCatalog` | `generatePostgresCatalog(options)` |
+| `parsePostgresSql` | `parsePostgresSql(sourceOrSources)` |
 | `fetches` | `fetches(options)` |
 | `flow` | `flow(options)` |
 | `impactedChecks` | `impactedChecks(options)` |

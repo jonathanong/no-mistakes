@@ -20,6 +20,7 @@ const planningFixturePath = join(
 
 const RUST_NAPI_BINDING_FILES = [
   "crates/no-mistakes/src/napi_api.rs",
+  "crates/no-mistakes/src/napi_api/postgres_source.rs",
   "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
   "crates/no-mistakes/src/napi_api/planning_bindings.rs",
   "crates/no-mistakes/src/napi_api/wrappers_query.rs",
@@ -159,6 +160,8 @@ test("programmatic API proxies object options through async native addon calls",
       JSON.stringify({ command: "reactUsages", options: JSON.parse(json) }),
     infraResourceRefsJson: async (json) =>
       JSON.stringify({ command: "infraResourceRefs", options: JSON.parse(json) }),
+    parsePostgresSqlJson: async (json) =>
+      JSON.stringify({ command: "parsePostgresSql", options: JSON.parse(json) }),
     generatePostgresCatalogJson: async (json) =>
       JSON.stringify({ command: "generatePostgresCatalog", options: JSON.parse(json) }),
     infraOutputsJson: async (json) =>
@@ -321,6 +324,10 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.serverRouteRelated({ roots: ["routes.ts"] })).command,
       "serverRouteRelated",
     );
+    assert.equal((await api.parsePostgresSql({ sql: "SELECT 1" })).command, "parsePostgresSql");
+    assert.deepEqual((await api.parsePostgresSql([{ sql: "SELECT 1" }])).options, [
+      { sql: "SELECT 1" },
+    ]);
     assert.equal((await api.serverContracts({ root: "." })).command, "serverContracts");
     assert.equal((await api.flow({ target: "src/api.ts#handler" })).command, "flow");
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
@@ -816,6 +823,35 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
   );
 });
 
+test("parsePostgresSql exposes named pure-source contracts and async batch overloads", () => {
+  const declarations = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  for (const type of [
+    "PostgresSqlFacts",
+    "PostgresSqlSource",
+    "PostgresSqlColumn",
+    "PostgresSqlIndex",
+    "PostgresSqlView",
+    "PostgresSqlTrigger",
+    "PostgresSqlFunction",
+    "PostgresSqlDiagnostic",
+    "PostgresSqlPosition",
+    "PostgresSqlSpan",
+  ]) {
+    assert.match(declarations, new RegExp(`export interface ${type} \\{`));
+  }
+  assert.match(index, /parsePostgresSql\(source: PostgresSqlSource\): Promise<PostgresSqlFacts>;/);
+  assert.match(
+    index,
+    /parsePostgresSql\(sources: PostgresSqlSource\[\]\): Promise<PostgresSqlFacts\[\]>;/,
+  );
+  assert.match(declarations, /schemaVersion: 1;/);
+  assert.match(declarations, /structuralIdentity: string;/);
+  assert.match(declarations, /functions: PostgresSqlFunctionReference\[\];/);
+  assert.match(declarations, /kind: "validateConstraint"; name: PostgresSqlIdentifier/);
+  assert.match(declarations, /dependenciesComplete: boolean;/);
+});
+
 test("resolveCheck declarations mirror its mutually exclusive runtime inputs", () => {
   const declarations = readFileSync(join(packageRoot, "query-types.d.ts"), "utf8");
 
@@ -964,7 +1000,7 @@ test("declarations expose invocation controls on every analysis", () => {
     /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
   );
   for (const [declaration, name] of declarations) {
-    if (name === "version") {
+    if (name === "version" || name === "parsePostgresSql") {
       assert.doesNotMatch(declaration, /WithInvocationOptions/);
     } else {
       assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);

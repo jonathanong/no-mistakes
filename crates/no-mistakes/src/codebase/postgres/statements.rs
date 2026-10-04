@@ -1,4 +1,5 @@
 //! Typed INSERT, SELECT, and trigger facts from PostgreSQL SQL.
+pub(super) use bounds::TableTokenIndex;
 
 mod bounds;
 mod conflict;

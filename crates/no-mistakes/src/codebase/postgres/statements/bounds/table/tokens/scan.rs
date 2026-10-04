@@ -1,11 +1,16 @@
 use super::{SourceDepth, SourceOperator, SourceTable, TableTokenCursor};
+use sqlparser::ast::Ident;
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
 
 impl TableTokenCursor {
     pub(in super::super) fn new(tokens: &[TokenWithSpan]) -> Self {
+        Self::from_iter(tokens)
+    }
+
+    pub(super) fn from_iter<'a>(tokens: impl IntoIterator<Item = &'a TokenWithSpan>) -> Self {
         let words: Vec<_> = tokens
-            .iter()
+            .into_iter()
             .filter(|token| !matches!(token.token, Token::Whitespace(_)))
             .collect();
         let mut names = Vec::new();
@@ -73,6 +78,14 @@ impl TableTokenCursor {
                 .collect::<Vec<_>>()
                 .join(".");
             names.push(SourceTable {
+                parts: [schema, Some(table)]
+                    .into_iter()
+                    .flatten()
+                    .map(|word| match word.quote_style {
+                        Some(quote) => Ident::with_quote(quote, &word.value),
+                        None => Ident::new(&word.value),
+                    })
+                    .collect(),
                 schema: schema.map(|word| word.value.clone()),
                 table: table.value.clone(),
                 key: if table.quote_style.is_some() {

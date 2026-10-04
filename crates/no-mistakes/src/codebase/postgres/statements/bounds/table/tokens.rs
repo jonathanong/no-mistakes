@@ -1,13 +1,14 @@
-use sqlparser::ast::Table;
+use sqlparser::ast::{Ident, Table};
 use sqlparser::tokenizer::{Location, Token, TokenWithSpan};
 
+mod identity;
 mod scan;
 #[cfg(test)]
 mod tests;
 
 /// Query-arm spellings grouped by their original top-level SQL statement. A skipped DDL
 /// statement must never supply a name to a later analyzed TABLE arm.
-pub(in super::super::super) struct TableTokenIndex {
+pub(in crate::codebase::postgres) struct TableTokenIndex {
     segments: Vec<SourceSegment>,
 }
 
@@ -109,6 +110,7 @@ struct SourceDepth {
 pub(super) struct SourceTable {
     schema: Option<String>,
     table: String,
+    parts: Vec<Ident>,
     pub(super) name: String,
     pub(super) key: String,
     pub(super) at: (usize, usize),

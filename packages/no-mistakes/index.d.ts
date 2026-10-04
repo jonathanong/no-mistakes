@@ -1,3 +1,8 @@
+import type { PostgresSqlSource, PostgresSqlFacts } from "./postgres-source-types";
+export type * from "./postgres-source-types";
+/** Parse SQL on the native async worker without repository I/O or a database. */
+export function parsePostgresSql(source: PostgresSqlSource): Promise<PostgresSqlFacts>;
+export function parsePostgresSql(sources: PostgresSqlSource[]): Promise<PostgresSqlFacts[]>;
 import type {
   PostgresCatalog,
   PostgresCatalogOptions,
