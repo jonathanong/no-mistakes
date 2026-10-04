@@ -76,10 +76,8 @@ impl TemporaryRelations {
                 if view.temporary
                     || temporary_name(&view.name)
                     || dependencies.iter().any(|dependency| match dependency {
-                        Dependency::Temporary(name) | Dependency::ConditionalTemporary(name, _) => {
-                            !dependencies.contains(&Dependency::Physical(vec![name.clone()]))
-                        }
-                        Dependency::Physical(_) => false,
+                        Dependency::Temporary(_) | Dependency::ConditionalTemporary(_, _) => true,
+                        Dependency::PossibleTemporary(_) | Dependency::Physical(_) => false,
                     })
                 {
                     let inherited = self.state.dependency_database(&dependencies);

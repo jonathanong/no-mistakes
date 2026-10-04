@@ -12,6 +12,8 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) enum Dependency {
     Temporary(String),
     ConditionalTemporary(String, String),
+    // A bare read behind an unknown earlier search-path schema is not definite.
+    PossibleTemporary(String),
     Physical(Vec<String>),
 }
 
@@ -93,7 +95,7 @@ impl State {
             if cascade {
                 for (name, dependencies) in &self.relations {
                     if dependencies.iter().any(|dependency| {
-                        matches!(dependency, Dependency::Temporary(parent) | Dependency::ConditionalTemporary(parent, _) if removed.contains(parent))
+                        matches!(dependency, Dependency::Temporary(parent) | Dependency::ConditionalTemporary(parent, _) | Dependency::PossibleTemporary(parent) if removed.contains(parent))
                     }) {
                         removed.insert(name.clone());
                     }

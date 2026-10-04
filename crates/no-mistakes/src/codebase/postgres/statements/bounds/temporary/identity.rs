@@ -51,6 +51,8 @@ impl State {
             if !candidate.earlier_schemas.is_empty() {
                 // Retain both resolutions until per-catalog evidence settles the source.
                 out.insert(Dependency::Physical(decoded_parts(name)));
+                out.insert(Dependency::PossibleTemporary(key(name)));
+                return;
             }
             out.insert(match candidate.database_qualifier {
                 Some(database) => Dependency::ConditionalTemporary(key(name), database),
