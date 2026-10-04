@@ -96,3 +96,18 @@ fn missing_qualified_parent_cannot_detach_temporary_child() {
     assert_eq!(facts(&sql).len(), 1);
     assert_eq!(shape(&sql), ["select: orders"]);
 }
+
+#[test]
+fn non_relation_partition_syntax_cannot_detach_temporary_child() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-invalid-name.sql"),
+    )
+    .unwrap();
+    assert_eq!(
+        crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql).len(),
+        8
+    );
+    assert_eq!(facts(&sql).len(), 1);
+    assert_eq!(shape(&sql), ["select: orders"]);
+}
