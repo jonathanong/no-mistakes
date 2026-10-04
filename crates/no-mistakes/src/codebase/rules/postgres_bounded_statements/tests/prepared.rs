@@ -23,3 +23,12 @@ fn rejected_prepared_transitions_keep_catalog_reads_visible() {
     );
     assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
 }
+
+#[test]
+fn partial_prepared_types_keep_wrong_arity_catalog_reads_visible() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-partial-types.sql"
+    ));
+    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
+}

@@ -63,3 +63,31 @@ fn duplicate_definitions_and_invalid_execute_arity_preserve_temporary_identity()
         ]
     );
 }
+
+#[test]
+fn partial_prepared_types_infer_total_execute_arity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-partial-types.sql"
+    ));
+    assert_eq!(
+        crate::codebase::postgres::parse_postgres_sql(sql)
+            .unwrap()
+            .len(),
+        19
+    );
+    assert_eq!(
+        shape(sql),
+        [
+            "select: capped orders",
+            "select: accounts",
+            "select: accounts",
+            "select: opaque",
+            "select: capped orders",
+            "select: accounts",
+            "select: opaque",
+            "select: capped orders",
+            "select: accounts"
+        ]
+    );
+}
