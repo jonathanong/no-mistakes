@@ -24,6 +24,9 @@ pub(super) fn expands_from_data(
     select: &Select,
     positions: super::super::value::PlaceholderPositions<'_>,
 ) -> bool {
+    if super::predicate::rejects_groups(select.having.as_ref()) {
+        return false;
+    }
     projected(select).iter().any(|expr| {
         contains_projection_call(expr, &|function| {
             data_backed_projection(function, positions)
@@ -68,7 +71,7 @@ pub(super) fn order_expansion_predicates_reject(query: &Query) -> Option<bool> {
     let (select, nested_empty) = select_body(&query.body)?;
     Some(
         nested_empty
-            || super::predicate::rejects_all(select.having.as_ref())
+            || super::predicate::rejects_groups(select.having.as_ref())
             || (!has_implicit_group(query, select)
                 && super::predicate::rejects_all(select.selection.as_ref())),
     )

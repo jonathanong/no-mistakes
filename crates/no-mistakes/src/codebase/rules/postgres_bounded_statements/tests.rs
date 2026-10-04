@@ -1,3 +1,4 @@
+mod rejecting_having_projection;
 mod fixture_configs;
 mod nested_zero_order;
 mod nonrecursive_ctes;

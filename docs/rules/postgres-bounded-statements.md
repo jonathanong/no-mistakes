@@ -161,6 +161,11 @@ forms and builtin array casts. For example, `unnest(COALESCE($1::uuid[],
 ARRAY[]::uuid[]))` remains caller-sized. Columns, subqueries, custom calls or
 custom casts inside these forms remain opaque; qualifying or quoting the
 conditional name does not establish the special-form contract.
+A constant-false or SQL-NULL `HAVING` rejects the group before SELECT-list
+expansion. For example, `id IN (SELECT unnest(get_all_ids()) HAVING false)`
+adds no target keys. This removes only the unused projection expansion proof;
+uncapped physical source items remain in the facts, and nonconstant `HAVING`
+does not establish an empty result.
 A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
