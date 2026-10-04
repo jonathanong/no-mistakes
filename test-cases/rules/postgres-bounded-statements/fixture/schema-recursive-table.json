@@ -1,0 +1,25 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "\"billing.accounts\"": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "billing.accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      }
+    }
+  }
+}

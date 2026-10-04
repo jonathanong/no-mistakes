@@ -648,3 +648,4 @@ Lenient PostgreSQL recovery retains exact TABLE-arm spelling inside DO bodies an
 Parenthesized PostgreSQL set operations retain a trailing LIMIT after an unqualified TABLE arm.
 
 Parenthesized PostgreSQL `TABLE relation` scalar subqueries retain quoted and qualified identity in view dependencies, including temporary-view and permanent-intermediary cascades; visible CTE aliases are excluded.
+Recursive `WITH` bodies can also start with `TABLE` or use it as a set-operation arm. Forward CTE dependencies resolve before projection, and one quoted name containing a dot remains distinct from a schema-qualified name.
