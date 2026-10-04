@@ -202,6 +202,14 @@ impl State {
 
     pub fn attach_partition(&mut self, parent: &str, child: &str) {
         if self.contains(parent) && self.contains(child) {
+            // PostgreSQL rejects attaching a relation that already belongs to a parent.
+            self.partitions.entry(key(child)).or_insert(key(parent));
+        }
+    }
+
+    pub fn attach_created_partition(&mut self, parent: &str, child: &str) {
+        // CREATE TEMP makes the new child definite even when pg_temp is not first in search_path.
+        if self.contains(parent) {
             self.partitions.insert(key(child), key(parent));
         }
     }

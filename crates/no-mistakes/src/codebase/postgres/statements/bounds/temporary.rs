@@ -58,7 +58,7 @@ impl TemporaryRelations {
                 {
                     self.insert(name.clone());
                     if let Some(parent) = parent {
-                        self.state.attach_partition(&parent, &name);
+                        self.state.attach_created_partition(&parent, &name);
                     }
                     if on_commit_drop {
                         self.state.on_commit_drop.insert(state::key(&name));

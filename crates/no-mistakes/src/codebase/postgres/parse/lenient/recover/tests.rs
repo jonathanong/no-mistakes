@@ -58,6 +58,19 @@ fn peel_do_body_reads_dollar_quote_and_optional_language() {
 }
 
 #[test]
+fn peel_do_body_accepts_only_complete_trailing_plpgsql_language() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-do-language-controls.sql"),
+    )
+    .unwrap();
+    let mut forms = sql.lines().filter(|line| line.starts_with("DO "));
+    let body = |line: &str| peel_do_body(&tokens(line.trim_end_matches(';')));
+    assert_eq!(body(forms.next().unwrap()), Some(" SELECT 1 ".to_string()));
+    assert!(forms.all(|line| body(line).is_none()));
+}
+
+#[test]
 fn peel_do_body_rejects_non_do_and_malformed_language() {
     assert!(peel_do_body(&tokens("CREATE TABLE t (id int)")).is_none());
     assert!(peel_do_body(&tokens("DO")).is_none());

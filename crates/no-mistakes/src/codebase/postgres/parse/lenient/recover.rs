@@ -69,7 +69,8 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
         return None;
     }
     index = skip_ws(tokens, index + 1);
-    if keyword_of(tokens.get(index)?) == Some(Keyword::LANGUAGE) {
+    let leading_language = keyword_of(tokens.get(index)?) == Some(Keyword::LANGUAGE);
+    if leading_language {
         index = skip_ws(tokens, index + 1);
         if !crate::codebase::postgres::parse::is_plpgsql_language(tokens.get(index)?) {
             return None;
@@ -79,7 +80,17 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
     match tokens.get(index)? {
         Token::DollarQuotedString(body) => {
             let rest = skip_ws(tokens, index + 1);
-            (rest >= tokens.len()).then(|| body.value.clone())
+            if rest >= tokens.len() {
+                return Some(body.value.clone());
+            }
+            if leading_language || keyword_of(tokens.get(rest)?) != Some(Keyword::LANGUAGE) {
+                return None;
+            }
+            let language = skip_ws(tokens, rest + 1);
+            if !crate::codebase::postgres::parse::is_plpgsql_language(tokens.get(language)?) {
+                return None;
+            }
+            (skip_ws(tokens, language + 1) >= tokens.len()).then(|| body.value.clone())
         }
         _ => None,
     }

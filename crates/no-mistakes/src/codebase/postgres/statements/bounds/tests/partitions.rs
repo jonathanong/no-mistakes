@@ -111,3 +111,25 @@ fn non_relation_partition_syntax_cannot_detach_temporary_child() {
     assert_eq!(facts(&sql).len(), 1);
     assert_eq!(shape(&sql), ["select: orders"]);
 }
+
+#[test]
+fn failed_reattach_preserves_original_partition_owner() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-owned-reattach.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 2);
+    assert_eq!(shape(&sql), ["select: opaque", "select: child"]);
+}
+
+#[test]
+fn create_temp_attaches_child_when_pg_temp_is_later_in_search_path() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-created-search-path.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 2);
+    assert_eq!(shape(&sql), ["select: opaque", "select: child"]);
+}

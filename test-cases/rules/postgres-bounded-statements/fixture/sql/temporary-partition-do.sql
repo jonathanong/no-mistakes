@@ -8,7 +8,7 @@ BEGIN
     ALTER TABLE accounts DETACH PARTITION orders;
   END IF;
 END
-$$;
+$$ LANGUAGE plpgsql;
 DROP TABLE accounts CASCADE;
 SELECT * FROM orders;
 CREATE TEMP TABLE accounts(id integer) PARTITION BY RANGE (id);
