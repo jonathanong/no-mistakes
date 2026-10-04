@@ -7,6 +7,7 @@ import type {
 /** Nested facts are procedural source occurrences, never guaranteed execution. */
 export interface PostgresSqlProceduralBlock {
   language: string;
+  bodyEncoding: PostgresSqlBodyEncoding;
   bodySpan: PostgresSqlSpan;
   statements: PostgresSqlStatement[];
   diagnostics: PostgresSqlDiagnostic[];
@@ -19,3 +20,6 @@ export interface PostgresSqlConditionalBranch {
   span: PostgresSqlSpan;
   statements: PostgresSqlStatement[];
 }
+
+/** Original body source slices retain this enclosing literal encoding. */
+export type PostgresSqlBodyEncoding = "dollarQuoted" | "singleQuoted";

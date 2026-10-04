@@ -5,8 +5,8 @@ use super::{facts, fixture};
 fn procedural_body_occurrences_retain_origin_and_honest_control_flow_diagnostics() {
     let source = fixture("procedural.sql");
     let facts = facts("procedural.sql");
-    assert_eq!(facts.statements.len(), 8);
-    assert_eq!(facts.diagnostics.len(), 1);
+    assert_eq!(facts.statements.len(), 9);
+    assert_eq!(facts.diagnostics.len(), 0);
     let blocks = facts
         .statements
         .iter()
@@ -15,7 +15,7 @@ fn procedural_body_occurrences_retain_origin_and_honest_control_flow_diagnostics
             _ => None,
         })
         .collect::<Vec<_>>();
-    assert_eq!(blocks.len(), 7);
+    assert_eq!(blocks.len(), 8);
     assert!(blocks[0].complete);
     assert!(blocks[1].complete);
     let nested = &blocks[0].statements[0];
@@ -46,6 +46,11 @@ fn procedural_body_occurrences_retain_origin_and_honest_control_flow_diagnostics
     ));
     assert!(!blocks[6].complete);
     assert!(blocks[6].statements.is_empty());
+    assert!(blocks[7].complete);
+    assert_eq!(
+        blocks[7].body_encoding,
+        super::super::PostgresSqlBodyEncoding::SingleQuoted
+    );
 }
 
 #[test]
@@ -252,4 +257,93 @@ fn conditional_projection_requires_its_prepared_source_owner() {
             .is_err());
         }
     }
+}
+
+#[test]
+fn conditional_keyword_compatibility_preserves_sql_identifiers_and_case_expressions() {
+    let result = facts("conditional-identifiers.sql");
+    assert!(result.diagnostics.is_empty());
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[0].facts else {
+        panic!()
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    let PostgresSqlStatementKind::Conditional { branches } = &block.statements[0].facts else {
+        panic!()
+    };
+    let PostgresSqlStatementKind::AlterTable { operations, .. } = &branches[0].statements[0].facts
+    else {
+        panic!()
+    };
+    let super::super::PostgresSqlAlterOperation::AddColumn { column, .. } = &operations[0] else {
+        panic!()
+    };
+    assert_eq!(column.name.value, "elsif");
+    assert_eq!(column.name.identity, "elsif");
+    let PostgresSqlStatementKind::AlterTable { operations, .. } = &branches[0].statements[1].facts
+    else {
+        panic!()
+    };
+    let super::super::PostgresSqlAlterOperation::AddColumn { column, .. } = &operations[0] else {
+        panic!()
+    };
+    assert!(column
+        .generated
+        .as_ref()
+        .unwrap()
+        .expression
+        .sql
+        .contains("THEN elsif"));
+    let PostgresSqlStatementKind::AlterTable { operations, .. } = &branches[1].statements[0].facts
+    else {
+        panic!()
+    };
+    let super::super::PostgresSqlAlterOperation::AddColumn { column, .. } = &operations[0] else {
+        panic!()
+    };
+    assert_eq!(column.name.value, "ELSIF");
+    assert!(column.name.quoted);
+}
+
+#[test]
+fn single_quoted_conditional_occurrences_keep_original_encoded_spans() {
+    let sql = fixture("conditional-single-quoted.sql");
+    let result = facts("conditional-single-quoted.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[0].facts else {
+        panic!()
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    assert_eq!(
+        block.body_encoding,
+        super::super::PostgresSqlBodyEncoding::SingleQuoted
+    );
+    let PostgresSqlStatementKind::Conditional { branches } = &block.statements[0].facts else {
+        panic!()
+    };
+    assert_eq!(branches.len(), 3);
+    for branch in branches {
+        let statement = &branch.statements[0];
+        assert_eq!(
+            &sql[statement.span.start.offset..statement.span.end.offset],
+            statement.sql
+        );
+        assert!(statement.sql.starts_with("ALTER TABLE children"));
+    }
+    let statement = &block.statements[1];
+    assert_eq!(
+        &sql[statement.span.start.offset..statement.span.end.offset],
+        statement.sql
+    );
+    assert!(statement.sql.contains("''snow''''s''"));
+    let PostgresSqlStatementKind::AlterTable { operations, .. } = &statement.facts else {
+        panic!()
+    };
+    let super::super::PostgresSqlAlterOperation::AddColumn { column } = &operations[0] else {
+        panic!()
+    };
+    assert_eq!(column.name.value, "雪");
+    let default = column.default.as_ref().unwrap();
+    assert_eq!(default.sql, "'snow''s'");
+    let span = default.span.as_ref().unwrap();
+    assert_eq!(&sql[span.start.offset..span.end.offset], "''snow''''s''");
 }

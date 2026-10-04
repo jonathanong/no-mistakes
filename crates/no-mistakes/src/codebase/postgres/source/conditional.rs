@@ -100,21 +100,32 @@ pub(super) fn prepare(tokens: &mut [TokenWithSpan]) {
             (!matches!(token.token, Token::Whitespace(_))).then_some(index)
         })
         .collect::<Vec<_>>();
-    for indices in significant.windows(3) {
-        if matches!(&tokens[indices[0]].token, Token::Word(word) if word.keyword == Keyword::END)
-            && tokens[indices[1]].token == Token::SemiColon
-            && matches!(&tokens[indices[2]].token, Token::Word(word) if word.quote_style.is_none() && ([Keyword::ELSE, Keyword::END].contains(&word.keyword) || word.value.eq_ignore_ascii_case("ELSIF")))
-        {
-            // The AST owns this nested BEGIN/END; retain the original delimiter span.
-            tokens[indices[1]].token = Token::Whitespace(Whitespace::Space);
-        }
-    }
-    for token in tokens {
-        if let Token::Word(word) = &mut token.token {
-            if word.quote_style.is_none() && word.value.eq_ignore_ascii_case("ELSIF") {
+    let mut case_depth = 0usize;
+    for (at, index) in significant.iter().enumerate() {
+        let previous = at.checked_sub(1).map(|at| &tokens[significant[at]].token);
+        let boundary = matches!(previous, Some(Token::SemiColon))
+            || matches!(previous, Some(Token::Word(word)) if word.keyword == Keyword::THEN);
+        let Token::Word(word) = &mut tokens[*index].token else {
+            continue;
+        };
+        if word.quote_style.is_none() {
+            if word.keyword == Keyword::CASE {
+                case_depth += 1;
+            } else if word.keyword == Keyword::END {
+                case_depth = case_depth.saturating_sub(1);
+            } else if case_depth == 0 && boundary && word.value.eq_ignore_ascii_case("ELSIF") {
                 word.value = "ELSEIF".into();
                 word.keyword = Keyword::ELSEIF;
             }
+        }
+    }
+    for indices in significant.windows(3) {
+        if matches!(&tokens[indices[0]].token, Token::Word(word) if word.keyword == Keyword::END)
+            && tokens[indices[1]].token == Token::SemiColon
+            && matches!(&tokens[indices[2]].token, Token::Word(word) if word.quote_style.is_none() && ([Keyword::ELSE, Keyword::ELSEIF, Keyword::END].contains(&word.keyword) || word.value.eq_ignore_ascii_case("ELSIF")))
+        {
+            // The AST owns this nested BEGIN/END; retain the original delimiter span.
+            tokens[indices[1]].token = Token::Whitespace(Whitespace::Space);
         }
     }
 }

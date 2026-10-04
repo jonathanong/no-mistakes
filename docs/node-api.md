@@ -78,7 +78,9 @@ omitting both selects none. See the
 
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](postgres-source-api.md). A source array returns
-facts in input order. This pure source API accepts no invocation-lock options.
+facts in input order. DO bodies expose typed IF/ELSIF/ELSE branch conditions
+and nested DDL source occurrences, without claiming that any branch executes.
+This pure source API accepts no invocation-lock options.
 
 `generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live
@@ -105,8 +107,8 @@ database name; older catalogs omit it and preserve conservative analysis.
 | `call-sites`                               | `callSites(options)`                                                                                                                                                                                                                                                       |
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
-| `postgres catalog` | `generatePostgresCatalog(options)` |
-| Source-only library capability | `parsePostgresSql(sourceOrSources)` |
+| `postgres catalog`                         | `generatePostgresCatalog(options)`                                                                                                                                                                                                                                         |
+| Source-only library capability             | `parsePostgresSql(sourceOrSources)`                                                                                                                                                                                                                                        |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
@@ -132,7 +134,7 @@ database name; older catalogs omit it and preserve conservative analysis.
 | `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
-| `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
+| `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                    |
 
 The `dependencies`, `dependents`, and `related` options accept
 `relationships: ["call"]` to select the opt-in lexical call edges. Calls are
@@ -202,67 +204,67 @@ The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
 does not have a one-to-one CLI command:
 
-| Runtime export | API |
-| --- | --- |
-| `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
-| `version` | `version()` |
-| `analyzeProject` | `analyzeProject(options)` |
-| `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
-| `callSites` | `callSites(options)` |
-| `check` | `check(options)` |
-| `ciEnv` | `ciEnv(options)` |
-| `ciImpact` | `ciImpact(options)` |
-| `ciTopology` | `ciTopology(options)` |
-| `ciTopologyImpact` | `ciTopologyImpact(options)` |
-| `dataPw` | `dataPw(options)` |
-| `deadExports` | `deadExports(options)` |
-| `dependencies` | `dependencies(options)` |
-| `dependents` | `dependents(options)` |
-| `effects` | `effects(options)` |
-| `exportsOf` | `exportsOf(options)` |
-| `generatePostgresCatalog` | `generatePostgresCatalog(options)` |
-| `parsePostgresSql` | `parsePostgresSql(sourceOrSources)` |
-| `fetches` | `fetches(options)` |
-| `flow` | `flow(options)` |
-| `impactedChecks` | `impactedChecks(options)` |
-| `importUsages` | `importUsages(options)` |
-| `importers` | `importers(options)` |
-| `infraOutputs` | `infraOutputs(options)` |
-| `infraResourceRefs` | `infraResourceRefs(options)` |
-| `infraTestFor` | `infraTestFor(options)` |
-| `lockfileDiff` | `lockfileDiff(options)` |
-| `validateMermaidMarkdown` | `validateMermaidMarkdown(options)` |
-| `playwrightCheck` | `playwrightCheck(options)` |
-| `playwrightEdges` | `playwrightEdges(options)` |
-| `playwrightRelated` | `playwrightRelated(options)` |
-| `playwrightTests` | `playwrightTests(options)` |
-| `reactAnalyze` | `reactAnalyze(options)` |
-| `reactCheck` | `reactCheck(options)` |
-| `reactUsages` | `reactUsages(options)` |
-| `registryExtension` | `registryExtension(options)` |
-| `related` | `related(options)` |
-| `resolveCheck` | `resolveCheck(options)` |
-| `resolveConfig` | `resolveConfig(options)` |
-| `rscCallers` | `rscCallers(options)` |
-| `swiftImporters` | `swiftImporters(options)` |
-| `swiftTestTargets` | `swiftTestTargets(options)` |
-| `symbols` | `symbols(options)` |
-| `testsComment` | `testsComment(options)` |
-| `testsGraphMermaid` | `testsGraphMermaid(options)` |
-| `queueCheck` | `queueCheck(options)` |
-| `queueEdges` | `queueEdges(options)` |
-| `queueRelated` | `queueRelated(options)` |
-| `queues` | `queues(options)` |
-| `serverContracts` | `serverContracts(options)` |
-| `serverRouteEdges` | `serverRouteEdges(options)` |
-| `serverRouteList` | `serverRouteList(options)` |
-| `serverRouteRelated` | `serverRouteRelated(options)` |
-| `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
-| `testsGraph` | `testsGraph(options)` |
-| `testsImpact` | `testsImpact(options)` |
-| `testsPlan` | `testsPlan(options)` |
-| `testsTargets` | `testsTargets(options)` |
-| `testsWhy` | `testsWhy(options)` |
+| Runtime export                 | API                                                                                                |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `createWorkflowTopologyIndex`  | `createWorkflowTopologyIndex(topology)`                                                            |
+| `version`                      | `version()`                                                                                        |
+| `analyzeProject`               | `analyzeProject(options)`                                                                          |
+| `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)`                                                            |
+| `callSites`                    | `callSites(options)`                                                                               |
+| `check`                        | `check(options)`                                                                                   |
+| `ciEnv`                        | `ciEnv(options)`                                                                                   |
+| `ciImpact`                     | `ciImpact(options)`                                                                                |
+| `ciTopology`                   | `ciTopology(options)`                                                                              |
+| `ciTopologyImpact`             | `ciTopologyImpact(options)`                                                                        |
+| `dataPw`                       | `dataPw(options)`                                                                                  |
+| `deadExports`                  | `deadExports(options)`                                                                             |
+| `dependencies`                 | `dependencies(options)`                                                                            |
+| `dependents`                   | `dependents(options)`                                                                              |
+| `effects`                      | `effects(options)`                                                                                 |
+| `exportsOf`                    | `exportsOf(options)`                                                                               |
+| `generatePostgresCatalog`      | `generatePostgresCatalog(options)`                                                                 |
+| `parsePostgresSql`             | `parsePostgresSql(sourceOrSources)`                                                                |
+| `fetches`                      | `fetches(options)`                                                                                 |
+| `flow`                         | `flow(options)`                                                                                    |
+| `impactedChecks`               | `impactedChecks(options)`                                                                          |
+| `importUsages`                 | `importUsages(options)`                                                                            |
+| `importers`                    | `importers(options)`                                                                               |
+| `infraOutputs`                 | `infraOutputs(options)`                                                                            |
+| `infraResourceRefs`            | `infraResourceRefs(options)`                                                                       |
+| `infraTestFor`                 | `infraTestFor(options)`                                                                            |
+| `lockfileDiff`                 | `lockfileDiff(options)`                                                                            |
+| `validateMermaidMarkdown`      | `validateMermaidMarkdown(options)`                                                                 |
+| `playwrightCheck`              | `playwrightCheck(options)`                                                                         |
+| `playwrightEdges`              | `playwrightEdges(options)`                                                                         |
+| `playwrightRelated`            | `playwrightRelated(options)`                                                                       |
+| `playwrightTests`              | `playwrightTests(options)`                                                                         |
+| `reactAnalyze`                 | `reactAnalyze(options)`                                                                            |
+| `reactCheck`                   | `reactCheck(options)`                                                                              |
+| `reactUsages`                  | `reactUsages(options)`                                                                             |
+| `registryExtension`            | `registryExtension(options)`                                                                       |
+| `related`                      | `related(options)`                                                                                 |
+| `resolveCheck`                 | `resolveCheck(options)`                                                                            |
+| `resolveConfig`                | `resolveConfig(options)`                                                                           |
+| `rscCallers`                   | `rscCallers(options)`                                                                              |
+| `swiftImporters`               | `swiftImporters(options)`                                                                          |
+| `swiftTestTargets`             | `swiftTestTargets(options)`                                                                        |
+| `symbols`                      | `symbols(options)`                                                                                 |
+| `testsComment`                 | `testsComment(options)`                                                                            |
+| `testsGraphMermaid`            | `testsGraphMermaid(options)`                                                                       |
+| `queueCheck`                   | `queueCheck(options)`                                                                              |
+| `queueEdges`                   | `queueEdges(options)`                                                                              |
+| `queueRelated`                 | `queueRelated(options)`                                                                            |
+| `queues`                       | `queues(options)`                                                                                  |
+| `serverContracts`              | `serverContracts(options)`                                                                         |
+| `serverRouteEdges`             | `serverRouteEdges(options)`                                                                        |
+| `serverRouteList`              | `serverRouteList(options)`                                                                         |
+| `serverRouteRelated`           | `serverRouteRelated(options)`                                                                      |
+| `serverRoutes`                 | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
+| `testsGraph`                   | `testsGraph(options)`                                                                              |
+| `testsImpact`                  | `testsImpact(options)`                                                                             |
+| `testsPlan`                    | `testsPlan(options)`                                                                               |
+| `testsTargets`                 | `testsTargets(options)`                                                                            |
+| `testsWhy`                     | `testsWhy(options)`                                                                                |
 
 `testsTargets()` and test-plan targets set `workspace: true` when a Vitest
 workspace/project-array source must be passed with `--workspace`; the emitted
@@ -604,14 +606,16 @@ const closure = await dependencies({
 });
 const report = await analyzeProject({
   root,
-  reports: [{
-    type: "dependencies",
-    files: ["web/app/page.tsx"],
-    relationships: ["import-static", "import-dynamic", "import-type"],
-    candidateInclude: ["web/**"],
-    candidateExclude: ["**/*.test.*"],
-    projection: "paths",
-  }],
+  reports: [
+    {
+      type: "dependencies",
+      files: ["web/app/page.tsx"],
+      relationships: ["import-static", "import-dynamic", "import-type"],
+      candidateInclude: ["web/**"],
+      candidateExclude: ["**/*.test.*"],
+      projection: "paths",
+    },
+  ],
 });
 ```
 

@@ -126,6 +126,7 @@ pub enum PostgresSqlStatementKind {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlProceduralBlock {
     pub language: String,
+    pub body_encoding: PostgresSqlBodyEncoding,
     pub body_span: PostgresSqlSpan,
     pub statements: Vec<PostgresSqlStatement>,
     pub diagnostics: Vec<PostgresSqlDiagnostic>,
@@ -139,4 +140,12 @@ pub struct PostgresSqlConditionalBranch {
     pub condition: Option<PostgresSqlExpression>,
     pub span: PostgresSqlSpan,
     pub statements: Vec<PostgresSqlStatement>,
+}
+
+/// The source slice retains the enclosing literal's encoding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PostgresSqlBodyEncoding {
+    DollarQuoted,
+    SingleQuoted,
 }

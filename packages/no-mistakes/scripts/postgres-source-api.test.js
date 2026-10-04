@@ -95,6 +95,21 @@ test(
     assert.deepEqual(facts.diagnostics, []);
     const block = facts.statements[0].block;
     assert.equal(block.complete, true);
+    assert.equal(block.bodyEncoding, "dollarQuoted");
+    const encoded = fixture("conditional-single-quoted.sql");
+    const quoted = await api.parsePostgresSql({ sql: encoded });
+    assert.deepEqual(quoted.diagnostics, []);
+    assert.equal(quoted.statements[0].block.bodyEncoding, "singleQuoted");
+    assert.equal(quoted.statements[0].block.complete, true);
+    const quoteStatement = quoted.statements[0].block.statements[1];
+    assert.equal(
+      Buffer.from(encoded)
+        .subarray(quoteStatement.span.start.offset, quoteStatement.span.end.offset)
+        .toString(),
+      quoteStatement.sql,
+    );
+    assert.equal(quoteStatement.operations[0].column.name.value, "雪");
+    assert.equal(quoteStatement.operations[0].column.default.sql, "'snow''s'");
     const conditional = block.statements[0];
     assert.equal(conditional.kind, "conditional");
     assert.equal(conditional.branches.length, 3);
@@ -112,5 +127,17 @@ test(
     const table = await api.parsePostgresSql({ sql: fixture("table-source-boundary.sql") });
     assert.deepEqual(table.diagnostics, []);
     assert.equal(table.statements.length, 1);
+    const neighbors = await api.parsePostgresSql({ sql: fixture("table-source-neighbors.sql") });
+    assert.deepEqual(neighbors.diagnostics, []);
+    assert.deepEqual(
+      neighbors.statements.map((statement) => statement.kind),
+      ["createView", "createTable", "other", "alterTable"],
+    );
+    assert.equal(neighbors.statements[0].view.dependenciesComplete, true);
+    assert.equal(
+      neighbors.statements[0].view.dependencies.find((name) => name.parts[0].identity === "Topics")
+        .parts[0].quoted,
+      true,
+    );
   },
 );

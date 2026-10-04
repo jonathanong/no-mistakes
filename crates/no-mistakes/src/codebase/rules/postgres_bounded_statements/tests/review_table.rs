@@ -5,9 +5,8 @@ fn quoted_table_arms_respect_temporary_identity_and_view_dependencies() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    // sqlparser rejects multiple TABLE arms in one parse; the supported lenient path still
-    // recovers each statement and must retain the original quoted source identity.
-    assert!(facts.parse_failed);
+    // Prepared delimiter normalization keeps successive TABLE ASTs and names intact.
+    assert!(!facts.parse_failed);
     let catalog = super::catalog();
     let found: Vec<_> = facts
         .bounds
