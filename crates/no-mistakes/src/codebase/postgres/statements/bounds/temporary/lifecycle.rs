@@ -177,8 +177,11 @@ impl TemporaryRelations {
         names: &[sqlparser::ast::ObjectName],
         cascade: bool,
     ) {
+        let names: Vec<_> = names.iter().map(items::sql_name).collect();
+        if !cascade && self.state.restrict_blocks_drop(&names) {
+            return;
+        }
         for name in names {
-            let name = items::sql_name(name);
             // PostgreSQL has no temporary materialized views: this wrong-kind DROP fails.
             if *kind == ObjectType::MaterializedView && self.state.matches_identity(&name) {
                 continue;
