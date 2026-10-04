@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 mod array_review;
 mod compact_aliases;
 mod compact_caller_arrays;
+mod materialized_drop;
 mod physical_cascade;
 mod recursive_forward;
 mod referential;

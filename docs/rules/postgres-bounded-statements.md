@@ -30,6 +30,11 @@ with a cap. Enable the rule on job and repository code where those sweeps live.
 
 Temporary relations are tracked within each SQL source in statement order. Tables declared `ON COMMIT DROP` lose their temporary identity at commit, including after a rename; `ON COMMIT DELETE ROWS` retains the identity. Transaction rollback and savepoints restore their identities; repeating `BEGIN` preserves the active transaction and its savepoints. Renames, drops, and cascading drops update temporary view dependencies, including dependencies on permanent relations. View dependencies include relations in scalar `SELECT`-list and `WHERE` subqueries; CTE aliases and table-function names are not relations. A recursive `WITH` resolves acyclic forward CTE references before projecting their bounds. Qualified permanent dependencies retain their schema identity; unqualified dependencies conservatively match a schema-qualified drop with the same relation name. A view over temporary relations is itself temporary. Quoted `TABLE "Accounts"` arms retain their case-sensitive identity, including inside a view; unquoted `TABLE Accounts` arms use the folded `accounts` identity. Explicit `search_path` order controls whether an unqualified name shadows the catalog relation, while `pg_temp` qualification selects the temporary identity.
 
+`DROP MATERIALIZED VIEW ... CASCADE` removes temporary views that depend on the
+materialized view and their temporary dependents; `RESTRICT` preserves their
+identities. Schema-qualified materialized-view names remain distinct from
+temporary namesakes.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`

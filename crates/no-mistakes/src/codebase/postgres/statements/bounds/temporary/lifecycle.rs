@@ -73,7 +73,7 @@ impl TemporaryRelations {
                 self.savepoints.clear();
             }
             Statement::Drop {
-                object_type: ObjectType::Table | ObjectType::View,
+                object_type: ObjectType::Table | ObjectType::View | ObjectType::MaterializedView,
                 names,
                 cascade,
                 ..
