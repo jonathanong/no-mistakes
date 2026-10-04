@@ -8,10 +8,12 @@ mod aliases;
 mod array_review;
 mod compact_aliases;
 mod physical_cascade;
+mod recursive_forward;
 mod repeated_begin;
 mod review;
 mod review_table;
 mod table_review;
+mod temporary_view;
 
 fn query(bound: &SqlBoundQuery) -> String {
     let items: Vec<String> = bound.items.iter().map(item).collect();

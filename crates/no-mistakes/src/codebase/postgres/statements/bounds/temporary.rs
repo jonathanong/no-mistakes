@@ -1,6 +1,7 @@
 //! Temporary relation identity follows SQL source order, never crossing source boundaries.
 mod lifecycle;
 mod state;
+pub(super) mod view_relations;
 use super::items::sql_name;
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{
@@ -29,6 +30,15 @@ impl TemporaryRelations {
             // View declarations have no executed bound fact; collect their source fact here once.
             let declaration = super::query::bound_query(&view.query, scope);
             self.state.dependencies(&declaration, &mut dependencies);
+            // The bound projection can omit relations in expressions that do not
+            // constrain rows. They still determine a view's lifetime.
+            for name in view_relations::names(&view.query) {
+                dependencies.insert(if self.state.contains(&name) {
+                    Dependency::Temporary(state::key(&name))
+                } else {
+                    Dependency::Physical(crate::codebase::postgres::decoded_parts(&name))
+                });
+            }
         }
         self.lifecycle(statement);
         // SELECT INTO's source is resolved before its destination is created.
