@@ -34,9 +34,9 @@ pub(crate) use wrappers::walk_executed;
 
 /// Extract statement facts from SQL recovered by [`crate::codebase::postgres::extract_embedded_sql_from_source`].
 ///
-/// This forwards the call's exact generated-placeholder positions to every statement-fact
-/// projection, distinguishing interpolated binds from user-written identifiers with the same
-/// marker spelling. Returns `None` when the call has no recovered SQL. Fact locations remain
+/// This forwards the call's exact generated-placeholder positions to bound, value-form, and
+/// relation-restriction facts, distinguishing interpolated binds from user-written identifiers
+/// with the same marker spelling. Returns `None` when the call has no recovered SQL. Fact locations remain
 /// relative to the recovered SQL text; for a `Dynamic` call, that text may contain only a
 /// verified leading statement fragment.
 pub fn extract_sql_statement_facts_for_embedded_call(

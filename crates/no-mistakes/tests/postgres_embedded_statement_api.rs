@@ -67,6 +67,12 @@ fn embedded_placeholder_positions_are_authoritative_across_fact_families() {
         ["tenant_id"]
     );
     assert!(!query_facts.bounds[0].query.capped);
+    let relation = query_facts.selects[0]
+        .relations
+        .iter()
+        .find(|relation| relation.table == "orders")
+        .unwrap();
+    assert_eq!(relation.constrained_columns, ["tenant_id"]);
 
     // Standalone extraction has no source provenance and retains its legacy marker heuristic.
     let standalone = extract_sql_statement_facts(query.sql_text.as_deref().unwrap());

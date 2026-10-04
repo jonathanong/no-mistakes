@@ -22,9 +22,11 @@ pub(in crate::codebase::postgres::statements::mutations) fn push_group(
     tables: &[TableWithJoins],
     selection: Option<&Expr>,
     ctes: &[String],
+    positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<Vec<SqlRelationPredicateFact>>,
 ) {
-    let relations = super::super::predicates::write_relations(sql, tables, selection, ctes);
+    let relations =
+        super::super::predicates::write_relations(sql, tables, selection, ctes, positions);
     if !relations.is_empty() {
         out.push(relations);
     }

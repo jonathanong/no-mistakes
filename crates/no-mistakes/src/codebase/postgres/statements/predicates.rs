@@ -16,8 +16,15 @@ pub(super) fn select_relations(
     sql: &str,
     select: &Select,
     ctes: &[String],
+    positions: super::value::PlaceholderPositions<'_>,
 ) -> Vec<SqlRelationPredicateFact> {
-    relations_for(sql, &select.from, select.selection.as_ref(), ctes)
+    relations_for(
+        sql,
+        &select.from,
+        select.selection.as_ref(),
+        ctes,
+        positions,
+    )
 }
 
 pub(super) fn write_relations(
@@ -25,8 +32,9 @@ pub(super) fn write_relations(
     tables: &[TableWithJoins],
     selection: Option<&Expr>,
     ctes: &[String],
+    positions: super::value::PlaceholderPositions<'_>,
 ) -> Vec<SqlRelationPredicateFact> {
-    relations_for(sql, tables, selection, ctes)
+    relations_for(sql, tables, selection, ctes, positions)
 }
 
 /// Base table name when `name` is not an in-scope CTE. Schema-qualified
@@ -53,6 +61,7 @@ fn relations_for(
     tables: &[TableWithJoins],
     selection: Option<&Expr>,
     ctes: &[String],
+    positions: super::value::PlaceholderPositions<'_>,
 ) -> Vec<SqlRelationPredicateFact> {
     let mut gathered = Gather::default();
     for table in tables {
@@ -90,6 +99,7 @@ fn relations_for(
         selection,
         gathered.from_items,
         gathered.all_base,
+        positions,
     );
     gathered
         .instances

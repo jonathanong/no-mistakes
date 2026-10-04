@@ -59,6 +59,7 @@ impl Collector<'_, '_, '_> {
                     &tables,
                     update.selection.as_ref(),
                     ctes,
+                    self.positions,
                     self.updates,
                 );
                 walk_side_queries(
@@ -102,6 +103,7 @@ impl Collector<'_, '_, '_> {
                     &tables,
                     delete.selection.as_ref(),
                     ctes,
+                    self.positions,
                     self.deletes,
                 );
                 walk_side_queries(

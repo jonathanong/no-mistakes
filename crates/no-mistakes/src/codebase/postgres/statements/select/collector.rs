@@ -133,7 +133,7 @@ impl Collector<'_, '_, '_> {
         );
         from::collect_derived_queries(sql, &select.from, ctes, in_insert_select, positions, out);
         nested::collect_at(sql, select, ctes, in_insert_select, positions, out);
-        let relations = super::super::predicates::select_relations(sql, select, ctes);
+        let relations = super::super::predicates::select_relations(sql, select, ctes, positions);
         let shapes = shapes::collect(select);
         let line = super::super::lines::line_containing(
             sql,

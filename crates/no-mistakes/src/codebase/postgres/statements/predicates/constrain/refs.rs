@@ -47,6 +47,13 @@ pub(super) fn qualifier_matches(qualifier: &str, ctx: &Ctx<'_>) -> bool {
 
 fn node_references(expr: &Expr, ctx: &Ctx<'_>) -> bool {
     match expr {
+        Expr::Identifier(ident)
+            if ctx.positions.is_some_and(|positions| {
+                super::super::super::value::is_placeholder_ident_at(ident, Some(positions))
+            }) =>
+        {
+            false
+        }
         Expr::Identifier(_) => ctx.from_items <= 1,
         Expr::CompoundIdentifier(parts) => qualifier_and_column(parts)
             .is_some_and(|(qualifier, _)| qualifier_matches(&qualifier, ctx)),
