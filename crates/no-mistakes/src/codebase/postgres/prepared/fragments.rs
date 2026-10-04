@@ -55,7 +55,7 @@ fn statement_facts(
         false,
         recovered_placeholder_positions,
     );
-    if !direct.selects.is_empty() {
+    if !direct.parse_failed || !direct.selects.is_empty() {
         return direct;
     }
     // Predicate-only fragments retain the legacy synthetic SELECT context.
