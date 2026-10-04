@@ -1,5 +1,7 @@
 mod columns;
 mod ctes;
+mod joins;
+use joins::JoinScope;
 mod scalar_arrays;
 mod scope;
 use scope::Scope;
@@ -96,6 +98,9 @@ struct Frame {
     enclosing: Option<Scope>,
     escaping_qualifiers: Vec<Qualified>,
     escaping_reads: Vec<SqlBareRead>,
+    /// These reads were resolved before a joined alias or later source became visible.
+    join_qualifiers: Vec<Qualified>,
+    join_reads: Vec<SqlBareRead>,
     qualifiers: Vec<Qualified>,
     /// How often each bare name occurs, and how often as a whole `ORDER BY` or `GROUP BY` item,
     /// where it can name an output column instead of a relation's column.
@@ -103,13 +108,6 @@ struct Frame {
     labels: BTreeMap<String, usize>,
     /// Bare reads of the levels below that none of them owns.
     reads: Vec<SqlBareRead>,
-}
-
-struct JoinScope {
-    outside: Scope,
-    qualifiers: usize,
-    escaping_qualifiers: usize,
-    bare: BTreeMap<String, usize>,
 }
 
 #[derive(Default)]
@@ -179,7 +177,9 @@ impl Scan {
                 up.push(qualifier);
             }
         }
+        up.extend(frame.join_qualifiers);
         reads.extend(frame.escaping_reads);
+        reads.extend(frame.join_reads);
         if let Some(enclosing) = &frame.enclosing {
             up.retain(|qualifier| !enclosing.relations.contains(&qualifier.key));
             for qualifier in &mut up {
