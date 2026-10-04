@@ -472,7 +472,7 @@ fn swift_relationship_edges_and_test_filter_work() {
             "swift",
             "--test",
             "swift",
-            "swift-clients/core/Sources/VouchaAPI/Endpoint.swift",
+            "swift-clients/core/Sources/ExampleAPI/Endpoint.swift",
         ],
     );
     let mut paths = file_paths(&dependents);
@@ -480,13 +480,13 @@ fn swift_relationship_edges_and_test_filter_work() {
     assert_eq!(
         paths,
         vec![
-            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
-            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+            "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
+            "swift-clients/ui/Tests/ExampleUITests/RSSFeedListViewModelTests.swift",
         ]
     );
     assert!(has_path_with_via(
         &dependents,
-        "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+        "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
         "swift-ref"
     ));
 }

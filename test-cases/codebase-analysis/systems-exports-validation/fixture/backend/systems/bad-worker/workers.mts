@@ -1,4 +1,4 @@
-import { createWorker } from '@data-stores/valkey/glide-mq-factory';
+import { createWorker } from '@example/cache/glide-mq-factory';
 import { QUEUE_NAME } from './config.mts';
 
 export const workerCount = 1;

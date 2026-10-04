@@ -1,4 +1,4 @@
-import { createBulkEnqueueFunction, createEnqueueFunction } from '@data-stores/valkey/glide-mq-factory';
+import { createBulkEnqueueFunction, createEnqueueFunction } from '@example/cache/glide-mq-factory';
 import { wrapperQueue } from './queues.mts';
 
 function createSingleWrapper(jobName: string) {

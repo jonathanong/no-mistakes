@@ -44,6 +44,6 @@ fn tests_impact_cli_preserves_configured_dotnet_test_projects() {
 fn tests_impact_cli_preserves_configured_swift_test_projects() {
     assert_self_selected(
         &fixture("swift-test-plan"),
-        "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+        "swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift",
     );
 }

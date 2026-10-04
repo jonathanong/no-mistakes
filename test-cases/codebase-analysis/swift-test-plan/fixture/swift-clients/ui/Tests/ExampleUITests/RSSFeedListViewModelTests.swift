@@ -1,5 +1,5 @@
 import XCTest
-import VouchaFeatures
+import ExampleFeatures
 
 final class RSSFeedListViewModelTests: XCTestCase {
     func testRefresh() {

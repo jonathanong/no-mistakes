@@ -1,4 +1,4 @@
 import XCTest
-@testable import VouchaAndroid
+@testable import ExampleAndroid
 
 final class AppTests: XCTestCase { func testApp() { _ = AndroidApp() } }

@@ -24,7 +24,7 @@ fn workflow_paths_must_cover_every_source_selected_by_the_project() {
 }
 
 #[test]
-fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
+fn reusable_workflow_callers_cover_application_style_static_typecheck_jobs() {
     let root = fixture_root("reusable-workflow");
     let report = findings(&root, &config(&root));
     assert_eq!(report.len(), 4, "{report:#?}");
