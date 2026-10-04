@@ -409,6 +409,46 @@ Keep the saved baseline until the comparison finishes, then remove build
 artifacts. A saved Criterion executable must receive `--bench` for Criterion measurement;
 without it, test mode runs each selected benchmark once without measurement.
 
+### PostgreSQL finite-array control runs
+
+[Investigation #1327](https://github.com/jonathanong/no-mistakes/issues/1327)
+followed frontend timing and memory reports on the PostgreSQL stack. A matched
+local comparison used the final [finite-array change #1188](https://github.com/jonathanong/no-mistakes/pull/1188),
+base `eb9513395` and head `f7c719dee`. The frontend collectors, benchmark adapter,
+`SourceStore`, and `fixtures/lang-frontends` corpus were unchanged. Every run
+passed the preflight invariants: 117 files, 69 parsed files, and 125 edges.
+
+Both binaries used the same x86_64 Linux host, Rust 1.96.0, release bench profile
+(full LTO, one code generation unit, incremental compilation off), two Rayon
+threads, and the `language-frontends` shard. Measurement runs pinned both
+binaries to the same two logical CPUs and used 30 samples, a two-second warmup,
+and four-second measurement. Both builds finished before the matched runs; the
+same saved executables supplied the repeat and reverse-order controls.
+
+| Comparison | Extract time change | Edges time change |
+| --- | --- | --- |
+| Base → head | +0.28%, p = 0.36 | +0.18%, p = 0.67 |
+| Base → same base again | −0.64%, p = 0.25 | +3.87%, p < 0.05 |
+| Adjacent head → base | +0.93%, within Criterion's noise threshold | −2.87%, p < 0.05 |
+
+Positive values mean the second executable was slower. The forward comparison
+found no timing change; its 95% intervals were −0.25% to +0.85% for extract and
+−0.62% to +0.99% for edges. The significant edges increase also appeared when
+repeating the unchanged base binary. These controls do not establish a
+consistent head-specific wall-clock regression or justify changing unrelated
+frontend code.
+
+The comparison covers the final merged change, rather than the historical
+`f11dbed` and `dd055b5` report. It does not validate ARM64 CPU simulation, native
+frontend timings, or memory measurements. The expected-base edges memory report
+on [alias facts #1341](https://github.com/jonathanong/no-mistakes/pull/1341#issuecomment-5975440043)
+therefore remains a measurement that has not been validated, not a disproved regression.
+[CodSpeed documents that concurrent allocation ordering can vary allocation
+counts and peak memory](https://codspeed.io/docs/instruments/memory#limitations).
+That is a possible explanation, not a result of this local timing experiment.
+Use matching memory profiles and repeated controls before attributing an
+allocation change or choosing a code correction.
+
 ## Anti-Patterns
 
 Avoid these patterns:
