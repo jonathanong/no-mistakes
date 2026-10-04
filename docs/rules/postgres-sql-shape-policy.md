@@ -323,3 +323,10 @@ opposite upper bound forms a selective window. Arbitrary negated predicates and
 optional-cursor disjunctions with an odd number of negations remain outside this
 comparison proof. An even number of `NOT` operators preserves the original
 optional cursor, including its NULL-switchable whole-table case.
+
+For `keyset-only-sweep`, a zero-row page remains empty through parentheses, unary
+signs and standard PostgreSQL numeric casts (`LIMIT +0`, `LIMIT 0::bigint`).
+Unquoted catalog-qualified numeric casts such as `LIMIT 0::pg_catalog.int8` also
+prove an empty page. Application-schema types, quoted custom type spellings, and
+casts through nonnumeric intermediate types stay conservative. This semantic check does not change
+`literal-limit` classification: cast or unary expressions remain non-literal.

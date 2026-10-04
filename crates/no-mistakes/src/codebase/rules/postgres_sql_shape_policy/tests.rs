@@ -382,3 +382,4 @@ mod predicate_escaping;
 
 #[cfg(test)]
 mod negated_keysets;
+mod semantic_zero;
