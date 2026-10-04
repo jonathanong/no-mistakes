@@ -369,6 +369,12 @@ several source operands maps each relation to the operand that wrote it. Its opt
 bare name. `alias_explicit` distinguishes an alias written in SQL from that synthesized
 name. An explicit alias replaces the base relation's name for nested correlated scope
 resolution, even when the alias text matches the table's bare name.
+Subquery pins also retain `qualified_reads` when a qualified column did not match an inner
+relation name syntactically. Each read keeps its quoted SQL qualifier and the base table names
+in each inner scope. The rule uses the selected schema catalog to determine whether a
+local bare table is the same relation; absent or ambiguous catalog identity stays conservative.
+The corresponding `lateral_qualified_reads` field preserves the same evidence for `LATERAL`
+sources.
 A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
 fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
 taken from a subquery or a column, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or

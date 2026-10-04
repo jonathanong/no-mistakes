@@ -79,7 +79,17 @@ impl Visitor for Scan {
             self.derived_scopes
                 .insert(&**subquery as *const Query as usize, scope);
         }
+        if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
+            self.hidden_join_scopes.push(self.stack.len());
+        }
         self.add_factor(factor);
+        ControlFlow::Continue(())
+    }
+
+    fn post_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
+        if matches!(factor, TableFactor::NestedJoin { alias: Some(_), .. }) {
+            self.hidden_join_scopes.pop();
+        }
         ControlFlow::Continue(())
     }
 
@@ -89,9 +99,15 @@ impl Visitor for Scan {
         };
         match expr {
             Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-                frame
-                    .qualifiers
-                    .push(parts[..parts.len() - 1].iter().map(ident_key).collect());
+                frame.qualifiers.push(super::Qualified {
+                    key: parts[..parts.len() - 1].iter().map(ident_key).collect(),
+                    sql: parts[..parts.len() - 1]
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join("."),
+                    scopes: Vec::new(),
+                });
             }
             Expr::Identifier(ident)
                 if !is_placeholder_ident_at(ident, self.positions.as_deref()) =>

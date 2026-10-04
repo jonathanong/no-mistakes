@@ -1,4 +1,4 @@
-use crate::codebase::postgres::statements::SqlBareRead;
+use crate::codebase::postgres::statements::{SqlBareRead, SqlQualifiedScope};
 use crate::fx::FxHashMap;
 use std::cell::RefCell;
 use std::hash::Hash;
@@ -55,6 +55,13 @@ impl Tables {
         entries.push(table);
         self.visible = entries.len();
     }
+
+    fn visible(&self) -> Vec<String> {
+        self.entries
+            .as_ref()
+            .map(|entries| entries.borrow()[..self.visible].to_vec())
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Clone, Default)]
@@ -64,6 +71,9 @@ pub(super) struct Scope {
     pub(super) whole_rows: Names,
     /// The base tables of the level, as SQL names.
     pub(super) tables: Tables,
+    /// Base names visible to qualified SQL references. An explicit table alias removes its
+    /// base name from this lexical namespace while `tables` still helps resolve bare columns.
+    pub(super) qualified_tables: Tables,
     /// A relation that is not a base table: a derived table, a function, a CTE.
     pub(super) foreign: bool,
     /// Known projected columns of derived/CTE/function sources in this level.
@@ -71,6 +81,21 @@ pub(super) struct Scope {
 }
 
 impl Scope {
+    /// Keep physical ownership separate from names visible through SQL qualifiers.
+    pub(super) fn record_base_table(&mut self, table: String, aliased: bool, hidden_by_join: bool) {
+        self.tables.push(table.clone());
+        if !aliased && !hidden_by_join {
+            self.qualified_tables.push(table);
+        }
+    }
+
+    pub(super) fn qualified_candidates(&self) -> SqlQualifiedScope {
+        SqlQualifiedScope {
+            tables: self.qualified_tables.visible(),
+            unknown: self.foreign,
+        }
+    }
+
     pub(super) fn resolve_reads(&self, reads: &mut Vec<SqlBareRead>) {
         if self.foreign {
             reads.clear();

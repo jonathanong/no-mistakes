@@ -6,7 +6,7 @@ use crate::codebase::postgres::idents::{
     ident_key, object_name_ident, unwrap_expr, visit_child_exprs,
 };
 use crate::codebase::postgres::statements::{
-    SqlBareRead, SqlBoundItem, SqlBoundItemKind, SqlPinSource,
+    SqlBareRead, SqlBoundItem, SqlBoundItemKind, SqlPinSource, SqlQualifiedRead,
 };
 use outputs::caller_outputs;
 use sqlparser::ast::{Expr, FunctionArguments, Ident, ObjectName, Query};
@@ -45,12 +45,14 @@ struct Refs {
     unknown: bool,
     /// Bare columns that subqueries of the expression read, if no table of theirs has them.
     reads: Vec<SqlBareRead>,
+    qualified_reads: Vec<SqlQualifiedRead>,
 }
 
 /// What a pin's value is sized by, and the bare columns its subqueries read.
 pub(super) struct Sourced {
     pub(super) source: SqlPinSource,
     pub(super) reads: Vec<SqlBareRead>,
+    pub(super) qualified_reads: Vec<SqlQualifiedRead>,
 }
 
 impl Resolver {
@@ -144,6 +146,7 @@ impl Resolver {
                 let reads = self.reads(query);
                 found.unknown |= reads.certain;
                 found.reads.extend(reads.bare);
+                found.qualified_reads.extend(reads.qualified);
             }
             Expr::Exists { .. } => {}
             Expr::CompoundFieldAccess { root, access_chain } => {
@@ -205,6 +208,7 @@ impl Resolver {
         Some(Sourced {
             source,
             reads: found.reads,
+            qualified_reads: found.qualified_reads,
         })
     }
 }

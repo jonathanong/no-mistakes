@@ -15,7 +15,7 @@ mod stored_array;
 mod table_only;
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
-    SqlBoundQuery, SqlPinSource,
+    SqlPinSource,
 };
 
 mod aliases;
@@ -36,14 +36,10 @@ mod review;
 mod review_table;
 mod schema_drop;
 mod schema_rename;
+mod syntax_render;
 mod table_review;
 mod temporary_view;
-
-fn query(bound: &SqlBoundQuery) -> String {
-    let items: Vec<String> = bound.items.iter().map(item).collect();
-    let cap = if bound.capped { "capped " } else { "" };
-    format!("{cap}{}", items.join(" "))
-}
+pub(super) use syntax_render::query;
 
 pub(super) fn facts(sql: &str) -> Vec<SqlBoundFact> {
     extract_sql_statement_facts(sql).bounds

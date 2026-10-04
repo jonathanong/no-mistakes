@@ -8,6 +8,7 @@ use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 mod possible_temporary;
 mod reads;
 use reads::table_offender;
+mod qualified;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,6 +94,7 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Evaluation {
             SqlBoundItemKind::Query(_) => {
                 !item.lateral
                     && !reads_outer(&item.lateral_reads, catalog)
+                    && !qualified::reads_outer(&item.lateral_qualified_reads, catalog)
                     && nested.as_ref().is_some_and(|inner| inner.bounded)
             }
             SqlBoundItemKind::Other => true,
@@ -147,6 +149,7 @@ fn keyed(
                 && arrays[index]
                 // A subquery in the value that reads the row checked sizes nothing.
                 && !reads_outer(&pin.reads, catalog)
+                && !qualified::reads_outer(&pin.qualified_reads, catalog)
                 // `IS NOT DISTINCT FROM $1` also matches NULL, which a unique key may repeat.
                 && (!pin.null_safe || catalog.column_is_not_null(name, physical))
                 && match &pin.source {

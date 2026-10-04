@@ -15,6 +15,7 @@ impl Scan {
                 .cloned(),
             _ => None,
         };
+        let hidden_by_join = self.hidden_join_scopes.contains(&self.stack.len());
         let Some(frame) = self.stack.last_mut() else {
             return;
         };
@@ -60,7 +61,9 @@ impl Scan {
                             && !args.args.iter().all(|argument| matches!(argument, FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if scalar_array(expr)))
                         { None } else { function_columns(name, alias) }
                 } else {
-                    frame.scope.tables.push(sql_name(name));
+                    frame
+                        .scope
+                        .record_base_table(sql_name(name), alias.is_some(), hidden_by_join);
                     return;
                 };
                 if args.is_some()

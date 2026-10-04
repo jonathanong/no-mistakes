@@ -210,7 +210,10 @@ fn quoted_relations_keep_their_identity_and_unaliased_tables_answer_to_their_bar
 
 #[test]
 fn a_lateral_source_that_reads_earlier_items_is_marked() {
-    let flag = |sql: &str| facts(sql)[0].query.items[1].lateral;
+    let flag = |sql: &str| {
+        let item = &facts(sql)[0].query.items[1];
+        item.lateral || !item.lateral_qualified_reads.is_empty()
+    };
     assert!(flag(
         "SELECT 1 FROM a JOIN LATERAL (SELECT a.id AS id) d ON a.id = d.id"
     ));
@@ -393,7 +396,7 @@ fn a_lateral_source_keeps_its_bare_reads_for_the_catalog() {
     let reads = |sql: &str| {
         let item = &facts(sql)[0].query.items[1];
         (
-            item.lateral,
+            item.lateral || !item.lateral_qualified_reads.is_empty(),
             item.lateral_reads
                 .iter()
                 .map(|read| format!("{}@{}", read.column, read.tables.join("+")))

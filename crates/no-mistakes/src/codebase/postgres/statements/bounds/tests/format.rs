@@ -4,6 +4,8 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
     let pins: Vec<String> = item
         .pins
         .iter()
+        // Catalog-resolved qualified reads remain deferred facts in these syntax-only snapshots.
+        .filter(|pin| pin.qualified_reads.is_empty())
         .map(|pin| {
             // `~=` is the null-safe `IS NOT DISTINCT FROM`.
             let operator = if pin.null_safe { "~=" } else { "=" };
@@ -24,7 +26,9 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
                 } => {
                     format!("{}{operator}array#{items:?}:{scalar_columns:?}", pin.column)
                 }
-                SqlPinSource::Query(bound) => format!("{}{operator}({})", pin.column, query(bound)),
+                SqlPinSource::Query(bound) => {
+                    format!("{}{operator}({})", pin.column, query(bound))
+                }
                 // This formatter describes key-credit proof; raw fixtures test read metadata.
                 SqlPinSource::ReadQuery(_) => String::new(),
             }

@@ -162,6 +162,7 @@ impl<'a> Builder<'a> {
                         pins::reads_items(subquery, &self.items, self.scope, self.positions);
                     item.lateral = reads.certain;
                     item.lateral_reads = reads.bare;
+                    item.lateral_qualified_reads = reads.qualified;
                 }
                 self.items.push(item);
             }
