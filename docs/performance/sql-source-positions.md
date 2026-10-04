@@ -1,3 +1,5 @@
+<!-- cspell:ignore RUSTC CODEGEN -->
+
 # SQL source-position preparation
 
 INSERT facts previously found the Nth `INSERT INTO` by lexing the whole source
