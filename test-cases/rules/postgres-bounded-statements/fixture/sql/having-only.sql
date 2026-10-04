@@ -21,3 +21,7 @@ SELECT 1 FROM orders HAVING true ORDER BY generate_series(1, 1000000) LIMIT 1;
 SELECT 1 FROM orders WHERE false HAVING true ORDER BY generate_series(1, 1000000);
 SELECT 1 FROM orders HAVING true ORDER BY count(*);
 SELECT 1 FROM orders HAVING true ORDER BY ALL;
+-- The parser accepts this PostgreSQL-invalid set-operation ORDER BY expression. It has no
+-- single SELECT group whose predicate can cap the outer SRF, so retain the arm findings.
+SELECT 1 FROM orders HAVING false UNION ALL SELECT 1 FROM customers
+ORDER BY generate_series(1, 10);
