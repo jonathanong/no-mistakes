@@ -538,3 +538,5 @@ mod aggregate;
 mod dml;
 
 mod query;
+
+mod conditional_table_function_inputs;

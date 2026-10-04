@@ -1,14 +1,14 @@
 //! The built-in functions the bound facts reason about, by name.
-use super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
+use super::super::value::PlaceholderPositions;
 use crate::codebase::postgres::idents::{
     ident_key, object_name_ident, unwrap_expr, visit_function_args,
 };
 use crate::codebase::postgres::statements::SqlBoundItemKind;
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArg, FunctionArguments, ObjectName, Query,
-    TableFunctionArgs, Visit, Visitor,
+    BinaryOperator, Expr, Function, FunctionArg, FunctionArguments, ObjectName, TableFunctionArgs,
 };
-use std::ops::ControlFlow;
+mod inputs;
+use inputs::input_depends_on_data_at;
 
 /// The built-in aggregates, ordered-set and hypothetical-set aggregates included.
 #[rustfmt::skip]
@@ -188,7 +188,7 @@ fn caller_supplied_argument(arg: &FunctionArg, positions: PlaceholderPositions<'
             } => right,
             _ => expr,
         };
-        supplied = !input_depends_on_data_at(input, true, positions);
+        supplied = !input_depends_on_data_at(input, positions);
     });
     supplied
 }
@@ -201,44 +201,12 @@ pub(super) fn unnest_kind_at(
 ) -> SqlBoundItemKind {
     if arrays
         .iter()
-        .any(|expr| input_depends_on_data_at(expr, true, positions))
+        .any(|expr| input_depends_on_data_at(expr, positions))
     {
         SqlBoundItemKind::Opaque
     } else {
         SqlBoundItemKind::Other
     }
-}
-
-/// Whether `expr` holds a subquery or a column: values the statement text does not provide.
-fn input_depends_on_data_at(
-    expr: &Expr,
-    reject_calls: bool,
-    positions: PlaceholderPositions<'_>,
-) -> bool {
-    struct Found(bool, bool, Option<Vec<(u32, u32)>>);
-    impl Visitor for Found {
-        type Break = ();
-        fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-            self.0 = true;
-            ControlFlow::Break(())
-        }
-        fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-            let column = match expr {
-                Expr::Identifier(ident) => !is_placeholder_ident_at(ident, self.2.as_deref()),
-                Expr::CompoundIdentifier(_) => true,
-                Expr::Function(_) if self.1 => true,
-                _ => false,
-            };
-            if column {
-                self.0 = true;
-                return ControlFlow::Break(());
-            }
-            ControlFlow::Continue(())
-        }
-    }
-    let mut found = Found(false, reject_calls, positions.map(<[(u32, u32)]>::to_vec));
-    let _ = expr.visit(&mut found);
-    found.0
 }
 
 #[cfg(test)]

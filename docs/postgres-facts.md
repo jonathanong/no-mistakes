@@ -366,7 +366,9 @@ windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returnin
 in the select list), and lists its FROM `items`. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
 operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`
-over arguments the statement supplies), or `Opaque` (any other table function, and the
+over arguments the statement supplies, including nested bare, unquoted
+`COALESCE`, `LEAST`, `GREATEST`, and `NULLIF` forms whose arguments remain
+caller-supplied), or `Opaque` (any other table function, and the
 recursive reference of a recursive CTE: never reported, and it bounds nothing pinned to
 it). A CTE reference without an alias is addressed by the CTE's name. Non-recursive CTE definitions read prior bindings, including a same-named base table; the new CTE output becomes visible after its definition. Recursive CTE names remain visible within their definitions. A `COPY (SELECT …)`
 query is a `Select` fact.

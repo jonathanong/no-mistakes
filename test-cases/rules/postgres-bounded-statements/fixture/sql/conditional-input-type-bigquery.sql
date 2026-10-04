@@ -1,0 +1,1 @@
+SELECT COALESCE(CAST($1 AS ARRAY<app.value>), $2);

@@ -151,7 +151,13 @@ A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm 
 uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,
 and a `VALUES` list or a set-returning built-in (bare or `pg_catalog.`-qualified) over
 arguments the statement supplies (`unnest($1)`, `generate_series(1, 10)`) is sized by the
-caller. A data-backed select-list set-returning function is opaque even when its
+caller. Bare, unquoted `COALESCE`, `LEAST`, `GREATEST`, and `NULLIF` preserve
+this proof when every argument is caller-supplied, including nested conditional
+forms and builtin array casts. For example, `unnest(COALESCE($1::uuid[],
+ARRAY[]::uuid[]))` remains caller-sized. Columns, subqueries, custom calls or
+custom casts inside these forms remain opaque; qualifying or quoting the
+conditional name does not establish the special-form contract.
+A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
 whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
