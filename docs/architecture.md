@@ -449,6 +449,70 @@ That is a possible explanation, not a result of this local timing experiment.
 Use matching memory profiles and repeated controls before attributing an
 allocation change or choosing a code correction.
 
+<!-- cspell:ignore RUSTFLAGS flamegraph -->
+
+### PostgreSQL finite-array allocation controls
+
+The remaining memory and allocation-call-path work for
+[investigation #1327](https://github.com/jonathanong/no-mistakes/issues/1327)
+used the same base `eb9513395` and final head `f7c719dee` as the timing controls.
+A temporary Linux allocation probe wrapped Rust's `System` allocator, counting
+successful allocation/reallocation calls and requested bytes, and tracking peak
+live requested bytes above the phase's starting heap. The fixture, worker pool,
+and unwinder were initialized before measurement. Each binary ran 12 extract
+calls and 12 edges calls, then repeated the same sequence without rebuilding.
+Every call checked the same 117-file, 69-parsed-file, 125-edge invariants.
+A separate calibration checked exactly one allocation, 4,096 requested bytes,
+and 4,096 peak additional bytes on every iteration.
+
+Both builds used the same x86_64 Linux host, Rust 1.96.0, release profile with
+full LTO and one code generation unit, no incremental compilation, and frame
+pointers. Both runs used two Rayon threads pinned to logical CPUs 22 and 23.
+[The probe source](performance/frontend-allocation-probe.rs) is a reproduction
+asset: copy it to `crates/no-mistakes/examples/allocation_probe_1327.rs` in an
+isolated checkout. Build with `cargo build --release -p no-mistakes
+--features test-instrumentation --example allocation_probe_1327 --jobs 3`. Run
+the same source on both commits with `RUSTFLAGS='-C force-frame-pointers=yes'` and
+`RAYON_NUM_THREADS=2`; keep the thread count, affinity, and fixture identical.
+Remove the example and build artifacts after the paired experiment.
+
+The table reports median peak additional Rust heap bytes, with the observed
+minimum and maximum in parentheses. These are requested bytes, not allocator
+usable sizes, process RSS, or CodSpeed memory measurements.
+
+| Binary run      | Extract peak additional bytes | Edges peak additional bytes |
+| --------------- | ----------------------------- | --------------------------- |
+| Base            | 217,342 (212,700–1,025,472)   | 236,195 (236,097–236,329)   |
+| Same base again | 212,848 (212,700–457,222)     | 236,321 (236,129–473,069)   |
+| Head            | 212,700 (212,700–791,134)     | 236,223 (236,029–253,289)   |
+| Same head again | 212,848 (212,700–522,670)     | 236,297 (236,013–253,305)   |
+
+Median extract allocation calls were 5,715, 5,709, 5,709, and 5,710 in that
+order; median requested bytes were 718,973, 709,617, 709,617, and 711,137.
+Median edges allocation calls were 10,844, 10,846, 10,844, and 10,845; median
+requested bytes were 1,274,799, 1,275,073, 1,274,621, and 1,274,821.
+The unchanged base binary alone exhibited a wide extract peak range and an
+edges peak outlier on its repeat. The final head did not show a consistent
+increase in these local allocation controls.
+
+The probe sampled a 16-frame allocation stack every 256 successful allocation
+calls and printed samples from each phase's first iteration. Symbolized stacks
+in both binaries included frontend fact collection, Rayon traversal, path
+normalization, Python parsing, and vector growth. Edges samples additionally
+included queue glob compilation and regex construction. These call paths were
+shared by base and head; sparse first-iteration samples do not attribute later
+outliers to a particular caller. Hardware `perf` sampling was unavailable under
+the host's existing permissions, so no CPU flamegraph was produced.
+
+The instrument perturbs allocation timing and excludes C-library allocations,
+allocator overhead, and stack memory. Its results support the timing controls'
+conclusion that the final merged change has no reproduced, consistent local
+frontend regression. They do not invalidate historical ARM64 simulation or
+CodSpeed memory reports, establish a cause for their deltas, or measure every
+later PostgreSQL PR. No frontend code correction is justified by this evidence.
+For a future report, retain its exact expected-base and head executables and
+repeat the same instrument on the same runner before selecting a code change.
+
 ## Anti-Patterns
 
 Avoid these patterns:
