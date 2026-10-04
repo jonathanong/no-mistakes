@@ -1,4 +1,5 @@
 mod stored_array;
+mod table_only;
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
     SqlBoundQuery, SqlPinSource,
