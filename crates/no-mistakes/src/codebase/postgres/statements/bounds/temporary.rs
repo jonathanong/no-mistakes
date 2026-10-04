@@ -11,7 +11,7 @@ use sqlparser::ast::{Expr, ObjectName, ObjectNamePart, SetExpr, Statement};
 use state::{Dependency, State};
 use std::collections::BTreeSet;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in super::super) struct TemporaryRelations {
     state: State,
     transaction: Option<State>,

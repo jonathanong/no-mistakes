@@ -19,6 +19,7 @@ mod materialized_drop;
 mod materialized_namesake;
 mod partitions;
 mod physical_cascade;
+mod prepared;
 mod recursive_forward;
 mod referential;
 mod repeated_begin;

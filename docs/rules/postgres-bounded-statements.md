@@ -61,6 +61,8 @@ An attach to a non-partitioned temporary parent does not transfer ownership. A
 `DETACH PARTITION ... CONCURRENTLY` inside `DO` or an explicit transaction cannot
 run in PostgreSQL, so recovered SQL in those contexts leaves the partition attached.
 
+`PREPARE` analyzes a `SELECT INTO TEMP` without creating its destination. The temporary identity begins when its `EXECUTE` runs with the prepared argument count; `DEALLOCATE` before execution leaves the catalog relation visible. A duplicate `PREPARE` keeps the original definition because PostgreSQL rejects the duplicate.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`
