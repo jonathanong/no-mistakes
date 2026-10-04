@@ -2,7 +2,64 @@ use super::{query, Scope};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
 use sqlparser::ast::Table;
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
+use sqlparser::tokenizer::{Location, Token, TokenWithSpan, Word};
+
+/// Query-arm spellings grouped by their original top-level SQL statement. A skipped DDL
+/// statement must never supply a name to a later analyzed TABLE arm.
+pub(in super::super) struct TableTokenIndex {
+    segments: Vec<SourceSegment>,
+}
+
+struct SourceSegment {
+    start: (u64, u64),
+    end: (u64, u64),
+    names: Vec<SourceTable>,
+}
+
+impl TableTokenIndex {
+    pub(in super::super) fn new(tokens: &[TokenWithSpan]) -> Self {
+        let segments = tokens
+            .split(|token| token.token == Token::SemiColon)
+            .filter_map(|segment| {
+                let first = segment
+                    .iter()
+                    .find(|token| !matches!(token.token, Token::Whitespace(_)))?;
+                let last = segment
+                    .iter()
+                    .rfind(|token| !matches!(token.token, Token::Whitespace(_)))?;
+                Some(SourceSegment {
+                    start: location(first.span.start),
+                    end: location(last.span.end),
+                    names: TableTokenCursor::new(segment).names,
+                })
+            })
+            .collect();
+        Self { segments }
+    }
+
+    pub(in super::super) fn cursor_at(&self, start: Location) -> TableTokenCursor {
+        let start = location(start);
+        let Some(index) = self
+            .segments
+            .partition_point(|segment| segment.start <= start)
+            .checked_sub(1)
+        else {
+            return TableTokenCursor::default();
+        };
+        let segment = &self.segments[index];
+        if start > segment.end {
+            return TableTokenCursor::default();
+        }
+        TableTokenCursor {
+            names: segment.names.clone(),
+            next: 0,
+        }
+    }
+}
+
+fn location(at: Location) -> (u64, u64) {
+    (at.line, at.column)
+}
 
 /// Source spellings for TABLE query arms. sqlparser's `Table` AST stores only word values,
 /// so a quoted mixed-case name needs the already prepared token stream to retain identity.

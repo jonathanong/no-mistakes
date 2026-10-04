@@ -119,7 +119,7 @@ impl Visitor for Collector<'_, '_> {
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         self.enter(query);
-        let site = limit_site(query, &self.tokens);
+        let site = limit_site(query, self.tokens);
         // `LIMIT 0` returns nothing: it is a cap, but no page of a walk.
         let empty = site
             .as_ref()

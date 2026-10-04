@@ -1,7 +1,7 @@
 use super::tokens::Tokens;
 use super::*;
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
-use sqlparser::ast::{Query, SetExpr, Statement};
+use sqlparser::ast::{Query, SetExpr, Spanned, Statement};
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
@@ -54,13 +54,8 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     let mut mutation_column_uses = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
-    let mut executed = Vec::new();
     let tokens = Tokens::new(sql);
-    let table_scope = collect_bounds
-        .then(|| bounds::Scope::with_table_tokens(bounds::TableTokenCursor::new(tokens.all())));
-    for statement in statements {
-        wrappers::walk_executed(statement, &mut executed);
-    }
+    let table_index = collect_bounds.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut out = FactOut {
         insert_n: &mut insert_n,
         trigger_n: &mut trigger_n,
@@ -73,14 +68,20 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         mutation_column_uses: &mut mutation_column_uses,
     };
     let mut temporary_relations = bounds::TemporaryRelations::default();
-    for statement in executed {
-        writes::collect(statement, &mut writes);
-        collect_one(sql, statement, &mut out);
-        if collect_bounds {
-            let first_bound = bounds.len();
-            let scope = table_scope.as_ref().expect("bounds scope is prepared");
-            bounds::collect(statement, scope, &mut bounds);
-            temporary_relations.apply(statement, &mut bounds[first_bound..], scope);
+    for statement in statements {
+        let scope = table_index
+            .as_ref()
+            .map(|index| bounds::Scope::with_table_tokens(index.cursor_at(statement.span().start)));
+        let mut executed = Vec::new();
+        wrappers::walk_executed(statement, &mut executed);
+        for statement in executed {
+            writes::collect(statement, &mut writes);
+            collect_one(sql, statement, &mut out);
+            if let Some(scope) = &scope {
+                let first_bound = bounds.len();
+                bounds::collect(statement, scope, &mut bounds);
+                temporary_relations.apply(statement, &mut bounds[first_bound..], scope);
+            }
         }
     }
     dedupe::exists_set_operations(&mut selects);

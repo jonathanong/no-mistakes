@@ -430,13 +430,33 @@ fn repeated_quoted_table_arms_do_not_consume_tokens_twice() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-repeat.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert_eq!(facts.bounds.len(), 3);
     let catalog = super::catalog();
-    assert!(facts
+    let found: Vec<_> = facts
         .bounds
         .iter()
         .flat_map(|fact| super::offenders(fact, &catalog))
-        .next()
-        .is_none());
+        .map(|finding| finding.table)
+        .collect();
+    assert_eq!(found, ["accounts"]);
+}
+
+#[test]
+fn skipped_create_table_arm_cannot_supply_a_later_query_identity() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-skipped.sql"
+    ));
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert_eq!(facts.bounds.len(), 1);
+    let catalog = super::catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| super::offenders(fact, &catalog))
+        .map(|finding| finding.table)
+        .collect();
+    assert_eq!(found, ["accounts"]);
 }
 
 #[test]
