@@ -170,6 +170,11 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
 3. Maintain 98% project and patch test coverage
 
+Native CI builds and platform tests omit Rust debug metadata to keep compilation
+within their ten-minute step deadlines. Development and test profiles use the same
+setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
+Linux still runs the full suite and enforces the coverage gates.
+
 ## Support
 
 | Language/Framework/Tool | Status |

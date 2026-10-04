@@ -199,3 +199,26 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     "Linux coverage keeps the full-suite spelling the native guard must reject",
   );
 });
+
+// A Cargo test-name filter still compiles the whole macOS lib-test binary.
+// Keep build/test profiles aligned so Windows can reuse its preceding build.
+test("native CI omits debug metadata without weakening runtime checks", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const body = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  assert.ok(body, "ci.yml must define native-tests");
+  const jobEnv = body.match(/^ {4}env:\n((?:^ {6}.*\n)+)/m)?.[1];
+  assert.ok(jobEnv, "both native build and test steps must inherit the profile settings");
+  for (const profile of ["DEV", "TEST"]) {
+    assert.match(jobEnv, new RegExp(`^ {6}CARGO_PROFILE_${profile}_DEBUG: ["']0["']$`, "m"));
+  }
+  assert.doesNotMatch(body, /CARGO_PROFILE_(?:DEV|TEST)_(?:DEBUG_ASSERTIONS|OVERFLOW_CHECKS):/);
+  const stepEnvs = [...body.matchAll(/^ {8}env:\n((?:^ {10}.*\n)+)/gm)];
+  for (const [, stepEnv] of stepEnvs) {
+    assert.doesNotMatch(stepEnv, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
+  }
+  for (const name of ["Build native CLI and N-API addon", "Run platform-specific Rust tests"]) {
+    const step = body.split(`- name: ${name}\n`)[1]?.split("\n      - name:")[0];
+    assert.ok(step, `${name} must remain enabled`);
+    assert.match(step, /^ {8}timeout-minutes: 10$/m);
+  }
+});
