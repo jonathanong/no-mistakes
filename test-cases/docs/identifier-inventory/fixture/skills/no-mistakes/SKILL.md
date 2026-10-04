@@ -1,0 +1,1 @@
+Synthetic documentation inventory fixture.
