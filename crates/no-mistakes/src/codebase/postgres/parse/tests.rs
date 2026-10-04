@@ -235,3 +235,14 @@ fn lenient_parse_skips_tokenizer_failures_and_empty_chunks() {
         parse_postgres_sql_lenient("CREATE TABLE t (id int GENERATED ALWAYS AS IDENTITY);");
     assert_eq!(identity.len(), 1, "{identity:#?}");
 }
+
+#[test]
+fn scalar_table_normalization_keeps_invalid_select_clauses_invalid() {
+    for sql in [
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/scalar-table-invalid-where.sql")),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/scalar-table-invalid-alias.sql")),
+    ] {
+        assert!(parse_postgres_sql(sql).is_err());
+        assert!(parse_postgres_sql_lenient(sql).is_empty());
+    }
+}

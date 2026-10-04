@@ -389,6 +389,11 @@ edges.
 including configured filesystem rules such as
 `package-json-nested-workspace-coverage`, and `warnings: string[]` for checks
 that could not run.
+
+PostgreSQL checks share the CLI SQL frontend: parenthesized `TABLE relation`
+subqueries retain quoted identity and view cascade dependencies in `check()`
+and `analyzeProject()` reports.
+
 It rejects with the same rule application and `options` path diagnostic as the
 CLI when a configured option has the wrong type; invalid option objects are
 never replaced with rule defaults.

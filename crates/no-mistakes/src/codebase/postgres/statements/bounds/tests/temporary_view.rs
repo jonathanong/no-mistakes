@@ -78,3 +78,31 @@ fn mixed_view_dependencies_follow_definite_rename_and_cascade() {
     );
     assert_eq!(shape(sql), ["select: opaque", "select: orders"]);
 }
+
+#[test]
+fn scalar_table_view_dependencies_follow_exact_source_identities() {
+    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-view-scalar-table.sql"));
+    let parsed = crate::codebase::postgres::extract_sql_statement_facts(sql);
+    assert!(
+        !parsed.parse_failed,
+        "{:?}",
+        crate::codebase::postgres::parse::parse_postgres_sql(sql)
+    );
+    assert_eq!(
+        super::shape(sql),
+        [
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: orders",
+            "select: opaque",
+            "select: opaque",
+            "select: orders"
+        ]
+    );
+}

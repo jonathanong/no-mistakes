@@ -2,7 +2,8 @@ use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
 
 /// sqlparser 0.63 accepts TABLE as a query arm but not as a top-level SQL
-/// statement. Rewrite only statement-leading TABLE to its SELECT equivalent.
+/// statement or scalar subquery. Rewrite query-leading TABLE to its SELECT
+/// equivalent while preserving the original relation tokens and source spans.
 pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
     if !has_standalone_table(tokens) {
         return;
@@ -62,7 +63,8 @@ enum Leading {
 fn leading_table(state: &mut Leading, token: &Token) -> bool {
     match token {
         Token::Whitespace(_) => false,
-        Token::SemiColon => {
+        Token::SemiColon | Token::LParen => {
+            // Parentheses may begin a scalar TABLE query, including inside a view.
             *state = Leading::Start;
             false
         }
