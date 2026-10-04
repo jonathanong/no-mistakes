@@ -1,4 +1,5 @@
 //! Request-local SQL relation identities and dependency closure.
+mod ownership;
 use crate::codebase::postgres::decoded_parts;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 use std::collections::{BTreeMap, BTreeSet};
@@ -22,6 +23,7 @@ pub(super) struct State {
     pub relations: BTreeMap<String, BTreeSet<Dependency>>,
     // A partition is owned by its parent even for DROP without CASCADE.
     pub partitions: BTreeMap<String, String>,
+    pub partitioned: BTreeSet<String>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub local_path: Option<bool>,
@@ -31,6 +33,7 @@ impl Default for State {
         Self {
             relations: BTreeMap::new(),
             partitions: BTreeMap::new(),
+            partitioned: BTreeSet::new(),
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
             local_path: None,
@@ -128,6 +131,7 @@ impl State {
         }
         self.relations.retain(|name, _| !removed.contains(name));
         self.partitions.retain(|child, _| !removed.contains(child));
+        self.partitioned.retain(|name| !removed.contains(name));
         self.on_commit_drop.retain(|name| !removed.contains(name));
     }
     pub fn rename_schema(&mut self, old: &str, new: &str) {
@@ -188,6 +192,9 @@ impl State {
         if let Some(parent) = self.partitions.remove(&old) {
             self.partitions.insert(new.clone(), parent);
         }
+        if self.partitioned.remove(&old) {
+            self.partitioned.insert(new.clone());
+        }
         for parent in self.partitions.values_mut() {
             if *parent == old {
                 *parent = new.clone();
@@ -196,33 +203,6 @@ impl State {
         for dependencies in self.relations.values_mut() {
             if dependencies.remove(&Dependency::Temporary(old.clone())) {
                 dependencies.insert(Dependency::Temporary(new.clone()));
-            }
-        }
-    }
-
-    pub fn attach_partition(&mut self, parent: &str, child: &str) {
-        if self.contains(parent) && self.contains(child) {
-            // PostgreSQL rejects attaching a relation that already belongs to a parent.
-            self.partitions.entry(key(child)).or_insert(key(parent));
-        }
-    }
-
-    pub fn attach_created_partition(&mut self, parent: &str, child: &str) {
-        // CREATE TEMP makes the new child definite even when pg_temp is not first in search_path.
-        if self.contains(parent) {
-            self.partitions.insert(key(child), key(parent));
-        }
-    }
-
-    pub fn detach_partition(&mut self, parent: &str, child: &str) {
-        if self.contains(parent) && self.contains(child) {
-            let child = key(child);
-            if self
-                .partitions
-                .get(&child)
-                .is_some_and(|owner| *owner == key(parent))
-            {
-                self.partitions.remove(&child);
             }
         }
     }

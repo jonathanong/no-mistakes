@@ -55,8 +55,14 @@ impl TemporaryRelations {
                 if (!on_commit_drop || self.transaction.is_some())
                     && !(table.if_not_exists
                         && self.state.relations.contains_key(&state::key(&name)))
+                    && parent
+                        .as_ref()
+                        .is_none_or(|parent| self.state.partitioned_parent(parent))
                 {
                     self.insert(name.clone());
+                    if table.partition_by.is_some() {
+                        self.state.partitioned.insert(state::key(&name));
+                    }
                     if let Some(parent) = parent {
                         self.state.attach_created_partition(&parent, &name);
                     }

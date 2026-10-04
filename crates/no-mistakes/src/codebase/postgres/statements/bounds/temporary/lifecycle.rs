@@ -57,6 +57,7 @@ impl TemporaryRelations {
             } => {
                 self.state.relations.clear();
                 self.state.partitions.clear();
+                self.state.partitioned.clear();
                 self.state.on_commit_drop.clear();
             }
             Statement::Discard {

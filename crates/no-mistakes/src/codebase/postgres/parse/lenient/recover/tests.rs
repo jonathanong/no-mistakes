@@ -36,7 +36,7 @@ fn recovers_only_complete_postgres_partition_transitions() {
         .lines()
         .find(|line| line.starts_with("ALTER TABLE accounts ADD COLUMN"))
         .unwrap();
-    assert!(super::partition::recover_partition_change(&tokens(ordinary), None).is_none());
+    assert!(super::partition::recover_partition_change(&tokens(ordinary), None, true).is_none());
 }
 
 fn tokens(sql: &str) -> Vec<Token> {
@@ -121,13 +121,18 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
     let parsed = recover_schema_ddl(
         &tokens("IF THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID"),
         None,
+        true,
     )
     .expect("alter");
     assert!(matches!(parsed, sqlparser::ast::Statement::AlterTable(_)));
-    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None).is_none());
+    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None, true).is_none());
     assert!(matches!(
-        recover_schema_ddl(&tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)"), None)
-            .expect("index"),
+        recover_schema_ddl(
+            &tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)"),
+            None,
+            true
+        )
+        .expect("index"),
         sqlparser::ast::Statement::CreateIndex(_)
     ));
 }
@@ -149,7 +154,7 @@ fn recover_chr_concatenations_as_sql() {
 #[test]
 fn parse_chunks_recovers_chr_encoded_schema_after_ordinary_parse_fails() {
     let sql = "chr(67)||chr(82)||chr(69)||chr(65)||chr(84)||chr(69)||' TABLE t (id int)'";
-    let statements = super::parse_chunks(vec![tokens(sql)], &[]);
+    let statements = super::parse_chunks(vec![tokens(sql)], &[], true);
     assert_eq!(statements.len(), 1, "{statements:#?}");
     assert!(matches!(
         statements[0],
@@ -170,8 +175,9 @@ fn parse_chunks_recovers_alter_when_begin_would_swallow_the_body() {
     let statements = super::parse_chunks(
         vec![tokens(
         "BEGIN IF NOT EXISTS (SELECT 1) THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID",
-    )],
+        )],
         &[],
+        true,
     );
     assert_eq!(statements.len(), 1, "{statements:#?}");
     assert!(matches!(

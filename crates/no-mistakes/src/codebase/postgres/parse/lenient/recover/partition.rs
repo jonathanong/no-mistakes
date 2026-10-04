@@ -11,6 +11,7 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 pub(super) fn recover_partition_change(
     chunk: &[Token],
     original: Option<&[TokenWithSpan]>,
+    allow_concurrent_detach: bool,
 ) -> Option<Statement> {
     let dialect = GenericDialect {};
     let mut parser = match original {
@@ -40,6 +41,11 @@ pub(super) fn recover_partition_change(
                     return None;
                 }
                 parser.next_token();
+                if !allow_concurrent_detach
+                    && matches!(next, Token::Word(ref word) if word.value.eq_ignore_ascii_case("CONCURRENTLY"))
+                {
+                    return None;
+                }
                 if !matches!(parser.peek_token().token, Token::EOF) {
                     return None;
                 }

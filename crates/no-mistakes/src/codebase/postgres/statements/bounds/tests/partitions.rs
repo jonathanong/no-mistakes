@@ -133,3 +133,42 @@ fn create_temp_attaches_child_when_pg_temp_is_later_in_search_path() {
     assert_eq!(facts(&sql).len(), 2);
     assert_eq!(shape(&sql), ["select: opaque", "select: child"]);
 }
+
+#[test]
+fn failed_attach_to_ordinary_parent_keeps_standalone_child() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-failed-attach.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 3);
+    assert_eq!(
+        shape(&sql),
+        ["select: opaque", "select: opaque", "select: child"]
+    );
+}
+
+#[test]
+fn failed_create_partition_of_ordinary_parent_keeps_physical_child() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-failed-create.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 1);
+    assert_eq!(shape(&sql), ["select: child"]);
+}
+
+#[test]
+fn failed_concurrent_detach_keeps_child_owned_in_do_and_transaction() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-failed-concurrent.sql"),
+    )
+    .unwrap();
+    assert_eq!(facts(&sql).len(), 3);
+    assert_eq!(
+        shape(&sql),
+        ["select: child", "select: child", "select: child"]
+    );
+}

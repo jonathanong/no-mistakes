@@ -57,6 +57,9 @@ partition transitions even though the strict PostgreSQL parser does not support 
 this also covers transitions inside `DO` blocks. Malformed transitions are skipped while
 other parseable statements are still checked. `CREATE TEMP TABLE IF NOT EXISTS child
 PARTITION OF parent` leaves an existing standalone child untouched.
+An attach to a non-partitioned temporary parent does not transfer ownership. A
+`DETACH PARTITION ... CONCURRENTLY` inside `DO` or an explicit transaction cannot
+run in PostgreSQL, so recovered SQL in those contexts leaves the partition attached.
 
 ## What it catches/requires
 

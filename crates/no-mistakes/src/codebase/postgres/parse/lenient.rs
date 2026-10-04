@@ -17,6 +17,10 @@ use rewrite::{
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, `CREATE [UNIQUE] INDEX`, and DML after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
+    parse_with_concurrent_detach(sql, true)
+}
+
+fn parse_with_concurrent_detach(sql: &str, allow_concurrent_detach: bool) -> Vec<Statement> {
     let normalized = super::normalize_copy_data(sql);
     let separated = super::distinct_group::separate_distinct_grouping(&normalized);
     let located = super::unicode::tokenize_with_location(&separated, false);
@@ -39,7 +43,10 @@ pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
                 let chunk = format!("{}{}", "\n".repeat(line.saturating_sub(1)), text);
                 *line += text.bytes().filter(|byte| *byte == b'\n').count();
                 *offset = start + text.len();
-                Some(parse_postgres_sql_lenient(&chunk))
+                Some(parse_with_concurrent_detach(
+                    &chunk,
+                    allow_concurrent_detach,
+                ))
             })
             .flatten()
             .collect();
@@ -48,7 +55,11 @@ pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_referential_set_column_lists(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
-    recover::parse_chunks(split_statement_tokens(tokens), &located)
+    recover::parse_chunks(
+        split_statement_tokens(tokens),
+        &located,
+        allow_concurrent_detach,
+    )
 }
 
 pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
