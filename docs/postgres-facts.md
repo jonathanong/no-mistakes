@@ -359,7 +359,7 @@ is not a bound fact. A fact keeps the `kind`, its
 `line` and `column`, a `SqlBoundQuery`, and for `UPDATE` / `DELETE` the index of the
 `target` item. Every item keeps its own `line` and `column`, so SQL recovered from
 several source operands maps each relation to the operand that wrote it. Its optional
-`alias` is normalized from SQL; for an unaliased base table it contains the table's
+`alias` is normalized from SQL; for a base table without an alias it contains the table's
 bare name. `alias_explicit` distinguishes an alias written in SQL from that synthesized
 name. An explicit alias replaces the base relation's name for nested correlated scope
 resolution, even when the alias text matches the table's bare name.
