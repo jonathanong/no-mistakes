@@ -39,8 +39,7 @@ fn parse_with_sources(
     let separated = super::distinct_group::separate_distinct_grouping(&normalized);
     let located = super::unicode::tokenize_with_location(&separated, false);
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
-    super::table_only::normalize(&mut located);
-    super::standalone_table::normalize(&mut located);
+    super::normalize_table_queries(&mut located);
     if located.is_empty() {
         let chunks = super::top_level_statements(sql);
         if chunks.len() <= 1 {
