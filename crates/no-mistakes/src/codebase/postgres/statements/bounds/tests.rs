@@ -1,3 +1,4 @@
+mod explain_table;
 mod nonrecursive_ctes;
 mod standalone_table;
 mod stored_array;
