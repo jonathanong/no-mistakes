@@ -30,12 +30,21 @@ pub(super) fn recover_partition_change(
                 return None;
             }
         }
-        AlterTableOperation::DetachPartition { .. }
-            if !matches!(parser.peek_token().token, Token::EOF) =>
-        {
-            return None;
+        AlterTableOperation::DetachPartition { .. } => {
+            let next = parser.peek_token().token;
+            if !matches!(next, Token::EOF) {
+                if !matches!(next, Token::Word(ref word) if word.quote_style.is_none()
+                    && (word.value.eq_ignore_ascii_case("CONCURRENTLY")
+                        || word.value.eq_ignore_ascii_case("FINALIZE")))
+                {
+                    return None;
+                }
+                parser.next_token();
+                if !matches!(parser.peek_token().token, Token::EOF) {
+                    return None;
+                }
+            }
         }
-        AlterTableOperation::DetachPartition { .. } => {}
         _ => return None,
     }
     Some(statement)

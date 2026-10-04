@@ -20,6 +20,8 @@ fn names_match(left: &[String], right: &[String]) -> bool {
 #[derive(Clone)]
 pub(super) struct State {
     pub relations: BTreeMap<String, BTreeSet<Dependency>>,
+    // A partition is owned by its parent even for DROP without CASCADE.
+    pub partitions: BTreeMap<String, String>,
     pub on_commit_drop: BTreeSet<String>,
     pub temp_first: bool,
     pub local_path: Option<bool>,
@@ -28,6 +30,7 @@ impl Default for State {
     fn default() -> Self {
         Self {
             relations: BTreeMap::new(),
+            partitions: BTreeMap::new(),
             on_commit_drop: BTreeSet::new(),
             temp_first: true,
             local_path: None,
@@ -103,23 +106,28 @@ impl State {
         self.remove(removed, true);
     }
     fn remove(&mut self, mut removed: BTreeSet<String>, cascade: bool) {
-        if cascade {
-            loop {
-                let before = removed.len();
+        loop {
+            let before = removed.len();
+            for (child, parent) in &self.partitions {
+                if removed.contains(parent) {
+                    removed.insert(child.clone());
+                }
+            }
+            if cascade {
                 for (name, dependencies) in &self.relations {
-                    if dependencies
-                        .iter()
-                        .any(|dependency| matches!(dependency, Dependency::Temporary(name) if removed.contains(name)))
-                    {
+                    if dependencies.iter().any(|dependency| {
+                        matches!(dependency, Dependency::Temporary(parent) if removed.contains(parent))
+                    }) {
                         removed.insert(name.clone());
                     }
                 }
-                if before == removed.len() {
-                    break;
-                }
+            }
+            if before == removed.len() {
+                break;
             }
         }
         self.relations.retain(|name, _| !removed.contains(name));
+        self.partitions.retain(|child, _| !removed.contains(child));
         self.on_commit_drop.retain(|name| !removed.contains(name));
     }
     pub fn rename_schema(&mut self, old: &str, new: &str) {
@@ -177,6 +185,14 @@ impl State {
         }
         let dependencies = self.relations.remove(&old).unwrap_or_default();
         self.relations.insert(new.clone(), dependencies);
+        if let Some(parent) = self.partitions.remove(&old) {
+            self.partitions.insert(new.clone(), parent);
+        }
+        for parent in self.partitions.values_mut() {
+            if *parent == old {
+                *parent = new.clone();
+            }
+        }
         for dependencies in self.relations.values_mut() {
             if dependencies.remove(&Dependency::Temporary(old.clone())) {
                 dependencies.insert(Dependency::Temporary(new.clone()));
@@ -185,17 +201,20 @@ impl State {
     }
 
     pub fn attach_partition(&mut self, parent: &str, child: &str) {
-        let parent = self.dependency(parent);
-        if self.contains(child) {
-            self.relations.entry(key(child)).or_default().insert(parent);
+        if self.contains(parent) && self.contains(child) {
+            self.partitions.insert(key(child), key(parent));
         }
     }
 
     pub fn detach_partition(&mut self, parent: &str, child: &str) {
-        let parent = self.dependency(parent);
         if self.contains(child) {
-            if let Some(dependencies) = self.relations.get_mut(&key(child)) {
-                dependencies.remove(&parent);
+            let child = key(child);
+            if self
+                .partitions
+                .get(&child)
+                .is_some_and(|owner| *owner == key(parent))
+            {
+                self.partitions.remove(&child);
             }
         }
     }

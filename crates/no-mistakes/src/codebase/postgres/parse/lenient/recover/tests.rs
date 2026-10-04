@@ -11,7 +11,7 @@ fn recovers_only_complete_postgres_partition_transitions() {
     .unwrap();
     assert!(crate::codebase::postgres::parse_postgres_sql(&sql).is_err());
     let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
-    assert_eq!(statements.len(), 6);
+    assert_eq!(statements.len(), 8);
     let changes: Vec<_> = statements
         .iter()
         .filter_map(|statement| match statement {
@@ -22,6 +22,8 @@ fn recovers_only_complete_postgres_partition_transitions() {
     assert!(matches!(
         changes.as_slice(),
         [
+            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
+            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
             sqlparser::ast::AlterTableOperation::DetachPartition { .. },
             sqlparser::ast::AlterTableOperation::AttachPartition { .. },
             sqlparser::ast::AlterTableOperation::AttachPartition { .. },

@@ -56,6 +56,7 @@ impl TemporaryRelations {
                 object_type: sqlparser::ast::DiscardObject::TEMP,
             } => {
                 self.state.relations.clear();
+                self.state.partitions.clear();
                 self.state.on_commit_drop.clear();
             }
             Statement::Discard {
@@ -88,31 +89,7 @@ impl TemporaryRelations {
                 }
             }
             Statement::AlterSchema(schema) => self.alter_schema(schema),
-            Statement::AlterTable(table) => {
-                for operation in &table.operations {
-                    match operation {
-                        AlterTableOperation::RenameTable { table_name } => {
-                            let (RenameTableNameKind::To(name) | RenameTableNameKind::As(name)) =
-                                table_name;
-                            self.state
-                                .rename(&items::sql_name(&table.name), &items::sql_name(name));
-                        }
-                        AlterTableOperation::AttachPartition { partition } => {
-                            if let Some(child) = partition_name(partition) {
-                                self.state
-                                    .attach_partition(&items::sql_name(&table.name), &child);
-                            }
-                        }
-                        AlterTableOperation::DetachPartition { partition } => {
-                            if let Some(child) = partition_name(partition) {
-                                self.state
-                                    .detach_partition(&items::sql_name(&table.name), &child);
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            }
+            Statement::AlterTable(table) => self.alter_table(table),
             Statement::Set(Set::SingleAssignment {
                 variable,
                 values,
@@ -191,6 +168,31 @@ impl TemporaryRelations {
                 continue;
             }
             self.state.drop(&name, cascade);
+        }
+    }
+    fn alter_table(&mut self, table: &sqlparser::ast::AlterTable) {
+        for operation in &table.operations {
+            match operation {
+                AlterTableOperation::RenameTable { table_name } => {
+                    let (RenameTableNameKind::To(name) | RenameTableNameKind::As(name)) =
+                        table_name;
+                    self.state
+                        .rename(&items::sql_name(&table.name), &items::sql_name(name));
+                }
+                AlterTableOperation::AttachPartition { partition } => {
+                    if let Some(child) = partition_name(partition) {
+                        self.state
+                            .attach_partition(&items::sql_name(&table.name), &child);
+                    }
+                }
+                AlterTableOperation::DetachPartition { partition } => {
+                    if let Some(child) = partition_name(partition) {
+                        self.state
+                            .detach_partition(&items::sql_name(&table.name), &child);
+                    }
+                }
+                _ => {}
+            }
         }
     }
 }

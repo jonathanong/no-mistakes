@@ -1,5 +1,9 @@
 -- Recover only complete PostgreSQL partition transitions after dialect parse fails.
 ALTER TABLE accounts DETACH PARTITION orders;
+ALTER TABLE accounts DETACH PARTITION orders CONCURRENTLY;
+-- FINALIZE resumes a previously interrupted concurrent detach.
+ALTER TABLE accounts DETACH PARTITION orders FINALIZE;
+ALTER TABLE accounts DETACH PARTITION orders CONCURRENTLY FINALIZE;
 ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);
 ALTER TABLE accounts ATTACH PARTITION orders DEFAULT;
 ALTER TABLE accounts ATTACH PARTITION orders DEFAULT trailing;
