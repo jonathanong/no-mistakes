@@ -28,6 +28,8 @@ holds its locks longer and buffers more. Pick a batch with a `LIMIT` (for an `UP
 or `DELETE`, in a CTE or subquery that chooses the target rows) and run it in a loop
 with a cap. Enable the rule on job and repository code where those sweeps live.
 
+Temporary relations are tracked within each SQL source in statement order. Tables declared `ON COMMIT DROP` lose their temporary identity at commit, including after a rename; `ON COMMIT DELETE ROWS` retains the identity. Transaction rollback and savepoints restore their identities; renames, drops, and cascading drops update temporary view dependencies. A view over temporary relations is itself temporary. Explicit `search_path` order controls whether an unqualified name shadows the catalog relation, while `pg_temp` qualification selects the temporary identity.
+
 ## What it catches/requires
 
 The rule reads the statement facts of each executed `SELECT`, `UPDATE` and `DELETE`
@@ -231,3 +233,8 @@ The same caller-supplied requirement applies to other caller-sized set-returning
 functions, including calls with PostgreSQL named arguments. Catalog functions
 known to return one row, such as `pg_stat_get_recovery_prefetch()`, preserve a
 pure aggregate's one-row cap.
+
+Temporary tables and views created earlier in the same SQL source shadow unqualified
+catalog relations until `DROP TABLE` or `DROP VIEW`. This includes `SELECT INTO TEMP`.
+Temporary relations are unknown and bound no joined items; qualified permanent
+relations retain their catalog identity. State resets for every SQL source.
