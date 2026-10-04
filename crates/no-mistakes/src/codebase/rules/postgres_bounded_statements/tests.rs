@@ -3,6 +3,7 @@ mod recovered_table;
 mod scalar_reducer_arrays;
 mod standalone_table;
 mod stored_array;
+mod table_derived_limit;
 mod table_only;
 use super::evaluate::offenders;
 use super::{check_with_files, check_with_files_and_sources, compile_options, Options, RULE_ID};

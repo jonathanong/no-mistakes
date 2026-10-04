@@ -335,6 +335,9 @@ including after temporary-table declarations. For `TABLE` set-operation arms, in
 `EXPLAIN TABLE name` is parsed as a plan without an executed query fact;
 `EXPLAIN ANALYZE TABLE name` executes the query and retains the same quoted
 or folded relation identity as standalone `TABLE name`.
+Inside a derived query, a `TABLE name` right arm after a set operator retains
+its following `LIMIT`. A streaming `UNION ALL` may be capped by that limit;
+a blocking `UNION` still reads its input before limiting output.
 When lenient parsing recovers SQL from a `DO` body or a reconstructed string,
 TABLE arms use the recovered fragment's source tokens to distinguish quoted
 identifiers from their unquoted catalog namesakes.

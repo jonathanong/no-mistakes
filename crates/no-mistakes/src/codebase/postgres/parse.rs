@@ -4,6 +4,9 @@ use sqlparser::parser::{Parser, ParserError};
 use std::fmt;
 
 mod copy_data;
+mod derived_table;
+#[cfg(test)]
+mod derived_table_limit;
 mod distinct_group;
 mod lenient;
 pub(crate) use lenient::LocatedStatement;
@@ -57,12 +60,17 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
             message: error.to_string(),
         })?;
     let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
-    table_only::normalize(&mut tokens);
-    standalone_table::normalize(&mut tokens);
+    normalize_table_queries(&mut tokens);
     Parser::new(&PostgreSqlDialect {})
         .with_tokens_with_locations(tokens)
         .parse_statements()
         .map_err(PostgresParseError::from)
+}
+
+fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>) {
+    table_only::normalize(tokens);
+    derived_table::normalize(tokens);
+    standalone_table::normalize(tokens);
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.
