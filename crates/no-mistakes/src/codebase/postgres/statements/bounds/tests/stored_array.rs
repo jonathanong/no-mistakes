@@ -32,3 +32,26 @@ fn stored_any_sources_are_retained_without_becoming_caller_arrays() {
         );
     }
 }
+
+#[test]
+fn wrapped_self_owned_stored_arrays_retain_dependencies() {
+    let facts = facts(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/wrapped-stored-array-facts.sql")));
+    assert_eq!(facts.len(), 8);
+    for fact in &facts[..3] {
+        assert_eq!(
+            fact.query.items[0].pins[0].source,
+            SqlPinSource::StoredArray(vec![0])
+        );
+    }
+    for fact in &facts[3..5] {
+        assert_eq!(fact.query.items[0].pins[0].source, SqlPinSource::Value);
+    }
+    assert_eq!(
+        facts[7].query.items[0].pins[0].source,
+        SqlPinSource::StoredArray(vec![0])
+    );
+    // Unknown qualifiers and ordinary self equality still provide no pin.
+    assert!(facts[5..7]
+        .iter()
+        .all(|fact| fact.query.items[0].pins.is_empty()));
+}

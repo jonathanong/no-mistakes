@@ -166,9 +166,18 @@ impl Resolver {
     }
 
     pub(super) fn source(&self, value: &Expr, pinned: usize) -> Option<Sourced> {
+        self.source_excluding(value, Some(pinned))
+    }
+
+    /// Stored-array syntax retains self-owned dependencies without finite-key credit.
+    pub(super) fn stored_source(&self, value: &Expr) -> Option<Sourced> {
+        self.source_excluding(value, None)
+    }
+
+    fn source_excluding(&self, value: &Expr, pinned: Option<usize>) -> Option<Sourced> {
         let mut found = Refs::default();
         self.refs(value, &mut found);
-        if found.unknown || found.items.contains(&pinned) {
+        if found.unknown || pinned.is_some_and(|pinned| found.items.contains(&pinned)) {
             return None;
         }
         let source = if found.items.is_empty() {
@@ -188,7 +197,8 @@ fn is_row_variant(name: &ObjectName) -> bool {
 }
 
 fn qualified(parts: &[Ident]) -> Option<(String, String)> {
-    let column = ident_key(parts.last()?);
-    let qualifier = ident_key(parts.get(parts.len().checked_sub(2)?)?);
-    Some((qualifier, column))
+    let [.., qualifier, column] = parts else {
+        return None;
+    };
+    Some((ident_key(qualifier), ident_key(column)))
 }

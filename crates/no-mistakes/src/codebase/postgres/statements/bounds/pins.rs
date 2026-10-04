@@ -84,26 +84,18 @@ pub(super) fn extract(
                         finite_array(&constructor(other).unwrap().elem, item, resolver)
                     }
                     // Retain stored-array syntax without crediting its owning row's bound.
-                    other => resolver
-                        .source(other, item)
-                        .map(|mut sourced| {
-                            if !matches!(sourced.source, SqlPinSource::Value)
-                                || !sourced.reads.is_empty()
-                            {
-                                let items = match sourced.source {
-                                    SqlPinSource::Items(items) => items,
-                                    _ => Vec::new(),
-                                };
-                                sourced.source = SqlPinSource::StoredArray(items);
-                            }
-                            sourced
-                        })
-                        .or_else(|| {
-                            resolver.column(other).map(|(source, _)| Sourced {
-                                source: SqlPinSource::StoredArray(vec![source]),
-                                reads: Vec::new(),
-                            })
-                        }),
+                    other => resolver.stored_source(other).map(|mut sourced| {
+                        if !matches!(sourced.source, SqlPinSource::Value)
+                            || !sourced.reads.is_empty()
+                        {
+                            let items = match sourced.source {
+                                SqlPinSource::Items(items) => items,
+                                _ => Vec::new(),
+                            };
+                            sourced.source = SqlPinSource::StoredArray(items);
+                        }
+                        sourced
+                    }),
                 };
                 pin(left, source, false);
             }

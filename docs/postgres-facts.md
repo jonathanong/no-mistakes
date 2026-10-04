@@ -374,6 +374,10 @@ equality or `IS NOT DISTINCT FROM` (a `null_safe` pin), `= ANY(…)`, `IN (…)`
 `Value` (no relation of the statement: a literal, a bind, or an interpolation recovered
 from a template literal), `Items` (columns of other items; a column
 compared with its own item is never a pin), `Array` (finite constructor dependencies plus scalar column requirements), `StoredArray` (an array read from statement rows), or a subquery. `StoredArray` retains source-item indexes and bare-read metadata; it never proves a finite key set, even when the array owner is uniquely pinned. An `Array` source keeps source-item indexes and column names; the evaluator proves those columns scalar against the prepared catalog before crediting their row bounds. `cast_types` records custom cast targets that require catalog scalar or enum proof; interval literals are already scalar. `indexed_columns` records columns accessed exclusively by scalar subscripts: the evaluator requires a catalog array with a proven scalar element type. Slices, unknown/domain element types, and unresolved aliases supply no indexed proof. Array columns without a scalar subscript supply no scalar proof. `WHERE` restricts every item.
+Stored-array `ANY` facts retain self-owned column dependencies through casts and
+conditional expressions. These dependencies remain `StoredArray` sources and
+provide no finite-key credit; ordinary equality still rejects self references.
+
 A join condition restricts only the non-preserved side of an outer join and both sides of
 an inner join; `USING (col)` pins like `ON a.col = b.col` when each side is one item,
 and `FULL`, `NATURAL` and `CROSS` joins pin nothing. A subquery that reads the row being
