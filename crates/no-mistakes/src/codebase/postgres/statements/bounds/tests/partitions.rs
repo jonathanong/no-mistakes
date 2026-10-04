@@ -81,3 +81,18 @@ fn if_not_exists_keeps_a_standalone_temporary_child() {
     assert_eq!(facts(&sql).len(), 1);
     assert_eq!(shape(&sql), ["select: opaque"]);
 }
+
+#[test]
+fn missing_qualified_parent_cannot_detach_temporary_child() {
+    let sql = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-bounded-statements")
+            .join("sql/temporary-partition-missing-parent.sql"),
+    )
+    .unwrap();
+    assert_eq!(
+        crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql).len(),
+        6
+    );
+    assert_eq!(facts(&sql).len(), 1);
+    assert_eq!(shape(&sql), ["select: orders"]);
+}

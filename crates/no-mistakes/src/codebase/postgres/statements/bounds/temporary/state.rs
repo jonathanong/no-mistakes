@@ -207,7 +207,7 @@ impl State {
     }
 
     pub fn detach_partition(&mut self, parent: &str, child: &str) {
-        if self.contains(child) {
+        if self.contains(parent) && self.contains(child) {
             let child = key(child);
             if self
                 .partitions
