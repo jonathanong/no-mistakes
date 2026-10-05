@@ -91,7 +91,7 @@ non-partial, immediate, plain columns) whose columns are all pinned by top-level
 `AND` equalities of `WHERE` or of an inner join's `ON`. A column is pinned by an
 equality to a literal, a `$n` placeholder, a recovered template interpolation
 (`${id}`; user-authored text that only spells the marker is a column), or a column
-of a relation that is already single-row, iterated to a fixpoint (so
+of a relation that is already single-row, repeated until nothing new is proven (so
 `JOIN grants g ON g.id = code.grant_id` is single-row once `code` is pinned by its
 unique `token_hash`). The unique key bounds the statement to one row per locked
 table, so a filter such as
