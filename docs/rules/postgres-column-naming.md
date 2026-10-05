@@ -16,14 +16,14 @@ rules:
     options:
       schemaCatalogPath: db/schema.json
       typeRules:
-        - types: ["timestamp with time zone", "timestamp without time zone"]
-          namePattern: "_at$"
-          hint: "end timestamp columns in _at"
+        - types: ['timestamp with time zone', 'timestamp without time zone']
+          namePattern: '_at$'
+          hint: 'end timestamp columns in _at'
       foreignKeys:
         targetMatch: last-word
       allow:
-        - object: "column:sessions.expires"
-          reason: "Name mirrors an external protocol field"
+        - object: 'column:sessions.expires'
+          reason: 'Name mirrors an external protocol field'
 ```
 
 ## Why and when
@@ -125,13 +125,12 @@ the whole catalog. For example:
   "tables": {
     "orders": {
       "columns": {
-        "shipped_at": {
-          // no-mistakes-disable-line postgres-column-naming: this is a calendar day
-          "dataType": "timestamp with time zone",
-        },
-      },
-    },
-  },
+        "shipped_at": { // no-mistakes-disable-line postgres-column-naming: this is a calendar day
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -139,8 +138,8 @@ Suppress a finding with `allow` when comments are not appropriate:
 
 ```yaml
 allow:
-  - object: "column:orders.shipped_at"
-    reason: "Shipped date is a calendar day in this table"
+  - object: 'column:orders.shipped_at'
+    reason: 'Shipped date is a calendar day in this table'
 ```
 
 One allow entry covers every finding on that object. An unused entry reports

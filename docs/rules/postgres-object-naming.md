@@ -20,16 +20,16 @@ rules:
     options:
       schemaCatalogPath: db/schema.json
       patterns:
-        index: "^idx_{table}__[a-z0-9_]+$"
-        uniqueIndex: "^(idx|uq)_{table}__[a-z0-9_]+$"
-        trigger: "^trigger_[a-z0-9_]+$"
-        function: "^fn_[a-z0-9_]+$"
-        triggerFunction: "^fn_(reject|update|project|create|lock)_[a-z0-9_]+$"
-        view: "^view_[a-z0-9_]+$"
-        materializedView: "^mv_[a-z0-9_]+$"
-        table: "^[a-z][a-z0-9_]*$"
-        column: "^[a-z][a-z0-9_]*$"
-        enum: "^[a-z][a-z0-9_]*$"
+        index: '^idx_{table}__[a-z0-9_]+$'
+        uniqueIndex: '^(idx|uq)_{table}__[a-z0-9_]+$'
+        trigger: '^trigger_[a-z0-9_]+$'
+        function: '^fn_[a-z0-9_]+$'
+        triggerFunction: '^fn_(reject|update|project|create|lock)_[a-z0-9_]+$'
+        view: '^view_[a-z0-9_]+$'
+        materializedView: '^mv_[a-z0-9_]+$'
+        table: '^[a-z][a-z0-9_]*$'
+        column: '^[a-z][a-z0-9_]*$'
+        enum: '^[a-z][a-z0-9_]*$'
       checkConstraintBackedIndexes: false
       tableMinWords: 2
       abbreviations:
@@ -41,7 +41,7 @@ rules:
         irregularPlurals: { person: people, child: children }
         uncountable: [data, metadata, feedback, media]
         nonPluralTokens: [status, analysis, sms, news, series]
-        ignorePatterns: ["^link__"]
+        ignorePatterns: ['^link__']
       deniedTokens:
         - token: cfg
           replacement: configuration
@@ -50,10 +50,10 @@ rules:
       spelling:
         acknowledgement: acknowledgment
       doubleUnderscore:
-        allowPattern: "^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$"
+        allowPattern: '^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$'
       allow:
-        - object: "table:legacy_cfg_values"
-          reason: "Name owned by an external replication tool"
+        - object: 'table:legacy_cfg_values'
+          reason: 'Name owned by an external replication tool'
 ```
 
 Patterns are not anchored for you. Write `^` and `$` when the whole name
