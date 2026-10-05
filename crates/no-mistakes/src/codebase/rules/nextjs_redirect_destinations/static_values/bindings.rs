@@ -1,0 +1,158 @@
+use super::*;
+use oxc_ast::ast::{
+    BindingPattern, Declaration, Program, Statement, VariableDeclaration, VariableDeclarationKind,
+};
+use oxc_ast_visit::Visit;
+
+pub(super) fn bind(pattern: &BindingPattern<'_>, value: Value, env: &mut Environment) {
+    match pattern {
+        BindingPattern::BindingIdentifier(ident) => {
+            env.insert(ident.name.to_string(), value);
+        }
+        BindingPattern::ArrayPattern(array) => {
+            let values = if let Value::Array(values) = value {
+                values
+            } else {
+                Arc::new(Vec::new())
+            };
+            for (index, element) in array.elements.iter().enumerate() {
+                if let Some(pattern) = element {
+                    bind(
+                        pattern,
+                        values.get(index).cloned().unwrap_or(Value::Unknown),
+                        env,
+                    );
+                }
+            }
+            if let Some(rest) = &array.rest {
+                bind(&rest.argument, Value::Unknown, env);
+            }
+        }
+        BindingPattern::ObjectPattern(object) => {
+            let values = if let Value::Object(values, true) = value {
+                values
+            } else {
+                Arc::new(BTreeMap::new())
+            };
+            for property in &object.properties {
+                let value = static_property_key_name(&property.key)
+                    .and_then(|name| values.get(name))
+                    .map(|(value, _)| value.clone())
+                    .unwrap_or(Value::Unknown);
+                bind(&property.value, value, env);
+            }
+            if let Some(rest) = &object.rest {
+                bind(&rest.argument, Value::Unknown, env);
+            }
+        }
+        BindingPattern::AssignmentPattern(pattern) => bind(&pattern.left, Value::Unknown, env),
+    }
+}
+
+pub(super) fn declaration(
+    evaluator: &mut Evaluator,
+    var: &VariableDeclaration<'_>,
+    env: &mut Environment,
+) {
+    for declarator in &var.declarations {
+        let value = if var.kind == VariableDeclarationKind::Const {
+            declarator
+                .init
+                .as_ref()
+                .map(|expr| evaluator.expression(expr, env, 0))
+                .unwrap_or(Value::Unknown)
+        } else {
+            Value::Unknown
+        };
+        bind(&declarator.id, value, env);
+    }
+}
+
+pub(in super::super) fn program_environment(program: &Program<'_>) -> Environment {
+    let mut env = Environment::new();
+    let mut evaluator = Evaluator::new();
+    for statement in &program.body {
+        match statement {
+            Statement::VariableDeclaration(var) => declaration(&mut evaluator, var, &mut env),
+            Statement::ExportDeclaration(export) => {
+                if let Declaration::VariableDeclaration(var) = &export.declaration {
+                    declaration(&mut evaluator, var, &mut env);
+                }
+            }
+            _ => {}
+        }
+    }
+    // Configuration methods run after module initialization. Account for top-level mutations.
+    for statement in &program.body {
+        if let Statement::ExpressionStatement(expression) = statement {
+            invalidate(&expression.expression, &mut env);
+        }
+    }
+    env
+}
+
+pub(super) fn invalidate(expr: &Expression<'_>, env: &mut Environment) {
+    struct References<'e> {
+        env: &'e mut Environment,
+    }
+    impl<'a> Visit<'a> for References<'_> {
+        fn visit_identifier_reference(&mut self, ident: &oxc_ast::ast::IdentifierReference<'a>) {
+            if let Some(value) = self.env.get(ident.name.as_str()).cloned() {
+                for binding in self.env.values_mut() {
+                    if shares_value(binding, &value) {
+                        *binding = Value::Unknown;
+                    }
+                }
+                self.env.insert(ident.name.to_string(), Value::Unknown);
+            }
+        }
+        fn visit_function(
+            &mut self,
+            _: &oxc_ast::ast::Function<'a>,
+            _: oxc_syntax::scope::ScopeFlags,
+        ) {
+        }
+        fn visit_arrow_function_expression(
+            &mut self,
+            _: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+        ) {
+        }
+    }
+    // Expression statements may mutate or pass an array to unknown code; never execute them.
+    References { env }.visit_expression(expr);
+}
+
+fn shares_value(value: &Value, target: &Value) -> bool {
+    match (value, target) {
+        (Value::Array(left), Value::Array(right)) if Arc::ptr_eq(left, right) => true,
+        (Value::Object(left, _), Value::Object(right, _)) if Arc::ptr_eq(left, right) => true,
+        (Value::Array(values), _) => values.iter().any(|value| shares_value(value, target)),
+        (Value::Object(values, _), _) => values
+            .values()
+            .any(|(value, _)| shares_value(value, target)),
+        _ => false,
+    }
+}
+
+pub(in super::super) fn scope_environment(
+    statements: &[Statement<'_>],
+    outer: &Environment,
+) -> Environment {
+    let mut env = outer.clone();
+    for statement in statements {
+        if let Statement::VariableDeclaration(var) = statement {
+            for declarator in &var.declarations {
+                bind(&declarator.id, Value::Unknown, &mut env);
+            }
+        }
+    }
+    let mut evaluator = Evaluator::new();
+    for statement in statements {
+        match statement {
+            Statement::VariableDeclaration(var) => declaration(&mut evaluator, var, &mut env),
+            Statement::ExpressionStatement(expr) => invalidate(&expr.expression, &mut env),
+            _ => {}
+        }
+    }
+    env
+}

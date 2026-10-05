@@ -1,12 +1,11 @@
+use super::static_values::{
+    parameter_environment, program_environment, scope_environment, Environment, Evaluator, Value,
+};
 use crate::codebase::ts_source::{
     byte_offset_to_line, static_property_key_name, unwrap_ts_wrappers,
 };
-use oxc_ast::ast::{
-    Expression, MethodDefinition, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
-    PropertyDefinition,
-};
+use oxc_ast::ast::{Expression, MethodDefinition, ObjectProperty, Program, PropertyDefinition};
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -15,6 +14,7 @@ pub(super) struct ExtractedDestinations {
     pub(super) body_found: bool,
     pub(super) destinations: Vec<ExtractedDestination>,
     pub(super) saw_destination_property: bool,
+    pub(super) incomplete: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,6 +45,8 @@ fn extract_named_destinations_from_program(
         body_found: false,
         destinations: BTreeMap::new(),
         saw_destination_property: false,
+        incomplete: false,
+        environment: program_environment(program),
     };
     finder.visit_program(program);
     ExtractedDestinations {
@@ -55,6 +57,7 @@ fn extract_named_destinations_from_program(
             .map(|(value, line)| ExtractedDestination { value, line })
             .collect(),
         saw_destination_property: finder.saw_destination_property,
+        incomplete: finder.incomplete,
     }
 }
 
@@ -64,31 +67,101 @@ struct BodyFinder<'a, 'n> {
     body_found: bool,
     destinations: BTreeMap<String, usize>,
     saw_destination_property: bool,
+    incomplete: bool,
+    environment: Environment,
 }
 
 impl BodyFinder<'_, '_> {
-    fn collect_from_expression(&mut self, expression: &Expression<'_>) {
-        self.body_found = true;
-        let mut collector = DestinationCollector {
-            source: self.source,
-            destinations: BTreeMap::new(),
-            saw_destination_property: false,
+    fn collect_from_expression(&mut self, expression: &Expression<'_>) -> bool {
+        let mut evaluator = Evaluator::new();
+        let value = match unwrap_ts_wrappers(expression) {
+            Expression::FunctionExpression(function) => {
+                evaluator.function(function, &self.environment)
+            }
+            Expression::ArrowFunctionExpression(function) => {
+                evaluator.arrow(function, &self.environment, 0)
+            }
+            _ => return false,
         };
-        collector.visit_expression(expression);
-        self.destinations = collector.destinations;
-        self.saw_destination_property = collector.saw_destination_property;
+        self.body_found = true;
+        self.collect(value);
+        true
+    }
+    fn collect(&mut self, value: Value) {
+        match value {
+            Value::Array(values) => {
+                for value in values.iter().cloned() {
+                    self.collect(value);
+                }
+            }
+            Value::Object(properties, complete) => {
+                let mut properties = (*properties).clone();
+                self.incomplete |= !complete;
+                if let Some((destination, offset)) = properties.remove("destination") {
+                    self.saw_destination_property = true;
+                    if let Value::String(value) = destination {
+                        let line = byte_offset_to_line(self.source, offset as usize) as usize;
+                        self.destinations.entry(value).or_insert(line);
+                    } else {
+                        self.incomplete = true;
+                    }
+                } else if self.name == "rewrites" {
+                    for key in ["beforeFiles", "afterFiles", "fallback"] {
+                        if let Some((value, _)) = properties.remove(key) {
+                            self.collect(value);
+                        }
+                    }
+                    self.incomplete |= !properties.is_empty();
+                } else {
+                    self.incomplete = true;
+                }
+            }
+            _ => self.incomplete = true,
+        }
     }
 }
 
 impl<'a> Visit<'a> for BodyFinder<'a, '_> {
+    fn visit_function(
+        &mut self,
+        function: &oxc_ast::ast::Function<'a>,
+        flags: oxc_syntax::scope::ScopeFlags,
+    ) {
+        let outer = self.environment.clone();
+        self.environment = parameter_environment(&function.params, &outer);
+        walk::walk_function(self, function, flags);
+        self.environment = outer;
+    }
+    fn visit_arrow_function_expression(
+        &mut self,
+        function: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+    ) {
+        let outer = self.environment.clone();
+        self.environment = parameter_environment(&function.params, &outer);
+        walk::walk_arrow_function_expression(self, function);
+        self.environment = outer;
+    }
+    fn visit_function_body(&mut self, body: &oxc_ast::ast::FunctionBody<'a>) {
+        let outer = self.environment.clone();
+        self.environment = scope_environment(&body.statements, &outer);
+        walk::walk_function_body(self, body);
+        self.environment = outer;
+    }
+
+    fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {
+        let outer = self.environment.clone();
+        self.environment = scope_environment(&block.body, &outer);
+        walk::walk_block_statement(self, block);
+        self.environment = outer;
+    }
+
     fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
         if self.body_found {
             return;
         }
         if static_property_key_name(&property.key) == Some(self.name)
-            && is_function_like(&property.value)
+            && self.collect_from_expression(&property.value)
         {
-            self.collect_from_expression(&property.value);
             return;
         }
         walk::walk_object_property(self, property);
@@ -99,18 +172,10 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
             return;
         }
         if static_property_key_name(&method.key) == Some(self.name) {
-            if let Some(body) = method.value.body.as_deref() {
-                self.body_found = true;
-                let mut collector = DestinationCollector {
-                    source: self.source,
-                    destinations: BTreeMap::new(),
-                    saw_destination_property: false,
-                };
-                collector.visit_function_body(body);
-                self.destinations = collector.destinations;
-                self.saw_destination_property = collector.saw_destination_property;
-                return;
-            }
+            self.body_found = true;
+            let value = Evaluator::new().function(&method.value, &self.environment);
+            self.collect(value);
+            return;
         }
         walk::walk_method_definition(self, method);
     }
@@ -121,59 +186,11 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         }
         if static_property_key_name(&property.key) == Some(self.name) {
             if let Some(value) = property.value.as_ref() {
-                if is_function_like(value) {
-                    self.collect_from_expression(value);
+                if self.collect_from_expression(value) {
                     return;
                 }
             }
         }
         walk::walk_property_definition(self, property);
-    }
-}
-
-struct DestinationCollector<'a> {
-    source: &'a str,
-    destinations: BTreeMap<String, usize>,
-    saw_destination_property: bool,
-}
-
-impl<'a> Visit<'a> for DestinationCollector<'a> {
-    fn visit_object_expression(&mut self, object: &ObjectExpression<'a>) {
-        inspect_destination_object(object, self.source, self);
-        walk::walk_object_expression(self, object);
-    }
-}
-
-fn inspect_destination_object(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    collector: &mut DestinationCollector<'_>,
-) {
-    for property in &object.properties {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            continue;
-        };
-        if static_property_key_name(&property.key) != Some("destination") {
-            continue;
-        }
-        collector.saw_destination_property = true;
-        if let Some(value) = string_literal_value(&property.value) {
-            let line = byte_offset_to_line(source, property.value.span().start as usize) as usize;
-            collector.destinations.entry(value).or_insert(line);
-        }
-    }
-}
-
-fn is_function_like(expression: &Expression<'_>) -> bool {
-    matches!(
-        unwrap_ts_wrappers(expression),
-        Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
-    )
-}
-
-fn string_literal_value(expression: &Expression<'_>) -> Option<String> {
-    match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some(literal.value.as_str().to_string()),
-        _ => None,
     }
 }

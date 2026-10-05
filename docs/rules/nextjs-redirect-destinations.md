@@ -14,7 +14,8 @@ Router pages as routes evolve.
 ## What it catches
 
 It reports static redirect/rewrite destinations that cannot be matched to the
-configured route inventory; dynamic destinations remain outside the heuristic.
+configured route inventory. If a returned entry cannot be recovered statically,
+it reports incomplete extraction alongside any known missing destinations.
 
 ## Options
 
@@ -75,3 +76,36 @@ move the page out of a `_` segment or stop redirecting to that path.
 Use `no-mistakes-disable-file nextjs-redirect-destinations` to opt a Next.js
 config out, or `no-mistakes-disable-next-line nextjs-redirect-destinations`
 on a destination line.
+
+## Static destination construction
+
+Immutable module and method-local constants, literal arrays and objects, array
+spreads, tuple or object destructuring, and single-parameter synchronous arrow
+callbacks to `.map()` are supported. Template strings can interpolate recovered
+strings. TypeScript annotations, `as const`, and `satisfies` wrappers are transparent.
+
+```ts
+const routePairs = [["/old", "/new"]] as const;
+export default {
+  async redirects() {
+    return [
+      { source: "/", destination: "/home", permanent: true },
+      ...routePairs.map(([source, target]) => ({
+        source,
+        destination: `${target}`,
+        permanent: true,
+      })),
+    ];
+  },
+};
+```
+
+Both `/home` and `/new` must match the configured page inventory. Destinations
+in unused constants or nested helper bodies do not count as returned entries.
+
+Mutation, mutable bindings, unknown spreads, unsupported callbacks, and dynamic
+interpolation produce incomplete extraction. Replace them with immutable static
+construction, or suppress the finding when runtime behavior is intentional.
+An invocation bounds evaluation to 4,096 expression steps per environment or
+method, 64 expression levels, and 65,536 bytes per constructed template string;
+exceeding a limit also reports incomplete extraction.
