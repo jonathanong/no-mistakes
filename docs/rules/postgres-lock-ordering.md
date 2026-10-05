@@ -102,7 +102,7 @@ prove nothing and still fail closed. Without a catalog no key is known to be uni
 so the original check applies.
 
 ```ts
-// accounts.id is the primary key: one row, so the IN list is only a filter.
+// orders.id is the primary key: one row, so the IN list is only a filter.
 query(`SELECT id FROM orders WHERE id = $1 AND status IN ('open', 'held') FOR UPDATE`);
 ```
 
