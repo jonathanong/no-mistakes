@@ -10,6 +10,11 @@ sources for exact canonical Next.js page routes. These retain Vitest ownership a
 the canonical `route-test` graph, while selector and fetch coverage remain browser
 coverage. See [integration route coverage](configuration/integration-route-coverage.md).
 
+Next.js redirect and rewrite checks recover immutable tuple maps and template
+destinations through the same Rust rule used by the CLI and async Node checks.
+Partial dynamic construction reports incomplete extraction; configured route
+roots retain their existing semantics.
+
 A language or framework is supported when an agent can ask the same structural
 questions it already asks of TS/JS, get deterministic structured output, and
 do so without shelling out to `rg` for the graph itself.

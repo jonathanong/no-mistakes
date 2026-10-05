@@ -9,6 +9,7 @@ mod extract;
 mod options;
 mod routes;
 mod scan;
+mod static_values;
 
 use options::Options;
 use scan::scan;

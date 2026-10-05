@@ -1,3 +1,4 @@
+mod static_values;
 use super::extract::{extract_named_destinations, ExtractedDestinations};
 use super::options::Options;
 use super::routes::{
@@ -112,12 +113,8 @@ fn fail_extractor_flags_unparsed_redirects_and_rewrites() {
 }
 
 #[test]
-fn dest_non_string_flags_extractor_destination_drift() {
-    let findings = run("dest-non-string", "{}");
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0]
-        .message
-        .contains("extracted no string destinations"));
+fn constant_destination_is_resolved() {
+    assert!(run("dest-non-string", "{}").is_empty());
 }
 
 #[test]
@@ -366,7 +363,7 @@ export default {
             .iter()
             .map(|destination| destination.value.as_str())
             .collect::<Vec<_>>(),
-        ["/about"]
+        ["/about", "/dynamic"]
     );
 }
 

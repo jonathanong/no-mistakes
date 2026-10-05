@@ -106,6 +106,11 @@ so {kind} construction changes are not silent."
         )];
     }
     let mut findings = Vec::new();
+    if extracted.incomplete {
+        findings.push(finding(rel, word_line(source, name), format!(
+            "{rel}: nextjs-redirect-destinations extraction is incomplete in {name}(); use bounded immutable constants, arrays and map callbacks so every {kind} destination can be checked."
+        )));
+    }
     for destination in extracted.destinations {
         let dest_path = strip_query_and_hash(&destination.value);
         if should_skip_destination(dest_path) {

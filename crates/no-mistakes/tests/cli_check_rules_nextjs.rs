@@ -89,3 +89,20 @@ fn nextjs_redirect_destinations_flags_extractor_drift() {
         "{body}"
     );
 }
+
+#[test]
+fn nextjs_static_tuple_destinations_and_partial_extraction_are_checked() {
+    for (scenario, expected) in [
+        ("static-tuples-fail", "/missing-route"),
+        ("partial-dynamic", "extraction is incomplete"),
+    ] {
+        let root = fixture("nextjs-redirect-destinations", scenario);
+        let out = check_fixture_config(&root, ".no-mistakes.yml");
+        assert_eq!(out.status.code(), Some(1));
+        assert!(stdout(&out).contains(expected), "{}", stdout(&out));
+    }
+    let root = fixture("nextjs-redirect-destinations", "static-tuples-pass");
+    assert!(check_fixture_config(&root, ".no-mistakes.yml")
+        .status
+        .success());
+}
