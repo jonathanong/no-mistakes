@@ -26,6 +26,8 @@ fn partial_dynamic_reassigned_and_aliased_mutations_fail_closed() {
         "static-reassignment",
         "static-alias-mutation",
         "static-local-mutation",
+        "static-conditional-mutation",
+        "static-initializer-mutation",
     ] {
         let findings = run(fixture, OPTIONS);
         assert_eq!(findings.len(), 1, "{fixture}: {findings:?}");

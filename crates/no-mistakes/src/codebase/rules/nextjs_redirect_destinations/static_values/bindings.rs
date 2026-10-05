@@ -2,7 +2,9 @@ use super::*;
 use oxc_ast::ast::{
     BindingPattern, Declaration, Program, Statement, VariableDeclaration, VariableDeclarationKind,
 };
-use oxc_ast_visit::Visit;
+mod mutations;
+pub(super) use mutations::invalidate;
+use mutations::invalidate_statement;
 
 pub(super) fn bind(pattern: &BindingPattern<'_>, value: Value, env: &mut Environment) {
     match pattern {
@@ -64,6 +66,11 @@ pub(super) fn declaration(
         } else {
             Value::Unknown
         };
+        if matches!(value, Value::Unknown) {
+            if let Some(init) = &declarator.init {
+                invalidate(init, env);
+            }
+        }
         bind(&declarator.id, value, env);
     }
 }
@@ -84,54 +91,16 @@ pub(in super::super) fn program_environment(program: &Program<'_>) -> Environmen
     }
     // Configuration methods run after module initialization. Account for top-level mutations.
     for statement in &program.body {
-        if let Statement::ExpressionStatement(expression) = statement {
-            invalidate(&expression.expression, &mut env);
+        match statement {
+            Statement::VariableDeclaration(_)
+            | Statement::ExportDeclaration(_)
+            | Statement::ExportDefaultDeclaration(_)
+            | Statement::FunctionDeclaration(_)
+            | Statement::ImportDeclaration(_) => {}
+            _ => invalidate_statement(statement, &mut env),
         }
     }
     env
-}
-
-pub(super) fn invalidate(expr: &Expression<'_>, env: &mut Environment) {
-    struct References<'e> {
-        env: &'e mut Environment,
-    }
-    impl<'a> Visit<'a> for References<'_> {
-        fn visit_identifier_reference(&mut self, ident: &oxc_ast::ast::IdentifierReference<'a>) {
-            if let Some(value) = self.env.get(ident.name.as_str()).cloned() {
-                for binding in self.env.values_mut() {
-                    if shares_value(binding, &value) {
-                        *binding = Value::Unknown;
-                    }
-                }
-                self.env.insert(ident.name.to_string(), Value::Unknown);
-            }
-        }
-        fn visit_function(
-            &mut self,
-            _: &oxc_ast::ast::Function<'a>,
-            _: oxc_syntax::scope::ScopeFlags,
-        ) {
-        }
-        fn visit_arrow_function_expression(
-            &mut self,
-            _: &oxc_ast::ast::ArrowFunctionExpression<'a>,
-        ) {
-        }
-    }
-    // Expression statements may mutate or pass an array to unknown code; never execute them.
-    References { env }.visit_expression(expr);
-}
-
-fn shares_value(value: &Value, target: &Value) -> bool {
-    match (value, target) {
-        (Value::Array(left), Value::Array(right)) if Arc::ptr_eq(left, right) => true,
-        (Value::Object(left, _), Value::Object(right, _)) if Arc::ptr_eq(left, right) => true,
-        (Value::Array(values), _) => values.iter().any(|value| shares_value(value, target)),
-        (Value::Object(values, _), _) => values
-            .values()
-            .any(|(value, _)| shares_value(value, target)),
-        _ => false,
-    }
 }
 
 pub(in super::super) fn scope_environment(
