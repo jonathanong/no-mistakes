@@ -69,7 +69,11 @@ With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
 btree unique index for every locked base table. `FOR UPDATE OF alias` limits
 the requirement to that resolved relation; joins, derived relations, or an
 unresolved `OF` target fail closed rather than silently checking only the first
-`FROM` table. This makes reader lock order match the catalog-backed writer
+`FROM` table. A comma-separated list such as `FOR UPDATE OF a, o` (with an
+optional `NOWAIT` or `SKIP LOCKED` after it) is one locking clause covering every
+listed relation, checked exactly like `FOR UPDATE OF a FOR UPDATE OF o`: with a
+catalog, every resolved relation needs its key prefix, and one unresolved name
+fails closed. This makes reader lock order match the catalog-backed writer
 order instead of accepting an unrelated deterministic sort. `SKIP LOCKED`
 remains an alternative because it avoids waiting for an already-held row lock.
 

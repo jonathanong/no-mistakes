@@ -143,3 +143,14 @@ fn postgres_lock_ordering_ignores_scoped_executors_by_default() {
     let out = check_fixture_config(&root, ".no-mistakes.yml");
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
+
+#[test]
+fn postgres_lock_ordering_checks_multi_target_of_lists() {
+    let pass = check_fixture_config(&fixture("pass-multi-target"), ".no-mistakes.yml");
+    assert!(pass.status.success(), "exit non-zero: {}", stdout(&pass));
+    let fail = check_fixture_config(&fixture("fail-multi-target"), ".no-mistakes.yml");
+    let body = stdout(&fail);
+    assert!(!fail.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("ABBA"), "{body}");
+    assert!(!body.contains("parseable"), "{body}");
+}

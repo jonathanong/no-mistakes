@@ -169,4 +169,6 @@ fn unwrap_expr(expr: &Expr) -> &Expr {
 }
 
 #[cfg(test)]
+mod of_list_tests;
+#[cfg(test)]
 mod tests;
