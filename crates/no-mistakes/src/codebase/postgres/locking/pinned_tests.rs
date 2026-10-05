@@ -91,3 +91,17 @@ fn lateral_and_derived_relations_resolve_only_when_not_locked() {
     let anonymous = "SELECT 1 FROM orders o, generate_series(1, 3) FOR UPDATE OF o";
     assert_eq!(only(anonymous).tables, Some(vec!["orders".to_string()]));
 }
+
+#[test]
+fn a_parenthesized_column_is_still_pinned() {
+    let sql = "SELECT 1 FROM orders o WHERE (o.id) = $1 AND (region) = 'eu' FOR UPDATE";
+    assert_eq!(pinned(sql, "orders"), ["id", "region"]);
+}
+
+#[test]
+fn a_lateral_function_joins_like_any_derived_relation() {
+    let sql = "SELECT 1 FROM orders o, LATERAL generate_series(1, o.qty) AS g(n) \
+               WHERE o.id = $1 FOR UPDATE OF o";
+    assert_eq!(only(sql).tables, Some(vec!["orders".to_string()]));
+    assert_eq!(pinned(sql, "orders"), ["id"]);
+}
