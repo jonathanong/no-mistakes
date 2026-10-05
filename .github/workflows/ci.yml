@@ -255,8 +255,10 @@ jobs:
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           --coverage=false
 
+      # Codecov is reporting only; an outage must not block merges.
       - name: Upload JavaScript coverage to Codecov
         timeout-minutes: 5
+        continue-on-error: true
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
@@ -510,15 +512,6 @@ jobs:
         timeout-minutes: 2
         run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
 
-      - name: Upload Rust coverage to Codecov
-        timeout-minutes: 5
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          use_oidc: true
-          files: target/llvm-cov/lcov.info
-          flags: rust
-          fail_ci_if_error: true
-
       - name: Enforce Rust coverage floors
         timeout-minutes: 5
         run: |
@@ -528,6 +521,17 @@ jobs:
             --fail-under-lines "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
             --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}" \
             --fail-under-regions "${RUST_COVERAGE_FAIL_UNDER_REGIONS}"
+
+      # Codecov is reporting only; the floors above gate coverage, so an outage must not block merges.
+      - name: Upload Rust coverage to Codecov
+        timeout-minutes: 5
+        continue-on-error: true
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/llvm-cov/lcov.info
+          flags: rust
+          fail_ci_if_error: true
 
   tests-gate:
     name: Tests with coverage
