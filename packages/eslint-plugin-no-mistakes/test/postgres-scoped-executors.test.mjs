@@ -47,7 +47,7 @@ describe("scoped PostgreSQL executors", () => {
   });
 
   it("matches from any module when importSpecifier is empty", () => {
-    const option = { ...SCOPED, importSpecifier: "" };
+    const option = { ...SCOPED, importSpecifier: "", executorNames: [] };
     assert.equal(manual("any-module.ts", option).length, 2);
   });
 
