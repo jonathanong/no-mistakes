@@ -30,6 +30,25 @@ pub(super) fn order_prefix_matches_for_qualifiers(
                 && actual.nulls_first == expected.nulls_first
         })
 }
+// Drop only a leading run of key columns pinned to one bound value. A later pin
+// stays in the prefix, and an empty remainder needs no ORDER BY key.
+pub(super) fn order_prefix_matches_skipping_pinned(
+    actual: &[CanonicalOrderKey],
+    expected: &[CanonicalOrderKey],
+    qualifiers: &[String],
+    pinned: &[String],
+) -> bool {
+    let start = pinned_prefix_len(expected, pinned);
+    order_prefix_matches_for_qualifiers(actual, &expected[start..], qualifiers)
+}
+fn pinned_prefix_len(keys: &[CanonicalOrderKey], pinned: &[String]) -> usize {
+    keys.iter()
+        .position(|key| !key_column_is_pinned(key, pinned))
+        .unwrap_or(keys.len())
+}
+fn key_column_is_pinned(key: &CanonicalOrderKey, pinned: &[String]) -> bool {
+    super::names::plain_column(&key.expression).is_some_and(|column| pinned.contains(&column))
+}
 pub fn expression_matches(left: &str, right: &str, ignore_qualifiers: bool) -> bool {
     let left = normalize_expression(left);
     let right = normalize_expression(right);

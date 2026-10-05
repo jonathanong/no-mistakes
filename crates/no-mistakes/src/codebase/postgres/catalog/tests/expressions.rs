@@ -1,4 +1,6 @@
-use super::super::expressions::order_prefix_matches_for_qualifiers;
+use super::super::expressions::{
+    order_prefix_matches_for_qualifiers, order_prefix_matches_skipping_pinned,
+};
 use super::super::{
     normalize_expression, order_prefix_matches, parse_postgres_expression, CanonicalOrderKey,
 };
@@ -92,4 +94,101 @@ fn redundant_boolean_parentheses_normalize_but_precedence_is_kept() {
         normalize_expression("NOT (a AND b)"),
         normalize_expression("NOT a AND b")
     );
+}
+
+#[test]
+fn pinned_leading_key_columns_drop_only_a_prefix() {
+    let qualifiers = ["feed_items".to_owned()];
+    let keys = [key("host_id"), key("guid")];
+    let host = ["host_id".to_owned()];
+    assert!(order_prefix_matches_skipping_pinned(
+        &[key("guid")],
+        &keys,
+        &qualifiers,
+        &host,
+    ));
+    assert!(order_prefix_matches_skipping_pinned(
+        &[key("guid"), key("id")],
+        &keys,
+        &qualifiers,
+        &host,
+    ));
+    assert!(order_prefix_matches_skipping_pinned(
+        &[key("feed_items.guid")],
+        &keys,
+        &qualifiers,
+        &host,
+    ));
+    assert!(!order_prefix_matches_skipping_pinned(
+        &[key("guid")],
+        &keys,
+        &qualifiers,
+        &[],
+    ));
+    assert!(!order_prefix_matches_skipping_pinned(
+        &[key("slot")],
+        &[key("host_id"), key("guid"), key("slot")],
+        &qualifiers,
+        &["guid".to_owned()],
+    ));
+    assert!(order_prefix_matches_skipping_pinned(
+        &[key("other")],
+        &keys,
+        &qualifiers,
+        &["host_id".to_owned(), "guid".to_owned()],
+    ));
+    assert!(order_prefix_matches_skipping_pinned(
+        &[],
+        &keys,
+        &qualifiers,
+        &["host_id".to_owned(), "guid".to_owned()],
+    ));
+    let mut descending = key("guid");
+    descending.ascending = false;
+    descending.nulls_first = true;
+    assert!(!order_prefix_matches_skipping_pinned(
+        &[descending],
+        &keys,
+        &qualifiers,
+        &host,
+    ));
+    let mut nulls_first = key("guid");
+    nulls_first.nulls_first = true;
+    assert!(!order_prefix_matches_skipping_pinned(
+        &[nulls_first],
+        &keys,
+        &qualifiers,
+        &host,
+    ));
+    assert!(!order_prefix_matches_skipping_pinned(
+        &[key("other.guid")],
+        &keys,
+        &qualifiers,
+        &host,
+    ));
+    assert!(!order_prefix_matches_skipping_pinned(
+        &[key("email")],
+        &[key("lower(email)")],
+        &qualifiers,
+        &["email".to_owned()],
+    ));
+    assert!(order_prefix_matches_skipping_pinned(
+        &[key("lower(email)")],
+        &[key("host_id"), key("lower(email)")],
+        &qualifiers,
+        &host,
+    ));
+    assert!(order_prefix_matches_skipping_pinned(
+        &[key("rest")],
+        &[
+            CanonicalOrderKey {
+                expression: "\"Order Id\"".to_owned(),
+                ascending: true,
+                nulls_first: false,
+            },
+            key("rest"),
+        ],
+        &qualifiers,
+        &["Order Id".to_owned()],
+    ));
 }

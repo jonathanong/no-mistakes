@@ -1,6 +1,7 @@
 mod false_positives;
 mod join_pinning;
 mod multi_target;
+mod pinned_prefix;
 use super::directive::{
     call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,
     has_safe_directive, line_start_offset, DEFAULT_SAFE_DIRECTIVE,
@@ -28,9 +29,11 @@ fn fixture(scenario: &str) -> PathBuf {
             | "fail-catalog-order"
             | "fail-catalog-qualified-other"
             | "fail-catalog-schema-qualified"
+            | "fail-pinned-key-prefix"
             | "pass-catalog"
             | "pass-catalog-of-alias"
             | "pass-catalog-unqualified"
+            | "pass-pinned-key-prefix"
     ) {
         return PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/postgres/lock-ordering")
@@ -117,6 +120,21 @@ fn catalog_mode_scopes_qualifiers_and_schema_names_to_locked_relations() {
         let findings = findings_with_catalog(scenario);
         assert_eq!(findings.len(), 1, "{scenario}: {findings:#?}");
         assert!(findings[0].message.contains("schema-catalog"));
+    }
+}
+
+#[test]
+fn catalog_mode_treats_pinned_leading_key_columns_as_ordered() {
+    assert!(findings_with_catalog("pass-pinned-key-prefix").is_empty());
+    let findings = findings_with_catalog("fail-pinned-key-prefix");
+    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    assert_eq!(lines, [5, 10, 15, 20, 25, 30, 35], "{findings:#?}");
+    for finding in &findings {
+        assert!(
+            finding.message.contains("schema-catalog unique-key order"),
+            "{finding:#?}"
+        );
+        assert_eq!(finding.target.as_deref(), Some(LOCK_ORDERING_TARGET));
     }
 }
 

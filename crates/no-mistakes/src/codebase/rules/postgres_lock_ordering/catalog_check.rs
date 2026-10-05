@@ -53,7 +53,8 @@ fn has_pinned_key(
         .any(|key| !key.is_empty() && key.iter().all(|column| pinned.contains(column.as_str())))
 }
 
-/// Whether every locked relation's catalog key prefix starts the `ORDER BY`.
+/// Whether every locked relation's catalog key, after its pinned leading columns,
+/// is a prefix of `ORDER BY`.
 pub(super) fn orders_by_catalog_key(lock: &LockingSelectMetadata, catalog: &SchemaCatalog) -> bool {
     lock.tables
         .as_deref()
@@ -65,10 +66,26 @@ pub(super) fn orders_by_catalog_key(lock: &LockingSelectMetadata, catalog: &Sche
                         .as_ref()
                         .and_then(|qualifiers| qualifiers.get(table))
                         .is_some_and(|qualifiers| {
-                            catalog.has_canonical_prefix_for_qualifiers(table, qualifiers, order)
+                            catalog.has_canonical_prefix_for_qualifiers(
+                                table,
+                                qualifiers,
+                                order,
+                                pinned_columns(lock, table),
+                            )
                         })
                 })
         })
+}
+
+fn pinned_columns<'a>(lock: &'a LockingSelectMetadata, table: &str) -> &'a [String] {
+    match lock
+        .pinned_columns
+        .as_ref()
+        .and_then(|columns| columns.get(table))
+    {
+        Some(columns) => columns.as_slice(),
+        None => &[],
+    }
 }
 
 /// Whether a locked relation name comes from an interpolation, so no catalog entry can

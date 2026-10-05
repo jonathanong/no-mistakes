@@ -76,3 +76,20 @@ pub(crate) fn normalize_table_name(table: &str) -> String {
         .collect::<Vec<_>>()
         .join(".")
 }
+
+/// The column name when an index key expression is a bare (possibly quoted) identifier.
+pub(super) fn plain_column(expression: &str) -> Option<String> {
+    let text = expression.trim();
+    let bare = text
+        .chars()
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic() || first == '_')
+        && text
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$');
+    let quoted = text.len() >= 2
+        && text.starts_with('"')
+        && text.ends_with('"')
+        && !text[1..text.len() - 1].replace("\"\"", "").contains('"');
+    (bare || quoted).then(|| normalize_identifier(text))
+}
