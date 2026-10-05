@@ -13,17 +13,17 @@ rules:
       schemaCatalogPath: db/schema.json
       shapes:
         - name: revision-history
-          tablePattern: '_revisions$'
+          tablePattern: "_revisions$"
           requiredColumns:
             - { name: id, type: uuid, nullable: false }
-            - { namePattern: '_id$', foreignKey: true }
-            - { name: revised_by_id, type: uuid, foreignKey: true, onDelete: 'set null' }
+            - { namePattern: "_id$", foreignKey: true }
+            - { name: revised_by_id, type: uuid, foreignKey: true, onDelete: "set null" }
             - { name: changes, type: jsonb, nullable: false }
           forbiddenColumns: [updated_at, deleted_at]
           requiredTriggers:
             - { function: fn_reject_mutation, timing: before, events: [update, delete] }
       bannedTablePatterns:
-        - pattern: '_(history|change_logs|audit_logs)$'
+        - pattern: "_(history|change_logs|audit_logs)$"
           message: use a *_revisions table
       allow:
         - object: table:vendor_sync_history

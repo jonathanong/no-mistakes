@@ -16,7 +16,7 @@ rules:
       minTokens: 1
       normalizeIdentifiers: true
       normalizeRaise: true
-      keepIdentifiers: ['now', 'coalesce']
+      keepIdentifiers: ["now", "coalesce"]
       allow:
         - object: function:fn_orders_audit
           reason: Kept separate on purpose; audited by a different team

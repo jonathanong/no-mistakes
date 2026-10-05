@@ -18,13 +18,13 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: db/schema.json
-      columnTypes: ['text', 'character varying']
-      namePatterns: ['(^|_)(status|state|kind|type|source|category|mode|channel)$']
+      columnTypes: ["text", "character varying"]
+      namePatterns: ["(^|_)(status|state|kind|type|source|category|mode|channel)$"]
       skipGeneratedColumns: false
       ignoreTablePatterns: []
       allow:
-        - object: 'column:webhook_deliveries.event_type'
-          reason: 'Values are defined by the webhook provider and change without a migration'
+        - object: "column:webhook_deliveries.event_type"
+          reason: "Values are defined by the webhook provider and change without a migration"
 ```
 
 ## Why and when
@@ -136,10 +136,10 @@ the column key in the snapshot, so the standard directives can suppress it:
     "invoices": {
       "columns": {
         // no-mistakes-disable-next-line postgres-finite-text-columns
-        "status": { "dataType": "text" }
-      }
-    }
-  }
+        "status": { "dataType": "text" },
+      },
+    },
+  },
 }
 ```
 

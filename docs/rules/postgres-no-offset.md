@@ -24,8 +24,7 @@ rules:
 `importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
 
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
-offsets such as `OFFSET ${limit}` are findings once the template becomes
-`OFFSET sql_placeholder_1`.
+offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET sql_placeholder_1`.
 
 ```ts
 import { query } from "@example/db";
@@ -82,12 +81,13 @@ Use `executorNames: []` without a module to select no executor calls and retain
 SQL-file/native-SQL analysis where supported. See the
 [executor migration](../migrations/explicit-postgres-executors.md).
 
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+| Option            | Default                                                      | Behavior                                                                            |
+| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
+| `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
 
-With both options omitted, executor calls (including `.query`) are not scanned.
+Omitting both options is a configuration error. Set `executorNames: []` without
+`importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

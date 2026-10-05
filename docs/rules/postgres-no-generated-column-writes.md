@@ -50,12 +50,12 @@ rules:
 Counterexample: DML assigns a generated column.
 
 ```ts
-import { write } from '@example/db'
+import { write } from "@example/db";
 
-write(`UPDATE items SET created_at = now()`)
-write(`INSERT INTO items (id, created_at) VALUES ($1, $2)`)
-write(`INSERT INTO items VALUES ($1, $2, $3)`)
-write(`INSERT INTO items (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET created_at = now()`)
+write(`UPDATE items SET created_at = now()`);
+write(`INSERT INTO items (id, created_at) VALUES ($1, $2)`);
+write(`INSERT INTO items VALUES ($1, $2, $3)`);
+write(`INSERT INTO items (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET created_at = now()`);
 ```
 
 ```sql
@@ -69,8 +69,8 @@ Fix: omit the generated column and write the source column instead. PostgreSQL
 computes `GENERATED ALWAYS` values from that source.
 
 ```ts
-write(`INSERT INTO items (id, note) VALUES ($1, $2)`)
-write(`UPDATE items SET note = $1`)
+write(`INSERT INTO items (id, note) VALUES ($1, $2)`);
+write(`UPDATE items SET note = $1`);
 ```
 
 Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
@@ -127,12 +127,13 @@ Use `executorNames: []` without a module to select no executor calls and retain
 SQL-file/native-SQL analysis where supported. See the
 [executor migration](../migrations/explicit-postgres-executors.md).
 
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+| Option            | Default                                                      | Behavior                                                                            |
+| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
+| `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
 
-With both options omitted, executor calls (including `.query`) are not scanned.
+Omitting both options is a configuration error. Set `executorNames: []` without
+`importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

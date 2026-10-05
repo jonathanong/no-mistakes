@@ -14,7 +14,7 @@ rules:
       schemaCatalogPath: db/schema.json
       objects: [table, view, materialized-view, column]
       columnNamePatterns: []
-      exemptColumnNamePatterns: ['^(id|created_at|updated_at)$', '^vendor_']
+      exemptColumnNamePatterns: ["^(id|created_at|updated_at)$", "^vendor_"]
       minLength: 10
       allow:
         - object: table:schema_migrations

@@ -17,12 +17,12 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: db/schema.json
-      neverAllowElementTypes: ['uuid']
+      neverAllowElementTypes: ["uuid"]
       allowElementTypes: []
       allowEnumElements: false
       allow:
-        - object: 'column:oauth_clients.redirect_uris'
-          reason: 'OAuth 2.0 client metadata (RFC 7591) defines this as a list'
+        - object: "column:oauth_clients.redirect_uris"
+          reason: "OAuth 2.0 client metadata (RFC 7591) defines this as a list"
 ```
 
 ## Why and when
