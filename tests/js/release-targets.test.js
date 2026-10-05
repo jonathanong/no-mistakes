@@ -88,7 +88,13 @@ test("release syncs optional native package versions and publishes only through 
     assert.match(publish[0], new RegExp(`            ${name}(?: \\\\|$)`, "m"));
     assert.doesNotMatch(publishJs[0], new RegExp(`${name}`));
   }
-  assert.match(publishJs[0], /            no-mistakes \\/);
+  assert.match(publishJs[0], /^ {12}no-mistakes$/m);
+  // Publish every package before waiting so one slow registry tarball cannot starve the rest.
+  for (const job of [publish[0], publishJs[0]]) {
+    const publishAt = job.indexOf('npm publish "./packages/$pkg"');
+    const waitAt = job.indexOf('--version "$version" --timeout-ms 1800000');
+    assert.ok(publishAt >= 0 && waitAt > publishAt, "publish all packages, then wait for each");
+  }
   assert.match(publishJs[0], /needs:\n {6}- prepare\n {6}- verify-npm-platform/);
   assert.match(publish[0], /needs:\n {6}- prepare\n {6}- validate\n {6}- build-native/);
   assert.match(
