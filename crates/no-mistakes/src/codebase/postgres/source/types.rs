@@ -2,9 +2,11 @@ use serde::{Deserialize, Serialize};
 
 mod columns;
 mod ddl;
+mod expressions;
 mod indexes;
 pub use columns::*;
 pub use ddl::*;
+pub use expressions::*;
 pub use indexes::*;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -67,6 +69,7 @@ pub struct PostgresSqlExpression {
     pub span: Option<PostgresSqlSpan>,
     pub columns: Vec<PostgresSqlName>,
     pub functions: Vec<PostgresSqlFunctionReference>,
+    pub root: PostgresSqlExpressionRoot,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

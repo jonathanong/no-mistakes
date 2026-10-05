@@ -49,6 +49,7 @@ pub(super) fn expression(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlE
         span: locations.span(expr.span()),
         columns: refs.columns,
         functions: refs.functions,
+        root: super::expression_roots::root(expr, locations),
     }
 }
 

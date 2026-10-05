@@ -78,7 +78,8 @@ omitting both selects none. See the
 
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](postgres-source-api.md). A source array returns
-facts in input order. DO bodies expose typed IF/ELSIF/ELSE branch conditions
+facts in input order. Expression roots and ordered direct call arguments are
+typed, including cast/parenthesis wrappers and bare SQL value functions. DO bodies expose typed IF/ELSIF/ELSE branch conditions
 and nested DDL source occurrences, without claiming that any branch executes.
 This pure source API accepts no invocation-lock options.
 

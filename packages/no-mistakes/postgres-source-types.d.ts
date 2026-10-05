@@ -1,3 +1,5 @@
+import type { PostgresSqlExpressionRoot } from "./postgres-expression-types";
+export type * from "./postgres-expression-types";
 import type { PostgresSqlDrop } from "./postgres-drop-types";
 export type * from "./postgres-drop-types";
 import type {
@@ -44,6 +46,7 @@ export interface PostgresSqlExpression {
   span: PostgresSqlSpan | null;
   columns: PostgresSqlName[];
   functions: PostgresSqlFunctionReference[];
+  root: PostgresSqlExpressionRoot;
 }
 export interface PostgresSqlType {
   sql: string;

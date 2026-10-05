@@ -6,6 +6,7 @@ mod columns;
 mod conditional;
 mod ddl;
 mod drop_facts;
+mod expression_roots;
 mod expressions;
 mod generated;
 mod indexes;

@@ -133,3 +133,34 @@ The shared PostgreSQL parser accepts expression counts such as
 AST, Unicode source coordinates, offsets, and `WITH TIES` policy. The prepared
 token adapter uses the same parser's LIMIT expression grammar and restores FETCH
 on that AST; it does not substitute a literal cap or parse the statement again.
+
+## Expression roots and direct arguments
+
+`PostgresSqlExpression.root` is a discriminated `PostgresSqlExpressionRoot`.
+A direct `uuid_generate_v7()` default has `kind: "functionCall"`; a CASE
+containing that function has a `case` root (possibly inside `parenthesized`).
+An arithmetic expression containing `uuid_extract_timestamp(id)` has a
+`binary` root. Flat `columns` and `functions` still list nested occurrences
+for dependency analysis and do not establish the root expression.
+
+Parentheses and casts remain explicit wrappers with an `expression` field.
+Consumers may unwrap those two kinds to recognize a cast-wrapped root call.
+No other root kind promotes a contained function call. `columnReference`
+retains each quoted/qualified name component; `literal`, `unary`, `binary`,
+`case`, `subquery`, and `other` remain distinct.
+
+A `functionCall` retains its exact name, ordered `PostgresSqlCallArgument`
+records, `argumentsComplete`, `syntax`, and call `modifiers`. Argument roots
+distinguish `f(id)`, `f(id + 1)`, `f(g(id))`, and `f('id')`; repeated arguments
+remain repeated. Named arguments retain the name. Argument `sql` is rendered
+SQL, while spans refer to the original UTF-8 source. Wildcards, subquery
+argument lists, and expression-named arguments set `argumentsComplete: false`;
+consumers requiring a fully supported direct-argument shape must fail closed.
+Call modifiers retain DISTINCT, ordering, FILTER, OVER, null treatment, and
+aggregate clauses so a plain call policy can require an empty list.
+
+Bare `CURRENT_TIMESTAMP`, `CURRENT_DATE`, and similar SQL value functions
+have `syntax: "value"`; parenthesized `CURRENT_TIMESTAMP(3)` has
+`syntax: "call"`. These are syntactic facts, not catalog or volatility claims.
+Function-name expectations and permitted argument forms remain consumer policy.
+Structural `identity` and flat references preserve their existing behavior.
