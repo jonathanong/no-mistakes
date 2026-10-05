@@ -14,8 +14,11 @@ options:
 
 A module with no `executorNames` uses `query`, `read`, and `write`. Without a
 module, explicitly configured executor names match named imports from any
-module. With both options omitted, no executor calls are selected. Native SQL
-and SQL-builder fragment policies retain their existing scope.
+module. Omitting both options is a configuration error in the next minor release.
+To intentionally select no executor calls, omit `importSpecifier` and write
+`executorNames: []` explicitly. Native SQL and SQL-builder fragment policies
+retain their existing scope. This prevents an unmigrated CI configuration
+from silently passing while skipping executor checks.
 
 This applies to bounded statements, explicit columns, generated-column
 predicates and writes, required predicates, SQL shape policy, OFFSET,

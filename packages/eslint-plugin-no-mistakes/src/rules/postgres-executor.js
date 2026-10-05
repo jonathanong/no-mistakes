@@ -10,6 +10,11 @@ const QUERY_PROPERTY = "query";
 const TRANSACTION_COMMAND = /^\s*(?:BEGIN|COMMIT|ROLLBACK)\b/i;
 
 function executorOptionDefaults(options = {}) {
+  if (!options.importSpecifier && !Array.isArray(options.executorNames)) {
+    throw new Error(
+      "PostgreSQL option importSpecifier: set importSpecifier (or executorNames) to select executor calls; set executorNames: [] to select no executor calls (see docs/migrations/explicit-postgres-executors.md)",
+    );
+  }
   return {
     importSpecifier: options.importSpecifier ?? DEFAULT_IMPORT_SPECIFIER,
     executorNames: options.executorNames ?? (options.importSpecifier ? DEFAULT_EXECUTOR_NAMES : []),

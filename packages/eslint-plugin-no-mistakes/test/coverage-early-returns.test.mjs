@@ -108,15 +108,18 @@ describe("exported helper early returns", () => {
     expect(firstCallArgument({ arguments: [{ type: "SpreadElement" }] })).toBeNull();
     expect(isDatabaseCall({ type: "Identifier" }, new Set())).toBe(false);
     expect(
-      executorBindings({
-        body: [
-          {
-            type: "ImportDeclaration",
-            source: { value: "@example/db" },
-            specifiers: [{ type: "ImportSpecifier", imported: null, local: { name: "query" } }],
-          },
-        ],
-      }),
+      executorBindings(
+        {
+          body: [
+            {
+              type: "ImportDeclaration",
+              source: { value: "@example/db" },
+              specifiers: [{ type: "ImportSpecifier", imported: null, local: { name: "query" } }],
+            },
+          ],
+        },
+        { executorNames: [] },
+      ),
     ).toEqual(new Set());
     expect(executedQueryText({ type: "Identifier", name: "q" }, new Map(), context())).toBeNull();
     expect(postgresCalleeName({ callee: { type: "Identifier", name: "query" } })).toBeNull();
@@ -392,6 +395,7 @@ describe("lint edges that hit remaining guards", () => {
           filename: "e2e/a.spec.ts",
           options: [
             {
+              executorNames: [],
               includePathPatterns: ["**"],
               checkedPathPatterns: ["**"],
               targets: [{ sourceSpecifierPatterns: ["mod"], calleeNamePatterns: ["run"] }],

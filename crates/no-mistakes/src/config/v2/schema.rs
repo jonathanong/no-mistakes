@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 mod applications;
 mod ci_checks;
 mod infra_config;
+mod postgres_executors;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;

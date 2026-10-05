@@ -66,6 +66,17 @@ describe("plugin exports", () => {
 });
 
 describe("postgres runtime helpers", () => {
+  it("rejects missing executor selection for every runtime rule", () => {
+    assert.throws(() => executorOptionDefaults(), /set importSpecifier.*executorNames: \[\]/);
+    for (const rule of Object.keys(plugin.rules).filter(
+      (name) =>
+        name.startsWith("postgres-") &&
+        plugin.rules[name].meta.schema?.[0]?.properties?.executorNames,
+    )) {
+      assert.throws(() => messages(IMPORT + 'query("BEGIN");', rule), /set importSpecifier/);
+      assert.deepEqual(messages(IMPORT + 'query("BEGIN");', rule, { executorNames: [] }), []);
+    }
+  });
   it("exposes the documented defaults and transaction contract", () => {
     assert.equal(DEFAULT_IMPORT_SPECIFIER, "");
     assert.deepEqual(DEFAULT_EXECUTOR_NAMES, ["query", "read", "write"]);
@@ -74,7 +85,7 @@ describe("postgres runtime helpers", () => {
     assert.ok(TRANSACTION_IMPORTS.has("withTransaction"));
     assert.ok(TRANSACTION_IMPORTS.has("withTransactionOptions"));
     assert.ok(TRANSACTION_COMMAND.test("BEGIN"));
-    assert.deepEqual(executorOptionDefaults(), {
+    assert.deepEqual(executorOptionDefaults({ executorNames: [] }), {
       importSpecifier: DEFAULT_IMPORT_SPECIFIER,
       executorNames: [],
       owners: [],
@@ -168,7 +179,7 @@ describe("postgres runtime helpers", () => {
   });
 
   it("collects executor bindings from named imports only", () => {
-    assert.deepEqual([...executorBindings(null)], []);
+    assert.deepEqual([...executorBindings(null, { executorNames: [] })], []);
     const program = {
       type: "Program",
       body: [
@@ -1093,8 +1104,14 @@ describe("postgres-no-unbounded-query-fanout", () => {
 
 describe("explicit PostgreSQL executor selection", () => {
   it("does not infer a database module", () => {
-    assert.deepEqual(messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction"), []);
-    assert.deepEqual(messages("client.query('BEGIN')", "postgres-no-manual-transaction"), []);
+    assert.deepEqual(
+      messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction", { executorNames: [] }),
+      [],
+    );
+    assert.deepEqual(
+      messages("client.query('BEGIN')", "postgres-no-manual-transaction", { executorNames: [] }),
+      [],
+    );
     assert.deepEqual(
       messages("client.query('BEGIN')", "postgres-no-manual-transaction", {
         importSpecifier: "@example/db",
