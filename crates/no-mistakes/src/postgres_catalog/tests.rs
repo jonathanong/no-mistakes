@@ -18,8 +18,20 @@ fn rejects_invalid_options_without_accessing_connection_secrets() {
             schema: schema.into(),
             coverage: PostgresCatalogCoverage::Complete,
             search_path_schemas: Vec::new(),
+            current_database: None,
         })
         .is_err());
+    }
+    for name in ["", "a\0b"] {
+        let error = generate(&PostgresCatalogOptions {
+            connection_env: "NOT_SET_NO_MISTAKES_TEST".into(),
+            schema: "public".into(),
+            coverage: PostgresCatalogCoverage::Complete,
+            search_path_schemas: Vec::new(),
+            current_database: Some(name.into()),
+        })
+        .unwrap_err();
+        assert!(error.to_string().starts_with("currentDatabase must be"));
     }
 }
 
@@ -61,6 +73,7 @@ fn observed_catalog_preserves_postgres_ordering_state() {
         schema: "Catalog.Test".into(),
         coverage: PostgresCatalogCoverage::Ordering,
         search_path_schemas: Vec::new(),
+        current_database: None,
     };
     let catalog = generate(&options).unwrap();
     assert_eq!(
@@ -152,6 +165,16 @@ fn observed_catalog_preserves_postgres_ordering_state() {
     assert_eq!(
         serde_json::from_str::<serde_json::Value>(&napi).unwrap(),
         catalog
+    );
+    // The Node API records the requested name, exactly as the CLI's --current-database does.
+    let mut options_json = serde_json::to_value(&options).unwrap();
+    options_json["currentDatabase"] = "app".into();
+    let recorded = crate::napi_api::generate_postgres_catalog_json_impl(options_json).unwrap();
+    let mut expected = catalog.clone();
+    expected["currentDatabase"] = "app".into();
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&recorded).unwrap(),
+        expected
     );
 
     assert_eq!(
@@ -453,6 +476,9 @@ fn options_default_to_complete_coverage_and_reject_unknown_values() {
     let default = parse(r#"{"connectionEnv": "DATABASE_URL", "schema": "public"}"#).unwrap();
     assert_eq!(default.coverage, PostgresCatalogCoverage::Complete);
     assert!(default.search_path_schemas.is_empty());
+    assert_eq!(default.current_database, None);
+    let recorded = parse(r#"{"connectionEnv":"A","schema":"s","currentDatabase":"app"}"#).unwrap();
+    assert_eq!(recorded.current_database.as_deref(), Some("app"));
     let scoped =
         parse(r#"{"connectionEnv":"A","schema":"s","searchPathSchemas":["audit"]}"#).unwrap();
     assert_eq!(scoped.search_path_schemas, ["audit"]);

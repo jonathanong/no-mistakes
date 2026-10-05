@@ -82,7 +82,7 @@ facts in input order. DO bodies expose typed IF/ELSIF/ELSE branch conditions
 and nested DDL source occurrences, without claiming that any branch executes.
 This pure source API accepts no invocation-lock options.
 
-`generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas })` asynchronously
+`generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas, currentDatabase })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live
 PostgreSQL schema. `coverage` is `"complete"` (the default; every catalog rule
 accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requires
@@ -90,7 +90,10 @@ accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requ
 writes the returned object to disk. See [`postgres catalog`](cli/postgres.md) for
 what a catalog holds, what it leaves out, and its limitations.
 Both catalog types expose optional `currentDatabase`, the exact connected
-database name; older catalogs omit it and preserve conservative analysis.
+database name; older catalogs omit it and preserve conservative analysis. The
+optional `currentDatabase` option, like the CLI's `--current-database`, records a
+fixed non-empty name instead, so regeneration does not depend on the generating
+database's name.
 
 ## CLI Mapping
 

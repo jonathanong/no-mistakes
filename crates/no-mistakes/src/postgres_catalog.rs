@@ -31,6 +31,10 @@ pub struct PostgresCatalogOptions {
     /// Schemas whose accessibility and complete relation-name sets are needed for search_path.
     #[serde(default)]
     pub search_path_schemas: Vec<String>,
+    /// Database name to record as `currentDatabase` instead of the connected database's name.
+    /// Use the deployed database's name so regeneration does not depend on where it runs.
+    #[serde(default)]
+    pub current_database: Option<String>,
 }
 
 /// Observe committed database metadata in one repeatable-read, read-only transaction.
@@ -45,6 +49,13 @@ pub fn generate(options: &PostgresCatalogOptions) -> Result<serde_json::Value> {
         .any(|schema| schema.is_empty() || schema.contains('\0'))
     {
         bail!("searchPathSchemas must contain non-empty PostgreSQL schema names");
+    }
+    if options
+        .current_database
+        .as_ref()
+        .is_some_and(|name| name.is_empty() || name.contains('\0'))
+    {
+        bail!("currentDatabase must be a non-empty PostgreSQL database name");
     }
     if options.connection_env.is_empty() || options.connection_env.contains(['=', '\0']) {
         bail!("connectionEnv must name an environment variable");
@@ -80,6 +91,9 @@ pub fn generate(options: &PostgresCatalogOptions) -> Result<serde_json::Value> {
     }
     let mut catalog: serde_json::Value = serde_json::from_slice(&output.stdout)
         .context("PostgreSQL did not return a catalog; verify that the requested schema exists")?;
+    if let (Some(name), Some(fields)) = (&options.current_database, catalog.as_object_mut()) {
+        fields.insert("currentDatabase".into(), name.as_str().into());
+    }
     // jsonb orders keys by length; sort them so committed catalogs read and diff naturally.
     catalog.sort_all_objects();
     Ok(catalog)

@@ -14,6 +14,11 @@ export interface PostgresCatalogOptions {
   coverage?: PostgresCatalogCoverage;
   /** Opt in to evidence for these exact schemas; absent or inaccessible schemas become null. */
   searchPathSchemas?: string[];
+  /**
+   * Non-empty name to record as `currentDatabase` instead of the connected database's name.
+   * Use the deployed database's name so regeneration does not depend on where it runs.
+   */
+  currentDatabase?: string;
 }
 export interface PostgresOrderingCatalog {
   formatVersion: 2;
