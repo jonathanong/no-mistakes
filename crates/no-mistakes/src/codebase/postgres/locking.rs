@@ -7,6 +7,7 @@ use sqlparser::ast::{
 };
 
 mod relations;
+mod single_row;
 use relations::locked_tables;
 
 /// Locking `SELECT` facts later lock-ordering rules can query.
@@ -18,6 +19,10 @@ pub struct LockingSelectMetadata {
     pub tables: Option<Vec<String>>,
     pub table_qualifiers: Option<std::collections::BTreeMap<String, Vec<String>>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
+    /// Columns of each locked table (keyed like `tables`) pinned to one bound value by a
+    /// top-level `WHERE` equality. With a catalog unique key they bound the lock to one
+    /// row regardless of `IN` / `= ANY` filters on other columns.
+    pub pinned_columns: Option<std::collections::BTreeMap<String, Vec<String>>>,
 }
 
 /// Parse `sql` and return one record per `SELECT` that uses `FOR UPDATE`.
@@ -52,6 +57,7 @@ fn collect_from_query(query: &Query, out: &mut Vec<LockingSelectMetadata>) {
             has_order_by: query.order_by.is_some(),
             skips_locked_rows: locks_skip_locked(&query.locks),
             tables: locked_tables.as_ref().map(|tables| tables.names.clone()),
+            pinned_columns: locked_tables.as_ref().map(|tables| tables.pinned.clone()),
             table_qualifiers: locked_tables.map(|tables| tables.qualifiers),
             order: query.order_by.as_ref().and_then(order_keys),
         });
@@ -170,5 +176,7 @@ fn unwrap_expr(expr: &Expr) -> &Expr {
 
 #[cfg(test)]
 mod of_list_tests;
+#[cfg(test)]
+mod pinned_tests;
 #[cfg(test)]
 mod tests;

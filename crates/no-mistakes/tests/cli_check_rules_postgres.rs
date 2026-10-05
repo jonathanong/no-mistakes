@@ -175,3 +175,38 @@ fn postgres_lock_ordering_checks_multi_target_of_lists() {
     assert!(body.contains("ABBA"), "{body}");
     assert!(!body.contains("parseable"), "{body}");
 }
+
+#[test]
+fn postgres_lock_ordering_accepts_pinned_unique_keys_with_in_filters() {
+    let pass = check_fixture_config(&fixture("pass-unique-key-filter"), ".no-mistakes.yml");
+    assert!(pass.status.success(), "exit non-zero: {}", stdout(&pass));
+    // Partial pins, OR pins, other-table pins, and a missing catalog still fail closed.
+    for scenario in ["fail-unique-key-partial", "fail-unique-key-no-catalog"] {
+        let fail = check_fixture_config(&fixture(scenario), ".no-mistakes.yml");
+        let body = stdout(&fail);
+        assert!(
+            !fail.status.success(),
+            "{scenario}: expected exit 1: {body}"
+        );
+        assert!(body.contains("ABBA"), "{scenario}: {body}");
+    }
+}
+
+#[test]
+fn postgres_lock_ordering_checks_the_locked_table_beside_a_lateral_join() {
+    let pass = check_fixture_config(&fixture("pass-catalog-lateral"), ".no-mistakes.yml");
+    assert!(pass.status.success(), "exit non-zero: {}", stdout(&pass));
+    let fail = check_fixture_config(&fixture("fail-catalog-lateral"), ".no-mistakes.yml");
+    let body = stdout(&fail);
+    assert!(!fail.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("schema-catalog unique-key order"), "{body}");
+}
+
+#[test]
+fn postgres_lock_ordering_reports_interpolated_relations_distinctly() {
+    let fail = check_fixture_config(&fixture("fail-catalog-interpolated"), ".no-mistakes.yml");
+    let body = stdout(&fail);
+    assert!(!fail.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("name is interpolated"), "{body}");
+    assert!(!body.contains("unique-key order"), "{body}");
+}

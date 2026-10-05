@@ -1,0 +1,131 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "tokens": {
+      "indexes": {
+        "tokens_token_hash_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "token_hash",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "accounts": {
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "invoices": {
+      "indexes": {
+        "invoices_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "order_lines": {
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "order_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "line_number",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "products": {
+      "indexes": {
+        "products_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    }
+  }
+}

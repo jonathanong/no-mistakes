@@ -312,9 +312,14 @@ consume the same statement facts.
 - `has_multi_row_predicate` — the locked select's `WHERE` uses `IN` or `= ANY`
 - `has_order_by` — the locked query has `ORDER BY`
 - `skips_locked_rows` — the lock uses `SKIP LOCKED`
-- `tables` — the schema-preserving base relations selected by the lock clause
+- `tables` — the schema-preserving base relations selected by the lock clause;
+  `None` when a relation cannot be resolved (an `OF` target that is not one base
+  table, or a derived relation locked without `OF`)
 - `table_qualifiers` — the schema, base-name, and alias qualifiers valid for
   each locked relation
+- `pinned_columns` — per locked table, the columns a top-level `WHERE` `AND`
+  equality pins to a literal or placeholder; the lock-ordering rule pairs them
+  with a catalog unique key to prove a single-row lock
 - `order` — parsed `ORDER BY` expression keys, used with a configured schema
   catalog to require an exact valid unique-key prefix without accepting a key
   qualified by another joined relation
