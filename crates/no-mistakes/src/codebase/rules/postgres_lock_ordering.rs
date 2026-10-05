@@ -8,6 +8,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod catalog_check;
 pub(crate) mod directive;
 mod scan;
 

@@ -1,13 +1,13 @@
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use super::schema::relation_name;
 use super::{canonical_order_keys, CanonicalOrderKey};
-use sqlparser::ast::{
-    BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, Query, SetExpr, Statement,
-    TableFactor, TableWithJoins,
-};
+use sqlparser::ast::{BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, SetExpr};
 
+mod collect;
 mod relations;
-use relations::locked_tables;
+mod single_row;
+use collect::collect_from_statement;
+pub use single_row::JoinEquality;
 
 /// Locking `SELECT` facts later lock-ordering rules can query.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,97 +18,43 @@ pub struct LockingSelectMetadata {
     pub tables: Option<Vec<String>>,
     pub table_qualifiers: Option<std::collections::BTreeMap<String, Vec<String>>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
+    /// Columns of each base relation in the FROM pinned to one bound value by a top-level
+    /// `WHERE` or inner-join `ON` equality. With a catalog unique key they bound a relation
+    /// to one row regardless of `IN` / `= ANY` filters on other columns.
+    pub pinned_columns: Option<std::collections::BTreeMap<String, Vec<String>>>,
+    /// Equalities between columns of two distinct base relations (top-level `AND` of `WHERE`
+    /// or an inner join's `ON`): a relation pinned through one is as single-row as the other.
+    pub join_equalities: Vec<JoinEquality>,
 }
 
 /// Parse `sql` and return one record per `SELECT` that uses `FOR UPDATE`.
+///
+/// No identifier is treated as a recovered interpolation; use
+/// [`extract_locking_select_metadata_with_placeholders`] for embedded SQL.
 pub fn extract_locking_select_metadata(
     sql: &str,
+) -> Result<Vec<LockingSelectMetadata>, PostgresParseError> {
+    extract_locking_select_metadata_with_placeholders(sql, &[])
+}
+
+/// Like [`extract_locking_select_metadata`], where `positions` are the SQL line and column of
+/// each generated interpolation marker (`EmbeddedSqlCall::recovered_placeholder_positions`).
+/// Only identifiers at those positions count as bound values, so user-authored text that
+/// merely spells the marker stays a column.
+pub fn extract_locking_select_metadata_with_placeholders(
+    sql: &str,
+    positions: &[(u32, u32)],
 ) -> Result<Vec<LockingSelectMetadata>, PostgresParseError> {
     let statements = parse_postgres_sql(sql)?;
     let mut locks = Vec::new();
     for statement in &statements {
-        collect_from_statement(statement, &mut locks);
+        collect_from_statement(statement, &mut locks, positions);
     }
     Ok(locks)
 }
 
-fn collect_from_statement(statement: &Statement, out: &mut Vec<LockingSelectMetadata>) {
-    if let Statement::Query(query) = statement {
-        collect_from_query(query, out);
-    }
-}
-
-fn collect_from_query(query: &Query, out: &mut Vec<LockingSelectMetadata>) {
-    if let Some(with) = &query.with {
-        for cte in &with.cte_tables {
-            collect_from_query(&cte.query, out);
-        }
-    }
-    collect_from_set_expr(&query.body, out);
-    if has_for_update(&query.locks) {
-        let locked_tables = locked_tables(&query.body, &query.locks);
-        out.push(LockingSelectMetadata {
-            has_multi_row_predicate: set_expr_has_multi_row(&query.body),
-            has_order_by: query.order_by.is_some(),
-            skips_locked_rows: locks_skip_locked(&query.locks),
-            tables: locked_tables.as_ref().map(|tables| tables.names.clone()),
-            table_qualifiers: locked_tables.map(|tables| tables.qualifiers),
-            order: query.order_by.as_ref().and_then(order_keys),
-        });
-    }
-}
-
 fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
     canonical_order_keys(order)
-}
-
-fn collect_from_set_expr(expr: &SetExpr, out: &mut Vec<LockingSelectMetadata>) {
-    match expr {
-        SetExpr::Select(select) => {
-            if let Some(selection) = &select.selection {
-                collect_queries_from_expr(selection, out);
-            }
-            for table in &select.from {
-                collect_from_table_with_joins(table, out);
-            }
-        }
-        SetExpr::Query(query) => collect_from_query(query, out),
-        SetExpr::SetOperation { left, right, .. } => {
-            collect_from_set_expr(left, out);
-            collect_from_set_expr(right, out);
-        }
-        _ => {}
-    }
-}
-
-fn collect_from_table_with_joins(table: &TableWithJoins, out: &mut Vec<LockingSelectMetadata>) {
-    collect_from_table_factor(&table.relation, out);
-    for join in &table.joins {
-        collect_from_table_factor(&join.relation, out);
-    }
-}
-
-fn collect_from_table_factor(factor: &TableFactor, out: &mut Vec<LockingSelectMetadata>) {
-    if let TableFactor::Derived { subquery, .. } = factor {
-        collect_from_query(subquery, out);
-    }
-}
-
-fn collect_queries_from_expr(expr: &Expr, out: &mut Vec<LockingSelectMetadata>) {
-    match unwrap_expr(expr) {
-        Expr::Subquery(query)
-        | Expr::InSubquery {
-            subquery: query, ..
-        } => {
-            collect_from_query(query, out);
-        }
-        Expr::BinaryOp { left, right, .. } => {
-            collect_queries_from_expr(left, out);
-            collect_queries_from_expr(right, out);
-        }
-        Expr::UnaryOp { expr, .. } => collect_queries_from_expr(expr, out),
-        _ => {}
-    }
 }
 
 fn has_for_update(locks: &[LockClause]) -> bool {
@@ -169,6 +115,10 @@ fn unwrap_expr(expr: &Expr) -> &Expr {
 }
 
 #[cfg(test)]
+mod join_tests;
+#[cfg(test)]
 mod of_list_tests;
+#[cfg(test)]
+mod pinned_tests;
 #[cfg(test)]
 mod tests;

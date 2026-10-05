@@ -1,7 +1,7 @@
+use super::collect::{collect_from_query, collect_from_set_expr, collect_queries_from_expr};
 use super::{
-    collect_from_query, collect_from_set_expr, collect_queries_from_expr, expr_has_multi_row,
-    extract_locking_select_metadata, function_is_any, function_name_is_any, order_keys,
-    set_expr_has_multi_row, LockingSelectMetadata,
+    expr_has_multi_row, extract_locking_select_metadata, function_is_any, function_name_is_any,
+    order_keys, set_expr_has_multi_row, LockingSelectMetadata,
 };
 use crate::codebase::postgres::parse_postgres_sql;
 use sqlparser::ast::{
@@ -114,7 +114,7 @@ fn relation_resolver_handles_an_empty_update_lock_set_and_deduplicates_self_join
         panic!("expected query");
     };
     assert_eq!(
-        super::relations::locked_tables(&query.body, &[]).map(|tables| tables.names),
+        super::relations::locked_tables(&query.body, &[], &[]).map(|tables| tables.names),
         Some(Vec::new())
     );
 
@@ -344,7 +344,7 @@ fn constructed_set_expr_and_unnest_helpers() {
     };
     assert!(expr_has_multi_row(&unary));
     let mut locks = Vec::new();
-    collect_from_set_expr(&nested, &mut locks);
+    collect_from_set_expr(&nested, &mut locks, &[]);
     collect_from_set_expr(
         &SetExpr::Values(Values {
             explicit_row: false,
@@ -352,15 +352,17 @@ fn constructed_set_expr_and_unnest_helpers() {
             value_keyword: false,
         }),
         &mut locks,
+        &[],
     );
-    collect_from_query(&empty_query(), &mut locks);
+    collect_from_query(&empty_query(), &mut locks, &[]);
     collect_queries_from_expr(
         &Expr::UnaryOp {
             op: UnaryOperator::Plus,
             expr: Box::new(Expr::Identifier(Ident::new("id"))),
         },
         &mut locks,
+        &[],
     );
-    collect_queries_from_expr(&Expr::Identifier(Ident::new("id")), &mut locks);
+    collect_queries_from_expr(&Expr::Identifier(Ident::new("id")), &mut locks, &[]);
     assert!(locks.is_empty());
 }

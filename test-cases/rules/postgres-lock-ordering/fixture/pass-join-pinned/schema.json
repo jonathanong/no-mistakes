@@ -1,0 +1,221 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "auth_codes": {
+      "indexes": {
+        "auth_codes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        },
+        "auth_codes_token_hash_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "token_hash",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "grants": {
+      "indexes": {
+        "grants_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        },
+        "grants_account_client_resource_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "account_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "client_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "resource",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": "(revoked_at IS NULL)"
+        }
+      }
+    },
+    "clients": {
+      "indexes": {
+        "clients_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        },
+        "clients_client_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "client_id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        },
+        "clients_metadata_url_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "metadata_url",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "subscriptions": {
+      "indexes": {
+        "subscriptions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        },
+        "subscriptions_account_product_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "account_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "product_id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": "(ended_at IS NULL)"
+        }
+      }
+    },
+    "subscription_sources": {
+      "indexes": {
+        "subscription_sources_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    },
+    "subscription_source_states": {
+      "indexes": {
+        "subscription_source_states_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "source_id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    }
+  }
+}

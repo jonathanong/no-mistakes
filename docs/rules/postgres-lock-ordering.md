@@ -73,15 +73,53 @@ each other and cannot form this ABBA cycle.
 With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
 `ORDER BY` with the ordered expression keys of one valid, ready, non-partial
 btree unique index for every locked base table. `FOR UPDATE OF alias` limits
-the requirement to that resolved relation; joins, derived relations, or an
-unresolved `OF` target fail closed rather than silently checking only the first
-`FROM` table. A comma-separated list such as `FOR UPDATE OF a, o` (with an
+the requirement to that resolved relation; a lock with no `OF` clause over joins or
+derived relations, or an unresolved `OF` target, fails closed rather than silently
+checking only the first `FROM` table. A comma-separated list such as `FOR UPDATE OF a, o` (with an
 optional `NOWAIT` or `SKIP LOCKED` after it) is one locking clause covering every
 listed relation, checked exactly like `FOR UPDATE OF a FOR UPDATE OF o`: with a
 catalog, every resolved relation needs its key prefix, and one unresolved name
 fails closed. This makes reader lock order match the catalog-backed writer
 order instead of accepting an unrelated deterministic sort. `SKIP LOCKED`
 remains an alternative because it avoids waiting for an already-held row lock.
+
+### Unique-key lookups with an `IN` / `= ANY` filter
+
+With `schemaCatalogPath`, an `IN` or `= ANY` predicate does not make the lock
+multi-row when every locked table has a catalog unique key (valid, ready,
+non-partial, immediate, plain columns) whose columns are all pinned by top-level
+`AND` equalities of `WHERE` or of an inner join's `ON`. A column is pinned by an
+equality to a literal, a `$n` placeholder, a recovered template interpolation
+(`${id}`; user-authored text that only spells the marker is a column), or a column
+of a relation that is already single-row, repeated until nothing new is proven (so
+`JOIN grants g ON g.id = code.grant_id` is single-row once `code` is pinned by its
+unique `token_hash`). The unique key bounds the statement to one row per locked
+table, so a filter such as
+`status IN ('open', 'held')` or `callback_url = ANY(a.callback_urls)` can only
+narrow it. Equalities inside `OR` or `NOT`, an equality in an outer join's `ON`, an unqualified column in a join, a pin
+on a table the lock does not name, a self-join, or a partially pinned composite key
+prove nothing and still fail closed. Without a catalog no key is known to be unique,
+so the original check applies.
+
+```ts
+// orders.id is the primary key: one row, so the IN list is only a filter.
+query(`SELECT id FROM orders WHERE id = $1 AND status IN ('open', 'held') FOR UPDATE`);
+```
+
+### Derived relations and interpolated relation names
+
+`FOR UPDATE OF alias` that names one base table is checked against that table
+alone: a `LATERAL` subquery, derived table, or table function elsewhere in `FROM`
+is not locked and does not change the locked table's `ORDER BY` key prefix. Without
+an `OF` clause every `FROM` item is locked, so a derived relation still fails
+closed, as does an `OF` target that is a derived relation.
+
+A relation name built by interpolation (`FROM ${table}`) cannot be looked up in the
+catalog. Instead of the key-prefix message, the rule reports a distinct
+"relation name is interpolated" diagnostic. It is suppressed the same way as other
+findings: the safe directive comment, `no-mistakes-disable-next-line`, or writing
+the relation name literally. The rule does not resolve `const` tuples or string
+unions into their members.
 
 ## Options and defaults
 
