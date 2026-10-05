@@ -174,7 +174,11 @@ Inherited `PGSERVICE`, `PGSERVICEFILE` and `PGHOSTADDR` are cleared so they cann
 override the selected URL. Other omitted libpq settings retain standard defaults.
 
 Requires PostgreSQL 12 or newer and `psql`. Ordering proof supports default
-operator classes and column indexes whose collation matches the column.
-Expression indexes with collations remain unprovable; their metadata is retained.
+operator classes and column indexes whose collation matches the column. An expression
+index is supported when its collation is its result type's default, such as
+`lower(email)` over a default-collation `text` column; one that derives a non-default
+collation from its column remains unprovable and its metadata is retained. Regenerate a
+committed catalog after upgrading so earlier `orderingSupported: false` values for such
+expression keys are replaced.
 Any unsupported or deferrable matching conflict index prevents proof, even when
 another matching index is supported.

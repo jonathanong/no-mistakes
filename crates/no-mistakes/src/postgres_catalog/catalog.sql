@@ -69,12 +69,14 @@ WITH selected AS (
         'column', a.attname,
         'opclass', quote_ident(opns.nspname) || '.' || quote_ident(op.opcname),
         'collation', CASE WHEN co.oid IS NOT NULL THEN quote_ident(cons.nspname) || '.' || quote_ident(co.collname) END,
-        'orderingSupported', COALESCE(op.opcdefault AND (CASE WHEN a.attnum IS NOT NULL THEN i.indcollation[k.n - 1] = a.attcollation ELSE i.indcollation[k.n - 1] = 0 END), false),
+        'orderingSupported', COALESCE(op.opcdefault AND (CASE WHEN a.attnum IS NOT NULL THEN i.indcollation[k.n - 1] = a.attcollation ELSE i.indcollation[k.n - 1] = ixt.typcollation END), false),
         'expression', CASE WHEN a.attname IS NOT NULL THEN quote_ident(a.attname) ELSE pg_get_indexdef(i.indexrelid, k.n, true) END,
         'descending', (i.indoption[k.n - 1] & 1) <> 0,
         'nullsFirst', (i.indoption[k.n - 1] & 2) <> 0
       ) ORDER BY k.n) FROM generate_series(1, i.indnkeyatts) k(n)
         LEFT JOIN pg_attribute a ON a.attrelid = r.oid AND a.attnum = i.indkey[k.n - 1]
+        JOIN pg_attribute ia ON ia.attrelid = i.indexrelid AND ia.attnum = k.n
+        JOIN pg_type ixt ON ixt.oid = ia.atttypid
         JOIN pg_opclass op ON op.oid = i.indclass[k.n - 1]
         JOIN pg_namespace opns ON opns.oid = op.opcnamespace
         LEFT JOIN pg_collation co ON co.oid = i.indcollation[k.n - 1]

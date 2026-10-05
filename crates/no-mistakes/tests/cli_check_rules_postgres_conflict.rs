@@ -38,6 +38,18 @@ fn postgres_conflict_ordering_cli_reports_missing_canonical_order() {
 }
 
 #[test]
+fn postgres_conflict_ordering_cli_accepts_a_generated_text_expression_key() {
+    // Regression: a catalog generated from real PostgreSQL reports `orderingSupported: true`
+    // for a `lower(text)` key, so the documented expression arbiter resolves.
+    let output = check(&fixture("pass-expression-text-key"));
+    assert!(
+        output.status.success(),
+        "exit non-zero: {}",
+        stdout(&output)
+    );
+}
+
+#[test]
 fn postgres_conflict_ordering_cli_accepts_a_catalog_ordered_writer() {
     let output = check(&fixture("pass-sql-include"));
     assert!(

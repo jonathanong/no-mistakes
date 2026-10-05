@@ -333,8 +333,19 @@ fn observed_catalog_preserves_postgres_ordering_state() {
         loaded.resolve_columns("numeric_expression", &["value + 1".into()], None),
         ResolvedArbiter::Exact(_)
     ));
+    // `lower(email)` takes the type's default collation, so ordering is modelled; an expression
+    // that derives a non-default collation from its column is not.
     assert_eq!(
         catalog["tables"]["\"Items\""]["indexes"]["expression_key"]["keys"][0]["orderingSupported"],
+        true
+    );
+    assert!(matches!(
+        loaded.resolve_columns("\"Items\"", &["lower(email)".into()], None),
+        ResolvedArbiter::Exact(_)
+    ));
+    assert_eq!(
+        catalog["tables"]["mixed_collation"]["indexes"]["collation_expression"]["keys"][0]
+            ["orderingSupported"],
         false
     );
 
