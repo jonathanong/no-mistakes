@@ -80,3 +80,12 @@ fn snapshot_load_reports_unsupported_and_unreadable_fields() {
     let extension = load_fixture("invalid-trailing-comma.json").unwrap_err();
     assert!(extension.contains("not valid JSONC"), "{extension}");
 }
+
+#[test]
+fn jsonc_rejects_new_json5_extensions() {
+    // Catalog syntax stays JSONC even when the parser gains JSON5 extensions.
+    for name in ["bare-decimal", "extended-escape", "non-finite"] {
+        let error = load_fixture(&format!("invalid-{name}.jsonc")).unwrap_err();
+        assert!(error.contains("not valid JSONC"), "{name}: {error}");
+    }
+}

@@ -131,7 +131,7 @@ pub fn parse_config<T: DeserializeOwned>(source: &str, path: &Path) -> Result<T>
     }
 }
 
-fn jsonc_parse_options() -> ParseOptions {
+pub(crate) fn jsonc_parse_options() -> ParseOptions {
     ParseOptions {
         allow_comments: true,
         allow_loose_object_property_names: false,
@@ -140,6 +140,9 @@ fn jsonc_parse_options() -> ParseOptions {
         allow_single_quoted_strings: false,
         allow_hexadecimal_numbers: false,
         allow_unary_plus_numbers: false,
+        allow_bare_decimal_point_numbers: false,
+        allow_extended_string_escapes: false,
+        allow_non_finite_numbers: false,
     }
 }
 

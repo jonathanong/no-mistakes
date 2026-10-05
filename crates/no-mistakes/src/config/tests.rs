@@ -183,3 +183,17 @@ fn test_parse_config_json_parse_error() {
         .unwrap();
     assert!(!err.to_string().is_empty());
 }
+
+#[test]
+fn jsonc_rejects_new_json5_extensions() {
+    // Dependency upgrades must not silently widen the accepted config syntax.
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/config/jsonc-strict");
+    for name in ["bare-decimal", "extended-escape", "non-finite"] {
+        let path = root.join(format!("{name}.jsonc"));
+        let source = fs::read_to_string(&path).unwrap();
+        assert!(
+            parse_config::<serde_json::Value>(&source, &path).is_err(),
+            "{name}"
+        );
+    }
+}
