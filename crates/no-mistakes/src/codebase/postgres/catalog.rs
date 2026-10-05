@@ -134,13 +134,8 @@ impl SchemaCatalog {
             &source,
             &jsonc_parser::CollectOptions::default(),
             &jsonc_parser::ParseOptions {
-                allow_comments: true,
-                allow_loose_object_property_names: false,
                 allow_trailing_commas: false,
-                allow_missing_commas: false,
-                allow_single_quoted_strings: false,
-                allow_hexadecimal_numbers: false,
-                allow_unary_plus_numbers: false,
+                ..crate::config::jsonc_parse_options()
             },
         )
         .with_context(|| format!("schemaCatalogPath {} is not valid JSONC", path.display()))?;
