@@ -43,7 +43,7 @@ pub(super) fn findings_for_sql_with_binds(
     };
     inserts
         .into_iter()
-        .filter(|insert| insert.source.multi_row && !pins_one_row(insert, catalog))
+        .filter(|insert| insert.source.multi_row && !order::pins_one_row(insert, catalog))
         .filter_map(|insert| finding_for_insert(file, line, insert, catalog))
         .collect()
 }
@@ -140,15 +140,6 @@ fn finding_for_insert(
         ));
     }
     None
-}
-
-/// Whether the source reads one relation pinned to a single row by a catalog unique key.
-fn pins_one_row(insert: &SqlConflictInsertFact, catalog: &SchemaCatalog) -> bool {
-    insert
-        .source
-        .pinned_relation
-        .as_ref()
-        .is_some_and(|pinned| catalog.columns_pin_one_row(&pinned.table, &pinned.columns))
 }
 
 fn target_matches_catalog(target: &[String], index: &CanonicalIndex) -> bool {

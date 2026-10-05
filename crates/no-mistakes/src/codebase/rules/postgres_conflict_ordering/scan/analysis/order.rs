@@ -1,5 +1,8 @@
 //! `ORDER BY` normalization: select aliases, positional references and constant keys.
-use crate::codebase::postgres::{expression_is_constant, CanonicalOrderKey, SqlInsertSourceShape};
+use crate::codebase::postgres::{
+    expression_is_constant, CanonicalOrderKey, SchemaCatalog, SqlConflictInsertFact,
+    SqlInsertSourceShape,
+};
 
 /// Replace a select alias or an integer position with the select-list expression it names.
 pub(super) fn resolve_references(
@@ -35,4 +38,13 @@ pub(super) fn without_constants(keys: &[CanonicalOrderKey]) -> Vec<CanonicalOrde
         .filter(|key| !expression_is_constant(&key.expression))
         .cloned()
         .collect()
+}
+
+/// Whether the source reads one relation pinned to a single row by a catalog unique key.
+pub(super) fn pins_one_row(insert: &SqlConflictInsertFact, catalog: &SchemaCatalog) -> bool {
+    insert
+        .source
+        .pinned_relation
+        .as_ref()
+        .is_some_and(|pinned| catalog.columns_pin_one_row(&pinned.table, &pinned.columns))
 }

@@ -1,4 +1,5 @@
 use super::*;
+use sqlparser::ast::Statement;
 
 #[test]
 fn preserves_expression_conflict_targets_while_parsing_the_source_order() {
