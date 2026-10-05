@@ -78,3 +78,22 @@ options still needs `importSpecifier` or `executorNames` (for example
 Every PostgreSQL rule that scans executor calls and the ESLint runtime rules
 `postgres-no-manual-transaction` and `postgres-no-unbounded-query-fanout` accept
 both options.
+
+### Reporting unmatched names
+
+A configured `executorFactoryNames` or `executorTypeNames` entry that no scanned
+file imports silently turns checking off for every query run through that
+executor, for example after a typo. Set `reportUnmatchedExecutorNames: true` on a
+Rust embedded-SQL rule to get one finding per such entry, reported once per rule
+application against the config file after aggregating every file the rule scans.
+The finding explains what did not match and how to fix it: correct the spelling,
+point `importSpecifier` at the module that exports the name (a re-export from
+another path does not match), or remove the entry. The option defaults to `false`;
+with it off, findings are unchanged. Because the finding has no source line, line
+and file suppression directives do not apply; turn the option off instead. The
+option is Rust-only: ESLint runs per file and cannot know a name never matched
+anywhere, so the ESLint runtime rules do not accept it.
+
+A file inside the database package that imports a factory or type by relative
+path (`../transaction`) is not matched: matching is by import specifier, not
+resolved path.

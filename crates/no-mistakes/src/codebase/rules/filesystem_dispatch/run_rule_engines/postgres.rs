@@ -29,8 +29,17 @@ pub(super) fn run(
     sources: &Arc<SourceStore>,
     facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
-    run_schema_rules(rule_id, root, config, files, sources, facts)
-        .or_else(|| run_naming_and_query_rules(rule_id, root, config, files, sources, facts))
+    let result = run_schema_rules(rule_id, root, config, files, sources, facts)
+        .or_else(|| run_naming_and_query_rules(rule_id, root, config, files, sources, facts))?;
+    Some(result.and_then(|mut findings| {
+        if crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&rule_id) {
+            findings.extend(crate::codebase::rules::postgres_unmatched_executors::check(
+                root, config, rule_id, files, sources, facts,
+            )?);
+            crate::codebase::rules::sort_findings(&mut findings);
+        }
+        Ok(findings)
+    }))
 }
 
 fn run_schema_rules(

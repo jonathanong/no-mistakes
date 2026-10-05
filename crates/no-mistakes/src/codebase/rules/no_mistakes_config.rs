@@ -46,7 +46,7 @@ fn tracked_rels(root: &Path, all_files: &[PathBuf]) -> BTreeSet<String> {
         .collect()
 }
 
-fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
+pub(crate) fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
     all_files
         .iter()
         .find_map(|path| {

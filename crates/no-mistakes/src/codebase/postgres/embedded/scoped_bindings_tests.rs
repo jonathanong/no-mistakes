@@ -141,3 +141,29 @@ fn scoped_names_are_sorted_and_deduplicated() {
     assert_eq!(options.executor_factory_names, ["a", "b"]);
     assert_eq!(options.executor_type_names, ["z"]);
 }
+
+fn matched(name: &str, options: &EmbeddedSqlOptions) -> (Vec<String>, Vec<String>) {
+    let path = fixture(name);
+    let source = std::fs::read_to_string(&path).expect("fixture");
+    let facts = extract_embedded_sql_from_source(&path, &source, options);
+    (facts.matched_factory_names, facts.matched_type_names)
+}
+
+#[test]
+fn matched_names_record_configured_imports_from_the_module_and_subpaths() {
+    assert_eq!(
+        matched("scoped-subpath-imports.ts", &scoped("@example/db")),
+        (
+            vec!["openTransaction".to_string()],
+            vec!["TxExecutor".to_string()]
+        )
+    );
+}
+
+#[test]
+fn matched_names_ignore_lookalike_modules() {
+    assert_eq!(
+        matched("scoped-lookalike-modules.ts", &scoped("@example/db")),
+        (Vec::new(), Vec::new())
+    );
+}

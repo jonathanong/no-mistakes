@@ -66,6 +66,10 @@ pub struct EmbeddedSqlFileFacts {
     pub executor_bindings: Vec<String>,
     pub calls: Vec<EmbeddedSqlCall>,
     pub fragments: Vec<EmbeddedSqlFragment>,
+    /// Configured `executor_factory_names` this file imports from the configured module.
+    pub matched_factory_names: Vec<String>,
+    /// Configured `executor_type_names` this file imports from the configured module.
+    pub matched_type_names: Vec<String>,
 }
 
 /// Parse `source` and extract executor SQL call sites.
@@ -109,7 +113,11 @@ pub fn extract_embedded_sql_from_program(
             fragment.recovered_placeholder_positions = positions;
         }
     }
+    let (matched_factory_names, matched_type_names) =
+        scoped_bindings::matched_names(program, options);
     EmbeddedSqlFileFacts {
+        matched_factory_names,
+        matched_type_names,
         path: path.to_path_buf(),
         executor_bindings,
         calls,
