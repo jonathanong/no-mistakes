@@ -88,6 +88,8 @@ describe("postgres runtime helpers", () => {
     assert.deepEqual(executorOptionDefaults({ executorNames: [] }), {
       importSpecifier: DEFAULT_IMPORT_SPECIFIER,
       executorNames: [],
+      executorFactoryNames: [],
+      executorTypeNames: [],
       owners: [],
       chunkFunctionNames: DEFAULT_CHUNK_FUNCTION_NAMES,
     });

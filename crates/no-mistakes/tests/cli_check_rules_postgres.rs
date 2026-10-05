@@ -126,3 +126,20 @@ fn postgres_lock_ordering_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+
+#[test]
+fn postgres_lock_ordering_scans_factory_and_typed_executors() {
+    let root = fixture("fail-scoped-executors");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert_eq!(body.matches("ABBA").count(), 2, "{body}");
+}
+
+#[test]
+fn postgres_lock_ordering_ignores_scoped_executors_by_default() {
+    // Same source as `fail-scoped-executors`, scoped options absent.
+    let root = fixture("pass-scoped-defaults");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}

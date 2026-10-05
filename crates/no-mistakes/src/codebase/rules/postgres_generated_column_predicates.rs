@@ -33,6 +33,8 @@ struct Options {
     sql_include: Vec<String>,
     import_specifier: String,
     executor_names: Vec<String>,
+    executor_factory_names: Vec<String>,
+    executor_type_names: Vec<String>,
     unanalyzable_sql: String,
     functions: Option<Vec<String>>,
     require_argument_is_primary_key: Option<bool>,
@@ -162,7 +164,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

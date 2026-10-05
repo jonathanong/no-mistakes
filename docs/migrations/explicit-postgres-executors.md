@@ -25,3 +25,52 @@ predicates and writes, required predicates, SQL shape policy, OFFSET,
 conflict ordering, lock ordering, idempotent inserts, and query annotation.
 
 The ESLint PostgreSQL runtime rules use the same explicit executor configuration.
+
+## Scoped executors
+
+Executors that a database module hands out at runtime are not imported names.
+Two further options select them, and both default to empty so existing
+configurations behave exactly as before:
+
+```yaml
+options:
+  importSpecifier: "@example/db"
+  executorFactoryNames: [openTransaction]
+  executorTypeNames: [TxExecutor]
+```
+
+```ts
+import { openTransaction, type TxExecutor } from "@example/db";
+
+export async function moveOrder(orderId: string) {
+  await using tx = await openTransaction();
+  await tx(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [orderId]); // scanned
+}
+
+export async function lockAccounts(run: TxExecutor, ids: string[]) {
+  return run(`SELECT * FROM accounts WHERE id = ANY($1) FOR UPDATE`, [ids]); // scanned
+}
+```
+
+- `executorFactoryNames` lists named imports (from `importSpecifier`, or from any
+  module when it is empty) that return an executor. A local declared with
+  `const`, `let`, `using`, or `await using` whose initializer calls the factory,
+  with or without `await`, is an executor. Calls `tx(sql)` and, when `.query`
+  members are enabled, `tx.query(sql)` are scanned.
+- `executorTypeNames` lists type names imported from `importSpecifier` (or any
+  module when it is empty), through `import type`, an inline `type` specifier, or
+  a value import. A parameter annotated with one, including `run?: TxExecutor`
+  and a destructured property typed inline as in `{ run }: { run: TxExecutor }`,
+  is an executor.
+- A binding applies only inside the declaring block (variables) or function
+  (parameters). A same-named identifier in a sibling function or outside the
+  block is not scanned. Imports from a module other than `importSpecifier` never
+  match.
+
+Neither option counts as executor selection: a rule configured with only these
+options still needs `importSpecifier` or `executorNames` (for example
+`executorNames: []`) to avoid the missing-selection configuration error.
+
+Every PostgreSQL rule that scans executor calls and the ESLint runtime rules
+`postgres-no-manual-transaction` and `postgres-no-unbounded-query-fanout` accept
+both options.

@@ -1,4 +1,5 @@
 use super::super::bindings::sql_statement_type_bindings;
+use super::super::scoped_bindings::ScopedExecutors;
 use super::resolve;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::Program;
@@ -18,6 +19,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) source: &'a str,
     pub(crate) query_members: bool,
     pub(crate) bindings: &'a HashSet<String>,
+    pub(crate) scoped: &'a ScopedExecutors,
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
@@ -32,12 +34,14 @@ pub(crate) fn collect_calls(
     program: &Program<'_>,
     source: &str,
     bindings: &HashSet<String>,
+    scoped: &ScopedExecutors,
     query_members: bool,
 ) -> (Vec<EmbeddedSqlCall>, Vec<EmbeddedSqlFragment>) {
     let mut visitor = ScopeVisitor {
         source,
         query_members,
         bindings,
+        scoped,
         scopes: Vec::new(),
         calls: Vec::new(),
         fragments: Vec::new(),

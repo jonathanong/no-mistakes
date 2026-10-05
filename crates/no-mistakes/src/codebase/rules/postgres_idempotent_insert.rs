@@ -24,6 +24,8 @@ pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
+    pub(crate) executor_factory_names: Vec<String>,
+    pub(crate) executor_type_names: Vec<String>,
     pub(crate) unanalyzable_sql: String,
     #[serde(default = "default_true")]
     pub(crate) scan_embedded: bool,
@@ -49,6 +51,8 @@ impl Default for Options {
             sql_include: Vec::new(),
             import_specifier: String::new(),
             executor_names: Vec::new(),
+            executor_factory_names: Vec::new(),
+            executor_type_names: Vec::new(),
             unanalyzable_sql: String::new(),
             scan_embedded: true,
             check_convergence: true,
@@ -135,7 +139,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

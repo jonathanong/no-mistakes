@@ -74,6 +74,14 @@ SQL-file/native-SQL analysis where supported. See the
 | ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
 | `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+| `executorFactoryNames` | Empty | Named imports (from `importSpecifier`, or any module when it is empty) whose call result bound with `const`, `let`, `using`, or `await using` is an executor inside the declaring block. |
+| `executorTypeNames` | Empty | Imported type names (`import type` or inline `type` specifiers) whose annotated parameters, including optional and inline-destructured ones, are executors inside the declaring function. |
+
+`executorFactoryNames` and `executorTypeNames` add scoped executors: `tx` in
+`await using tx = await openTransaction()` or `run` in `run: TxExecutor` is scanned
+only inside the block or function that declares it, and a same-named identifier
+elsewhere is not. Matching is by configuration only, both default to empty, and
+neither counts as executor selection: still set `importSpecifier` or `executorNames`.
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).

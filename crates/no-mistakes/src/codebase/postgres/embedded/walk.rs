@@ -105,7 +105,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
             }
         }
         resolve::apply_append(self, call);
-        if let Some(callee) = callee_name(call, self.bindings) {
+        if let Some(callee) = callee_name(call, self.bindings, self.scoped) {
             if self.query_members
                 || !crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee)
                     .is_member_expression()

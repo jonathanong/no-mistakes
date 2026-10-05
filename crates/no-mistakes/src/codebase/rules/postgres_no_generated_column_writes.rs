@@ -22,6 +22,8 @@ pub(crate) struct Options {
     pub(crate) include: Vec<String>,
     pub(crate) import_specifier: Option<String>,
     pub(crate) executor_names: Vec<String>,
+    pub(crate) executor_factory_names: Vec<String>,
+    pub(crate) executor_type_names: Vec<String>,
     pub(crate) extra_generated_columns: Vec<ExtraGeneratedColumn>,
     pub(crate) trigger_maintained_columns: Vec<String>,
 }
@@ -152,6 +154,7 @@ fn embedded_options(opts: &Options) -> EmbeddedSqlOptions {
         opts.import_specifier.as_deref().unwrap_or_default(),
         &opts.executor_names,
     )
+    .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
 }
 
 fn is_default_dml_path(path: &Path) -> bool {
