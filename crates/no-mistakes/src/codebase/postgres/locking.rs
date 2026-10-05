@@ -7,8 +7,6 @@ mod collect;
 mod relations;
 mod single_row;
 use collect::collect_from_statement;
-#[cfg(test)]
-use collect::{collect_from_query, collect_from_set_expr, collect_queries_from_expr};
 pub use single_row::JoinEquality;
 
 /// Locking `SELECT` facts later lock-ordering rules can query.

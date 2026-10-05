@@ -1,7 +1,7 @@
+use super::collect::{collect_from_query, collect_from_set_expr, collect_queries_from_expr};
 use super::{
-    collect_from_query, collect_from_set_expr, collect_queries_from_expr, expr_has_multi_row,
-    extract_locking_select_metadata, function_is_any, function_name_is_any, order_keys,
-    set_expr_has_multi_row, LockingSelectMetadata,
+    expr_has_multi_row, extract_locking_select_metadata, function_is_any, function_name_is_any,
+    order_keys, set_expr_has_multi_row, LockingSelectMetadata,
 };
 use crate::codebase::postgres::parse_postgres_sql;
 use sqlparser::ast::{
