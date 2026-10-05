@@ -141,3 +141,31 @@ test(
     );
   },
 );
+
+test(
+  "compiled CJS and ESM source roots retain direct calls and ordered arguments",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("expression-roots.sql") };
+    const facts = await api.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const columns = facts.statements[0].columns;
+    assert.equal(columns[0].default.root.kind, "functionCall");
+    assert.equal(columns[1].default.root.expression.kind, "case");
+    assert.equal(columns[3].generated.expression.root.kind, "binary");
+    const args = columns[6].default.root.arguments;
+    assert.deepEqual(
+      args.slice(0, 4).map((arg) => arg.root.kind),
+      Array(4).fill("columnReference"),
+    );
+    assert.deepEqual(
+      args.slice(4, 7).map((arg) => arg.root.kind),
+      ["binary", "functionCall", "literal"],
+    );
+    assert.equal(columns[7].default.root.syntax, "value");
+    assert.equal(columns[8].default.root.syntax, "call");
+  },
+);

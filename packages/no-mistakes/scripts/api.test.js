@@ -824,6 +824,17 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
   );
 });
 
+test("SQL expression roots expose named contracts without opaque AST dispatch", () => {
+  const expressions = readFileSync(join(packageRoot, "postgres-expression-types.d.ts"), "utf8");
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  assert.match(expressions, /export type PostgresSqlExpressionRoot =/);
+  assert.match(expressions, /export type PostgresSqlFunctionSyntax =/);
+  assert.match(expressions, /export interface PostgresSqlCallArgument/);
+  assert.match(expressions, /argumentsComplete: boolean/);
+  assert.match(source, /root: PostgresSqlExpressionRoot/);
+  assert.match(source, /export type \* from "\.\/postgres-expression-types"/);
+});
+
 test("parsePostgresSql exposes named pure-source contracts and async batch overloads", () => {
   const declarations = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");

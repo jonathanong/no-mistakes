@@ -1,5 +1,6 @@
 mod body;
 mod ddl;
+mod expression_roots;
 mod indexes;
 mod locations;
 mod parsing;
