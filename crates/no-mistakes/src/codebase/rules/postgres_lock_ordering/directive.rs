@@ -2,7 +2,16 @@ pub(crate) const DEFAULT_SAFE_DIRECTIVE: &str = "deadlock-safe";
 const DIRECTIVE_LOOKBACK: usize = 200;
 
 pub(super) fn contains_for_update(sql: &str) -> bool {
-    sql.to_ascii_lowercase().contains("for update")
+    let lowered = sql.to_ascii_lowercase();
+    lowered.contains("for update") || lowered.contains("for no key update")
+}
+
+/// Offset of the first exclusive-lock clause in already-lowercased text.
+fn lock_clause_offset(lowered: &str) -> Option<usize> {
+    ["for update", "for no key update"]
+        .iter()
+        .filter_map(|clause| lowered.find(clause))
+        .min()
 }
 
 pub(crate) fn has_safe_directive(source: &str, line: u32, sql: &str, directive: &str) -> bool {
@@ -23,10 +32,7 @@ fn lookback_window(source: &str, line: u32) -> String {
 pub(super) fn call_offset(source: &str, line: u32) -> usize {
     let line_start = line_start_offset(source, line);
     let haystack = &source[line_start..];
-    let rel = haystack
-        .to_ascii_lowercase()
-        .find("for update")
-        .unwrap_or(0);
+    let rel = lock_clause_offset(&haystack.to_ascii_lowercase()).unwrap_or(0);
     line_start + rel
 }
 

@@ -27,15 +27,23 @@ fn multi_target_of_list_with_share_is_not_a_for_update_lock() {
 }
 
 #[test]
-fn sqlparser_rejects_the_key_strengths_with_or_without_a_list() {
-    // sqlparser only knows UPDATE and SHARE, so these fail the same way for a
-    // single target; the list rewrite must not change that.
-    for strength in ["NO KEY UPDATE", "KEY SHARE"] {
-        for target in ["a", "a, o"] {
-            let sql = format!("SELECT 1 {FROM} FOR {strength} OF {target}");
-            assert!(extract_locking_select_metadata(&sql).is_err(), "{sql}");
-        }
+fn no_key_update_is_checked_like_for_update() {
+    for target in ["a", "a, o"] {
+        let update = locks(&format!("FOR UPDATE OF {target}"));
+        assert_eq!(locks(&format!("FOR NO KEY UPDATE OF {target}")), update);
+        assert_eq!(update.len(), 1);
     }
+    assert_eq!(locks("FOR NO KEY UPDATE"), locks("FOR UPDATE"));
+    assert!(locks("FOR NO KEY UPDATE OF a, o SKIP LOCKED")[0].skips_locked_rows);
+}
+
+#[test]
+fn key_share_parses_but_is_not_a_for_update_lock() {
+    // Like FOR SHARE, shared locks are not lock-ordering targets.
+    for target in ["a", "a, o"] {
+        assert!(locks(&format!("FOR KEY SHARE OF {target}")).is_empty());
+    }
+    assert!(locks("FOR KEY SHARE").is_empty());
 }
 
 #[test]
