@@ -1036,3 +1036,28 @@ test("declarations expose invocation controls on every analysis", () => {
     }
   }
 });
+
+test("SELECT scope facts expose named public contracts", () => {
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const query = readFileSync(join(packageRoot, "postgres-query-types.d.ts"), "utf8");
+  assert.match(source, /kind: "select"; query: PostgresSqlQuery/);
+  assert.match(source, /export type \* from "\.\/postgres-query-types"/);
+  for (const name of [
+    "Query",
+    "QueryScope",
+    "QueryRelation",
+    "QueryJoin",
+    "QueryColumn",
+    "QueryEquality",
+    "QueryExists",
+    "QueryCte",
+    "QueryUnsupported",
+    "PredicateContext",
+  ]) {
+    assert.match(query, new RegExp(`export interface PostgresSql${name} \{`));
+  }
+  for (const name of ["Clause", "RelationKind", "JoinKind", "ColumnResolution"])
+    assert.match(query, new RegExp(`export type PostgresSqlQuery${name} =`));
+  assert.match(query, /unsupported: PostgresSqlQueryUnsupported\[\];/);
+  assert.match(query, /correlations: PostgresSqlQueryColumn\[\];/);
+});

@@ -151,6 +151,9 @@ pub(super) fn project(
         return PostgresSqlStatementKind::Drop { drop };
     }
     match statement {
+        Statement::Query(query) => PostgresSqlStatementKind::Select {
+            query: super::query::project(query, locations),
+        },
         Statement::CreateTable(value) => PostgresSqlStatementKind::CreateTable {
             table: name(&value.name),
             columns: value

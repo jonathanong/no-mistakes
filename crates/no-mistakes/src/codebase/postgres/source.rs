@@ -13,6 +13,7 @@ mod indexes;
 mod locations;
 mod parsing;
 mod procedural;
+mod query;
 mod type_facts;
 mod types;
 pub use types::*;

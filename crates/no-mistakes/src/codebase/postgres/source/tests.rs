@@ -23,3 +23,5 @@ fn facts(name: &str) -> super::PostgresSqlFacts {
         file_name: Some(name.into()),
     })
 }
+
+mod query;

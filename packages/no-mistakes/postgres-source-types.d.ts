@@ -1,5 +1,7 @@
 import type { PostgresSqlExpressionRoot } from "./postgres-expression-types";
 export type * from "./postgres-expression-types";
+import type { PostgresSqlQuery } from "./postgres-query-types";
+export type * from "./postgres-query-types";
 import type { PostgresSqlDrop } from "./postgres-drop-types";
 export type * from "./postgres-drop-types";
 import type {
@@ -171,6 +173,7 @@ export interface PostgresSqlFunction {
   security: string | null;
 }
 export type PostgresSqlStatementKind =
+  | { kind: "select"; query: PostgresSqlQuery }
   | {
       kind: "createTable";
       table: PostgresSqlName;
