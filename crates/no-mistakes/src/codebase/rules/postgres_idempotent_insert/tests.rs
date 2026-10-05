@@ -73,7 +73,11 @@ fn volatile_update_fails() {
 
 #[test]
 fn compile_options_default_checks_on() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        import_specifier: Some("@example/db".into()),
+        ..Default::default()
+    })
+    .unwrap();
     assert!(compiled.check_convergence);
     assert!(compiled.check_volatility);
     assert!(compiled.check_arbiter);
@@ -121,6 +125,7 @@ fn invalid_include_glob_errors() {
 #[test]
 fn rejects_unknown_unanalyzable_sql() {
     let error = compile_options(&Options {
+        import_specifier: Some("@example/db".into()),
         unanalyzable_sql: "fial".into(),
         ..Default::default()
     })

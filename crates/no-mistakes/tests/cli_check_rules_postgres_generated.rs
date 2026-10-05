@@ -55,7 +55,7 @@ fn postgres_no_generated_column_writes_json_has_rule_id() {
     let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
     std::fs::write(
         config.path(),
-        "rules:\n  - rule: postgres-no-generated-column-writes\n    scope: repository\n",
+        "rules:\n  - rule: postgres-no-generated-column-writes\n    scope: repository\n    options:\n      importSpecifier: \"@example/db\"\n",
     )
     .unwrap();
     let out = Command::new(bin())

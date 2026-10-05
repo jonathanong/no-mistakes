@@ -166,11 +166,12 @@ Imports decide which local identifiers execute SQL:
 
 | knob | default |
 | --- | --- |
-| `importSpecifier` | Empty; configure your database module explicitly |
-| `executorNames` | Empty without a module; `query`, `read`, `write` with a module |
+| `importSpecifier` | None; required unless `executorNames` is set |
+| `executorNames` | Required unless `importSpecifier` is set; `query`, `read`, `write` with a module; `[]` selects none |
 
 Without a module, only explicitly configured names match named imports from
-any module. With neither option set, no executor calls are collected.
+any module. With neither option set, the rule reports a configuration error; set
+`executorNames: []` to collect no executor calls.
 A configured module's `withTransaction` and `withTransactionOptions` imports
 also bind `query`. Member calls named `query` are collected when a module is configured or `query`
 is explicitly enabled in the executor names. Existing SQL-builder fragment recovery is

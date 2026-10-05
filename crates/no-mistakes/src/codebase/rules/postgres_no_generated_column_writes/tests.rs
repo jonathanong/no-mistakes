@@ -221,7 +221,7 @@ fn empty_catalog_dynamic_sql_and_invalid_schema() {
     let dynamic = unit_fixture("dynamic");
     let unresolved = check_with_files(
         &dynamic,
-        &config_with_options("importSpecifier: ''"),
+        &config_with_options("importSpecifier: ''\nexecutorNames: []"),
         &[dynamic.join("schema.sql"), dynamic.join("write.ts")],
     )
     .unwrap();
@@ -275,4 +275,27 @@ fn default_dml_extensions_and_message_shape() {
     assert!(message.contains("src/q.ts:4"));
     assert!(message.contains("items.created_at"));
     assert!(message.contains("source column"));
+}
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
 }

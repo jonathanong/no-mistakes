@@ -157,14 +157,16 @@ when set).
 
 ### `postgres-no-manual-transaction`
 
-`importSpecifier?: string` (default empty),
-`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module), and
-`owners?: string[]`.
+`importSpecifier?: string` and `executorNames?: string[]` (`["query", "read", "write"]`
+with a module). At least one of the two is required; the rule throws a
+configuration error when both are omitted, and `executorNames: []` selects no
+executor calls. Also `owners?: string[]`.
 
 ### `postgres-no-unbounded-query-fanout`
 
-`importSpecifier?: string`, `executorNames?: string[]`, and
-`chunkFunctionNames?: string[]` (default `["chunkArray"]`).
+`importSpecifier?: string` and `executorNames?: string[]` (at least one is required,
+as for `postgres-no-manual-transaction`; `executorNames: []` selects no executor
+calls), and `chunkFunctionNames?: string[]` (default `["chunkArray"]`).
 
 ### `server-require-nullable-fetch-wrapper`
 
@@ -218,6 +220,9 @@ suppression guidance.
 
 Executor import matching has no module default. Set `importSpecifier` explicitly
 to your database module to enable default `query`, `read`, and `write` names.
+Setting neither `importSpecifier` nor `executorNames` is a configuration error
+(the PostgreSQL runtime rules throw instead of silently checking no calls); set
+`executorNames: []` explicitly to select no executor calls.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables `.query` members. Configured modules retain member matching
 with custom executor names. See the [migration notes](migrations/explicit-postgres-executors.md).

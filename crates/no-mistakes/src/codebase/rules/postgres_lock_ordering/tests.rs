@@ -253,7 +253,11 @@ fn missing_source_file_errors() {
 
 #[test]
 fn missing_sql_text_is_ignored() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
     let call = crate::codebase::postgres::EmbeddedSqlCall {
         line: 1,
         callee: "query".to_string(),
@@ -266,8 +270,12 @@ fn missing_sql_text_is_ignored() {
 #[test]
 fn compile_options_honor_overrides() {
     let compiled = compile_options(&Options {
-        import_specifier: "@other/db".to_string(),
-        executor_names: vec!["write".to_string(), "run".to_string(), "write".to_string()],
+        import_specifier: Some("@other/db".to_string()),
+        executor_names: Some(vec![
+            "write".to_string(),
+            "run".to_string(),
+            "write".to_string(),
+        ]),
         safe_directive: "ordered-locks".to_string(),
         schema_catalog_path: "schema.json".to_string(),
         ..Default::default()
@@ -321,7 +329,11 @@ fn lookback_handles_line_one_and_unclosed_block_comment() {
 
 #[test]
 fn compile_options_fill_defaults() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
     assert_eq!(
         compiled.embedded.import_specifier,
         EmbeddedSqlOptions::default().import_specifier
@@ -347,4 +359,27 @@ fn floor_char_boundary_and_line_offsets() {
     assert_eq!(line_start_offset("a\nb\nc", 2), 2);
     assert_eq!(line_start_offset("a\nb", 9), 3);
     assert_eq!(call_offset("query(`SELECT 1`)", 1), 0);
+}
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
 }

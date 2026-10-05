@@ -21,7 +21,7 @@ pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
     pub(crate) include: Vec<String>,
     pub(crate) import_specifier: Option<String>,
-    pub(crate) executor_names: Vec<String>,
+    pub(crate) executor_names: Option<Vec<String>>,
     pub(crate) extra_generated_columns: Vec<ExtraGeneratedColumn>,
     pub(crate) trigger_maintained_columns: Vec<String>,
 }
@@ -123,7 +123,11 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: embedded_options(opts),
+        embedded: EmbeddedSqlOptions::for_rule(
+            RULE_ID,
+            opts.import_specifier.as_deref(),
+            opts.executor_names.as_deref(),
+        )?,
         extra_generated_columns: opts.extra_generated_columns.clone(),
         trigger_maintained_columns: trigger_columns(&opts.trigger_maintained_columns)?,
     })
@@ -145,13 +149,6 @@ fn trigger_columns(values: &[String]) -> Result<Vec<String>> {
         names.push(name.to_string());
     }
     Ok(names)
-}
-
-fn embedded_options(opts: &Options) -> EmbeddedSqlOptions {
-    EmbeddedSqlOptions::configured(
-        opts.import_specifier.as_deref().unwrap_or_default(),
-        &opts.executor_names,
-    )
 }
 
 fn is_default_dml_path(path: &Path) -> bool {

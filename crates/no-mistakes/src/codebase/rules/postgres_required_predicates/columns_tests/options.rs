@@ -69,12 +69,15 @@ fn new_options_reject_invalid_values() {
         ),
     ];
     for (yaml, needle) in cases {
-        let Err(error) = compile_options(&serde_yaml::from_str::<Options>(yaml).unwrap()) else {
+        let Err(error) = compile_options(
+            &serde_yaml::from_str::<Options>(&format!("executorNames: []\n{yaml}")).unwrap(),
+        ) else {
             panic!("{yaml} compiled");
         };
         assert!(error.to_string().contains(needle), "{yaml} {error}");
     }
     assert!(compile_options(&Options {
+        executor_names: Some(Vec::new()),
         relations: vec![RelationOption {
             table: "orders".into(),
             require_columns: vec!["account_id".into()],

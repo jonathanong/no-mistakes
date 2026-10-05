@@ -183,8 +183,8 @@ fn dynamic_and_unparseable_embedded_calls_are_ignored() {
 #[test]
 fn compile_options_honor_overrides() {
     let compiled = compile_options(&Options {
-        import_specifier: "@other/db".to_string(),
-        executor_names: vec!["run".to_string()],
+        import_specifier: Some("@other/db".to_string()),
+        executor_names: Some(vec!["run".to_string()]),
         ..Default::default()
     })
     .unwrap();
@@ -194,7 +194,11 @@ fn compile_options_honor_overrides() {
 
 #[test]
 fn compile_options_fill_defaults() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
     assert_eq!(
         compiled.embedded.import_specifier,
         EmbeddedSqlOptions::default().import_specifier
@@ -202,5 +206,52 @@ fn compile_options_fill_defaults() {
     assert_eq!(
         compiled.embedded.executor_names,
         EmbeddedSqlOptions::default().executor_names
+    );
+}
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
+}
+
+#[test]
+fn standalone_check_rejects_an_absent_executor_selection() {
+    // The standalone entry point prepares its facts before compiling options, so
+    // the missing executor selection must surface from that preparation too.
+    let config = crate::config::v2::NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: super::RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("schemaCatalogPath: schema.json").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let error = super::check_with_files(std::path::Path::new("."), &config, &[])
+        .expect_err("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
     );
 }

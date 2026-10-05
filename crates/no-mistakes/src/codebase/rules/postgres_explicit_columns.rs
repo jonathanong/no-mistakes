@@ -26,8 +26,8 @@ struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
-    import_specifier: String,
-    executor_names: Vec<String>,
+    import_specifier: Option<String>,
+    executor_names: Option<Vec<String>>,
     unanalyzable_sql: String,
     schema_catalog_path: String,
     max_columns: Option<i64>,
@@ -140,7 +140,11 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         schema: PostgresSchemaOptions {
             sql_include: opts.sql_include.clone(),
         },
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
+        embedded: EmbeddedSqlOptions::for_rule(
+            RULE_ID,
+            opts.import_specifier.as_deref(),
+            opts.executor_names.as_deref(),
+        )?,
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

@@ -22,10 +22,12 @@ await withTransaction(async (tx) => {
 
 ## Options
 
-- `importSpecifier` identifies the database module and defaults to
-  empty (configure your database module explicitly).
+- `importSpecifier` identifies the database module and has no default
+  (configure your database module explicitly).
 - `executorNames` lists checked executor names and defaults to
-  `["query", "read", "write"]` only with a configured module; otherwise it is empty.
+  `["query", "read", "write"]` only with a configured module. Set at least one of
+  `importSpecifier` and `executorNames`: omitting both throws a configuration
+  error. `executorNames: []` explicitly selects no executor calls.
 - `owners` is an absolute-suffix or repository-relative allowlist for the
   transaction lifecycle helper. It defaults to no owner exemptions.
 
@@ -48,6 +50,8 @@ await query("BEGIN");
 
 Executor import matching has no module default. Set `importSpecifier` explicitly
 to your database module to enable default `query`, `read`, and `write` names.
+Setting neither `importSpecifier` nor `executorNames` is a configuration error; set
+`executorNames: []` explicitly to select no executor calls.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables `.query` members. A configured module retains member matching
 even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).

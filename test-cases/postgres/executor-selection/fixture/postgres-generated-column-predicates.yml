@@ -1,0 +1,4 @@
+# Neither importSpecifier nor executorNames selects an executor: a configuration error.
+rules:
+  - rule: postgres-generated-column-predicates
+    scope: repository

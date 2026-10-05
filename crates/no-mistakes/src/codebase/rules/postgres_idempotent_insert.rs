@@ -22,8 +22,8 @@ pub(crate) struct Options {
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
     pub(crate) sql_include: Vec<String>,
-    pub(crate) import_specifier: String,
-    pub(crate) executor_names: Vec<String>,
+    pub(crate) import_specifier: Option<String>,
+    pub(crate) executor_names: Option<Vec<String>>,
     pub(crate) unanalyzable_sql: String,
     #[serde(default = "default_true")]
     pub(crate) scan_embedded: bool,
@@ -47,8 +47,8 @@ impl Default for Options {
             include: Vec::new(),
             exclude: Vec::new(),
             sql_include: Vec::new(),
-            import_specifier: String::new(),
-            executor_names: Vec::new(),
+            import_specifier: None,
+            executor_names: None,
             unanalyzable_sql: String::new(),
             scan_embedded: true,
             check_convergence: true,
@@ -135,7 +135,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
+        embedded: embedded_options(opts)?,
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,
@@ -153,6 +153,20 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             .map(|(name, columns)| (name.clone(), columns.clone()))
             .collect(),
     })
+}
+
+/// Executor calls are only judged when `scanEmbedded` is on, so only then must
+/// the options select them.
+fn embedded_options(opts: &Options) -> Result<EmbeddedSqlOptions> {
+    let specifier = opts.import_specifier.as_deref();
+    let names = opts.executor_names.as_deref();
+    if opts.scan_embedded {
+        return EmbeddedSqlOptions::for_rule(RULE_ID, specifier, names);
+    }
+    Ok(EmbeddedSqlOptions::configured(
+        specifier.unwrap_or_default(),
+        names.unwrap_or_default(),
+    ))
 }
 
 #[cfg(test)]

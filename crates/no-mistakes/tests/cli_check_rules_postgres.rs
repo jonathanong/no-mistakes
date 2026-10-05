@@ -108,3 +108,33 @@ fn postgres_lock_ordering_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+
+fn stderr(o: &Output) -> String {
+    String::from_utf8_lossy(&o.stderr).into_owned()
+}
+
+#[test]
+fn postgres_lock_ordering_without_executor_selection_is_a_config_error() {
+    // Neither importSpecifier nor executorNames: the rule would silently scan
+    // no executor calls, so `check` fails as a configuration error.
+    let root = fixture("missing-executor");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert_eq!(out.status.code(), Some(2), "{}", stderr(&out));
+    assert!(stdout(&out).is_empty(), "{}", stdout(&out));
+    assert_eq!(
+        stderr(&out),
+        "error: postgres-lock-ordering option importSpecifier: set importSpecifier (or \
+executorNames) to select executor calls; set executorNames: [] to scan only SQL files \
+and native SQL (see docs/migrations/explicit-postgres-executors.md)\n"
+    );
+}
+
+#[test]
+fn postgres_lock_ordering_empty_executor_names_selects_no_executor_calls() {
+    // The same lock that `fail` reports is not scanned: `executorNames: []` is
+    // the explicit opt-out, not an error.
+    let root = fixture("opt-out");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+    assert!(!stdout(&out).contains(RULE), "{}", stdout(&out));
+}

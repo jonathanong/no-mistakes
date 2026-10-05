@@ -1,0 +1,4 @@
+# Neither importSpecifier nor executorNames: the rule would silently scan no executor calls.
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository

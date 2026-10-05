@@ -6,11 +6,11 @@ const helpers = require("./postgres-runtime-helpers");
 const {
   callbackContainsExecutor,
   executorBindings,
-  executorOptionDefaults,
   executorOptionSchema,
   isPromiseAllCallee,
   isStaticallyBounded,
   mapCallArgument,
+  resolveExecutorOptions,
 } = helpers;
 
 module.exports = Object.assign(
@@ -32,7 +32,10 @@ module.exports = Object.assign(
       },
     },
     (context) => {
-      const options = executorOptionDefaults(context.options?.[0] ?? {});
+      const options = resolveExecutorOptions(
+        "postgres-no-unbounded-query-fanout",
+        context.options?.[0],
+      );
       let bindings = new Set();
 
       return {

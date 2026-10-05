@@ -36,6 +36,7 @@ fn files(root: &Path) -> Vec<PathBuf> {
 fn compile_options_reject_invalid_include_glob_and_unanalyzable_sql() {
     let glob_error = match compile_options(&Options {
         schema_catalog_path: "schema.json".to_string(),
+        import_specifier: Some("@example/db".to_string()),
         include: vec!["[".to_string()],
         ..Default::default()
     }) {
@@ -46,6 +47,7 @@ fn compile_options_reject_invalid_include_glob_and_unanalyzable_sql() {
 
     let sql_error = match compile_options(&Options {
         schema_catalog_path: "schema.json".to_string(),
+        import_specifier: Some("@example/db".to_string()),
         unanalyzable_sql: "maybe".to_string(),
         ..Default::default()
     }) {
@@ -62,6 +64,7 @@ fn compile_options_reject_invalid_include_glob_and_unanalyzable_sql() {
 fn compile_options_cover_include_exclude_sql_sources_and_safe_directive() {
     let compiled = compile_options(&Options {
         schema_catalog_path: "schema.json".to_string(),
+        import_specifier: Some("@example/db".to_string()),
         include: vec!["src/**/*.ts".to_string()],
         exclude: vec!["src/skip.ts".to_string()],
         sql_include: vec!["queries/**/*.sql".to_string()],
@@ -116,4 +119,29 @@ fn include_and_sql_exclude_filters_skip_non_matching_paths() {
     )
     .unwrap();
     assert!(excluded.is_empty(), "{excluded:#?}");
+}
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        schema_catalog_path: "schema.json".into(),
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        schema_catalog_path: "schema.json".into(),
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
 }

@@ -46,7 +46,11 @@ fn messages(root: &str, file: &str) -> String {
 
 #[test]
 fn new_shapes_are_off_by_default() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
     assert!(compiled.shapes.correlated_exists_set_operation);
     assert!(!compiled.shapes.not_in_subquery);
     assert!(!compiled.shapes.count_for_existence);
@@ -91,6 +95,7 @@ fn invalid_examples_are_reported_when_opted_in() {
 #[test]
 fn unknown_shape_is_still_a_config_error() {
     let Err(error) = compile_options(&Options {
+        executor_names: Some(Vec::new()),
         banned_shapes: vec!["not-in-subquery".into(), "sideways".into()],
         ..Default::default()
     }) else {
@@ -104,6 +109,7 @@ fn unknown_shape_is_still_a_config_error() {
     );
     assert!(
         compile_options(&Options {
+            executor_names: Some(Vec::new()),
             banned_shapes: vec!["not-in-subquery".into(), "count-for-existence".into()],
             ..Default::default()
         })

@@ -19,7 +19,10 @@ fn expression_partition_elements_are_not_required_columns() {
 #[test]
 fn a_missing_catalog_adds_no_partition_findings() {
     let opts = super::super::super::compile_options(
-        &serde_yaml::from_str("partitionKeys: require\nschemaCatalogPath: schema.json\n").unwrap(),
+        &serde_yaml::from_str(
+            "partitionKeys: require\nschemaCatalogPath: schema.json\nexecutorNames: []\n",
+        )
+        .unwrap(),
     )
     .unwrap();
     let relation = SqlRelationPredicateFact {

@@ -27,6 +27,7 @@ const {
   isPromiseAllCallee,
   isStaticallyBounded,
   mapCallArgument,
+  resolveExecutorOptions,
   resolveVariable,
   sqlStatementBindings,
   sqlText,
@@ -1092,9 +1093,60 @@ describe("postgres-no-unbounded-query-fanout", () => {
 });
 
 describe("explicit PostgreSQL executor selection", () => {
+  const RUNTIME_RULES = ["postgres-no-manual-transaction", "postgres-no-unbounded-query-fanout"];
+
+  it.each(RUNTIME_RULES)("%s rejects a configuration that selects no executor", (rule) => {
+    // ESLint prefixes rule-load failures with the rule id.
+    const message = new RegExp(
+      `^Error while loading rule 'no-mistakes/${rule}': ${rule} option importSpecifier: ` +
+        "set importSpecifier \\(or executorNames\\) to select executor calls; " +
+        "set executorNames: \\[\\] to select no executor calls " +
+        "\\(see docs/migrations/explicit-postgres-executors.md\\)\\nOccurred while linting fixture\\.jsx$",
+    );
+    const code = IMPORT + "query('BEGIN')";
+    // No options at all, unrelated options only, and a blank module are all
+    // "absent": the rule would otherwise silently check nothing.
+    const unrelated =
+      rule === "postgres-no-manual-transaction"
+        ? { owners: ["src/tx.ts"] }
+        : { chunkFunctionNames: ["chunk"] };
+    for (const option of [undefined, {}, unrelated, { importSpecifier: "" }]) {
+      assert.throws(() => messages(code, rule, option), { message });
+    }
+  });
+
+  it.each(RUNTIME_RULES)("%s accepts an explicit empty executorNames", (rule) => {
+    // `executorNames: []` is the deliberate opt-out: no executor calls match,
+    // not even `.query` members, and the rule does not throw.
+    for (const code of [
+      IMPORT + "query('BEGIN'); Promise.all(ids.map((id) => query('SELECT 1')));",
+      "client.query('BEGIN'); Promise.all(ids.map((id) => client.query('SELECT 1')));",
+    ]) {
+      assert.deepEqual(messages(code, rule, { executorNames: [] }), []);
+    }
+  });
+
+  it("resolves the executor options only when an executor is selected", () => {
+    assert.throws(
+      () => resolveExecutorOptions("postgres-no-manual-transaction"),
+      /option importSpecifier/,
+    );
+    assert.throws(
+      () => resolveExecutorOptions("postgres-no-manual-transaction", {}),
+      /executorNames/,
+    );
+    assert.deepEqual(resolveExecutorOptions("rule", { executorNames: [] }).executorNames, []);
+    assert.deepEqual(resolveExecutorOptions("rule", { importSpecifier: "@app/db" }).executorNames, [
+      "query",
+      "read",
+      "write",
+    ]);
+    assert.deepEqual(resolveExecutorOptions("rule", { executorNames: ["run"] }).executorNames, [
+      "run",
+    ]);
+  });
+
   it("does not infer a database module", () => {
-    assert.deepEqual(messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction"), []);
-    assert.deepEqual(messages("client.query('BEGIN')", "postgres-no-manual-transaction"), []);
     assert.deepEqual(
       messages("client.query('BEGIN')", "postgres-no-manual-transaction", {
         importSpecifier: "@example/db",

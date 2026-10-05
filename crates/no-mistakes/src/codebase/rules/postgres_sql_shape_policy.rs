@@ -50,8 +50,8 @@ pub(crate) struct Options {
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
     pub(crate) sql_include: Vec<String>,
-    pub(crate) import_specifier: String,
-    pub(crate) executor_names: Vec<String>,
+    pub(crate) import_specifier: Option<String>,
+    pub(crate) executor_names: Option<Vec<String>>,
     pub(crate) banned_shapes: Vec<String>,
     pub(crate) unanalyzable_sql: String,
     pub(crate) shape_options: iteration::ShapeOptions,
@@ -147,7 +147,11 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.sql_include.clone()
             },
         },
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
+        embedded: EmbeddedSqlOptions::for_rule(
+            RULE_ID,
+            opts.import_specifier.as_deref(),
+            opts.executor_names.as_deref(),
+        )?,
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

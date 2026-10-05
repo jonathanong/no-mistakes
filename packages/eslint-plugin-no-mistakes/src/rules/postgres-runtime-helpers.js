@@ -16,6 +16,7 @@ const {
   isDatabaseCall,
   isManualTransactionText,
   memberPropertyName,
+  resolveExecutorOptions,
 } = require("./postgres-executor");
 const {
   childNodes,
@@ -170,6 +171,7 @@ module.exports = {
   isPromiseAllCallee,
   isStaticallyBounded,
   mapCallArgument,
+  resolveExecutorOptions,
   resolveVariable,
   sqlStatementBindings,
   sqlText,

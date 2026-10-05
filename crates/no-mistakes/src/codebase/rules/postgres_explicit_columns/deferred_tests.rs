@@ -149,7 +149,9 @@ fn prepared_scans_fail_on_absent_fact_demand_and_keep_sql_opt_in() {
     let root = fixture("deferred");
     let file = root.join("sql/lines.sql");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
-    let opts = compile_options(&serde_yaml::from_str(SQL).unwrap()).unwrap();
+    let opts =
+        compile_options(&serde_yaml::from_str(&format!("{SQL}executorNames: []\n")).unwrap())
+            .unwrap();
     assert!(
         scan::scan(&root, &opts, std::slice::from_ref(&file), &sources, None)
             .unwrap_err()

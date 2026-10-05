@@ -80,3 +80,52 @@ fn config_errors_name_the_option() {
         assert!(error.contains(expected), "{error}");
     }
 }
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        schema_catalog_path: "schema.json".into(),
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        schema_catalog_path: "schema.json".into(),
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
+}
+
+#[test]
+fn standalone_check_rejects_an_absent_executor_selection() {
+    // The standalone entry point prepares its facts before compiling options, so
+    // the missing executor selection must surface from that preparation too.
+    let config = crate::config::v2::NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: super::RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("schemaCatalogPath: schema.json").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let error = super::check_with_files(std::path::Path::new("."), &config, &[])
+        .expect_err("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+}

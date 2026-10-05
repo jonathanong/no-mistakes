@@ -60,10 +60,15 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
 
 | Option | Default | Behavior |
 | --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+| `importSpecifier` | None | Required unless `executorNames` is set. Set it to your database module to match its named imports. |
+| `executorNames` | Required unless `importSpecifier` is set; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. `[]` selects no executor calls. |
 
-With both options omitted, executor calls (including `.query`) are not scanned.
+Set `importSpecifier` or `executorNames`. With both omitted, `no-mistakes check`
+fails with a configuration error (`postgres-require-query-annotation option importSpecifier: set
+importSpecifier (or executorNames) to select executor calls; ...`) instead of
+silently scanning no executor calls. To scan only SQL files and native SQL, set
+`executorNames: []` explicitly; without a module that selects no executor calls
+(including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

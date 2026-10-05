@@ -22,7 +22,9 @@ fn config() -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str("sqlInclude: [\"sql/**/*.sql\"]").unwrap(),
+            options: crate::codebase::postgres::tests::fixture_rule_options(
+                "sqlInclude: [\"sql/**/*.sql\"]",
+            ),
             ..Default::default()
         }],
         ..Default::default()
@@ -91,7 +93,11 @@ fn honors_disable_comments() {
 
 #[test]
 fn compile_options_default_to_exists_set_op() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
     assert!(compiled.fail_unanalyzable);
 }
 
@@ -109,6 +115,7 @@ fn missing_source_file_errors() {
 #[test]
 fn rejects_unknown_options() {
     let error = compile_options(&Options {
+        executor_names: Some(Vec::new()),
         unanalyzable_sql: "fial".into(),
         ..Default::default()
     })
@@ -116,6 +123,7 @@ fn rejects_unknown_options() {
     .expect("mode");
     assert!(error.to_string().contains("unanalyzableSql"), "{error}");
     let error = compile_options(&Options {
+        executor_names: Some(Vec::new()),
         banned_shapes: vec!["other-shape".into()],
         ..Default::default()
     })
@@ -124,6 +132,7 @@ fn rejects_unknown_options() {
     assert!(error.to_string().contains("bannedShapes"), "{error}");
     assert!(
         !compile_options(&Options {
+            executor_names: Some(Vec::new()),
             banned_shapes: vec!["correlated-exists-set-operation".into()],
             unanalyzable_sql: "ignore".into(),
             ..Default::default()
@@ -170,8 +179,8 @@ fn include_exclude_and_option_overrides() {
     assert!(error.to_string().contains("invalid glob"), "{error}");
     let compiled = compile_options(&Options {
         sql_include: vec!["migrations/**/*.sql".into()],
-        import_specifier: "@other/db".into(),
-        executor_names: vec!["run".into()],
+        import_specifier: Some("@other/db".into()),
+        executor_names: Some(vec!["run".into()]),
         unanalyzable_sql: "ignore".into(),
         ..Default::default()
     })
@@ -385,3 +394,50 @@ mod predicate_escaping;
 #[cfg(test)]
 mod negated_keysets;
 mod semantic_zero;
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
+}
+
+#[test]
+fn standalone_check_rejects_an_absent_executor_selection() {
+    // The standalone entry point prepares its facts before compiling options, so
+    // the missing executor selection must surface from that preparation too.
+    let config = crate::config::v2::NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: super::RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("schemaCatalogPath: schema.json").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let error = super::check_with_files(std::path::Path::new("."), &config, &[])
+        .expect_err("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+}

@@ -168,8 +168,8 @@ fn missing_sql_text_is_ignored() {
 #[test]
 fn compile_options_honor_overrides() {
     let compiled = compile_options(&Options {
-        import_specifier: "@other/db".to_string(),
-        executor_names: vec!["run".to_string()],
+        import_specifier: Some("@other/db".to_string()),
+        executor_names: Some(vec!["run".to_string()]),
         ..Default::default()
     })
     .unwrap();
@@ -179,7 +179,11 @@ fn compile_options_honor_overrides() {
 
 #[test]
 fn compile_options_fill_defaults() {
-    let compiled = compile_options(&Options::default()).unwrap();
+    let compiled = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
     assert_eq!(
         compiled.embedded.import_specifier,
         EmbeddedSqlOptions::default().import_specifier

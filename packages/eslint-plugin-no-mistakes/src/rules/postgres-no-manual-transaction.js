@@ -6,12 +6,12 @@ const helpers = require("./postgres-runtime-helpers");
 const {
   executedQueryText,
   executorBindings,
-  executorOptionDefaults,
   executorOptionSchema,
   firstCallArgument,
   isDatabaseCall,
   isManualTransactionText,
   isOwnerFile,
+  resolveExecutorOptions,
   sqlStatementBindings,
 } = helpers;
 
@@ -34,7 +34,10 @@ module.exports = Object.assign(
       },
     },
     (context) => {
-      const options = executorOptionDefaults(context.options?.[0] ?? {});
+      const options = resolveExecutorOptions(
+        "postgres-no-manual-transaction",
+        context.options?.[0],
+      );
       if (isOwnerFile(context.filename, options.owners)) return {};
       let bindings = new Set();
       let statements = new Map();

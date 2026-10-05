@@ -148,7 +148,17 @@ fn omitted_prepared_write_demand_is_an_error() {
 fn null_import_specifier_selects_no_executor_profile() {
     let root = unit_fixture("quoted-identity");
     let paths = [root.join("schema.sql"), root.join("write.ts")];
-    let findings =
-        check_with_files(&root, &config_with_options("importSpecifier: null"), &paths).unwrap();
+    let config = config_with_options("importSpecifier: null\nexecutorNames: []");
+    let findings = check_with_files(&root, &config, &paths).unwrap();
     assert!(findings.is_empty());
+    // Without the explicit empty executorNames a null module selects nothing,
+    // which is a configuration error rather than a silent zero-call scan.
+    let error = check_with_files(&root, &config_with_options("importSpecifier: null"), &paths)
+        .expect_err("an absent executor selection must be rejected");
+    assert!(
+        error
+            .to_string()
+            .starts_with("postgres-no-generated-column-writes option importSpecifier:"),
+        "{error}"
+    );
 }

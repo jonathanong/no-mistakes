@@ -55,8 +55,8 @@ fn include_exclude_and_option_overrides() {
     assert!(error.to_string().contains("invalid glob"), "{error}");
     let compiled = compile_options(&Options {
         sql_include: vec!["migrations/**/*.sql".into()],
-        import_specifier: "@other/db".into(),
-        executor_names: vec!["run".into()],
+        import_specifier: Some("@other/db".into()),
+        executor_names: Some(vec!["run".into()]),
         unanalyzable_sql: "ignore".into(),
         relations: vec![RelationOption {
             table: "topics".into(),
@@ -73,6 +73,7 @@ fn include_exclude_and_option_overrides() {
     assert_eq!(compiled.embedded.executor_names, ["run"]);
     assert!(
         compile_options(&Options {
+            executor_names: Some(Vec::new()),
             unanalyzable_sql: "fail".into(),
             ..Default::default()
         })
@@ -115,6 +116,7 @@ fn dynamic_unparseable_and_unrelated_tables() {
         "{unparseable:?}"
     );
     let unrelated = compile_options(&Options {
+        executor_names: Some(Vec::new()),
         relations: vec![RelationOption {
             table: "accounts".into(),
             require: vec!["id IS NOT NULL".into()],
@@ -142,4 +144,51 @@ fn dynamic_unparseable_and_unrelated_tables() {
     )
     .unwrap();
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn compile_options_reject_an_absent_executor_selection() {
+    let error = compile_options(&Options {
+        ..Default::default()
+    })
+    .err()
+    .expect("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
+    // An explicit empty list is the opt-out, not an error.
+    let opted_out = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.embedded.executor_names.is_empty());
+}
+
+#[test]
+fn standalone_check_rejects_an_absent_executor_selection() {
+    // The standalone entry point prepares its facts before compiling options, so
+    // the missing executor selection must surface from that preparation too.
+    let config = crate::config::v2::NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: super::RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("schemaCatalogPath: schema.json").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let error = super::check_with_files(std::path::Path::new("."), &config, &[])
+        .expect_err("neither importSpecifier nor executorNames selects an executor");
+    assert!(
+        error.to_string().starts_with(&format!(
+            "{} option importSpecifier: set importSpecifier (or executorNames)",
+            super::RULE_ID
+        )),
+        "{error}"
+    );
 }

@@ -20,8 +20,9 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                         "../../../../../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml"
                     )
                 )
-            } else if *id == POSTGRES_CONFLICT_ORDERING
-                || *id == POSTGRES_COLUMN_REQUIRES_TRIGGER
+            } else if let Some(entry) = executor_selection::config_entry(id) {
+                entry
+            } else if *id == POSTGRES_COLUMN_REQUIRES_TRIGGER
                 || *id == POSTGRES_REQUIRED_COMMENTS
                 || *id == POSTGRES_DUPLICATE_FUNCTION_BODY
                 || *id == POSTGRES_TABLE_SHAPE
@@ -29,8 +30,6 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                 || *id == POSTGRES_COLUMN_NAMING
                 || *id == POSTGRES_FINITE_TEXT_COLUMNS
                 || *id == POSTGRES_ARRAY_COLUMNS
-                || *id == POSTGRES_EXPLICIT_COLUMNS
-                || *id == POSTGRES_BOUNDED_STATEMENTS
             {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n"
@@ -568,3 +567,4 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
 }
 
 mod coverage;
+mod executor_selection;

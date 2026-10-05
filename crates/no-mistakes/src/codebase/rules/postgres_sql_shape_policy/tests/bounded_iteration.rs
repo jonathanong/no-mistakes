@@ -287,10 +287,12 @@ fn unanalyzable_sql_names_an_enabled_iteration_shape() {
 #[test]
 fn shape_options_are_validated() {
     let error = |yaml: &str| {
-        compile_options(&serde_yaml::from_str::<Options>(yaml).unwrap())
-            .err()
-            .unwrap()
-            .to_string()
+        compile_options(
+            &serde_yaml::from_str::<Options>(&format!("executorNames: []\n{yaml}")).unwrap(),
+        )
+        .err()
+        .unwrap()
+        .to_string()
     };
     let negative = error("shapeOptions: {literalLimit: {allowedValues: [1, -2]}}");
     assert!(
@@ -304,11 +306,15 @@ fn shape_options_are_validated() {
     );
     let table = error("shapeOptions: {keysetOnlySweep: {ignoreTables: ['']}}");
     assert!(table.contains("ignoreTables: empty string"), "{table}");
-    assert!(compile_options(&Options::default()).is_ok());
+    assert!(compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .is_ok());
     // An unparseable predicate is still compared textually.
     assert!(compile_options(
         &serde_yaml::from_str::<Options>(
-            "shapeOptions: {keysetOnlySweep: {nonSelectivePredicates: ['(((']}}"
+            "executorNames: []\nshapeOptions: {keysetOnlySweep: {nonSelectivePredicates: ['(((']}}"
         )
         .unwrap()
     )

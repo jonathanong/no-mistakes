@@ -392,6 +392,8 @@ describe("lint edges that hit remaining guards", () => {
           filename: "e2e/a.spec.ts",
           options: [
             {
+              // The postgres runtime rules require an executor selection.
+              importSpecifier: "@example/db",
               includePathPatterns: ["**"],
               checkedPathPatterns: ["**"],
               targets: [{ sourceSpecifierPatterns: ["mod"], calleeNamePatterns: ["run"] }],

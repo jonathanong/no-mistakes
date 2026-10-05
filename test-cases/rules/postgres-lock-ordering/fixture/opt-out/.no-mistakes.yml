@@ -1,0 +1,6 @@
+# Explicit executorNames: [] opts out of executor calls, so the lock in src/lock.ts is not scanned.
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      executorNames: []

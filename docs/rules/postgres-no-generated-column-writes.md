@@ -15,6 +15,8 @@ files.
 rules:
   - rule: postgres-no-generated-column-writes
     scope: repository
+    options:
+      importSpecifier: "@example/db"
 ```
 
 `sqlInclude` defaults to `**/*.sql`. There is no hardcoded `backend/` or
@@ -23,8 +25,9 @@ blocks is collected into the catalog, DML (`UPDATE` / `INSERT` / `MERGE`)
 inside `DO $$` is reported like top-level DML (see statement lines below), and PostgreSQL 18 `VIRTUAL` generated
 columns still populate the catalog. `include` selects DML files (`.ts`,
 `.mts`, `.tsx`, `.js`, `.sql` when unset). `importSpecifier` /
-`executorNames` select TypeScript call sites. No module is selected by default;
-a configured module enables `query`, `read`, and `write`.
+`executorNames` select TypeScript call sites. No module is selected by default and
+at least one of the two options is required (`executorNames: []` opts out of
+executor calls); a configured module enables `query`, `read`, and `write`.
 
 Tables that are not declared in SQL — for example application election
 `voteTable` relations — must be listed in `extraGeneratedColumns`. This rule
@@ -107,10 +110,12 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
 - `include` selects files containing DML. When omitted or empty, it analyzes
   `.ts`, `.mts`, `.tsx`, `.js`, and `.sql` files; otherwise its glob list is
   used.
-- `importSpecifier` supplies the embedded-SQL matcher's import source. When
-  omitted or empty, it has no module default.
+- `importSpecifier` supplies the embedded-SQL matcher's import source. It has no
+  module default; omitting it (or leaving it empty) without `executorNames` is a
+  configuration error.
 - `executorNames` supplies the imported executor names that contain SQL. An
-  omitted or empty list uses `[query, read, write]` only with a configured module.
+  omitted list uses `[query, read, write]` only with a configured module; an
+  explicit `[]` without a module selects no executor calls.
 - `extraGeneratedColumns` adds `{ table, column }` pairs to the generated
   column catalog. It defaults to an empty list.
 - `triggerMaintainedColumns` defaults to `[]`. A non-generated column whose
@@ -123,10 +128,15 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
 
 | Option | Default | Behavior |
 | --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+| `importSpecifier` | None | Required unless `executorNames` is set. Set it to your database module to match its named imports. |
+| `executorNames` | Required unless `importSpecifier` is set; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. `[]` selects no executor calls. |
 
-With both options omitted, executor calls (including `.query`) are not scanned.
+Set `importSpecifier` or `executorNames`. With both omitted, `no-mistakes check`
+fails with a configuration error (`postgres-no-generated-column-writes option importSpecifier: set
+importSpecifier (or executorNames) to select executor calls; ...`) instead of
+silently scanning no executor calls. To scan only SQL files and native SQL, set
+`executorNames: []` explicitly; without a module that selects no executor calls
+(including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

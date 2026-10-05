@@ -18,6 +18,18 @@ function executorOptionDefaults(options = {}) {
   };
 }
 
+// A rule that checks executor calls must select them. With neither option it would
+// silently check no calls, so that is a configuration error; `executorNames: []`
+// is the explicit opt-out. A blank `importSpecifier` counts as omitted.
+function resolveExecutorOptions(ruleId, options = {}) {
+  if (!options.importSpecifier && options.executorNames === undefined) {
+    throw new Error(
+      `${ruleId} option importSpecifier: set importSpecifier (or executorNames) to select executor calls; set executorNames: [] to select no executor calls (see docs/migrations/explicit-postgres-executors.md)`,
+    );
+  }
+  return executorOptionDefaults(options);
+}
+
 function executorOptionSchema(extraProperties = {}) {
   return {
     type: "object",
@@ -119,4 +131,5 @@ module.exports = {
   isDatabaseCall,
   isManualTransactionText,
   memberPropertyName,
+  resolveExecutorOptions,
 };

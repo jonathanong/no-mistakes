@@ -21,10 +21,12 @@ for (const ids of chunkArray(userIds, 50)) {
 
 ## Options
 
-- `importSpecifier` identifies the database module; it defaults to empty. Set
+- `importSpecifier` identifies the database module; it has no default. Set
   it explicitly to select imports from a module.
-- `executorNames` lists checked executor names and defaults to `[]`. A configured
-  module with no explicit names enables `query`, `read`, and `write`.
+- `executorNames` lists checked executor names. A configured module with no
+  explicit names enables `query`, `read`, and `write`. Set at least one of
+  `importSpecifier` and `executorNames`: omitting both throws a configuration
+  error. `executorNames: []` explicitly selects no executor calls.
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
 
@@ -47,6 +49,8 @@ await Promise.all(ids.map((id) => query(sql, [id])));
 
 Executor import matching has no module default. Set `importSpecifier` explicitly
 to your database module to enable default `query`, `read`, and `write` names.
+Setting neither `importSpecifier` nor `executorNames` is a configuration error; set
+`executorNames: []` explicitly to select no executor calls.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables `.query` members. A configured module retains member matching
 even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).

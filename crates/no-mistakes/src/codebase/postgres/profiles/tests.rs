@@ -177,7 +177,7 @@ fn rule_config(rule: &str) -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: rule.into(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str("sqlInclude: ['**/*.sql']").unwrap(),
+            options: serde_yaml::from_str("sqlInclude: ['**/*.sql']\nexecutorNames: []").unwrap(),
             ..Default::default()
         }],
         ..Default::default()
@@ -254,9 +254,10 @@ fn every_embedded_rule_requires_explicit_executor_selection() {
     ]);
     for rule_id in ids {
         for (yaml, expected_calls) in [
-            ("{}", 0),
             ("importSpecifier: '@example/db'", 1),
             ("executorNames: [query]", 1),
+            // Explicit empty names opt out: SQL files and native SQL only.
+            ("executorNames: []", 0),
             ("importSpecifier: '@other/db'", 0),
         ] {
             let mut config = NoMistakesConfig::default();
@@ -269,6 +270,40 @@ fn every_embedded_rule_requires_explicit_executor_selection() {
             let profiles = configured_embedded_sql_options(&config, &[rule_id]).unwrap();
             let facts = extract_embedded_sql_from_source(&path, &source, &profiles[0]);
             assert_eq!(facts.calls.len(), expected_calls, "{rule_id}: {yaml}");
+        }
+    }
+}
+
+#[test]
+fn every_embedded_rule_rejects_an_absent_executor_selection() {
+    let mut ids = PREPARED_EMBEDDED_SQL_RULE_IDS.to_vec();
+    ids.extend([
+        "postgres-idempotent-insert",
+        "postgres-require-query-annotation",
+    ]);
+    for rule_id in ids {
+        // A blank module is absent too, and so is an options mapping that
+        // only carries unrelated keys.
+        for yaml in ["{}", "importSpecifier: ''", "sqlInclude: ['**/*.sql']"] {
+            let mut config = NoMistakesConfig::default();
+            config.rules.push(RuleDef {
+                rule: rule_id.to_string(),
+                scope: Some(RuleScope::Repository),
+                options: serde_yaml::from_str(yaml).unwrap(),
+                ..RuleDef::default()
+            });
+            let error = configured_embedded_sql_options(&config, &[rule_id])
+                .expect_err("an absent executor selection must be a configuration error");
+            let message = error.to_string();
+            assert!(
+                message.starts_with(&format!("{rule_id} option importSpecifier: set ")),
+                "{rule_id}: {yaml}: {message}"
+            );
+            assert!(message.contains("executorNames: []"), "{message}");
+            assert!(
+                message.contains("docs/migrations/explicit-postgres-executors.md"),
+                "{message}"
+            );
         }
     }
 }

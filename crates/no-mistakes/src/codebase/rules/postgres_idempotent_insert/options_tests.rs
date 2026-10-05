@@ -57,8 +57,8 @@ fn include_exclude_and_option_overrides() {
     assert!(error.to_string().contains("invalid glob"), "{error}");
     let compiled = compile_options(&Options {
         sql_include: vec!["migrations/**/*.sql".into()],
-        import_specifier: "@other/db".into(),
-        executor_names: vec!["run".into()],
+        import_specifier: Some("@other/db".into()),
+        executor_names: Some(vec!["run".into()]),
         unanalyzable_sql: "ignore".into(),
         scan_embedded: false,
         check_convergence: false,
@@ -79,6 +79,7 @@ fn include_exclude_and_option_overrides() {
     assert!(!compiled.check_triggers);
     assert!(!compiled.check_generated);
     let only_volatility = compile_options(&Options {
+        import_specifier: Some("@example/db".into()),
         check_volatility: false,
         ..Default::default()
     })
@@ -98,12 +99,42 @@ fn include_exclude_and_option_overrides() {
         .any(|(name, columns)| name == "audit" && columns == &["id".to_string()]));
     assert!(
         compile_options(&Options {
+            import_specifier: Some("@example/db".into()),
             unanalyzable_sql: "fail".into(),
             ..Default::default()
         })
         .unwrap()
         .fail_unanalyzable
     );
+}
+
+#[test]
+fn executor_selection_is_only_required_while_embedded_calls_are_scanned() {
+    let error = compile_options(&Options::default())
+        .err()
+        .expect("embedded scanning needs an executor selection");
+    assert!(
+        error
+            .to_string()
+            .starts_with("postgres-idempotent-insert option importSpecifier: set importSpecifier"),
+        "{error}"
+    );
+    // `scanEmbedded: false` never judges executor calls, so neither option is
+    // needed and the rule stays on SQL files.
+    let sql_only = compile_options(&Options {
+        scan_embedded: false,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(!sql_only.scan_embedded);
+    assert_eq!(sql_only.embedded, EmbeddedSqlOptions::default());
+    let opted_out = compile_options(&Options {
+        executor_names: Some(Vec::new()),
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(opted_out.scan_embedded);
+    assert_eq!(opted_out.embedded, EmbeddedSqlOptions::default());
 }
 
 #[test]

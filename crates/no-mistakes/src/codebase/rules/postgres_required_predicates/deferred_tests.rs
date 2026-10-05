@@ -125,7 +125,9 @@ fn prepared_scans_reject_an_absent_request() {
     let root = fixture("deferred");
     let file = root.join("sql/self-in.sql");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
-    let opts = compile_options(&serde_yaml::from_str(REQUIRED).unwrap()).unwrap();
+    let opts =
+        compile_options(&serde_yaml::from_str(&format!("{REQUIRED}executorNames: []\n")).unwrap())
+            .unwrap();
     let error = scan::scan(&root, &opts, &[file], &sources, None).unwrap_err();
     assert!(error
         .to_string()

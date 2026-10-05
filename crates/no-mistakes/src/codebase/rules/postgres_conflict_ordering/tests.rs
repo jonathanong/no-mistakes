@@ -179,11 +179,11 @@ fn requires_a_catalog_path() {
 fn compile_options_canonicalize_executor_names_for_prepared_fact_lookup() {
     let compiled = compile_options(&Options {
         schema_catalog_path: "schema.json".to_string(),
-        executor_names: vec![
+        executor_names: Some(vec![
             "write".to_string(),
             "query".to_string(),
             "write".to_string(),
-        ],
+        ]),
         ..Default::default()
     })
     .unwrap();
@@ -207,6 +207,7 @@ fn prepared_scan_contextualizes_a_missing_embedded_sql_projection() {
     );
     let compiled = compile_options(&Options {
         schema_catalog_path: "schema.json".to_string(),
+        import_specifier: Some("@example/db".to_string()),
         ..Options::default()
     })
     .unwrap();
