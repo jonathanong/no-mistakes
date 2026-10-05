@@ -24,6 +24,16 @@ fn multi_target_of_lists_require_a_catalog_prefix_for_every_relation() {
 }
 
 #[test]
+fn no_key_update_is_checked_and_key_share_is_not() {
+    assert!(findings_for("pass-key-strengths").is_empty());
+    let findings = findings_for("fail-key-strengths");
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    for finding in &findings {
+        assert!(finding.message.contains("ABBA"), "{findings:#?}");
+    }
+}
+
+#[test]
 fn unresolved_name_in_a_multi_target_of_list_fails_closed() {
     let findings = findings_with_catalog("fail-catalog-multi-target-unresolved");
     assert_eq!(findings.len(), 1, "{findings:#?}");

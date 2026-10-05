@@ -9,6 +9,7 @@ mod distinct_group;
 pub(super) mod fetch_expression;
 mod lenient;
 mod lock_of_list;
+mod lock_strength;
 mod prepared;
 pub(crate) use lenient::LocatedStatement;
 pub(crate) use prepared::PreparedSql;
@@ -84,6 +85,7 @@ fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>
     derived_table::normalize(tokens);
     standalone_table::normalize(tokens);
     table_boundary::normalize(tokens);
+    lock_strength::normalize(tokens);
     lock_of_list::normalize(tokens);
 }
 

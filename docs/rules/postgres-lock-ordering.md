@@ -64,6 +64,12 @@ A multi-row `FOR UPDATE` query using `IN` or `= ANY` must order its rows or use
 `SKIP LOCKED`. The embedded SQL must be statically recoverable; unparseable
 statements receive a separate diagnostic.
 
+`FOR NO KEY UPDATE` is checked exactly like `FOR UPDATE`, with a single target or
+an `OF` list: lock ordering depends on which rows are locked and in what order,
+not on the lock strength. Shared locks (`FOR SHARE` and `FOR KEY SHARE`) are
+accepted by the parser but are not checked, since shared lockers do not wait on
+each other and cannot form this ABBA cycle.
+
 With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
 `ORDER BY` with the ordered expression keys of one valid, ready, non-partial
 btree unique index for every locked base table. `FOR UPDATE OF alias` limits
