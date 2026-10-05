@@ -1,0 +1,96 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "order_deliveries": {
+      "indexes": {
+        "order_deliveries_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        },
+        "order_deliveries_idempotency_key_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "idempotency_key",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        },
+        "order_deliveries_intake_kind_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "intake_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "kind",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": null
+    },
+    "sessions": {
+      "indexes": {
+        "sessions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": null
+    }
+  },
+  "views": {},
+  "enums": {},
+  "extensions": {},
+  "functions": {},
+  "policies": {}
+}

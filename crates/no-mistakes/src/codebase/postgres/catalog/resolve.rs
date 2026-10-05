@@ -126,6 +126,14 @@ impl SchemaCatalog {
             })
             .collect()
     }
+    /// Whether equality on `columns` holds `table` to at most one row: some unique key of
+    /// [`Self::unique_keys`] lies wholly among them.
+    pub fn columns_pin_one_row(&self, table: &str, columns: &[String]) -> bool {
+        let pinned: Vec<String> = columns.iter().map(|c| normalize_identifier(c)).collect();
+        self.unique_keys(table)
+            .iter()
+            .any(|key| !key.is_empty() && key.iter().all(|column| pinned.contains(column)))
+    }
     /// Whether `column` of `table` cannot hold NULL. Every row has a `ctid`.
     pub fn column_is_not_null(&self, table: &str, column: &str) -> bool {
         column == "ctid"

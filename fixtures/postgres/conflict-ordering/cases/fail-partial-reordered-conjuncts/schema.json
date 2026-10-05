@@ -1,0 +1,76 @@
+{
+  "coverage": "ordering",
+  "currentDatabase": "postgres",
+  "formatVersion": 2,
+  "schema": "s1540",
+  "tables": {
+    "memberships": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "idx_memberships__account_user_active": {
+          "accessMethod": "btree",
+          "constraintBacked": false,
+          "definition": "CREATE UNIQUE INDEX idx_memberships__account_user_active ON s1540.memberships USING btree (account_id, user_id) WHERE ((deleted_at IS NULL) AND (user_id IS NOT NULL))",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "account_id",
+              "descending": false,
+              "expression": "account_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "user_id",
+              "descending": false,
+              "expression": "user_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": "((deleted_at IS NULL) AND (user_id IS NOT NULL))",
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "primaryKey": null,
+      "relationKind": "table",
+      "uniqueConstraints": {}
+    }
+  }
+}

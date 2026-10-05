@@ -29,3 +29,6 @@ CREATE TABLE "Catalog.Test".mixed_deferred (value integer UNIQUE DEFERRABLE INIT
 CREATE UNIQUE INDEX mixed_immediate ON "Catalog.Test".mixed_deferred(value);
 CREATE TABLE "Catalog.Test".numeric_expression (value integer);
 CREATE UNIQUE INDEX numeric_key ON "Catalog.Test".numeric_expression((value + 1));
+-- An expression over a column with a non-default collation derives that collation, so the
+-- canonical comparator cannot model it, unlike `lower(email)` above on the default collation.
+CREATE UNIQUE INDEX collation_expression ON "Catalog.Test".mixed_collation((lower(value)));

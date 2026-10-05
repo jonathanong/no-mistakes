@@ -1,0 +1,104 @@
+{
+  "coverage": "ordering",
+  "currentDatabase": "postgres",
+  "formatVersion": 2,
+  "schema": "s1539",
+  "tables": {
+    "contacts": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "contacts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX contacts_pkey ON s1539.contacts USING btree (account_id, email)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "account_id",
+              "descending": false,
+              "expression": "account_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "email",
+              "descending": false,
+              "expression": "email",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        },
+        "idx_contacts__account_email_lower": {
+          "accessMethod": "btree",
+          "constraintBacked": false,
+          "definition": "CREATE UNIQUE INDEX idx_contacts__account_email_lower ON s1539.contacts USING btree (account_id, lower(email))",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "account_id",
+              "descending": false,
+              "expression": "account_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": null,
+              "descending": false,
+              "expression": "lower(email)",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "account_id",
+          "email"
+        ]
+      },
+      "relationKind": "table",
+      "uniqueConstraints": {}
+    }
+  }
+}

@@ -19,7 +19,7 @@ mod select;
 mod sweeps;
 mod tokens;
 mod trigger;
-mod value;
+pub(in crate::codebase::postgres) mod value;
 mod wrappers;
 mod writes;
 

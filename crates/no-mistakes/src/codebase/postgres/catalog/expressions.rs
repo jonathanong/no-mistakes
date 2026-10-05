@@ -41,7 +41,9 @@ pub fn expression_matches(left: &str, right: &str, ignore_qualifiers: bool) -> b
 }
 pub fn normalize_expression(expression: &str) -> String {
     parse_postgres_expression(expression)
-        .map(|expression| normalize_sql_display(&strip_outer_nesting(expression).to_string()))
+        .map(|expression| {
+            normalize_sql_display(&super::nesting::strip_redundant_nesting(expression).to_string())
+        })
         .unwrap_or_else(|| normalize_sql_display(expression))
 }
 pub fn parse_postgres_expression(expression: &str) -> Option<Expr> {
@@ -60,12 +62,6 @@ pub fn parse_postgres_expression(expression: &str) -> Option<Expr> {
         } => Some(expression),
         _ => None,
     }
-}
-fn strip_outer_nesting(mut expression: Expr) -> Expr {
-    while let Expr::Nested(inner) = expression {
-        expression = *inner;
-    }
-    expression
 }
 fn normalize_sql_display(sql: &str) -> String {
     let mut normalized = String::with_capacity(sql.len());

@@ -1,0 +1,53 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "receipts": {
+      "indexes": {
+        "receipts_order_id_key": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [{ "expression": "order_id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    },
+    "order_archive": {
+      "indexes": {
+        "order_archive_order_id_key": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [{ "expression": "order_id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    },
+    "orders": {
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": { "columns": ["id"] }
+    },
+    "order_lines": {
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [
+            { "expression": "order_id", "descending": false, "nullsFirst": false },
+            { "expression": "line_no", "descending": false, "nullsFirst": false }
+          ],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": { "columns": ["order_id", "line_no"] }
+    },
+    "staged_orders": {
+      "indexes": {
+        "staged_orders_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": { "columns": ["id"] }
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

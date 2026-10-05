@@ -1,10 +1,18 @@
 use crate::codebase::postgres::{canonical_order_keys, parse_postgres_sql, CanonicalOrderKey};
 use anyhow::{bail, Result};
+use collect::collect_statement;
 use raw::{raw_conflicts, sanitize};
-use sqlparser::ast::{Insert, OnInsert, Query, SelectItem, SetExpr, Statement, TableObject};
+use single_row::query_is_potentially_multi_row;
+use sqlparser::ast::{Insert, SelectItem, SetExpr, TableObject};
 use std::collections::BTreeMap;
 
+mod collect;
+mod pinned;
+pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
+mod single_row;
+#[cfg(test)]
+mod single_row_tests;
 #[cfg(test)]
 mod tests;
 
@@ -25,15 +33,29 @@ pub enum SqlConflictTarget {
     Targetless,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SqlInsertSourceShape {
     pub multi_row: bool,
+    /// Set when the source reads one relation pinned by constant equalities; a catalog unique
+    /// key among `columns` then proves a single row.
+    pub pinned_relation: Option<SqlPinnedRelation>,
+    /// Select-list expressions by position, for positional `ORDER BY`; `None` with a wildcard.
+    pub select_list: Option<Vec<String>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
     pub projections: Option<BTreeMap<String, String>>,
     pub order_aliases: BTreeMap<String, String>,
 }
 
 pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>> {
+    analyze_conflict_inserts_with_binds(sql, &[])
+}
+
+/// `binds` are the `(line, column)` positions of identifiers recovered from template
+/// interpolations; only those identifiers count as bound values.
+pub fn analyze_conflict_inserts_with_binds(
+    sql: &str,
+    binds: &[(u32, u32)],
+) -> Result<Vec<SqlConflictInsertFact>> {
     let raw = raw_conflicts(sql)?;
     if raw.is_empty() {
         return Ok(Vec::new());
@@ -43,7 +65,7 @@ pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>>
     let mut raw = raw.into_iter();
     let mut inserts = Vec::new();
     for statement in &statements {
-        collect_statement(statement, &mut raw, &mut inserts)?;
+        collect_statement(statement, &mut raw, binds, &mut inserts)?;
     }
     if raw.next().is_some() {
         bail!("could not align ON CONFLICT clauses with INSERT statements");
@@ -51,102 +73,33 @@ pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>>
     Ok(inserts)
 }
 
-fn collect_statement(
-    statement: &Statement,
-    raw: &mut std::vec::IntoIter<raw::RawConflict>,
-    inserts: &mut Vec<SqlConflictInsertFact>,
-) -> Result<()> {
-    match statement {
-        Statement::Insert(insert) => collect_insert(insert, raw, inserts),
-        Statement::Query(query) => collect_query(query, raw, inserts),
-        _ => Ok(()),
-    }
-}
-
-fn collect_query(
-    query: &Query,
-    raw: &mut std::vec::IntoIter<raw::RawConflict>,
-    inserts: &mut Vec<SqlConflictInsertFact>,
-) -> Result<()> {
-    if let Some(with) = &query.with {
-        for cte in &with.cte_tables {
-            collect_query(&cte.query, raw, inserts)?;
-        }
-    }
-    collect_set_expr(query.body.as_ref(), raw, inserts)
-}
-
-fn collect_set_expr(
-    body: &SetExpr,
-    raw: &mut std::vec::IntoIter<raw::RawConflict>,
-    inserts: &mut Vec<SqlConflictInsertFact>,
-) -> Result<()> {
-    match body {
-        SetExpr::Insert(statement) => collect_statement(statement, raw, inserts),
-        SetExpr::Query(query) => collect_query(query, raw, inserts),
-        SetExpr::SetOperation { left, right, .. } => {
-            collect_set_expr(left, raw, inserts)?;
-            collect_set_expr(right, raw, inserts)
-        }
-        _ => Ok(()),
-    }
-}
-
-fn collect_insert(
+fn analyze_insert(
     insert: &Insert,
-    raw: &mut std::vec::IntoIter<raw::RawConflict>,
-    inserts: &mut Vec<SqlConflictInsertFact>,
-) -> Result<()> {
-    if let Some(source) = insert.source.as_deref() {
-        collect_query(source, raw, inserts)?;
-    }
-    let Some(OnInsert::OnConflict(_)) = insert.on else {
-        return Ok(());
-    };
-    let raw = raw
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("missing ON CONFLICT target"))?;
-    inserts.push(analyze_insert(insert, raw.target)?);
-    Ok(())
-}
-
-fn analyze_insert(insert: &Insert, target: SqlConflictTarget) -> Result<SqlConflictInsertFact> {
+    target: SqlConflictTarget,
+    binds: &[(u32, u32)],
+) -> Result<SqlConflictInsertFact> {
     let table = match &insert.table {
         TableObject::TableName(name) => name.to_string(),
         _ => bail!("INSERT target is not a table name"),
     };
-    let source = insert.source.as_deref().map_or(
-        SqlInsertSourceShape {
-            multi_row: false,
-            order: None,
-            projections: None,
-            order_aliases: BTreeMap::new(),
-        },
-        |query| SqlInsertSourceShape {
-            multi_row: query_is_potentially_multi_row(query.body.as_ref()),
-            order: query.order_by.as_ref().and_then(order_keys),
-            projections: projection_map(insert, query.body.as_ref()),
-            order_aliases: order_aliases(query.body.as_ref()),
-        },
-    );
+    let source = insert
+        .source
+        .as_deref()
+        .map_or(SqlInsertSourceShape::default(), |query| {
+            SqlInsertSourceShape {
+                multi_row: query_is_potentially_multi_row(query, binds),
+                pinned_relation: pinned::pinned_relation(query, binds),
+                select_list: single_row::select_list(query.body.as_ref()),
+                order: query.order_by.as_ref().and_then(canonical_order_keys),
+                projections: projection_map(insert, query.body.as_ref()),
+                order_aliases: order_aliases(query.body.as_ref()),
+            }
+        });
     Ok(SqlConflictInsertFact {
         table,
         target,
         source,
     })
-}
-
-fn query_is_potentially_multi_row(body: &SetExpr) -> bool {
-    match body {
-        SetExpr::Values(values) => values.rows.len() > 1,
-        SetExpr::Insert(_) | SetExpr::Update(_) | SetExpr::Delete(_) | SetExpr::Merge(_) => true,
-        SetExpr::Query(query) => query_is_potentially_multi_row(query.body.as_ref()),
-        SetExpr::Select(_) | SetExpr::SetOperation { .. } | SetExpr::Table(_) => true,
-    }
-}
-
-fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
-    canonical_order_keys(order)
 }
 
 fn projection_map(insert: &Insert, body: &SetExpr) -> Option<BTreeMap<String, String>> {
