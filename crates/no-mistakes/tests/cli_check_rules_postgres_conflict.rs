@@ -50,6 +50,26 @@ fn postgres_conflict_ordering_cli_accepts_a_generated_text_expression_key() {
 }
 
 #[test]
+fn postgres_conflict_ordering_cli_normalizes_redundant_predicate_parentheses() {
+    // Regression: the catalog stores `((a) AND (b))`; the writer's unparenthesized predicate
+    // must resolve to the same partial index.
+    let output = check(&fixture("pass-partial-unparenthesized"));
+    assert!(
+        output.status.success(),
+        "exit non-zero: {}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn postgres_conflict_ordering_cli_keeps_conjunct_order_significant() {
+    let output = check(&fixture("fail-partial-reordered-conjuncts"));
+    let body = stdout(&output);
+    assert!(!output.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("unresolved-arbiter"), "{body}");
+}
+
+#[test]
 fn postgres_conflict_ordering_cli_accepts_a_catalog_ordered_writer() {
     let output = check(&fixture("pass-sql-include"));
     assert!(

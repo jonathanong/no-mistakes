@@ -90,7 +90,10 @@ The comparison parses SQL expressions: for example, an index key
 `lower` as a column. It also resolves a top-level `SELECT` alias, so
 `SELECT input.id AS conflict_id ... ORDER BY conflict_id` is accepted. Only an
 exact normalized partial-index predicate is accepted; logical implication is
-deliberately not guessed.
+deliberately not guessed. Normalization ignores case, whitespace and redundant
+parentheses around `AND`/`OR` operands, so `deleted_at IS NULL AND kind IS NOT NULL`
+matches the catalog's `((deleted_at IS NULL) AND (kind IS NOT NULL))`. Parentheses that
+change precedence, such as `a AND (b OR c)`, and the order of conjuncts stay significant.
 
 ## Valid example
 
