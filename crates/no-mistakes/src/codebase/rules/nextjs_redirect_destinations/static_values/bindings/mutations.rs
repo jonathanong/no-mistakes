@@ -57,13 +57,23 @@ pub(super) fn invalidate_statement(statement: &Statement<'_>, env: &mut Environm
     References { env }.visit_statement(statement);
 }
 fn shares_value(value: &Value, target: &Value) -> bool {
+    shares_bounded(value, target, &mut 4096, 0)
+}
+fn shares_bounded(value: &Value, target: &Value, remaining: &mut usize, depth: usize) -> bool {
+    // Exhaustion conservatively treats the binding as a possible alias.
+    if *remaining == 0 || depth >= 64 {
+        return true;
+    }
+    *remaining -= 1;
     match (value, target) {
         (Value::Array(left), Value::Array(right)) if Arc::ptr_eq(left, right) => true,
         (Value::Object(left, _), Value::Object(right, _)) if Arc::ptr_eq(left, right) => true,
-        (Value::Array(values), _) => values.iter().any(|value| shares_value(value, target)),
+        (Value::Array(values), _) => values
+            .iter()
+            .any(|value| shares_bounded(value, target, remaining, depth + 1)),
         (Value::Object(values, _), _) => values
             .values()
-            .any(|(value, _)| shares_value(value, target)),
+            .any(|(value, _)| shares_bounded(value, target, remaining, depth + 1)),
         _ => false,
     }
 }

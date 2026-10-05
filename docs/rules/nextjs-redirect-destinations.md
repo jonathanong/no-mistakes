@@ -113,3 +113,6 @@ construction, or suppress the finding when runtime behavior is intentional.
 An invocation bounds evaluation to 4,096 expression steps per environment or
 method, 64 expression levels, and 65,536 bytes per constructed template string;
 exceeding a limit also reports incomplete extraction.
+
+Destination collection and mutation alias traversal are also bounded to 4,096
+value visits and 64 nesting levels; exhaustion reports incomplete extraction.

@@ -67,6 +67,10 @@ fn unsupported_forms_and_evaluation_limits_fail_closed() {
         "static-bounds",
         "static-string-bound",
         "static-object-bound",
+        "static-shared-array-bound",
+        "static-deep-array-bound",
+        "static-alias-traversal-bound",
+        "static-alias-depth-bound",
     ] {
         let findings = run(fixture, OPTIONS);
         assert_eq!(findings.len(), 1, "{fixture}: {findings:?}");

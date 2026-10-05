@@ -1,3 +1,4 @@
+mod collection;
 use super::static_values::{
     parameter_environment, program_environment, scope_environment, Environment, Evaluator, Value,
 };
@@ -86,38 +87,6 @@ impl BodyFinder<'_, '_> {
         self.body_found = true;
         self.collect(value);
         true
-    }
-    fn collect(&mut self, value: Value) {
-        match value {
-            Value::Array(values) => {
-                for value in values.iter().cloned() {
-                    self.collect(value);
-                }
-            }
-            Value::Object(properties, complete) => {
-                let mut properties = (*properties).clone();
-                self.incomplete |= !complete;
-                if let Some((destination, offset)) = properties.remove("destination") {
-                    self.saw_destination_property = true;
-                    if let Value::String(value) = destination {
-                        let line = byte_offset_to_line(self.source, offset as usize) as usize;
-                        self.destinations.entry(value).or_insert(line);
-                    } else {
-                        self.incomplete = true;
-                    }
-                } else if self.name == "rewrites" {
-                    for key in ["beforeFiles", "afterFiles", "fallback"] {
-                        if let Some((value, _)) = properties.remove(key) {
-                            self.collect(value);
-                        }
-                    }
-                    self.incomplete |= !properties.is_empty();
-                } else {
-                    self.incomplete = true;
-                }
-            }
-            _ => self.incomplete = true,
-        }
     }
 }
 
