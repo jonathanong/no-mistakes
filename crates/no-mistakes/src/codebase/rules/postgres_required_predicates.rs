@@ -182,6 +182,8 @@ mod equality_tests;
 #[cfg(test)]
 mod options_tests;
 #[cfg(test)]
+mod tagged_tests;
+#[cfg(test)]
 mod tests;
 
 #[cfg(test)]
