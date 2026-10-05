@@ -169,6 +169,11 @@ scoped executors that also match imports from `importSpecifier` subpaths, see th
 `executorFactoryNames?: string[]`, `executorTypeNames?: string[]`, and
 `chunkFunctionNames?: string[]` (default `["chunkArray"]`).
 
+The Rust-only `reportUnmatchedExecutorNames` option (reports configured executor
+names no scanned file imports) is not available in these ESLint rules: they run per
+file and cannot know a name never matched anywhere. See the
+[migration notes](migrations/explicit-postgres-executors.md#reporting-unmatched-names).
+
 ### `server-require-nullable-fetch-wrapper`
 
 `includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,

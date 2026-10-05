@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      # Same typo as the failing fixture; reporting is off, so nothing is reported.
+      executorFactoryNames: [openTransaction, openTransacton]
+      executorTypeNames: [TransactionQuery]
+      reportUnmatchedExecutorNames: false

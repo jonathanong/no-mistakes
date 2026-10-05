@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [openTransaction]
+      executorTypeNames: [TransactionQuery]
+      reportUnmatchedExecutorNames: true

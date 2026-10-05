@@ -75,7 +75,9 @@ omitting both is a configuration error. Set `executorNames: []` explicitly
 without a module to select no executor calls. `executorFactoryNames` and
 `executorTypeNames` additionally select block- or function-scoped executors from
 factory results and executor-typed parameters, imported from `importSpecifier` or
-a subpath of it. See the
+a subpath of it. Rust rules also accept `reportUnmatchedExecutorNames: true` to report
+configured names no scanned file imports; it appears in `check()` results like any
+other finding. See the
 [executor migration notes](migrations/explicit-postgres-executors.md).
 
 ## PostgreSQL catalog generation

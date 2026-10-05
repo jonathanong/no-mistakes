@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      # `openTransacton` is a deliberate typo: it never matches an import, so
+      # exactly one unmatched-name finding is reported.
+      executorFactoryNames: [openTransaction, openTransacton]
+      executorTypeNames: [TransactionQuery]
+      reportUnmatchedExecutorNames: true

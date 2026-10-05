@@ -52,6 +52,44 @@ pub(super) fn scoped_executors(
     visitor.found
 }
 
+/// Configured scoped names this file imports from the configured module,
+/// as `(factory names, type names)`, using the same matching as the collector.
+pub(super) fn matched_names(
+    program: &Program<'_>,
+    options: &EmbeddedSqlOptions,
+) -> (Vec<String>, Vec<String>) {
+    let (mut factories, mut types) = (Vec::new(), Vec::new());
+    for statement in &program.body {
+        let Statement::ImportDeclaration(import) = statement else {
+            continue;
+        };
+        if !from_configured_module(import.source.value.as_str(), &options.import_specifier) {
+            continue;
+        }
+        for specifier in import.specifiers.iter().flatten() {
+            let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier else {
+                continue;
+            };
+            let imported = named.imported.name();
+            let type_only = import.import_kind == ImportOrExportKind::Type
+                || named.import_kind == ImportOrExportKind::Type;
+            if !type_only && contains(&options.executor_factory_names, imported.as_str()) {
+                factories.push(imported.to_string());
+            }
+            if contains(&options.executor_type_names, imported.as_str()) {
+                types.push(imported.to_string());
+            }
+        }
+    }
+    (sorted_unique(factories), sorted_unique(types))
+}
+
+fn sorted_unique(mut names: Vec<String>) -> Vec<String> {
+    names.sort();
+    names.dedup();
+    names
+}
+
 fn collect_imports(
     import: &ImportDeclaration<'_>,
     options: &EmbeddedSqlOptions,
