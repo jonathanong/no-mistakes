@@ -23,9 +23,10 @@ pub(super) fn select_line(sql: &str, select: &Select, tables: &[String]) -> usiz
     if standalone_table {
         start.line as usize
     } else {
-        super::super::lines::line_containing(
-            sql,
-            &[tables.first().map(String::as_str).unwrap_or("select")],
-        )
+        let name = tables.first().map(String::as_str).unwrap_or("select");
+        // Comments and quoted text can mention the table (`/* lockDocuments */`);
+        // prefer the first code token, then fall back to a substring search.
+        super::super::lines::first_word_line(sql, name.rsplit('.').next().unwrap_or(name))
+            .unwrap_or_else(|| super::super::lines::line_containing(sql, &[name]))
     }
 }

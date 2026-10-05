@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      relations:
+        - table: topics
+          require:
+            - parent_id IS NOT NULL
+        - table: orders
+          requireColumns: [account_id]

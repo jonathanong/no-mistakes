@@ -72,8 +72,10 @@ pub(super) fn textual_require(
                     file,
                     select.line.max(1),
                     &format!(
-                        "queries against {} must include `{}`",
-                        relation.table, required
+                        "queries against {} must include `{}`{}",
+                        relation.table,
+                        required,
+                        equality_hint(&select.predicate_sql, required)
                     ),
                     Some(relation.table.as_str()),
                     None,
@@ -82,6 +84,23 @@ pub(super) fn textual_require(
         }
     }
     findings
+}
+
+/// An equality on a column that must be `IS NULL` selects exactly the
+/// non-NULL rows the requirement excludes, so it never satisfies the
+/// requirement. Explain the right fix instead of weakening the rule.
+fn equality_hint(predicate_sql: &str, required: &str) -> String {
+    let required = normalize(required);
+    let Some(column) = required.strip_suffix(" is null") else {
+        return String::new();
+    };
+    let sql = normalize(predicate_sql);
+    if !(sql.contains(&format!("{column} = ")) || sql.contains(&format!("{column} in "))) {
+        return String::new();
+    }
+    format!(
+        "; an equality on `{column}` selects only rows where it is not NULL, which `{required}` excludes. If this query intentionally reads those rows, add `requireColumns: [{column}]` instead of `require`, or suppress with `no-mistakes-disable-next-line postgres-required-predicates` and a reason"
+    )
 }
 
 fn contains_predicate(haystack: &str, needle: &str) -> bool {

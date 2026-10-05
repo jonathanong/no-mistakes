@@ -178,7 +178,13 @@ mod validate;
 #[cfg(test)]
 mod columns_tests;
 #[cfg(test)]
+mod equality_tests;
+#[cfg(test)]
 mod options_tests;
+#[cfg(test)]
+mod scoped_tagged_tests;
+#[cfg(test)]
+mod tagged_tests;
 #[cfg(test)]
 mod tests;
 
