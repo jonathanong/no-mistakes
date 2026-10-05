@@ -171,7 +171,7 @@ jobs:
     name: Validate
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 50
     permissions:
       contents: read
     steps:
@@ -309,6 +309,11 @@ jobs:
           "$pg_bin/pg_ctl" -D "$RUNNER_TEMP/no-mistakes-postgres" -l "$RUNNER_TEMP/no-mistakes-postgres.log" -o "-k $RUNNER_TEMP -p 56225 -c listen_addresses=" start
           echo "NO_MISTAKES_TEST_POSTGRES_URL=postgresql://$USER@localhost/postgres?host=$RUNNER_TEMP&port=56225" >> "$GITHUB_ENV"
           echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"
+
+      # Build and run separately, like CI: compiling alone takes most of a combined budget.
+      - name: Build Rust tests
+        timeout-minutes: 20
+        run: cargo test --all-features --no-run
 
       - name: Run Rust tests
         timeout-minutes: 15
