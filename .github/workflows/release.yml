@@ -546,7 +546,7 @@ jobs:
       - validate
       - build-native
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 80
     permissions:
       contents: write
       id-token: write
@@ -662,29 +662,33 @@ jobs:
             gh release create "$tag" dist/* --title "$tag" --generate-notes
           fi
 
+      # Publish every package first, then wait: registry propagation runs in
+      # parallel, and one slow tarball (over 10 minutes for 0.74.0) cannot
+      # starve the packages queued behind it.
       - name: Publish npm platform packages with OIDC
-        timeout-minutes: 25
+        timeout-minutes: 50
         shell: bash
         run: |
           set -euo pipefail
           version="${{ needs.prepare.outputs.version }}"
           wait_script="packages/no-mistakes/scripts/wait-npm-tarball.js"
-          for pkg in \
-            no-mistakes-darwin-arm64 \
-            no-mistakes-linux-arm64-gnu \
-            no-mistakes-linux-x64-gnu \
+          packages=(
+            no-mistakes-darwin-arm64
+            no-mistakes-linux-arm64-gnu
+            no-mistakes-linux-x64-gnu
             no-mistakes-win32-x64-msvc
-          do
+          )
+          for pkg in "${packages[@]}"; do
             if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
               echo "$pkg $version tarball is already fetchable; skipping publish"
-              continue
-            fi
-            if pnpm view "$pkg@$version" version >/dev/null 2>&1; then
+            elif pnpm view "$pkg@$version" version >/dev/null 2>&1; then
               echo "$pkg $version metadata exists without a fetchable tarball; waiting"
             else
               npm publish "./packages/$pkg" --provenance --access public
             fi
-            node "$wait_script" --package "$pkg" --version "$version"
+          done
+          for pkg in "${packages[@]}"; do
+            node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 1800000
           done
 
   verify-npm-platform:
@@ -741,7 +745,7 @@ jobs:
       - prepare
       - verify-npm-platform
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 50
     permissions:
       contents: write
       id-token: write
@@ -776,27 +780,29 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
 
+      # Same publish-then-wait shape as the platform packages.
       - name: Publish npm JS packages with OIDC
-        timeout-minutes: 15
+        timeout-minutes: 40
         shell: bash
         run: |
           set -euo pipefail
           version="${{ needs.prepare.outputs.version }}"
           wait_script="packages/no-mistakes/scripts/wait-npm-tarball.js"
-          for pkg in \
-            no-mistakes \
+          packages=(
+            no-mistakes
             eslint-plugin-no-mistakes
-          do
+          )
+          for pkg in "${packages[@]}"; do
             if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
               echo "$pkg $version tarball is already fetchable; skipping publish"
-              continue
-            fi
-            if pnpm view "$pkg@$version" version >/dev/null 2>&1; then
+            elif pnpm view "$pkg@$version" version >/dev/null 2>&1; then
               echo "$pkg $version metadata exists without a fetchable tarball; waiting"
             else
               npm publish "./packages/$pkg" --provenance --access public
             fi
-            node "$wait_script" --package "$pkg" --version "$version"
+          done
+          for pkg in "${packages[@]}"; do
+            node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 1800000
           done
 
   verify-npm-root:
