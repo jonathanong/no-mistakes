@@ -1,3 +1,4 @@
+mod multi_target;
 use super::directive::{
     call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,
     has_safe_directive, line_start_offset, DEFAULT_SAFE_DIRECTIVE,
