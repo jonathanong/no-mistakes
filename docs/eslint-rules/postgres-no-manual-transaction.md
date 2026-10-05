@@ -51,3 +51,6 @@ to your database module to enable default `query`, `read`, and `write` names.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables `.query` members. A configured module retains member matching
 even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).
+
+Omitting both `importSpecifier` and `executorNames` is a configuration error.
+Set `executorNames: []` explicitly to select no executor calls.

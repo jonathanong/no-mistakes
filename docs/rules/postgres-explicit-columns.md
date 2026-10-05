@@ -7,8 +7,8 @@ relation is wider than `maxColumns`, or when it is named in `relations`.
 rules:
   - rule: postgres-explicit-columns
     options:
-      include: ['src/**/*.ts']
-      exclude: ['**/*.test.ts']
+      include: ["src/**/*.ts"]
+      exclude: ["**/*.test.ts"]
       sqlInclude: []
       schemaCatalogPath: db/schema.json
       maxColumns: 12
@@ -72,12 +72,19 @@ list means no function is exempt. An empty or duplicate name is a config error.
 
 ### Executor configuration
 
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+Omitting both `importSpecifier` and `executorNames` is a configuration error.
+Set `importSpecifier` to your database module or list `executorNames` explicitly.
+Use `executorNames: []` without a module to select no executor calls and retain
+SQL-file/native-SQL analysis where supported. See the
+[executor migration](../migrations/explicit-postgres-executors.md).
 
-With both options omitted, executor calls (including `.query`) are not scanned.
+| Option            | Default                                                      | Behavior                                                                            |
+| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
+| `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+Omitting both options is a configuration error. Set `executorNames: []` without
+`importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).

@@ -112,6 +112,7 @@ fn empty_relations_are_a_no_op() {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("executorNames: []").unwrap(),
             ..Default::default()
         }],
         ..Default::default()
@@ -149,7 +150,7 @@ fn invalid_include_glob_errors() {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str("include: ['[']").unwrap(),
+            options: serde_yaml::from_str("include: ['[']\nexecutorNames: []").unwrap(),
             ..Default::default()
         }],
         ..Default::default()

@@ -221,7 +221,7 @@ fn empty_catalog_dynamic_sql_and_invalid_schema() {
     let dynamic = unit_fixture("dynamic");
     let unresolved = check_with_files(
         &dynamic,
-        &config_with_options("importSpecifier: ''"),
+        &config_with_options("importSpecifier: ''\nexecutorNames: []"),
         &[dynamic.join("schema.sql"), dynamic.join("write.ts")],
     )
     .unwrap();

@@ -15,6 +15,7 @@ impl RuleDef {
     /// disables a configured rule. The original [`Self::rule_options`] API
     /// intentionally remains infallible for existing programmatic callers.
     pub fn try_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> Result<T> {
+        super::postgres_executors::validate(self)?;
         if matches!(&self.options, serde_yaml::Value::Null)
             || matches!(&self.options, serde_yaml::Value::Mapping(options) if options.is_empty())
         {

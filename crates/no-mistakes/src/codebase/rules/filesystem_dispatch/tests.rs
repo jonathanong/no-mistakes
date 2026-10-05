@@ -8,6 +8,9 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
     let rule_entries: String = rules
         .iter()
         .map(|id| {
+            let executor_option = if crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
+                || matches!(*id, POSTGRES_IDEMPOTENT_INSERT | POSTGRES_REQUIRE_QUERY_ANNOTATION)
+            { "      executorNames: []\n" } else { "" };
             if *id == PRODUCTION_DEPENDENCY_DECLARATIONS {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n      \
@@ -20,21 +23,18 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                         "../../../../../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml"
                     )
                 )
-            } else if *id == POSTGRES_CONFLICT_ORDERING
-                || *id == POSTGRES_COLUMN_REQUIRES_TRIGGER
-                || *id == POSTGRES_REQUIRED_COMMENTS
-                || *id == POSTGRES_DUPLICATE_FUNCTION_BODY
-                || *id == POSTGRES_TABLE_SHAPE
-                || *id == POSTGRES_OBJECT_NAMING
-                || *id == POSTGRES_COLUMN_NAMING
-                || *id == POSTGRES_FINITE_TEXT_COLUMNS
-                || *id == POSTGRES_ARRAY_COLUMNS
-                || *id == POSTGRES_EXPLICIT_COLUMNS
-                || *id == POSTGRES_BOUNDED_STATEMENTS
+            } else if matches!(*id,
+                POSTGRES_CONFLICT_ORDERING | POSTGRES_COLUMN_REQUIRES_TRIGGER
+                | POSTGRES_REQUIRED_COMMENTS | POSTGRES_DUPLICATE_FUNCTION_BODY
+                | POSTGRES_TABLE_SHAPE | POSTGRES_OBJECT_NAMING | POSTGRES_COLUMN_NAMING
+                | POSTGRES_FINITE_TEXT_COLUMNS | POSTGRES_ARRAY_COLUMNS
+                | POSTGRES_EXPLICIT_COLUMNS | POSTGRES_BOUNDED_STATEMENTS)
             {
                 format!(
-                    "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n"
+                    "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n{executor_option}"
                 )
+            } else if !executor_option.is_empty() {
+                format!("  - rule: {id}\n    scope: repository\n    options:\n{executor_option}")
             } else {
                 format!("  - rule: {id}\n    scope: repository\n")
             }

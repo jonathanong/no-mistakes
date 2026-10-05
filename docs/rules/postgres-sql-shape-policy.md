@@ -34,7 +34,7 @@ rules:
         literalLimit:
           allowedValues: [1]
         keysetOnlySweep:
-          nonSelectivePredicates: ['deleted_at IS NULL']
+          nonSelectivePredicates: ["deleted_at IS NULL"]
           ignoreTables: []
       unanalyzableSql: fail
 ```
@@ -123,12 +123,19 @@ other values are a configuration error). `importSpecifier` has no default. `exec
 
 ### Executor configuration
 
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `importSpecifier` | Empty | Set explicitly to your database module to match its named imports. |
-| `executorNames` | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+Omitting both `importSpecifier` and `executorNames` is a configuration error.
+Set `importSpecifier` to your database module or list `executorNames` explicitly.
+Use `executorNames: []` without a module to select no executor calls and retain
+SQL-file/native-SQL analysis where supported. See the
+[executor migration](../migrations/explicit-postgres-executors.md).
 
-With both options omitted, executor calls (including `.query`) are not scanned.
+| Option            | Default                                                      | Behavior                                                                            |
+| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
+| `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
+
+Omitting both options is a configuration error. Set `executorNames: []` without
+`importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
@@ -192,13 +199,13 @@ with a `TABLESAMPLE` is restricted before it is ordered, so it is not a whole-ta
 A bare `ORDER BY` name
 that is also an output name means that output expression: `SELECT random() AS id … ORDER BY
 id`, and `SELECT random() … ORDER BY random`, are not ordered by a column of the table. A
-builder fragment that is only the tail of a query (`` .append(sql` ORDER BY id LIMIT 500`) ``)
+builder fragment that is only the tail of a query (``.append(sql` ORDER BY id LIMIT 500`)``)
 is inspected for its `LIMIT` too.
 
-| Option                                                | Type      | Default | Meaning / config errors                                                                                       |
-| ----------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `shapeOptions.literalLimit.allowedValues`             | integer[] | `[1]`   | Literal values allowed in `LIMIT` / `FETCH FIRST`. A negative value is a configuration error.                 |
-| `shapeOptions.keysetOnlySweep.nonSelectivePredicates` | string[]  | `[]`    | Conjuncts (compared after SQL token normalization; keywords and unquoted identifiers fold to lower case, while string literals, dollar-quoted strings, and quoted identifiers retain their contents) that do not narrow the walk. An empty string is a configuration error. |
+| Option                                                | Type      | Default | Meaning / config errors                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shapeOptions.literalLimit.allowedValues`             | integer[] | `[1]`   | Literal values allowed in `LIMIT` / `FETCH FIRST`. A negative value is a configuration error.                                                                                                                                                                                                                                                                                          |
+| `shapeOptions.keysetOnlySweep.nonSelectivePredicates` | string[]  | `[]`    | Conjuncts (compared after SQL token normalization; keywords and unquoted identifiers fold to lower case, while string literals, dollar-quoted strings, and quoted identifiers retain their contents) that do not narrow the walk. An empty string is a configuration error.                                                                                                            |
 | `shapeOptions.keysetOnlySweep.ignoreTables`           | string[]  | `[]`    | Tables that may be walked whole (small configuration tables). Entries use SQL identifier spelling: unquoted `Orders` folds to `orders`, while `"Orders"` matches only that exact case. An empty string is a configuration error. An unqualified entry also matches the table in any schema, but a dot inside a quoted name belongs to the name: `items` does not match `"work.items"`. |
 
 Invalid with both shapes banned (and `deleted_at IS NULL` configured):

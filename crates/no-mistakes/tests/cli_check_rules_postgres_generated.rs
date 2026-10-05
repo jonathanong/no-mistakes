@@ -52,17 +52,12 @@ fn postgres_no_generated_column_writes_fails_for_each_dml_shape() {
 #[test]
 fn postgres_no_generated_column_writes_json_has_rule_id() {
     let root = fixture("fixture");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: postgres-no-generated-column-writes\n    scope: repository\n",
-    )
-    .unwrap();
+    let config = root.join(".no-mistakes.yml");
     let out = Command::new(bin())
         .args(["check", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(config.path())
+        .arg(&config)
         .args(["--format", "json"])
         .output()
         .unwrap();

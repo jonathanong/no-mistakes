@@ -46,7 +46,8 @@ fn catalog_paths_are_normalized_and_deduplicated() {
         config.rules.push(RuleDef {
             rule: "postgres-lock-ordering".to_string(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(&format!("schemaCatalogPath: {path}")).unwrap(),
+            options: serde_yaml::from_str(&format!("schemaCatalogPath: {path}\nexecutorNames: []"))
+                .unwrap(),
             ..RuleDef::default()
         });
     }
@@ -177,7 +178,7 @@ fn rule_config(rule: &str) -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: rule.into(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str("sqlInclude: ['**/*.sql']").unwrap(),
+            options: serde_yaml::from_str("sqlInclude: ['**/*.sql']\nexecutorNames: []").unwrap(),
             ..Default::default()
         }],
         ..Default::default()
@@ -191,7 +192,7 @@ fn invalid_schema_and_statement_options_stop_request_planning() {
             rules: vec![RuleDef {
                 rule: rule.into(),
                 scope: Some(RuleScope::Repository),
-                options: serde_yaml::from_str("sqlInclude: false").unwrap(),
+                options: serde_yaml::from_str("sqlInclude: false\nexecutorNames: []").unwrap(),
                 ..Default::default()
             }],
             ..Default::default()
@@ -254,7 +255,7 @@ fn every_embedded_rule_requires_explicit_executor_selection() {
     ]);
     for rule_id in ids {
         for (yaml, expected_calls) in [
-            ("{}", 0),
+            ("executorNames: []", 0),
             ("importSpecifier: '@example/db'", 1),
             ("executorNames: [query]", 1),
             ("importSpecifier: '@other/db'", 0),

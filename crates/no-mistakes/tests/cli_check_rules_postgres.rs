@@ -37,6 +37,24 @@ fn stdout(o: &Output) -> String {
 const RULE: &str = "postgres-lock-ordering";
 
 #[test]
+fn postgres_executor_selection_fails_loudly_unless_explicitly_disabled() {
+    let root = fixture("executor-selection");
+    let missing = check_fixture_config(&root, "missing.yml");
+    let diagnostic = format!(
+        "{}{}",
+        stdout(&missing),
+        String::from_utf8_lossy(&missing.stderr)
+    );
+    assert!(!missing.status.success(), "{diagnostic}");
+    assert!(
+        diagnostic.contains("set importSpecifier (or executorNames)"),
+        "{diagnostic}"
+    );
+    let opted_out = check_fixture_config(&root, "opt-out.yml");
+    assert!(opted_out.status.success(), "{}", stdout(&opted_out));
+}
+
+#[test]
 fn postgres_lock_ordering_fails_for_multi_row_for_update() {
     let root = fixture("fail");
     let out = check_fixture_config(&root, ".no-mistakes.yml");
