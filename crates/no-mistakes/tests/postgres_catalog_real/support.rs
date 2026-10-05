@@ -69,6 +69,11 @@ impl Database {
 
     /// Write the catalog with the CLI and return the CLI's exit output.
     pub fn generate(&self, schema: &str, coverage: Option<&str>, output: &Path) -> Output {
+        self.generate_with(schema, &coverage_arguments(coverage), output)
+    }
+
+    /// Write the catalog with the CLI and extra arguments, and return the CLI's exit output.
+    pub fn generate_with(&self, schema: &str, arguments: &[&str], output: &Path) -> Output {
         let mut command = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
         command.args([
             "postgres",
@@ -77,9 +82,7 @@ impl Database {
             "NM_CATALOG_TEST_URL",
         ]);
         command.args(["--schema", schema]);
-        if let Some(coverage) = coverage {
-            command.args(["--coverage", coverage]);
-        }
+        command.args(arguments);
         command.arg("--output").arg(output);
         command.env("NM_CATALOG_TEST_URL", &self.url);
         command.output().unwrap()
@@ -87,9 +90,14 @@ impl Database {
 
     /// Generate and return the catalog file's bytes.
     pub fn catalog_bytes(&self, schema: &str, coverage: Option<&str>) -> Vec<u8> {
+        self.catalog_bytes_with(schema, &coverage_arguments(coverage))
+    }
+
+    /// Generate with extra CLI arguments and return the catalog file's bytes.
+    pub fn catalog_bytes_with(&self, schema: &str, arguments: &[&str]) -> Vec<u8> {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("catalog.json");
-        let output = self.generate(schema, coverage, &path);
+        let output = self.generate_with(schema, arguments, &path);
         assert!(
             output.status.success(),
             "{}",
@@ -110,6 +118,10 @@ impl Drop for Database {
             self.name
         ));
     }
+}
+
+fn coverage_arguments(coverage: Option<&str>) -> Vec<&str> {
+    coverage.map_or_else(Vec::new, |coverage| vec!["--coverage", coverage])
 }
 
 fn run_psql(url: &str, arguments: &[&str]) -> String {

@@ -69,6 +69,27 @@ fn postgres_catalog_cli_writes_deterministic_owned_json_and_preserves_output_on_
 }
 
 #[test]
+fn postgres_catalog_cli_rejects_an_empty_current_database_before_connecting() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("catalog.json");
+    let run = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "postgres",
+            "catalog",
+            "--connection-env",
+            "CATALOG_TEST_CONNECTION",
+        ])
+        .args(["--schema", "public", "--current-database", "", "--output"])
+        .arg(&output)
+        .env_remove("CATALOG_TEST_CONNECTION")
+        .output()
+        .unwrap();
+    assert_eq!(run.status.code(), Some(2), "an empty name is a usage error");
+    assert!(String::from_utf8_lossy(&run.stderr).contains("--current-database"));
+    assert!(!output.exists());
+}
+
+#[test]
 fn postgres_catalog_cli_reports_safe_connection_and_output_errors() {
     let directory = tempfile::tempdir().unwrap();
     for (connection_env, schema) in [

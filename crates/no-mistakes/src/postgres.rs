@@ -24,6 +24,9 @@ enum PostgresCommand {
         /// Include explicit schema/relations evidence for these search_path schemas.
         #[arg(long = "search-path-schema")]
         search_path_schemas: Vec<String>,
+        /// Record this name as `currentDatabase` instead of the connected database's name.
+        #[arg(long, value_parser = clap::builder::NonEmptyStringValueParser::new())]
+        current_database: Option<String>,
         #[arg(long)]
         output: PathBuf,
     },
@@ -34,6 +37,7 @@ pub fn run(args: PostgresArgs) -> Result<ExitCode> {
         schema,
         coverage,
         search_path_schemas,
+        current_database,
         output,
     } = args.command;
     let catalog = generate(&PostgresCatalogOptions {
@@ -41,6 +45,7 @@ pub fn run(args: PostgresArgs) -> Result<ExitCode> {
         schema,
         coverage,
         search_path_schemas,
+        current_database,
     })?;
     let json = format!("{catalog:#}\n");
     publish_catalog(&output, &mut |file| file.write_all(json.as_bytes()))

@@ -787,6 +787,7 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
     /export type PostgresSearchPathEvidence = Partial<Record<string, string\[\] \| null>>;/,
   );
   assert.match(types, /searchPathSchemas\?: string\[\];/);
+  assert.match(types, /export interface PostgresCatalogOptions \{[^}]*currentDatabase\?: string;/);
   assert.equal((types.match(/searchPathEvidence\?: PostgresSearchPathEvidence;/g) || []).length, 2);
   assert.match(
     types,
