@@ -1,0 +1,35 @@
+Gnuplot not found, using plotters backend
+Benchmarking postgres_independent_ctes/32
+Benchmarking postgres_independent_ctes/32: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/32: Collecting 10 samples in estimated 1.0067 s (2310 iterations)
+Benchmarking postgres_independent_ctes/32: Analyzing
+postgres_independent_ctes/32
+                        time:   [441.90 µs 442.52 µs 443.02 µs]
+                        thrpt:  [72.231 Kelem/s 72.313 Kelem/s 72.414 Kelem/s]
+                 change:
+                        time:   [-0.2956% -0.1260% +0.0301%] (p = 0.15 > 0.05)
+                        thrpt:  [-0.0301% +0.1262% +0.2965%]
+                        No change in performance detected.
+Benchmarking postgres_independent_ctes/128
+Benchmarking postgres_independent_ctes/128: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/128: Collecting 10 samples in estimated 1.2277 s (220 iterations)
+Benchmarking postgres_independent_ctes/128: Analyzing
+postgres_independent_ctes/128
+                        time:   [6.4639 ms 6.5366 ms 6.6595 ms]
+                        thrpt:  [19.221 Kelem/s 19.582 Kelem/s 19.802 Kelem/s]
+                 change:
+                        time:   [+13.960% +16.124% +18.157%] (p = 0.00 < 0.05)
+                        thrpt:  [-15.367% -13.885% -12.250%]
+                        Performance has regressed.
+Benchmarking postgres_independent_ctes/512
+Benchmarking postgres_independent_ctes/512: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/512: Collecting 10 samples in estimated 1.7244 s (20 iterations)
+Benchmarking postgres_independent_ctes/512: Analyzing
+postgres_independent_ctes/512
+                        time:   [85.585 ms 85.768 ms 85.941 ms]
+                        thrpt:  [5.9576 Kelem/s 5.9696 Kelem/s 5.9824 Kelem/s]
+                 change:
+                        time:   [+0.3085% +0.9703% +1.4990%] (p = 0.01 < 0.05)
+                        thrpt:  [-1.4769% -0.9609% -0.3076%]
+                        Change within noise threshold.
+
