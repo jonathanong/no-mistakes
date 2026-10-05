@@ -47,6 +47,8 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
 struct EmbeddedSqlRuleOptions {
     import_specifier: Option<String>,
     executor_names: Vec<String>,
+    executor_factory_names: Vec<String>,
+    executor_type_names: Vec<String>,
 }
 
 #[derive(Default, Deserialize)]
@@ -66,10 +68,16 @@ pub(crate) fn configured_embedded_sql_options(
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
-            profiles.push(EmbeddedSqlOptions::configured(
-                options.import_specifier.as_deref().unwrap_or_default(),
-                &options.executor_names,
-            ));
+            profiles.push(
+                EmbeddedSqlOptions::configured(
+                    options.import_specifier.as_deref().unwrap_or_default(),
+                    &options.executor_names,
+                )
+                .with_scoped_executors(
+                    &options.executor_factory_names,
+                    &options.executor_type_names,
+                ),
+            );
         }
     }
     profiles.sort();

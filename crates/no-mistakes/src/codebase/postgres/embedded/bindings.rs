@@ -1,3 +1,4 @@
+use super::scoped_bindings::ScopedExecutors;
 use super::EmbeddedSqlOptions;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
@@ -111,12 +112,19 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
 
 /// True when `call` is a bound executor or an opted-in `.query` member call.
 pub fn is_database_call(call: &CallExpression<'_>, bindings: &HashSet<String>) -> bool {
-    callee_name(call, bindings).is_some()
+    callee_name(call, bindings, &ScopedExecutors::default()).is_some()
 }
 
-pub(super) fn callee_name(call: &CallExpression<'_>, bindings: &HashSet<String>) -> Option<String> {
+pub(super) fn callee_name(
+    call: &CallExpression<'_>,
+    bindings: &HashSet<String>,
+    scoped: &ScopedExecutors,
+) -> Option<String> {
     match unwrap_ts_wrappers(&call.callee) {
-        Expression::Identifier(ident) if bindings.contains(ident.name.as_str()) => {
+        Expression::Identifier(ident)
+            if bindings.contains(ident.name.as_str())
+                || scoped.contains(ident.name.as_str(), call.span.start) =>
+        {
             Some(ident.name.to_string())
         }
         Expression::StaticMemberExpression(member)

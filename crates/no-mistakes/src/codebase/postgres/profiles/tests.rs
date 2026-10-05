@@ -26,6 +26,31 @@ fn profiles_apply_defaults_and_deduplicate_executor_order() {
 }
 
 #[test]
+fn profiles_carry_scoped_executor_options_sorted_and_distinct() {
+    let mut config = NoMistakesConfig::default();
+    for options in [
+        "importSpecifier: '@example/db'\nexecutorFactoryNames: [b, a]\nexecutorTypeNames: [T, T]",
+        "importSpecifier: '@example/db'",
+    ] {
+        config.rules.push(RuleDef {
+            rule: "postgres-lock-ordering".to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options).unwrap(),
+            ..RuleDef::default()
+        });
+    }
+    let profiles = configured_embedded_sql_options(&config, &["postgres-lock-ordering"]).unwrap();
+    // Scoped options make a distinct projection from the plain module profile.
+    assert_eq!(profiles.len(), 2);
+    let scoped = profiles
+        .iter()
+        .find(|profile| !profile.executor_factory_names.is_empty())
+        .unwrap();
+    assert_eq!(scoped.executor_factory_names, ["a", "b"]);
+    assert_eq!(scoped.executor_type_names, ["T"]);
+}
+
+#[test]
 fn profiles_reject_invalid_shared_option_shapes() {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {

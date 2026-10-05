@@ -26,6 +26,12 @@ await withTransaction(async (tx) => {
   empty (configure your database module explicitly).
 - `executorNames` lists checked executor names and defaults to
   `["query", "read", "write"]` only with a configured module; otherwise it is empty.
+- `executorFactoryNames` lists imports whose call result bound with `const`,
+  `let`, `using`, or `await using` is an executor inside the declaring block. It
+  defaults to `[]`.
+- `executorTypeNames` lists imported type names whose annotated parameters
+  (including optional and inline-destructured ones) are executors inside the
+  declaring function. It defaults to `[]`.
 - `owners` is an absolute-suffix or repository-relative allowlist for the
   transaction lifecycle helper. It defaults to no owner exemptions.
 

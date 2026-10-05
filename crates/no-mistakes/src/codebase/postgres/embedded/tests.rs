@@ -176,6 +176,7 @@ fn custom_specifier_and_executor_names() {
     let options = EmbeddedSqlOptions {
         import_specifier: "@app/db".to_string(),
         executor_names: vec!["run".to_string()],
+        ..Default::default()
     };
     let facts = extract_embedded_sql_from_source(Path::new("custom.ts"), source, &options);
     assert!(facts.executor_bindings.iter().any(|name| name == "r"));

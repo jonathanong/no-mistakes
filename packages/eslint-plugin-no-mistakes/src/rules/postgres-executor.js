@@ -1,6 +1,7 @@
 "use strict";
 
 const { quasiText, sqlText, unwrapTs } = require("./postgres-query-text");
+const { collectScopedExecutors, isScopedExecutor } = require("./postgres-scoped-executors");
 
 const DEFAULT_IMPORT_SPECIFIER = "";
 const DEFAULT_EXECUTOR_NAMES = ["query", "read", "write"];
@@ -18,6 +19,8 @@ function executorOptionDefaults(options = {}) {
   return {
     importSpecifier: options.importSpecifier ?? DEFAULT_IMPORT_SPECIFIER,
     executorNames: options.executorNames ?? (options.importSpecifier ? DEFAULT_EXECUTOR_NAMES : []),
+    executorFactoryNames: options.executorFactoryNames ?? [],
+    executorTypeNames: options.executorTypeNames ?? [],
     owners: options.owners ?? [],
     chunkFunctionNames: options.chunkFunctionNames ?? DEFAULT_CHUNK_FUNCTION_NAMES,
   };
@@ -29,6 +32,8 @@ function executorOptionSchema(extraProperties = {}) {
     properties: {
       importSpecifier: { type: "string" },
       executorNames: { type: "array", items: { type: "string" } },
+      executorFactoryNames: { type: "array", items: { type: "string" } },
+      executorTypeNames: { type: "array", items: { type: "string" } },
       ...extraProperties,
     },
     additionalProperties: false,
@@ -43,7 +48,9 @@ function importedName(specifier) {
 
 function executorBindings(program, options = {}) {
   const bindings = new Set();
-  const { importSpecifier, executorNames } = executorOptionDefaults(options);
+  const defaults = executorOptionDefaults(options);
+  const { importSpecifier, executorNames } = defaults;
+  bindings.scoped = collectScopedExecutors(program, defaults);
   bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
@@ -80,7 +87,12 @@ function memberPropertyName(node) {
 function calleeName(call, bindings) {
   const callee = unwrapTs(call?.callee);
   if (!callee) return null;
-  if (callee.type === "Identifier" && bindings?.has(callee.name)) return callee.name;
+  if (
+    callee.type === "Identifier" &&
+    (bindings?.has(callee.name) || isScopedExecutor(bindings?.scoped, callee.name, call))
+  ) {
+    return callee.name;
+  }
   if (
     bindings?.queryMembers !== false &&
     callee.type === "MemberExpression" &&

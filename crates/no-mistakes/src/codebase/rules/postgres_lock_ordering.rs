@@ -23,6 +23,8 @@ pub(crate) struct Options {
     pub(crate) exclude: Vec<String>,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
+    pub(crate) executor_factory_names: Vec<String>,
+    pub(crate) executor_type_names: Vec<String>,
     pub(crate) safe_directive: String,
     pub(crate) schema_catalog_path: String,
 }
@@ -111,7 +113,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         include,
         exclude,
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
         safe_directive: if opts.safe_directive.is_empty() {
             DEFAULT_SAFE_DIRECTIVE.to_string()
         } else {

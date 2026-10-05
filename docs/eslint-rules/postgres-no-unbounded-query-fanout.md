@@ -25,6 +25,12 @@ for (const ids of chunkArray(userIds, 50)) {
   it explicitly to select imports from a module.
 - `executorNames` lists checked executor names and defaults to `[]`. A configured
   module with no explicit names enables `query`, `read`, and `write`.
+- `executorFactoryNames` lists imports whose call result bound with `const`,
+  `let`, `using`, or `await using` is an executor inside the declaring block. It
+  defaults to `[]`.
+- `executorTypeNames` lists imported type names whose annotated parameters
+  (including optional and inline-destructured ones) are executors inside the
+  declaring function. It defaults to `[]`.
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
 

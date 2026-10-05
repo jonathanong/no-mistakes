@@ -9,6 +9,7 @@ mod bindings;
 mod dml_kind;
 mod options;
 mod placeholders;
+mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
@@ -97,6 +98,7 @@ pub fn extract_embedded_sql_from_program(
         program,
         source,
         &bindings,
+        &scoped_bindings::scoped_executors(program, options),
         !options.import_specifier.is_empty()
             || options.executor_names.iter().any(|name| name == "query"),
     );
@@ -200,5 +202,7 @@ mod helper_body_tests;
 mod imported_sql_tag_tests;
 #[cfg(test)]
 mod resolution_gaps_tests;
+#[cfg(test)]
+mod scoped_bindings_tests;
 #[cfg(test)]
 mod tests;

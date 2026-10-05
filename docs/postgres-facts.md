@@ -168,9 +168,13 @@ Imports decide which local identifiers execute SQL:
 | --- | --- |
 | `importSpecifier` | Empty; configure your database module explicitly |
 | `executorNames` | Empty without a module; `query`, `read`, `write` with a module |
+| `executorFactoryNames` | Empty; factory imports whose call result bound to a local is an executor in its block |
+| `executorTypeNames` | Empty; imported types whose annotated parameters are executors in their function |
 
 Without a module, only explicitly configured names match named imports from
-any module. With neither option set, no executor calls are collected.
+any module. `executorFactoryNames` and `executorTypeNames` add executors that are
+scoped to the declaring block or function (see the
+[migration notes](migrations/explicit-postgres-executors.md#scoped-executors)). With neither option set, no executor calls are collected.
 A configured module's `withTransaction` and `withTransactionOptions` imports
 also bind `query`. Member calls named `query` are collected when a module is configured or `query`
 is explicitly enabled in the executor names. Existing SQL-builder fragment recovery is

@@ -158,12 +158,15 @@ when set).
 ### `postgres-no-manual-transaction`
 
 `importSpecifier?: string` (default empty),
-`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module), and
+`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
+`executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
+scoped executors, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)), and
 `owners?: string[]`.
 
 ### `postgres-no-unbounded-query-fanout`
 
-`importSpecifier?: string`, `executorNames?: string[]`, and
+`importSpecifier?: string`, `executorNames?: string[]`,
+`executorFactoryNames?: string[]`, `executorTypeNames?: string[]`, and
 `chunkFunctionNames?: string[]` (default `["chunkArray"]`).
 
 ### `server-require-nullable-fetch-wrapper`
