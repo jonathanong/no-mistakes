@@ -52,13 +52,17 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
 }
 ```
 
-- `executorFactoryNames` lists named imports (from `importSpecifier`, or from any
-  module when it is empty) that return an executor. A local declared with
+- For these two options, "from `importSpecifier`" also includes its subpaths:
+  with `importSpecifier: "@example/db"`, imports from `@example/db/types` and
+  `@example/db/tx/open` match, while `@example/dbx` and `@example/db-utils` do not.
+  `executorNames` and `withTransaction` still require the exact module.
+- `executorFactoryNames` lists named imports (from `importSpecifier` or a subpath
+  of it, or from any module when it is empty) that return an executor. A local declared with
   `const`, `let`, `using`, or `await using` whose initializer calls the factory,
   with or without `await`, is an executor. Calls `tx(sql)` and, when `.query`
   members are enabled, `tx.query(sql)` are scanned.
-- `executorTypeNames` lists type names imported from `importSpecifier` (or any
-  module when it is empty), through `import type`, an inline `type` specifier, or
+- `executorTypeNames` lists type names imported from `importSpecifier` or a
+  subpath of it (or any module when it is empty), through `import type`, an inline `type` specifier, or
   a value import. A parameter annotated with one, including `run?: TxExecutor`
   and a destructured property typed inline as in `{ run }: { run: TxExecutor }`,
   is an executor.

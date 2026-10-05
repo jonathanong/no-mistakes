@@ -57,9 +57,7 @@ fn collect_imports(
     options: &EmbeddedSqlOptions,
     visitor: &mut ScopeCollector,
 ) {
-    if !options.import_specifier.is_empty()
-        && import.source.value.as_str() != options.import_specifier
-    {
+    if !from_configured_module(import.source.value.as_str(), &options.import_specifier) {
         return;
     }
     let Some(specifiers) = &import.specifiers else {
@@ -80,6 +78,16 @@ fn collect_imports(
             visitor.types.insert(local);
         }
     }
+}
+
+/// The module itself or any subpath of it (`@example/db/types`); a sibling
+/// package sharing the prefix (`@example/dbx`) does not match.
+fn from_configured_module(source: &str, specifier: &str) -> bool {
+    specifier.is_empty()
+        || source == specifier
+        || source
+            .strip_prefix(specifier)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 fn contains(names: &[String], name: &str) -> bool {

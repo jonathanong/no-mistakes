@@ -32,6 +32,9 @@ await withTransaction(async (tx) => {
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
   declaring function. It defaults to `[]`.
+- Imports for the two scoped options above match `importSpecifier` and its
+  subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
+  `@example/dbx`.
 - `owners` is an absolute-suffix or repository-relative allowlist for the
   transaction lifecycle helper. It defaults to no owner exemptions.
 

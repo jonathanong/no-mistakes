@@ -74,7 +74,8 @@ or `executorNames` in the rule options to select embedded executor calls;
 omitting both is a configuration error. Set `executorNames: []` explicitly
 without a module to select no executor calls. `executorFactoryNames` and
 `executorTypeNames` additionally select block- or function-scoped executors from
-factory results and executor-typed parameters. See the
+factory results and executor-typed parameters, imported from `importSpecifier` or
+a subpath of it. See the
 [executor migration notes](migrations/explicit-postgres-executors.md).
 
 ## PostgreSQL catalog generation

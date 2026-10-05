@@ -160,7 +160,7 @@ when set).
 `importSpecifier?: string` (default empty),
 `executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
 `executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
-scoped executors, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)), and
+scoped executors that also match imports from `importSpecifier` subpaths, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)), and
 `owners?: string[]`.
 
 ### `postgres-no-unbounded-query-fanout`

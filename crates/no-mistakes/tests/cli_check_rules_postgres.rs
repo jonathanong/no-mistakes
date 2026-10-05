@@ -137,6 +137,16 @@ fn postgres_lock_ordering_scans_factory_and_typed_executors() {
 }
 
 #[test]
+fn postgres_lock_ordering_scans_scoped_executors_from_import_subpaths() {
+    let root = fixture("fail-scoped-subpath-executors");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("src/lock.ts"), "{body}");
+    assert!(body.contains("src/open.ts"), "{body}");
+}
+
+#[test]
 fn postgres_lock_ordering_ignores_scoped_executors_by_default() {
     // Same source as `fail-scoped-executors`, scoped options absent.
     let root = fixture("pass-scoped-defaults");
