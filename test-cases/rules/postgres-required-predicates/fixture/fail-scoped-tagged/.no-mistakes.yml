@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorTypeNames: [TransactionQuery]
+      relations:
+        - table: documents
+          require:
+            - deleted_at IS NULL
+            - owner_id IS NOT NULL

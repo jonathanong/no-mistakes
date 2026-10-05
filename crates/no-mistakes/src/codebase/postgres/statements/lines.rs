@@ -57,6 +57,15 @@ fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
         .collect()
 }
 
+/// Line of the first code token equal to `word` (case-insensitive), skipping
+/// comments and quoted text.
+pub(super) fn first_word_line(sql: &str, word: &str) -> Option<usize> {
+    words(sql)
+        .into_iter()
+        .find(|found| eq(found, word))
+        .map(|found| found.line)
+}
+
 pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
     source
         .lines()
