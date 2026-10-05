@@ -119,8 +119,8 @@ pub(in super::super) fn scope_environment(
     for statement in statements {
         match statement {
             Statement::VariableDeclaration(var) => declaration(&mut evaluator, var, &mut env),
-            Statement::ExpressionStatement(expr) => invalidate(&expr.expression, &mut env),
-            _ => {}
+            Statement::FunctionDeclaration(_) => {}
+            _ => mutations::invalidate_statement(statement, &mut env),
         }
     }
     env
