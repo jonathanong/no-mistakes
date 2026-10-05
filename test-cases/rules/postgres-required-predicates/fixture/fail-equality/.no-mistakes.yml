@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]
+      relations:
+        - table: documents
+          require:
+            - deleted_at IS NULL
+            - archived_by_id IS NULL

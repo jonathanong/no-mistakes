@@ -45,6 +45,15 @@ A configured `relations[].require` entry still matches the relation's
 WHERE/JOIN SQL as a case-insensitive, whitespace-normalized substring. That
 behavior is unchanged.
 
+An equality never satisfies a `require: ["col IS NULL"]` entry. `col = $1`,
+`col IN (...)`, and `col = ANY(...)` match only rows where `col` is not NULL,
+which are exactly the rows `col IS NULL` excludes (for example soft-deleted or
+archived rows), so accepting them would let a query read the guarded rows.
+The finding stays, and its message points at the fix: if the query
+intentionally reads those rows (the inverse of the live-row filter), use
+`requireColumns: [col]` (any equality or comparison constrains the column) in
+place of the `IS NULL` text, or suppress that statement with a reason.
+
 `relations[].requireColumns` applies to every base-table instance in SELECT
 (including subqueries and CTE bodies), UPDATE, DELETE, and the SELECT of
 `INSERT … SELECT`. Supported `TABLE` set-operation arms count as reads of
