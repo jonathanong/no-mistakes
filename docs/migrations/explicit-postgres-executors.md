@@ -17,7 +17,7 @@ module, explicitly configured executor names match named imports from any
 module. Omitting both options is a configuration error in the next minor release.
 To intentionally select no executor calls, omit `importSpecifier` and write
 `executorNames: []` explicitly. Native SQL and SQL-builder fragment policies
-retain their existing scope. This prevents an unmigrated CI configuration
+retain their existing scope. This prevents a CI configuration that has not migrated
 from silently passing while skipping executor checks.
 
 This applies to bounded statements, explicit columns, generated-column
