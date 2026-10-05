@@ -82,6 +82,21 @@ describe("resolveCursorContractOptions", () => {
     assert.equal(resolveCursorContractOptions({ ...base, exclude: {} }), null);
     assert.equal(resolveCursorContractOptions({ ...base, includeFiles: [1] }), null);
     assert.equal(resolveCursorContractOptions({ ...base, sqlTagModules: [1] }), null);
+    assert.equal(resolveCursorContractOptions({ ...base, trustedSqlTags: "sql" }), null);
+    assert.equal(resolveCursorContractOptions({ ...base, trustedSqlTags: [null] }), null);
+    assert.equal(resolveCursorContractOptions({ ...base, trustedSqlTags: [1] }), null);
+    assert.equal(resolveCursorContractOptions({ ...base, trustedSqlTags: [[]] }), null);
+    assert.equal(
+      resolveCursorContractOptions({ ...base, trustedSqlTags: [{ module: 1, name: "sql" }] }),
+      null,
+    );
+    assert.equal(
+      resolveCursorContractOptions({
+        ...base,
+        trustedSqlTags: [{ module: "@example/db", name: 1 }],
+      }),
+      null,
+    );
     assert.equal(resolveCursorContractOptions({ ...base, annotation: 1 }), null);
   });
 
@@ -98,6 +113,14 @@ describe("resolveCursorContractOptions", () => {
     assert.deepEqual(resolved.exclude, []);
     assert.deepEqual(resolved.includeFiles, ["lib/seed.js"]);
     assert.deepEqual([...resolved.sqlTagModules], DEFAULT_SQL_TAG_MODULES);
+    assert.deepEqual(resolved.trustedSqlTags, []);
+    assert.deepEqual(
+      resolveCursorContractOptions({
+        ...base,
+        trustedSqlTags: [{ module: "@example/db", name: "sql", extra: true }],
+      }).trustedSqlTags,
+      [{ module: "@example/db", name: "sql" }],
+    );
     assert.deepEqual(
       [...resolveCursorContractOptions({ ...base, sqlTagModules: ["@db/sql"] }).sqlTagModules],
       ["@db/sql"],

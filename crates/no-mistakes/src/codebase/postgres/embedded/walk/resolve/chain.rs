@@ -14,7 +14,7 @@ use std::collections::HashSet;
 /// other than its global meaning (e.g. the trusted `sql` tag shadowed by a
 /// same-file helper's own parameter) — see [`interpolating_untrusted_tag`].
 /// `imported_sql_tags` are local names of a default import from
-/// `sql-template-strings`, which is the trusted tag under any spelling.
+/// `sql-template-strings`, or of a configured named SQL tag.
 /// `depth` bounds recursion so a cyclic or pathological chain fails closed
 /// instead of overflowing the stack.
 pub(super) fn resolve_expr(

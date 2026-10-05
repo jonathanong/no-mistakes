@@ -51,6 +51,51 @@ fn profiles_carry_scoped_executor_options_sorted_and_distinct() {
 }
 
 #[test]
+fn profiles_carry_trusted_sql_tags_sorted_and_distinct() {
+    let mut config = NoMistakesConfig::default();
+    for options in [
+        "importSpecifier: '@example/db'\ntrustedSqlTags:\n  - {module: '@example/db/sql', name: tag}\n  - {module: '@example/db', name: sql}\n  - {module: '@example/db', name: sql}",
+        "importSpecifier: '@example/db'",
+    ] {
+        config.rules.push(RuleDef {
+            rule: "postgres-lock-ordering".to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options).unwrap(),
+            ..RuleDef::default()
+        });
+    }
+    let profiles = configured_embedded_sql_options(&config, &["postgres-lock-ordering"]).unwrap();
+    assert_eq!(profiles.len(), 2);
+    let tagged = profiles
+        .iter()
+        .find(|profile| !profile.trusted_sql_tags.is_empty())
+        .unwrap();
+    assert_eq!(
+        tagged.trusted_sql_tags,
+        vec![
+            crate::codebase::postgres::TrustedSqlTag {
+                module: "@example/db".into(),
+                name: "sql".into(),
+            },
+            crate::codebase::postgres::TrustedSqlTag {
+                module: "@example/db/sql".into(),
+                name: "tag".into(),
+            },
+        ]
+    );
+    let mut scalar = NoMistakesConfig::default();
+    scalar.rules.push(RuleDef {
+        rule: "postgres-lock-ordering".to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("importSpecifier: '@example/db'\ntrustedSqlTags: sql").unwrap(),
+        ..RuleDef::default()
+    });
+    let error = configured_embedded_sql_options(&scalar, &["postgres-lock-ordering"])
+        .expect_err("a scalar trustedSqlTags value must be rejected");
+    assert!(error.to_string().contains("trustedSqlTags"), "{error}");
+}
+
+#[test]
 fn profiles_reject_invalid_shared_option_shapes() {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {

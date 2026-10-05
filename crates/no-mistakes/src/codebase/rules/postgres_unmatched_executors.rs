@@ -26,6 +26,7 @@ struct Options {
     executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
+    trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     report_unmatched_executor_names: bool,
 }
 
@@ -33,6 +34,7 @@ impl Options {
     fn profile(&self) -> EmbeddedSqlOptions {
         EmbeddedSqlOptions::configured(&self.import_specifier, &self.executor_names)
             .with_scoped_executors(&self.executor_factory_names, &self.executor_type_names)
+            .with_trusted_sql_tags(&self.trusted_sql_tags)
     }
 }
 

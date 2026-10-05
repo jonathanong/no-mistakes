@@ -97,3 +97,45 @@ anywhere, so the ESLint runtime rules do not accept it.
 A file inside the database package that imports a factory or type by relative
 path (`../transaction`) is not matched: matching is by import specifier, not
 resolved path.
+
+## Trusted SQL tags
+
+An imported tag is not trusted unless you opt in. The default is empty, so
+`import { sql } from "@example/db"` stays an arbitrary function. Fail-closed
+rules then report the call as not statically recoverable, and an in-SQL
+suppression directive cannot attach.
+
+```yaml
+options:
+  importSpecifier: "@example/db"
+  trustedSqlTags:
+    - module: "@example/db"
+      name: sql
+```
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `trustedSqlTags` | Empty | Named imports of `name` from `module`, or a subpath of `module`, are parameterized SQL tags. A renamed local binding is trusted. A default import is not. A shadowed or rebound local fails closed. The same name from another module, or a sibling prefix such as `@example/dbx`, stays untrusted. An empty `module` or `name` matches nothing. |
+
+```ts
+import { query, sql } from "@example/db";
+
+export async function load(accountId: string) {
+  return query(sql`
+    SELECT id
+    FROM documents
+    WHERE account_id = ${accountId}
+  `);
+}
+```
+
+With that option the tag is trusted the same way as a default import from
+`sql-template-strings`: interpolations are placeholders and the SQL is analyzed.
+`import { sql as dbSql }` trusts the local binding `dbSql`. `import sql from
+"@example/db"` does not. `@example/db/sql` matches `module: "@example/db"`;
+`@example/dbx` does not.
+
+`postgres-cursor-call-contract` uses the same list for named imports, in addition
+to its default-import `sqlTagModules` list. The ESLint runtime rules accept the
+option so a shared executor configuration validates. They still read every tagged
+template; the list does not hide a call.

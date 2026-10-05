@@ -1,3 +1,5 @@
+use super::options::TrustedSqlTag;
+use super::scoped_bindings::from_configured_module;
 use super::EmbeddedSqlKind;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
@@ -11,12 +13,12 @@ use std::collections::HashSet;
 ///
 /// A tagged template with interpolated values is untrusted unless the tag
 /// is really the trusted SQL concatenation tag: the unshadowed identifier
-/// `sql`, or a default import from `sql-template-strings` under any local
-/// name. That tag parameterizes interpolated values instead of splicing
-/// them into the text, which is what makes trusting its quasi text safe
-/// even though the call has arguments. Nothing else — `String.raw`
-/// included — offers that guarantee, so any other tag with interpolations
-/// is untrusted.
+/// `sql`, a default import from `sql-template-strings` under any local
+/// name, or a configured named import recorded in `imported_sql_tags`.
+/// That tag parameterizes interpolated values instead of splicing them
+/// into the text, which is what makes trusting its quasi text safe even
+/// though the call has arguments. Nothing else — `String.raw` included —
+/// offers that guarantee, so any other tag with interpolations is untrusted.
 ///
 /// A tagged template with zero interpolated values carries no runtime data
 /// at all, so the only question left is whether the tag returns its quasi
@@ -96,4 +98,24 @@ fn is_sql_tag(
     let name = ident.name.as_str();
     !is_shadowed(name)
         && (ident.name.eq_ignore_ascii_case("sql") || imported_sql_tags.contains(name))
+}
+
+/// Whether `imported` from `source` is a configured parameterized tag.
+///
+/// A named import only: the caller records the local binding. An empty
+/// module or name matches nothing, so it cannot widen to every import.
+pub(super) fn matches_trusted_sql_import(
+    source: &str,
+    imported: &str,
+    tags: &[TrustedSqlTag],
+) -> bool {
+    tags.iter()
+        .any(|tag| trusted_named_tag(source, imported, tag))
+}
+
+fn trusted_named_tag(source: &str, imported: &str, tag: &TrustedSqlTag) -> bool {
+    !tag.module.is_empty()
+        && !tag.name.is_empty()
+        && tag.name == imported
+        && from_configured_module(source, &tag.module)
 }

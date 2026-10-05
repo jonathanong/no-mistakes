@@ -38,6 +38,37 @@ function firstQuasiText(template, allowRaw) {
   return quasi.value?.cooked ?? (allowRaw ? (quasi.value?.raw ?? null) : null);
 }
 
+function importedBindingName(specifier) {
+  const imported = specifier?.imported;
+  if (!imported) return null;
+  return imported.type === "Literal" ? String(imported.value) : imported.name;
+}
+
+// Named opt-in only. An empty module must not match every import.
+function matchesTrustedSqlTag(source, imported, tag) {
+  if (!tag.module || !tag.name || tag.name !== imported) return false;
+  return source === tag.module || String(source).startsWith(`${tag.module}/`);
+}
+
+function trustedNamedSqlImport(specifier, declaration, source, config) {
+  if (specifier?.type !== "ImportSpecifier") return false;
+  if (specifier.importKind === "type" || declaration?.importKind === "type") return false;
+  if (declaration?.type !== "ImportDeclaration" || typeof source !== "string") return false;
+  const imported = importedBindingName(specifier);
+  return (config.trustedSqlTags ?? []).some((tag) => matchesTrustedSqlTag(source, imported, tag));
+}
+
+function defaultSqlTagImport(specifier, declaration, source, config) {
+  return (
+    specifier.type === "ImportDefaultSpecifier" &&
+    specifier.importKind !== "type" &&
+    declaration?.type === "ImportDeclaration" &&
+    declaration.importKind !== "type" &&
+    typeof source === "string" &&
+    config.sqlTagModules.has(source)
+  );
+}
+
 function exactSqlTag(context, tag, helpers, config) {
   const identifier = helpers.unwrap(tag);
   if (identifier?.type !== "Identifier") return false;
@@ -46,14 +77,10 @@ function exactSqlTag(context, tag, helpers, config) {
     const specifier = candidate.node;
     const declaration = candidate.parent || specifier.parent;
     const source = declaration?.source?.value;
+    if (candidate.type !== "ImportBinding") return false;
     return (
-      candidate.type === "ImportBinding" &&
-      specifier.type === "ImportDefaultSpecifier" &&
-      specifier.importKind !== "type" &&
-      declaration?.type === "ImportDeclaration" &&
-      declaration.importKind !== "type" &&
-      typeof source === "string" &&
-      config.sqlTagModules.has(source)
+      trustedNamedSqlImport(specifier, declaration, source, config) ||
+      defaultSqlTagImport(specifier, declaration, source, config)
     );
   });
   return Boolean(

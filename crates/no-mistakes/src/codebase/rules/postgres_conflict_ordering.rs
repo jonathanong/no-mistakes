@@ -24,6 +24,7 @@ pub(crate) struct Options {
     pub(crate) executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
+    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     pub(crate) schema_catalog_path: String,
     pub(crate) sql_include: Vec<String>,
     pub(crate) unanalyzable_sql: String,
@@ -134,7 +135,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         include,
         exclude,
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
+            .with_trusted_sql_tags(&opts.trusted_sql_tags),
         schema_catalog_path: opts.schema_catalog_path.clone(),
         sql_sources: (!opts.sql_include.is_empty()).then(|| PostgresSchemaOptions {
             sql_include: opts.sql_include.clone(),

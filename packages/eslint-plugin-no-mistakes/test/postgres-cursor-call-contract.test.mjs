@@ -357,4 +357,95 @@ describe("postgres-cursor-call-contract", () => {
       [],
     );
   });
+
+  it("trusts configured named sql tags and leaves the others untrusted", () => {
+    const trusted = {
+      ...OPTIONS,
+      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+    };
+    const named = `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/db'\nrunCursor(sql\`SELECT 1\`)`;
+    assert.deepEqual(messages(named, RULE, trusted, "src/trusted-sql-tag.js"), ["annotation"]);
+    assert.deepEqual(messages(named, RULE, OPTIONS, "src/untrusted-sql-tag.js"), ["staticQuery"]);
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport { sql } from '@other/db'\nrunCursor(sql\`SELECT 1\`)`,
+        RULE,
+        trusted,
+        "src/other-module-sql-tag.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport { sql as dbSql } from '@example/db/sql'\nrunCursor(dbSql\`SELECT 1\`)`,
+        RULE,
+        trusted,
+        "src/subpath-sql-tag.js",
+      ),
+      ["annotation"],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/dbx'\nrunCursor(sql\`SELECT 1\`)`,
+        RULE,
+        trusted,
+        "src/sibling-sql-tag.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport sql from '@example/db'\nrunCursor(sql\`SELECT 1\`)`,
+        RULE,
+        trusted,
+        "src/default-sql-tag.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport { sql as dbSql } from '@example/db'\nexport function load() {\n  const dbSql = (strings) => strings\n  return runCursor(dbSql\`SELECT 1\`)\n}`,
+        RULE,
+        trusted,
+        "src/shadowed-sql-tag.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport { type sql as dbSql } from '@example/db'\nrunCursor(dbSql\`SELECT 1\`)`,
+        RULE,
+        trusted,
+        "src/type-sql-tag.ts",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        named,
+        RULE,
+        { ...OPTIONS, trustedSqlTags: [{ module: "", name: "sql" }] },
+        "src/empty-module-sql-tag.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        named,
+        RULE,
+        { ...OPTIONS, trustedSqlTags: [{ module: "@example/db", name: "" }] },
+        "src/empty-name-sql-tag.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/db'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
+        RULE,
+        trusted,
+        "src/annotated-sql-tag.js",
+      ),
+      [],
+    );
+  });
 });

@@ -90,6 +90,7 @@ describe("postgres runtime helpers", () => {
       executorNames: [],
       executorFactoryNames: [],
       executorTypeNames: [],
+      trustedSqlTags: [],
       owners: [],
       chunkFunctionNames: DEFAULT_CHUNK_FUNCTION_NAMES,
     });
@@ -103,6 +104,19 @@ describe("postgres runtime helpers", () => {
       "@app/db",
     );
     assert.equal(executorOptionSchema({ owners: { type: "array" } }).additionalProperties, false);
+    assert.deepEqual(
+      executorOptionDefaults({
+        executorNames: [],
+        trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+      }).trustedSqlTags,
+      [{ module: "@example/db", name: "sql" }],
+    );
+    assert.deepEqual(
+      ids(IMPORT + "query(sql`BEGIN`);", "postgres-no-manual-transaction", {
+        trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+      }),
+      ["manualTransaction"],
+    );
   });
 
   it("unwraps TypeScript wrappers and walks child nodes", () => {

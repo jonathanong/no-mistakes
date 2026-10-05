@@ -30,6 +30,7 @@ struct Options {
     executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
+    trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     unanalyzable_sql: String,
     schema_catalog_path: String,
     max_columns: Option<i64>,
@@ -143,7 +144,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             sql_include: opts.sql_include.clone(),
         },
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
+            .with_trusted_sql_tags(&opts.trusted_sql_tags),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

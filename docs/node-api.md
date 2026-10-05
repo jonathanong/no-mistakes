@@ -75,7 +75,10 @@ omitting both is a configuration error. Set `executorNames: []` explicitly
 without a module to select no executor calls. `executorFactoryNames` and
 `executorTypeNames` additionally select block- or function-scoped executors from
 factory results and executor-typed parameters, imported from `importSpecifier` or
-a subpath of it. Rust rules also accept `reportUnmatchedExecutorNames: true` to report
+a subpath of it. `trustedSqlTags` (default empty) opts in to named imports of
+`name` from `module`, or a subpath of `module`, as parameterized SQL tags. A
+renamed local binding is trusted. A default import is not, and a shadowed or
+rebound local fails closed. Rust rules also accept `reportUnmatchedExecutorNames: true` to report
 configured names no scanned file imports; it appears in `check()` results like any
 other finding. See the
 [executor migration notes](migrations/explicit-postgres-executors.md).

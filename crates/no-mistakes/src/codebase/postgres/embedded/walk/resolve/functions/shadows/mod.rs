@@ -1,5 +1,6 @@
 mod import;
 
+use super::super::super::super::options::TrustedSqlTag;
 use super::super::for_each_bound_name;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
@@ -23,9 +24,9 @@ use std::collections::HashSet;
 /// tagged-template tag, and a callable rebinding of either is exactly the
 /// shape that can ignore its template arguments and return arbitrary text.
 ///
-/// Default imports from `sql-template-strings` are the opposite: they *are*
-/// the trusted tag, recorded in [`TagShadows::imported`] under whatever
-/// local name the file used.
+/// Default imports from `sql-template-strings`, and configured named
+/// `trustedSqlTags` imports, are the opposite: they *are* the trusted tag,
+/// recorded in [`TagShadows::imported`] under whatever local name the file used.
 #[derive(Default)]
 pub(super) struct TagShadows {
     names: HashSet<String>,
@@ -33,11 +34,16 @@ pub(super) struct TagShadows {
 }
 
 impl TagShadows {
-    pub(super) fn collect(program: &Program<'_>) -> Self {
+    pub(super) fn collect(program: &Program<'_>, trusted_sql_tags: &[TrustedSqlTag]) -> Self {
         let mut shadows = Self::default();
         let top_level_functions = top_level_function_names(program);
         for statement in &program.body {
-            record_statement(statement, &top_level_functions, &mut shadows);
+            record_statement(
+                statement,
+                &top_level_functions,
+                trusted_sql_tags,
+                &mut shadows,
+            );
         }
         shadows
     }
@@ -82,6 +88,7 @@ fn top_level_function_names<'a>(program: &Program<'a>) -> HashSet<&'a str> {
 fn record_statement(
     statement: &Statement<'_>,
     top_level_functions: &HashSet<&str>,
+    trusted_sql_tags: &[TrustedSqlTag],
     shadows: &mut TagShadows,
 ) {
     match statement {
@@ -106,7 +113,9 @@ fn record_statement(
             }
             _ => {}
         },
-        Statement::ImportDeclaration(import) => import::record_import(import, shadows),
+        Statement::ImportDeclaration(import) => {
+            import::record_import(import, shadows, trusted_sql_tags);
+        }
         _ => {}
     }
 }

@@ -1,4 +1,4 @@
-use super::EmbeddedSqlOptions;
+use super::{EmbeddedSqlOptions, TrustedSqlTag};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -49,6 +49,7 @@ struct EmbeddedSqlRuleOptions {
     executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
+    trusted_sql_tags: Vec<TrustedSqlTag>,
 }
 
 #[derive(Default, Deserialize)]
@@ -76,7 +77,8 @@ pub(crate) fn configured_embedded_sql_options(
                 .with_scoped_executors(
                     &options.executor_factory_names,
                     &options.executor_type_names,
-                ),
+                )
+                .with_trusted_sql_tags(&options.trusted_sql_tags),
             );
         }
     }

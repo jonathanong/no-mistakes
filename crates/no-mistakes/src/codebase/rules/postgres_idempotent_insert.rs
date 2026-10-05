@@ -26,6 +26,7 @@ pub(crate) struct Options {
     pub(crate) executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
+    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     pub(crate) unanalyzable_sql: String,
     #[serde(default = "default_true")]
     pub(crate) scan_embedded: bool,
@@ -53,6 +54,7 @@ impl Default for Options {
             executor_names: Vec::new(),
             executor_factory_names: Vec::new(),
             executor_type_names: Vec::new(),
+            trusted_sql_tags: Vec::new(),
             unanalyzable_sql: String::new(),
             scan_embedded: true,
             check_convergence: true,
@@ -140,7 +142,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             },
         },
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
+            .with_trusted_sql_tags(&opts.trusted_sql_tags),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

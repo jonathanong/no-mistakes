@@ -34,6 +34,27 @@ function optionalStringArray(value, present) {
   return Array.isArray(value) && value.every((entry) => typeof entry === "string") ? value : null;
 }
 
+function trustedSqlTagEntry(entry) {
+  return (
+    entry !== null &&
+    typeof entry === "object" &&
+    !Array.isArray(entry) &&
+    typeof entry.module === "string" &&
+    typeof entry.name === "string"
+  );
+}
+
+function parseTrustedSqlTags(value, present) {
+  if (!present) return undefined;
+  if (!Array.isArray(value)) return null;
+  const tags = [];
+  for (const entry of value) {
+    if (!trustedSqlTagEntry(entry)) return null;
+    tags.push({ module: entry.module, name: entry.name });
+  }
+  return tags;
+}
+
 function resolveCursorContractOptions(raw) {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return null;
   const modules = stringArray(raw.modules);
@@ -44,7 +65,14 @@ function resolveCursorContractOptions(raw) {
   const exclude = optionalStringArray(raw.exclude, raw.exclude !== undefined);
   const includeFiles = optionalStringArray(raw.includeFiles, raw.includeFiles !== undefined);
   const sqlTagModules = optionalStringArray(raw.sqlTagModules, raw.sqlTagModules !== undefined);
-  if (include === null || exclude === null || includeFiles === null || sqlTagModules === null) {
+  const trustedSqlTags = parseTrustedSqlTags(raw.trustedSqlTags, raw.trustedSqlTags !== undefined);
+  if (
+    include === null ||
+    exclude === null ||
+    includeFiles === null ||
+    sqlTagModules === null ||
+    trustedSqlTags === null
+  ) {
     return null;
   }
   let annotation;
@@ -64,6 +92,7 @@ function resolveCursorContractOptions(raw) {
     exclude: exclude ?? [],
     includeFiles: (includeFiles ?? []).map((file) => file.replace(/^(?:\.\/)+/, "")),
     sqlTagModules: new Set(sqlTagModules ?? DEFAULT_SQL_TAG_MODULES),
+    trustedSqlTags: trustedSqlTags ?? [],
     annotation,
   };
 }
