@@ -1,4 +1,5 @@
 mod false_positives;
+mod join_pinning;
 mod multi_target;
 use super::directive::{
     call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,

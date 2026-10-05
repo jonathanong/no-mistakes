@@ -88,10 +88,15 @@ remains an alternative because it avoids waiting for an already-held row lock.
 With `schemaCatalogPath`, an `IN` or `= ANY` predicate does not make the lock
 multi-row when every locked table has a catalog unique key (valid, ready,
 non-partial, immediate, plain columns) whose columns are all pinned by top-level
-`AND` equalities to a literal or `$n` placeholder (an optional cast is fine). The
-unique key bounds the statement to one row per locked table, so a filter such as
+`AND` equalities of `WHERE` or of an inner join's `ON`. A column is pinned by an
+equality to a literal, a `$n` placeholder, a recovered template interpolation
+(`${id}`; user-authored text that only spells the marker is a column), or a column
+of a relation that is already single-row, iterated to a fixpoint (so
+`JOIN grants g ON g.id = code.grant_id` is single-row once `code` is pinned by its
+unique `token_hash`). The unique key bounds the statement to one row per locked
+table, so a filter such as
 `status IN ('open', 'held')` or `callback_url = ANY(a.callback_urls)` can only
-narrow it. Equalities inside `OR` or `NOT`, an unqualified column in a join, a pin
+narrow it. Equalities inside `OR` or `NOT`, an equality in an outer join's `ON`, an unqualified column in a join, a pin
 on a table the lock does not name, a self-join, or a partially pinned composite key
 prove nothing and still fail closed. Without a catalog no key is known to be unique,
 so the original check applies.

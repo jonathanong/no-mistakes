@@ -2,7 +2,7 @@ use super::catalog_check::{locks_interpolated_relation, locks_single_row, orders
 use super::directive::{contains_for_update, has_safe_directive};
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::postgres::{
-    extract_locking_select_metadata, LockingSelectMetadata, SchemaCatalog,
+    extract_locking_select_metadata_with_placeholders, LockingSelectMetadata, SchemaCatalog,
 };
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -74,7 +74,10 @@ fn findings_for_call_with_catalog(
     if has_safe_directive(source, call.line, sql, &opts.safe_directive) {
         return Vec::new();
     }
-    match extract_locking_select_metadata(sql) {
+    match extract_locking_select_metadata_with_placeholders(
+        sql,
+        &call.recovered_placeholder_positions,
+    ) {
         Err(_) => vec![finding(
             file,
             call.line,

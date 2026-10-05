@@ -317,9 +317,13 @@ consume the same statement facts.
   table, or a derived relation locked without `OF`)
 - `table_qualifiers` — the schema, base-name, and alias qualifiers valid for
   each locked relation
-- `pinned_columns` — per locked table, the columns a top-level `WHERE` `AND`
-  equality pins to a literal or placeholder; the lock-ordering rule pairs them
-  with a catalog unique key to prove a single-row lock
+- `pinned_columns` — per base relation in the `FROM`, the columns a top-level `AND`
+  equality (in `WHERE` or an inner join's `ON`) pins to a literal, placeholder, or
+  recovered interpolation (`extract_locking_select_metadata_with_placeholders`
+  takes the interpolation positions)
+- `join_equalities` — equalities between columns of two distinct base relations;
+  the lock-ordering rule pairs both with a catalog unique key to prove a
+  single-row lock
 - `order` — parsed `ORDER BY` expression keys, used with a configured schema
   catalog to require an exact valid unique-key prefix without accepting a key
   qualified by another joined relation

@@ -25,10 +25,10 @@ export function pinOnOtherTable(accountId: string, ids: string[]) {
   );
 }
 
-// Both tables are locked and only one is pinned.
+// Both tables are locked and only one is pinned; the join is on a non-key column.
 export function lockBothPinOne(orderId: string, statuses: string[]) {
   return query(
-    `SELECT o.id FROM orders o JOIN accounts a ON a.id = o.account_id
+    `SELECT o.id FROM orders o JOIN accounts a ON a.region = o.region
      WHERE o.id = $1 AND a.status = ANY($2) FOR UPDATE`,
     [orderId, statuses],
   );

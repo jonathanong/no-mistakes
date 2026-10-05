@@ -1,4 +1,4 @@
-use super::single_row::pinned_columns;
+use super::single_row::{analyze, JoinEquality, Pins};
 use crate::codebase::postgres::catalog::normalize_table_name;
 use sqlparser::ast::{
     LockClause, LockType, ObjectName, ObjectNamePart, SetExpr, TableFactor, TableWithJoins,
@@ -8,11 +8,17 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) struct LockedTables {
     pub(super) names: Vec<String>,
     pub(super) qualifiers: BTreeMap<String, Vec<String>>,
-    /// Columns of each locked table pinned to one bound value by a top-level `WHERE` conjunct.
+    /// Pins of every base relation in the FROM, not only the locked ones: a locked relation
+    /// can be pinned through a join to an unlocked one.
     pub(super) pinned: BTreeMap<String, Vec<String>>,
+    pub(super) joins: Vec<JoinEquality>,
 }
 
-pub(super) fn locked_tables(body: &SetExpr, locks: &[LockClause]) -> Option<LockedTables> {
+pub(super) fn locked_tables(
+    body: &SetExpr,
+    locks: &[LockClause],
+    positions: &[(u32, u32)],
+) -> Option<LockedTables> {
     let relations = relations(body)?;
     let update_locks: Vec<_> = locks
         .iter()
@@ -23,12 +29,13 @@ pub(super) fn locked_tables(body: &SetExpr, locks: &[LockClause]) -> Option<Lock
             names: Vec::new(),
             qualifiers: BTreeMap::new(),
             pinned: BTreeMap::new(),
+            joins: Vec::new(),
         });
     }
-    let selection = select_selection(body);
+    let pins = analyze(&relations, select_of(body)?, positions);
     if update_locks.iter().any(|lock| lock.of.is_none()) {
         // Without `OF`, every FROM item is locked, so each must be a base table.
-        return selected_tables(&relations, &relations.iter().collect::<Vec<_>>(), selection);
+        return selected_tables(&relations.iter().collect::<Vec<_>>(), pins);
     }
     let mut tables = Vec::new();
     for lock in update_locks {
@@ -42,12 +49,12 @@ pub(super) fn locked_tables(body: &SetExpr, locks: &[LockClause]) -> Option<Lock
         }
         tables.push(matches[0]);
     }
-    selected_tables(&relations, &tables, selection)
+    selected_tables(&tables, pins)
 }
 
-fn select_selection(body: &SetExpr) -> Option<&sqlparser::ast::Expr> {
+fn select_of(body: &SetExpr) -> Option<&sqlparser::ast::Select> {
     match body {
-        SetExpr::Select(select) => select.selection.as_ref(),
+        SetExpr::Select(select) => Some(select),
         _ => None,
     }
 }
@@ -132,20 +139,14 @@ fn opaque_names(factor: &TableFactor) -> BTreeSet<String> {
     }
 }
 
-fn selected_tables(
-    all: &[Relation],
-    selected: &[&Relation],
-    selection: Option<&sqlparser::ast::Expr>,
-) -> Option<LockedTables> {
+fn selected_tables(selected: &[&Relation], pins: Pins) -> Option<LockedTables> {
     let mut qualifiers = BTreeMap::new();
-    let mut pinned = BTreeMap::new();
     for relation in selected {
         let table = relation.table.clone()?;
         qualifiers
             .entry(table.clone())
             .or_insert_with(BTreeSet::new)
             .extend(relation.names.iter().cloned());
-        pinned.insert(table, pinned_columns(all, relation, selection));
     }
     let names = qualifiers.keys().cloned().collect();
     let qualifiers = qualifiers
@@ -155,7 +156,8 @@ fn selected_tables(
     Some(LockedTables {
         names,
         qualifiers,
-        pinned,
+        pinned: pins.bound,
+        joins: pins.joins,
     })
 }
 

@@ -62,7 +62,10 @@ pub use embedded::{
     EmbeddedSqlFileFacts, EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions,
     EmbeddedSqlSourcePosition,
 };
-pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
+pub use locking::{
+    extract_locking_select_metadata, extract_locking_select_metadata_with_placeholders,
+    JoinEquality, LockingSelectMetadata,
+};
 pub use migration::extract_migration_facts;
 pub use offset::{
     sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse, SqlOffsetFact,

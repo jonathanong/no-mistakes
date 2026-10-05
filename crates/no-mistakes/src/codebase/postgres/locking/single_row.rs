@@ -1,93 +1,157 @@
-//! Columns a locked relation has pinned to one bound value.
+//! Columns a `SELECT`'s base relations have pinned, by value or through a join.
 //!
-//! A catalog unique key whose columns are all pinned bounds the lock to one row, however
-//! many `IN` / `= ANY` filters sit beside it. Only top-level `AND` conjuncts count: an
-//! equality inside `OR`, `NOT`, or a subquery does not bound the result.
+//! A catalog unique key whose columns are all pinned bounds a relation to one row, however
+//! many `IN` / `= ANY` filters sit beside it. Only top-level `AND` conjuncts of `WHERE` and of
+//! an inner join's `ON` count: an equality inside `OR`, `NOT`, an outer join, or a subquery
+//! does not bound the result.
 
 use super::relations::Relation;
 use crate::codebase::postgres::catalog::normalize_table_name;
-use sqlparser::ast::{BinaryOperator, Expr, Ident};
+use crate::codebase::postgres::statements::value::is_placeholder_ident_at;
+use sqlparser::ast::{BinaryOperator, Expr, Ident, JoinConstraint, JoinOperator, Select};
+use std::collections::BTreeMap;
 
-pub(super) fn pinned_columns(
-    all: &[Relation],
-    relation: &Relation,
-    selection: Option<&Expr>,
-) -> Vec<String> {
-    // A self-join cannot tell which alias a pin belongs to, so it proves nothing.
-    let repeated = all
-        .iter()
-        .filter(|other| other.table == relation.table)
-        .count()
-        > 1;
-    let Some(selection) = selection.filter(|_| !repeated) else {
-        return Vec::new();
-    };
-    let mut columns = Vec::new();
-    collect(selection, relation, all.len() == 1, &mut columns);
-    columns.sort();
-    columns.dedup();
-    columns
+/// `left_table.left_column = right_table.right_column`, an inner-join or `WHERE` equality
+/// between two distinct base relations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JoinEquality {
+    pub left_table: String,
+    pub left_column: String,
+    pub right_table: String,
+    pub right_column: String,
 }
 
-fn collect(expr: &Expr, relation: &Relation, sole: bool, out: &mut Vec<String>) {
+#[derive(Default)]
+pub(super) struct Pins {
+    /// Columns of each base relation pinned to one bound value.
+    pub(super) bound: BTreeMap<String, Vec<String>>,
+    pub(super) joins: Vec<JoinEquality>,
+}
+
+enum Side {
+    Bound,
+    Column(usize, String),
+    Other,
+}
+
+pub(super) fn analyze(all: &[Relation], select: &Select, positions: &[(u32, u32)]) -> Pins {
+    let mut pins = Pins::default();
+    for relation in all.iter().filter_map(|relation| relation.table.as_ref()) {
+        pins.bound.entry(relation.clone()).or_default();
+    }
+    let mut conjuncts = Vec::new();
+    conjuncts_of(select.selection.as_ref(), &mut conjuncts);
+    for table in &select.from {
+        for join in &table.joins {
+            if let JoinOperator::Join(JoinConstraint::On(on))
+            | JoinOperator::Inner(JoinConstraint::On(on)) = &join.join_operator
+            {
+                conjuncts_of(Some(on), &mut conjuncts);
+            }
+        }
+    }
+    for (left, right) in conjuncts {
+        let (left, right) = (side(left, all, positions), side(right, all, positions));
+        match (left, right) {
+            (Side::Column(index, column), Side::Bound)
+            | (Side::Bound, Side::Column(index, column)) => {
+                if let Some(table) = &all[index].table {
+                    pins.bound.entry(table.clone()).or_default().push(column);
+                }
+            }
+            (Side::Column(a, a_column), Side::Column(b, b_column)) if a != b => {
+                if let (Some(left_table), Some(right_table)) = (&all[a].table, &all[b].table) {
+                    pins.joins.push(JoinEquality {
+                        left_table: left_table.clone(),
+                        left_column: a_column,
+                        right_table: right_table.clone(),
+                        right_column: b_column,
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+    for columns in pins.bound.values_mut() {
+        columns.sort();
+        columns.dedup();
+    }
+    pins
+}
+
+/// The `left = right` conjuncts reachable through top-level `AND` only.
+fn conjuncts_of<'a>(expr: Option<&'a Expr>, out: &mut Vec<(&'a Expr, &'a Expr)>) {
     match expr {
-        Expr::Nested(inner) => collect(inner, relation, sole, out),
-        Expr::BinaryOp {
+        Some(Expr::Nested(inner)) => conjuncts_of(Some(inner), out),
+        Some(Expr::BinaryOp {
             left,
             op: BinaryOperator::And,
             right,
-        } => {
-            collect(left, relation, sole, out);
-            collect(right, relation, sole, out);
+        }) => {
+            conjuncts_of(Some(left), out);
+            conjuncts_of(Some(right), out);
         }
-        Expr::BinaryOp {
+        Some(Expr::BinaryOp {
             left,
             op: BinaryOperator::Eq,
             right,
-        } => {
-            let column = if is_bound_value(right) {
-                column_of(left, relation, sole)
-            } else if is_bound_value(left) {
-                column_of(right, relation, sole)
-            } else {
-                None
-            };
-            out.extend(column);
-        }
+        }) => out.push((left, right)),
         _ => {}
     }
 }
 
-/// A literal or `$n` placeholder, possibly cast: one value for the whole statement.
-fn is_bound_value(expr: &Expr) -> bool {
+fn side(expr: &Expr, all: &[Relation], positions: &[(u32, u32)]) -> Side {
     match expr {
-        Expr::Value(_) => true,
-        Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => is_bound_value(inner),
-        _ => false,
-    }
-}
-
-fn column_of(expr: &Expr, relation: &Relation, sole: bool) -> Option<String> {
-    match expr {
-        Expr::Nested(inner) => column_of(inner, relation, sole),
+        Expr::Nested(inner) => side(inner, all, positions),
+        // A literal or `$n`, possibly cast: one value for the whole statement.
+        Expr::Value(_) => Side::Bound,
+        Expr::Cast { expr: inner, .. } => match side(inner, all, positions) {
+            Side::Bound => Side::Bound,
+            _ => Side::Other,
+        },
+        // A recovered interpolation is exactly one bound value; user-authored text that merely
+        // spells the marker is a column.
+        Expr::Identifier(ident) if is_placeholder_ident_at(ident, Some(positions)) => Side::Bound,
         // An unqualified column is only attributable when the FROM has one relation.
-        Expr::Identifier(ident) => sole.then(|| normalize(ident)),
-        Expr::CompoundIdentifier(parts) => {
-            let (column, qualifier) = parts.split_last()?;
-            let qualifier = qualifier
-                .iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(".");
-            relation
-                .names
-                .contains(&normalize_table_name(&qualifier))
-                .then(|| normalize(column))
-        }
-        _ => None,
+        Expr::Identifier(ident) if all.len() == 1 => relation_column(all, 0, ident),
+        Expr::CompoundIdentifier(parts) => qualified(parts, all),
+        _ => Side::Other,
     }
 }
 
-fn normalize(ident: &Ident) -> String {
-    normalize_table_name(&ident.to_string())
+fn qualified(parts: &[Ident], all: &[Relation]) -> Side {
+    let Some((column, qualifier)) = parts.split_last() else {
+        return Side::Other;
+    };
+    let qualifier = qualifier
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>()
+        .join(".");
+    let qualifier = normalize_table_name(&qualifier);
+    let mut matches = all
+        .iter()
+        .enumerate()
+        .filter(|(_, relation)| relation.names.contains(&qualifier));
+    match (matches.next(), matches.next()) {
+        (Some((index, _)), None) => relation_column(all, index, column),
+        _ => Side::Other,
+    }
+}
+
+fn relation_column(all: &[Relation], index: usize, column: &Ident) -> Side {
+    let Some(table) = &all[index].table else {
+        return Side::Other;
+    };
+    // A self-join cannot tell which alias a pin belongs to, so it proves nothing.
+    let repeated = all
+        .iter()
+        .filter(|other| other.table.as_ref() == Some(table))
+        .count()
+        > 1;
+    if repeated {
+        Side::Other
+    } else {
+        Side::Column(index, normalize_table_name(&column.to_string()))
+    }
 }

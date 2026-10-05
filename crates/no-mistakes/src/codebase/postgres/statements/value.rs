@@ -13,7 +13,10 @@ pub(super) type PlaceholderPositions<'a> = Option<&'a [(u32, u32)]>;
 /// Standalone SQL has only the legacy spelling heuristic. Embedded SQL has exact recovered
 /// positions, so a marker-shaped user identifier is a column unless its source location was
 /// generated. Quoted identifiers are never interpolation binds.
-pub(super) fn is_placeholder_ident_at(ident: &Ident, positions: PlaceholderPositions<'_>) -> bool {
+pub(in crate::codebase::postgres) fn is_placeholder_ident_at(
+    ident: &Ident,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
     if let Some(positions) = positions {
         return ident.quote_style.is_none()
             && is_placeholder_ident(&ident.value)

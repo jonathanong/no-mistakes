@@ -203,6 +203,16 @@ fn postgres_lock_ordering_checks_the_locked_table_beside_a_lateral_join() {
 }
 
 #[test]
+fn postgres_lock_ordering_pins_lock_targets_through_join_keys_and_interpolations() {
+    let pass = check_fixture_config(&fixture("pass-join-pinned"), ".no-mistakes.yml");
+    assert!(pass.status.success(), "exit non-zero: {}", stdout(&pass));
+    let fail = check_fixture_config(&fixture("fail-join-pinned"), ".no-mistakes.yml");
+    let body = stdout(&fail);
+    assert!(!fail.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("ABBA"), "{body}");
+}
+
+#[test]
 fn postgres_lock_ordering_reports_interpolated_relations_distinctly() {
     let fail = check_fixture_config(&fixture("fail-catalog-interpolated"), ".no-mistakes.yml");
     let body = stdout(&fail);
