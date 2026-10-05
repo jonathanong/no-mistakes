@@ -166,3 +166,40 @@ fn constant_expressions_are_literals_and_parameters_only() {
         assert!(!expression_is_constant(varying), "{varying}");
     }
 }
+
+#[test]
+fn recovered_interpolations_are_bound_values_only_at_recovered_positions() {
+    // Line 1 holds the INSERT; the select list `sql_placeholder_1, sql_placeholder_2` starts at
+    // column 40. Only identifiers at a recovered position are binds.
+    let sql = "INSERT INTO items (id, note) SELECT sql_placeholder_1, sql_placeholder_2 WHERE true ON CONFLICT (id) DO NOTHING";
+    let start = sql.find("sql_placeholder_1").unwrap() as u32 + 1;
+    let second = sql.find("sql_placeholder_2").unwrap() as u32 + 1;
+    let shape = |binds: &[(u32, u32)]| {
+        analyze_conflict_inserts_with_binds(sql, binds)
+            .unwrap()
+            .remove(0)
+            .source
+    };
+    assert!(!shape(&[(1, start), (1, second)]).multi_row);
+    assert!(
+        shape(&[(1, start)]).multi_row,
+        "an unrecovered identifier is a column"
+    );
+    assert!(shape(&[]).multi_row);
+    assert!(analyze_conflict_inserts(sql).unwrap()[0].source.multi_row);
+
+    // CURRENT_TIMESTAMP and friends are scalars.
+    let sql = "INSERT INTO items (id, note) SELECT 1, CURRENT_TIMESTAMP WHERE true ON CONFLICT (id) DO NOTHING";
+    assert!(!analyze_conflict_inserts(sql).unwrap()[0].source.multi_row);
+
+    // A recovered interpolation pins a unique key on either side of the equality, but is never
+    // the column side.
+    let sql = "INSERT INTO items (id, note) SELECT o.id, 1 FROM orders o WHERE sql_placeholder_1 = o.id ON CONFLICT (id) DO NOTHING";
+    let at = sql.find("sql_placeholder_1").unwrap() as u32 + 1;
+    let pinned = analyze_conflict_inserts_with_binds(sql, &[(1, at)])
+        .unwrap()
+        .remove(0);
+    assert_eq!(pinned.source.pinned_relation.unwrap().columns, ["id"]);
+    let pinned = analyze_conflict_inserts(sql).unwrap().remove(0);
+    assert!(pinned.source.pinned_relation.is_none());
+}

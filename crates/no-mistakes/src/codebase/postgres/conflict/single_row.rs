@@ -14,6 +14,10 @@ const SCALAR_FUNCTIONS: &[&str] = &[
     "nullif",
     "concat",
     "now",
+    "current_timestamp",
+    "current_date",
+    "current_time",
+    "localtimestamp",
     "clock_timestamp",
     "gen_random_uuid",
     "uuid_generate_v4",
@@ -21,20 +25,20 @@ const SCALAR_FUNCTIONS: &[&str] = &[
     "json_build_object",
 ];
 
-pub(super) fn query_is_potentially_multi_row(query: &Query) -> bool {
-    !limits_to_one_row(query) && body_is_potentially_multi_row(query.body.as_ref())
+pub(super) fn query_is_potentially_multi_row(query: &Query, binds: &[(u32, u32)]) -> bool {
+    !limits_to_one_row(query) && body_is_potentially_multi_row(query.body.as_ref(), binds)
 }
 
-fn body_is_potentially_multi_row(body: &SetExpr) -> bool {
+fn body_is_potentially_multi_row(body: &SetExpr, binds: &[(u32, u32)]) -> bool {
     match body {
         SetExpr::Values(values) => values.rows.len() > 1,
         SetExpr::Insert(_) | SetExpr::Update(_) | SetExpr::Delete(_) | SetExpr::Merge(_) => true,
-        SetExpr::Query(query) => query_is_potentially_multi_row(query),
+        SetExpr::Query(query) => query_is_potentially_multi_row(query, binds),
         // Without FROM a SELECT is one row, unless a set-returning function expands it.
         SetExpr::Select(select) => {
             !select.from.is_empty()
                 || !select.projection.iter().all(|item| {
-                    projection_expr(item).is_some_and(|expr| single_valued(expr, false))
+                    projection_expr(item).is_some_and(|expr| single_valued(expr, false, binds))
                 })
         }
         SetExpr::SetOperation { .. } | SetExpr::Table(_) => true,
@@ -69,16 +73,24 @@ pub(super) fn projection_expr(item: &sqlparser::ast::SelectItem) -> Option<&Expr
     }
 }
 
+/// An interpolation recovered from a template literal reaches the parser as a
+/// `sql_placeholder_N` identifier; only one at a recovered position is a bound value, so a
+/// user-authored identifier with that spelling is still a column.
+pub(super) fn is_bind(ident: &sqlparser::ast::Ident, binds: &[(u32, u32)]) -> bool {
+    crate::codebase::postgres::statements::value::is_placeholder_ident_at(ident, Some(binds))
+}
+
 /// Whether `expr` produces one value per input row (columns only when `allow_columns`).
-pub(super) fn single_valued(expr: &Expr, allow_columns: bool) -> bool {
+pub(super) fn single_valued(expr: &Expr, allow_columns: bool, binds: &[(u32, u32)]) -> bool {
     match expr {
         Expr::Value(_) | Expr::Subquery(_) => true,
-        Expr::Identifier(_) | Expr::CompoundIdentifier(_) => allow_columns,
+        Expr::Identifier(ident) => allow_columns || is_bind(ident, binds),
+        Expr::CompoundIdentifier(_) => allow_columns,
         Expr::Nested(inner)
         | Expr::Cast { expr: inner, .. }
-        | Expr::UnaryOp { expr: inner, .. } => single_valued(inner, allow_columns),
+        | Expr::UnaryOp { expr: inner, .. } => single_valued(inner, allow_columns, binds),
         Expr::BinaryOp { left, right, .. } => {
-            single_valued(left, allow_columns) && single_valued(right, allow_columns)
+            single_valued(left, allow_columns, binds) && single_valued(right, allow_columns, binds)
         }
         Expr::Function(function) => {
             let name = function.name.to_string().to_ascii_lowercase();
@@ -88,7 +100,7 @@ pub(super) fn single_valued(expr: &Expr, allow_columns: bool) -> bool {
                     FunctionArguments::None => true,
                     FunctionArguments::List(list) => list.args.iter().all(|arg| match arg {
                         FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => {
-                            single_valued(expr, allow_columns)
+                            single_valued(expr, allow_columns, binds)
                         }
                         _ => false,
                     }),

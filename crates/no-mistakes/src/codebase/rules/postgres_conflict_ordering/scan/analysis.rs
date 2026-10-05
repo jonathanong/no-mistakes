@@ -1,7 +1,7 @@
 use super::super::RULE_ID;
 use super::substitute::substitute_target_columns;
 use crate::codebase::postgres::{
-    analyze_conflict_inserts, order_prefix_matches, CanonicalIndex, CanonicalOrderKey,
+    analyze_conflict_inserts_with_binds, order_prefix_matches, CanonicalIndex, CanonicalOrderKey,
     ResolvedArbiter, SchemaCatalog, SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape,
 };
 use crate::codebase::rules::RuleFinding;
@@ -17,7 +17,19 @@ pub(super) fn findings_for_sql(
     catalog: &SchemaCatalog,
     fail_unanalyzable: bool,
 ) -> Vec<RuleFinding> {
-    let inserts = match analyze_conflict_inserts(sql) {
+    findings_for_sql_with_binds(file, line, sql, &[], catalog, fail_unanalyzable)
+}
+
+/// `binds` are recovered template-interpolation positions within `sql`.
+pub(super) fn findings_for_sql_with_binds(
+    file: &str,
+    line: usize,
+    sql: &str,
+    binds: &[(u32, u32)],
+    catalog: &SchemaCatalog,
+    fail_unanalyzable: bool,
+) -> Vec<RuleFinding> {
+    let inserts = match analyze_conflict_inserts_with_binds(sql, binds) {
         Ok(inserts) => inserts,
         Err(_) if fail_unanalyzable && contains_insert_conflict(sql) => {
             return vec![finding(

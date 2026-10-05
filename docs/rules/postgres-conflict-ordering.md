@@ -102,7 +102,10 @@ with, so it needs no `ORDER BY`. The rule accepts only these shapes:
 
 - a `SELECT` without `FROM` whose select list holds literals, bound parameters, casts,
   scalar subqueries and a short list of scalar functions (`lower`, `upper`, `coalesce`,
-  `nullif`, `concat`, `now`, `gen_random_uuid`, ...). A set-returning function such as
+  `nullif`, `concat`, `now`, `current_timestamp`, `gen_random_uuid`, ...). A `${...}`
+  interpolation in a recovered template literal counts as a bound parameter, but only at
+  a recovered position: a user-authored identifier spelled `sql_placeholder_1` is a column.
+  A `WHERE` clause never changes this. A set-returning function such as
   `unnest` or `generate_series` can expand it, so it is not single-row;
 - a `SELECT` from one plain table (no join, CTE shadowing or table function) whose
   top-level `AND` conjuncts equate every column of one catalog unique key (valid, ready,

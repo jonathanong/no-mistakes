@@ -364,7 +364,7 @@ fn remaining_set_expr_and_insert_shapes() {
     else {
         panic!("union query");
     };
-    assert!(query_is_potentially_multi_row(&query));
+    assert!(query_is_potentially_multi_row(&query, &[]));
 
     let Statement::Query(wrapped) = parse_postgres_sql("(SELECT 1 FROM items)")
         .unwrap()
@@ -373,7 +373,7 @@ fn remaining_set_expr_and_insert_shapes() {
     else {
         panic!("wrapped");
     };
-    assert!(query_is_potentially_multi_row(&wrapped));
+    assert!(query_is_potentially_multi_row(&wrapped, &[]));
 
     let insert_stmt = parse_postgres_sql("INSERT INTO items VALUES (1)")
         .unwrap()
@@ -381,12 +381,12 @@ fn remaining_set_expr_and_insert_shapes() {
         .unwrap();
     let mut raw = Vec::new().into_iter();
     let mut inserts = Vec::new();
-    collect_statement(&insert_stmt, &mut raw, &mut inserts).unwrap();
+    collect_statement(&insert_stmt, &mut raw, &[], &mut inserts).unwrap();
     assert!(inserts.is_empty());
 
     let update = parse_postgres_sql("UPDATE items SET id = 1")
         .unwrap()
         .pop()
         .unwrap();
-    collect_statement(&update, &mut Vec::new().into_iter(), &mut inserts).unwrap();
+    collect_statement(&update, &mut Vec::new().into_iter(), &[], &mut inserts).unwrap();
 }

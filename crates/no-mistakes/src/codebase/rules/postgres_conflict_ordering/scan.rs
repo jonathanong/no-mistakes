@@ -70,10 +70,11 @@ pub(super) fn scan_with_sources(
             if !recovered_sql_needs_insert_check(Some(sql)) {
                 continue;
             }
-            findings.extend(analysis::findings_for_sql(
+            findings.extend(analysis::findings_for_sql_with_binds(
                 &rel,
                 call.line as usize,
                 sql,
+                &call.recovered_placeholder_positions,
                 catalog,
                 opts.fail_unanalyzable,
             ));

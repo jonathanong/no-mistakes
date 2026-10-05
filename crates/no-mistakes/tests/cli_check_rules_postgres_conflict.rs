@@ -99,6 +99,31 @@ fn postgres_conflict_ordering_cli_keeps_single_row_lookalikes_failing_closed() {
 }
 
 #[test]
+fn postgres_conflict_ordering_cli_treats_template_interpolations_as_bound_values() {
+    // Regression: `${...}` reaches the parser as a recovered placeholder identifier, so a
+    // FROM-less `INSERT ... SELECT ${a}, ${b} WHERE EXISTS (...)` is one row.
+    let output = check(&fixture("pass-template-single-row"));
+    assert!(
+        output.status.success(),
+        "exit non-zero: {}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn postgres_conflict_ordering_cli_does_not_bind_user_authored_placeholder_names() {
+    let output = check(&fixture("fail-template-lookalikes"));
+    let body = stdout(&output);
+    assert!(!output.status.success(), "expected exit 1: {body}");
+    assert_eq!(
+        body.matches("\"target\":\"missing-canonical-order\"")
+            .count(),
+        3,
+        "{body}"
+    );
+}
+
+#[test]
 fn postgres_conflict_ordering_cli_maps_positional_and_constant_order_keys() {
     let output = check(&fixture("pass-order-by-forms"));
     assert!(

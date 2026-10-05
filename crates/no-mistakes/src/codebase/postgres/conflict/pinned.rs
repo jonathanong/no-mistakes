@@ -1,13 +1,13 @@
 //! Pin evidence for a single-relation `INSERT ... SELECT` and the constant-value test shared with
 //! the conflict-ordering rule.
-use super::single_row::{projection_expr, single_valued};
+use super::single_row::{is_bind, projection_expr, single_valued};
 use super::SqlConflictInsertFact;
 use crate::codebase::postgres::parse_postgres_expression;
 use sqlparser::ast::{BinaryOperator, Expr, Query, SetExpr, TableFactor, With};
 
 /// A single plain relation whose WHERE equates columns to constants, so a catalog unique key
 /// among those columns bounds the source to one row.
-pub(super) fn pinned_relation(query: &Query) -> Option<SqlPinnedRelation> {
+pub(super) fn pinned_relation(query: &Query, binds: &[(u32, u32)]) -> Option<SqlPinnedRelation> {
     if query.with.is_some() {
         return None;
     }
@@ -30,7 +30,7 @@ pub(super) fn pinned_relation(query: &Query) -> Option<SqlPinnedRelation> {
         || !select
             .projection
             .iter()
-            .all(|item| projection_expr(item).is_some_and(|expr| single_valued(expr, true)))
+            .all(|item| projection_expr(item).is_some_and(|expr| single_valued(expr, true, binds)))
     {
         return None;
     }
@@ -44,23 +44,23 @@ pub(super) fn pinned_relation(query: &Query) -> Option<SqlPinnedRelation> {
         })?
         .to_ascii_lowercase();
     let mut columns = Vec::new();
-    collect_pins(select.selection.as_ref()?, &qualifier, &mut columns);
+    collect_pins(select.selection.as_ref()?, &qualifier, binds, &mut columns);
     (!columns.is_empty()).then(|| SqlPinnedRelation {
         table: name.to_string(),
         columns,
     })
 }
 
-fn collect_pins(expr: &Expr, qualifier: &str, columns: &mut Vec<String>) {
+fn collect_pins(expr: &Expr, qualifier: &str, binds: &[(u32, u32)], columns: &mut Vec<String>) {
     match expr {
-        Expr::Nested(inner) => collect_pins(inner, qualifier, columns),
+        Expr::Nested(inner) => collect_pins(inner, qualifier, binds, columns),
         Expr::BinaryOp {
             left,
             op: BinaryOperator::And,
             right,
         } => {
-            collect_pins(left, qualifier, columns);
-            collect_pins(right, qualifier, columns);
+            collect_pins(left, qualifier, binds, columns);
+            collect_pins(right, qualifier, binds, columns);
         }
         Expr::BinaryOp {
             left,
@@ -69,7 +69,7 @@ fn collect_pins(expr: &Expr, qualifier: &str, columns: &mut Vec<String>) {
         } => {
             for (column, other) in [(left, right), (right, left)] {
                 if let Some(column) =
-                    column_of(column, qualifier).filter(|_| expr_is_constant(other))
+                    column_of(column, qualifier, binds).filter(|_| expr_is_constant(other, binds))
                 {
                     columns.push(column);
                 }
@@ -79,10 +79,10 @@ fn collect_pins(expr: &Expr, qualifier: &str, columns: &mut Vec<String>) {
     }
 }
 
-fn column_of(expr: &Expr, qualifier: &str) -> Option<String> {
+fn column_of(expr: &Expr, qualifier: &str, binds: &[(u32, u32)]) -> Option<String> {
     match expr {
-        Expr::Nested(inner) => column_of(inner, qualifier),
-        Expr::Identifier(ident) => Some(ident.to_string()),
+        Expr::Nested(inner) => column_of(inner, qualifier, binds),
+        Expr::Identifier(ident) if !is_bind(ident, binds) => Some(ident.to_string()),
         Expr::CompoundIdentifier(parts) => match parts.as_slice() {
             [owner, column] if owner.value.eq_ignore_ascii_case(qualifier) => {
                 Some(column.to_string())
@@ -93,12 +93,13 @@ fn column_of(expr: &Expr, qualifier: &str) -> Option<String> {
     }
 }
 
-fn expr_is_constant(expr: &Expr) -> bool {
+fn expr_is_constant(expr: &Expr, binds: &[(u32, u32)]) -> bool {
     match expr {
         Expr::Value(_) => true,
+        Expr::Identifier(ident) => is_bind(ident, binds),
         Expr::Nested(inner)
         | Expr::Cast { expr: inner, .. }
-        | Expr::UnaryOp { expr: inner, .. } => expr_is_constant(inner),
+        | Expr::UnaryOp { expr: inner, .. } => expr_is_constant(inner, binds),
         _ => false,
     }
 }
@@ -106,7 +107,7 @@ fn expr_is_constant(expr: &Expr) -> bool {
 /// Whether `expression` is a literal or bound parameter (possibly cast), so it has the same
 /// value in every row and cannot change the order of rows.
 pub fn expression_is_constant(expression: &str) -> bool {
-    parse_postgres_expression(expression).is_some_and(|expr| expr_is_constant(&expr))
+    parse_postgres_expression(expression).is_some_and(|expr| expr_is_constant(&expr, &[]))
 }
 
 /// A single plain relation whose `WHERE` equates `columns` to constants.
