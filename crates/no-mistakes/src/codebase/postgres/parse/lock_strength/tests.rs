@@ -28,7 +28,10 @@ fn rewrites_no_key_update_to_update() {
 
 #[test]
 fn rewrites_key_share_to_share_including_at_end_of_input() {
-    assert_eq!(text("SELECT 1 FROM t FOR KEY SHARE"), "SELECT 1 FROM t FOR SHARE");
+    assert_eq!(
+        text("SELECT 1 FROM t FOR KEY SHARE"),
+        "SELECT 1 FROM t FOR SHARE"
+    );
     assert_eq!(
         text("SELECT 1 FROM t FOR KEY SHARE OF a, b"),
         "SELECT 1 FROM t FOR SHARE OF a, b"
