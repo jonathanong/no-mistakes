@@ -100,12 +100,12 @@ Run from the directory containing both checkouts:
 ```sh
 set -e
 # Select a CPU pair available on this machine for both runs.
-scopes_cpus=18,19
+scopes_affinity=18,19
 export CARGO_BUILD_JOBS=2 RUSTC_WRAPPER='' CARGO_INCREMENTAL=0
 export CARGO_PROFILE_BENCH_LTO=false CARGO_PROFILE_BENCH_CODEGEN_UNITS=16
 export CARGO_PROFILE_BENCH_DEBUG=0 RAYON_NUM_THREADS=2
 export CARGO_TARGET_DIR="$PWD/scopes-before-target"
-(cd scopes-before && taskset -c "$scopes_cpus" cargo bench -p no-mistakes \
+(cd scopes-before && taskset -c "$scopes_affinity" cargo bench -p no-mistakes \
   --no-default-features --bench sql_bound_scopes -- \
   --sample-size 10 --warm-up-time 1 --measurement-time 1 \
   --confidence-level 0.95 --save-baseline controlled_before) > before.txt 2>&1
@@ -113,7 +113,7 @@ cp -R "$CARGO_TARGET_DIR/criterion" before-evidence
 export CARGO_TARGET_DIR="$PWD/scopes-candidate-target"
 mkdir -p "$CARGO_TARGET_DIR"
 cp -R before-evidence "$CARGO_TARGET_DIR/criterion"
-(cd scopes-candidate && taskset -c "$scopes_cpus" cargo bench -p no-mistakes \
+(cd scopes-candidate && taskset -c "$scopes_affinity" cargo bench -p no-mistakes \
   --no-default-features --bench sql_bound_scopes -- \
   --sample-size 10 --warm-up-time 1 --measurement-time 1 \
   --confidence-level 0.95 --baseline controlled_before) > candidate.txt 2>&1
