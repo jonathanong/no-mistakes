@@ -1054,7 +1054,7 @@ test("SELECT scope facts expose named public contracts", () => {
     "QueryUnsupported",
     "PredicateContext",
   ]) {
-    assert.match(query, new RegExp(`export interface PostgresSql${name} \{`));
+    assert.match(query, new RegExp(`export interface PostgresSql${name} [{]`));
   }
   for (const name of ["Clause", "RelationKind", "JoinKind", "ColumnResolution"])
     assert.match(query, new RegExp(`export type PostgresSqlQuery${name} =`));
