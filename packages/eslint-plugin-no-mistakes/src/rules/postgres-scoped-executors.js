@@ -20,6 +20,11 @@ function importedName(specifier) {
   return imported?.type === "Literal" ? String(imported.value) : imported?.name;
 }
 
+// The module itself or any subpath of it; `@example/dbx` does not match.
+function fromConfiguredModule(source, specifier) {
+  return !specifier || source === specifier || String(source).startsWith(`${specifier}/`);
+}
+
 // Local names of configured factory (value) and type imports, by module.
 function scopedImports(program, options) {
   const factories = new Set();
@@ -27,7 +32,7 @@ function scopedImports(program, options) {
   const { importSpecifier, executorFactoryNames, executorTypeNames } = options;
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
-    if (importSpecifier && statement.source?.value !== importSpecifier) continue;
+    if (!fromConfiguredModule(statement.source?.value, importSpecifier)) continue;
     for (const specifier of statement.specifiers ?? []) {
       if (specifier.type !== "ImportSpecifier") continue;
       const imported = importedName(specifier);

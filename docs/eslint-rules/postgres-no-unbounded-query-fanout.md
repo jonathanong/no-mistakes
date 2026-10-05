@@ -31,6 +31,9 @@ for (const ids of chunkArray(userIds, 50)) {
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
   declaring function. It defaults to `[]`.
+- Imports for the two scoped options above match `importSpecifier` and its
+  subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
+  `@example/dbx`.
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
 

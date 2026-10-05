@@ -42,6 +42,15 @@ describe("scoped PostgreSQL executors", () => {
     assert.deepEqual(manual("different-module.ts"), []);
   });
 
+  it("matches factory and type imports from subpaths of importSpecifier", () => {
+    // type import, inline `type` specifier, and a subpath factory import.
+    assert.equal(manual("subpath-imports.ts").length, 3);
+  });
+
+  it("does not match modules that only share a string prefix", () => {
+    assert.deepEqual(manual("lookalike-modules.ts"), []);
+  });
+
   it("separates value type imports from type-only factory imports", () => {
     assert.equal(manual("value-type-import.ts").length, 1);
   });

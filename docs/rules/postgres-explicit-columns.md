@@ -90,6 +90,9 @@ SQL-file/native-SQL analysis where supported. See the
 only inside the block or function that declares it, and a same-named identifier
 elsewhere is not. Matching is by configuration only, both default to empty, and
 neither counts as executor selection: still set `importSpecifier` or `executorNames`.
+With `importSpecifier` set, these two options also match imports from its subpaths
+(`@example/db/types` for `@example/db`) but not sibling packages such as
+`@example/dbx`; `executorNames` still requires the exact module.
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).

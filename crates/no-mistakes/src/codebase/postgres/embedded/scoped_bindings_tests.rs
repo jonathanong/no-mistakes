@@ -97,6 +97,19 @@ fn imports_from_another_module_do_not_match() {
 }
 
 #[test]
+fn subpath_imports_of_the_specifier_match() {
+    assert_eq!(
+        scan("scoped-subpath-imports.ts", &scoped("@example/db")),
+        ["subpath_factory", "subpath_type", "subpath_inline_type"]
+    );
+}
+
+#[test]
+fn modules_sharing_only_a_string_prefix_do_not_match() {
+    assert!(scan("scoped-lookalike-modules.ts", &scoped("@example/db")).is_empty());
+}
+
+#[test]
 fn empty_specifier_matches_any_module() {
     assert_eq!(
         scan("scoped-any-module.ts", &scoped("")),
