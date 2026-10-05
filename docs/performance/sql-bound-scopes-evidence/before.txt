@@ -1,0 +1,26 @@
+Gnuplot not found, using plotters backend
+Benchmarking postgres_independent_ctes/32
+Benchmarking postgres_independent_ctes/32: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/32: Collecting 10 samples in estimated 1.0078 s (2310 iterations)
+Benchmarking postgres_independent_ctes/32: Analyzing
+postgres_independent_ctes/32
+                        time:   [442.81 µs 443.31 µs 443.58 µs]
+                        thrpt:  [72.141 Kelem/s 72.184 Kelem/s 72.265 Kelem/s]
+Benchmarking postgres_independent_ctes/128
+Benchmarking postgres_independent_ctes/128: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/128: Collecting 10 samples in estimated 1.2392 s (220 iterations)
+Benchmarking postgres_independent_ctes/128: Analyzing
+postgres_independent_ctes/128
+                        time:   [5.6409 ms 5.6602 ms 5.6757 ms]
+                        thrpt:  [22.552 Kelem/s 22.614 Kelem/s 22.691 Kelem/s]
+Benchmarking postgres_independent_ctes/512
+Benchmarking postgres_independent_ctes/512: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/512: Collecting 10 samples in estimated 1.6845 s (20 iterations)
+Benchmarking postgres_independent_ctes/512: Analyzing
+postgres_independent_ctes/512
+                        time:   [84.544 ms 84.944 ms 85.470 ms]
+                        thrpt:  [5.9904 Kelem/s 6.0275 Kelem/s 6.0560 Kelem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+

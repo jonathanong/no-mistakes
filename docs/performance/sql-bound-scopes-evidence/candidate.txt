@@ -1,0 +1,41 @@
+Gnuplot not found, using plotters backend
+Benchmarking postgres_independent_ctes/32
+Benchmarking postgres_independent_ctes/32: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/32: Collecting 10 samples in estimated 1.0042 s (3905 iterations)
+Benchmarking postgres_independent_ctes/32: Analyzing
+postgres_independent_ctes/32
+                        time:   [256.56 µs 256.93 µs 257.17 µs]
+                        thrpt:  [124.43 Kelem/s 124.55 Kelem/s 124.73 Kelem/s]
+                 change:
+                        time:   [-42.069% -41.991% -41.910%] (p = 0.00 < 0.05)
+                        thrpt:  [+72.147% +72.388% +72.620%]
+                        Performance has improved.
+Benchmarking postgres_independent_ctes/128
+Benchmarking postgres_independent_ctes/128: Warming up for 1.0000 s
+Benchmarking postgres_independent_ctes/128: Collecting 10 samples in estimated 1.0969 s (550 iterations)
+Benchmarking postgres_independent_ctes/128: Analyzing
+postgres_independent_ctes/128
+                        time:   [1.9886 ms 1.9904 ms 1.9923 ms]
+                        thrpt:  [64.247 Kelem/s 64.309 Kelem/s 64.368 Kelem/s]
+                 change:
+                        time:   [-64.872% -64.773% -64.680%] (p = 0.00 < 0.05)
+                        thrpt:  [+183.13% +183.88% +184.67%]
+                        Performance has improved.
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high mild
+Benchmarking postgres_independent_ctes/512
+Benchmarking postgres_independent_ctes/512: Warming up for 1.0000 s
+
+Warning: Unable to complete 10 samples in 1.0s. You may wish to increase target time to 1.3s or enable flat sampling.
+Benchmarking postgres_independent_ctes/512: Collecting 10 samples in estimated 1.3220 s (55 iterations)
+Benchmarking postgres_independent_ctes/512: Analyzing
+postgres_independent_ctes/512
+                        time:   [23.926 ms 24.341 ms 24.937 ms]
+                        thrpt:  [20.531 Kelem/s 21.035 Kelem/s 21.399 Kelem/s]
+                 change:
+                        time:   [-71.906% -71.594% -71.161%] (p = 0.00 < 0.05)
+                        thrpt:  [+246.76% +252.04% +255.95%]
+                        Performance has improved.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+
