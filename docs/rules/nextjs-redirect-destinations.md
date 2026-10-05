@@ -103,6 +103,10 @@ export default {
 Both `/home` and `/new` must match the configured page inventory. Destinations
 in unused constants or nested helper bodies do not count as returned entries.
 
+Unknown calls may invoke callbacks or helpers that mutate captured containers,
+so they conservatively invalidate known arrays and objects. Uncalled helper
+declarations do not invalidate their captured bindings.
+
 Mutation, mutable bindings, unknown spreads, unsupported callbacks, and dynamic
 interpolation produce incomplete extraction. Replace them with immutable static
 construction, or suppress the finding when runtime behavior is intentional.

@@ -98,7 +98,7 @@ fn nextjs_static_tuple_destinations_and_partial_extraction_are_checked() {
     ] {
         let root = fixture("nextjs-redirect-destinations", scenario);
         let out = check_fixture_config(&root, ".no-mistakes.yml");
-        assert!(!out.status.success());
+        assert_eq!(out.status.code(), Some(1));
         assert!(stdout(&out).contains(expected), "{}", stdout(&out));
     }
     let root = fixture("nextjs-redirect-destinations", "static-tuples-pass");

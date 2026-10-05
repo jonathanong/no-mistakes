@@ -28,6 +28,16 @@ fn partial_dynamic_reassigned_and_aliased_mutations_fail_closed() {
         "static-local-mutation",
         "static-conditional-mutation",
         "static-initializer-mutation",
+        "static-wrapper-mutation",
+        "static-callback-mutation",
+        "static-helper-mutation",
+        "static-object-initializer-mutation",
+        "static-map-initializer-mutation",
+        "static-constructor-mutation",
+        "static-initialization-order",
+        "static-computed-unknown",
+        "static-nested-object-mutation",
+        "static-wrapper-return-call",
     ] {
         let findings = run(fixture, OPTIONS);
         assert_eq!(findings.len(), 1, "{fixture}: {findings:?}");
@@ -68,6 +78,7 @@ fn unsupported_forms_and_evaluation_limits_fail_closed() {
         "static-scoped-function",
         "static-object-destructure",
         "static-class-decoys",
+        "static-unused-helper",
     ] {
         assert!(run(fixture, OPTIONS).is_empty(), "{fixture}");
     }

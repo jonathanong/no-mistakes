@@ -2,6 +2,7 @@ use super::*;
 use oxc_ast::ast::{
     BindingPattern, Declaration, Program, Statement, VariableDeclaration, VariableDeclarationKind,
 };
+mod effects;
 mod mutations;
 pub(super) use mutations::invalidate;
 use mutations::invalidate_statement;
@@ -57,7 +58,7 @@ pub(super) fn declaration(
     env: &mut Environment,
 ) {
     for declarator in &var.declarations {
-        let value = if var.kind == VariableDeclarationKind::Const {
+        let mut value = if var.kind == VariableDeclarationKind::Const {
             declarator
                 .init
                 .as_ref()
@@ -66,6 +67,12 @@ pub(super) fn declaration(
         } else {
             Value::Unknown
         };
+        if let Some(init) = &declarator.init {
+            if effects::has_unknown_call(init) {
+                invalidate(init, env);
+                value = Value::Unknown;
+            }
+        }
         if matches!(value, Value::Unknown) {
             if let Some(init) = &declarator.init {
                 invalidate(init, env);
@@ -86,17 +93,14 @@ pub(in super::super) fn program_environment(program: &Program<'_>) -> Environmen
                     declaration(&mut evaluator, var, &mut env);
                 }
             }
-            _ => {}
-        }
-    }
-    // Configuration methods run after module initialization. Account for top-level mutations.
-    for statement in &program.body {
-        match statement {
-            Statement::VariableDeclaration(_)
-            | Statement::ExportDeclaration(_)
-            | Statement::ExportDefaultDeclaration(_)
-            | Statement::FunctionDeclaration(_)
-            | Statement::ImportDeclaration(_) => {}
+            Statement::ExportDefaultDeclaration(export) => {
+                if let Some(expr) = export.declaration.as_expression() {
+                    if effects::has_unknown_call(expr) {
+                        invalidate(expr, &mut env);
+                    }
+                }
+            }
+            Statement::FunctionDeclaration(_) | Statement::ImportDeclaration(_) => {}
             _ => invalidate_statement(statement, &mut env),
         }
     }

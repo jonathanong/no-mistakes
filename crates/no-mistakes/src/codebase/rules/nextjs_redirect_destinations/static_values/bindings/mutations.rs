@@ -4,6 +4,38 @@ struct References<'e> {
     env: &'e mut Environment,
 }
 impl<'a> Visit<'a> for References<'_> {
+    fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
+        // Unknown calls may run callbacks or closures that mutate any captured container.
+        invalidate_containers(self.env);
+        oxc_ast_visit::walk::walk_call_expression(self, call);
+    }
+    fn visit_new_expression(&mut self, expr: &oxc_ast::ast::NewExpression<'a>) {
+        invalidate_containers(self.env);
+        oxc_ast_visit::walk::walk_new_expression(self, expr);
+    }
+    fn visit_tagged_template_expression(
+        &mut self,
+        expr: &oxc_ast::ast::TaggedTemplateExpression<'a>,
+    ) {
+        invalidate_containers(self.env);
+        oxc_ast_visit::walk::walk_tagged_template_expression(self, expr);
+    }
+    fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
+        for item in &declaration.declarations {
+            if let Some(init) = &item.init {
+                if super::effects::has_unknown_call(init) {
+                    self.visit_expression(init);
+                }
+            }
+        }
+    }
+    fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) {
+        if let Some(expr) = &statement.argument {
+            if super::effects::has_unknown_call(expr) {
+                self.visit_expression(expr);
+            }
+        }
+    }
     fn visit_identifier_reference(&mut self, ident: &oxc_ast::ast::IdentifierReference<'a>) {
         if let Some(value) = self.env.get(ident.name.as_str()).cloned() {
             for binding in self.env.values_mut() {
@@ -33,5 +65,13 @@ fn shares_value(value: &Value, target: &Value) -> bool {
             .values()
             .any(|(value, _)| shares_value(value, target)),
         _ => false,
+    }
+}
+
+fn invalidate_containers(env: &mut Environment) {
+    for binding in env.values_mut() {
+        if matches!(binding, Value::Array(_) | Value::Object(_, _)) {
+            *binding = Value::Unknown;
+        }
     }
 }
