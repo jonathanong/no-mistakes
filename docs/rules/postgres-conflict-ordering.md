@@ -95,6 +95,25 @@ parentheses around `AND`/`OR` operands, so `deleted_at IS NULL AND kind IS NOT N
 matches the catalog's `((deleted_at IS NULL) AND (kind IS NOT NULL))`. Parentheses that
 change precedence, such as `a AND (b OR c)`, and the order of conjuncts stay significant.
 
+### Single-row sources and constant keys
+
+A source that provably yields at most one row has no second writer order to disagree
+with, so it needs no `ORDER BY`. The rule accepts only these shapes:
+
+- a `SELECT` without `FROM` whose select list holds literals, bound parameters, casts,
+  scalar subqueries and a short list of scalar functions (`lower`, `upper`, `coalesce`,
+  `nullif`, `concat`, `now`, `gen_random_uuid`, ...). A set-returning function such as
+  `unnest` or `generate_series` can expand it, so it is not single-row;
+- a `SELECT` from one plain table (no join, CTE shadowing or table function) whose
+  top-level `AND` conjuncts equate every column of one catalog unique key (valid, ready,
+  immediate, non-partial) to a literal or bound parameter;
+- a literal `LIMIT 0`/`LIMIT 1` or `FETCH FIRST [1] ROW ONLY`.
+
+Anything else, including `OR` filters, partial unique indexes, a partly pinned composite key
+and `LIMIT $1`, stays multi-row and fail-closed. A positional `ORDER BY 1, 2` maps to the
+select list. A key that is a literal or bound parameter is the same in every row, so the
+`ORDER BY` may include it or omit it; the remaining keys must still lead in catalog order.
+
 ## Valid example
 
 ```sql

@@ -40,9 +40,14 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
     }];
     assert_eq!(display_keys(&expected), "tenant_id DESC NULLS FIRST");
 
-    let aliases =
-        std::collections::BTreeMap::from([("tenant".to_string(), "tenant_id".to_string())]);
-    let resolved = resolve_order_aliases(
+    let shape = SqlInsertSourceShape {
+        order_aliases: std::collections::BTreeMap::from([(
+            "tenant".to_string(),
+            "tenant_id".to_string(),
+        )]),
+        ..Default::default()
+    };
+    let resolved = order::resolve_references(
         &[
             CanonicalOrderKey {
                 expression: "tenant".to_string(),
@@ -55,7 +60,7 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
                 nulls_first: false,
             },
         ],
-        &aliases,
+        &shape,
     );
     assert_eq!(resolved[0].expression, "tenant_id");
     assert_eq!(resolved[1].expression, "id");
@@ -79,9 +84,7 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
         &index,
         &SqlInsertSourceShape {
             multi_row: true,
-            order: None,
-            projections: None,
-            order_aliases: std::collections::BTreeMap::new(),
+            ..Default::default()
         }
     )
     .is_none());
@@ -89,12 +92,11 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
         &index,
         &SqlInsertSourceShape {
             multi_row: true,
-            order: None,
             projections: Some(std::collections::BTreeMap::from([(
                 "id".to_string(),
                 "source_id".to_string(),
             )])),
-            order_aliases: std::collections::BTreeMap::new(),
+            ..Default::default()
         }
     )
     .is_none());

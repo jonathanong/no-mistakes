@@ -1,10 +1,16 @@
 use crate::codebase::postgres::{canonical_order_keys, parse_postgres_sql, CanonicalOrderKey};
 use anyhow::{bail, Result};
 use raw::{raw_conflicts, sanitize};
+use single_row::query_is_potentially_multi_row;
 use sqlparser::ast::{Insert, OnInsert, Query, SelectItem, SetExpr, Statement, TableObject};
 use std::collections::BTreeMap;
 
+mod pinned;
+pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
+mod single_row;
+#[cfg(test)]
+mod single_row_tests;
 #[cfg(test)]
 mod tests;
 
@@ -25,9 +31,14 @@ pub enum SqlConflictTarget {
     Targetless,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SqlInsertSourceShape {
     pub multi_row: bool,
+    /// Set when the source reads one relation pinned by constant equalities; a catalog unique
+    /// key among `columns` then proves a single row.
+    pub pinned_relation: Option<SqlPinnedRelation>,
+    /// Select-list expressions by position, for positional `ORDER BY`; `None` with a wildcard.
+    pub select_list: Option<Vec<String>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
     pub projections: Option<BTreeMap<String, String>>,
     pub order_aliases: BTreeMap<String, String>,
@@ -68,12 +79,18 @@ fn collect_query(
     raw: &mut std::vec::IntoIter<raw::RawConflict>,
     inserts: &mut Vec<SqlConflictInsertFact>,
 ) -> Result<()> {
+    let first = inserts.len();
     if let Some(with) = &query.with {
         for cte in &with.cte_tables {
             collect_query(&cte.query, raw, inserts)?;
         }
     }
-    collect_set_expr(query.body.as_ref(), raw, inserts)
+    collect_set_expr(query.body.as_ref(), raw, inserts)?;
+    if let Some(with) = &query.with {
+        // A CTE can shadow a catalog table, so its name proves nothing about uniqueness.
+        pinned::forget_shadowed(&mut inserts[first..], with);
+    }
+    Ok(())
 }
 
 fn collect_set_expr(
@@ -115,38 +132,24 @@ fn analyze_insert(insert: &Insert, target: SqlConflictTarget) -> Result<SqlConfl
         TableObject::TableName(name) => name.to_string(),
         _ => bail!("INSERT target is not a table name"),
     };
-    let source = insert.source.as_deref().map_or(
-        SqlInsertSourceShape {
-            multi_row: false,
-            order: None,
-            projections: None,
-            order_aliases: BTreeMap::new(),
-        },
-        |query| SqlInsertSourceShape {
-            multi_row: query_is_potentially_multi_row(query.body.as_ref()),
-            order: query.order_by.as_ref().and_then(order_keys),
-            projections: projection_map(insert, query.body.as_ref()),
-            order_aliases: order_aliases(query.body.as_ref()),
-        },
-    );
+    let source = insert
+        .source
+        .as_deref()
+        .map_or(SqlInsertSourceShape::default(), |query| {
+            SqlInsertSourceShape {
+                multi_row: query_is_potentially_multi_row(query),
+                pinned_relation: pinned::pinned_relation(query),
+                select_list: single_row::select_list(query.body.as_ref()),
+                order: query.order_by.as_ref().and_then(canonical_order_keys),
+                projections: projection_map(insert, query.body.as_ref()),
+                order_aliases: order_aliases(query.body.as_ref()),
+            }
+        });
     Ok(SqlConflictInsertFact {
         table,
         target,
         source,
     })
-}
-
-fn query_is_potentially_multi_row(body: &SetExpr) -> bool {
-    match body {
-        SetExpr::Values(values) => values.rows.len() > 1,
-        SetExpr::Insert(_) | SetExpr::Update(_) | SetExpr::Delete(_) | SetExpr::Merge(_) => true,
-        SetExpr::Query(query) => query_is_potentially_multi_row(query.body.as_ref()),
-        SetExpr::Select(_) | SetExpr::SetOperation { .. } | SetExpr::Table(_) => true,
-    }
-}
-
-fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
-    canonical_order_keys(order)
 }
 
 fn projection_map(insert: &Insert, body: &SetExpr) -> Option<BTreeMap<String, String>> {

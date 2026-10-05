@@ -70,6 +70,45 @@ fn postgres_conflict_ordering_cli_keeps_conjunct_order_significant() {
 }
 
 #[test]
+fn postgres_conflict_ordering_cli_accepts_provably_single_row_sources() {
+    // Regression: a FROM-less SELECT, a unique-key lookup and LIMIT 1 yield one row.
+    let output = check(&fixture("pass-single-row-source"));
+    assert!(
+        output.status.success(),
+        "exit non-zero: {}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn postgres_conflict_ordering_cli_keeps_single_row_lookalikes_failing_closed() {
+    let output = check(&fixture("fail-single-row-lookalikes"));
+    let body = stdout(&output);
+    assert!(!output.status.success(), "expected exit 1: {body}");
+    assert_eq!(
+        body.matches("\"target\":\"missing-canonical-order\"")
+            .count(),
+        8,
+        "{body}"
+    );
+    assert_eq!(
+        body.matches("\"target\":\"noncanonical-order\"").count(),
+        1,
+        "{body}"
+    );
+}
+
+#[test]
+fn postgres_conflict_ordering_cli_maps_positional_and_constant_order_keys() {
+    let output = check(&fixture("pass-order-by-forms"));
+    assert!(
+        output.status.success(),
+        "exit non-zero: {}",
+        stdout(&output)
+    );
+}
+
+#[test]
 fn postgres_conflict_ordering_cli_accepts_a_catalog_ordered_writer() {
     let output = check(&fixture("pass-sql-include"));
     assert!(

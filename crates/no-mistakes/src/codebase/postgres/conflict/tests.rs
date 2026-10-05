@@ -150,15 +150,7 @@ fn captures_values_cardinality_and_default_values() {
     assert!(!inserts[0].source.multi_row);
     assert!(inserts[1].source.multi_row);
     assert_eq!(inserts[0].source.projections, None);
-    assert_eq!(
-        inserts[2].source,
-        SqlInsertSourceShape {
-            multi_row: false,
-            order: None,
-            projections: None,
-            order_aliases: Default::default(),
-        }
-    );
+    assert_eq!(inserts[2].source, SqlInsertSourceShape::default());
     assert!(inserts[3].source.multi_row);
     assert!(inserts[4].source.multi_row);
 }
@@ -240,7 +232,7 @@ fn order_by_all_is_ignored_directly() {
         kind: sqlparser::ast::OrderByKind::All(Default::default()),
         interpolate: None,
     };
-    assert_eq!(order_keys(&order), None);
+    assert_eq!(canonical_order_keys(&order), None);
 }
 
 #[test]
@@ -372,12 +364,16 @@ fn remaining_set_expr_and_insert_shapes() {
     else {
         panic!("union query");
     };
-    assert!(query_is_potentially_multi_row(query.body.as_ref()));
+    assert!(query_is_potentially_multi_row(&query));
 
-    let Statement::Query(wrapped) = parse_postgres_sql("(SELECT 1)").unwrap().pop().unwrap() else {
+    let Statement::Query(wrapped) = parse_postgres_sql("(SELECT 1 FROM items)")
+        .unwrap()
+        .pop()
+        .unwrap()
+    else {
         panic!("wrapped");
     };
-    assert!(query_is_potentially_multi_row(wrapped.body.as_ref()));
+    assert!(query_is_potentially_multi_row(&wrapped));
 
     let insert_stmt = parse_postgres_sql("INSERT INTO items VALUES (1)")
         .unwrap()

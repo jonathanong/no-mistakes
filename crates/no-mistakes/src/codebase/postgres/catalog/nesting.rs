@@ -21,9 +21,13 @@ fn operand(expression: Expr, parent: &BinaryOperator) -> Expr {
     let inner = strip_redundant_nesting(expression);
     // Only an `OR` nested under `AND` changes meaning without its parentheses.
     match (&inner, parent) {
-        (Expr::BinaryOp { op: BinaryOperator::Or, .. }, BinaryOperator::And) => {
-            Expr::Nested(Box::new(inner))
-        }
+        (
+            Expr::BinaryOp {
+                op: BinaryOperator::Or,
+                ..
+            },
+            BinaryOperator::And,
+        ) => Expr::Nested(Box::new(inner)),
         _ => inner,
     }
 }

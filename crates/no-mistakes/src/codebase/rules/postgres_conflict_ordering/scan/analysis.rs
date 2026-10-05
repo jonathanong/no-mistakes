@@ -6,6 +6,7 @@ use crate::codebase::postgres::{
 };
 use crate::codebase::rules::RuleFinding;
 
+mod order;
 mod sql;
 pub(super) use sql::{contains_insert_conflict, sql_statements};
 
@@ -30,7 +31,7 @@ pub(super) fn findings_for_sql(
     };
     inserts
         .into_iter()
-        .filter(|insert| insert.source.multi_row)
+        .filter(|insert| insert.source.multi_row && !pins_one_row(insert, catalog))
         .filter_map(|insert| finding_for_insert(file, line, insert, catalog))
         .collect()
 }
@@ -98,6 +99,11 @@ fn finding_for_insert(
             "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
         ));
     };
+    // A literal or bound parameter is the same in every row, so it cannot change row order.
+    let expected = order::without_constants(&expected);
+    if expected.is_empty() {
+        return None;
+    }
     let Some(actual) = insert.source.order.as_ref() else {
         return Some(finding(
             file,
@@ -109,7 +115,7 @@ fn finding_for_insert(
             ),
         ));
     };
-    let actual = resolve_order_aliases(actual, &insert.source.order_aliases);
+    let actual = order::without_constants(&order::resolve_references(actual, &insert.source));
     if !order_prefix_matches(&actual, &expected, false) {
         return Some(finding(
             file,
@@ -122,6 +128,15 @@ fn finding_for_insert(
         ));
     }
     None
+}
+
+/// Whether the source reads one relation pinned to a single row by a catalog unique key.
+fn pins_one_row(insert: &SqlConflictInsertFact, catalog: &SchemaCatalog) -> bool {
+    insert
+        .source
+        .pinned_relation
+        .as_ref()
+        .is_some_and(|pinned| catalog.columns_pin_one_row(&pinned.table, &pinned.columns))
 }
 
 fn target_matches_catalog(target: &[String], index: &CanonicalIndex) -> bool {
@@ -163,23 +178,6 @@ fn display_keys(keys: &[CanonicalOrderKey]) -> String {
         .join(", ")
 }
 
-fn resolve_order_aliases(
-    order: &[CanonicalOrderKey],
-    aliases: &std::collections::BTreeMap<String, String>,
-) -> Vec<CanonicalOrderKey> {
-    order
-        .iter()
-        .map(|key| CanonicalOrderKey {
-            expression: aliases
-                .get(&key.expression.to_ascii_lowercase())
-                .cloned()
-                .unwrap_or_else(|| key.expression.clone()),
-            ascending: key.ascending,
-            nulls_first: key.nulls_first,
-        })
-        .collect()
-}
-
 pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
@@ -191,5 +189,7 @@ pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> R
     }
 }
 
+#[cfg(test)]
+mod order_tests;
 #[cfg(test)]
 mod tests;
