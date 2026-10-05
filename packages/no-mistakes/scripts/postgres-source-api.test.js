@@ -131,7 +131,7 @@ test(
     assert.deepEqual(neighbors.diagnostics, []);
     assert.deepEqual(
       neighbors.statements.map((statement) => statement.kind),
-      ["createView", "createTable", "other", "alterTable"],
+      ["createView", "createTable", "select", "alterTable"],
     );
     assert.equal(neighbors.statements[0].view.dependenciesComplete, true);
     assert.equal(
@@ -167,5 +167,36 @@ test(
     );
     assert.equal(columns[7].default.root.syntax, "value");
     assert.equal(columns[8].default.root.syntax, "call");
+  },
+);
+
+test(
+  "compiled source API preserves typed SELECT scopes through both module facades",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const input = { sql: fixture("query-scopes.sql") };
+    const facts = await api.parsePostgresSql(input);
+    assert.deepEqual(await esm.parsePostgresSql(input), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const query = facts.statements[0].query;
+    assert.equal(facts.statements[0].kind, "select");
+    assert.equal(query.complete, true);
+    assert.deepEqual(
+      query.ctes.map((c) => [c.name.identity, c.used]),
+      [
+        ["unused", false],
+        ["base", true],
+        ["used", true],
+      ],
+    );
+    assert.ok(query.equalities.some((e) => e.context.underOr && !e.context.mandatory));
+    assert.ok(query.exists.some((e) => e.correlated && e.correlations.length > 0));
+    assert.ok(facts.statements[2].query.ctes.every((c) => c.cyclic));
+    const unsupported = await api.parsePostgresSql({ sql: fixture("query-unsupported.sql") });
+    assert.ok(
+      unsupported.statements.every((s) => !s.query.complete && s.query.unsupported.length > 0),
+    );
   },
 );

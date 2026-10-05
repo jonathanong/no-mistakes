@@ -164,3 +164,53 @@ have `syntax: "value"`; parenthesized `CURRENT_TIMESTAMP(3)` has
 `syntax: "call"`. These are syntactic facts, not catalog or volatility claims.
 Function-name expectations and permitted argument forms remain consumer policy.
 Structural `identity` and flat references preserve their existing behavior.
+## SELECT scope facts
+
+`parsePostgresSql()` projects query statements as `{ kind: "select", query }`.
+`PostgresSqlQuery` contains deterministic, query-local IDs for scopes, relations,
+joins, CTE definitions, column references, equality predicates, and EXISTS
+occurrences. It uses the already parsed AST and requires no project root or
+schema catalog. Existing statement ordinals, SQL, structural identities and
+source spans retain their meaning.
+
+Scopes record their parent and hosting clause: projection, FROM, WHERE, JOIN ON,
+HAVING, GROUP BY, ORDER BY, LIMIT or OFFSET. Set operations own separate ordered
+branch scopes and expose their operator and quantifier. Names preserve quoted
+identifier identity and schema qualification; relation aliases hide their
+underlying table names. Joined-group aliases hide the individual participants.
+Derived tables expose their child scope, lateral status, and declared column
+aliases. This is syntactic ownership, not catalog-backed column lineage.
+
+Qualified columns resolve against visible relation aliases in the current
+scope, then permitted outer scopes. Non-lateral derived tables and CTE bodies
+cannot see the containing query's FROM aliases. Unqualified, unknown and
+ambiguous columns keep explicit resolution statuses and null relation IDs.
+No relation is guessed from an unqualified column name.
+
+CTEs record lexical ownership, declared columns, recursive WITH status,
+references, use reachable from the main query, and reference cycles. Unused
+CTE definitions still have facts. Inner definitions shadow outer names;
+non-recursive definitions see preceding CTEs, while recursive WITH definitions
+can reference the complete local group. Cycle reporting describes syntax and
+does not validate PostgreSQL's recursive-query restrictions.
+
+Joins record ordered left/right relation IDs, inner/outer/cross/semi/anti kind,
+and ON, USING, NATURAL or absent constraints. Equality facts retain their
+clause, join ID, direct column operands when available, and predicate context.
+Only positive conjuncts in WHERE and inner/semi JOIN ON have `mandatory: true`.
+OR, NOT, CASE, boolean tests, function arguments and other expression wrappers
+retain conservative context flags. Outer JOIN ON and HAVING equalities are
+never promoted to mandatory predicates. Consumers must interpret these facts
+for their own policies; the parser does not prove authorization or tenant
+isolation.
+
+EXISTS facts expose negation, context, child scope and resolved references to
+outer relations. `correlated` describes those known qualified references;
+unqualified references cannot establish correlation without a catalog.
+
+Unsupported relation, expression or query forms appear in `unsupported` with
+a reason, hosting scope/clause and available source span, and set
+`complete: false`. Table functions, named windows, window
+frames and function argument clauses currently take this path. Parse failures
+remain source diagnostics. Spans use UTF-8 byte offsets and Unicode scalar
+line/column positions, including quoted identifiers and nested queries.

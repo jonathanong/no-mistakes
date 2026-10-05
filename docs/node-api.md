@@ -683,3 +683,7 @@ addon avoids UTF-16 string copies at the N-API boundary.
 - Prefer structured API results over parsing human CLI output.
 
 `generatePostgresCatalog` is a runtime export. Its named public types are `PostgresCatalogOptions`, `PostgresCatalogCoverage`, `PostgresSearchPathEvidence`, `PostgresCompleteCatalog`, `PostgresOrderingCatalog` and their union `PostgresCatalog`. The overloads return `PostgresOrderingCatalog` for `coverage: "ordering"` and `PostgresCompleteCatalog` otherwise. `searchPathSchemas` opts into exact schema accessibility and relation-name evidence in `searchPathEvidence`; an omitted entry is unknown. Generate evidence with the role that executes the analyzed SQL.
+
+`parsePostgresSql()` also returns typed `PostgresSqlQuery` scope facts for SELECT
+statements, including relation and CTE visibility, join participants, conservative
+predicate contexts and EXISTS correlation. See [SELECT scope facts](postgres-source-api.md#select-scope-facts).
