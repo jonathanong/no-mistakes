@@ -165,6 +165,6 @@ For test files that must always run in CI, enable the ESLint/Oxlint
 `no-mistakes/test-no-skips` rule in explicit flat-config `files` globs.
 It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;
 `allow` permits named exceptions such as `todo`. See
-[the rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/test-no-skips.md). This is a
+[the plugin options reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#test-no-skips). This is a
 single-file plugin rule, so invoke the configured linter rather than a
 `no-mistakes check` catalog scan.
