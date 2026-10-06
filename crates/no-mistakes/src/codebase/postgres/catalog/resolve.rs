@@ -1,6 +1,6 @@
-use super::expressions::order_prefix_matches_for_qualifiers;
+use super::expressions::order_prefix_matches_skipping_pinned;
 use super::{
-    names::{normalize_identifier, normalize_table_name},
+    names::{normalize_identifier, normalize_table_name, plain_column},
     normalize_expression, order_prefix_matches, ArbiterTable, CanonicalIndex, CanonicalOrderKey,
     ResolvedArbiter, SchemaCatalog,
 };
@@ -87,13 +87,16 @@ impl SchemaCatalog {
         table: &str,
         qualifiers: &[String],
         order: &[CanonicalOrderKey],
+        pinned: &[String],
     ) -> bool {
         self.arbiter_table(table).is_some_and(|table| {
             table
                 .indexes
                 .iter()
                 .filter(|index| index.ordering_supported && index.predicate.is_none())
-                .any(|index| order_prefix_matches_for_qualifiers(order, &index.keys, qualifiers))
+                .any(|index| {
+                    order_prefix_matches_skipping_pinned(order, &index.keys, qualifiers, pinned)
+                })
         })
     }
     /// Column sets that hold at most one row per value: valid, ready, live, immediate,
@@ -153,22 +156,6 @@ impl SchemaCatalog {
             self.tables.get(key.strip_prefix(&prefix)?)
         })
     }
-}
-/// The column name when an index key expression is a bare (possibly quoted) identifier.
-fn plain_column(expression: &str) -> Option<String> {
-    let text = expression.trim();
-    let bare = text
-        .chars()
-        .next()
-        .is_some_and(|first| first.is_ascii_alphabetic() || first == '_')
-        && text
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$');
-    let quoted = text.len() >= 2
-        && text.starts_with('"')
-        && text.ends_with('"')
-        && !text[1..text.len() - 1].replace("\"\"", "").contains('"');
-    (bare || quoted).then(|| normalize_identifier(text))
 }
 fn resolve_candidates(candidates: Vec<CanonicalIndex>) -> ResolvedArbiter {
     if candidates

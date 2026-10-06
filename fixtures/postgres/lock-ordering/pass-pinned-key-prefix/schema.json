@@ -1,0 +1,43 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "feed_items": {
+      "indexes": {
+        "feed_items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }],
+          "predicate": null
+        },
+        "feed_items_host_id_guid_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            { "expression": "host_id", "descending": false, "nullsFirst": false },
+            { "expression": "guid", "descending": false, "nullsFirst": false }
+          ],
+          "predicate": null
+        },
+        "feed_items_guid_partial": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "expression": "guid", "descending": false, "nullsFirst": false }],
+          "predicate": "deleted_at IS NULL"
+        }
+      }
+    }
+  }
+}

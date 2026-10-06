@@ -72,7 +72,28 @@ each other and cannot form this ABBA cycle.
 
 With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
 `ORDER BY` with the ordered expression keys of one valid, ready, non-partial
-btree unique index for every locked base table. `FOR UPDATE OF alias` limits
+btree unique index for every locked base table. Leading columns of that key
+that are pinned for the locked relation are already fixed on every row, so they
+are not part of the required prefix. A pin is a top-level `AND` equality in
+`WHERE` or an inner join's `ON` to a literal, a `$n` placeholder, or a recovered
+template interpolation — the same columns `pinned_columns` records. Only a
+leading prefix is dropped: pinning `guid` does not remove it from
+`UNIQUE (host_id, guid)` while `host_id` is still required. `ORDER BY` may
+keep those pinned columns. It must begin with either the full key or the key
+after that leading prefix is dropped, with the same expression, ascending
+direction, and nulls semantics, and a qualifier must still name the locked
+relation. A key whose columns are all pinned needs no `ORDER BY` prefix from
+that key. Equalities inside `OR` or `NOT`, and pins on a different relation,
+do not count.
+
+```ts
+// feed_items UNIQUE (host_id, guid): every locked row shares host_id.
+query(
+  `SELECT id, guid FROM feed_items WHERE host_id = $1 AND guid = ANY($2) ORDER BY guid FOR UPDATE`,
+);
+```
+
+`FOR UPDATE OF alias` limits
 the requirement to that resolved relation; a lock with no `OF` clause over joins or
 derived relations, or an unresolved `OF` target, fails closed rather than silently
 checking only the first `FROM` table. A comma-separated list such as `FOR UPDATE OF a, o` (with an
@@ -97,8 +118,9 @@ unique `token_hash`). The unique key bounds the statement to one row per locked
 table, so a filter such as
 `status IN ('open', 'held')` or `callback_url = ANY(a.callback_urls)` can only
 narrow it. Equalities inside `OR` or `NOT`, an equality in an outer join's `ON`, an unqualified column in a join, a pin
-on a table the lock does not name, a self-join, or a partially pinned composite key
-prove nothing and still fail closed. Without a catalog no key is known to be unique,
+on a table the lock does not name, or a self-join do not pin a column. A partially pinned composite key does not
+prove a single-row lock: with no `ORDER BY`, or with one that does not start with the remaining catalog key, it still
+fails closed. Without a catalog no key is known to be unique,
 so the original check applies.
 
 ```ts
