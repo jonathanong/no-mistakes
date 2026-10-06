@@ -18,7 +18,11 @@ mod candidates;
 mod collector;
 mod owners;
 
-pub(super) use candidates::from_configured_module;
+/// The module itself or any subpath of it (`@example/db/types`); a sibling
+/// package sharing the prefix (`@example/dbx`) does not match.
+pub(super) fn from_configured_module(source: &str, specifier: &str) -> bool {
+    candidates::from_configured_module(source, specifier)
+}
 
 pub(super) struct ScopedCollection {
     pub(super) executors: ScopedExecutors,

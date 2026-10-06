@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
@@ -17,7 +17,12 @@ export function fixture(name) {
 }
 
 export function lint(code, rules, filename = "fixture.jsx", globals = {}) {
-  const linter = new Linter({ configType: "flat" });
+  // Flat config matches paths relative to the linter cwd. An absolute fixture
+  // path is outside the package directory, so anchor cwd at that file.
+  const linter = new Linter({
+    configType: "flat",
+    cwd: isAbsolute(filename) ? dirname(filename) : process.cwd(),
+  });
   const isTypeScript = /\.[cm]?tsx?$/.test(filename);
   return linter.verify(
     code,
