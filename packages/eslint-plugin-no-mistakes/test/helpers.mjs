@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
@@ -16,12 +16,23 @@ export function fixture(name) {
   );
 }
 
+// Flat config matches paths inside the linter cwd. Fixture files live outside
+// this package, so those anchor cwd at the file. An absolute path inside the
+// package keeps the package cwd: path-scoped rules match that relative path
+// (`backend/index.ts`), and the file directory would collapse it to the basename.
+function linterCwd(filename) {
+  if (!isAbsolute(filename)) return process.cwd();
+  const fromPackage = relative(process.cwd(), filename);
+  if (fromPackage === "" || fromPackage.startsWith("..") || isAbsolute(fromPackage)) {
+    return dirname(filename);
+  }
+  return process.cwd();
+}
+
 export function lint(code, rules, filename = "fixture.jsx", globals = {}) {
-  // Flat config matches paths relative to the linter cwd. An absolute fixture
-  // path is outside the package directory, so anchor cwd at that file.
   const linter = new Linter({
     configType: "flat",
-    cwd: isAbsolute(filename) ? dirname(filename) : process.cwd(),
+    cwd: linterCwd(filename),
   });
   const isTypeScript = /\.[cm]?tsx?$/.test(filename);
   return linter.verify(
