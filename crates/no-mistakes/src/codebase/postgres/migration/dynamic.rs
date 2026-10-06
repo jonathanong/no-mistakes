@@ -53,6 +53,8 @@ pub(super) fn schema_bodies(sql: &str) -> Vec<DynamicSql> {
     routine::schema_bodies(sql)
 }
 
+pub(super) use routine::peeled_schema_bodies;
+
 fn tokenize(sql: &str) -> Vec<TokenWithSpan> {
     super::super::parse::unicode::tokenize_raw_unicode(sql)
 }

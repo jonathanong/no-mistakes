@@ -104,3 +104,31 @@ fn aggregate_runner_reports_scoped_embedded_executors() {
         .iter()
         .all(|finding| finding.file == "policy.test.ts"));
 }
+
+#[test]
+fn expanded_ddl_and_settings_are_available_through_cli() {
+    let root = fixture("expanded");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    for expected in [
+        "CREATE DATABASE",
+        "ALTER SYSTEM",
+        "DROP TYPE",
+        "session_replication_role",
+        "embedded.test.ts",
+    ] {
+        assert!(body.contains(expected), "missing {expected}: {body}");
+    }
+}
+
+#[test]
+fn unknown_statement_group_is_a_cli_configuration_error() {
+    let out = check_fixture_config(&fixture("unknown-kind"));
+    let body = format!("{}{}", stdout(&out), String::from_utf8_lossy(&out.stderr));
+    assert!(!out.status.success());
+    assert!(
+        body.contains("unknown bannedStatements kind or group `dml`"),
+        "{body}"
+    );
+}

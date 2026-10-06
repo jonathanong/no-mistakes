@@ -30,3 +30,27 @@ fn kind_and_parts(statement: &Statement) -> Option<(&'static str, &'static [&'st
         _ => None,
     }
 }
+
+mod policy;
+pub(super) use policy::record as record_new;
+pub(crate) use policy::SUPPORTED_KINDS;
+
+/// Reuse the prepared AST and the existing recursive routine projection.
+pub(crate) fn policy_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
+    let mut facts = SqlSchemaFileFacts::default();
+    for statement in statements {
+        record(sql, statement, &mut facts);
+    }
+    record_new(sql, &mut facts);
+    for dynamic in super::dynamic::schema_bodies(sql)
+        .into_iter()
+        .chain(super::dynamic::extract(sql))
+    {
+        let parsed = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&dynamic.sql);
+        let mut nested = policy_facts(&dynamic.sql, &parsed);
+        super::dynamic::remap_fact_lines(&mut nested, &dynamic);
+        facts.statement_kinds.extend(nested.statement_kinds);
+        facts.setting_uses.extend(nested.setting_uses);
+    }
+    facts
+}

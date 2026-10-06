@@ -72,6 +72,7 @@ pub use locking::{
     JoinEquality, LockingSelectMetadata,
 };
 pub use migration::extract_migration_facts;
+pub(crate) use migration::SUPPORTED_KINDS;
 pub use offset::{
     sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse, SqlOffsetFact,
 };
@@ -103,7 +104,7 @@ pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDeclaredIdentifier,
     SqlDropIndexMetadata, SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint,
-    SqlSchemaFileFacts, SqlStatementKind, SqlTableSchemaEvent, SqlUnnamedConstraint,
+    SqlSchemaFileFacts, SqlSettingUse, SqlStatementKind, SqlTableSchemaEvent, SqlUnnamedConstraint,
 };
 
 #[cfg(test)]

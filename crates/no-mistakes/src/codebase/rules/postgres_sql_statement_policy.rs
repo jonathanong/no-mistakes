@@ -26,6 +26,7 @@ const DEFAULT_BANNED: &[&str] = &[
 pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
     pub(crate) banned_statements: Vec<String>,
+    pub(crate) banned_settings: Vec<String>,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
@@ -37,6 +38,7 @@ pub(crate) struct Options {
 struct CompiledOptions {
     schema: PostgresSchemaOptions,
     banned: HashSet<String>,
+    settings: HashSet<String>,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
 }
@@ -92,14 +94,30 @@ pub(crate) fn check_with_files_sources_and_facts(
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
-    let banned = if opts.banned_statements.is_empty() {
-        DEFAULT_BANNED.iter().map(|kind| kind.to_string()).collect()
+    let mut banned = HashSet::new();
+    let values: Vec<String> = if opts.banned_statements.is_empty() {
+        DEFAULT_BANNED.iter().map(|value| (*value).into()).collect()
     } else {
-        opts.banned_statements
-            .iter()
-            .map(|kind| kind.to_ascii_uppercase())
-            .collect()
+        opts.banned_statements.clone()
     };
+    for value in values {
+        let kind = value
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_uppercase();
+        if kind == "DDL" {
+            banned.extend(
+                crate::codebase::postgres::SUPPORTED_KINDS
+                    .iter()
+                    .map(|kind| (*kind).to_string()),
+            );
+        } else if crate::codebase::postgres::SUPPORTED_KINDS.contains(&kind.as_str()) {
+            banned.insert(kind);
+        } else {
+            anyhow::bail!("{RULE_ID}: unknown bannedStatements kind or group `{value}`");
+        }
+    }
     Ok(CompiledOptions {
         schema: PostgresSchemaOptions {
             sql_include: if opts.sql_include.is_empty() {
@@ -109,6 +127,11 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             },
         },
         banned,
+        settings: opts
+            .banned_settings
+            .iter()
+            .map(|name| name.trim().to_ascii_lowercase())
+            .collect(),
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
@@ -125,3 +148,9 @@ fn sql_rel(root: &Path, path: &Path) -> String {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod expanded_tests;
+
+#[cfg(test)]
+mod context_tests;

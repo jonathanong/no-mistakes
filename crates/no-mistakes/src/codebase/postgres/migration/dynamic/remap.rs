@@ -28,6 +28,9 @@ pub(in super::super) fn remap_fact_lines(
     for constraint in &mut facts.unnamed_constraints {
         constraint.line = dynamic.source_line(constraint.line);
     }
+    for setting in &mut facts.setting_uses {
+        setting.line = dynamic.source_line(setting.line);
+    }
     for statement in &mut facts.statement_kinds {
         statement.line = dynamic.source_line(statement.line);
     }

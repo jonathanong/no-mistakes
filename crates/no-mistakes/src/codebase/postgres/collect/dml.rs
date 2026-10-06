@@ -84,6 +84,9 @@ fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCa
             })
             .unwrap_or_else(|| line.saturating_add(shift))
     };
+    for setting in &mut facts.setting_uses {
+        setting.line = source_line(setting.line, 1);
+    }
     for statement in &mut facts.statement_kinds {
         statement.line = source_line(statement.line, 1);
     }

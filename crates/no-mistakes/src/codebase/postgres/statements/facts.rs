@@ -24,7 +24,7 @@ use prepared::PreparedStatements;
 #[derive(Default)]
 struct StatementSources<'a> {
     tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
-    kinds: Option<&'a [crate::codebase::postgres::SqlStatementKind]>,
+    policy: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
 }
 
 fn extract_from_parsed_and_sources(
@@ -139,12 +139,17 @@ fn extract_from_parsed_and_sources(
         placeholder_positions.unwrap_or_default(),
         placeholder_positions.is_some(),
     );
+    let (statement_kinds, setting_uses) = sources.policy.map_or_else(
+        || {
+            let facts = crate::codebase::postgres::migration::policy_facts(sql, statements);
+            (facts.statement_kinds, facts.setting_uses)
+        },
+        |facts| (facts.statement_kinds.clone(), facts.setting_uses.clone()),
+    );
     SqlStatementFileFacts {
         path: Default::default(),
-        statement_kinds: sources.kinds.map_or_else(
-            || crate::codebase::postgres::migration::statement_kinds(sql, statements),
-            |kinds| kinds.to_vec(),
-        ),
+        statement_kinds,
+        setting_uses,
         writes,
         inserts,
         selects,

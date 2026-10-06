@@ -16,6 +16,7 @@ pub(super) fn scan(
     let mut findings = Vec::new();
     for file in &schema_facts {
         let rel = sql_rel(root, &file.path);
+        findings.extend(settings(&rel, &file.setting_uses, opts));
         for statement in &file.statement_kinds {
             if !opts.banned.contains(&statement.kind) {
                 continue;
@@ -53,8 +54,8 @@ pub(super) fn scan(
         for file in facts.postgres_statements(path, Some(&opts.embedded))? {
             if file.parse_failed && opts.fail_unanalyzable {
                 findings.push(unanalyzable(&rel, file.origin_line.max(1)));
-                continue;
             }
+            findings.extend(settings(&rel, &file.setting_uses, opts));
             for statement in &file.statement_kinds {
                 if opts.banned.contains(&statement.kind) {
                     findings.push(RuleFinding {
@@ -87,4 +88,26 @@ fn unanalyzable(file: &str, line: usize) -> RuleFinding {
         import: None,
         target: Some("unanalyzable-sql".into()),
     }
+}
+
+fn settings(
+    file: &str,
+    uses: &[crate::codebase::postgres::SqlSettingUse],
+    opts: &CompiledOptions,
+) -> Vec<RuleFinding> {
+    uses.iter()
+        .filter(|setting| opts.settings.contains(&setting.name))
+        .map(|setting| RuleFinding {
+            rule: RULE_ID.into(),
+            file: file.into(),
+            line: setting.line.max(1),
+            message: format!(
+                "{file}:{}: SQL matching this rule must not change PostgreSQL setting `{}`",
+                setting.line.max(1),
+                setting.name
+            ),
+            import: None,
+            target: Some(format!("setting:{}", setting.name)),
+        })
+        .collect()
 }

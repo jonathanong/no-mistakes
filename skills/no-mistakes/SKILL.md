@@ -149,5 +149,7 @@ Older catalogs omit that evidence, so database qualification stays conservative.
 To ban DDL in test executors, configure `postgres-sql-statement-policy` with
 rule application `include`/`exclude`, `importSpecifier`, and any factory/type
 executor names. `sqlInclude` continues to select SQL files. Dynamic calls follow
-`unanalyzableSql` (`fail` by default, or `ignore`). See the
+`unanalyzableSql` (`fail` by default, or `ignore`). Set `bannedStatements: [ddl]`
+for all 23 supported kinds and `bannedSettings` for named SET/set_config changes.
+Unknown statement kinds or groups fail configuration validation. See the
 [statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
