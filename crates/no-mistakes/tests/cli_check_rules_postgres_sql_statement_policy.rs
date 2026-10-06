@@ -94,3 +94,13 @@ fn postgres_sql_statement_policy_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+
+#[test]
+fn aggregate_runner_reports_scoped_embedded_executors() {
+    let root = fixture("embedded");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == "policy.test.ts"));
+}

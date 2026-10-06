@@ -21,11 +21,17 @@ use std::sync::Arc;
 mod prepared;
 use prepared::PreparedStatements;
 
+#[derive(Default)]
+struct StatementSources<'a> {
+    tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
+    kinds: Option<&'a [crate::codebase::postgres::SqlStatementKind]>,
+}
+
 fn extract_from_parsed_and_sources(
     sql: &str,
     prepared_sql: &PreparedSql<'_>,
     statements: &[Statement],
-    sources: Option<&[Option<Arc<[TokenWithSpan]>>]>,
+    sources: StatementSources<'_>,
     parse_failed: bool,
     collect_bounds: bool,
     placeholder_positions: super::value::PlaceholderPositions<'_>,
@@ -66,6 +72,7 @@ fn extract_from_parsed_and_sources(
     let mut lifecycle = LifecycleBuilder::default();
     for (index, source_statement) in statements.iter().enumerate() {
         let recovered_source = sources
+            .tokens
             .and_then(|sources| sources.get(index))
             .and_then(Option::as_ref);
         let source_has_table =
@@ -134,6 +141,10 @@ fn extract_from_parsed_and_sources(
     );
     SqlStatementFileFacts {
         path: Default::default(),
+        statement_kinds: sources.kinds.map_or_else(
+            || crate::codebase::postgres::migration::statement_kinds(sql, statements),
+            |kinds| kinds.to_vec(),
+        ),
         writes,
         inserts,
         selects,

@@ -14,7 +14,7 @@ pub(crate) fn prepare_rule_sql_facts(
         .collect();
     let profiles = configured_embedded_sql_options(config, &dml_ids)?;
     let patterns = sql_patterns(config, rule_ids)?;
-    let selected = if dml_ids.is_empty() {
+    let selected = if profiles.is_empty() {
         crate::codebase::postgres::postgres_sql_paths(
             root,
             files,
@@ -33,7 +33,7 @@ pub(crate) fn prepare_rule_sql_facts(
             Vec::new(),
             crate::codebase::check_facts::CheckFactPlan {
                 postgres_schema: rule_ids.iter().any(|id| *id != "postgres-sql-shape-policy"),
-                postgres_dml: !dml_ids.is_empty(),
+                postgres_dml: !profiles.is_empty(),
                 postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,

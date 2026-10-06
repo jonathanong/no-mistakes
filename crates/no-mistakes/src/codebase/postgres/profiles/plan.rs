@@ -16,7 +16,8 @@ pub fn configure_prepared_postgres_plan(
     ];
     plan.postgres_dml |= dml_rules
         .iter()
-        .any(|id| !config.rule_applications(id).is_empty());
+        .any(|id| !config.rule_applications(id).is_empty())
+        || !configured_embedded_sql_options(config, &["postgres-sql-statement-policy"])?.is_empty();
     plan.postgres_bounds |= !config
         .rule_applications("postgres-bounded-statements")
         .is_empty();

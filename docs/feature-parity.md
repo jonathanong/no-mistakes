@@ -49,6 +49,12 @@ language CLIs are not started.
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
 
+PostgreSQL statement policy checks SQL files and opt-in JavaScript/TypeScript
+executor calls through shared prepared facts, with CLI and async Node parity.
+Named imports, factory handles, and typed executor parameters honor configured
+scope; SQL-file selection retains `sqlInclude` semantics. See
+[statement policy](rules/postgres-sql-statement-policy.md).
+
 PostgreSQL bounded-statement checks share prepared SQL facts across the CLI and
 async Node API. Temporary view lifetimes include cascading drops of physical
 materialized views, qualified namesake separation, and transaction or savepoint

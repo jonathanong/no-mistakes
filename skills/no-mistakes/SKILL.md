@@ -145,3 +145,9 @@ inventories remain explicit opt-in. See [catalog options](https://github.com/jon
 
 Generated catalogs also record the exact connected database in `currentDatabase`.
 Older catalogs omit that evidence, so database qualification stays conservative.
+
+To ban DDL in test executors, configure `postgres-sql-statement-policy` with
+rule application `include`/`exclude`, `importSpecifier`, and any factory/type
+executor names. `sqlInclude` continues to select SQL files. Dynamic calls follow
+`unanalyzableSql` (`fail` by default, or `ignore`). See the
+[statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).

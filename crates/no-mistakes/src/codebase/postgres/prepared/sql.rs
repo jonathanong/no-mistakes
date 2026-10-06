@@ -74,6 +74,7 @@ pub(super) fn collect(
                             *failed,
                             plan.postgres_bounds,
                             None,
+                            schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(|schema| schema.statement_kinds.as_slice()),
                         );
                         value.path = path.clone();
                         Arc::new(vec![value])

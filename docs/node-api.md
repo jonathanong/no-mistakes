@@ -83,6 +83,13 @@ configured names no scanned file imports; it appears in `check()` results like a
 other finding. See the
 [executor migration notes](migrations/explicit-postgres-executors.md).
 
+`postgres-sql-statement-policy` also supports those executor options through
+`check()` and check queries. Its embedded analysis is opt-in; omitting executor
+configuration preserves SQL-file-only behavior. Rule application `include` and
+`exclude` scope executor files; `sqlInclude` still selects SQL files. See the
+[statement policy](rules/postgres-sql-statement-policy.md) for test-helper DDL
+and `unanalyzableSql` examples.
+
 ## PostgreSQL catalog generation
 
 For SQL text without a database or repository, use async
