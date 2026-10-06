@@ -32,8 +32,9 @@ await withTransaction(async (tx) => {
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
   declaring function. It defaults to `[]`.
-- `trustedSqlTags` defaults to `[]`. It is accepted so a shared executor
-  configuration validates. This rule still reads every tagged template.
+- `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
+  It is accepted so a shared executor configuration validates. This rule still
+  reads every tagged template.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`.
