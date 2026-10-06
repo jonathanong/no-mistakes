@@ -1,0 +1,44 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "audit_keys": {
+      "indexes": {
+        "audit_keys_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "scope_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "user_key",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "team_key",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": null
+    }
+  },
+  "views": {},
+  "enums": {},
+  "extensions": {},
+  "functions": {},
+  "policies": {}
+}

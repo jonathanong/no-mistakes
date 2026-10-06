@@ -103,12 +103,83 @@ fn positional_references_resolve_through_the_select_list() {
         "1"
     );
     // Constants are dropped; columns, calls and unparsable text are kept.
-    let kept = order::without_constants(&[
-        key("$1"),
-        key("'x'"),
-        key("id"),
-        key("now()"),
-        key("lower("),
-    ]);
+    let kept = order::without_constants(
+        &[
+            key("$1"),
+            key("'x'"),
+            key("id"),
+            key("now()"),
+            key("lower("),
+        ],
+        &SqlInsertSourceShape::default(),
+    );
     assert_eq!(kept.len(), 3);
+}
+
+fn shape(sql: &str, binds: &[(u32, u32)]) -> SqlInsertSourceShape {
+    crate::codebase::postgres::analyze_conflict_inserts_with_binds(sql, binds)
+        .unwrap()
+        .remove(0)
+        .source
+}
+
+fn resolved(source: &SqlInsertSourceShape, expression: &str) -> String {
+    order::resolve_references(&[key(expression)], source)[0]
+        .expression
+        .clone()
+}
+
+#[test]
+fn bare_names_resolve_only_when_one_relation_can_supply_them() {
+    let tail = "ON CONFLICT (a) DO NOTHING";
+    let single = shape(
+        &format!("INSERT INTO t (a) SELECT i.a FROM unnest($1::int[]) AS i(a) {tail}"),
+        &[],
+    );
+    assert_eq!(resolved(&single, "a"), "i.a");
+    assert_eq!(resolved(&single, "A"), "i.a");
+    // Not a bare identifier, or no select-list expression of that shape: left as written.
+    assert_eq!(resolved(&single, "lower(a)"), "lower(a)");
+    assert_eq!(resolved(&single, "b"), "b");
+    let wildcard = shape(
+        &format!("INSERT INTO t (a) SELECT * FROM u AS i {tail}"),
+        &[],
+    );
+    assert_eq!(resolved(&wildcard, "a"), "a");
+
+    let joined = |from: &str| {
+        shape(
+            &format!("INSERT INTO t (a) SELECT x.a FROM {from} {tail}"),
+            &[],
+        )
+    };
+    let declared = "unnest($1::int[]) AS x(a) CROSS JOIN unnest($2::int[]) AS y(b)";
+    assert_eq!(resolved(&joined(declared), "a"), "x.a");
+    // Declared by neither relation, by both, or hidden in a plain table: unresolved.
+    assert_eq!(resolved(&joined(declared), "c"), "c");
+    let both = "unnest($1::int[]) AS x(a) CROSS JOIN unnest($2::int[]) AS y(a)";
+    assert_eq!(resolved(&joined(both), "a"), "a");
+    let plain = "unnest($1::int[]) AS x(a) CROSS JOIN other AS y";
+    assert_eq!(resolved(&joined(plain), "a"), "a");
+    let nested = "(unnest($1::int[]) AS x(a) CROSS JOIN other)";
+    assert_eq!(resolved(&joined(nested), "a"), "a");
+    let unaliased = shape(
+        &format!("INSERT INTO t (a) SELECT a FROM unnest($1::int[]) {tail}"),
+        &[],
+    );
+    assert_eq!(resolved(&unaliased, "a"), "a");
+}
+
+#[test]
+fn recovered_placeholders_are_constant_projections_but_user_spelling_is_not() {
+    let sql = "INSERT INTO t (a, b) SELECT sql_placeholder_1::uuid, i.b FROM unnest($1::int[]) AS i(b) ON CONFLICT (a, b) DO NOTHING";
+    let count = |source: &SqlInsertSourceShape| source.constant_projections.len();
+    assert_eq!(count(&shape(sql, &[(1, 29)])), 1);
+    assert_eq!(count(&shape(sql, &[])), 0);
+    // A user identifier sharing text with a real placeholder cannot be told apart: fail closed.
+    let clash = "INSERT INTO t (a, b) SELECT sql_placeholder_1, sql_placeholder_1 FROM u ON CONFLICT (a, b) DO NOTHING";
+    assert_eq!(count(&shape(clash, &[(1, 29)])), 0);
+    let values = "INSERT INTO t (a) VALUES (1), (2) ON CONFLICT (a) DO NOTHING";
+    assert!(shape(values, &[]).constant_projections.is_empty());
+    assert!(shape(values, &[]).relations.is_none());
 }

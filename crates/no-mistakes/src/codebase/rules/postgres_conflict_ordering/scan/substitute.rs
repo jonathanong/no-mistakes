@@ -7,6 +7,12 @@ pub(super) fn substitute_target_columns(
     projections: &BTreeMap<String, String>,
 ) -> Option<String> {
     let mut expression = parse_postgres_expression(expression)?;
+    // An arbiter column left out of the INSERT list takes its default, the same in every row.
+    if let Expr::Identifier(identifier) = &expression {
+        if !projections.contains_key(&identifier.value.to_ascii_lowercase()) {
+            return Some("NULL".to_string());
+        }
+    }
     substitute_expression(&mut expression, projections)?;
     Some(expression.to_string())
 }

@@ -51,6 +51,7 @@ pub use collect::{
 pub use conflict::{
     analyze_conflict_inserts, analyze_conflict_inserts_with_binds, expression_is_constant,
     SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape, SqlPinnedRelation,
+    SqlSourceRelation,
 };
 pub use dml::{
     extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,
