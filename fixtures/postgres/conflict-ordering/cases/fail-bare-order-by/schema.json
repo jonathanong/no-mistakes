@@ -1,0 +1,39 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "order_lines": {
+      "indexes": {
+        "order_lines_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "order_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "line_no",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": null
+    }
+  },
+  "views": {},
+  "enums": {},
+  "extensions": {},
+  "functions": {},
+  "policies": {}
+}

@@ -112,7 +112,7 @@ fn finding_for_insert(
         ));
     };
     // A literal or bound parameter is the same in every row, so it cannot change row order.
-    let expected = order::without_constants(&expected);
+    let expected = order::without_constants(&expected, &insert.source);
     if expected.is_empty() {
         return None;
     }
@@ -127,7 +127,10 @@ fn finding_for_insert(
             ),
         ));
     };
-    let actual = order::without_constants(&order::resolve_references(actual, &insert.source));
+    let actual = order::without_constants(
+        &order::resolve_references(actual, &insert.source),
+        &insert.source,
+    );
     if !order_prefix_matches(&actual, &expected, false) {
         return Some(finding(
             file,

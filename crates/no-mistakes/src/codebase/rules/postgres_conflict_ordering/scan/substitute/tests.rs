@@ -40,7 +40,12 @@ fn accepts_literal_and_function_expression_leaves() {
 fn rejects_missing_projections_and_unsupported_expression_shapes() {
     let projections = projections();
 
-    assert!(substitute_target_columns("missing", &projections).is_none());
+    // A bare column the INSERT list omits takes its default; any other use of it is unmapped.
+    assert_eq!(
+        substitute_target_columns("missing", &projections).as_deref(),
+        Some("NULL")
+    );
+    assert!(substitute_target_columns("lower(missing)", &projections).is_none());
     assert!(substitute_target_columns("key BETWEEN 1 AND 2", &projections).is_none());
     assert!(substitute_target_columns("count(*)", &projections).is_none());
 }

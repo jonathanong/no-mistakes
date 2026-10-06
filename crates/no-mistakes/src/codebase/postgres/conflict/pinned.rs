@@ -93,7 +93,7 @@ fn column_of(expr: &Expr, qualifier: &str, binds: &[(u32, u32)]) -> Option<Strin
     }
 }
 
-fn expr_is_constant(expr: &Expr, binds: &[(u32, u32)]) -> bool {
+pub(super) fn expr_is_constant(expr: &Expr, binds: &[(u32, u32)]) -> bool {
     match expr {
         Expr::Value(_) => true,
         Expr::Identifier(ident) => is_bind(ident, binds),

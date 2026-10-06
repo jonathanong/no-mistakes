@@ -88,7 +88,8 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
         }
     )
     .is_none());
-    assert!(expected_source_order(
+    // `tenant_id` is absent from the projections, so it takes its default in every row.
+    let expected = expected_source_order(
         &index,
         &SqlInsertSourceShape {
             multi_row: true,
@@ -97,9 +98,11 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
                 "source_id".to_string(),
             )])),
             ..Default::default()
-        }
+        },
     )
-    .is_none());
+    .unwrap();
+    assert_eq!(expected.len(), 1);
+    assert_eq!(expected[0].expression, "NULL");
     assert!(contains_insert_conflict(
         "INSERT INTO items ON CONFLICT DO NOTHING"
     ));

@@ -4,12 +4,14 @@ use collect::collect_statement;
 use raw::{raw_conflicts, sanitize};
 use single_row::query_is_potentially_multi_row;
 use sqlparser::ast::{Insert, SelectItem, SetExpr, TableObject};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 mod collect;
 mod pinned;
 pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
+mod scope;
+pub use scope::SqlSourceRelation;
 mod single_row;
 #[cfg(test)]
 mod single_row_tests;
@@ -44,6 +46,10 @@ pub struct SqlInsertSourceShape {
     pub order: Option<Vec<CanonicalOrderKey>>,
     pub projections: Option<BTreeMap<String, String>>,
     pub order_aliases: BTreeMap<String, String>,
+    /// Select-list expressions that are literals or bound parameters.
+    pub constant_projections: BTreeSet<String>,
+    /// The `FROM` relations, or `None` when they cannot be listed.
+    pub relations: Option<Vec<SqlSourceRelation>>,
 }
 
 pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>> {
@@ -93,6 +99,8 @@ fn analyze_insert(
                 order: query.order_by.as_ref().and_then(canonical_order_keys),
                 projections: projection_map(insert, query.body.as_ref()),
                 order_aliases: order_aliases(query.body.as_ref()),
+                constant_projections: scope::constant_projections(query, binds),
+                relations: scope::source_relations(query),
             }
         });
     Ok(SqlConflictInsertFact {
