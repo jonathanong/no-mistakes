@@ -39,9 +39,8 @@ pub(super) fn order_prefix_matches_skipping_pinned(
     pinned: &[String],
 ) -> bool {
     let pinned_count = pinned_prefix_len(expected, pinned);
-    (0..=pinned_count).any(|skip| {
-        order_prefix_matches_for_qualifiers(actual, &expected[skip..], qualifiers)
-    })
+    (0..=pinned_count)
+        .any(|skip| order_prefix_matches_for_qualifiers(actual, &expected[skip..], qualifiers))
 }
 fn pinned_prefix_len(keys: &[CanonicalOrderKey], pinned: &[String]) -> usize {
     keys.iter()
