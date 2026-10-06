@@ -40,6 +40,7 @@ const rules = {
   "server-require-nullable-fetch-wrapper": require("./rules/server-require-nullable-fetch-wrapper"),
   "test-no-error-message-matching": require("./rules/test-no-error-message-matching"),
   "test-no-delayed-rejects": require("./rules/test-no-delayed-rejects"),
+  "test-no-skips": require("./rules/test-no-skips"),
   "test-no-shared-state": require("./rules/test-no-shared-state"),
   "ts-no-const-aliases": require("./rules/ts-no-const-aliases"),
   "ts-no-export-renaming": require("./rules/ts-no-export-renaming"),

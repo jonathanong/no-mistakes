@@ -64,6 +64,8 @@ function context(extra = {}) {
     options: [{}],
     report() {},
     sourceCode: {
+      ast: { tokens: [] },
+      getAllComments: () => [],
       getScope: () => emptyScope(),
       visitorKeys: {
         Program: ["body"],

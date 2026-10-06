@@ -10,6 +10,14 @@ sources for exact canonical Next.js page routes. These retain Vitest ownership a
 the canonical `route-test` graph, while selector and fetch coverage remain browser
 coverage. See [integration route coverage](configuration/integration-route-coverage.md).
 
+The ESLint/Oxlint plugin also provides the file-local `test-no-skips` rule for
+Vitest and Playwright. It bans `skip`, `skipIf`, `runIf`, `only`, `todo`, and
+`fixme` by default, with an explicit `allow` option. ESLint `files` globs
+determine which test files are checked; the rule does not discover tests or
+infer repository-wide scope. This remains a plugin capability and adds no
+`no-mistakes` CLI or N-API command. See
+[test-no-skips](eslint-rules/test-no-skips.md).
+
 Next.js redirect and rewrite checks recover immutable tuple maps and template
 destinations through the same Rust rule used by the CLI and async Node checks.
 Partial dynamic construction reports incomplete extraction; configured route

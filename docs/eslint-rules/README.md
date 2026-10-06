@@ -71,6 +71,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`react-no-nullish-react-node`](react-no-nullish-react-node.md)       | Preserve nullish ReactNode semantics.                     |
 | [`react-no-use-promise-resolve`](react-no-use-promise-resolve.md)     | Reject `React.use(Promise.resolve(...))`.                 |
 | [`test-no-error-message-matching`](test-no-error-message-matching.md) | Prefer stable error contracts over message text.          |
+| [`test-no-skips`](test-no-skips.md)                                   | Reject skipped, conditional, pending, and focused tests.  |
 | [`test-no-shared-state`](test-no-shared-state.md)                     | Reject mutable module-scope test state.                   |
 | [`vitest-mock-test-file-naming`](vitest-mock-test-file-naming.md)     | Name module-mocking tests `*.mock.test.*`.                |
 
