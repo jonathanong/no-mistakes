@@ -28,3 +28,9 @@ export default [
 See [`test-no-skips`](../../docs/eslint-rules/test-no-skips.md) for the rule's
 behavior and configuration, and the [ESLint rule index](../../docs/eslint-rules/README.md)
 for the complete list.
+
+To cap long Vitest timeouts, enable `no-mistakes/vitest-timeout-cap` in the
+test and Vitest config files selected by your flat-config globs. It defaults to
+5,000 ms for configured test and hook timeouts and 30,000 ms for per-test and
+hook overrides. See the [rule documentation](../../docs/eslint-rules/vitest-timeout-cap.md)
+for options and examples.

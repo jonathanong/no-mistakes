@@ -1,0 +1,15 @@
+import { defineConfig, mergeConfig } from 'vitest/config';
+import * as vitest from 'vitest';
+const unknown = { test: { testTimeout: 60000, ...dynamicOptions } };
+const low = { test: { testTimeout: 5000 } };
+const right = { test: { hookTimeout: 60000 } };
+const first = defineConfig(mergeConfig(low, right));
+const nested = defineConfig(mergeConfig({ test: { hookTimeout: 60000 } }, unknown));
+const empty = defineConfig();
+const noTest = defineConfig({ unrelated: true });
+const opaque = defineConfig(() => { setup(); return { test: { testTimeout: 60000 } }; });
+vitest.beforeAll(() => {}, 60000);
+vitest.vi.setConfig({ testTimeout: 60000 });
+beforeEach(() => {}, 60000);
+test('global', () => {}, 60000);
+export default defineConfig(mergeConfig({ test: { testTimeout: 60000 } }, { test: { testTimeout: 5000 } }));

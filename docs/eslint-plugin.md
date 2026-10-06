@@ -245,3 +245,16 @@ modifiers and bound Vitest context `skip()` calls. `allow` defaults to `[]` and
 accepts `skip`, `skipIf`, `runIf`, `only`, `todo`, and `fixme`.
 See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
 table callbacks, configuration, and `no-mistakes` suppression directives.
+
+### `vitest-timeout-cap`
+
+Enable this single-file ESLint/Oxlint rule with explicit `files` globs for
+Vitest configs/projects and test files. `defaultMax` defaults to `5000` ms for
+config/project `testTimeout` and `hookTimeout`; `overrideMax` defaults to
+`30000` ms for test/suite/hook overrides and `vi.setConfig` timeout defaults.
+Both caps must be positive finite numbers. `unknownValues` defaults to
+`ignore`; set `finding` to require statically recoverable timeout values.
+Same-module constants, aliases, config callbacks with a single return,
+object/array spreads and effective `mergeConfig` precedence are supported.
+See [the rule reference](eslint-rules/vitest-timeout-cap.md) for limits and
+`no-mistakes` file/line/next-line suppressions.
