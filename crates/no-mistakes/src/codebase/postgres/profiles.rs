@@ -17,6 +17,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-bounded-statements",
     "postgres-no-offset",
     "postgres-sql-shape-policy",
+    "postgres-sql-statement-policy",
     "postgres-no-generated-column-writes",
 ];
 
@@ -69,17 +70,20 @@ pub(crate) fn configured_embedded_sql_options(
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
-            profiles.push(
-                EmbeddedSqlOptions::configured(
-                    options.import_specifier.as_deref().unwrap_or_default(),
-                    &options.executor_names,
-                )
-                .with_scoped_executors(
-                    &options.executor_factory_names,
-                    &options.executor_type_names,
-                )
-                .with_trusted_sql_tags(&options.trusted_sql_tags),
-            );
+            let profile = EmbeddedSqlOptions::configured(
+                options.import_specifier.as_deref().unwrap_or_default(),
+                &options.executor_names,
+            )
+            .with_scoped_executors(
+                &options.executor_factory_names,
+                &options.executor_type_names,
+            )
+            .with_trusted_sql_tags(&options.trusted_sql_tags);
+            // Legacy statement policies select only SQL files until executors
+            // are explicitly configured; do not request an empty TS projection.
+            if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {
+                profiles.push(profile);
+            }
         }
     }
     profiles.sort();
@@ -158,7 +162,6 @@ pub(crate) fn load_schema_catalogs(
 
 #[cfg(test)]
 mod tests;
-
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct SqlOptions {
@@ -193,6 +196,5 @@ fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<Stri
 
 mod prepare;
 pub(crate) use prepare::prepare_rule_sql_facts;
-
 mod plan;
 pub use plan::configure_prepared_postgres_plan;

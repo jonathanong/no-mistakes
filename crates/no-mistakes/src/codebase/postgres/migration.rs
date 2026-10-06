@@ -20,6 +20,29 @@ pub(crate) fn extract_from_parsed(sql: &str, statements: &[Statement]) -> SqlSch
     extract_parsed_migration_facts(sql, statements)
 }
 
+/// Reuse the prepared AST and the schema-policy routine projection without
+/// collecting unrelated indexes, identifiers, or table metadata.
+pub(crate) fn statement_kinds(
+    sql: &str,
+    statements: &[Statement],
+) -> Vec<super::types::SqlStatementKind> {
+    let mut facts = SqlSchemaFileFacts::default();
+    for statement in statements {
+        statements::record(sql, statement, &mut facts);
+    }
+    for dynamic_sql in dynamic::schema_bodies(sql)
+        .into_iter()
+        .chain(dynamic::extract(sql))
+    {
+        let parsed = super::parse::parse_postgres_sql_lenient(&dynamic_sql.sql);
+        for mut kind in statement_kinds(&dynamic_sql.sql, &parsed) {
+            kind.line = dynamic_sql.source_line(kind.line);
+            facts.statement_kinds.push(kind);
+        }
+    }
+    facts.statement_kinds
+}
+
 fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
         table_events_collected: true,

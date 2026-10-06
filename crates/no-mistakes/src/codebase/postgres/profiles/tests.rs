@@ -152,6 +152,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-bounded-statements",
             "postgres-no-offset",
             "postgres-sql-shape-policy",
+            "postgres-sql-statement-policy",
             "postgres-no-generated-column-writes",
         ]
     );
@@ -339,8 +340,16 @@ fn every_embedded_rule_requires_explicit_executor_selection() {
                 ..RuleDef::default()
             });
             let profiles = configured_embedded_sql_options(&config, &[rule_id]).unwrap();
-            let facts = extract_embedded_sql_from_source(&path, &source, &profiles[0]);
-            assert_eq!(facts.calls.len(), expected_calls, "{rule_id}: {yaml}");
+            // SQL-file-only statement policy has no executor projection at all.
+            let calls: usize = profiles
+                .iter()
+                .map(|profile| {
+                    extract_embedded_sql_from_source(&path, &source, profile)
+                        .calls
+                        .len()
+                })
+                .sum();
+            assert_eq!(calls, expected_calls, "{rule_id}: {yaml}");
         }
     }
 }

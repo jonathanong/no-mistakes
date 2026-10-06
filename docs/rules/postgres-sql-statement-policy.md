@@ -1,6 +1,7 @@
 # `postgres-sql-statement-policy`
 
-Flags configured PostgreSQL statement kinds in matching SQL files. Use this
+Flags configured PostgreSQL statement kinds in matching SQL files and configured
+JavaScript/TypeScript executor calls. Use this
 for config-driven or seed SQL that must not carry schema DDL (`CREATE TABLE`,
 `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
 `DROP VIEW`). `CREATE UNIQUE INDEX` counts as `CREATE INDEX`. Materialized
@@ -33,7 +34,49 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. `bannedStatements` defaults to the list
-above.
+above. Embedded SQL is opt-in through `importSpecifier` or explicit
+`executorNames`. With `importSpecifier`, executor names default to `query`,
+`read`, and `write`. `executorFactoryNames` enables local handles returned by
+configured named factory imports, and `executorTypeNames` enables parameters
+annotated with configured imported executor types. `trustedSqlTags` accepts
+`{ module, name }` entries, as in `postgres-sql-shape-policy`.
+
+Rule application `include`/`exclude` limits both sources; `sqlInclude` continues
+to select only SQL files. `unanalyzableSql` defaults to `fail`; `ignore` skips unanalyzable calls, and `fail` reports
+dynamic executor arguments and unparseable recovered SQL. No executor module
+or factory is inferred from project conventions.
+
+```yaml
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: ['**/*.test.ts', 'test-helpers/**']
+    options:
+      importSpecifier: '@example/db'
+      trustedSqlTags: [{module: '@example/db', name: sql}]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      bannedStatements: [ALTER TABLE, CREATE TABLE, CREATE VIEW, TRUNCATE]
+      unanalyzableSql: fail
+```
+
+For example, this test helper takes schema locks that can stall parallel tests:
+
+```ts
+import { query, sql } from '@example/db';
+await query(sql`ALTER TABLE orders ADD CONSTRAINT reject_writes CHECK (false)`);
+```
+
+Inject failures through an executor seam instead:
+
+```ts
+const failingQuery: TransactionQuery = async statement => {
+  if (statement.text.startsWith('UPDATE orders')) throw new Error('injected');
+  return query(statement);
+};
+```
+
+The same rule options work through the asynchronous Node `check()` API.
 
 Counterexample: schema DDL in a config-driven file.
 

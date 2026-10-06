@@ -1,5 +1,5 @@
 use super::RuleFinding;
-use crate::codebase::postgres::PostgresSchemaOptions;
+use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -26,11 +26,19 @@ const DEFAULT_BANNED: &[&str] = &[
 pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
     pub(crate) banned_statements: Vec<String>,
+    pub(crate) import_specifier: String,
+    pub(crate) executor_names: Vec<String>,
+    pub(crate) executor_factory_names: Vec<String>,
+    pub(crate) executor_type_names: Vec<String>,
+    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    pub(crate) unanalyzable_sql: String,
 }
 
 struct CompiledOptions {
     schema: PostgresSchemaOptions,
     banned: HashSet<String>,
+    embedded: EmbeddedSqlOptions,
+    fail_unanalyzable: bool,
 }
 
 pub(crate) fn check_with_files(
@@ -68,7 +76,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
-        let compiled = compile_options(&opts);
+        let compiled = compile_options(&opts)?;
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
@@ -83,7 +91,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings)
 }
 
-fn compile_options(opts: &Options) -> CompiledOptions {
+fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let banned = if opts.banned_statements.is_empty() {
         DEFAULT_BANNED.iter().map(|kind| kind.to_string()).collect()
     } else {
@@ -92,7 +100,7 @@ fn compile_options(opts: &Options) -> CompiledOptions {
             .map(|kind| kind.to_ascii_uppercase())
             .collect()
     };
-    CompiledOptions {
+    Ok(CompiledOptions {
         schema: PostgresSchemaOptions {
             sql_include: if opts.sql_include.is_empty() {
                 PostgresSchemaOptions::default().sql_include
@@ -101,7 +109,14 @@ fn compile_options(opts: &Options) -> CompiledOptions {
             },
         },
         banned,
-    }
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
+            .with_trusted_sql_tags(&opts.trusted_sql_tags),
+        fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
+            RULE_ID,
+            &opts.unanalyzable_sql,
+        )?,
+    })
 }
 
 fn sql_rel(root: &Path, path: &Path) -> String {

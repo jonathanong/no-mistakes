@@ -27,6 +27,12 @@ pub struct EmbeddedSqlOptions {
 }
 
 impl EmbeddedSqlOptions {
+    pub(crate) fn selects_executors(&self) -> bool {
+        !self.executor_names.is_empty()
+            || !self.executor_factory_names.is_empty()
+            || !self.executor_type_names.is_empty()
+    }
+
     /// A configured module enables standard executor names. Without a module,
     /// names must be explicit and may match named imports from any module.
     pub fn configured(import_specifier: &str, executor_names: &[String]) -> Self {

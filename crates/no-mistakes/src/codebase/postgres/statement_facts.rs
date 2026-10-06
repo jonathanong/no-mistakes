@@ -45,6 +45,8 @@ pub(crate) struct SqlViewReads {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlStatementFileFacts {
     pub path: PathBuf,
+    /// Statement categories shared with schema policy, including static routine DDL.
+    pub statement_kinds: Vec<super::types::SqlStatementKind>,
     /// Syntactic write targets; catalog resolution happens after preparation.
     pub writes: Vec<SqlWriteFact>,
     pub inserts: Vec<SqlInsertFact>,

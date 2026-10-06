@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: ['**/*.test.ts', 'sql/**/*.sql']
+    exclude: [excluded.test.ts, dynamic.test.ts, routines.test.ts]
+    options:
+      importSpecifier: '@example/db'
+      trustedSqlTags: [{module: '@example/db', name: sql}]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      sqlInclude: ['sql/seeds/*.sql']
