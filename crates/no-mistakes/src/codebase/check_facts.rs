@@ -9,6 +9,7 @@ mod map;
 mod plan;
 mod playwright_facts;
 mod playwright_plan;
+mod relative_scope;
 mod runner;
 mod staged_playwright;
 pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};

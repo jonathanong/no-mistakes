@@ -5,16 +5,26 @@
 //! inside the declaring block (variables) or function (parameters), stored as
 //! source spans so a same-named identifier elsewhere is never matched.
 
+use super::relative::{PendingRelativeSpan, RelativeScopedCandidate};
 use super::EmbeddedSqlOptions;
+use candidates::classify;
 use collector::ScopeCollector;
-use oxc_ast::ast::{
-    ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
-};
+use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement};
 use oxc_ast_visit::Visit;
 use oxc_span::Span;
 use std::collections::HashMap;
 
+mod candidates;
 mod collector;
+mod owners;
+
+pub(super) use candidates::from_configured_module;
+
+pub(super) struct ScopedCollection {
+    pub(super) executors: ScopedExecutors,
+    pub(super) candidates: Vec<RelativeScopedCandidate>,
+    pub(super) spans: Vec<PendingRelativeSpan>,
+}
 
 /// Binding name to the source spans in which it is an executor.
 #[derive(Debug, Default)]
@@ -36,20 +46,18 @@ impl ScopedExecutors {
     }
 }
 
-pub(super) fn scoped_executors(
-    program: &Program<'_>,
-    options: &EmbeddedSqlOptions,
-) -> ScopedExecutors {
-    let mut visitor = ScopeCollector::default();
-    for statement in &program.body {
-        if let Statement::ImportDeclaration(import) = statement {
-            collect_imports(import, options, &mut visitor);
-        }
-    }
-    if !(visitor.factories.is_empty() && visitor.types.is_empty()) {
+pub(super) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> ScopedCollection {
+    let mut imports = classify(program, options);
+    let candidates = std::mem::take(&mut imports.candidates);
+    let mut visitor = ScopeCollector::from_imports(imports);
+    if visitor.needs_walk() {
         visitor.visit_program(program);
     }
-    visitor.found
+    ScopedCollection {
+        executors: visitor.found,
+        candidates,
+        spans: visitor.spans,
+    }
 }
 
 /// Configured scoped names this file imports from the configured module,
@@ -63,7 +71,10 @@ pub(super) fn matched_names(
         let Statement::ImportDeclaration(import) = statement else {
             continue;
         };
-        if !from_configured_module(import.source.value.as_str(), &options.import_specifier) {
+        if !candidates::from_configured_module(
+            import.source.value.as_str(),
+            &options.import_specifier,
+        ) {
             continue;
         }
         for specifier in import.specifiers.iter().flatten() {
@@ -73,10 +84,12 @@ pub(super) fn matched_names(
             let imported = named.imported.name();
             let type_only = import.import_kind == ImportOrExportKind::Type
                 || named.import_kind == ImportOrExportKind::Type;
-            if !type_only && contains(&options.executor_factory_names, imported.as_str()) {
+            if !type_only
+                && candidates::contains(&options.executor_factory_names, imported.as_str())
+            {
                 factories.push(imported.to_string());
             }
-            if contains(&options.executor_type_names, imported.as_str()) {
+            if candidates::contains(&options.executor_type_names, imported.as_str()) {
                 types.push(imported.to_string());
             }
         }
@@ -88,46 +101,4 @@ fn sorted_unique(mut names: Vec<String>) -> Vec<String> {
     names.sort();
     names.dedup();
     names
-}
-
-fn collect_imports(
-    import: &ImportDeclaration<'_>,
-    options: &EmbeddedSqlOptions,
-    visitor: &mut ScopeCollector,
-) {
-    if !from_configured_module(import.source.value.as_str(), &options.import_specifier) {
-        return;
-    }
-    let Some(specifiers) = &import.specifiers else {
-        return;
-    };
-    for specifier in specifiers {
-        let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier else {
-            continue;
-        };
-        let imported = named.imported.name();
-        let local = named.local.name.to_string();
-        let type_only = import.import_kind == ImportOrExportKind::Type
-            || named.import_kind == ImportOrExportKind::Type;
-        if !type_only && contains(&options.executor_factory_names, imported.as_str()) {
-            visitor.factories.insert(local.clone());
-        }
-        if contains(&options.executor_type_names, imported.as_str()) {
-            visitor.types.insert(local);
-        }
-    }
-}
-
-/// The module itself or any subpath of it (`@example/db/types`); a sibling
-/// package sharing the prefix (`@example/dbx`) does not match.
-pub(super) fn from_configured_module(source: &str, specifier: &str) -> bool {
-    specifier.is_empty()
-        || source == specifier
-        || source
-            .strip_prefix(specifier)
-            .is_some_and(|rest| rest.starts_with('/'))
-}
-
-fn contains(names: &[String], name: &str) -> bool {
-    names.iter().any(|candidate| candidate == name)
 }

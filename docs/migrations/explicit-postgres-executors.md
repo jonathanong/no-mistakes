@@ -52,23 +52,30 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
 }
 ```
 
-- For these two options, "from `importSpecifier`" also includes its subpaths:
-  with `importSpecifier: "@example/db"`, imports from `@example/db/types` and
-  `@example/db/tx/open` match, while `@example/dbx` and `@example/db-utils` do not.
-  `executorNames` and `withTransaction` still require the exact module.
-- `executorFactoryNames` lists named imports (from `importSpecifier` or a subpath
-  of it, or from any module when it is empty) that return an executor. A local declared with
+- For these two options, "from `importSpecifier`" also includes its subpaths
+  and a relative import whose resolved file is inside the package that
+  `importSpecifier` resolves to. With `importSpecifier: "@example/db"`, imports
+  from `@example/db/types` and `@example/db/tx/open` match, while `@example/dbx`
+  and `@example/db-utils` do not. `import { openTransaction } from "../transaction"`
+  matches only when that file resolves inside the `@example/db` package. The same
+  names imported from a file outside that package do not match. If the package
+  root cannot be determined, relative imports do not match. `executorNames` and
+  `withTransaction` still require the exact module.
+- `executorFactoryNames` lists named imports (from `importSpecifier`, a subpath
+  of it, a relative path that resolves into that package, or any module when it
+  is empty) that return an executor. A local declared with
   `const`, `let`, `using`, or `await using` whose initializer calls the factory,
   with or without `await`, is an executor. Calls `tx(sql)` and, when `.query`
   members are enabled, `tx.query(sql)` are scanned.
-- `executorTypeNames` lists type names imported from `importSpecifier` or a
-  subpath of it (or any module when it is empty), through `import type`, an inline `type` specifier, or
+- `executorTypeNames` lists type names imported from `importSpecifier`, a
+  subpath of it, a relative path that resolves into that package, or any module
+  when it is empty, through `import type`, an inline `type` specifier, or
   a value import. A parameter annotated with one, including `run?: TxExecutor`
   and a destructured property typed inline as in `{ run }: { run: TxExecutor }`,
   is an executor.
 - A binding applies only inside the declaring block (variables) or function
   (parameters). A same-named identifier in a sibling function or outside the
-  block is not scanned. Imports from a module other than `importSpecifier` never
+  block is not scanned. A same-named import from outside that package does not
   match.
 
 Neither option counts as executor selection: a rule configured with only these
@@ -88,15 +95,12 @@ Rust embedded-SQL rule to get one finding per such entry, reported once per rule
 application against the config file after aggregating every file the rule scans.
 The finding explains what did not match and how to fix it: correct the spelling,
 point `importSpecifier` at the module that exports the name (a re-export from
-another path does not match), or remove the entry. The option defaults to `false`;
+another path does not match; a relative import matches only when it resolves
+into that package), or remove the entry. The option defaults to `false`;
 with it off, findings are unchanged. Because the finding has no source line, line
 and file suppression directives do not apply; turn the option off instead. The
 option is Rust-only: ESLint runs per file and cannot know a name never matched
 anywhere, so the ESLint runtime rules do not accept it.
-
-A file inside the database package that imports a factory or type by relative
-path (`../transaction`) is not matched: matching is by import specifier, not
-resolved path.
 
 ## Trusted SQL tags
 

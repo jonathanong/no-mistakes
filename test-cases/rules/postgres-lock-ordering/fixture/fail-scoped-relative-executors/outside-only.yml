@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      include: ["packages/other/**"]
+      importSpecifier: "@example/db"
+      executorFactoryNames: [openTransaction]
+      executorTypeNames: [TxExecutor]

@@ -93,6 +93,7 @@ fn collect_check_facts_inner(
         .values()
         .filter(|facts| facts.parse_error.is_some())
         .count();
+    super::relative_scope::project_relative_executor_scopes(session, root, &sources, &mut ts);
     let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(
         root,
         &sources,

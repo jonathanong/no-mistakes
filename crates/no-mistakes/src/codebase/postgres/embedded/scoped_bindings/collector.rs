@@ -1,49 +1,57 @@
+use super::super::relative::PendingRelativeSpan;
+use super::candidates::ImportClassification;
+use super::owners::{self, NameHit};
 use super::ScopedExecutors;
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BindingPattern, BlockStatement, Expression, ForStatement, Function,
-    FunctionBody, ObjectPattern, Program, StaticBlock, SwitchStatement, TSSignature, TSType,
-    TSTypeName, VariableDeclaration, VariableDeclarationKind,
+    ArrowFunctionExpression, BindingPattern, BlockStatement, ForStatement, Function, FunctionBody,
+    ObjectPattern, Program, StaticBlock, SwitchStatement, TSSignature, TSType, VariableDeclaration,
+    VariableDeclarationKind,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Default)]
 pub(super) struct ScopeCollector {
-    pub(super) factories: HashSet<String>,
-    pub(super) types: HashSet<String>,
+    factories: HashSet<String>,
+    types: HashSet<String>,
+    provisional_factories: HashMap<String, Vec<u32>>,
+    provisional_types: HashMap<String, Vec<u32>>,
     scopes: Vec<Span>,
     pub(super) found: ScopedExecutors,
+    pub(super) spans: Vec<PendingRelativeSpan>,
 }
 
 impl ScopeCollector {
-    fn type_matches(&self, ty: &TSType<'_>) -> bool {
-        match ty {
-            TSType::TSTypeReference(reference) => matches!(
-                &reference.type_name,
-                TSTypeName::IdentifierReference(ident) if self.types.contains(ident.name.as_str())
-            ),
-            TSType::TSUnionType(union) => {
-                union.types.iter().any(|member| self.type_matches(member))
-            }
-            _ => false,
+    pub(super) fn from_imports(imports: ImportClassification) -> Self {
+        Self {
+            factories: imports.factories,
+            types: imports.types,
+            provisional_factories: imports.provisional_factories,
+            provisional_types: imports.provisional_types,
+            ..Self::default()
         }
     }
 
-    fn is_factory_call(&self, init: &Expression<'_>) -> bool {
-        let mut init = unwrap_ts_wrappers(init);
-        if let Expression::AwaitExpression(awaited) = init {
-            init = unwrap_ts_wrappers(&awaited.argument);
+    pub(super) fn needs_walk(&self) -> bool {
+        !self.factories.is_empty()
+            || !self.types.is_empty()
+            || !self.provisional_factories.is_empty()
+            || !self.provisional_types.is_empty()
+    }
+
+    fn record(&mut self, name: &str, span: Span, hit: NameHit) {
+        if hit.confirmed {
+            self.found.add(name, span);
+        } else if !hit.owners.is_empty() {
+            self.spans.push(PendingRelativeSpan {
+                owners: hit.owners,
+                name: name.to_string(),
+                start: span.start,
+                end: span.end,
+            });
         }
-        let Expression::CallExpression(call) = init else {
-            return false;
-        };
-        matches!(
-            unwrap_ts_wrappers(&call.callee),
-            Expression::Identifier(ident) if self.factories.contains(ident.name.as_str())
-        )
     }
 
     fn bind_params(&mut self, params: &oxc_ast::ast::FormalParameters<'_>, scope: Span) {
@@ -53,8 +61,9 @@ impl ScopeCollector {
             };
             let annotated = &annotation.type_annotation;
             match &param.pattern {
-                BindingPattern::BindingIdentifier(ident) if self.type_matches(annotated) => {
-                    self.found.add(ident.name.as_str(), scope);
+                BindingPattern::BindingIdentifier(ident) => {
+                    let hit = owners::type_hit(&self.types, &self.provisional_types, annotated);
+                    self.record(ident.name.as_str(), scope, hit);
                 }
                 BindingPattern::ObjectPattern(object) => {
                     self.bind_object_properties(object, annotated, scope);
@@ -79,18 +88,29 @@ impl ScopeCollector {
             else {
                 continue;
             };
+            let mut hit = NameHit {
+                confirmed: false,
+                owners: Vec::new(),
+            };
             let typed = literal.members.iter().any(|member| {
                 let TSSignature::TSPropertySignature(signature) = member else {
                     return false;
                 };
-                signature.key.static_name().as_deref() == Some(key.as_ref())
-                    && signature
-                        .type_annotation
-                        .as_ref()
-                        .is_some_and(|annotation| self.type_matches(&annotation.type_annotation))
+                if signature.key.static_name().as_deref() != Some(key.as_ref()) {
+                    return false;
+                }
+                let Some(annotation) = &signature.type_annotation else {
+                    return false;
+                };
+                hit = owners::type_hit(
+                    &self.types,
+                    &self.provisional_types,
+                    &annotation.type_annotation,
+                );
+                hit.confirmed || !hit.owners.is_empty()
             });
             if typed {
-                self.found.add(local.name.as_str(), scope);
+                self.record(local.name.as_str(), scope, hit);
             }
         }
     }
@@ -149,10 +169,10 @@ impl<'a> Visit<'a> for ScopeCollector {
                 if let (BindingPattern::BindingIdentifier(ident), Some(init)) =
                     (&declarator.id, &declarator.init)
                 {
-                    if self.is_factory_call(init) {
-                        let span = Span::new(declarator.span().start, end);
-                        self.found.add(ident.name.as_str(), span);
-                    }
+                    let hit =
+                        owners::factory_hit(&self.factories, &self.provisional_factories, init);
+                    let span = Span::new(declarator.span().start, end);
+                    self.record(ident.name.as_str(), span, hit);
                 }
             }
         }

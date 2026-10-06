@@ -68,8 +68,8 @@ SQL-file/native-SQL analysis where supported. See the
 | ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
 | `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-| `executorFactoryNames` | Empty | Named imports (from `importSpecifier`, or any module when it is empty) whose call result bound with `const`, `let`, `using`, or `await using` is an executor inside the declaring block. |
-| `executorTypeNames` | Empty | Imported type names (`import type` or inline `type` specifiers) whose annotated parameters, including optional and inline-destructured ones, are executors inside the declaring function. |
+| `executorFactoryNames` | Empty | Named imports (from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty) whose call result bound with `const`, `let`, `using`, or `await using` is an executor inside the declaring block. |
+| `executorTypeNames` | Empty | Imported type names (`import type` or inline `type` specifiers) from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty, whose annotated parameters, including optional and inline-destructured ones, are executors inside the declaring function. |
 | `trustedSqlTags` | Empty | Named imports of `name` from `module`, or a subpath of `module`, are parameterized SQL tags. A renamed local binding is trusted. A default import is not. A shadowed or rebound local fails closed. The same name from another module, or a sibling prefix such as `@example/dbx`, stays untrusted. |
 
 `executorFactoryNames` and `executorTypeNames` add scoped executors: `tx` in
@@ -79,7 +79,10 @@ elsewhere is not. Matching is by configuration only, both default to empty, and
 neither counts as executor selection: still set `importSpecifier` or `executorNames`.
 With `importSpecifier` set, these two options also match imports from its subpaths
 (`@example/db/types` for `@example/db`) but not sibling packages such as
-`@example/dbx`; `executorNames` still requires the exact module.
+`@example/dbx`. A relative import (`../transaction`) matches only when the resolved
+file is inside the package `importSpecifier` resolves to; a same-named import outside
+that package does not. If the package root cannot be determined, relative imports do
+not match. `executorNames` still requires the exact module.
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).

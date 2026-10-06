@@ -163,7 +163,7 @@ enough, and a shadowed or rebound local fails closed.
 `importSpecifier?: string` (default empty),
 `executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
 `executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
-scoped executors that also match imports from `importSpecifier` subpaths, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
+scoped executors that also match imports from `importSpecifier` subpaths and relative imports that resolve into that package, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
 `trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
 shared executor configuration validates; this rule still reads every tagged template), and
 `owners?: string[]`.
