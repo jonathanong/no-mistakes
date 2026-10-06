@@ -192,6 +192,127 @@ describe("queryHead and wrappers", () => {
     );
   });
 
+  it("trusts a configured named import and fails closed on the other shapes", () => {
+    const trusted = {
+      ...config,
+      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+    };
+    const quasi = {
+      type: "TemplateLiteral",
+      quasis: [{ value: { cooked: "/* rows */ SELECT 1", raw: "/* rows */ SELECT 1" } }],
+    };
+    const tagged = (name) => ({
+      type: "TaggedTemplateExpression",
+      tag: identifier(name),
+      quasi,
+    });
+    const named = (extras = {}) =>
+      importVariable(extras.local ?? "sql", "ImportSpecifier", {
+        imported: extras.imported ?? "sql",
+        module: extras.module ?? "@example/db",
+        importKind: extras.importKind,
+        declarationKind: extras.declarationKind,
+      });
+    assert.equal(
+      queryHead(contextFor(named()), tagged("sql"), helpers, trusted),
+      "/* rows */ SELECT 1",
+    );
+    assert.equal(
+      queryHead(contextFor(named({ local: "dbSql" })), tagged("dbSql"), helpers, trusted),
+      "/* rows */ SELECT 1",
+    );
+    assert.equal(
+      queryHead(
+        contextFor(named({ module: "@example/db/sql", local: "dbSql" })),
+        tagged("dbSql"),
+        helpers,
+        trusted,
+      ),
+      "/* rows */ SELECT 1",
+    );
+    assert.equal(queryHead(contextFor(named()), tagged("sql"), helpers, config), null);
+    assert.equal(
+      queryHead(contextFor(named({ module: "@other/db" })), tagged("sql"), helpers, trusted),
+      null,
+    );
+    assert.equal(
+      queryHead(contextFor(named({ module: "@example/dbx" })), tagged("sql"), helpers, trusted),
+      null,
+    );
+    assert.equal(
+      queryHead(
+        contextFor(named({ imported: "helper", local: "dbSql" })),
+        tagged("dbSql"),
+        helpers,
+        trusted,
+      ),
+      null,
+    );
+    assert.equal(
+      queryHead(
+        contextFor(importVariable("sql", "ImportDefaultSpecifier", { module: "@example/db" })),
+        tagged("sql"),
+        helpers,
+        trusted,
+      ),
+      null,
+    );
+    assert.equal(
+      queryHead(
+        contextFor(named({ importKind: "type", local: "dbSql" })),
+        tagged("dbSql"),
+        helpers,
+        trusted,
+      ),
+      null,
+    );
+    assert.equal(
+      queryHead(
+        contextFor(named({ declarationKind: "type", local: "dbSql" })),
+        tagged("dbSql"),
+        helpers,
+        trusted,
+      ),
+      null,
+    );
+    const written = named();
+    written.references = [{ identifier: identifier("sql"), isWrite: () => true }];
+    assert.equal(queryHead(contextFor(written), tagged("sql"), helpers, trusted), null);
+    assert.equal(
+      queryHead(contextFor(named()), tagged("sql"), helpers, {
+        ...trusted,
+        trustedSqlTags: [{ module: "", name: "sql" }],
+      }),
+      null,
+    );
+    assert.equal(
+      queryHead(contextFor(named()), tagged("sql"), helpers, {
+        ...trusted,
+        trustedSqlTags: [{ module: "@example/db", name: "" }],
+      }),
+      null,
+    );
+    const literal = named();
+    literal.defs[0].node.imported = { type: "Literal", value: "sql" };
+    assert.equal(
+      queryHead(contextFor(literal), tagged("sql"), helpers, trusted),
+      "/* rows */ SELECT 1",
+    );
+    const missing = named();
+    missing.defs[0].node.imported = undefined;
+    assert.equal(queryHead(contextFor(missing), tagged("sql"), helpers, trusted), null);
+    const bare = named();
+    bare.defs[0].parent = {
+      type: "BlockStatement",
+      importKind: "value",
+      source: { value: "@example/db" },
+    };
+    assert.equal(queryHead(contextFor(bare), tagged("sql"), helpers, trusted), null);
+    const badSource = named();
+    badSource.defs[0].parent.source = { value: 1 };
+    assert.equal(queryHead(contextFor(badSource), tagged("sql"), helpers, trusted), null);
+  });
+
   it("allows discarded appends and type-query references on a const binding", () => {
     const init = { type: "Literal", value: "/* rows */ SELECT 1" };
     const id = identifier("statement");

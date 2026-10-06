@@ -145,9 +145,12 @@ Supported argument shapes:
 
 - string literals
 - tagged templates, such as a `sql` tag applied to a template literal. The trusted tag is an identifier
-  spelled `sql` (case-insensitive) that is not lexically shadowed, or a
-  default import from `sql-template-strings` under any local name. Other
-  `sql`-named imports, including `import * as sql`, remain untrusted shadows.
+  spelled `sql` (case-insensitive) that is not lexically shadowed, a
+  default import from `sql-template-strings` under any local name, or a
+  `trustedSqlTags` named import (including a rename) from that module or a
+  subpath of it. Other `sql`-named imports, including `import * as sql`, a
+  default import from the configured module, and the same name from another
+  module, remain untrusted. The list defaults to empty.
   `String.raw` with no interpolations is trusted only when `String` is the
   intrinsic, not a local import, class, parameter, or callable rebinding.
 - template literals
@@ -170,6 +173,7 @@ Imports decide which local identifiers execute SQL:
 | `executorNames` | Empty without a module; `query`, `read`, `write` with a module |
 | `executorFactoryNames` | Empty; factory imports whose call result bound to a local is an executor in its block |
 | `executorTypeNames` | Empty; imported types whose annotated parameters are executors in their function |
+| `trustedSqlTags` | Empty; named imports of `name` from `module` or its subpaths are parameterized SQL tags |
 
 Without a module, only explicitly configured names match named imports from
 any module. `executorFactoryNames` and `executorTypeNames` add executors that are

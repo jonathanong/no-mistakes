@@ -21,6 +21,7 @@ function executorOptionDefaults(options = {}) {
     executorNames: options.executorNames ?? (options.importSpecifier ? DEFAULT_EXECUTOR_NAMES : []),
     executorFactoryNames: options.executorFactoryNames ?? [],
     executorTypeNames: options.executorTypeNames ?? [],
+    trustedSqlTags: options.trustedSqlTags ?? [],
     owners: options.owners ?? [],
     chunkFunctionNames: options.chunkFunctionNames ?? DEFAULT_CHUNK_FUNCTION_NAMES,
   };
@@ -34,6 +35,18 @@ function executorOptionSchema(extraProperties = {}) {
       executorNames: { type: "array", items: { type: "string" } },
       executorFactoryNames: { type: "array", items: { type: "string" } },
       executorTypeNames: { type: "array", items: { type: "string" } },
+      trustedSqlTags: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["module", "name"],
+          properties: {
+            module: { type: "string" },
+            name: { type: "string" },
+          },
+        },
+      },
       ...extraProperties,
     },
     additionalProperties: false,

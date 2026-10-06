@@ -3,6 +3,7 @@ mod collect;
 mod reassigned;
 mod shadows;
 
+use super::super::super::options::TrustedSqlTag;
 use collect::collect_named_functions;
 use oxc_ast::ast::{FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
@@ -39,14 +40,14 @@ pub(super) struct Resolvable<'a> {
 }
 
 impl LocalFunctions {
-    pub(crate) fn collect(program: &Program<'_>) -> Self {
+    pub(crate) fn collect(program: &Program<'_>, trusted_sql_tags: &[TrustedSqlTag]) -> Self {
         let mut raw: HashMap<&str, Resolvable<'_>> = HashMap::new();
         for statement in &program.body {
             collect_named_functions(statement, &mut raw);
         }
         let reassigned = ReassignedNames::collect(program);
         raw.retain(|name, _| !reassigned.contains(name));
-        let tag_shadows = TagShadows::collect(program);
+        let tag_shadows = TagShadows::collect(program, trusted_sql_tags);
         let mut resolved = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
@@ -75,7 +76,8 @@ impl LocalFunctions {
         self.tag_shadows.contains(name)
     }
 
-    /// Local names of a default import from `sql-template-strings`.
+    /// Local names of a default import from `sql-template-strings`, or of a
+    /// configured named `trustedSqlTags` import.
     pub(crate) fn imported_sql_tags(&self) -> &HashSet<String> {
         self.tag_shadows.imported_tags()
     }

@@ -1,4 +1,17 @@
+use serde::Deserialize;
+
 const DEFAULT_EXECUTOR_NAMES: &[&str] = &["query", "read", "write"];
+
+/// A named import the user asserts is a parameterized SQL tag.
+///
+/// Matching is syntactic: `name` imported from `module` or a subpath of it.
+/// Empty `module` or `name` matches nothing.
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrustedSqlTag {
+    pub module: String,
+    pub name: String,
+}
 
 /// Configurable executor import matching. Empty defaults select no executors.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -9,6 +22,8 @@ pub struct EmbeddedSqlOptions {
     pub executor_factory_names: Vec<String>,
     /// Imported type names whose annotated parameters are executors.
     pub executor_type_names: Vec<String>,
+    /// Named imports trusted as parameterized SQL tags. Empty trusts none.
+    pub trusted_sql_tags: Vec<TrustedSqlTag>,
 }
 
 impl EmbeddedSqlOptions {
@@ -30,6 +45,7 @@ impl EmbeddedSqlOptions {
             executor_names: names,
             executor_factory_names: Vec::new(),
             executor_type_names: Vec::new(),
+            trusted_sql_tags: Vec::new(),
         }
     }
 
@@ -37,6 +53,15 @@ impl EmbeddedSqlOptions {
     pub fn with_scoped_executors(mut self, factories: &[String], types: &[String]) -> Self {
         self.executor_factory_names = sorted_unique(factories);
         self.executor_type_names = sorted_unique(types);
+        self
+    }
+
+    /// Opt in to parameterized tags. Order does not affect the profile key.
+    pub fn with_trusted_sql_tags(mut self, tags: &[TrustedSqlTag]) -> Self {
+        let mut tags = tags.to_vec();
+        tags.sort();
+        tags.dedup();
+        self.trusted_sql_tags = tags;
         self
     }
 }

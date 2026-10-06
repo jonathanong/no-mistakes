@@ -150,23 +150,30 @@ when set).
 ### `postgres-cursor-call-contract`
 
 `modules: string[]`, `executors: string[]`, `include?: string[]`,
-`exclude?: string[]`, `includeFiles?: string[]`, `annotation?: string`, and
-`sqlTagModules?: string[]`. Empty `modules` or `executors` disables the rule;
+`exclude?: string[]`, `includeFiles?: string[]`, `annotation?: string`,
+`sqlTagModules?: string[]`, and `trustedSqlTags?: { module: string, name: string }[]`
+(default empty). Empty `modules` or `executors` disables the rule;
 `include` defaults to `**/*.{ts,mts,tsx,js,mjs}` and `sqlTagModules` to
-`["sql-template-strings"]`.
+`["sql-template-strings"]`. `trustedSqlTags` trusts a named import of `name` from
+`module` or a subpath of `module`, including a rename. A default import is not
+enough, and a shadowed or rebound local fails closed.
 
 ### `postgres-no-manual-transaction`
 
 `importSpecifier?: string` (default empty),
 `executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
 `executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
-scoped executors that also match imports from `importSpecifier` subpaths, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)), and
+scoped executors that also match imports from `importSpecifier` subpaths, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
+`trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
+shared executor configuration validates; this rule still reads every tagged template), and
 `owners?: string[]`.
 
 ### `postgres-no-unbounded-query-fanout`
 
 `importSpecifier?: string`, `executorNames?: string[]`,
-`executorFactoryNames?: string[]`, `executorTypeNames?: string[]`, and
+`executorFactoryNames?: string[]`, `executorTypeNames?: string[]`,
+`trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
+shared executor configuration validates; this rule still reads every tagged template), and
 `chunkFunctionNames?: string[]` (default `["chunkArray"]`).
 
 The Rust-only `reportUnmatchedExecutorNames` option (reports configured executor

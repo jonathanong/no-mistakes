@@ -94,6 +94,18 @@ module.exports = rule(
           includeFiles: { type: "array", items: { type: "string" } },
           annotation: { type: "string" },
           sqlTagModules: { type: "array", items: { type: "string" } },
+          trustedSqlTags: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["module", "name"],
+              properties: {
+                module: { type: "string" },
+                name: { type: "string" },
+              },
+            },
+          },
         },
       },
     ],

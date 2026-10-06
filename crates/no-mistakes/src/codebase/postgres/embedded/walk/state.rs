@@ -1,4 +1,5 @@
 use super::super::bindings::sql_statement_type_bindings;
+use super::super::options::TrustedSqlTag;
 use super::super::scoped_bindings::ScopedExecutors;
 use super::resolve;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
@@ -36,6 +37,7 @@ pub(crate) fn collect_calls(
     bindings: &HashSet<String>,
     scoped: &ScopedExecutors,
     query_members: bool,
+    trusted_sql_tags: &[TrustedSqlTag],
 ) -> (Vec<EmbeddedSqlCall>, Vec<EmbeddedSqlFragment>) {
     let mut visitor = ScopeVisitor {
         source,
@@ -49,7 +51,7 @@ pub(crate) fn collect_calls(
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program),
+        functions: resolve::LocalFunctions::collect(program, trusted_sql_tags),
         sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);

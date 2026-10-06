@@ -17,7 +17,7 @@ mod walk;
 
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::recovered_sql_needs_insert_check;
-pub use options::EmbeddedSqlOptions;
+pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 
 /// One executor call site and its recovered SQL text. For `Dynamic` calls,
 /// `sql_text` can be only a verified leading statement rather than complete SQL.
@@ -105,6 +105,7 @@ pub fn extract_embedded_sql_from_program(
         &scoped_bindings::scoped_executors(program, options),
         !options.import_specifier.is_empty()
             || options.executor_names.iter().any(|name| name == "query"),
+        &options.trusted_sql_tags,
     );
     for fragment in &mut fragments {
         if let Some(sql_text) = fragment.sql_text.take() {
@@ -214,3 +215,5 @@ mod resolution_gaps_tests;
 mod scoped_bindings_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod trusted_sql_tag_tests;

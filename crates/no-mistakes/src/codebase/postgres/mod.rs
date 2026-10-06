@@ -61,7 +61,7 @@ pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
     EmbeddedSqlFileFacts, EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions,
-    EmbeddedSqlSourcePosition,
+    EmbeddedSqlSourcePosition, TrustedSqlTag,
 };
 pub use locking::{
     extract_locking_select_metadata, extract_locking_select_metadata_with_placeholders,

@@ -40,6 +40,7 @@ pub(crate) struct Options {
     pub(crate) executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
+    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     pub(crate) relations: Vec<RelationOption>,
     pub(crate) unanalyzable_sql: String,
     pub(crate) schema_catalog_path: String,
@@ -155,7 +156,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             },
         },
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names),
+            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
+            .with_trusted_sql_tags(&opts.trusted_sql_tags),
         relations: opts.relations.clone(),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
@@ -187,6 +189,8 @@ mod scoped_tagged_tests;
 mod tagged_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod trusted_tag_tests;
 
 #[cfg(test)]
 mod deferred_tests;

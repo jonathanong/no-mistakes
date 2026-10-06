@@ -120,7 +120,7 @@ fn collect_imports(
 
 /// The module itself or any subpath of it (`@example/db/types`); a sibling
 /// package sharing the prefix (`@example/dbx`) does not match.
-fn from_configured_module(source: &str, specifier: &str) -> bool {
+pub(super) fn from_configured_module(source: &str, specifier: &str) -> bool {
     specifier.is_empty()
         || source == specifier
         || source

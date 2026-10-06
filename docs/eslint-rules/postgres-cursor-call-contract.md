@@ -28,7 +28,14 @@ runCursor("/* users */ SELECT * FROM users");
   `**/*.{ts,mts,tsx,js,mjs}`; `includeFiles` wins over `exclude`.
 - `annotation` replaces the leading `/* name */` requirement.
 - `sqlTagModules` lists supported SQL tag modules and defaults to
-  `["sql-template-strings"]`.
+  `["sql-template-strings"]`. A default import from one of those modules is a
+  trusted tag.
+- `trustedSqlTags` defaults to empty. Each entry `{ module, name }` trusts a
+  named import of `name` from `module` or a subpath of `module` (`@example/db/sql`
+  matches `@example/db`; `@example/dbx` does not), including a rename such as
+  `import { sql as dbSql }`. A default import is not enough. A shadowed or
+  rebound local fails closed. The same name from another module stays untrusted.
+  An empty `module` or `name` matches nothing.
 
 ## Fix
 
