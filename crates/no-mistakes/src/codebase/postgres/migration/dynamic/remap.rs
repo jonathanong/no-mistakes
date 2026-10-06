@@ -31,6 +31,9 @@ pub(in super::super) fn remap_fact_lines(
     for setting in &mut facts.setting_uses {
         setting.line = dynamic.source_line(setting.line);
     }
+    for call in &mut facts.function_calls {
+        call.line = dynamic.source_line(call.line);
+    }
     for statement in &mut facts.statement_kinds {
         statement.line = dynamic.source_line(statement.line);
     }

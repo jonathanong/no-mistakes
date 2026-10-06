@@ -8,41 +8,14 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod functions;
 mod iteration;
 mod scan;
 
 pub const RULE_ID: &str = "postgres-sql-shape-policy";
 
-const CORRELATED_EXISTS_SET_OP: &str = "correlated-exists-set-operation";
-const NOT_IN_SUBQUERY: &str = "not-in-subquery";
-const COUNT_FOR_EXISTENCE: &str = "count-for-existence";
-const LITERAL_LIMIT: &str = "literal-limit";
-const KEYSET_ONLY_SWEEP: &str = "keyset-only-sweep";
-
-#[derive(Clone, Copy, Default)]
-pub(crate) struct BannedShapes {
-    correlated_exists_set_operation: bool,
-    not_in_subquery: bool,
-    count_for_existence: bool,
-    literal_limit: bool,
-    keyset_only_sweep: bool,
-}
-
-impl BannedShapes {
-    fn unanalyzable_target(&self) -> &'static str {
-        if self.correlated_exists_set_operation {
-            CORRELATED_EXISTS_SET_OP
-        } else if self.not_in_subquery {
-            NOT_IN_SUBQUERY
-        } else if self.count_for_existence {
-            COUNT_FOR_EXISTENCE
-        } else if self.literal_limit {
-            LITERAL_LIMIT
-        } else {
-            KEYSET_ONLY_SWEEP
-        }
-    }
-}
+mod shapes;
+use shapes::*;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -68,6 +41,7 @@ pub(crate) struct CompiledOptions {
     fail_unanalyzable: bool,
     shapes: BannedShapes,
     iteration: iteration::IterationOptions,
+    banned_functions: Vec<Vec<String>>,
 }
 
 impl CompiledOptions {
@@ -158,33 +132,12 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             &opts.unanalyzable_sql,
         )?,
         shapes,
+        banned_functions: functions::compile(
+            &opts.shape_options.banned_function_call,
+            shapes.banned_function_call,
+        )?,
         iteration: iteration::compile(&opts.shape_options)?,
     })
-}
-
-fn banned_shapes(values: &[String]) -> Result<BannedShapes> {
-    let mut shapes = BannedShapes::default();
-    let values = if values.is_empty() {
-        vec![CORRELATED_EXISTS_SET_OP.to_string()]
-    } else {
-        values.to_vec()
-    };
-    for shape in &values {
-        if shape.eq_ignore_ascii_case(CORRELATED_EXISTS_SET_OP) {
-            shapes.correlated_exists_set_operation = true;
-        } else if shape.eq_ignore_ascii_case(NOT_IN_SUBQUERY) {
-            shapes.not_in_subquery = true;
-        } else if shape.eq_ignore_ascii_case(COUNT_FOR_EXISTENCE) {
-            shapes.count_for_existence = true;
-        } else if shape.eq_ignore_ascii_case(LITERAL_LIMIT) {
-            shapes.literal_limit = true;
-        } else if shape.eq_ignore_ascii_case(KEYSET_ONLY_SWEEP) {
-            shapes.keyset_only_sweep = true;
-        } else {
-            anyhow::bail!("{RULE_ID}: unknown bannedShapes value `{shape}`");
-        }
-    }
-    Ok(shapes)
 }
 
 #[cfg(test)]
@@ -211,3 +164,9 @@ mod prepared_tests;
 
 #[cfg(test)]
 mod table_sweep_tests;
+
+#[cfg(test)]
+mod function_tests;
+
+#[cfg(test)]
+mod function_projection_tests;

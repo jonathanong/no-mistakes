@@ -22,9 +22,15 @@ mod prepared;
 use prepared::PreparedStatements;
 
 #[derive(Default)]
+pub(crate) struct StatementPolicySources<'a> {
+    pub(crate) schema: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
+    pub(crate) functions: &'a [crate::codebase::postgres::SqlFunctionCallFact],
+}
+
+#[derive(Default)]
 struct StatementSources<'a> {
     tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
-    policy: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
+    policy: StatementPolicySources<'a>,
 }
 
 fn extract_from_parsed_and_sources(
@@ -139,17 +145,31 @@ fn extract_from_parsed_and_sources(
         placeholder_positions.unwrap_or_default(),
         placeholder_positions.is_some(),
     );
-    let (statement_kinds, setting_uses) = sources.policy.map_or_else(
+    let (statement_kinds, setting_uses, mut function_calls) = sources.policy.schema.map_or_else(
         || {
             let facts = crate::codebase::postgres::migration::policy_facts(sql, statements);
-            (facts.statement_kinds, facts.setting_uses)
+            (
+                facts.statement_kinds,
+                facts.setting_uses,
+                facts.function_calls,
+            )
         },
-        |facts| (facts.statement_kinds.clone(), facts.setting_uses.clone()),
+        |facts| {
+            (
+                facts.statement_kinds.clone(),
+                facts.setting_uses.clone(),
+                facts.function_calls.clone(),
+            )
+        },
     );
+    if sources.policy.schema.is_none() {
+        function_calls.extend_from_slice(sources.policy.functions);
+    }
     SqlStatementFileFacts {
         path: Default::default(),
         statement_kinds,
         setting_uses,
+        function_calls,
         writes,
         inserts,
         selects,

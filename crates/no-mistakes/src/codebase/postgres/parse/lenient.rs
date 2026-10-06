@@ -22,8 +22,13 @@ use rewrite::{rewrite_drop_index_concurrently, rewrite_referential_set_column_li
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     parse_with_sources(sql, false, true)
         .into_iter()
+        .filter(|located| !located.function_projection)
         .map(|located| located.statement)
         .collect()
+}
+
+pub(crate) fn parse_postgres_sql_with_function_sources(sql: &str) -> Vec<LocatedStatement> {
+    parse_with_sources(sql, false, true)
 }
 
 pub(super) fn parse_postgres_sql_lenient_with_sources(
@@ -78,7 +83,7 @@ fn parse_with_normalized_sources(
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_referential_set_column_lists(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
-    let mut statements = recover::parse_chunks_with_sources(
+    let mut statements = recover::parse_chunks_with_function_calls(
         split_statement_tokens(tokens),
         &located,
         allow_concurrent_detach,

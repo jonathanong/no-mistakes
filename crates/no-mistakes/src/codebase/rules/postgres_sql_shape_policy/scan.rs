@@ -42,6 +42,13 @@ pub(super) fn scan(
         }
         for fragment in facts.postgres_fragments(path, &opts.embedded)? {
             let statements = &fragment.statements;
+            findings.extend(super::functions::findings(
+                &rel,
+                statements,
+                &opts.shapes,
+                &opts.banned_functions,
+                |line| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize,
+            ));
             if opts.fail_unanalyzable && statements.parse_failed {
                 findings.push(finding(
                     &rel,
@@ -75,6 +82,13 @@ pub(super) fn scan(
     for (path, profile) in projections {
         for file in facts.postgres_statements(path, profile)? {
             let rel = relative_slash_path(root, &file.path);
+            findings.extend(super::functions::findings(
+                &rel,
+                file,
+                &opts.shapes,
+                &opts.banned_functions,
+                |line| line.max(1),
+            ));
             if opts.fail_unanalyzable && file.parse_failed {
                 findings.push(finding(
                     &rel,

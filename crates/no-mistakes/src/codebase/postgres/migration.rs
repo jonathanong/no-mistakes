@@ -12,12 +12,24 @@ mod statements;
 mod table_events;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
-    let statements = super::parse::parse_postgres_sql_lenient(sql);
-    extract_from_parsed(sql, &statements)
+    let (located, functions) = super::parse::partition_function_sources(
+        super::parse::parse_postgres_sql_with_function_sources(sql),
+    );
+    let statements: Vec<_> = located
+        .into_iter()
+        .map(|located| located.statement)
+        .collect();
+    extract_from_parsed(sql, &statements, &functions)
 }
 
-pub(crate) fn extract_from_parsed(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
-    extract_parsed_migration_facts(sql, statements)
+pub(crate) fn extract_from_parsed(
+    sql: &str,
+    statements: &[Statement],
+    functions: &[super::SqlFunctionCallFact],
+) -> SqlSchemaFileFacts {
+    let mut facts = extract_parsed_migration_facts(sql, statements);
+    facts.function_calls.extend_from_slice(functions);
+    facts
 }
 
 pub(crate) use statements::{policy_facts, SUPPORTED_KINDS};
@@ -101,10 +113,7 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
         .into_iter()
         .chain(dynamic::extract(sql))
     {
-        let mut dynamic_facts = extract_parsed_migration_facts(
-            &dynamic_sql.sql,
-            &super::parse::parse_postgres_sql_lenient(&dynamic_sql.sql),
-        );
+        let mut dynamic_facts = extract_migration_facts(&dynamic_sql.sql);
         if !dynamic_sql.executed {
             dynamic_facts.table_events.clear();
         }
@@ -128,6 +137,7 @@ fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFac
         .extend(dynamic.unnamed_constraints);
     facts.statement_kinds.extend(dynamic.statement_kinds);
     facts.setting_uses.extend(dynamic.setting_uses);
+    facts.function_calls.extend(dynamic.function_calls);
     facts
         .not_valid_constraints
         .extend(dynamic.not_valid_constraints);

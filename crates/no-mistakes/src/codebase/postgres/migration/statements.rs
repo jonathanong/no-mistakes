@@ -3,6 +3,7 @@ use crate::codebase::postgres::types::{SqlSchemaFileFacts, SqlStatementKind};
 use sqlparser::ast::{ObjectType, Statement};
 
 pub(super) fn record(sql: &str, statement: &Statement, facts: &mut SqlSchemaFileFacts) {
+    super::super::function_calls::collect(statement, &mut facts.function_calls);
     let Some((kind, parts)) = kind_and_parts(statement) else {
         return;
     };
@@ -46,11 +47,21 @@ pub(crate) fn policy_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFile
         .into_iter()
         .chain(super::dynamic::extract(sql))
     {
-        let parsed = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&dynamic.sql);
+        let (located, functions) = crate::codebase::postgres::parse::partition_function_sources(
+            crate::codebase::postgres::parse::parse_postgres_sql_with_function_sources(
+                &dynamic.sql,
+            ),
+        );
+        let parsed: Vec<_> = located
+            .into_iter()
+            .map(|located| located.statement)
+            .collect();
         let mut nested = policy_facts(&dynamic.sql, &parsed);
+        nested.function_calls.extend(functions);
         super::dynamic::remap_fact_lines(&mut nested, &dynamic);
         facts.statement_kinds.extend(nested.statement_kinds);
         facts.setting_uses.extend(nested.setting_uses);
+        facts.function_calls.extend(nested.function_calls);
     }
     facts
 }

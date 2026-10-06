@@ -36,27 +36,26 @@ pub(super) fn collect(
                 let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
                 let parsed = prepared.parse();
                 let failed = parsed.is_err();
-                (
-                    parsed.unwrap_or_else(|_| {
-                        crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
+                let (statements, functions) = match parsed {
+                    Ok(statements) => (statements, Vec::new()),
+                    Err(_) => {
+                        let (located, functions) = crate::codebase::postgres::parse::partition_function_sources(crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
                             source,
                             prepared.normalized(),
-                        )
-                        .into_iter()
-                        .map(|located| located.statement)
-                        .collect()
-                    }),
-                    failed,
-                    prepared,
-                )
+                        ));
+                        (located.into_iter().map(|located| located.statement).collect(), functions)
+                    }
+                };
+                (statements, functions, failed, prepared)
             });
             let schema = (plan.postgres_schema && schema_set.contains(path)).then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, _, _)| {
+                    .map(|(statements, functions, _, _)| {
                         let mut value = crate::codebase::postgres::migration::extract_from_parsed(
                             source.as_ref().unwrap(),
                             statements,
+                            functions,
                         );
                         value.path = path.clone();
                         Arc::new(value)
@@ -66,7 +65,7 @@ pub(super) fn collect(
             let statements = plan.postgres_dml.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, failed, prepared)| {
+                    .map(|(statements, functions, failed, prepared)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             prepared,
@@ -74,7 +73,10 @@ pub(super) fn collect(
                             *failed,
                             plan.postgres_bounds,
                             None,
-                            schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
+                            crate::codebase::postgres::statements::StatementPolicySources {
+                                schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
+                                functions,
+                            },
                         );
                         value.path = path.clone();
                         Arc::new(vec![value])

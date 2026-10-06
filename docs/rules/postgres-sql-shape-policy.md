@@ -41,12 +41,64 @@ rules:
 
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
 `[correlated-exists-set-operation]`. `not-in-subquery`, `count-for-existence`,
-Numeric digit separators in literal limits are decoded (`LIMIT 1_000` is `LIMIT 1000`).
-
-`literal-limit` and `keyset-only-sweep` are opt-in. Unknown `bannedShapes` values
-are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+`literal-limit`, `keyset-only-sweep`, and `banned-function-call` are opt-in.
+Numeric digit separators in literal limits are decoded (`LIMIT 1_000` is
+`LIMIT 1000`). Unknown `bannedShapes` values are a configuration error.
+`unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error).
 `importSpecifier` has no default; `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
+
+`banned-function-call` is opt-in. Set a nonempty
+`shapeOptions.bannedFunctionCall.functions` list to the SQL function names to
+ban. An unqualified configured name matches the final name part, whether the
+SQL call is qualified or unqualified: `pg_sleep` matches both `pg_sleep(...)`
+and `pg_catalog.pg_sleep(...)`. A qualified configured name must match every
+name part. Unquoted SQL and configured identifiers follow PostgreSQL folding
+rules; quoted identifiers retain their exact case. Calls are matched from parsed function-expression facts, so
+column references and aliases with the same spelling are not reported.
+
+The check covers calls in CTEs, subqueries, mutations, native SQL, configured
+executor calls, routine bodies, and statically recovered `EXECUTE` strings.
+This is useful in parallel tests: `pg_sleep` occupies a database connection
+for the duration of the delay and can stall other work waiting for a pooled
+connection.
+
+```yaml
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: ['**/*.test.ts', 'test-helpers/**']
+    options:
+      importSpecifier: '@example/db'
+      trustedSqlTags: [{module: '@example/db', name: sql}]
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions: [pg_sleep, pg_catalog.pg_advisory_lock]
+```
+
+An empty or omitted `functions` list is a configuration error when
+`banned-function-call` is enabled. It has no default effect on the rule's
+existing shapes. Unknown shape names remain configuration errors.
+
+Counterexample: a test executor sleeps while holding a database connection.
+
+```ts
+await query(sql`SELECT pg_catalog.pg_sleep(30)`);
+```
+
+Fix: use a controlled test barrier or fixture synchronization instead of a
+time delay. Suppress an intentional call with
+`no-mistakes-disable-next-line postgres-sql-shape-policy` or
+`no-mistakes-disable-line`; use
+`no-mistakes-disable-file` only when the whole file is an intentional
+exception.
+
+```sql
+SELECT pg_catalog.clock_timestamp();
+```
+
+This call remains allowed when only `pg_sleep` is configured.
 
 Counterexample: correlated `EXISTS` wrapping `UNION ALL`.
 
@@ -117,7 +169,8 @@ scopes are not tracked.
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
 `[correlated-exists-set-operation]`. Also accepted, and off unless listed:
-`not-in-subquery`, `count-for-existence`, `literal-limit`, `keyset-only-sweep`.
+`not-in-subquery`, `count-for-existence`, `literal-limit`, `keyset-only-sweep`,
+`banned-function-call`.
 Unknown `bannedShapes` values are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error). `importSpecifier` has no default. `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
@@ -223,6 +276,7 @@ is inspected for its `LIMIT` too.
 | `shapeOptions.literalLimit.allowedValues`             | integer[] | `[1]`   | Literal values allowed in `LIMIT` / `FETCH FIRST`. A negative value is a configuration error.                                                                                                                                                                                                                                                                                          |
 | `shapeOptions.keysetOnlySweep.nonSelectivePredicates` | string[]  | `[]`    | Conjuncts (compared after SQL token normalization; keywords and unquoted identifiers fold to lower case, while string literals, dollar-quoted strings, and quoted identifiers retain their contents) that do not narrow the walk. An empty string is a configuration error.                                                                                                            |
 | `shapeOptions.keysetOnlySweep.ignoreTables`           | string[]  | `[]`    | Tables that may be walked whole (small configuration tables). Entries use SQL identifier spelling: unquoted `Orders` folds to `orders`, while `"Orders"` matches only that exact case. An empty string is a configuration error. An unqualified entry also matches the table in any schema, but a dot inside a quoted name belongs to the name: `items` does not match `"work.items"`. |
+| `shapeOptions.bannedFunctionCall.functions`            | string[]  | —       | Required and nonempty when `banned-function-call` is enabled. Function names follow PostgreSQL identifier case rules; unqualified names match the final part of any qualified call, while qualified names require all parts to match. |
 
 Invalid with both shapes banned (and `deleted_at IS NULL` configured):
 

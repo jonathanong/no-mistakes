@@ -1,0 +1,11 @@
+BEGIN PERFORM pg_sleep(1);
+IF CASE WHEN true THEN pg_sleep(1) ELSE NULL END IS NULL THEN SELECT pg_sleep(1);
+IF THEN PERFORM pg_sleep(1);
+IF true THEN;
+IF true SELECT pg_sleep(1);
+PERFORM;
+BEGIN;
+RETURN QUERY SELECT pg_sleep(1);
+ELSE SELECT pg_sleep(1);
+ELSIF (pg_sleep(1) IS NULL) THEN PERFORM pg_sleep(1);
+BEGIN WITH timer AS (SELECT pg_sleep(1)) SELECT * FROM timer;

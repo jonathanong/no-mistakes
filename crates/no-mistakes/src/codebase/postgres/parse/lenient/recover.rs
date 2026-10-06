@@ -2,6 +2,7 @@ use super::{keyword_of, next_non_ws, LocatedStatement};
 mod bodies;
 mod locations;
 mod partition;
+mod queries;
 pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
@@ -11,7 +12,7 @@ use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-pub(super) fn parse_chunks_with_sources(
+pub(super) fn parse_chunks_with_function_calls(
     chunks: Vec<Vec<Token>>,
     original: &[TokenWithSpan],
     allow_concurrent_detach: bool,
@@ -80,10 +81,18 @@ fn parse_chunk(
             }
             let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {
-                recover_schema_ddl(&chunk, original, allow_concurrent_detach)
-                    .map(LocatedStatement::plain)
+                let expressions = queries::recover(&chunk, original);
+                // Keep the established guarded DML/DDL recovery alongside any
+                // newly recovered condition expression, without replacing it.
+                let mut projected: Vec<_> = expressions
                     .into_iter()
-                    .collect()
+                    .map(LocatedStatement::functions)
+                    .collect();
+                projected.extend(
+                    recover_schema_ddl(&chunk, original, allow_concurrent_detach)
+                        .map(LocatedStatement::plain),
+                );
+                projected
             } else {
                 recovered
             }
