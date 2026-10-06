@@ -87,7 +87,8 @@ fn profiles_carry_trusted_sql_tags_sorted_and_distinct() {
     scalar.rules.push(RuleDef {
         rule: "postgres-lock-ordering".to_string(),
         scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str("importSpecifier: '@example/db'\ntrustedSqlTags: sql").unwrap(),
+        options: serde_yaml::from_str("importSpecifier: '@example/db'\ntrustedSqlTags: sql")
+            .unwrap(),
         ..RuleDef::default()
     });
     let error = configured_embedded_sql_options(&scalar, &["postgres-lock-ordering"])
