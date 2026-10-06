@@ -46,6 +46,7 @@ const rules = {
   "ts-no-export-renaming": require("./rules/ts-no-export-renaming"),
   "ts-no-function-aliases": require("./rules/ts-no-function-aliases"),
   "ts-preserve-null-option-defaults": require("./rules/ts-preserve-null-option-defaults"),
+  "vitest-timeout-cap": require("./rules/vitest-timeout-cap"),
   "vitest-mock-test-file-naming": require("./rules/vitest-mock-test-file-naming"),
 };
 

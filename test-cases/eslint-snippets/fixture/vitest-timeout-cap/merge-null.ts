@@ -1,0 +1,11 @@
+import { defineConfig, mergeConfig } from 'vitest/config';
+const base = { test: { testTimeout: 60000, hookTimeout: 60000 } };
+const uncertain = { ...dynamicConfig };
+const early = { test: { testTimeout: 60000 }, ...uncertain };
+const initial = defineConfig(early);
+const nullSpread = { test: { testTimeout: 60000, ...null } };
+const primitive = { test: { testTimeout: 5000 } };
+const unknown = { test: { testTimeout: 60 * 1000 } };
+const quiet = defineConfig(unknown);
+const known = defineConfig(nullSpread);
+export default defineConfig(mergeConfig(base, { test: { testTimeout: null, hookTimeout: 5000 } }));

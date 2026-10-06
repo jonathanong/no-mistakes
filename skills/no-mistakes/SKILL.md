@@ -168,3 +168,11 @@ It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;
 [the plugin options reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#test-no-skips). This is a
 single-file plugin rule, so invoke the configured linter rather than a
 `no-mistakes check` catalog scan.
+
+Enable ESLint/Oxlint `no-mistakes/vitest-timeout-cap` with explicit test and
+Vitest config/project `files` globs to cap defaults (`defaultMax`, `5000` ms)
+and test/hook/suite overrides (`overrideMax`, `30000` ms). Same-module numeric
+constants resolve; `unknownValues: "finding"` reports unresolved values.
+See [plugin options](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#vitest-timeout-cap).
+This file-specific capability uses the configured linter rather than a
+repository catalog scan.

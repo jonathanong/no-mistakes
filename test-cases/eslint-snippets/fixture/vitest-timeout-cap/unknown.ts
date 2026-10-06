@@ -1,0 +1,12 @@
+import { it, beforeAll, vi } from 'vitest';
+import { defineConfig, mergeConfig } from 'vitest/config';
+import { EXTERNAL } from 'other';
+const UNKNOWN = Number(process.env.TIMEOUT);
+const callback = () => {};
+it('unknown timeout', callback, UNKNOWN);
+beforeAll(callback, EXTERNAL);
+it('known callback', callback);
+it('unknown option', { timeout: UNKNOWN }, callback);
+vi.setConfig({ testTimeout: UNKNOWN });
+const base = { test: { testTimeout: 60_000, hookTimeout: 60_000 } };
+export default defineConfig(mergeConfig(base, dynamicConfig));
