@@ -78,8 +78,9 @@ are not part of the required prefix. A pin is a top-level `AND` equality in
 `WHERE` or an inner join's `ON` to a literal, a `$n` placeholder, or a recovered
 template interpolation — the same columns `pinned_columns` records. Only a
 leading prefix is dropped: pinning `guid` does not remove it from
-`UNIQUE (host_id, guid)` while `host_id` is still required. `ORDER BY` must
-begin with the remaining columns, with the same expression, ascending
+`UNIQUE (host_id, guid)` while `host_id` is still required. `ORDER BY` may
+keep those pinned columns. It must begin with either the full key or the key
+after that leading prefix is dropped, with the same expression, ascending
 direction, and nulls semantics, and a qualifier must still name the locked
 relation. A key whose columns are all pinned needs no `ORDER BY` prefix from
 that key. Equalities inside `OR` or `NOT`, and pins on a different relation,

@@ -46,6 +46,14 @@ fn pinned_leading_columns_satisfy_catalog_key_order() {
         &lock(guid.clone(), Some(vec!["host_id"])),
         &catalog,
     ));
+    // Keeping the pinned column is still (host_id, guid) order.
+    assert!(orders_by_catalog_key(
+        &lock(
+            vec![key("host_id", true), key("guid", true)],
+            Some(vec!["host_id"]),
+        ),
+        &catalog,
+    ));
     assert!(orders_by_catalog_key(
         &lock(
             vec![key("guid", true), key("id", true)],
