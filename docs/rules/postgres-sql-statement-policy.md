@@ -63,6 +63,7 @@ names and defaults to empty. Names match case-insensitively in `SET`, `SET
 LOCAL`, `SET SESSION`, `set_config('name', ...)`, and `ALTER DATABASE` or
 `ALTER SYSTEM ... SET` statements. `set_config` must be unqualified or called
 through `pg_catalog`, and its first argument must be a static string literal.
+`SET TIME ZONE` (including `LOCAL` or `SESSION`) matches the parameter `timezone`.
 Settings findings use target `setting:<name>`. Dynamic setting names are not
 matched. Statement kinds and settings found in recoverable routine bodies or
 static `EXECUTE` strings are checked like top-level SQL. If parsing fails,

@@ -28,7 +28,16 @@ pub(super) fn collect(
         }
         if let Some(token) = header.get(name) {
             if let Token::Word(value) = &token.token {
-                let mut parameter = value.value.clone();
+                let mut parameter = if set == 0
+                    && word(token, "TIME")
+                    && header
+                        .get(name + 1)
+                        .is_some_and(|token| word(token, "ZONE"))
+                {
+                    "timezone".to_owned()
+                } else {
+                    value.value.clone()
+                };
                 let mut at = name + 1;
                 while header
                     .get(at)

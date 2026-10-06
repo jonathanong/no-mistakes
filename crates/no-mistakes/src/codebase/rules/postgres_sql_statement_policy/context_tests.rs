@@ -75,3 +75,23 @@ fn escaped_and_dollar_quoted_setting_names_are_static_literals() {
         vec![1, 2]
     );
 }
+
+#[test]
+fn time_zone_alias_uses_the_timezone_parameter_name() {
+    let root = fixture("expanded");
+    let mut cfg = config(false);
+    cfg.rules[0].options = serde_yaml::from_str("bannedSettings: [timezone]").unwrap();
+    let findings = check_with_files(&root, &cfg, &[root.join("timezone.sql")]).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.target.as_deref()))
+            .collect::<Vec<_>>(),
+        vec![
+            (1, Some("setting:timezone")),
+            (2, Some("setting:timezone")),
+            (3, Some("setting:timezone")),
+            (4, Some("setting:timezone"))
+        ]
+    );
+}
