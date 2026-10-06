@@ -60,7 +60,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 &statements,
                 super::StatementSources {
                     tokens: Some(&sources),
-                    kinds: None,
+                    policy: None,
                 },
                 parse_failed,
                 collect_bounds,
@@ -77,7 +77,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     parse_failed: bool,
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
-    statement_kinds: Option<&[crate::codebase::postgres::SqlStatementKind]>,
+    schema_policy: Option<&crate::codebase::postgres::SqlSchemaFileFacts>,
 ) -> SqlStatementFileFacts {
     super::extract_from_parsed_and_sources(
         sql,
@@ -85,7 +85,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         statements,
         super::StatementSources {
             tokens: None,
-            kinds: statement_kinds,
+            policy: schema_policy,
         },
         parse_failed,
         collect_bounds,

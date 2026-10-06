@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      bannedStatements: [ddl]
+      bannedSettings: [session_replication_role, app.guard]
+      importSpecifier: '@example/db'
+      unanalyzableSql: ignore

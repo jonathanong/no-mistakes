@@ -63,6 +63,7 @@ pub struct SqlSchemaFileFacts {
     pub add_columns: Vec<SqlAddColumnMetadata>,
     pub unnamed_constraints: Vec<SqlUnnamedConstraint>,
     pub statement_kinds: Vec<SqlStatementKind>,
+    pub setting_uses: Vec<SqlSettingUse>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
     pub declared_identifiers: Vec<SqlDeclaredIdentifier>,
@@ -164,6 +165,13 @@ pub struct SqlUnnamedConstraint {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlStatementKind {
     pub kind: String,
+    pub line: usize,
+}
+
+/// A syntactically recoverable PostgreSQL parameter change.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlSettingUse {
+    pub name: String,
     pub line: usize,
 }
 

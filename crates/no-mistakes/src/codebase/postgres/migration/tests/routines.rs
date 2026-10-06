@@ -59,7 +59,9 @@ fn routine_bodies_recover_every_statement_policy_kind() {
         counts,
         std::collections::BTreeMap::from([
             ("ALTER TABLE", 3),
+            ("CREATE FUNCTION", 1),
             ("CREATE INDEX", 3),
+            ("CREATE PROCEDURE", 1),
             ("CREATE TABLE", 3),
             ("CREATE VIEW", 3),
             ("DROP INDEX", 3),

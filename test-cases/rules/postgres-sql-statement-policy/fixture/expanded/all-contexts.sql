@@ -1,0 +1,55 @@
+-- Each supported new category must survive all three recovery contexts.
+DO $outer$ BEGIN
+  CREATE DATABASE scratch TEMPLATE template0;
+  DROP DATABASE scratch;
+  ALTER DATABASE app SET statement_timeout = '1s';
+  ALTER SYSTEM SET statement_timeout = '2s';
+  CREATE SCHEMA scratch_schema;
+  ALTER SCHEMA scratch_schema OWNER TO postgres;
+  DROP SCHEMA scratch_schema;
+  CREATE TRIGGER reject_rows BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write();
+  DROP TRIGGER reject_rows ON orders;
+  CREATE FUNCTION empty_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';
+  CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS 'BEGIN NULL; END';
+  DROP FUNCTION empty_fn();
+  DROP PROCEDURE empty_proc();
+  DROP TABLE orders;
+  CREATE TYPE phase AS ENUM ('new', 'done');
+  DROP TYPE phase;
+END $outer$;
+CREATE FUNCTION enclosing() RETURNS void LANGUAGE plpgsql AS $outer$ BEGIN
+  CREATE DATABASE scratch TEMPLATE template0;
+  DROP DATABASE scratch;
+  ALTER DATABASE app SET statement_timeout = '1s';
+  ALTER SYSTEM SET statement_timeout = '2s';
+  CREATE SCHEMA scratch_schema;
+  ALTER SCHEMA scratch_schema OWNER TO postgres;
+  DROP SCHEMA scratch_schema;
+  CREATE TRIGGER reject_rows BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write();
+  DROP TRIGGER reject_rows ON orders;
+  CREATE FUNCTION empty_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';
+  CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS 'BEGIN NULL; END';
+  DROP FUNCTION empty_fn();
+  DROP PROCEDURE empty_proc();
+  DROP TABLE orders;
+  CREATE TYPE phase AS ENUM ('new', 'done');
+  DROP TYPE phase;
+END $outer$;
+DO $outer$ BEGIN
+  EXECUTE 'CREATE DATABASE scratch TEMPLATE template0';
+  EXECUTE 'DROP DATABASE scratch';
+  EXECUTE 'ALTER DATABASE app SET statement_timeout = ''1s''';
+  EXECUTE 'ALTER SYSTEM SET statement_timeout = ''2s''';
+  EXECUTE 'CREATE SCHEMA scratch_schema';
+  EXECUTE 'ALTER SCHEMA scratch_schema OWNER TO postgres';
+  EXECUTE 'DROP SCHEMA scratch_schema';
+  EXECUTE 'CREATE TRIGGER reject_rows BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write()';
+  EXECUTE 'DROP TRIGGER reject_rows ON orders';
+  EXECUTE 'CREATE FUNCTION empty_fn() RETURNS int LANGUAGE sql AS ''SELECT 1''';
+  EXECUTE 'CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS ''BEGIN NULL; END''';
+  EXECUTE 'DROP FUNCTION empty_fn()';
+  EXECUTE 'DROP PROCEDURE empty_proc()';
+  EXECUTE 'DROP TABLE orders';
+  EXECUTE 'CREATE TYPE phase AS ENUM (''new'', ''done'')';
+  EXECUTE 'DROP TYPE phase';
+END $outer$;

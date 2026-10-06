@@ -52,7 +52,10 @@ frontends. They stay available to every language once files are tracked.
 PostgreSQL statement policy checks SQL files and opt-in JavaScript/TypeScript
 executor calls through shared prepared facts, with CLI and async Node parity.
 Named imports, factory handles, and typed executor parameters honor configured
-scope; SQL-file selection retains `sqlInclude` semantics. See
+scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
+23 documented statement kinds, including routines and database utility commands.
+`bannedSettings` checks named settings in SET commands and literal `set_config`
+calls, including recovered routine bodies and static EXECUTE. See
 [statement policy](rules/postgres-sql-statement-policy.md).
 
 PostgreSQL bounded-statement checks share prepared SQL facts across the CLI and

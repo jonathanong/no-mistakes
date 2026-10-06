@@ -67,6 +67,14 @@ pub(super) fn schema_bodies(sql: &str) -> Vec<DynamicSql> {
         .collect()
 }
 
+pub(in super::super) fn peeled_schema_bodies(sql: &str) -> Vec<DynamicSql> {
+    bodies(sql)
+        .into_iter()
+        .filter(|body| body.direct_facts_already_recovered)
+        .flat_map(|body| schema_statements(&body))
+        .collect()
+}
+
 fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
     let tokens = tokenize(&body.sql);
     let mut result = Vec::new();
