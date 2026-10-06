@@ -6,7 +6,7 @@ use super::{
     PendingRelativeScope, PendingRelativeSpan, RelativeScopedCandidate,
 };
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::ts_source::{FileInventory, SourceStore};
+use crate::codebase::ts_source::{discover_visible_paths, FileInventory, SourceStore};
 use crate::codebase::workspaces::load_indexed_from_source_store;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -484,23 +484,7 @@ fn fixture_root() -> PathBuf {
 }
 
 fn workspace(root: &Path) -> crate::codebase::workspaces::IndexedWorkspaceMap {
-    let files = walk(root);
+    let files = discover_visible_paths(root);
     let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&files)));
     load_indexed_from_source_store(root, &sources).expect("workspace")
-}
-
-fn walk(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let mut stack = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        for entry in std::fs::read_dir(&dir).expect("read dir") {
-            let path = entry.expect("entry").path();
-            if path.is_dir() {
-                stack.push(path);
-            } else {
-                files.push(normalize_path(&path));
-            }
-        }
-    }
-    files
 }

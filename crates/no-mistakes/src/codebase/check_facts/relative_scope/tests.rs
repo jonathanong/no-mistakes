@@ -9,7 +9,7 @@ use crate::codebase::check_facts::{
 };
 use crate::codebase::postgres::{EmbeddedSqlCall, EmbeddedSqlFileFacts, EmbeddedSqlOptions};
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
-use crate::codebase::ts_source::{FileIdMap, FileInventory, SourceStore};
+use crate::codebase::ts_source::{discover_visible_paths, FileIdMap, FileInventory, SourceStore};
 use crate::codebase::workspaces::load_indexed_from_source_store;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -26,25 +26,9 @@ fn options() -> EmbeddedSqlOptions {
         .with_scoped_executors(&["openTransaction".into()], &["TxExecutor".into()])
 }
 
-fn walk(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let mut stack = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        for entry in std::fs::read_dir(&dir).expect("read dir") {
-            let path = entry.expect("entry").path();
-            if path.is_dir() {
-                stack.push(path);
-            } else {
-                files.push(normalize_path(&path));
-            }
-        }
-    }
-    files
-}
-
 fn sources_for(root: &Path) -> Arc<SourceStore> {
     Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
-        &walk(root),
+        &discover_visible_paths(root),
     ))))
 }
 

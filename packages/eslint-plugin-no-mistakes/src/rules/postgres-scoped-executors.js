@@ -30,7 +30,12 @@ function fromConfiguredModule(source, specifier) {
 }
 
 function packageName(specifier) {
-  if (typeof specifier !== "string" || specifier === "" || specifier.startsWith(".") || specifier.startsWith("/")) {
+  if (
+    typeof specifier !== "string" ||
+    specifier === "" ||
+    specifier.startsWith(".") ||
+    specifier.startsWith("/")
+  ) {
     return null;
   }
   if (specifier.startsWith("@")) {
