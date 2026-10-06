@@ -178,7 +178,8 @@ Imports decide which local identifiers execute SQL:
 Without a module, only explicitly configured names match named imports from
 any module. `executorFactoryNames` and `executorTypeNames` add executors that are
 scoped to the declaring block or function and also match imports from subpaths of
-a configured `importSpecifier` (see the
+a configured `importSpecifier`, plus relative imports that resolve into that
+package (see the
 [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)). With neither option set, no executor calls are collected.
 A configured module's `withTransaction` and `withTransactionOptions` imports
 also bind `query`. Member calls named `query` are collected when a module is configured or `query`

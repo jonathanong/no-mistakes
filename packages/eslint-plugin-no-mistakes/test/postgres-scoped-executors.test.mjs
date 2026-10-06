@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { fixture, messages, require } from "./helpers.mjs";
+import { __dirname, fixture, messages, require } from "./helpers.mjs";
 
 const {
   collectScopedExecutors,
@@ -55,6 +56,23 @@ describe("scoped PostgreSQL executors", () => {
     assert.equal(manual("value-type-import.ts").length, 1);
   });
 
+  it("scans a relative import that resolves inside the importSpecifier package", () => {
+    const name = "postgres-scoped/relative-inside/orders.ts";
+    assert.equal(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)).length, 1);
+  });
+
+  it("does not scan a relative import that resolves outside that package", () => {
+    // The file sits in @example/db, but the import lands in another directory.
+    const name = "postgres-scoped/relative-inside/orders-external.ts";
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)), []);
+  });
+
+  it("does not scan a relative import when the package root cannot be determined", () => {
+    const name = "postgres-scoped/relative-outside/orders.ts";
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)), []);
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, "app.ts"), []);
+  });
+
   it("matches from any module when importSpecifier is empty", () => {
     const option = { ...SCOPED, importSpecifier: "", executorNames: [] };
     assert.equal(manual("any-module.ts", option).length, 2);
@@ -82,6 +100,10 @@ describe("scoped PostgreSQL executors", () => {
     assert.equal(isScopedExecutor(scoped, "run", { range: [12, 14] }), false);
   });
 });
+
+function fixtureFile(name) {
+  return resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", name);
+}
 
 const SCOPED_DEFAULTS = {
   importSpecifier: "",

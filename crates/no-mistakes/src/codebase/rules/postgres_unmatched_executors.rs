@@ -179,8 +179,8 @@ fn message(ctx: &Context<'_>, option: &str, name: &str) -> String {
         "{rule}: {option} entry `{name}` was not imported from {module} in any of the {scanned} \
          file(s) this rule scanned, so queries run through it are not checked. Fix: correct the \
          spelling to match the exported name; set `importSpecifier` to the module that exports \
-         it (a re-export from another path does not match, and neither does a relative import \
-         inside the package); or remove the entry if it is unused. This check exists because a \
+         it (a re-export from another path does not match; a relative import matches only when \
+         it resolves into that package); or remove the entry if it is unused. This check exists because a \
          typo here silently disables the rule for that executor; set \
          `reportUnmatchedExecutorNames: false` to turn it off.",
         rule = ctx.rule_id,

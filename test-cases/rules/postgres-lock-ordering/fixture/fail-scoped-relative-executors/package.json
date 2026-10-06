@@ -1,0 +1,5 @@
+{
+  "name": "scoped-relative-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

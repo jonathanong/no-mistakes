@@ -149,6 +149,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &sources,
         &mut ts,
     );
+    super::relative_scope::project_relative_executor_scopes(session, root, &sources, &mut ts);
     let integration_route_links = crate::playwright::integration_routes::prepare_links(
         root,
         &plan,

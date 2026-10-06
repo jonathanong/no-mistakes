@@ -42,6 +42,12 @@ fn standalone_preparation_reports_only_unmatched_names() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(findings[0].message.contains("`openTransacton`"));
     assert!(findings[0].message.contains("1 file(s)"));
+    assert!(
+        findings[0]
+            .message
+            .contains("a relative import matches only when it resolves into that package"),
+        "{findings:?}"
+    );
 }
 
 #[test]

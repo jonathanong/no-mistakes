@@ -41,7 +41,7 @@ module.exports = Object.assign(
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options);
+          bindings = executorBindings(node, options, context.filename);
           statements = sqlStatementBindings(node);
         },
         CallExpression(node) {

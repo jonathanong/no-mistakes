@@ -59,11 +59,11 @@ function importedName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
-function executorBindings(program, options = {}) {
+function executorBindings(program, options = {}, filename) {
   const bindings = new Set();
   const defaults = executorOptionDefaults(options);
   const { importSpecifier, executorNames } = defaults;
-  bindings.scoped = collectScopedExecutors(program, defaults);
+  bindings.scoped = collectScopedExecutors(program, defaults, filename);
   bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;

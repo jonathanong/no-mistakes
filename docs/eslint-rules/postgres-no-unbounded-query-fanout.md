@@ -36,7 +36,8 @@ for (const ids of chunkArray(userIds, 50)) {
   reads every tagged template.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
-  `@example/dbx`.
+  `@example/dbx`. A relative import matches only when it resolves into that
+  package. If the package root cannot be determined, relative imports do not match.
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
 

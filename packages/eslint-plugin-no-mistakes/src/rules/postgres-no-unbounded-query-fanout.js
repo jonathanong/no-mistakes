@@ -37,7 +37,7 @@ module.exports = Object.assign(
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options);
+          bindings = executorBindings(node, options, context.filename);
         },
         CallExpression(node) {
           if (!isPromiseAllCallee(node.callee)) return;

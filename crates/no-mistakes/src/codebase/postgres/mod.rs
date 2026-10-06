@@ -64,6 +64,9 @@ pub use embedded::{
     EmbeddedSqlFileFacts, EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions,
     EmbeddedSqlSourcePosition, TrustedSqlTag,
 };
+pub(crate) use embedded::{
+    package_name, package_root_for_specifier, project_relative_scoped_facts,
+};
 pub use locking::{
     extract_locking_select_metadata, extract_locking_select_metadata_with_placeholders,
     JoinEquality, LockingSelectMetadata,

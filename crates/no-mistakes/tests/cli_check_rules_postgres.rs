@@ -155,6 +155,42 @@ fn postgres_lock_ordering_ignores_scoped_executors_by_default() {
 }
 
 #[test]
+fn postgres_lock_ordering_scans_relative_imports_inside_the_package() {
+    let root = fixture("fail-scoped-relative-executors");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert_eq!(body.matches("ABBA").count(), 2, "{body}");
+    assert!(body.contains("packages/db/src/orders/lock.ts"), "{body}");
+    assert!(!body.contains("packages/other"), "{body}");
+}
+
+#[test]
+fn postgres_lock_ordering_ignores_relative_imports_outside_the_package() {
+    let root = fixture("fail-scoped-relative-executors");
+    let out = check_fixture_config(&root, "outside-only.yml");
+    let body = stdout(&out);
+    assert!(out.status.success(), "exit non-zero: {body}");
+    assert!(!body.contains("ABBA"), "{body}");
+}
+
+#[test]
+fn postgres_unmatched_executor_names_count_relative_imports_inside_the_package() {
+    let root = fixture("fail-scoped-relative-executors");
+    let inside = check_fixture_config(&root, "unmatched-inside.yml");
+    let inside_body = stdout(&inside);
+    assert!(!inside.status.success(), "expected exit 1: {inside_body}");
+    assert!(inside_body.contains("ABBA"), "{inside_body}");
+    assert!(!inside_body.contains("was not imported"), "{inside_body}");
+    let outside = check_fixture_config(&root, "unmatched-outside.yml");
+    let outside_body = stdout(&outside);
+    assert!(!outside.status.success(), "expected exit 1: {outside_body}");
+    assert!(outside_body.contains("was not imported"), "{outside_body}");
+    assert!(!outside_body.contains("0 file(s)"), "{outside_body}");
+    assert!(!outside_body.contains("ABBA"), "{outside_body}");
+}
+
+#[test]
 fn postgres_lock_ordering_checks_no_key_update() {
     let pass = check_fixture_config(&fixture("pass-key-strengths"), ".no-mistakes.yml");
     assert!(pass.status.success(), "exit non-zero: {}", stdout(&pass));

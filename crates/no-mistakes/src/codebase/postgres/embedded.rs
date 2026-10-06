@@ -9,6 +9,7 @@ mod bindings;
 mod dml_kind;
 mod options;
 mod placeholders;
+mod relative;
 mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
@@ -18,6 +19,9 @@ mod walk;
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::recovered_sql_needs_insert_check;
 pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
+pub(crate) use relative::{
+    package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
+};
 
 /// One executor call site and its recovered SQL text. For `Dynamic` calls,
 /// `sql_text` can be only a verified leading statement rather than complete SQL.
@@ -70,6 +74,8 @@ pub struct EmbeddedSqlFileFacts {
     pub matched_factory_names: Vec<String>,
     /// Configured `executor_type_names` this file imports from the configured module.
     pub matched_type_names: Vec<String>,
+    /// Relative imports of configured names, projected after the request resolver exists.
+    pub(crate) pending_relative: PendingRelativeScope,
 }
 
 /// Parse `source` and extract executor SQL call sites.
@@ -98,15 +104,18 @@ pub fn extract_embedded_sql_from_program(
         .cloned()
         .collect();
     executor_bindings.sort();
-    let (calls, mut fragments) = walk::collect_calls(
+    let scoped = scoped_bindings::collect(program, options);
+    let mut collected = walk::collect_calls(
         program,
         source,
         &bindings,
-        &scoped_bindings::scoped_executors(program, options),
+        &scoped.executors,
+        &scoped.spans,
         !options.import_specifier.is_empty()
             || options.executor_names.iter().any(|name| name == "query"),
         &options.trusted_sql_tags,
     );
+    let mut fragments = collected.fragments;
     for fragment in &mut fragments {
         if let Some(sql_text) = fragment.sql_text.take() {
             let (sql_text, positions) = placeholders::publish_placeholders_with_positions(sql_text);
@@ -121,8 +130,14 @@ pub fn extract_embedded_sql_from_program(
         matched_type_names,
         path: path.to_path_buf(),
         executor_bindings,
-        calls,
+        calls: collected.calls,
         fragments,
+        pending_relative: PendingRelativeScope {
+            candidates: scoped.candidates,
+            spans: scoped.spans,
+            calls: std::mem::take(&mut collected.pending_calls),
+            confirmed_order: std::mem::take(&mut collected.confirmed_order),
+        },
     }
 }
 
