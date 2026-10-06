@@ -16,11 +16,13 @@ example, this checks test files for skipped or exclusive tests while allowing
 ```js
 import noMistakes from "eslint-plugin-no-mistakes";
 
-export default [{
-  files: ["**/*.test.*", "tests/**"],
-  plugins: { "no-mistakes": noMistakes },
-  rules: { "no-mistakes/test-no-skips": ["error", { allow: ["todo"] }] },
-}];
+export default [
+  {
+    files: ["**/*.test.*", "tests/**"],
+    plugins: { "no-mistakes": noMistakes },
+    rules: { "no-mistakes/test-no-skips": ["error", { allow: ["todo"] }] },
+  },
+];
 ```
 
 See [`test-no-skips`](../../docs/eslint-rules/test-no-skips.md) for the rule's
