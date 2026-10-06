@@ -7,6 +7,9 @@ use std::sync::Arc;
 pub(crate) struct LocatedStatement {
     pub(crate) statement: Statement,
     pub(crate) source: Option<Arc<[TokenWithSpan]>>,
+    /// Recovered procedural expressions supply calls without changing legacy
+    /// statement, query, or lifecycle projections.
+    pub(crate) function_projection: bool,
 }
 
 impl LocatedStatement {
@@ -14,6 +17,14 @@ impl LocatedStatement {
         Self {
             statement,
             source: None,
+            function_projection: false,
+        }
+    }
+
+    pub(super) fn functions(statement: Statement) -> Self {
+        Self {
+            function_projection: true,
+            ..Self::plain(statement)
         }
     }
 }

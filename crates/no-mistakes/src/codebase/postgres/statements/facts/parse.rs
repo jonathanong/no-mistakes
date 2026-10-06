@@ -49,18 +49,23 @@ fn extract_sql_statement_facts_with_placeholder_positions(
             placeholder_positions,
         ),
         Err(_) => {
-            let (statements, sources): (Vec<_>, Vec<_>) =
-                parse_postgres_sql_lenient_with_sources(sql, prepared.normalized())
-                    .into_iter()
-                    .map(|located| (located.statement, located.source))
-                    .unzip();
+            let (located, functions) = crate::codebase::postgres::parse::partition_function_sources(
+                parse_postgres_sql_lenient_with_sources(sql, prepared.normalized()),
+            );
+            let (statements, sources): (Vec<_>, Vec<_>) = located
+                .into_iter()
+                .map(|located| (located.statement, located.source))
+                .unzip();
             super::extract_from_parsed_and_sources(
                 sql,
                 &prepared,
                 &statements,
                 super::StatementSources {
                     tokens: Some(&sources),
-                    policy: None,
+                    policy: super::StatementPolicySources {
+                        schema: None,
+                        functions: &functions,
+                    },
                 },
                 parse_failed,
                 collect_bounds,
@@ -77,7 +82,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
     parse_failed: bool,
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
-    schema_policy: Option<&crate::codebase::postgres::SqlSchemaFileFacts>,
+    policy: super::StatementPolicySources<'_>,
 ) -> SqlStatementFileFacts {
     super::extract_from_parsed_and_sources(
         sql,
@@ -85,7 +90,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         statements,
         super::StatementSources {
             tokens: None,
-            policy: schema_policy,
+            policy,
         },
         parse_failed,
         collect_bounds,

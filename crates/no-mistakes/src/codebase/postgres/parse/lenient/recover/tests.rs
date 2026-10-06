@@ -170,7 +170,7 @@ fn recover_chr_concatenations_as_sql() {
 #[test]
 fn parse_chunks_recovers_chr_encoded_schema_after_ordinary_parse_fails() {
     let sql = "chr(67)||chr(82)||chr(69)||chr(65)||chr(84)||chr(69)||' TABLE t (id int)'";
-    let statements = super::parse_chunks_with_sources(vec![tokens(sql)], &[], true);
+    let statements = parse_chunks_with_sources(vec![tokens(sql)], &[], true);
     assert_eq!(statements.len(), 1, "{statements:#?}");
     assert!(matches!(
         statements[0].statement,
@@ -188,7 +188,7 @@ fn concatenated_strings_joins_dollar_quoted_literals() {
 
 #[test]
 fn parse_chunks_recovers_alter_when_begin_would_swallow_the_body() {
-    let statements = super::parse_chunks_with_sources(
+    let statements = parse_chunks_with_sources(
         vec![tokens(
         "BEGIN IF NOT EXISTS (SELECT 1) THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID",
         )],
@@ -242,4 +242,15 @@ fn do_body_aligns_to_the_opening_dollar_quote() {
         super::locations::align_chr_sql("A\nB", Some(&original)),
         "\nA B"
     );
+}
+
+fn parse_chunks_with_sources(
+    chunks: Vec<Vec<Token>>,
+    original: &[sqlparser::tokenizer::TokenWithSpan],
+    allow: bool,
+) -> Vec<super::LocatedStatement> {
+    super::parse_chunks_with_function_calls(chunks, original, allow)
+        .into_iter()
+        .filter(|located| !located.function_projection)
+        .collect()
 }

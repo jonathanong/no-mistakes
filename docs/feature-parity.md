@@ -58,6 +58,12 @@ scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 calls, including recovered routine bodies and static EXECUTE. See
 [statement policy](rules/postgres-sql-statement-policy.md).
 
+PostgreSQL SQL shape checks have CLI and
+async Node parity. The opt-in `banned-function-call` SQL shape consumes shared AST
+function-call facts in SQL files and parameterized embedded SQL, including
+recoverable PL/pgSQL expressions and static EXECUTE. Configured names preserve
+qualified and quoted identifier identity; columns and aliases are inert.
+
 PostgreSQL bounded-statement checks share prepared SQL facts across the CLI and
 async Node API. Temporary view lifetimes include cascading drops of physical
 materialized views, qualified namesake separation, and transaction or savepoint

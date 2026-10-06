@@ -64,6 +64,7 @@ pub struct SqlSchemaFileFacts {
     pub unnamed_constraints: Vec<SqlUnnamedConstraint>,
     pub statement_kinds: Vec<SqlStatementKind>,
     pub setting_uses: Vec<SqlSettingUse>,
+    pub function_calls: Vec<super::SqlFunctionCallFact>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
     pub declared_identifiers: Vec<SqlDeclaredIdentifier>,

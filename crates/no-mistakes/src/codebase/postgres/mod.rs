@@ -8,6 +8,8 @@ mod collect;
 mod conflict;
 pub mod dml;
 mod embedded;
+mod function_calls;
+pub use function_calls::SqlFunctionCallFact;
 pub(crate) mod idents;
 mod locking;
 mod migration;

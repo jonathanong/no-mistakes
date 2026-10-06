@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      executorNames: []
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions: []

@@ -12,6 +12,7 @@ use serde::Deserialize;
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct ShapeOptions {
+    pub(super) banned_function_call: super::functions::BannedFunctionCall,
     literal_limit: LiteralLimit,
     keyset_only_sweep: KeysetOnlySweep,
 }

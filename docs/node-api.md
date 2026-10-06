@@ -83,6 +83,12 @@ configured names no scanned file imports; it appears in `check()` results like a
 other finding. See the
 [executor migration notes](migrations/explicit-postgres-executors.md).
 
+`postgres-sql-shape-policy` also accepts `banned-function-call` and its
+`shapeOptions.bannedFunctionCall.functions` list through the same YAML rule
+configuration. Calls in executor SQL use the prepared embedded SQL facts; the
+existing asynchronous `check()` API handles the query, so this option adds no
+Node export or declaration.
+
 `postgres-sql-statement-policy` also supports those executor options through
 `check()` and check queries. Its embedded analysis is opt-in; omitting executor
 configuration preserves SQL-file-only behavior. Rule application `include` and

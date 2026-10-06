@@ -48,6 +48,7 @@ pub struct SqlStatementFileFacts {
     /// Statement categories shared with schema policy, including static routine DDL.
     pub statement_kinds: Vec<super::types::SqlStatementKind>,
     pub setting_uses: Vec<super::types::SqlSettingUse>,
+    pub function_calls: Vec<super::SqlFunctionCallFact>,
     /// Syntactic write targets; catalog resolution happens after preparation.
     pub writes: Vec<SqlWriteFact>,
     pub inserts: Vec<SqlInsertFact>,
