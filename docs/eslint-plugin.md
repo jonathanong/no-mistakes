@@ -28,10 +28,10 @@ Oxlint loads the same ESLint plugin through `jsPlugins`:
 
 ## Presets
 
-| Preset                           | Contents                                                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Preset                           | Contents                                                                                                                                |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `noMistakes.configs.recommended` | Static fetches, direct TypeScript APIs and const identities, basic selector safety, no property deletion, and ReactNode nullish safety. |
-| `noMistakes.configs.strict`      | Recommended plus stricter Next.js, Playwright, React, test-state, mock-file, delayed-rejection, and array-await rules. |
+| `noMistakes.configs.strict`      | Recommended plus stricter Next.js, Playwright, React, test-state, mock-file, delayed-rejection, and array-await rules.                  |
 
 ## Editor suggestions
 
@@ -236,3 +236,12 @@ to your database module to enable default `query`, `read`, and `write` names.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables `.query` members. Configured modules retain member matching
 with custom executor names. See the [migration notes](migrations/explicit-postgres-executors.md).
+
+### `test-no-skips`
+
+Enable this single-file rule in a flat-config block with explicit test `files`
+globs. It reports Vitest/Playwright skip, conditional, focus, pending, and fixme
+modifiers and bound Vitest context `skip()` calls. `allow` defaults to `[]` and
+accepts `skip`, `skipIf`, `runIf`, `only`, `todo`, and `fixme`.
+See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
+table callbacks, configuration, and `no-mistakes` suppression directives.

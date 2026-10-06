@@ -1,0 +1,21 @@
+import { expect, it } from 'vitest';
+import other from 'ordinary';
+import * as ordinary from 'ordinary';
+import * as runner from 'vitest';
+import defaultVitest from 'vitest';
+expect.skip();
+other.only();
+ordinary.test.skip();
+defaultVitest.it.skip();
+runner.expect.only();
+(42).skip;
+it('ctx', (ctx = {}) => ctx.skip());
+it('ctx', (ctx) => { ({}).skip(); });
+const helper = ctx => ctx.skip();
+it.each([1])('ctx', (_, ctx) => ctx.skip());
+function ordinaryFunction(ctx) { ctx.skip(); }
+it['skip']('static literal', () => {});
+runner.test['only']('namespace literal', () => {});
+it('ctx', ctx => ctx['skip']());
+it.each([{ skip() {} }])('table data', row => row.skip());
+it.for([{ skip() {} }])('table context', (row, ctx) => { row.skip(); ctx.skip(); });

@@ -71,27 +71,27 @@ the repository docs.
 
 ## Quick command selection
 
-| Need | Command |
-| --- | --- |
-| File/module dependencies | `no-mistakes dependencies <file> --format json` |
-| Files or named-export consumers | `no-mistakes dependents <file>[#SYMBOL] --format json` |
-| Direct static importers | `no-mistakes importers <file> --format json` |
-| Public API, imports, or signature blast radius | `no-mistakes symbols <file> --include both --format json`; add `--mode signature-impact --symbol NAME` |
-| Named exports and their consumers | `no-mistakes exports-of <file> --format json` |
-| Is an export unused? | `no-mistakes dead-exports <file> [NAME...]` |
-| Function calls and static argument shapes | `no-mistakes call-sites <file> NAME --format json` |
-| Tests for a changed file or diff | `no-mistakes tests plan <framework> --changed-file <file> --format json`; use `--from-git-diff base...head` for a diff |
-| Explain selected tests | `no-mistakes tests why <test> --plan plan.json --format json` |
-| Exact runner commands | `no-mistakes tests plan <framework> --changed-file <file> --format commands` |
-| Combined tests, lint, typecheck, and configured checks | `no-mistakes impacted-checks <file...> --format json` |
-| Playwright coverage or related tests | `no-mistakes playwright check --json`; `no-mistakes playwright related <file> --json` |
-| React callers and component traits | `no-mistakes react usages <file>#Component --format json`; `no-mistakes react analyze <glob> --format json` |
-| Next.js page-to-API coupling | `no-mistakes fetches <route-or-file> --format json` |
-| Queue/server graph | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json` |
-| CI or workflow impact | `no-mistakes ci impact <file> --format json`; `no-mistakes ci topology --format json` |
-| Private CI planning artifacts (npm package) | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>` |
-| Terraform/OpenTofu or Swift | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes swift importers <file> --format json` |
-| Configured language graph | `no-mistakes dependents <file> --relationship <lang> --format json` |
+| Need                                                   | Command                                                                                                                |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| File/module dependencies                               | `no-mistakes dependencies <file> --format json`                                                                        |
+| Files or named-export consumers                        | `no-mistakes dependents <file>[#SYMBOL] --format json`                                                                 |
+| Direct static importers                                | `no-mistakes importers <file> --format json`                                                                           |
+| Public API, imports, or signature blast radius         | `no-mistakes symbols <file> --include both --format json`; add `--mode signature-impact --symbol NAME`                 |
+| Named exports and their consumers                      | `no-mistakes exports-of <file> --format json`                                                                          |
+| Is an export unused?                                   | `no-mistakes dead-exports <file> [NAME...]`                                                                            |
+| Function calls and static argument shapes              | `no-mistakes call-sites <file> NAME --format json`                                                                     |
+| Tests for a changed file or diff                       | `no-mistakes tests plan <framework> --changed-file <file> --format json`; use `--from-git-diff base...head` for a diff |
+| Explain selected tests                                 | `no-mistakes tests why <test> --plan plan.json --format json`                                                          |
+| Exact runner commands                                  | `no-mistakes tests plan <framework> --changed-file <file> --format commands`                                           |
+| Combined tests, lint, typecheck, and configured checks | `no-mistakes impacted-checks <file...> --format json`                                                                  |
+| Playwright coverage or related tests                   | `no-mistakes playwright check --json`; `no-mistakes playwright related <file> --json`                                  |
+| React callers and component traits                     | `no-mistakes react usages <file>#Component --format json`; `no-mistakes react analyze <glob> --format json`            |
+| Next.js page-to-API coupling                           | `no-mistakes fetches <route-or-file> --format json`                                                                    |
+| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`                   |
+| CI or workflow impact                                  | `no-mistakes ci impact <file> --format json`; `no-mistakes ci topology --format json`                                  |
+| Private CI planning artifacts (npm package)            | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>`                                      |
+| Terraform/OpenTofu or Swift                            | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes swift importers <file> --format json`        |
+| Configured language graph                              | `no-mistakes dependents <file> --relationship <lang> --format json`                                                    |
 
 `tests plan` supports `vitest`, `playwright`, `jest`, `dotnet`, `swift`,
 `python`, `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, and `dart`
@@ -160,3 +160,11 @@ nonempty `shapeOptions.bannedFunctionCall.functions` list. Calls in expressions,
 CTEs, subqueries, and recoverable PL/pgSQL bodies use the same prepared facts.
 Configure `trustedSqlTags` for custom named SQL tag imports. See
 [shape policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-shape-policy.md).
+
+For test files that must always run in CI, enable the ESLint/Oxlint
+`no-mistakes/test-no-skips` rule in explicit flat-config `files` globs.
+It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;
+`allow` permits named exceptions such as `todo`. See
+[the rule reference](../../docs/eslint-rules/test-no-skips.md). This is a
+single-file plugin rule, so invoke the configured linter rather than a
+`no-mistakes check` catalog scan.
