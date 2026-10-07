@@ -333,7 +333,7 @@ console.log(child.kind, child.cteId, child.returning); // insert, 0, typed items
 ```
 
 A SELECT CTE remains an ordinary query scope and does not appear in this array.
-`ctes.referenced` and `ctes.used` continue to describe relation references and
+The CTE `referenced` and `used` flags continue to describe relation references and
 SELECT reachability: an unreferenced modifying CTE still appears even when both
 flags are false. [PostgreSQL executes data-modifying CTEs](https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING) even without references
 or RETURNING, and does not promise an execution order among them; source order
@@ -346,3 +346,8 @@ parser cannot represent a statement, the source report includes a diagnostic
 and no enclosing query facts for that rejected statement. For example, an
 ON CONFLICT target predicate inside a CTE currently exceeds that parser's
 nested INSERT support. Following valid statements are still collected.
+
+MERGE ON and WHEN conditions are retained as typed predicates and query facts
+with clause `other` and non-mandatory context: they choose actions rather than
+restrict every affected row. UPDATE and DELETE WHERE conditions retain ordinary
+WHERE predicate context.

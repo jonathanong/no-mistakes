@@ -55,6 +55,20 @@ fn data_modifying_ctes_are_typed_ordered_and_share_query_provenance() {
     };
     assert_eq!(merge.clauses.len(), 4);
     assert_eq!(q.nested_statements[3].returning.len(), 1);
+    let merge_scope = q.nested_statements[3].query_scope_id;
+    let merge_equalities: Vec<_> = q
+        .equalities
+        .iter()
+        .filter(|e| e.scope_id == merge_scope)
+        .collect();
+    assert_eq!(merge_equalities.len(), 2);
+    assert!(merge_equalities
+        .iter()
+        .all(|e| !e.context.mandatory && e.clause == PostgresSqlQueryClause::Other));
+    assert!(q
+        .equalities
+        .iter()
+        .any(|e| e.scope_id == q.nested_statements[1].query_scope_id && e.context.mandatory));
     assert!(matches!(
         merge.clauses[0].action,
         PostgresSqlMergeAction::Update { .. }

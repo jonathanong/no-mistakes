@@ -8,7 +8,7 @@ WITH "Added" AS (
   DELETE FROM "Schéma"."Target" AS t USING changed c WHERE t.id = c.id RETURNING *
 ), merged AS (
   MERGE INTO "Schéma"."Target" t USING changed c ON t.id = c.id
-  WHEN MATCHED AND c.id > 0 THEN UPDATE SET id = c.id
+  WHEN MATCHED AND c.id = t.id THEN UPDATE SET id = c.id
   WHEN MATCHED THEN DELETE
   WHEN NOT MATCHED THEN INSERT (id) VALUES (c.id)
   WHEN NOT MATCHED BY SOURCE THEN DO NOTHING

@@ -9,7 +9,8 @@ impl Collector<'_, '_> {
     ) -> PostgresSqlQueryStatementKind {
         let target_relation_ids = self.relation(&value.table, scope, env);
         let source_relation_ids = self.relation(&value.source, scope, env);
-        self.dml_predicate(Some(&value.on), scope, env);
+        // Match conditions choose actions; they are not mandatory row filters.
+        self.nonpredicate(&value.on, scope, PostgresSqlQueryClause::Other, env);
         if matches!(
             value.output,
             Some(sqlparser::ast::OutputClause::Output { .. })
@@ -26,7 +27,9 @@ impl Collector<'_, '_> {
             .clauses
             .iter()
             .map(|clause| {
-                self.dml_predicate(clause.predicate.as_ref(), scope, env);
+                if let Some(predicate) = &clause.predicate {
+                    self.nonpredicate(predicate, scope, PostgresSqlQueryClause::Other, env);
+                }
                 let action = match &clause.action {
                     MergeAction::Insert(insert) => match &insert.kind {
                         MergeInsertKind::Values(values) if insert.insert_predicate.is_none() => {

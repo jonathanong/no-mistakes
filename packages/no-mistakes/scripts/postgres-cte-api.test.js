@@ -44,6 +44,12 @@ test(
       query.nestedStatements[3].merge.clauses.map((c) => c.action.kind),
       ["update", "delete", "insert", "doNothing"],
     );
+    assert.equal(query.nestedStatements[3].returning[0].kind, "expression");
+    const mergeEqualities = query.equalities.filter(
+      (e) => e.scopeId === query.nestedStatements[3].queryScopeId,
+    );
+    assert.equal(mergeEqualities.length, 2);
+    assert.ok(mergeEqualities.every((e) => !e.context.mandatory && e.clause === "other"));
     const unreferenced = facts.statements[1].query;
     assert.equal(unreferenced.nestedStatements.length, 1);
     assert.equal(unreferenced.ctes[0].referenced, false);
