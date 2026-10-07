@@ -6,6 +6,7 @@ use std::process::Command;
 
 pub mod facts;
 pub mod jsx;
+pub mod module_facts;
 
 mod file_id_map;
 mod file_inventory;

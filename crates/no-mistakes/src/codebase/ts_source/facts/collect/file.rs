@@ -153,6 +153,9 @@ pub(crate) fn collect_file_facts_from_program(
         Default::default()
     };
     TsFileFacts {
+        module_bindings: plan
+            .module_bindings
+            .then(|| Arc::new(crate::codebase::ts_source::module_facts::extract(program))),
         operational_error: None,
         parse_error,
         fatal_parse_error: false,

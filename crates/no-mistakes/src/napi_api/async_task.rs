@@ -87,7 +87,7 @@ fn ensure_rayon_threads() {
     crate::cli::init_rayon_threads(crate::cli::JobsArg { jobs: 0 });
 }
 
-fn to_napi_error(error: anyhow::Error) -> napi::Error {
+pub(super) fn to_napi_error(error: anyhow::Error) -> napi::Error {
     napi::Error::from_reason(format!("{error:#}"))
 }
 

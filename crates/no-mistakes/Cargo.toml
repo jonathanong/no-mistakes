@@ -54,6 +54,7 @@ toml = "1.1"
 unicode-id-start = "1.4.0"
 wait-timeout = "0.2"
 tempfile = "3"
+oxc_semantic = "0.152.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

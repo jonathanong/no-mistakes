@@ -1,3 +1,9 @@
+import type { TypeScriptModulesOptions, TypeScriptModulesReport } from "./typescript-module-types";
+export type * from "./typescript-module-types";
+/** Analyze selected TS/JS modules asynchronously with source-local binding semantics. */
+export function analyzeTypeScriptModules(
+  options: WithInvocationOptions<TypeScriptModulesOptions>,
+): Promise<TypeScriptModulesReport>;
 import type { PostgresSqlSource, PostgresSqlFacts } from "./postgres-source-types";
 export type * from "./postgres-source-types";
 /** Parse SQL on the native async worker without repository I/O or a database. */

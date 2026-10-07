@@ -50,6 +50,7 @@ pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactCon
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
+    pub module_bindings: bool,
     pub imports: bool,
     pub function_calls: bool,
     pub call_sites: bool,
@@ -73,6 +74,7 @@ pub struct TsFactPlan {
 
 #[derive(Debug, Clone, Default)]
 pub struct TsFileFacts {
+    pub module_bindings: Option<Arc<super::module_facts::TypeScriptModuleFacts>>,
     /// A source read or collector failure. Consumers that need a complete
     /// answer must surface this instead of treating the empty facts as a
     /// successful analysis result.
