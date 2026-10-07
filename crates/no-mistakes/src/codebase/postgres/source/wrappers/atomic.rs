@@ -1,4 +1,6 @@
 use super::*;
+mod boundary;
+use boundary::end;
 
 pub(super) fn collect(
     function: &mut PostgresSqlFunction,
@@ -141,26 +143,6 @@ pub(super) fn collect(
         ));
     }
     function.wrapper = wrapper;
-}
-
-fn end(parser: &Parser<'_>, start: usize) -> usize {
-    let mut depth: usize = 0;
-    let mut index = start;
-    loop {
-        let token = parser.token_at(index);
-        if token.token == Token::EOF {
-            return index;
-        }
-        if keyword(&token.token, Keyword::BEGIN) || keyword(&token.token, Keyword::CASE) {
-            depth += 1;
-        } else if keyword(&token.token, Keyword::END) {
-            depth = depth.saturating_sub(1);
-            if depth == 0 {
-                return index;
-            }
-        }
-        index += 1;
-    }
 }
 
 /// Conflicting bodies remain one incomplete declaration and preserve the AS body.

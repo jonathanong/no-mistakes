@@ -1,5 +1,5 @@
 use super::super::PostgresSqlExecution;
-use sqlparser::ast::{Expr, UtilityOption, Value};
+use sqlparser::ast::{Expr, UnaryOperator, UtilityOption, Value};
 
 pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> PostgresSqlExecution {
     let mut analyze = legacy;
@@ -72,26 +72,43 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
     }
 }
 fn boolean(expr: Option<&Expr>) -> Option<bool> {
-    let value = match expr {
+    let expr = match expr {
         None => return Some(true),
-        Some(Expr::Value(value)) => match &value.value {
-            Value::Boolean(value) => return Some(*value),
-            Value::Number(value, _) => {
-                return match value.as_str() {
-                    "0" => Some(false),
-                    "1" => Some(true),
-                    _ => None,
-                }
-            }
-            Value::SingleQuotedString(value) => value.as_str(),
-            _ => return None,
-        },
-        Some(Expr::Identifier(value)) => value.value.as_str(),
-        _ => return None,
+        Some(expr) => expr,
     };
+    match expr {
+        Expr::Value(value) => match &value.value {
+            Value::Boolean(value) => return Some(*value),
+            Value::Number(value, _) => return integer(value, false),
+            _ => {}
+        },
+        Expr::UnaryOp { op, expr } => {
+            let Expr::Value(value) = expr.as_ref() else {
+                return None;
+            };
+            let Value::Number(value, _) = &value.value else {
+                return None;
+            };
+            return match op {
+                UnaryOperator::Plus => integer(value, false),
+                UnaryOperator::Minus => integer(value, true),
+                _ => None,
+            };
+        }
+        _ => {}
+    }
+    let value = string(expr)?;
     match value.to_ascii_lowercase().as_str() {
         "true" | "on" => Some(true),
         "false" | "off" => Some(false),
+        _ => None,
+    }
+}
+
+fn integer(value: &str, negative: bool) -> Option<bool> {
+    match crate::codebase::postgres::numeric_literal::integer(value).ok()? {
+        0 => Some(false),
+        1 if !negative => Some(true),
         _ => None,
     }
 }
@@ -108,7 +125,12 @@ fn string(expr: &Expr) -> Option<String> {
         }
         Expr::Identifier(value) => Some(value.value.clone()),
         Expr::Value(value) => match &value.value {
-            Value::SingleQuotedString(value) => Some(value.clone()),
+            // All literal spellings have already been decoded by the request's
+            // prepared token inventory. Decoding again would corrupt escapes.
+            Value::SingleQuotedString(value)
+            | Value::EscapedStringLiteral(value)
+            | Value::UnicodeStringLiteral(value) => Some(value.clone()),
+            Value::DollarQuotedString(value) => Some(value.value.clone()),
             _ => None,
         },
         _ => None,

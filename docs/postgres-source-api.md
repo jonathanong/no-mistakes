@@ -417,7 +417,8 @@ wrapper has its own span, completeness, and diagnostics. Execution is explicit:
 - Plain EXPLAIN is `nonExecuting`.
 - EXPLAIN ANALYZE is `executesForAnalysis`. The ANALYZE option accepts TRUE/ON/1,
   FALSE/OFF/0, and an omitted value meaning TRUE. Quoted boolean strings accept true/false/on/off, but quoted numeric strings
-  remain invalid. Quoted option names preserve exact lowercase identity.
+  remain invalid. Signed integer +1, +0, and -0 have the same boolean meaning;
+  other signed numbers remain invalid. Quoted option names preserve exact lowercase identity.
 - PREPARE is `nonExecuting`; preparing a statement does not execute it.
 - Unsupported or ambiguous EXPLAIN options are `unknown` and incomplete.
   Duplicate options and incompatible ANALYZE/GENERIC_PLAN settings fail closed.
@@ -434,6 +435,9 @@ fields, adding `function.wrapper` with `wrapperKind: "functionDeclaration"` and
 `execution: "nonExecuting"`. SQL-language BEGIN ATOMIC bodies expose ordered
 source occurrences through the same prepared parser. The body is bounded by its
 matching END; nested CASE, comments, and string literals retain original spans.
+Transaction BEGIN does not introduce a nested atomic body or consume following statements.
+Unreserved BEGIN/ATOMIC names and CASE/END labels retain identifier meaning;
+function parameters and qualified names do not change the body boundary.
 Opaque string bodies and unsupported languages or body forms remain declarations
 with incomplete child facts and localized diagnostics. The wrapper's incomplete
 status describes its child projection, not the existing function signature.
@@ -461,6 +465,8 @@ legacy FORMAT forms report unknown execution and incomplete facts.
 `EXPLAIN` accepts PostgreSQL's `ANALYSE` alias and `SERIALIZE OFF`. FORMAT and
 SERIALIZE identifier values fold to lowercase; quoted string values retain their
 case, so unsupported values such as `'JSON'` and `'TEXT'` remain incomplete.
+Plain, escape-prefixed, Unicode, and dollar-quoted option strings reuse their
+prepared decoded values with the same case-sensitive comparisons.
 Conditional wrapper children use the same compatibility restoration as
 top-level wrappers, including original generated-column storage modes.
 

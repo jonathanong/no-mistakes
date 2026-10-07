@@ -47,3 +47,11 @@ mod wrapper_option_identity;
 mod wrapper_metadata;
 
 mod wrapper_boolean_identity;
+
+mod wrapper_with_conflict;
+
+mod wrapper_string_options;
+
+mod wrapper_signed_options;
+
+mod wrapper_atomic_identifiers;
