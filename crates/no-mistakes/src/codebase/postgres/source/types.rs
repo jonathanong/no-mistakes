@@ -6,12 +6,14 @@ mod expressions;
 mod indexes;
 mod insert;
 mod query;
+mod query_statements;
 pub use columns::*;
 pub use ddl::*;
 pub use expressions::*;
 pub use indexes::*;
 pub use insert::*;
 pub use query::*;
+pub use query_statements::*;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

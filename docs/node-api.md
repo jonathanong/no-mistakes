@@ -775,3 +775,8 @@ returns an empty report, without a global fallback.
 nested conditional `DO` bodies, including original global spans, typed foreign
 key references and `NOT VALID`. Incomplete procedural coverage retains localized
 diagnostics alongside recovered facts. See [nested constraint source facts](postgres-source-api.md#constraints-inside-conditional-do-bodies).
+
+`parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as
+`query.nestedStatements`, with named exported statement, DML assignment, MERGE
+and RETURNING types. Child IDs reference the same query report; source order,
+completeness and exact SQL slices are described in [PostgreSQL source facts](postgres-source-api.md#data-modifying-ctes).

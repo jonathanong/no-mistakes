@@ -311,3 +311,38 @@ constraint. Unsupported ALTER operations, incomplete SELECT or INSERT facts,
 and unsupported control flow keep the enclosing block incomplete. Inspect its
 diagnostics and nested typed facts; these are occurrences, not proof that the
 constraint executes, is installed, or is validated.
+
+### Data-modifying CTEs
+
+`query.nestedStatements` exposes INSERT, UPDATE, DELETE and MERGE bodies in
+original source order. Each child includes an exact `sql` slice, byte `span`,
+`cteId`, `queryScopeId`, `parentScopeId`, typed fields, RETURNING items,
+`complete` and `unsupported`. All IDs refer to the containing query report.
+An INSERT source query references its scope in that same report; it does not
+create a separate query inventory. UPDATE/DELETE/MERGE targets and FROM/USING
+inputs reference typed entries in `query.relations`. Unsupported modifiers or
+actions retain their typed child and make both the child and query incomplete.
+INSERT children also retain existing conflict diagnostics.
+
+```js
+const [statement] = (await parsePostgresSql({
+  sql: "WITH a AS (INSERT INTO target (id) VALUES (1) RETURNING id) SELECT id FROM a",
+})).statements;
+const child = statement.query.nestedStatements[0];
+console.log(child.kind, child.cteId, child.returning); // insert, 0, typed items
+```
+
+A SELECT CTE remains an ordinary query scope and does not appear in this array.
+`ctes.referenced` and `ctes.used` continue to describe relation references and
+SELECT reachability: an unreferenced modifying CTE still appears even when both
+flags are false. [PostgreSQL executes data-modifying CTEs](https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING) even without references
+or RETURNING, and does not promise an execution order among them; source order
+is only a deterministic presentation order. These are syntactic facts, not SQL
+semantic validation, so nested modifying CTE syntax can be projected even where
+PostgreSQL would reject its execution. No SQL is executed.
+
+Parser rejection is distinct from projection incompleteness: when the shared
+parser cannot represent a statement, the source report includes a diagnostic
+and no enclosing query facts for that rejected statement. For example, an
+ON CONFLICT target predicate inside a CTE currently exceeds that parser's
+nested INSERT support. Following valid statements are still collected.

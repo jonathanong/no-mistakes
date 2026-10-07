@@ -37,6 +37,10 @@ impl<'a> Locations<'a> {
         (start.offset <= end.offset).then_some(PostgresSqlSpan { start, end })
     }
 
+    pub(super) fn slice(&self, span: &PostgresSqlSpan) -> &str {
+        &self.sql[span.start.offset..span.end.offset]
+    }
+
     pub(super) fn range(&self, start: usize, end: usize) -> PostgresSqlSpan {
         let start = self.boundary(start);
         let end = self.boundary(end).max(start);

@@ -18,6 +18,20 @@ pub(super) fn project(
     facts: Option<&parsing::ConflictFacts>,
     locations: &Locations<'_>,
 ) -> PostgresSqlInsert {
+    project_inner(value, facts, locations, false)
+}
+
+/// The query collector owns CTE sources and RETURNING; borrow only the INSERT core.
+pub(super) fn project_cte_core(value: &Insert, locations: &Locations<'_>) -> PostgresSqlInsert {
+    project_inner(value, None, locations, true)
+}
+
+fn project_inner(
+    value: &Insert,
+    facts: Option<&parsing::ConflictFacts>,
+    locations: &Locations<'_>,
+    cte_core: bool,
+) -> PostgresSqlInsert {
     let table = match &value.table {
         TableObject::TableName(table) => Some(name(table)),
         _ => None,
@@ -27,10 +41,10 @@ pub(super) fn project(
         .as_ref()
         .map(|alias| identifier(&alias.alias));
     let mut complete = table.is_some()
-        && supported_modifiers(value)
+        && supported_modifiers(value, cte_core)
         && !facts.is_some_and(|facts| facts.unsupported_with);
     let source_span = facts.and_then(|facts| facts.source_span);
-    let source = match value.source.as_ref() {
+    let source = match value.source.as_ref().filter(|_| !cte_core) {
         None => PostgresSqlInsertSource::DefaultValues,
         Some(query) => match query.body.as_ref() {
             SetExpr::Values(values) => {
@@ -150,7 +164,7 @@ pub(super) fn project(
     }
 }
 
-fn supported_modifiers(value: &Insert) -> bool {
+fn supported_modifiers(value: &Insert, cte_core: bool) -> bool {
     value.or.is_none()
         && !value.ignore
         && !value.overwrite
@@ -158,7 +172,7 @@ fn supported_modifiers(value: &Insert) -> bool {
         && value.assignments.is_empty()
         && value.partitioned.is_none()
         && value.after_columns.is_empty()
-        && value.returning.is_none()
+        && (value.returning.is_none() || cte_core)
         && value.output.is_none()
         && !value.replace_into
         && value.priority.is_none()
@@ -169,4 +183,8 @@ fn supported_modifiers(value: &Insert) -> bool {
         && value.multi_table_into_clauses.is_empty()
         && value.multi_table_when_clauses.is_empty()
         && value.multi_table_else_clause.is_none()
+}
+
+pub(super) fn values_unmodified(query: &sqlparser::ast::Query) -> bool {
+    values::unmodified(query)
 }

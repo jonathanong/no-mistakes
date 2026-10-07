@@ -40,6 +40,12 @@ impl Collector<'_, '_> {
                     }
                 }
             }
+            SetExpr::Insert(statement)
+            | SetExpr::Update(statement)
+            | SetExpr::Delete(statement)
+            | SetExpr::Merge(statement) => {
+                self.statement(statement, scope, env);
+            }
             _ => self.unsupported(
                 scope,
                 PostgresSqlQueryClause::Other,

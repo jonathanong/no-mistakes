@@ -1122,3 +1122,39 @@ test("nested DO constraints remain typed through procedural declaration paths", 
   assert.match(source, /referencedColumns: PostgresSqlIdentifier\[\];/);
   assert.match(procedural, /spans retain original global source coordinates/);
 });
+
+test("data-modifying CTE facts expose named exported declaration contracts", () => {
+  const query = readFileSync(join(packageRoot, "postgres-query-types.d.ts"), "utf8");
+  const child = readFileSync(join(packageRoot, "postgres-query-statement-types.d.ts"), "utf8");
+  assert.match(query, /export type \* from "\.\/postgres-query-statement-types"/);
+  assert.match(query, /nestedStatements: PostgresSqlQueryStatement\[\];/);
+  for (const name of [
+    "QueryStatementProvenance",
+    "CteInsert",
+    "CteUpdate",
+    "CteDelete",
+    "CteMerge",
+    "DmlAssignment",
+    "MergeClause",
+  ])
+    assert.match(child, new RegExp(`export interface PostgresSql${name} [{]`));
+  for (const name of [
+    "QueryStatement",
+    "QueryStatementKind",
+    "CteInsertSource",
+    "MergeAction",
+    "ReturningItem",
+  ])
+    assert.match(child, new RegExp(`export type PostgresSql${name} =`));
+  for (const field of [
+    "cteId",
+    "queryScopeId",
+    "parentScopeId",
+    "sql",
+    "span",
+    "returning",
+    "complete",
+    "unsupported",
+  ])
+    assert.match(child, new RegExp(`\\b${field}:`));
+});

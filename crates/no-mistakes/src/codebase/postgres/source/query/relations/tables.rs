@@ -1,7 +1,7 @@
 use super::*;
 use sqlparser::ast::TableFactor;
 impl Collector<'_, '_> {
-    pub(super) fn relation(
+    pub(in super::super) fn relation(
         &mut self,
         table: &TableFactor,
         scope: usize,

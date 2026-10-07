@@ -10,6 +10,7 @@ pub struct PostgresSqlQuery {
     pub equalities: Vec<PostgresSqlQueryEquality>,
     pub exists: Vec<PostgresSqlQueryExists>,
     pub ctes: Vec<PostgresSqlQueryCte>,
+    pub nested_statements: Vec<PostgresSqlQueryStatement>,
     pub unsupported: Vec<PostgresSqlQueryUnsupported>,
     pub complete: bool,
 }
