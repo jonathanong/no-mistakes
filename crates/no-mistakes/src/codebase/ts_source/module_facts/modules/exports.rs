@@ -23,16 +23,38 @@ pub(super) fn all(value: &ExportAllDeclaration<'_>, facts: &mut TypeScriptModule
         span: value.span.into(),
     });
 }
-pub(super) fn named(value: &ExportNamedDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
+pub(super) fn named(
+    value: &ExportNamedDeclaration<'_>,
+    semantic: &Semantic<'_>,
+    facts: &mut TypeScriptModuleFacts,
+) {
     for specifier in &value.specifiers {
         facts.exports.push(ModuleExport {
             specifier: None,
             local: name(&specifier.local),
             exported: name(&specifier.exported),
-            type_only: value.export_kind.is_type() || specifier.export_kind.is_type(),
+            type_only: value.export_kind.is_type()
+                || specifier.export_kind.is_type()
+                || local_type_only(&specifier.local, semantic, facts),
             span: specifier.span.into(),
         });
     }
+}
+
+fn local_type_only(
+    local: &ModuleExportName<'_>,
+    semantic: &Semantic<'_>,
+    facts: &TypeScriptModuleFacts,
+) -> bool {
+    let ModuleExportName::IdentifierReference(local) = local else {
+        return false;
+    };
+    semantic
+        .scoping()
+        .get_reference(local.reference_id.get().expect("semantic export reference"))
+        .symbol_id()
+        .and_then(|id| facts.bindings.get(id.index()))
+        .is_some_and(|binding| binding.type_only)
 }
 
 pub(super) fn inline(
@@ -104,6 +126,40 @@ pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScri
         type_only,
         span: value.span.into(),
     });
+}
+
+pub(super) fn commonjs(
+    value: &AssignmentExpression<'_>,
+    semantic: &Semantic<'_>,
+    facts: &mut TypeScriptModuleFacts,
+) {
+    let Some(member) = value.left.as_member_expression() else {
+        return;
+    };
+    let mut property = member.static_property_name();
+    let mut object = member.object().get_inner_expression();
+    while let Some(member) = object.as_member_expression() {
+        property = member.static_property_name();
+        object = member.object().get_inner_expression();
+    }
+    let Expression::Identifier(object) = object else {
+        return;
+    };
+    let commonjs = object.name == "exports"
+        || (object.name == "module" && property.is_none_or(|name| name == "exports"));
+    if commonjs
+        && semantic
+            .scoping()
+            .get_reference(object.reference_id.get().expect("semantic export object"))
+            .symbol_id()
+            .is_none()
+    {
+        unsupported(
+            facts,
+            value.span,
+            "CommonJS export assignments are unsupported",
+        );
+    }
 }
 
 #[cfg(test)]

@@ -735,19 +735,23 @@ specifier `bindingId` identifies its entry in `bindings`. `runtime` on a binding
 means the declaration is syntactically a value; on a reference it means evaluation
 uses that value. `typeOnly` distinguishes type uses, including `typeof Value` in a
 type query. A value import used only in annotations has no runtime references.
+Local named exports of type declarations are type-only even without an explicit
+`type` modifier; source re-exports retain their syntactic flags.
 `shadows` identifies the nearest enclosing same-name binding. IDs are local to a
 module and are not persistent identities.
 
 All spans are half-open **UTF-8 byte offsets** into the original source. They are not
 JavaScript UTF-16 string indexes; use `Buffer.from(source).subarray(start, end)`.
 String literals and templates without substitutions use the existing static import
-extractor, including parenthesized TypeScript wrappers. No AST or raw source is
+extractor, including parenthesized TypeScript wrappers. Transparent wrappers on
+`require` callees and default-export identifiers preserve their binding identity. No AST or raw source is
 returned. Ambient declarations are not runtime values.
 The facts do not prove that an imported value exists in another module.
 
 Check `complete` and `diagnostics` before relying on a module. Non-literal module
 loads, shadowed or indirect `require`, direct `eval`, `with`, TypeScript import-equals and legacy
-export-assignment/namespace-export forms and merged declarations are explicit diagnostic gaps. Source I/O,
+export-assignment/namespace-export forms, CommonJS export assignments, and merged
+declarations are explicit diagnostic gaps. Source I/O,
 unsupported source extensions, and parser/semantic errors also make the module
 incomplete; any recovered facts remain available for inspection. Empty `files`
 returns an empty report, without a global fallback.

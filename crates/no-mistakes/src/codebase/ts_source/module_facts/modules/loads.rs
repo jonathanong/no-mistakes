@@ -16,8 +16,13 @@ pub(super) fn require(
     semantic: &Semantic<'_>,
     facts: &mut TypeScriptModuleFacts,
 ) {
-    if matches!(value.callee.get_inner_expression(), Expression::Identifier(callee) if callee.name == "eval")
-    {
+    let Expression::Identifier(callee) = value.callee.get_inner_expression() else {
+        return;
+    };
+    let reference = semantic
+        .scoping()
+        .get_reference(callee.reference_id.get().expect("semantic call reference"));
+    if callee.name == "eval" && reference.symbol_id().is_none() {
         unsupported(
             facts,
             value.span,
@@ -25,15 +30,9 @@ pub(super) fn require(
         );
         return;
     }
-    let Expression::Identifier(callee) = &value.callee else {
-        return;
-    };
     if callee.name != "require" {
         return;
     }
-    let reference = semantic
-        .scoping()
-        .get_reference(callee.reference_id.get().expect("semantic call reference"));
     if reference.symbol_id().is_some() {
         unsupported(facts, value.span, "Shadowed require is not a module loader");
         return;
@@ -79,8 +78,20 @@ pub(super) fn indirect(
     {
         return;
     }
-    if let AstKind::CallExpression(call) = semantic.nodes().parent_kind(node_id) {
-        if matches!(&call.callee, Expression::Identifier(callee) if callee.span == value.span) {
+    let parent = semantic.nodes().ancestor_kinds(node_id).find(|kind| {
+        !matches!(
+            kind,
+            AstKind::ParenthesizedExpression(_)
+                | AstKind::TSAsExpression(_)
+                | AstKind::TSSatisfiesExpression(_)
+                | AstKind::TSNonNullExpression(_)
+                | AstKind::TSInstantiationExpression(_)
+                | AstKind::TSTypeAssertion(_)
+        )
+    });
+    if let Some(AstKind::CallExpression(call)) = parent {
+        if matches!(call.callee.get_inner_expression(), Expression::Identifier(callee) if callee.span == value.span)
+        {
             return;
         }
     }

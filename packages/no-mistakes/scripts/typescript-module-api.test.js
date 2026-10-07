@@ -85,6 +85,33 @@ test(
       assert.equal(extra.modules[0].imports[0].typeOnly, true);
       assert.equal(extra.modules[0].imports[1].typeOnly, false);
       assert.equal(extra.modules[1].exports[0].local, "value");
+      const loaders = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "wrapped-require.ts",
+          "shadowed-eval.cjs",
+          "commonjs-exports.cjs",
+          "local-type-exports.ts",
+        ],
+      });
+      assert.equal(
+        loaders.modules.find((entry) => entry.fileName.endsWith("wrapped-require.ts")).loads.length,
+        6,
+      );
+      assert.equal(
+        loaders.modules.find((entry) => entry.fileName.endsWith("shadowed-eval.cjs")).complete,
+        true,
+      );
+      assert.equal(
+        loaders.modules.find((entry) => entry.fileName.endsWith("commonjs-exports.cjs")).complete,
+        false,
+      );
+      assert.ok(
+        loaders.modules
+          .find((entry) => entry.fileName.endsWith("local-type-exports.ts"))
+          .exports.slice(0, 3)
+          .every((entry) => entry.typeOnly),
+      );
       assert.equal("ast" in module, false);
       assert.equal("source" in module, false);
     }

@@ -27,10 +27,11 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
             }),
             AstKind::ExportFromDeclaration(value) => exports::from(value, facts),
             AstKind::ExportAllDeclaration(value) => exports::all(value, facts),
-            AstKind::ExportNamedDeclaration(value) => exports::named(value, facts),
+            AstKind::ExportNamedDeclaration(value) => exports::named(value, semantic, facts),
             AstKind::ExportDeclaration(value) => exports::inline(value, &inline_bindings, facts),
             AstKind::ExportDefaultDeclaration(value) => exports::default(value, facts),
             AstKind::ImportExpression(value) => loads::dynamic(value, facts),
+            AstKind::AssignmentExpression(value) => exports::commonjs(value, semantic, facts),
             AstKind::CallExpression(value) => loads::require(value, semantic, facts),
             AstKind::IdentifierReference(value) => {
                 loads::indirect(value, node.id(), semantic, facts)

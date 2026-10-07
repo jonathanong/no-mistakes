@@ -295,3 +295,34 @@ fn shadow_bindings_skip_empty_intermediate_scopes() {
         None
     );
 }
+
+#[test]
+fn local_export_types_wrapped_loads_and_commonjs_gaps_are_explicit() {
+    for module in report(&[
+        "local-type-exports.ts",
+        "shadowed-eval.cjs",
+        "wrapped-require.ts",
+        "commonjs-exports.cjs",
+        "local-export-objects.cjs",
+    ])
+    .modules
+    {
+        if module.file_name.ends_with("commonjs-exports.cjs") {
+            assert!(!module.complete);
+            assert_eq!(module.facts.diagnostics.len(), 5);
+        } else {
+            assert!(module.complete, "{:?}", module.facts.diagnostics);
+        }
+        if module.file_name.ends_with("wrapped-require.ts") {
+            assert_eq!(module.facts.loads.len(), 6);
+        }
+        if module.file_name.ends_with("local-type-exports.ts") {
+            assert!(module.facts.exports[..3]
+                .iter()
+                .all(|export| export.type_only));
+            assert!(!module.facts.exports[3].type_only);
+            // Source re-exports remain syntactic, without resolving another module.
+            assert!(!module.facts.exports[4].type_only);
+        }
+    }
+}
