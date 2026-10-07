@@ -445,6 +445,10 @@ matching END; nested CASE, comments, and string literals retain original spans.
 Transaction BEGIN does not introduce a nested atomic body or consume following statements.
 Unreserved BEGIN/ATOMIC names and CASE/END labels retain identifier meaning;
 function parameters and qualified names do not change the body boundary.
+Bare END labels before query continuation tokens also preserve the declaration
+boundary; where the native child grammar cannot project them, the declaration
+stays explicitly incomplete. An ambiguous END without a preceding child delimiter
+remains a recovery boundary rather than inferring unsupported label syntax.
 Opaque string bodies and unsupported languages or body forms remain declarations
 with incomplete child facts and localized diagnostics. The wrapper's incomplete
 status describes its child projection, not the existing function signature.

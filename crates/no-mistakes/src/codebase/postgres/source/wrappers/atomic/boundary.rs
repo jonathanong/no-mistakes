@@ -1,8 +1,10 @@
 //! Recover the declaration boundary without mistaking query aliases for bodies.
 use super::*;
+mod end_alias;
 
 pub(super) fn end(parser: &Parser<'_>, start: usize) -> usize {
     let mut depth: usize = 0;
+    let mut cases = Vec::new();
     let mut parentheses: usize = 0;
     let mut declaration = false;
     let mut index = start;
@@ -32,11 +34,15 @@ pub(super) fn end(parser: &Parser<'_>, start: usize) -> usize {
             declaration = false;
             depth += 1;
         } else if keyword(&token.token, Keyword::CASE) && case_expression(parser, index) {
-            depth += 1;
+            cases.push(parentheses);
         } else if keyword(&token.token, Keyword::END) && !label(parser, index) {
-            depth = depth.saturating_sub(1);
-            if depth == 0 {
-                return index;
+            if cases.last() == Some(&parentheses) && !child_boundary(parser, index) {
+                cases.pop();
+            } else if !end_alias::continues_query(parser, index) {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return index;
+                }
             }
         }
         index += 1;

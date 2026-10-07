@@ -61,3 +61,5 @@ mod wrapper_atomic_identifiers;
 mod wrapper_insert_identifiers;
 
 mod wrapper_repeated_options;
+
+mod wrapper_bare_end_alias;
