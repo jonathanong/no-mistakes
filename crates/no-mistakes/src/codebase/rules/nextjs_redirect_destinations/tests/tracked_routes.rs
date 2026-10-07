@@ -243,3 +243,21 @@ fn authoritative_routes_still_honor_scope_skip_and_rule_path_filters() {
         11
     );
 }
+
+#[test]
+fn overlapping_project_routes_cannot_borrow_another_projects_git_index() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture("overlapping-projects"));
+    let root = fixture.path();
+    let outer = root.join("web");
+    let embedded = outer.join("app/embedded");
+    crate::test_support::git_init(&outer);
+    crate::test_support::git_init(&embedded);
+    crate::test_support::git_add_force(&outer, &["next.config.ts", "app/outer"]);
+    crate::test_support::git_add_force(&embedded, &["next.config.ts", "app/present"]);
+    let findings =
+        crate::codebase::rules::run_filesystem_rules(root, Some(&root.join(".no-mistakes.yml")))
+            .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "web/next.config.ts");
+    assert!(findings[0].message.contains("'/embedded/app/present'"));
+}

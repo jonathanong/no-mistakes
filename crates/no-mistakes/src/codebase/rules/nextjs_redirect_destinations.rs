@@ -67,11 +67,11 @@ pub(crate) fn check_with_files_sources_and_snapshot(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let tracked = if opts.tracked_routes_only {
+            let findings = if opts.tracked_routes_only {
                 let snapshot = snapshot.ok_or_else(|| anyhow::anyhow!(
                     "nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory"
                 ))?;
-                let mut tracked = Vec::new();
+                let mut findings = Vec::new();
                 for target_root in &target_roots {
                     if !snapshot.git_index_available_for(target_root) {
                         anyhow::bail!("nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory for {}", target_root.display());
@@ -79,18 +79,18 @@ pub(crate) fn check_with_files_sources_and_snapshot(
                     // A non-Git umbrella's fallback list must never prove
                     // membership in its nested project's Git index.
                     let inventory = snapshot.tracked_paths_for(target_root);
-                    tracked.extend(inventory.iter().filter(|path| {
+                    let tracked = inventory.iter().filter(|path| {
                         path.starts_with(target_root)
                             && super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                    }).cloned());
+                    }).cloned().collect::<Vec<_>>();
+                    let tracked = super::path_filter::filter_rule_files(root, config, rule, &tracked)?;
+                    findings.extend(scan(root, &opts, &files, &tracked, std::slice::from_ref(target_root), sources));
                 }
-                tracked.sort();
-                tracked.dedup();
-                Some(super::path_filter::filter_rule_files(root, config, rule, &tracked)?)
+                findings
             } else {
-                None
+                scan(root, &opts, &files, &files, &target_roots, sources)
             };
-            Ok(scan(root, &opts, &files, tracked.as_deref().unwrap_or(&files), &target_roots, sources))
+            Ok(findings)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

@@ -65,7 +65,8 @@ uses the existing ignore-aware filesystem inventory. Route groups and
 dynamic/catch-all matching are identical in both modes. A tracked-route request
 without a prepared Git index inventory returns an error instead of falling back
 to filesystem pages. Each configured project uses its own prepared Git scope,
-so a non-Git umbrella directory can contain Git-backed Next.js projects. The
+so a non-Git umbrella directory can contain Git-backed Next.js projects. Even
+overlapping project directories keep separate tracked route sets. The
 Rust `run_filesystem_rules_with_files` entrypoint also accepts an authoritative
 tracked-file list; generic visible lists require the accompanying discovery
 snapshot. Next.js configuration code is never executed.

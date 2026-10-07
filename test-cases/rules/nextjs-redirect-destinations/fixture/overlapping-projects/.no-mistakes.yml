@@ -1,0 +1,10 @@
+projects:
+  outer:
+    root: web
+  embedded:
+    root: web/app/embedded
+rules:
+  - rule: nextjs-redirect-destinations
+    projects: [outer, embedded]
+    options:
+      trackedRoutesOnly: true
