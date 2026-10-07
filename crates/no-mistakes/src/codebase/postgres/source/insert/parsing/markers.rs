@@ -58,10 +58,20 @@ fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {
     let mut depth: usize = 0;
     significant
         .iter()
-        .map(|index| {
+        .enumerate()
+        .map(|(position, index)| {
             let token = &tokens[*index].token;
             if *token == Token::SemiColon {
                 depth = 0;
+                beginning = true;
+                insert = false;
+                return false;
+            }
+            if depth == 0
+                && keyword(token, Keyword::ATOMIC)
+                && position > 0
+                && keyword(&tokens[significant[position - 1]].token, Keyword::BEGIN)
+            {
                 beginning = true;
                 insert = false;
                 return false;

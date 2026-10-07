@@ -4,16 +4,18 @@ pub(super) fn collect(
     function: &mut PostgresSqlFunction,
     parser: &mut Parser<'_>,
     context: &Context<'_, '_>,
+    depth: usize,
 ) {
     let start = parser.index();
     parser.next_token();
     let atomic = parser.parse_keyword(Keyword::ATOMIC);
     let end = end(parser, start);
     let supported = atomic
+        && depth < 16
         && function
             .language
             .as_ref()
-            .is_some_and(|value| value.eq_ignore_ascii_case("sql"));
+            .is_none_or(|value| value.eq_ignore_ascii_case("sql"));
     let mut wrapper = empty(
         PostgresSqlWrapperKind::FunctionDeclaration,
         PostgresSqlExecution::NonExecuting,
@@ -30,6 +32,12 @@ pub(super) fn collect(
             let child_ordinal = ordinal;
             ordinal += 1;
             let parsed = super::super::insert::parsing::parse(parser, context.markers);
+            let nested = atomic_child::function(
+                parsed.as_ref().ok().map(|value| &value.0),
+                parser,
+                context,
+                depth,
+            );
             let overrun = parser.index() > end;
             if overrun {
                 while parser.index() > end {
@@ -58,13 +66,17 @@ pub(super) fn collect(
                     let tokens = (child_start..parser.index())
                         .map(|index| parser.token_at(index).clone())
                         .collect::<Vec<_>>();
-                    if let Some(child) = context.statement(
+                    if let Some(mut child) = context.statement(
                         &statement,
                         &tokens,
                         child_ordinal,
                         1,
                         insert_facts.as_ref(),
                     ) {
+                        if let Some(function) = nested {
+                            child.facts = PostgresSqlStatementKind::CreateFunction { function };
+                            finalize(&mut child.facts, &child.span);
+                        }
                         wrapper.statements.push(child);
                     }
                 }
@@ -72,22 +84,14 @@ pub(super) fn collect(
                     wrapper
                         .diagnostics
                         .push(diagnostic(&error.to_string(), None));
-                    while parser.index() < end
-                        && !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF)
-                    {
-                        parser.next_token();
-                    }
+                    atomic_child::recover(parser, end, context.markers);
                 }
                 Ok(_) => {
                     wrapper.diagnostics.push(diagnostic(
                         "Function child crossed END or has no statement delimiter",
                         None,
                     ));
-                    while parser.index() < end
-                        && !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF)
-                    {
-                        parser.next_token();
-                    }
+                    atomic_child::recover(parser, end, context.markers);
                 }
             }
         }
@@ -97,7 +101,11 @@ pub(super) fn collect(
             parser.next_token();
         }
         wrapper.diagnostics.push(diagnostic(
-            "Only SQL-language BEGIN ATOMIC bodies expose child source occurrences",
+            if depth >= 16 {
+                "Function declaration nesting exceeds the safety limit"
+            } else {
+                "Only SQL-language BEGIN ATOMIC bodies expose child source occurrences"
+            },
             None,
         ));
     }

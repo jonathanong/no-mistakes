@@ -8,6 +8,7 @@ use sqlparser::{
     tokenizer::{Span, Token, TokenWithSpan},
 };
 mod atomic;
+mod atomic_child;
 mod child;
 mod header;
 mod options;
@@ -140,7 +141,7 @@ pub(super) fn function(
 ) -> PostgresSqlFunction {
     let mut function = super::ddl::function(value, context.locations);
     if keyword(&parser.peek_token().token, Keyword::BEGIN) {
-        atomic::collect(&mut function, parser, context);
+        atomic::collect(&mut function, parser, context, 0);
     }
     function
 }

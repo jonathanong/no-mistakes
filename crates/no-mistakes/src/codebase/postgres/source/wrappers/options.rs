@@ -5,6 +5,7 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
     let mut analyze = legacy;
     let mut seen = std::collections::BTreeSet::new();
     let mut generic = false;
+    let mut requires_analyze = false;
     for option in options.into_iter().flatten() {
         if option.name.quote_style.is_some() {
             return PostgresSqlExecution::Unknown;
@@ -23,8 +24,25 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
                 return PostgresSqlExecution::Unknown;
             };
             generic = value;
+        } else if name == "serialize" {
+            let value = option
+                .arg
+                .as_ref()
+                .map(ToString::to_string)
+                .unwrap_or_else(|| "text".into())
+                .to_ascii_lowercase();
+            match value.as_str() {
+                "none" | "'none'" => {}
+                "text" | "binary" | "'text'" | "'binary'" => requires_analyze = true,
+                _ => return PostgresSqlExecution::Unknown,
+            }
+        } else if name == "wal" || name == "timing" {
+            let Some(value) = boolean(option.arg.as_ref()) else {
+                return PostgresSqlExecution::Unknown;
+            };
+            requires_analyze |= value;
         } else if [
-            "verbose", "costs", "settings", "buffers", "wal", "timing", "summary", "memory",
+            "verbose", "costs", "settings", "buffers", "summary", "memory",
         ]
         .contains(&name.as_str())
         {
@@ -49,7 +67,7 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
             return PostgresSqlExecution::Unknown;
         }
     }
-    if analyze && generic {
+    if analyze && generic || !analyze && requires_analyze {
         PostgresSqlExecution::Unknown
     } else if analyze {
         PostgresSqlExecution::ExecutesForAnalysis

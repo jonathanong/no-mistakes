@@ -442,3 +442,9 @@ from that declaration. Nested wrappers retain their own syntax classification;
 consumers must also honor ancestor execution context. The parser never executes
 SQL, interprets function behavior, resolves prepared plans, exports raw parser
 ASTs, or applies replay policy. Wrapper projection has a bounded nesting limit.
+
+Supported EXPLAIN options include `SERIALIZE NONE`, `TEXT`, or `BINARY`; omitted
+SERIALIZE values mean TEXT. Enabled SERIALIZE, WAL, and TIMING require ANALYZE.
+Invalid combinations report unknown execution and incomplete child coverage.
+Nested atomic function declarations remain one child declaration occurrence, with
+bounded nesting and their own non-executing context.

@@ -71,11 +71,30 @@ test(
       "wrapper-recovery.sql",
       "wrapper-compatibility.sql",
       "wrapper-boundaries.sql",
+      "wrapper-review.sql",
     ]) {
       const result = await cjs.parsePostgresSql({ sql: fixture(name) });
       assert.deepEqual(await esm.parsePostgresSql({ sql: fixture(name) }), result);
       assert.deepEqual(result.diagnostics, []);
       assert.ok(result.statements.every((item) => item.kind !== "other"));
+      if (name === "wrapper-review.sql") {
+        assert.equal(result.statements[0].function.wrapper.complete, true);
+        const outer = result.statements[1].function.wrapper;
+        assert.equal(outer.statements.length, 2);
+        assert.equal(outer.statements[0].function.wrapper.statements.length, 2);
+        const sourceBytes = Buffer.from(fixture(name));
+        const visit = (statement) => {
+          assert.equal(
+            sourceBytes.subarray(statement.span.start.offset, statement.span.end.offset).toString(),
+            statement.sql,
+          );
+          const owned = statement.wrapper || statement.function?.wrapper;
+          if (owned) for (const child of owned.statements) visit(child);
+        };
+        result.statements.forEach(visit);
+        assert.equal(result.statements[18].function.wrapper.statements[0].ordinal, 1);
+        assert.equal(result.statements[19].sql, "SELECT 60;");
+      }
     }
   },
 );
