@@ -25,25 +25,7 @@ pub(super) fn project(
         .table_alias
         .as_ref()
         .map(|alias| identifier(&alias.alias));
-    let mut complete = table.is_some()
-        && value.or.is_none()
-        && !value.ignore
-        && !value.overwrite
-        && !value.has_table_keyword
-        && value.assignments.is_empty()
-        && value.partitioned.is_none()
-        && value.after_columns.is_empty()
-        && value.returning.is_none()
-        && value.output.is_none()
-        && !value.replace_into
-        && value.priority.is_none()
-        && value.insert_alias.is_none()
-        && value.settings.is_none()
-        && value.format_clause.is_none()
-        && value.multi_table_insert_type.is_none()
-        && value.multi_table_into_clauses.is_empty()
-        && value.multi_table_when_clauses.is_empty()
-        && value.multi_table_else_clause.is_none();
+    let mut complete = table.is_some() && supported_modifiers(value);
     let source = match value.source.as_ref() {
         None => PostgresSqlInsertSource::DefaultValues,
         Some(query) => match query.body.as_ref() {
@@ -155,4 +137,25 @@ pub(super) fn project(
         complete,
         diagnostics,
     }
+}
+
+fn supported_modifiers(value: &Insert) -> bool {
+    value.or.is_none()
+        && !value.ignore
+        && !value.overwrite
+        && !value.has_table_keyword
+        && value.assignments.is_empty()
+        && value.partitioned.is_none()
+        && value.after_columns.is_empty()
+        && value.returning.is_none()
+        && value.output.is_none()
+        && !value.replace_into
+        && value.priority.is_none()
+        && value.insert_alias.is_none()
+        && value.settings.is_none()
+        && value.format_clause.is_none()
+        && value.multi_table_insert_type.is_none()
+        && value.multi_table_into_clauses.is_empty()
+        && value.multi_table_when_clauses.is_empty()
+        && value.multi_table_else_clause.is_none()
 }
