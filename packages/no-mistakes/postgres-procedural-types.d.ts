@@ -4,7 +4,11 @@ import type {
   PostgresSqlSpan,
   PostgresSqlStatement,
 } from "./postgres-source-types";
-/** Nested facts are procedural source occurrences, never guaranteed execution. */
+/** Nested facts are procedural source occurrences, never guaranteed execution.
+ * Supported nested ALTER TABLE constraints use the same typed operations as
+ * top-level statements. Their spans retain original global source coordinates.
+ * Inspect diagnostics even when safely attributed statements are present.
+ */
 export interface PostgresSqlProceduralBlock {
   language: string;
   bodyEncoding: PostgresSqlBodyEncoding;

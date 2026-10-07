@@ -2,7 +2,7 @@ use super::super::PostgresSqlStatementKind;
 use super::{facts, fixture};
 
 #[test]
-fn nested_conditional_locks_report_source_boundary_gaps_without_panicking() {
+fn nested_conditional_locks_retain_unsupported_occurrences_without_hiding_constraints() {
     for name in [
         "nested-conditional-locks.sql",
         "conditional-adjacent-locks.sql",
@@ -20,12 +20,12 @@ fn nested_conditional_locks_report_source_boundary_gaps_without_panicking() {
             panic!("expected a DO fact")
         };
         assert!(!block.complete);
-        assert_eq!(block.diagnostics.len(), 1);
+        assert_eq!(block.diagnostics.len(), 2);
         assert!(block.diagnostics[0]
             .message
-            .contains("Conditional statement source range is unavailable"));
+            .contains("Unsupported nested procedural statement"));
         assert!(block.diagnostics[0].span.is_some());
-        assert!(block.statements.is_empty());
+        assert_eq!(block.statements.len(), 1);
     }
 }
 
@@ -63,5 +63,5 @@ fn conditional_boundary_diagnostics_preserve_neighboring_index_facts() {
         panic!("expected the middle DO fact")
     };
     assert!(!block.complete);
-    assert_eq!(block.diagnostics.len(), 1);
+    assert_eq!(block.diagnostics.len(), 2);
 }

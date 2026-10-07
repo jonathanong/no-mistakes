@@ -1,7 +1,7 @@
 //! Typed branch occurrences reuse the enclosing program's prepared tokens and AST.
 use super::{expressions::expression, locations::Locations, types::*};
 use sqlparser::{
-    ast::{ConditionalStatements, IfStatement, Spanned, Statement},
+    ast::{ConditionalStatements, IfStatement, Statement},
     keywords::Keyword,
     tokenizer::{Span, Token, TokenWithSpan, Whitespace},
 };
@@ -38,23 +38,8 @@ pub(super) fn project(
         };
         let mut projected = Vec::new();
         for (ordinal, statement) in statements.iter_mut().enumerate() {
-            let start_index = tokens.partition_point(|token| token.span.start < cursor);
-            let start_index = start_index
-                + tokens[start_index..]
-                    .iter()
-                    .position(|token| !matches!(token.token, Token::Whitespace(_)))
-                    .ok_or("Conditional statement source start is unavailable")?;
-            let end = statement.span().end;
-            let end_index = tokens.partition_point(|token| token.span.end < end);
-            let finish = end_index
-                + tokens[end_index..]
-                    .iter()
-                    .position(|token| token.token == Token::SemiColon)
-                    .ok_or("Conditional statement delimiter is unavailable")?;
-            let owned = tokens
-                .get(start_index..=finish)
-                .filter(|owned| !owned.is_empty())
-                .ok_or("Conditional statement source range is unavailable")?;
+            let range = super::conditional_source::statement_range(statement, tokens, cursor)?;
+            let owned = &tokens[range];
             let span = locations
                 .span(Span {
                     start: owned[0].span.start,
@@ -62,7 +47,7 @@ pub(super) fn project(
                 })
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
-            let facts = if let Statement::If(nested) = statement {
+            let mut facts = if let Statement::If(nested) = statement {
                 project(nested, owned, source, locations, generated, recursive_views)?
             } else {
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
@@ -70,6 +55,9 @@ pub(super) fn project(
                 );
                 super::projection::project(statement, locations, &tables, recursive_views)
             };
+            if let PostgresSqlStatementKind::Insert { insert } = &mut facts {
+                insert.span = Some(span.clone());
+            }
             cursor = owned.last().unwrap().span.end;
             projected.push(PostgresSqlStatement {
                 ordinal,

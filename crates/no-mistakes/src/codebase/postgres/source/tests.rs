@@ -1,6 +1,7 @@
 mod body;
 mod conditional_ranges;
 mod ddl;
+mod do_constraints;
 mod expression_roots;
 mod indexes;
 mod locations;

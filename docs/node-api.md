@@ -769,3 +769,9 @@ returns an empty report, without a global fallback.
 
 <!-- cspell:ignore subarray -->
 
+
+
+`parsePostgresSql()` preserves safely attributed constraint occurrences inside
+nested conditional `DO` bodies, including original global spans, typed foreign
+key references and `NOT VALID`. Incomplete procedural coverage retains localized
+diagnostics alongside recovered facts. See [nested constraint source facts](postgres-source-api.md#constraints-inside-conditional-do-bodies).
