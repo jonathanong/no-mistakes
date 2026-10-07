@@ -229,17 +229,23 @@ fn conditional_projection_requires_its_prepared_source_owner() {
             .map(|index| parser.token_at(index))
             .collect::<Vec<_>>();
         let empty = fixture("empty.sql");
-        assert!(
-            conditional::project(&mut value, &tokens, &source, &Locations::new(&empty), &[])
-                .is_err()
-        );
+        assert!(conditional::project(
+            &mut value,
+            &tokens,
+            &source,
+            &Locations::new(&empty),
+            &[],
+            &prepared.recursive_views
+        )
+        .is_err());
         if name == "conditional-branch.sql" {
             assert!(conditional::project(
                 &mut value,
                 &[],
                 &source,
                 &Locations::new(&source.sql),
-                &[]
+                &[],
+                &prepared.recursive_views
             )
             .is_err());
             let missing = tokens
@@ -252,7 +258,8 @@ fn conditional_projection_requires_its_prepared_source_owner() {
                 &missing,
                 &source,
                 &Locations::new(&source.sql),
-                &[]
+                &[],
+                &prepared.recursive_views
             )
             .is_err());
         }

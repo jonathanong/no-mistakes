@@ -17,6 +17,8 @@ pub(crate) use lenient::parse_postgres_sql_with_function_sources;
 pub(crate) use lenient::LocatedStatement;
 pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
+mod recursive_view;
+pub(crate) use recursive_view::RecursiveViews;
 mod sql_text;
 mod standalone_table;
 mod table_boundary;
@@ -64,6 +66,7 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 
 pub(super) struct PreparedPostgresTokens {
     pub tokens: Vec<sqlparser::tokenizer::TokenWithSpan>,
+    pub recursive_views: RecursiveViews,
     pub lexical_error: Option<sqlparser::tokenizer::TokenizerError>,
 }
 
@@ -77,8 +80,10 @@ pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
         .err();
     let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
     normalize_table_queries(&mut tokens);
+    let recursive_views = recursive_view::prepare(&mut tokens);
     PreparedPostgresTokens {
         tokens,
+        recursive_views,
         lexical_error,
     }
 }

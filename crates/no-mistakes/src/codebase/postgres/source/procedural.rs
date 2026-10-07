@@ -99,9 +99,15 @@ pub(super) fn collect(
         .collect();
     super::conditional::prepare(&mut prepared.tokens);
     let local = Locations::new(sql);
+    let mut recursive_views = crate::codebase::postgres::parse::RecursiveViews::default();
     for token in &mut prepared.tokens {
+        let local_start = token.span.start;
         relocate(token, &local, locations, &body)?;
+        prepared
+            .recursive_views
+            .relocate(local_start, token.span.start, &mut recursive_views);
     }
+    prepared.recursive_views = recursive_views;
     let nested = super::parsing::collect_program(source, prepared, locations, depth + 1);
     block.complete = nested.diagnostics.is_empty()
         && nested

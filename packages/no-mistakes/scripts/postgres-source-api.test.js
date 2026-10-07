@@ -200,3 +200,101 @@ test(
     );
   },
 );
+
+test(
+  "compiled CJS and ESM source APIs emit recursive view facts and preserve neighbors",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("recursive-views.sql") };
+    const facts = await api.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 8);
+    for (const [index, names, quoted, replace, materialized] of [
+      [0, ["recursive_view"], false, false, false],
+      [1, ["App", "RecursiveView"], true, true, false],
+      [2, ["app", "commented"], false, false, false],
+      [3, ["ordinary_view"], false, false, false],
+      [4, ["App", "OrdinaryView"], true, true, false],
+      [5, ["materialized_view"], false, false, true],
+      [6, ["recursive"], true, false, false],
+    ]) {
+      const statement = facts.statements[index];
+      assert.equal(statement.kind, "createView");
+      assert.deepEqual(
+        statement.view.name.parts.map((part) => part.identity),
+        names,
+      );
+      assert.ok(statement.view.name.parts.every((part) => part.quoted === quoted));
+      assert.equal(statement.view.materialized, materialized);
+      assert.equal(statement.view.orReplace, replace);
+      assert.equal(statement.view.columns[0].identity, index === 1 || index === 4 ? "X" : "x");
+      assert.equal(statement.view.dependenciesComplete, true);
+      assert.equal(
+        Buffer.from(source.sql)
+          .subarray(statement.span.start.offset, statement.span.end.offset)
+          .toString(),
+        statement.sql,
+      );
+    }
+    assert.equal(facts.statements[0].view.query, facts.statements[3].view.query);
+    assert.equal(facts.statements[1].view.query, facts.statements[4].view.query);
+    assert.match(facts.statements[6].view.query, /^WITH RECURSIVE/);
+    const invalid = await api.parsePostgresSql({ sql: fixture("recursive-views-invalid.sql") });
+    assert.equal(invalid.diagnostics.length, 4);
+    assert.equal(invalid.statements.length, 1);
+    assert.equal(invalid.statements[0].ordinal, 4);
+  },
+);
+
+test(
+  "compiled recursive views preserve implicit CTE scope and require columns",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sources = [
+      { sql: fixture("recursive-view-scope.sql") },
+      { sql: fixture("recursive-view-missing-columns.sql") },
+    ];
+    const [facts, invalid] = await api.parsePostgresSql(sources);
+    assert.deepEqual(await esm.parsePostgresSql(sources), [facts, invalid]);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 7);
+    for (const [index, expected] of [
+      [0, ["app.seed"]],
+      [1, []],
+      [2, []],
+      [3, []],
+      [4, ['app."Nums"']],
+      [5, ["ordinary"]],
+    ]) {
+      const statement = facts.statements[index];
+      assert.equal(statement.kind, "createView");
+      assert.equal(statement.view.temporary, index < 4);
+      assert.equal(statement.view.orReplace, index === 2 || index === 3);
+      assert.equal(statement.view.materialized, false);
+      assert.equal(statement.view.dependenciesComplete, true);
+      assert.deepEqual(
+        statement.view.dependencies.map((name) => name.sql),
+        expected,
+      );
+    }
+    const nested = facts.statements[6].block.statements[0].branches[0].statements[0];
+    assert.deepEqual(
+      nested.view.dependencies.map((name) => name.sql),
+      ["app.seed"],
+    );
+    assert.equal(invalid.diagnostics.length, 3);
+    assert.ok(
+      invalid.diagnostics
+        .slice(0, 2)
+        .every((diagnostic) => /explicit column-name list/.test(diagnostic.message)),
+    );
+    assert.equal(invalid.statements[0].block.complete, false);
+    assert.match(invalid.statements[0].block.diagnostics[0].message, /explicit column-name list/);
+    assert.equal(invalid.statements[1].sql, "SELECT 2;");
+  },
+);

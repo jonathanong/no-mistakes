@@ -165,8 +165,33 @@ fn create_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
         Some(Keyword::MATERIALIZED) => {
             follows_keyword(tokens, next, Keyword::VIEW).then_some(index)
         }
+        Some(Keyword::OR | Keyword::TEMP | Keyword::TEMPORARY) => {
+            modified_view_start(tokens, next).then_some(index)
+        }
         _ => None,
     }
+}
+
+fn modified_view_start(tokens: &[Token], mut next: usize) -> bool {
+    if keyword_of(&tokens[next]) == Some(Keyword::OR) {
+        let Some(replace) = next_non_ws(tokens, next + 1) else {
+            return false;
+        };
+        if keyword_of(&tokens[replace]) != Some(Keyword::REPLACE) {
+            return false;
+        }
+        let Some(after) = next_non_ws(tokens, replace + 1) else {
+            return false;
+        };
+        next = after;
+    }
+    if matches!(
+        keyword_of(&tokens[next]),
+        Some(Keyword::TEMP | Keyword::TEMPORARY)
+    ) {
+        return follows_keyword(tokens, next, Keyword::VIEW);
+    }
+    keyword_of(&tokens[next]) == Some(Keyword::VIEW)
 }
 
 fn drop_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {

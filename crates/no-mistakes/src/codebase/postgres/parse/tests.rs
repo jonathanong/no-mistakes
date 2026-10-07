@@ -249,3 +249,5 @@ fn scalar_table_normalization_keeps_invalid_select_clauses_invalid() {
         assert!(parse_postgres_sql_lenient(sql).is_empty());
     }
 }
+
+mod recursive_views;
