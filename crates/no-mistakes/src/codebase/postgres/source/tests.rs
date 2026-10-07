@@ -6,6 +6,7 @@ mod expression_roots;
 mod indexes;
 mod locations;
 mod metadata;
+mod metadata_statement_positions;
 mod metadata_conditional;
 mod metadata_escape;
 mod metadata_escape_values;

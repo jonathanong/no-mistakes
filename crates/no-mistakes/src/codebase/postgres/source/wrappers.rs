@@ -11,6 +11,7 @@ mod atomic;
 mod atomic_child;
 mod child;
 mod header;
+pub(super) use header::child_start as prepared_child_start;
 mod options;
 mod restoration;
 mod semantics;

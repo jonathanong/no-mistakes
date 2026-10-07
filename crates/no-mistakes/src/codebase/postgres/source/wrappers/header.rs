@@ -4,8 +4,11 @@ use sqlparser::{
     tokenizer::{Token, TokenWithSpan},
 };
 
-/// The AST already validated this prefix; locate its child in original tokens.
-pub(super) fn child_start(tokens: &[TokenWithSpan], kind: PostgresSqlWrapperKind) -> usize {
+/// Locate the wrapper child in prepared tokens; projection also validates its AST.
+pub(in crate::codebase::postgres::source) fn child_start(
+    tokens: &[TokenWithSpan],
+    kind: PostgresSqlWrapperKind,
+) -> usize {
     let significant = tokens
         .iter()
         .enumerate()

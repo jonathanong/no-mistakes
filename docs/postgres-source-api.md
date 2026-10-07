@@ -471,6 +471,8 @@ Conditional wrapper children use the same compatibility restoration as
 top-level wrappers, including original generated-column storage modes.
 
 Atomic declarations and conditional wrappers share prepared COMMENT validation,
+anchored to statement and wrapper-child positions so query table or alias names
+such as `JOIN comment ON ...` retain their query identity,
 including routine signatures, Unicode escapes, and string continuations.
 Malformed metadata leaves its declaration incomplete and retains independent
 following statements. EXPLAIN with a COMMENT child is invalid PostgreSQL and
