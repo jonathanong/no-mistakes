@@ -2,6 +2,15 @@ use super::*;
 use sqlparser::ast::{LimitClause, OrderByKind};
 impl Collector<'_, '_> {
     pub(super) fn query_clauses(&mut self, query: &Query, scope: usize, env: &CteEnvironment) {
+        // Keep ordinary SELECT projection stable while diagnosing omitted source locks.
+        if self.insert_source && !query.locks.is_empty() {
+            self.unsupported(
+                scope,
+                PostgresSqlQueryClause::Other,
+                "INSERT source locking",
+                query.span(),
+            );
+        }
         if let Some(order) = &query.order_by {
             match &order.kind {
                 OrderByKind::Expressions(exprs) => {

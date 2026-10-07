@@ -1,3 +1,5 @@
+import type { PostgresSqlQueryStatement } from "./postgres-query-statement-types";
+export type * from "./postgres-query-statement-types";
 import type {
   PostgresSqlIdentifier,
   PostgresSqlName,
@@ -12,6 +14,8 @@ export interface PostgresSqlQuery {
   equalities: PostgresSqlQueryEquality[];
   exists: PostgresSqlQueryExists[];
   ctes: PostgresSqlQueryCte[];
+  /** Data-modifying query bodies in original source order; SELECT CTEs are excluded. */
+  nestedStatements: PostgresSqlQueryStatement[];
   unsupported: PostgresSqlQueryUnsupported[];
   complete: boolean;
 }

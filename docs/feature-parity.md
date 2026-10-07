@@ -692,3 +692,8 @@ Recursive `WITH` bodies can also start with `TABLE` or use it as a set-operation
 
 Selected TS/JS module binding and import facts are available through the async
 `analyzeTypeScriptModules` Node API; see [Node API](node-api.md#selected-typescript-and-javascript-module-facts).
+
+PostgreSQL pure-source Rust and async Node APIs project INSERT/UPDATE/DELETE/MERGE
+CTE bodies through `query.nestedStatements`, including source provenance, typed
+RETURNING/actions and explicit incomplete children. CJS and ESM use the same
+native projection. This surface reports syntax without executing SQL.

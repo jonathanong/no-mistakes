@@ -11,6 +11,7 @@ mod ctes;
 mod predicates;
 mod relations;
 mod resolution;
+mod statements;
 
 type CteEnvironment = BTreeMap<String, usize>;
 struct ScopeState {
@@ -21,6 +22,8 @@ struct Collector<'a, 's> {
     locations: &'a Locations<'s>,
     facts: PostgresSqlQuery,
     states: Vec<ScopeState>,
+    depth: usize,
+    insert_source: bool,
 }
 
 pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQuery {
@@ -31,6 +34,8 @@ pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQu
             ..Default::default()
         },
         states: Vec::new(),
+        depth: 0,
+        insert_source: false,
     };
     collector.query(
         query,
@@ -41,6 +46,13 @@ pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQu
         None,
     );
     collector.finish_ctes();
+    collector
+        .facts
+        .nested_statements
+        .sort_by_key(|statement| statement.span.as_ref().map(|span| span.start.offset));
+    for (ordinal, statement) in collector.facts.nested_statements.iter_mut().enumerate() {
+        statement.ordinal = ordinal;
+    }
     collector.facts
 }
 
@@ -85,9 +97,16 @@ impl Collector<'_, '_> {
             definition,
             self.locations.span(query.span()),
         );
+        // Bound projection independently of parser configuration for library AST callers.
+        if self.depth == 64 {
+            self.unsupported(scope, clause, "query nesting limit", query.span());
+            return scope;
+        }
+        self.depth += 1;
         let env = self.ctes(query, scope, outer);
         self.body(&query.body, scope, &env);
         self.query_clauses(query, scope, &env);
+        self.depth -= 1;
         scope
     }
     fn unsupported(

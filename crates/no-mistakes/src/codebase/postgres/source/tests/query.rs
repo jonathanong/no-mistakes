@@ -169,3 +169,5 @@ fn query_spans_use_source_utf8_bytes() {
 }
 
 mod edges;
+
+mod modifying_ctes;
