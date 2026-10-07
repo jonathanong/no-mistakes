@@ -42,6 +42,21 @@ test(
         facts.statements.map((statement) => statement.kind),
         name.endsWith("-mixed.sql") ? ["createIndex", "doBlock", "createIndex"] : ["doBlock"],
       );
+      if (name.endsWith("-mixed.sql")) {
+        for (const [index, expected] of [
+          [0, "CREATE INDEX before_lock_idx ON sample_child(parent_id);"],
+          [2, "CREATE INDEX after_lock_idx ON sample_parent(id);"],
+        ]) {
+          const neighbor = facts.statements[index];
+          assert.equal(neighbor.sql, expected);
+          assert.equal(
+            Buffer.from(sql)
+              .subarray(neighbor.span.start.offset, neighbor.span.end.offset)
+              .toString(),
+            expected,
+          );
+        }
+      }
     }
   },
 );
