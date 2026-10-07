@@ -6,6 +6,7 @@ use sqlparser::{
     tokenizer::{Span, Token, TokenWithSpan, Whitespace},
 };
 
+/// Project branches only when prepared tokens identify nonempty statement ranges.
 pub(super) fn project(
     value: &mut IfStatement,
     tokens: &[&TokenWithSpan],
