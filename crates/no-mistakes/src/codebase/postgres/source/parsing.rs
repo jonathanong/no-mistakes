@@ -26,6 +26,13 @@ pub(super) fn collect_program(
     let generated = super::generated::prepare(&mut prepared.tokens);
     let fetch_expressions =
         crate::codebase::postgres::parse::fetch_expression::prepare(&mut prepared.tokens);
+    // Conditional AST parsing owns its nested statements. Keep that grammar
+    // intact; unsupported partial conflict targets in procedural bodies diagnose.
+    let conflict_markers = if depth == 0 {
+        super::insert::parsing::prepare(&mut prepared.tokens)
+    } else {
+        Vec::new()
+    };
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
@@ -37,10 +44,9 @@ pub(super) fn collect_program(
         let parsed = if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
         } else {
-            parser
-                .parse_statement()
+            super::insert::parsing::parse(&mut parser, &conflict_markers)
                 .map_err(|error| error.to_string())
-                .and_then(|mut statement| {
+                .and_then(|(mut statement, conflict_predicate)| {
                     prepared
                         .recursive_views
                         .validate(&statement)
@@ -55,6 +61,15 @@ pub(super) fn collect_program(
                         &generated,
                         parser.token_at(parser.index().saturating_sub(1)).span.end,
                     );
+                    if let Statement::Insert(value) = &statement {
+                        return Ok(PostgresSqlStatementKind::Insert {
+                            insert: Box::new(super::insert::project(
+                                value,
+                                conflict_predicate.as_ref(),
+                                locations,
+                            )),
+                        });
+                    }
                     if let Statement::If(value) = &mut statement {
                         if depth == 0 {
                             return Err("Conditional statements require a procedural body".into());
@@ -98,9 +113,7 @@ pub(super) fn collect_program(
             Err(error) => (None, Some(error)),
         };
         if error.is_some() {
-            while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
-                parser.next_token();
-            }
+            recover(&mut parser, &conflict_markers);
         }
         let end = if parser.peek_token().token == Token::SemiColon {
             parser.next_token().span.end
@@ -129,7 +142,10 @@ pub(super) fn collect_program(
             ordinal += 1;
             continue;
         };
-        if let Some(facts) = facts {
+        if let Some(mut facts) = facts {
+            if let PostgresSqlStatementKind::Insert { insert } = &mut facts {
+                insert.span = Some(span.clone());
+            }
             if matches!(&facts, PostgresSqlStatementKind::CreateView { view } if !view.dependencies_complete)
             {
                 result.diagnostics.push(PostgresSqlDiagnostic { message: "View TABLE-arm dependencies have ambiguous source identity; dependencies are incomplete".into(), span: Some(span.clone()) });
@@ -157,4 +173,18 @@ pub(super) fn collect_program(
         });
     }
     result
+}
+
+fn recover(parser: &mut Parser<'_>, markers: &[sqlparser::tokenizer::Location]) {
+    loop {
+        let token = parser.peek_token();
+        let boundary =
+            token.token == Token::SemiColon && markers.binary_search(&token.span.start).is_err();
+        if boundary || token.token == Token::EOF {
+            break;
+        }
+        // Synthetic conflict delimiters belong to this failed statement, not
+        // to the next ordinal. Only an original semicolon ends recovery.
+        parser.next_token();
+    }
 }

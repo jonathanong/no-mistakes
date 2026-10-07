@@ -13,6 +13,9 @@ pub(super) fn project(
         return PostgresSqlStatementKind::Drop { drop };
     }
     match statement {
+        Statement::Insert(value) => PostgresSqlStatementKind::Insert {
+            insert: Box::new(super::insert::project(value, None, locations)),
+        },
         Statement::Query(query) => PostgresSqlStatementKind::Select {
             query: super::query::project(query, locations),
         },

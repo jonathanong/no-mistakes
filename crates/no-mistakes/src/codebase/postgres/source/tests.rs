@@ -26,3 +26,6 @@ fn facts(name: &str) -> super::PostgresSqlFacts {
 }
 
 mod query;
+
+mod insert;
+mod insert_review;

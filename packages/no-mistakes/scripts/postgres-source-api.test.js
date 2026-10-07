@@ -352,3 +352,106 @@ test(
     assert.equal(invalid.statements[1].sql, "SELECT 2;");
   },
 );
+
+test(
+  "compiled CJS and ESM INSERT facts preserve conflict provenance and spans",
+  { skip: !compiled },
+  async () => {
+    const sql = fixture("insert.sql");
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const result = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 13);
+    for (const statement of result.statements) {
+      assert.equal(statement.kind, "insert");
+      assert.equal(
+        Buffer.from(sql)
+          .subarray(statement.span.start.offset, statement.span.end.offset)
+          .toString(),
+        statement.sql,
+      );
+    }
+    const inserts = result.statements.map((statement) => statement.insert);
+    assert.deepEqual(
+      inserts.map((insert) => insert.source.kind),
+      [
+        "values",
+        "values",
+        "defaultValues",
+        "select",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+      ],
+    );
+    assert.equal(inserts[1].table.parts[1].identity, "Accounts");
+    assert.equal(inserts[1].columns[0].parts[0].identity, "ID");
+    assert.equal(inserts[1].onConflict.target.kind, "omitted");
+    assert.equal(inserts[4].onConflict.target.kind, "columns");
+    assert.equal(inserts[5].onConflict.target.kind, "constraint");
+    assert.equal(inserts[6].onConflict.predicate.sql, "id > 0");
+    assert.deepEqual(
+      inserts[7].onConflict.action.assignments.map((assignment) => assignment.provenance),
+      ["targetColumn", "literal", "placeholder", "unresolved", "unresolved", "excludedColumn"],
+    );
+    assert.equal(inserts[7].complete, false);
+    assert.equal(inserts[7].diagnostics.length, 1);
+    assert.equal(inserts[8].onConflict.action.kind, "doNothing");
+    assert.equal(inserts[9].complete, false);
+    assert.equal(inserts[12].complete, false);
+    const malformed = await cjs.parsePostgresSql({ sql: fixture("insert-errors.sql") });
+    assert.equal(malformed.diagnostics.length, 10);
+    assert.equal(malformed.statements.length, 1);
+    assert.equal(malformed.statements[0].ordinal, 10);
+    assert.equal(malformed.statements[0].insert.complete, true);
+    assert.deepEqual(await esm.parsePostgresSql({ sql: fixture("insert-errors.sql") }), malformed);
+    const modifierSql = fixture("insert-values-modifiers.sql");
+    const modifiers = await cjs.parsePostgresSql({ sql: modifierSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: modifierSql }), modifiers);
+    assert.deepEqual(modifiers.diagnostics, []);
+    assert.deepEqual(
+      modifiers.statements.map((item) => item.insert.complete),
+      [false, false, false, false, true],
+    );
+    assert.ok(modifiers.statements.every((item) => item.insert.source.kind === "values"));
+    const recoverySql = fixture("insert-review-invalid.sql");
+    const recovery = await cjs.parsePostgresSql({ sql: recoverySql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: recoverySql }), recovery);
+    assert.equal(recovery.diagnostics.length, 3);
+    assert.deepEqual(
+      recovery.statements.map((item) => item.ordinal),
+      [1, 3, 5, 6],
+    );
+    assert.equal(recovery.statements[2].insert.complete, true);
+    for (const item of recovery.statements) {
+      assert.equal(
+        Buffer.from(recoverySql).subarray(item.span.start.offset, item.span.end.offset).toString(),
+        item.sql,
+      );
+    }
+    const reviewSql = fixture("insert-review.sql");
+    const review = await cjs.parsePostgresSql({ sql: reviewSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: reviewSql }), review);
+    assert.deepEqual(review.diagnostics, []);
+    assert.equal(review.statements.length, 11);
+    assert.equal(review.statements[0].insert.onConflict, null);
+    assert.equal(review.statements[2].insert.onConflict.predicate.sql, "id > 0");
+    assert.equal(review.statements[2].insert.source.query.ctes.length, 1);
+    assert.deepEqual(
+      review.statements[7].insert.onConflict.action.assignments.map((item) => item.provenance),
+      ["literal", "literal", "literal", "unresolved", "unresolved", "unresolved"],
+    );
+    assert.deepEqual(
+      review.statements.slice(8).map((item) => item.block.complete),
+      [false, false, true],
+    );
+  },
+);

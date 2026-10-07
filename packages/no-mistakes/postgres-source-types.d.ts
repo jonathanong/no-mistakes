@@ -1,3 +1,7 @@
+import type { PostgresSqlFunction } from "./postgres-function-types";
+export type * from "./postgres-function-types";
+import type { PostgresSqlInsert } from "./postgres-insert-types";
+export type * from "./postgres-insert-types";
 import type { PostgresSqlExpressionRoot } from "./postgres-expression-types";
 export type * from "./postgres-expression-types";
 import type { PostgresSqlQuery } from "./postgres-query-types";
@@ -151,28 +155,8 @@ export interface PostgresSqlTrigger {
   executionKind: string | null;
   characteristics: string | null;
 }
-export interface PostgresSqlFunctionArgument {
-  name: PostgresSqlIdentifier | null;
-  mode: string | null;
-  dataType: PostgresSqlType;
-  default: PostgresSqlExpression | null;
-}
-export interface PostgresSqlFunction {
-  name: PostgresSqlName;
-  arguments: PostgresSqlFunctionArgument[];
-  returnType: PostgresSqlType | null;
-  returnsSet: boolean;
-  language: string | null;
-  behavior: string | null;
-  bodySql: string | null;
-  orReplace: boolean;
-  temporary: boolean;
-  calledOnNull: string | null;
-  parallel: string | null;
-  configuration: string[];
-  security: string | null;
-}
 export type PostgresSqlStatementKind =
+  | { kind: "insert"; insert: PostgresSqlInsert }
   | { kind: "select"; query: PostgresSqlQuery }
   | {
       kind: "createTable";
