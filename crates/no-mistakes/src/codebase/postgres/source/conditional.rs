@@ -47,6 +47,17 @@ pub(super) fn project(
                 })
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
+            if matches!(statement, Statement::Comment { .. }) {
+                // Native AST parsing accepts unquoted words as literal strings.
+                // Validate the original value token before exposing typed facts.
+                let value = owned
+                    .iter()
+                    .rev()
+                    .find(|token| !matches!(token.token, Token::Whitespace(_) | Token::SemiColon))
+                    // A nonempty COMMENT range always includes its keyword.
+                    .unwrap();
+                super::metadata::comment_value(&value.token)?;
+            }
             let mut facts = if let Statement::If(nested) = statement {
                 project(nested, owned, source, locations, generated, recursive_views)?
             } else {

@@ -885,6 +885,22 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(procedural, /complete: boolean;/);
 });
 
+test("PostgreSQL metadata facts export routine signatures and typed index operations", () => {
+  const declarations = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const metadata = readFileSync(join(packageRoot, "postgres-metadata-types.d.ts"), "utf8");
+  assert.match(declarations, /export type \* from "\.\/postgres-metadata-types";/);
+  assert.match(declarations, /kind: "comment"; comment: PostgresSqlComment/);
+  assert.match(declarations, /kind: "alterIndex"; index: PostgresSqlAlterIndex/);
+  assert.match(metadata, /export interface PostgresSqlComment/);
+  assert.match(metadata, /arguments: PostgresSqlFunctionArgument\[\] \| null;/);
+  assert.match(metadata, /comment: string \| null;/);
+  assert.match(metadata, /export interface PostgresSqlAlterIndex/);
+  assert.match(metadata, /ifExists: boolean;/);
+  assert.match(metadata, /export type PostgresSqlAlterIndexOperation/);
+  assert.match(metadata, /kind: "attachPartition"; partition: PostgresSqlName/);
+  assert.match(metadata, /kind: "rename"; name: PostgresSqlName/);
+});
+
 test("resolveCheck declarations mirror its mutually exclusive runtime inputs", () => {
   const declarations = readFileSync(join(packageRoot, "query-types.d.ts"), "utf8");
 

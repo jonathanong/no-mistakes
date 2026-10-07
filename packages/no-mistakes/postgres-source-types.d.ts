@@ -1,4 +1,6 @@
 import type { PostgresSqlFunction } from "./postgres-function-types";
+import type { PostgresSqlComment, PostgresSqlAlterIndex } from "./postgres-metadata-types";
+export type * from "./postgres-metadata-types";
 export type * from "./postgres-function-types";
 import type { PostgresSqlInsert } from "./postgres-insert-types";
 export type * from "./postgres-insert-types";
@@ -156,6 +158,8 @@ export interface PostgresSqlTrigger {
   characteristics: string | null;
 }
 export type PostgresSqlStatementKind =
+  | { kind: "comment"; comment: PostgresSqlComment }
+  | { kind: "alterIndex"; index: PostgresSqlAlterIndex }
   | { kind: "insert"; insert: PostgresSqlInsert }
   | { kind: "select"; query: PostgresSqlQuery }
   | {

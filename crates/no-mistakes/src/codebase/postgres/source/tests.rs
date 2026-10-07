@@ -5,6 +5,7 @@ mod do_constraints;
 mod expression_roots;
 mod indexes;
 mod locations;
+mod metadata;
 mod parsing;
 mod procedural;
 mod schema;

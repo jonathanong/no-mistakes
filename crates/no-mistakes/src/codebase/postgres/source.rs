@@ -1,5 +1,6 @@
 //! Standalone source facts: one prepared token inventory, one AST per statement.
 
+mod adjacent_strings;
 mod alter;
 mod body;
 mod columns;
@@ -14,6 +15,7 @@ mod generated;
 mod indexes;
 mod insert;
 mod locations;
+mod metadata;
 mod parsing;
 mod procedural;
 mod procedural_occurrences;

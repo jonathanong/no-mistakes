@@ -22,6 +22,7 @@ pub(super) fn collect_program(
         statements: Vec::new(),
         diagnostics: Vec::new(),
     };
+    super::adjacent_strings::prepare(&mut prepared.tokens);
     ddl::prepare_trigger_arguments(&mut prepared.tokens);
     let generated = super::generated::prepare(&mut prepared.tokens);
     let fetch_expressions =
@@ -43,6 +44,8 @@ pub(super) fn collect_program(
         let start_index = parser.index();
         let parsed = if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
+        } else if super::metadata::starts(&parser) {
+            super::metadata::collect(&mut parser, locations)
         } else {
             super::insert::parsing::parse(&mut parser, &conflict_markers)
                 .map_err(|error| error.to_string())

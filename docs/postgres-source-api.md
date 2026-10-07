@@ -364,3 +364,40 @@ explicit incomplete child.
 
 Write targets bind to physical table facts even when a CTE declares the same
 unqualified name. FROM/USING sources retain ordinary lexical CTE lookup.
+## Comments, index metadata, and string continuations
+
+Both Node facades and the Rust source API return `{ kind: "comment", comment }`
+for supported COMMENT targets. The named `PostgresSqlComment` contract retains
+`objectType`, the exact quoted/qualified target identity, nullable comment text,
+and routine argument modes, names, and typed signatures. `arguments: []`
+preserves an explicit `FUNCTION f()` signature; `null` means no signature was
+written. A comment is metadata and does not imply routine invocation. Plain, escape,
+Unicode, and dollar-quoted strings are accepted; bare words are rejected.
+
+```sql
+COMMENT ON FUNCTION example_function() IS 'documentation';
+ALTER INDEX example_parent ATTACH PARTITION example_child;
+COMMENT ON TABLE example_table IS
+  'First. '
+  'Second.';
+```
+
+ALTER INDEX ATTACH PARTITION and RENAME TO return `{ kind: "alterIndex", index }`.
+`PostgresSqlAlterIndex` preserves the index name, `ifExists`, and a named
+`PostgresSqlAlterIndexOperation`: `attachPartition` carries the child index
+identity, while `rename` carries the unqualified new name. `IF EXISTS` is supported
+for rename and rejected for attach. These are source facts without
+catalog lookup, SQL execution, or migration policy.
+
+Plain single-quoted strings separated by whitespace containing a newline are
+joined in the prepared token inventory, including line-comment continuations.
+Statement SQL and spans still refer to the original source. The same handling
+applies to defaults and INSERT expressions. PostgreSQL does not concatenate
+same-line literals or literals separated by a block comment; those spellings
+are not normalized. See the [PostgreSQL lexical rules](https://www.postgresql.org/docs/18/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS)
+and [scanner continuation grammar](https://github.com/postgres/postgres/blob/REL_18_STABLE/src/backend/parser/scan.l).
+
+Malformed routine defaults, multiple comment targets, missing index targets,
+and malformed SQL such as `CREATE TABLE invoices (amount_minor_units BIGINT,,);`
+remain diagnostics without successful facts. Recovery preserves the next
+independent statement even when a missing value consumes its semicolon.
