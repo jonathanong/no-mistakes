@@ -457,3 +457,9 @@ language identifiers preserve case, so `"sql"` is supported and `"SQL"` is not.
 A conflicting AS body followed by BEGIN ATOMIC remains incomplete and retains
 its original `bodySql`. PostgreSQL FORMAT options require parentheses; bare
 legacy FORMAT forms report unknown execution and incomplete facts.
+
+`EXPLAIN` accepts PostgreSQL's `ANALYSE` alias and `SERIALIZE OFF`. FORMAT and
+SERIALIZE identifier values fold to lowercase; quoted string values retain their
+case, so unsupported values such as `'JSON'` and `'TEXT'` remain incomplete.
+Conditional wrapper children use the same compatibility restoration as
+top-level wrappers, including original generated-column storage modes.

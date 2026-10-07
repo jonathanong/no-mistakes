@@ -67,6 +67,7 @@ test(
     assert.equal(facts.statements.filter((item) => item.kind === "insert").length, 0);
     for (const name of [
       "wrapper-options.sql",
+      "wrapper-option-identity.sql",
       "wrapper-functions.sql",
       "wrapper-recovery.sql",
       "wrapper-compatibility.sql",
@@ -79,6 +80,36 @@ test(
       assert.deepEqual(await esm.parsePostgresSql({ sql: fixture(name) }), result);
       assert.deepEqual(result.diagnostics, []);
       assert.ok(result.statements.every((item) => item.kind !== "other"));
+      if (name === "wrapper-option-identity.sql") {
+        assert.deepEqual(
+          result.statements.slice(0, 17).map((item) => item.wrapper.execution),
+          [
+            "executesForAnalysis",
+            "nonExecuting",
+            "unknown",
+            "nonExecuting",
+            "nonExecuting",
+            "nonExecuting",
+            "nonExecuting",
+            "unknown",
+            "executesForAnalysis",
+            "executesForAnalysis",
+            "unknown",
+            "nonExecuting",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+          ],
+        );
+        const children = result.statements[17].block.statements[0].branches[0].statements;
+        assert.equal(children[0].wrapper.statements[0].columns[1].generated.storage, "VIRTUAL");
+        assert.equal(
+          children[1].wrapper.statements[0].operations[0].column.generated.storage,
+          "VIRTUAL",
+        );
+      }
       if (name === "wrapper-review-boundaries.sql") {
         assert.equal(result.statements[0].function.wrapper.complete, true);
         assert.equal(result.statements[1].function.wrapper.complete, false);

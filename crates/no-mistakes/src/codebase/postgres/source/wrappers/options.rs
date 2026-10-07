@@ -10,7 +10,10 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
         if option.name.quote_style.is_some() {
             return PostgresSqlExecution::Unknown;
         }
-        let name = option.name.value.to_ascii_lowercase();
+        let mut name = option.name.value.to_ascii_lowercase();
+        if name == "analyse" {
+            name = "analyze".into();
+        }
         if !seen.insert(name.clone()) {
             return PostgresSqlExecution::Unknown;
         }
@@ -25,15 +28,16 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
             };
             generic = value;
         } else if name == "serialize" {
-            let value = option
-                .arg
-                .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_else(|| "text".into())
-                .to_ascii_lowercase();
+            let value = match option.arg.as_ref() {
+                None => "text".into(),
+                Some(expr) => match string(expr) {
+                    Some(value) => value,
+                    None => return PostgresSqlExecution::Unknown,
+                },
+            };
             match value.as_str() {
-                "none" | "'none'" => {}
-                "text" | "binary" | "'text'" | "'binary'" => requires_analyze = true,
+                "none" | "off" => {}
+                "text" | "binary" => requires_analyze = true,
                 _ => return PostgresSqlExecution::Unknown,
             }
         } else if name == "wal" || name == "timing" {
@@ -50,17 +54,8 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
                 return PostgresSqlExecution::Unknown;
             }
         } else if name == "format" {
-            let value = option
-                .arg
-                .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_default()
-                .to_ascii_lowercase();
-            if ![
-                "text", "xml", "json", "yaml", "'text'", "'xml'", "'json'", "'yaml'",
-            ]
-            .contains(&value.as_str())
-            {
+            let value = option.arg.as_ref().and_then(string);
+            if !matches!(value.as_deref(), Some("text" | "xml" | "json" | "yaml")) {
                 return PostgresSqlExecution::Unknown;
             }
         } else {
@@ -95,4 +90,19 @@ fn boolean(expr: Option<&Expr>) -> Option<bool> {
 
 pub(super) fn legacy_format(format: Option<sqlparser::ast::AnalyzeFormatKind>) -> bool {
     format.is_none()
+}
+
+// PostgreSQL folds identifiers, but compares literal option values case-sensitively.
+fn string(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Identifier(value) if value.quote_style.is_none() => {
+            Some(value.value.to_ascii_lowercase())
+        }
+        Expr::Identifier(value) => Some(value.value.clone()),
+        Expr::Value(value) => match &value.value {
+            Value::SingleQuotedString(value) => Some(value.clone()),
+            _ => None,
+        },
+        _ => None,
+    }
 }

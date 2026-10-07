@@ -68,6 +68,7 @@ pub(super) fn project(
                     .iter()
                     .map(|token| (*token).clone())
                     .collect::<Vec<_>>();
+                wrapper_context.restore(statement, owned.last().unwrap().span.end)?;
                 wrapper_context
                     .statement(statement, &tokens, ordinal, 0, None)
                     .ok_or("Conditional wrapper source span is unavailable")?

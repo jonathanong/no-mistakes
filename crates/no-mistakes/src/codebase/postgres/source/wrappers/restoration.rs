@@ -1,7 +1,7 @@
 use super::*;
 
 impl Context<'_, '_> {
-    pub(super) fn restore(
+    pub(in crate::codebase::postgres::source) fn restore(
         &self,
         statement: &mut Statement,
         end: sqlparser::tokenizer::Location,
