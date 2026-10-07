@@ -5,6 +5,7 @@ mod ddl;
 mod expressions;
 mod indexes;
 mod insert;
+mod metadata;
 mod query;
 mod query_statements;
 pub use columns::*;
@@ -12,6 +13,7 @@ pub use ddl::*;
 pub use expressions::*;
 pub use indexes::*;
 pub use insert::*;
+pub use metadata::*;
 pub use query::*;
 pub use query_statements::*;
 
@@ -96,6 +98,12 @@ pub struct PostgresSqlStatement {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PostgresSqlStatementKind {
+    Comment {
+        comment: PostgresSqlComment,
+    },
+    AlterIndex {
+        index: PostgresSqlAlterIndex,
+    },
     Insert {
         insert: Box<PostgresSqlInsert>,
     },

@@ -1,0 +1,8 @@
+COMMENT ON FUNCTION f() IS $$dollar text$$;
+COMMENT ON PROCEDURE p() IS $tag$tagged text$tag$;
+COMMENT ON FUNCTION f() IS U&'d\006fc';
+COMMENT ON FUNCTION f() IS E'escaped\nline';
+COMMENT ON TABLE t IS $$table dollar$$;
+COMMENT ON MATERIALIZED VIEW v IS 'view';
+COMMENT ON TABLE t IS NULL;
+DO $$BEGIN IF TRUE THEN COMMENT ON TABLE t IS 'branch'; END IF; END$$;

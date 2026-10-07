@@ -16,11 +16,12 @@ pub(super) fn decode(value: &str, escape: char) -> Option<String> {
         }
         let long = chars.next_if_eq(&'+').is_some();
         let scalar = codepoint(&mut chars, if long { 6 } else { 4 })?;
-        if (0xD800..=0xDBFF).contains(&scalar) && !long {
+        if (0xD800..=0xDBFF).contains(&scalar) {
             if chars.next()? != escape {
                 return None;
             }
-            let low = codepoint(&mut chars, 4)?;
+            let low_long = chars.next_if_eq(&'+').is_some();
+            let low = codepoint(&mut chars, if low_long { 6 } else { 4 })?;
             if !(0xDC00..=0xDFFF).contains(&low) {
                 return None;
             }

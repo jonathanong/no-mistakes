@@ -1,5 +1,4 @@
 use sqlparser::ast::Statement;
-use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::ParserError;
 use std::fmt;
 
@@ -19,6 +18,8 @@ pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
 mod recursive_view;
 pub(crate) use recursive_view::RecursiveViews;
+mod source_escape;
+mod source_unicode;
 mod sql_text;
 mod standalone_table;
 mod table_boundary;
@@ -74,10 +75,14 @@ pub(super) struct PreparedPostgresTokens {
 pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
     let normalized = normalize_copy_data(sql);
     let separated = distinct_group::separate_distinct_grouping(&normalized);
+    let escaped = source_escape::prepare(&separated);
     let mut tokens = Vec::new();
-    let lexical_error = sqlparser::tokenizer::Tokenizer::new(&PostgreSqlDialect {}, &separated)
-        .tokenize_with_location_into_buf(&mut tokens)
-        .err();
+    let lexical_error =
+        sqlparser::tokenizer::Tokenizer::new(&source_unicode::SourceDialect, &escaped.sql)
+            .tokenize_with_location_into_buf(&mut tokens)
+            .err();
+    escaped.restore(&mut tokens);
+    source_unicode::prepare(&mut tokens);
     let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
     normalize_table_queries(&mut tokens);
     let recursive_views = recursive_view::prepare(&mut tokens);

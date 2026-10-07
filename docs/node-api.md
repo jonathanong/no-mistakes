@@ -111,6 +111,10 @@ typed, including cast/parenthesis wrappers and bare SQL value functions. DO bodi
 and nested DDL source occurrences, without claiming that any branch executes.
 This pure source API accepts no invocation-lock options.
 
+Typed comment metadata preserves routine signatures, and ALTER INDEX metadata
+preserves attach-partition and rename operations. Plain newline-separated
+string constants are joined while source spans retain their original spelling.
+
 `generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas, currentDatabase })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live
 PostgreSQL schema. `coverage` is `"complete"` (the default; every catalog rule
