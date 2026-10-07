@@ -61,7 +61,9 @@ raw parser nodes or internal imports.
   `TEMP`/`TEMPORARY` headers preserve `temporary: true`. Recursive views require
   a nonempty column-name list; omission produces a diagnostic. Dependency facts
   model the implicit recursive binding, excluding unqualified self-references
-  while retaining qualified physical references.
+  while retaining qualified physical references. The shared strict and lenient
+  parser ASTs carry an equivalent recursive CTE for downstream statement and
+  lifecycle analysis; source API query text retains the declared body.
 - Views and materialized views expose relation dependencies and typed function
   references with source spans for drop/recreation ordering.
   CTE references follow their PostgreSQL visibility scope and are excluded from

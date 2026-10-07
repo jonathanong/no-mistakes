@@ -14,14 +14,8 @@ pub(super) fn view(
     tokens: &TableTokenIndex,
     recursive: bool,
 ) -> PostgresSqlView {
-    let (dependencies, dependencies_complete, functions) = dependencies::collect(
-        &view.query,
-        tokens,
-        locations,
-        recursive
-            .then(|| crate::codebase::postgres::idents::object_name_ident(&view.name))
-            .flatten(),
-    );
+    let (dependencies, dependencies_complete, functions) =
+        dependencies::collect(&view.query, tokens, locations);
     PostgresSqlView {
         name: expressions::name(&view.name),
         columns: view
@@ -32,7 +26,15 @@ pub(super) fn view(
         materialized: view.materialized,
         temporary: view.temporary,
         or_replace: view.or_replace,
-        query: view.query.to_string(),
+        // Compatibility restoration wraps the original body in an implicit CTE.
+        // Source facts retain the declared body; AST consumers use the full scope.
+        query: if recursive {
+            view.query.with.as_ref().unwrap().cte_tables[0]
+                .query
+                .to_string()
+        } else {
+            view.query.to_string()
+        },
         dependencies,
         dependencies_complete,
         functions,

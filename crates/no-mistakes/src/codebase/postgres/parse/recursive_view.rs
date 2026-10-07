@@ -1,8 +1,10 @@
 use super::PostgresParseError;
-use sqlparser::ast::{CreateView, Spanned, Statement, Visit, Visitor};
+use sqlparser::ast::{CreateView, Spanned, Statement, Visit, VisitMut, Visitor, VisitorMut};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Location, Token, TokenWithSpan, Whitespace};
 use std::{collections::BTreeSet, ops::ControlFlow};
+
+mod query;
 
 /// Located recursive declarations survive compatibility normalization so source
 /// projections can validate columns and model the implicit recursive CTE scope.
@@ -17,6 +19,35 @@ impl RecursiveViews {
     pub(crate) fn relocate(&self, from: Location, to: Location, relocated: &mut Self) {
         if self.0.contains(&from) {
             relocated.0.insert(to);
+        }
+    }
+
+    pub(super) fn restore_valid(&self, statements: &mut Vec<super::LocatedStatement>) {
+        statements.retain_mut(|located| {
+            if self.validate(&located.statement).is_err() {
+                return false;
+            }
+            self.restore(&mut located.statement);
+            true
+        });
+    }
+
+    /// Preserve the implicit binding for every downstream AST consumer.
+    pub(crate) fn restore(&self, statement: &mut Statement) {
+        struct Restore<'a>(&'a RecursiveViews);
+        impl VisitorMut for Restore<'_> {
+            type Break = ();
+            fn post_visit_statement(&mut self, statement: &mut Statement) -> ControlFlow<()> {
+                if let Statement::CreateView(view) = statement {
+                    if self.0.contains(view) {
+                        query::wrap(view);
+                    }
+                }
+                ControlFlow::Continue(())
+            }
+        }
+        if !self.0.is_empty() {
+            let _ = statement.visit(&mut Restore(self));
         }
     }
 

@@ -45,6 +45,7 @@ pub(super) fn collect_program(
                         .recursive_views
                         .validate(&statement)
                         .map_err(|error| error.to_string())?;
+                    prepared.recursive_views.restore(&mut statement);
                     crate::codebase::postgres::parse::fetch_expression::restore(
                         &mut statement,
                         &fetch_expressions,

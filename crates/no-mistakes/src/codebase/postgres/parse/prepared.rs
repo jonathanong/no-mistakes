@@ -47,8 +47,9 @@ impl<'a> PreparedSql<'a> {
             .parse_statements()
             .map_err(PostgresParseError::from)?;
         super::fetch_expression::restore(&mut statements, &fetch);
-        for statement in &statements {
+        for statement in &mut statements {
             recursive_views.validate(statement)?;
+            recursive_views.restore(statement);
         }
         Ok(statements)
     }

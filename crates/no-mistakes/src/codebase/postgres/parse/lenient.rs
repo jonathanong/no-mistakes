@@ -57,6 +57,7 @@ fn parse_with_normalized_sources(
     let located = super::unicode::tokenize_with_location(&separated, false);
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
     super::normalize_table_queries(&mut located);
+    let recursive_views = super::recursive_view::prepare(&mut located);
     let fetch = super::fetch_expression::prepare(&mut located);
     if located.is_empty() {
         let chunks = super::top_level_statements(sql);
@@ -88,6 +89,7 @@ fn parse_with_normalized_sources(
         &located,
         allow_concurrent_detach,
     );
+    recursive_views.restore_valid(&mut statements);
     for statement in &mut statements {
         super::fetch_expression::restore(&mut statement.statement, &fetch);
     }
