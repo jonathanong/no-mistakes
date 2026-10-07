@@ -8,7 +8,7 @@ const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
 
 test(
-  "compiled CJS and ESM source APIs diagnose conditional boundary gaps without aborting",
+  "compiled CJS and ESM source APIs retain safely attributed conditional occurrences",
   { skip: !compiled },
   async () => {
     const api = require("../index.js");
@@ -31,11 +31,11 @@ test(
         statement.sql,
       );
       assert.equal(statement.block.complete, false);
-      assert.deepEqual(statement.block.statements, []);
-      assert.equal(statement.block.diagnostics.length, 1);
+      assert.equal(statement.block.statements.length, 1);
+      assert.equal(statement.block.diagnostics.length, 2);
       assert.match(
         statement.block.diagnostics[0].message,
-        /Conditional statement source range is unavailable/,
+        /Unsupported nested procedural statement/,
       );
       assert.ok(statement.block.diagnostics[0].span);
       assert.deepEqual(

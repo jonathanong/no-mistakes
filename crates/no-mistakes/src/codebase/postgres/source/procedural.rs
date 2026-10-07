@@ -109,13 +109,18 @@ pub(super) fn collect(
     }
     prepared.recursive_views = recursive_views;
     let nested = super::parsing::collect_program(source, prepared, locations, depth + 1);
-    block.complete = nested.diagnostics.is_empty()
-        && nested
-            .statements
-            .iter()
-            .all(|statement| complete(&statement.facts));
     block.statements = nested.statements;
     block.diagnostics = nested.diagnostics;
+    block
+        .diagnostics
+        .extend(super::procedural_occurrences::unsupported(
+            &block.statements,
+        ));
+    block.complete = block.diagnostics.is_empty()
+        && block
+            .statements
+            .iter()
+            .all(|statement| super::completeness::statement(&statement.facts));
     Ok(PostgresSqlStatementKind::DoBlock { block })
 }
 
@@ -169,18 +174,4 @@ pub(super) fn relocate(
         column: span.end.column as u64,
     };
     Ok(())
-}
-
-fn complete(facts: &PostgresSqlStatementKind) -> bool {
-    match facts {
-        PostgresSqlStatementKind::Insert { insert } => insert.complete,
-        PostgresSqlStatementKind::DoBlock { block } => block.complete,
-        PostgresSqlStatementKind::Conditional { branches } => branches.iter().all(|branch| {
-            branch
-                .statements
-                .iter()
-                .all(|statement| complete(&statement.facts))
-        }),
-        _ => true,
-    }
 }

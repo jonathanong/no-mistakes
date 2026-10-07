@@ -277,3 +277,37 @@ including INSERT occurrences inside conditional branches.
 `VALUES` source facts expose rows. Query-level CTEs, ordering, pagination,
 locking, and other query modifiers that are absent from that row contract mark
 the INSERT incomplete rather than silently discarding their meaning.
+
+### Constraints inside conditional DO bodies
+
+Supported `ALTER TABLE ... ADD CONSTRAINT` occurrences beneath nested `IF`,
+`ELSIF`, and `ELSE` branches use the same typed `alterTable.operations` facts as
+top-level statements. For example:
+
+```sql
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sample_constraint') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sample_constraint') THEN
+      ALTER TABLE sample_child ADD CONSTRAINT sample_constraint
+        FOREIGN KEY (parent_id) REFERENCES sample_parent(id) NOT VALID;
+    END IF;
+  END IF;
+END $$;
+```
+
+The enclosing `doBlock` and its ordered `conditional.branches[].statements`
+retain the source hierarchy. The nested `alterTable` names `sample_child`; its
+`addConstraint` operation names the foreign key, local and referenced columns,
+referenced relation, and `notValid: true`. Statement spans use original global
+UTF-8 byte offsets, so a nested occurrence remains distinguishable from a
+top-level statement. Comments, dollar quoting, single-quoted encoding, quoted
+or schema-qualified names, and neighboring top-level statements retain their
+source boundaries. No PostgreSQL AST or execution policy is returned.
+
+Safely attributed facts can coexist with incomplete procedural coverage.
+For example, unsupported `LOCK` statements retain explicit `other` source
+occurrences and localized diagnostics instead of hiding a following typed
+constraint. Unsupported ALTER operations, incomplete SELECT or INSERT facts,
+and unsupported control flow keep the enclosing block incomplete. Inspect its
+diagnostics and nested typed facts; these are occurrences, not proof that the
+constraint executes, is installed, or is validated.

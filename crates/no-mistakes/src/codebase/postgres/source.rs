@@ -3,7 +3,9 @@
 mod alter;
 mod body;
 mod columns;
+mod completeness;
 mod conditional;
+mod conditional_source;
 mod ddl;
 mod drop_facts;
 mod expression_roots;
@@ -14,6 +16,7 @@ mod insert;
 mod locations;
 mod parsing;
 mod procedural;
+mod procedural_occurrences;
 mod projection;
 mod query;
 mod type_facts;

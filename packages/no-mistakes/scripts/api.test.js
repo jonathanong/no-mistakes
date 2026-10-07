@@ -1107,3 +1107,18 @@ test("TypeScript module facts expose named contracts and async invocation option
     assert.match(types, new RegExp(`export (?:interface|type) TypeScript${name}\\b`));
   }
 });
+
+test("nested DO constraints remain typed through procedural declaration paths", () => {
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const procedural = readFileSync(join(packageRoot, "postgres-procedural-types.d.ts"), "utf8");
+  assert.match(source, /kind: "doBlock"; block: PostgresSqlProceduralBlock/);
+  assert.match(source, /kind: "conditional";\s+branches: PostgresSqlConditionalBranch\[\]/);
+  assert.match(procedural, /statements: PostgresSqlStatement\[\];/);
+  assert.match(
+    source,
+    /kind: "addConstraint"; constraint: PostgresSqlConstraint; notValid: boolean/,
+  );
+  assert.match(source, /referencedTable: PostgresSqlName \| null;/);
+  assert.match(source, /referencedColumns: PostgresSqlIdentifier\[\];/);
+  assert.match(procedural, /spans retain original global source coordinates/);
+});
