@@ -95,43 +95,60 @@ fn native_and_node_cli_require_tracked_routes_when_enabled() {
 
 #[test]
 fn native_and_node_cli_use_nested_project_indexes_under_non_git_roots() {
-    let fixture = gitignore_fixture::materialize_saved(
-        "../../test-cases/rules/nextjs-redirect-destinations/fixture/nested-projects",
-    );
-    let root = fixture.path();
-    let project = root.join("packages/web");
-    std::fs::rename(
-        project.join(".gitignore.fixture"),
-        project.join(".gitignore"),
-    )
-    .unwrap();
-    git(&project, &["init", "-q", "--initial-branch=main"]);
-    // Ignored-but-staged pages must enter the scoped route projection even
-    // when the umbrella's ignore-aware walk cannot see them.
-    git(&project, &["add", "-f", "."]);
-    git(&project, &["rm", "--cached", "-r", "app/untracked"]);
-    for node in [false, true] {
-        let output = check(root, ".no-mistakes.yml", node);
-        assert_eq!(
-            output.status.code(),
-            Some(1),
-            "{}",
-            String::from_utf8_lossy(&output.stderr)
+    for fixture_name in ["nested-projects", "nested-ignored-config"] {
+        let fixture = gitignore_fixture::materialize_saved(&format!(
+            "../../test-cases/rules/nextjs-redirect-destinations/fixture/{fixture_name}",
+        ));
+        let root = fixture.path();
+        let project = root.join("packages/web");
+        std::fs::rename(
+            project.join(".gitignore.fixture"),
+            project.join(".gitignore"),
+        )
+        .unwrap();
+        git(&project, &["init", "-q", "--initial-branch=main"]);
+        // Ignored-but-staged pages must enter the scoped route projection even
+        // when the umbrella's ignore-aware walk cannot see them.
+        git(&project, &["add", "-f", "."]);
+        git(&project, &["rm", "--cached", "-r", "app/untracked"]);
+        for node in [false, true] {
+            let output = check(root, ".no-mistakes.yml", node);
+            assert_eq!(
+                output.status.code(),
+                Some(1),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            let findings = report["rules"].as_array().unwrap();
+            assert_eq!(findings.len(), 3, "{findings:?}");
+            assert!(findings
+                .iter()
+                .all(|finding| finding["message"].as_str().unwrap().contains("'/untracked")));
+        }
+        git(&project, &["add", "app/untracked"]);
+        for node in [false, true] {
+            let output = check(root, ".no-mistakes.yml", node);
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+
+        git(
+            &project,
+            &["update-index", "--skip-worktree", "app/tracked/page.tsx"],
         );
-        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-        let findings = report["rules"].as_array().unwrap();
-        assert_eq!(findings.len(), 3, "{findings:?}");
-        assert!(findings
-            .iter()
-            .all(|finding| finding["message"].as_str().unwrap().contains("'/untracked")));
-    }
-    git(&project, &["add", "app/untracked"]);
-    for node in [false, true] {
-        let output = check(root, ".no-mistakes.yml", node);
-        assert!(
-            output.status.success(),
-            "{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
+        std::fs::remove_file(project.join("app/tracked/page.tsx")).unwrap();
+        std::fs::remove_file(project.join("app/untracked/page.tsx")).unwrap();
+        for node in [false, true] {
+            let output = check(root, ".no-mistakes.yml", node);
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
     }
 }

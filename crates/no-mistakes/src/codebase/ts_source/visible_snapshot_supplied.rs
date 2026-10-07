@@ -10,6 +10,7 @@ impl VisiblePathSnapshot {
             authoritative_tracked_paths: false,
             request_view: snapshot_path_view_from_paths(request_paths, None),
             scoped_views: Mutex::new(HashMap::new()),
+            scope_roots: Mutex::new(HashMap::new()),
             observer: None,
         }
     }
@@ -27,4 +28,18 @@ impl VisiblePathSnapshot {
         snapshot
     }
 
+}
+
+fn snapshot_path_view_from_paths(
+    paths: &[PathBuf],
+    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+) -> Arc<SnapshotPathView> {
+    let inventory = Arc::new(FileInventory::from_paths(paths));
+    let tracked_paths = inventory.paths();
+    Arc::new(SnapshotPathView {
+        sources: Arc::new(SourceStore::new_observed(inventory, observer)),
+        tracked_paths,
+        git_index_paths: normalized_index_paths(paths),
+        git_index_available: false,
+    })
 }

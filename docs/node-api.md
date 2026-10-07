@@ -717,9 +717,10 @@ predicate contexts and EXISTS correlation. See [SELECT scope facts](postgres-sou
 
 `check()` applies `nextjs-redirect-destinations` to recovered static tuple maps
 and template destinations, and reports incomplete extraction for partially dynamic returns.
+
 The rule option `trackedRoutesOnly: true` restricts matching pages to the request's
-Git index inventory through the same async `check()` API. Untracked pages do not satisfy destinations; ignored-but-staged and sparse indexed
-pages remain eligible; the default filesystem mode is unchanged.
+Git index inventory through the same async `check()` API. Untracked pages do not
+satisfy destinations; ignored-but-staged and sparse indexed pages remain eligible; the default filesystem mode is unchanged.
 See [tracked route configuration](rules/nextjs-redirect-destinations.md#options).
 
 ### Selected TypeScript and JavaScript module facts

@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::ts_source::VisiblePathSnapshot;
+mod scoped_inventory;
 
 fn tracked_fixture() -> tempfile::TempDir {
     let fixture = crate::test_support::materialize_saved_fixture(&fixture("tracked-routes"));

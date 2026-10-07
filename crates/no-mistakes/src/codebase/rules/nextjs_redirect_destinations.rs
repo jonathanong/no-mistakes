@@ -78,13 +78,22 @@ pub(crate) fn check_with_files_sources_and_snapshot(
                     }
                     // A non-Git umbrella's fallback list must never prove
                     // membership in its nested project's Git index.
-                    let inventory = snapshot.tracked_paths_for(target_root);
+                    let inventory = snapshot.git_index_paths_for(target_root);
                     let tracked = inventory.iter().filter(|path| {
                         path.starts_with(target_root)
                             && super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
                     }).cloned().collect::<Vec<_>>();
                     let tracked = super::path_filter::filter_rule_files(root, config, rule, &tracked)?;
-                    findings.extend(scan(root, &opts, &files, &tracked, std::slice::from_ref(target_root), sources));
+                    let mut target_files = files.clone();
+                    target_files.extend(snapshot.paths_for(target_root).iter().filter(|path| {
+                        super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
+                    }).cloned());
+                    target_files.sort();
+                    target_files.dedup();
+                    let target_files = super::path_filter::filter_rule_files(root, config, rule, &target_files)?;
+                    // Supplemental scoped configs still read through the one
+                    // request store, retaining shared success/failure identity.
+                    findings.extend(scan(root, &opts, &target_files, &tracked, std::slice::from_ref(target_root), sources));
                 }
                 findings
             } else {

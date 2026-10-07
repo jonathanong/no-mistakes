@@ -134,6 +134,14 @@ fn tagged_git_paths_separate_index_entries_from_untracked_entries() {
     );
     assert!(views.visible.iter().all(|entry| entry.index_kind.is_none()));
     assert_eq!(
+        views.git_index_paths,
+        vec![
+            PathBuf::from("deleted.mts"),
+            PathBuf::from("sparse.mts"),
+            PathBuf::from("tracked file.mts"),
+        ]
+    );
+    assert_eq!(
         views.tracked,
         vec![
             PathBuf::from("sparse.mts"),
@@ -190,6 +198,14 @@ fn staged_git_paths_classify_regular_files_and_symlinks_from_index_mode() {
             PathBuf::from("exec.mts"),
             PathBuf::from("link.mts"),
             PathBuf::from("submodule"),
+            PathBuf::from("tracked file.mts"),
+        ]
+    );
+    assert_eq!(
+        views.git_index_paths,
+        vec![
+            PathBuf::from("exec.mts"),
+            PathBuf::from("link.mts"),
             PathBuf::from("tracked file.mts"),
         ]
     );
