@@ -111,3 +111,25 @@ fn duplicate_conflicts_do_not_produce_complete_prefix_facts() {
         "id > 0"
     );
 }
+
+#[test]
+fn values_query_modifiers_are_explicitly_incomplete() {
+    let result = facts("insert-values-modifiers.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 5);
+    for (statement, expected) in result
+        .statements
+        .iter()
+        .zip([false, false, false, false, true])
+    {
+        let PostgresSqlStatementKind::Insert { insert } = &statement.facts else {
+            panic!("INSERT expected")
+        };
+        assert!(matches!(
+            insert.source,
+            PostgresSqlInsertSource::Values { .. }
+        ));
+        assert_eq!(insert.complete, expected);
+        assert_eq!(insert.diagnostics.is_empty(), expected);
+    }
+}

@@ -273,3 +273,7 @@ source-level `WITH` scopes, currently produce incomplete INSERT facts. Signed
 numeric constants have literal assignment provenance; unary expressions over
 columns remain unresolved. Procedural blocks inherit incomplete INSERT facts,
 including INSERT occurrences inside conditional branches.
+
+`VALUES` source facts expose rows. Query-level CTEs, ordering, pagination,
+locking, and other query modifiers that are absent from that row contract mark
+the INSERT incomplete rather than silently discarding their meaning.

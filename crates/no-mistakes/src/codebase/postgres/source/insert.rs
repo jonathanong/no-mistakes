@@ -10,6 +10,7 @@ use sqlparser::ast::{
 };
 pub(super) mod parsing;
 mod provenance;
+mod values;
 use provenance::provenance;
 
 pub(super) fn project(
@@ -32,14 +33,17 @@ pub(super) fn project(
     let source = match value.source.as_ref() {
         None => PostgresSqlInsertSource::DefaultValues,
         Some(query) => match query.body.as_ref() {
-            SetExpr::Values(values) => PostgresSqlInsertSource::Values {
-                rows: values
-                    .rows
-                    .iter()
-                    .map(|row| row.iter().map(|expr| expression(expr, locations)).collect())
-                    .collect(),
-                span: locations.span(source_span.unwrap_or_else(|| query.span())),
-            },
+            SetExpr::Values(values) => {
+                complete &= values::unmodified(query);
+                PostgresSqlInsertSource::Values {
+                    rows: values
+                        .rows
+                        .iter()
+                        .map(|row| row.iter().map(|expr| expression(expr, locations)).collect())
+                        .collect(),
+                    span: locations.span(source_span.unwrap_or_else(|| query.span())),
+                }
+            }
             SetExpr::Select(_) | SetExpr::Query(_) | SetExpr::SetOperation { .. } => {
                 let facts = super::query::project(query, locations);
                 complete &= facts.complete;
