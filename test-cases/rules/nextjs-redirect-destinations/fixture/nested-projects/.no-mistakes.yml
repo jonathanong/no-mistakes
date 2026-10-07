@@ -1,0 +1,8 @@
+projects:
+  frontend:
+    root: packages/web
+rules:
+  - rule: nextjs-redirect-destinations
+    projects: [frontend]
+    options:
+      trackedRoutesOnly: true

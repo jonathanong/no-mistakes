@@ -16,12 +16,20 @@ pub(super) fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    route_files: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for target_root in target_roots {
-        findings.extend(scan_target(root, opts, files, target_root, sources));
+        findings.extend(scan_target(
+            root,
+            opts,
+            files,
+            route_files,
+            target_root,
+            sources,
+        ));
     }
     findings
 }
@@ -30,6 +38,7 @@ fn scan_target(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    route_files: &[PathBuf],
     target_root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
@@ -44,7 +53,7 @@ fn scan_target(
         return Vec::new();
     }
     let app_root = resolved_app_root(target_root, opts.app_root.as_deref());
-    let route_set = build_route_set(files, &app_root);
+    let route_set = build_route_set(route_files, &app_root);
     let app_root_label = display_app_root(opts.app_root.as_deref());
     let rel = relative_slash_path(root, &config_path);
     let mut findings = check_named_section(

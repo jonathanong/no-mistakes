@@ -64,9 +64,6 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
-        NEXTJS_REDIRECT_DESTINATIONS => {
-            nextjs_redirect_destinations::check_with_files_and_sources(root, config, files, sources)
-        }
         _ => return None,
     })
 }

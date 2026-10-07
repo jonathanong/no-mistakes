@@ -19,10 +19,10 @@ it reports incomplete extraction alongside any known missing destinations.
 
 ## Options
 
-`configPath`, `appRoot`, and `includeRewrites` are the rule's options.
+`configPath`, `appRoot`, `includeRewrites`, and `trackedRoutesOnly` are the rule's options.
 `configPath` and `appRoot` are optional; when omitted, the rule discovers the
 standard `next.config.{ts,mjs,js}` and uses `app`. `includeRewrites` defaults
-to `true`.
+to `true`. `trackedRoutesOnly` defaults to `false`.
 
 ## Valid example
 
@@ -51,10 +51,39 @@ rules:
       configPath: next.config.ts
       appRoot: app
       includeRewrites: true
+      trackedRoutesOnly: false
 ```
 
 `includeRewrites` defaults to `true`, so rewrite destinations in `beforeFiles`,
 `afterFiles`, and `fallback` are checked unless you set `includeRewrites: false`.
+
+Set `trackedRoutesOnly: true` to require pages present in the prepared Git index
+inventory. Untracked pages, including those excluded by ignore rules, cannot
+satisfy literal or tuple-map
+destinations, even when present on disk; staging a page with `git add` makes it
+eligible on the next invocation. Index membership also includes sparse-checkout
+pages not materialized locally and tracked pages removed only from the worktree;
+removing a page from the index makes it ineligible. Configuration source must
+still be locally readable. This also applies to rewrites. The default
+uses the existing ignore-aware filesystem inventory. Route groups and
+dynamic/catch-all matching are identical in both modes. A tracked-route request
+without a prepared Git index inventory returns an error instead of falling back
+to filesystem pages: a local page cannot prove index membership. Run the check
+against a Git-backed configured project, provide an authoritative tracked list
+through Rust `run_filesystem_rules_with_files`, or set `trackedRoutesOnly: false`
+to explicitly use filesystem routes. Each configured project uses its own prepared Git scope,
+so a non-Git umbrella directory can contain Git-backed Next.js projects. Even
+overlapping project directories keep separate tracked route sets. Sibling
+projects in one nested Git repository share its prepared index discovery.
+Ignored-but-staged project configs are read through the request source store. The
+Rust `run_filesystem_rules_with_files` entrypoint also accepts an authoritative
+tracked-file list; generic visible lists require the accompanying discovery
+snapshot. Next.js configuration code is never executed.
+
+For example, `/new` is valid with a staged `app/new/page.tsx`; with the option
+enabled, the same page left untracked is a missing destination. Fix the finding
+by adding the intended page to Git, removing the redirect, or targeting a tracked
+route.
 
 External destinations (`://`, `//`) and parameterized `:[A-Za-z]` destinations
 are skipped. Query strings and hashes are stripped before matching. Dynamic

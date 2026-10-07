@@ -6,6 +6,7 @@ struct DiscoveredPath {
 struct DiscoveredPathViews {
     visible: Vec<DiscoveredPath>,
     tracked: Vec<PathBuf>,
+    git_index_paths: Vec<PathBuf>,
 }
 
 fn git_ls_paths(root: &Path) -> Option<Vec<PathBuf>> {
@@ -43,6 +44,7 @@ fn git_ls_path_views(root: &Path) -> std::io::Result<Option<DiscoveredPathViews>
 fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
     let mut visible = Vec::new();
     let mut tracked = Vec::new();
+    let mut git_index_paths = Vec::new();
     let mut deleted = HashSet::new();
     for record in output
         .split(|byte| *byte == 0)
@@ -57,6 +59,13 @@ fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
         let (path, index_kind) = parse_git_listed_rest(*tag, rest);
         if path.as_os_str().is_empty() {
             continue;
+        }
+        if !matches!(*tag, b'?' | b'K')
+            && parse_stage_path(rest).is_none_or(|(kind, _)| kind.is_some())
+        {
+            // Gitlinks are repository directories, even if their names look
+            // like source files; sparse regular files remain index members.
+            git_index_paths.push(path.clone());
         }
         if *tag == b'R' {
             deleted.insert(path);
@@ -75,7 +84,9 @@ fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
     sort_dedup_discovered(&mut visible);
     tracked.sort();
     tracked.dedup();
-    DiscoveredPathViews { visible, tracked }
+    git_index_paths.sort();
+    git_index_paths.dedup();
+    DiscoveredPathViews { visible, tracked, git_index_paths }
 }
 
 fn parse_git_listed_rest(tag: u8, rest: &[u8]) -> (PathBuf, Option<file_inventory::GitIndexKind>) {

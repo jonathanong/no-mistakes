@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
+include!("visible_snapshot_supplied.rs");
+include!("visible_snapshot_paths.rs");
+include!("visible_snapshot_scopes.rs");
+
 /// Canonical, request-scoped view of paths that are not ignored.
 ///
 /// The request root is discovered exactly once. Configured roots outside the
@@ -9,14 +13,19 @@ use std::sync::{Arc, Mutex, OnceLock};
 #[doc(hidden)]
 pub struct VisiblePathSnapshot {
     request_root: PathBuf,
+    authoritative_tracked_paths: bool,
     request_view: Arc<SnapshotPathView>,
     scoped_views: Mutex<HashMap<PathBuf, Arc<OnceLock<Arc<SnapshotPathView>>>>>,
+    scope_roots: Mutex<HashMap<PathBuf, PathBuf>>,
+    projected_paths: Mutex<HashMap<PathBuf, Arc<OnceLock<ProjectedSnapshotPaths>>>>,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
 }
 
 struct SnapshotPathView {
     sources: Arc<SourceStore>,
     tracked_paths: Arc<Vec<PathBuf>>,
+    git_index_paths: Arc<Vec<PathBuf>>,
+    git_index_available: bool,
 }
 
 impl VisiblePathSnapshot {
@@ -41,36 +50,35 @@ impl VisiblePathSnapshot {
         let request_view = snapshot_path_view(request_paths, observer.clone());
         Self {
             request_root: normalized_request_root,
+            authoritative_tracked_paths: false,
             request_view,
             scoped_views: Mutex::new(HashMap::new()),
+            scope_roots: Mutex::new(HashMap::new()),
+            projected_paths: Mutex::new(HashMap::new()),
             observer,
-        }
-    }
-
-    /// Build a request snapshot from candidates already discovered by the
-    /// caller. Graph requests use this to share their canonical file set with
-    /// specialized collectors instead of starting a second repository scan.
-    #[doc(hidden)]
-    pub fn from_paths(request_root: &Path, request_paths: &[PathBuf]) -> Self {
-        let normalized_request_root = normalize_discovery_path(request_root);
-        Self {
-            request_root: normalized_request_root,
-            request_view: snapshot_path_view_from_paths(request_paths, None),
-            scoped_views: Mutex::new(HashMap::new()),
-            observer: None,
         }
     }
 
     #[doc(hidden)]
     pub fn paths_for(&self, root: &Path) -> Arc<Vec<PathBuf>> {
-        self.path_view_for(root).sources.inventory().paths()
+        let view = self.path_view_for(root);
+        self.project_paths(root, &view, SnapshotPathKind::Visible)
     }
 
-    /// Return the complete tracked path inventory for a discovered scope. In
+    /// Return the worktree-readable tracked path inventory for a scope. In
     /// non-Git fallbacks, this is the complete ignore-aware visible path set.
     #[doc(hidden)]
     pub fn tracked_paths_for(&self, root: &Path) -> Arc<Vec<PathBuf>> {
-        Arc::clone(&self.path_view_for(root).tracked_paths)
+        let view = self.path_view_for(root);
+        self.project_paths(root, &view, SnapshotPathKind::Tracked)
+    }
+
+    /// Whether this prepared scope can prove tracked membership.
+    /// Generic supplied path lists and non-Git fallbacks cannot prove tracked
+    /// membership; explicitly authoritative tracked lists can.
+    #[doc(hidden)]
+    pub fn git_index_available_for(&self, root: &Path) -> bool {
+        self.path_view_for(root).git_index_available
     }
 
     /// Restrict candidates to the tracked (or non-Git fallback) inventories
@@ -116,11 +124,15 @@ impl VisiblePathSnapshot {
     }
 
     fn path_view_for(&self, root: &Path) -> Arc<SnapshotPathView> {
-        if root == self.request_root {
+        if self.authoritative_tracked_paths || root == self.request_root {
             return Arc::clone(&self.request_view);
         }
         let normalized_root = normalize_discovery_path(root);
         if normalized_root == self.request_root {
+            return Arc::clone(&self.request_view);
+        }
+        let scope_root = self.cached_scope_root(&normalized_root);
+        if scope_root == self.request_root {
             return Arc::clone(&self.request_view);
         }
         let view = {
@@ -128,7 +140,7 @@ impl VisiblePathSnapshot {
                 .scoped_views
                 .lock()
                 .expect("visible-path snapshot mutex poisoned");
-            match scoped_views.entry(normalized_root.clone()) {
+            match scoped_views.entry(scope_root.clone()) {
                 std::collections::hash_map::Entry::Occupied(entry) => {
                     increment(&self.observer, "discovery.cache_hits", 1);
                     Arc::clone(entry.get())
@@ -139,20 +151,14 @@ impl VisiblePathSnapshot {
             }
         };
         Arc::clone(view.get_or_init(|| {
-            if normalized_root.starts_with(&self.request_root)
-                && !has_nested_git_boundary(&self.request_root, &normalized_root)
-            {
-                Arc::clone(&self.request_view)
-            } else {
-                let paths = discover_classified_path_views(&normalized_root);
-                increment(&self.observer, "discovery.roots", 1);
-                increment(
-                    &self.observer,
-                    "discovery.candidates",
-                    paths.visible.len() as u64,
-                );
-                snapshot_path_view(paths, self.observer.clone())
-            }
+            let paths = discover_classified_path_views(&scope_root);
+            increment(&self.observer, "discovery.roots", 1);
+            increment(
+                &self.observer,
+                "discovery.candidates",
+                paths.visible.len() as u64,
+            );
+            snapshot_path_view(paths, self.observer.clone())
         }))
     }
 }
@@ -177,20 +183,11 @@ fn snapshot_path_view(
             observer,
         )),
         tracked_paths: Arc::new(tracked_paths),
+        git_index_paths: normalized_index_paths(&paths.git_index_paths),
+        git_index_available: paths.git_index_available,
     })
 }
 
-fn snapshot_path_view_from_paths(
-    paths: &[PathBuf],
-    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
-) -> Arc<SnapshotPathView> {
-    let inventory = Arc::new(FileInventory::from_paths(paths));
-    let tracked_paths = inventory.paths();
-    Arc::new(SnapshotPathView {
-        sources: Arc::new(SourceStore::new_observed(inventory, observer)),
-        tracked_paths,
-    })
-}
 
 fn contains_path(paths: &[PathBuf], path: &Path) -> bool {
     // Exact OsStr membership. Canonical remapping does not belong here.
@@ -207,18 +204,4 @@ fn increment(
     if let Some(observer) = observer {
         observer.increment(metric, amount);
     }
-}
-
-fn has_nested_git_boundary(request_root: &Path, root: &Path) -> bool {
-    let mut current = root;
-    while current != request_root {
-        if current.join(".git").exists() {
-            return true;
-        }
-        let Some(parent) = current.parent() else {
-            break;
-        };
-        current = parent;
-    }
-    false
 }

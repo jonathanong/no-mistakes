@@ -18,6 +18,7 @@ mod discovery_preserve;
 mod gitignore;
 mod ignore_walk;
 mod source_and_discovery;
+mod visible_snapshot_scopes;
 
 #[test]
 fn matching_disable_directive_reports_exact_supported_provenance() {

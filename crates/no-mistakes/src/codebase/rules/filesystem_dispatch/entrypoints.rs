@@ -76,7 +76,7 @@ pub fn run_filesystem_rules_with_config(
     config: &crate::config::v2::NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, files);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_tracked_paths(root, files);
     run_filesystem_rules_with_config_and_snapshot(root, config, files, &snapshot)
 }
 
@@ -86,7 +86,7 @@ fn run_filesystem_rules_with_config_and_path(
     config_path: Option<&Path>,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, files);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_tracked_paths(root, files);
     run_filesystem_rules_with_config_snapshot_and_path(root, config, config_path, files, &snapshot)
 }
 
