@@ -152,3 +152,23 @@ fn native_and_node_cli_use_nested_project_indexes_under_non_git_roots() {
         }
     }
 }
+
+#[test]
+fn native_and_node_cli_explain_missing_git_inventory_recovery() {
+    let fixture = gitignore_fixture::materialize_saved(
+        "../../test-cases/rules/nextjs-redirect-destinations/fixture/tracked-routes",
+    );
+    for node in [false, true] {
+        let output = check(fixture.path(), ".no-mistakes.yml", node);
+        assert!(!output.status.success());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        for expected in [
+            "fails closed",
+            "Git-backed configured project",
+            "run_filesystem_rules_with_files()",
+            "trackedRoutesOnly: false",
+        ] {
+            assert!(stderr.contains(expected), "{stderr}");
+        }
+    }
+}

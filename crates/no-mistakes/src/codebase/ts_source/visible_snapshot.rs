@@ -17,6 +17,7 @@ pub struct VisiblePathSnapshot {
     request_view: Arc<SnapshotPathView>,
     scoped_views: Mutex<HashMap<PathBuf, Arc<OnceLock<Arc<SnapshotPathView>>>>>,
     scope_roots: Mutex<HashMap<PathBuf, PathBuf>>,
+    projected_paths: Mutex<HashMap<PathBuf, Arc<OnceLock<ProjectedSnapshotPaths>>>>,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
 }
 
@@ -53,6 +54,7 @@ impl VisiblePathSnapshot {
             request_view,
             scoped_views: Mutex::new(HashMap::new()),
             scope_roots: Mutex::new(HashMap::new()),
+            projected_paths: Mutex::new(HashMap::new()),
             observer,
         }
     }
@@ -60,7 +62,7 @@ impl VisiblePathSnapshot {
     #[doc(hidden)]
     pub fn paths_for(&self, root: &Path) -> Arc<Vec<PathBuf>> {
         let view = self.path_view_for(root);
-        self.project_paths(root, &view, view.sources.inventory().paths())
+        self.project_paths(root, &view, SnapshotPathKind::Visible)
     }
 
     /// Return the worktree-readable tracked path inventory for a scope. In
@@ -68,7 +70,7 @@ impl VisiblePathSnapshot {
     #[doc(hidden)]
     pub fn tracked_paths_for(&self, root: &Path) -> Arc<Vec<PathBuf>> {
         let view = self.path_view_for(root);
-        self.project_paths(root, &view, Arc::clone(&view.tracked_paths))
+        self.project_paths(root, &view, SnapshotPathKind::Tracked)
     }
 
     /// Whether this prepared scope can prove tracked membership.

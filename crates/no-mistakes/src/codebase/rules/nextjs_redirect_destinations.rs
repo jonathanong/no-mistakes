@@ -68,32 +68,59 @@ pub(crate) fn check_with_files_sources_and_snapshot(
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             let findings = if opts.tracked_routes_only {
-                let snapshot = snapshot.ok_or_else(|| anyhow::anyhow!(
-                    "nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory"
-                ))?;
+                let snapshot = snapshot.ok_or_else(|| missing_tracked_inventory(root))?;
                 let mut findings = Vec::new();
                 for target_root in &target_roots {
                     if !snapshot.git_index_available_for(target_root) {
-                        anyhow::bail!("nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory for {}", target_root.display());
+                        return Err(missing_tracked_inventory(target_root));
                     }
                     // A non-Git umbrella's fallback list must never prove
                     // membership in its nested project's Git index.
                     let inventory = snapshot.git_index_paths_for(target_root);
-                    let tracked = inventory.iter().filter(|path| {
-                        path.starts_with(target_root)
-                            && super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                    }).cloned().collect::<Vec<_>>();
-                    let tracked = super::path_filter::filter_rule_files(root, config, rule, &tracked)?;
+                    let tracked = inventory
+                        .iter()
+                        .filter(|path| {
+                            path.starts_with(target_root)
+                                && super::file_allowed_by_roots_and_skip(
+                                    root,
+                                    &skip,
+                                    path,
+                                    &target_roots,
+                                )
+                        })
+                        .cloned()
+                        .collect::<Vec<_>>();
+                    let tracked =
+                        super::path_filter::filter_rule_files(root, config, rule, &tracked)?;
                     let mut target_files = files.clone();
-                    target_files.extend(snapshot.paths_for(target_root).iter().filter(|path| {
-                        super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                    }).cloned());
+                    target_files.extend(
+                        snapshot
+                            .paths_for(target_root)
+                            .iter()
+                            .filter(|path| {
+                                super::file_allowed_by_roots_and_skip(
+                                    root,
+                                    &skip,
+                                    path,
+                                    &target_roots,
+                                )
+                            })
+                            .cloned(),
+                    );
                     target_files.sort();
                     target_files.dedup();
-                    let target_files = super::path_filter::filter_rule_files(root, config, rule, &target_files)?;
+                    let target_files =
+                        super::path_filter::filter_rule_files(root, config, rule, &target_files)?;
                     // Supplemental scoped configs still read through the one
                     // request store, retaining shared success/failure identity.
-                    findings.extend(scan(root, &opts, &target_files, &tracked, std::slice::from_ref(target_root), sources));
+                    findings.extend(scan(
+                        root,
+                        &opts,
+                        &target_files,
+                        &tracked,
+                        std::slice::from_ref(target_root),
+                        sources,
+                    ));
                 }
                 findings
             } else {
@@ -105,6 +132,13 @@ pub(crate) fn check_with_files_sources_and_snapshot(
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn missing_tracked_inventory(root: &Path) -> anyhow::Error {
+    anyhow::anyhow!(
+        "nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory for {}. The rule fails closed because filesystem pages cannot prove Git index membership. Run against a Git-backed configured project, supply an authoritative tracked list through Rust run_filesystem_rules_with_files(), or set trackedRoutesOnly: false to use filesystem routes.",
+        root.display()
+    )
 }
 
 #[cfg(test)]

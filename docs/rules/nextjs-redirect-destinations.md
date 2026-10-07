@@ -68,7 +68,10 @@ still be locally readable. This also applies to rewrites. The default
 uses the existing ignore-aware filesystem inventory. Route groups and
 dynamic/catch-all matching are identical in both modes. A tracked-route request
 without a prepared Git index inventory returns an error instead of falling back
-to filesystem pages. Each configured project uses its own prepared Git scope,
+to filesystem pages: a local page cannot prove index membership. Run the check
+against a Git-backed configured project, provide an authoritative tracked list
+through Rust `run_filesystem_rules_with_files`, or set `trackedRoutesOnly: false`
+to explicitly use filesystem routes. Each configured project uses its own prepared Git scope,
 so a non-Git umbrella directory can contain Git-backed Next.js projects. Even
 overlapping project directories keep separate tracked route sets. Sibling
 projects in one nested Git repository share its prepared index discovery.

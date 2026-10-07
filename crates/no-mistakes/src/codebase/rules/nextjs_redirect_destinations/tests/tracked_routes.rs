@@ -91,10 +91,28 @@ fn tracked_routes_require_boolean_option_and_real_prepared_git_inventory() {
     assert!(check(root, &config("{trackedRoutesOnly: invalid}")).is_err());
     let files = fixture_files(root);
     let error = check_with_files(root, &config("{trackedRoutesOnly: true}"), &files).unwrap_err();
-    assert!(error.to_string().contains("prepared Git index inventory"));
+    let message = error.to_string();
+    for expected in [
+        "prepared Git index inventory",
+        "fails closed",
+        "Git-backed configured project",
+        "run_filesystem_rules_with_files()",
+        "trackedRoutesOnly: false",
+    ] {
+        assert!(message.contains(expected), "{message}");
+    }
     let non_git = crate::test_support::materialize_saved_fixture(&fixture("tracked-routes"));
     let error = check(non_git.path(), &config("{trackedRoutesOnly: true}")).unwrap_err();
-    assert!(error.to_string().contains("prepared Git index inventory"));
+    let message = error.to_string();
+    for expected in [
+        "prepared Git index inventory",
+        "fails closed",
+        "Git-backed configured project",
+        "run_filesystem_rules_with_files()",
+        "trackedRoutesOnly: false",
+    ] {
+        assert!(message.contains(expected), "{message}");
+    }
 }
 
 #[test]

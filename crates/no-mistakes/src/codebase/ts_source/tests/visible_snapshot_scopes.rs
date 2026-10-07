@@ -40,9 +40,45 @@ fn assert_sibling_scope_reuse(root: &Path, repo: &Path) {
         [alpha.join("src/a.ts")]
     );
     assert!(snapshot.tracked_paths_for(&beta).is_empty());
+    let projected = std::thread::scope(|scope| {
+        [&alpha, &beta, &alpha, &beta]
+            .into_iter()
+            .map(|root| {
+                scope.spawn(|| {
+                    (
+                        snapshot.paths_for(root),
+                        snapshot.tracked_paths_for(root),
+                        snapshot.git_index_paths_for(root),
+                    )
+                })
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|thread| thread.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+    for (index, root) in [&alpha, &beta].into_iter().enumerate() {
+        let first = &projected[index];
+        let concurrent = &projected[index + 2];
+        // Pointer identity protects reuse, even for empty tracked projections.
+        assert!(Arc::ptr_eq(&first.0, &concurrent.0));
+        assert!(Arc::ptr_eq(&first.1, &concurrent.1));
+        assert!(Arc::ptr_eq(&first.2, &concurrent.2));
+        assert!(Arc::ptr_eq(&first.0, &snapshot.paths_for(root)));
+        assert!(Arc::ptr_eq(&first.1, &snapshot.tracked_paths_for(root)));
+        assert!(Arc::ptr_eq(&first.2, &snapshot.git_index_paths_for(root)));
+    }
+    assert_eq!(observer.snapshot().work["discovery.projections"], 2);
+    assert_eq!(projected[0].2.as_slice(), [alpha.join("src/a.ts")]);
+    assert!(projected[1].2.is_empty());
     // Another project must use the same frozen index, even after staging changes.
     crate::test_support::git_add_force(repo, &["packages/beta"]);
     assert!(snapshot.tracked_paths_for(&beta).is_empty());
+    assert!(Arc::ptr_eq(
+        &projected[1].2,
+        &snapshot.git_index_paths_for(&beta)
+    ));
+    assert_eq!(observer.snapshot().work["discovery.projections"], 2);
     assert_eq!(observer.snapshot().work["discovery.roots"], 2);
     assert_eq!(
         VisiblePathSnapshot::new(root)

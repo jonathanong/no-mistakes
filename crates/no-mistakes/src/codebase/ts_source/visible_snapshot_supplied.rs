@@ -11,6 +11,7 @@ impl VisiblePathSnapshot {
             request_view: snapshot_path_view_from_paths(request_paths, None),
             scoped_views: Mutex::new(HashMap::new()),
             scope_roots: Mutex::new(HashMap::new()),
+            projected_paths: Mutex::new(HashMap::new()),
             observer: None,
         }
     }
