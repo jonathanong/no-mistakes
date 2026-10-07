@@ -68,9 +68,15 @@ fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {
                 return false;
             }
             if depth == 0
+                && !insert
                 && keyword(token, Keyword::ATOMIC)
                 && position > 0
                 && keyword(&tokens[significant[position - 1]].token, Keyword::BEGIN)
+                && super::super::super::metadata_preparation::boundary(
+                    tokens,
+                    significant,
+                    position,
+                )
             {
                 beginning = true;
                 insert = false;

@@ -388,3 +388,6 @@ require("./postgres-wrapper-option-api.test.js");
 require("./postgres-wrapper-with-conflict-api.test.js");
 
 require("./postgres-comment-alias-api.test.js");
+require("./postgres-wrapper-boundary-api.test.js");
+
+require("./postgres-wrapper-repeated-options-api.test.js");

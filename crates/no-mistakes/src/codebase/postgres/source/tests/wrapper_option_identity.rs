@@ -8,7 +8,7 @@ fn explain_option_aliases_and_quoted_values_match_postgresql_identity() {
     assert_eq!(result.statements.len(), 18, "{:?}", result.statements);
     use PostgresSqlExecution::{ExecutesForAnalysis as Runs, NonExecuting as Plan, Unknown};
     for (statement, expected) in result.statements.iter().zip([
-        Runs, Plan, Unknown, Plan, Plan, Plan, Plan, Unknown, Runs, Runs, Unknown, Plan, Unknown,
+        Runs, Plan, Runs, Plan, Plan, Plan, Plan, Unknown, Runs, Runs, Unknown, Plan, Unknown,
         Unknown, Unknown, Unknown, Unknown,
     ]) {
         let PostgresSqlStatementKind::Wrapper { wrapper } = &statement.facts else {

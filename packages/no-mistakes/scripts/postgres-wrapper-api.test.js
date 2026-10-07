@@ -121,7 +121,7 @@ test(
           [
             "executesForAnalysis",
             "nonExecuting",
-            "unknown",
+            "executesForAnalysis",
             "nonExecuting",
             "nonExecuting",
             "nonExecuting",

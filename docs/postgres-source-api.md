@@ -421,12 +421,15 @@ wrapper has its own span, completeness, and diagnostics. Execution is explicit:
   other signed numbers remain invalid. Quoted option names preserve exact lowercase identity.
 - PREPARE is `nonExecuting`; preparing a statement does not execute it.
 - Unsupported or ambiguous EXPLAIN options are `unknown` and incomplete.
-  Duplicate options and incompatible ANALYZE/GENERIC_PLAN settings fail closed.
+  Repeated options use the final value of each name, including ANALYSE as an
+  alias of ANALYZE. Every occurrence must still have a valid value. Incompatible
+  final ANALYZE/GENERIC_PLAN or WAL/TIMING/SERIALIZE settings fail closed.
 
 Complete EXPLAIN/PREPARE child projection currently covers INSERT and query
 facts. Other parsed children retain their source facts but make the wrapper
 incomplete; for example, CREATE TABLE AS does not expose its query in the existing
-CREATE TABLE contract. Existing parser compatibility restoration and partial
+CREATE TABLE contract. SELECT INTO also remains incomplete because target-creation facts are not
+represented by the existing query contract. Existing parser compatibility restoration and partial
 conflict predicates also apply to supported wrapped children. Parse failures
 remain typed incomplete wrappers and recover at original statement delimiters.
 

@@ -54,12 +54,8 @@ pub(super) fn collect(
                         continue;
                     }
                     parser.next_token();
-                    if matches!(&statement, Statement::CreateTable(table) if table.query.is_some())
-                    {
-                        wrapper.diagnostics.push(diagnostic(
-                            "Function child CREATE TABLE AS query facts are unsupported",
-                            None,
-                        ));
+                    if let Some(message) = semantics::child_gap(&statement) {
+                        wrapper.diagnostics.push(diagnostic(message, None));
                     }
                     let tokens = (child_start..parser.index())
                         .map(|index| parser.token_at(index).clone())

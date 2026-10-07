@@ -94,6 +94,7 @@ fn case_expression(parser: &Parser<'_>, index: usize) -> bool {
         Token::SemiColon | Token::Comma | Token::RParen | Token::EOF => false,
         Token::Word(word) => ![
             Keyword::FROM,
+            Keyword::INTO,
             Keyword::WHERE,
             Keyword::GROUP,
             Keyword::HAVING,

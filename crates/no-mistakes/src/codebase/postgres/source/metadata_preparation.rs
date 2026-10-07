@@ -38,11 +38,18 @@ pub(super) fn prepare<'a>(
             continue;
         }
         let start = prefix[0];
-        let end = tokens[start..]
+        let end = significant
             .iter()
-            .position(|token| token.token == Token::SemiColon
-                || matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::END))
-            .map_or(tokens.len(), |offset| start + offset);
+            .enumerate()
+            .skip(position)
+            .find(|(at, index)| {
+                let token = &tokens[**index].token;
+                token == &Token::SemiColon
+                    || matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::END)
+                        // Qualified object components use ColLabel, including END.
+                        && tokens[significant[*at - 1]].token != Token::Period
+            })
+            .map_or(tokens.len(), |(_, index)| *index);
         while parser.index() > start {
             parser.prev_token();
         }
@@ -126,7 +133,7 @@ fn prepared_child_position(
     None
 }
 
-fn boundary(
+pub(super) fn boundary(
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
     significant: &[usize],
     position: usize,

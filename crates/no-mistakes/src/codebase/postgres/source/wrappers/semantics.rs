@@ -1,4 +1,15 @@
 use super::*;
+pub(super) fn child_gap(statement: &Statement) -> Option<&'static str> {
+    match statement {
+        Statement::CreateTable(table) if table.query.is_some() => {
+            Some("Child CREATE TABLE AS query facts are unsupported")
+        }
+        Statement::Query(query) if matches!(query.body.as_ref(), sqlparser::ast::SetExpr::Select(select) if select.into.is_some()) => {
+            Some("Child SELECT INTO target creation facts are unsupported")
+        }
+        _ => None,
+    }
+}
 pub(in crate::codebase::postgres::source) fn finalize(
     facts: &mut PostgresSqlStatementKind,
     span: &PostgresSqlSpan,

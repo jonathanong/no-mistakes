@@ -3,9 +3,10 @@ use sqlparser::ast::{Expr, UnaryOperator, UtilityOption, Value};
 
 pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> PostgresSqlExecution {
     let mut analyze = legacy;
-    let mut seen = std::collections::BTreeSet::new();
     let mut generic = false;
-    let mut requires_analyze = false;
+    let mut wal = false;
+    let mut timing = false;
+    let mut serialize = false;
     for option in options.into_iter().flatten() {
         let mut name = if option.name.quote_style.is_some() {
             option.name.value.clone()
@@ -14,9 +15,6 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
         };
         if name == "analyse" && option.name.quote_style.is_none() {
             name = "analyze".into();
-        }
-        if !seen.insert(name.clone()) {
-            return PostgresSqlExecution::Unknown;
         }
         if name == "analyze" {
             let Some(value) = boolean(option.arg.as_ref()) else {
@@ -37,15 +35,19 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
                 },
             };
             match value.as_str() {
-                "none" | "off" => {}
-                "text" | "binary" => requires_analyze = true,
+                "none" | "off" => serialize = false,
+                "text" | "binary" => serialize = true,
                 _ => return PostgresSqlExecution::Unknown,
             }
         } else if name == "wal" || name == "timing" {
             let Some(value) = boolean(option.arg.as_ref()) else {
                 return PostgresSqlExecution::Unknown;
             };
-            requires_analyze |= value;
+            if name == "wal" {
+                wal = value;
+            } else {
+                timing = value;
+            }
         } else if [
             "verbose", "costs", "settings", "buffers", "summary", "memory",
         ]
@@ -63,7 +65,9 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
             return PostgresSqlExecution::Unknown;
         }
     }
-    if analyze && generic || !analyze && requires_analyze {
+    // PostgreSQL validates each occurrence, then applies cross-option checks to
+    // the last value of each name; an earlier true flag can be reset to false.
+    if analyze && generic || !analyze && (wal || timing || serialize) {
         PostgresSqlExecution::Unknown
     } else if analyze {
         PostgresSqlExecution::ExecutesForAnalysis

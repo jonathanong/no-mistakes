@@ -131,9 +131,11 @@ fn project(
     {
         wrapper.execution = PostgresSqlExecution::Unknown;
     }
+    let gap = semantics::child_gap(child);
     match context.statement(child, child_tokens, 0, depth + 1, insert_facts) {
         Ok(child) => {
             wrapper.complete = known
+                && gap.is_none()
                 && matches!(
                     child.facts,
                     PostgresSqlStatementKind::Insert { .. }

@@ -9,6 +9,7 @@ mod metadata;
 mod metadata_conditional;
 mod metadata_escape;
 mod metadata_escape_values;
+mod metadata_qualified_end;
 mod metadata_statement_positions;
 mod metadata_unicode;
 mod parsing;
@@ -56,3 +57,6 @@ mod wrapper_string_options;
 mod wrapper_signed_options;
 
 mod wrapper_atomic_identifiers;
+mod wrapper_insert_identifiers;
+
+mod wrapper_repeated_options;
