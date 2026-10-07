@@ -364,6 +364,7 @@ explicit incomplete child.
 
 Write targets bind to physical table facts even when a CTE declares the same
 unqualified name. FROM/USING sources retain ordinary lexical CTE lookup.
+
 ## Comments, index metadata, and string continuations
 
 Both Node facades and the Rust source API return `{ kind: "comment", comment }`
@@ -372,7 +373,9 @@ for supported COMMENT targets. The named `PostgresSqlComment` contract retains
 and routine argument modes, names, and typed signatures. `arguments: []`
 preserves an explicit `FUNCTION f()` signature; `null` means no signature was
 written. A comment is metadata and does not imply routine invocation. Plain, escape,
-Unicode, and dollar-quoted strings are accepted; bare words are rejected.
+Unicode (including `UESCAPE`), and dollar-quoted strings are accepted; bare words
+and standalone `USER` targets are rejected. Routine comments inside conditional
+DO branches preserve the same signatures.
 
 ```sql
 COMMENT ON FUNCTION example_function() IS 'documentation';
@@ -389,8 +392,9 @@ identity, while `rename` carries the unqualified new name. `IF EXISTS` is suppor
 for rename and rejected for attach. These are source facts without
 catalog lookup, SQL execution, or migration policy.
 
-Plain single-quoted strings separated by whitespace containing a newline are
+Plain and escape-prefixed single-quoted strings separated by whitespace containing a newline are
 joined in the prepared token inventory, including line-comment continuations.
+Continuation segments inherit the first escape-prefixed literal's escape state.
 Statement SQL and spans still refer to the original source. The same handling
 applies to defaults and INSERT expressions. PostgreSQL does not concatenate
 same-line literals or literals separated by a block comment; those spellings

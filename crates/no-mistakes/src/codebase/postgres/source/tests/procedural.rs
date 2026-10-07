@@ -235,7 +235,8 @@ fn conditional_projection_requires_its_prepared_source_owner() {
             &source,
             &Locations::new(&empty),
             &[],
-            &prepared.recursive_views
+            &prepared.recursive_views,
+            &mut super::super::metadata_preparation::Comments::new(),
         )
         .is_err());
         if name == "conditional-branch.sql" {
@@ -245,7 +246,8 @@ fn conditional_projection_requires_its_prepared_source_owner() {
                 &source,
                 &Locations::new(&source.sql),
                 &[],
-                &prepared.recursive_views
+                &prepared.recursive_views,
+                &mut super::super::metadata_preparation::Comments::new(),
             )
             .is_err());
             let missing = tokens
@@ -259,7 +261,8 @@ fn conditional_projection_requires_its_prepared_source_owner() {
                 &source,
                 &Locations::new(&source.sql),
                 &[],
-                &prepared.recursive_views
+                &prepared.recursive_views,
+                &mut super::super::metadata_preparation::Comments::new(),
             )
             .is_err());
         }

@@ -73,12 +73,87 @@ test(
     const source = { sql: fixture("invalid-metadata.sql") };
     const facts = await cjs.parsePostgresSql(source);
     assert.deepEqual(await esm.parsePostgresSql(source), facts);
-    assert.equal(facts.diagnostics.length, 22);
+    assert.equal(facts.diagnostics.length, 23);
     assert.match(facts.diagnostics[0].message, /column name or constraint/);
     assert.deepEqual(
       facts.statements.map((statement) => statement.kind),
       ["createIndex"],
     );
-    assert.equal(facts.statements[0].ordinal, 22);
+    assert.equal(facts.statements[0].ordinal, 23);
+  },
+);
+
+test(
+  "compiled metadata supports escape continuation quote state",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("escaped-continuations.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.equal(facts.diagnostics.length, 5);
+    assert.deepEqual(
+      facts.statements.slice(0, 4).map((statement) => statement.comment.comment),
+      ["foobar", "first\nsecond\tend\r\b\f\\z", "ABCDxZ", "é雪"],
+    );
+    assert.deepEqual(
+      facts.statements.slice(4).map((statement) => statement.kind),
+      ["createTable", "insert"],
+    );
+  },
+);
+
+test("compiled routine comments retain nested signatures", { skip: !compiled }, async () => {
+  const cjs = require("../index.js");
+  const esm = await import("../index.mjs");
+  const source = { sql: fixture("conditional-routine-comment.sql") };
+  const facts = await cjs.parsePostgresSql(source);
+  assert.deepEqual(await esm.parsePostgresSql(source), facts);
+  assert.deepEqual(facts.diagnostics, []);
+  assert.equal(facts.statements[0].block.complete, true);
+  const comment = facts.statements[0].block.statements[0].branches[0].statements[0].comment;
+  assert.equal(comment.name.parts[0].identity, "Schéma");
+  assert.equal(comment.arguments[1].mode, "VARIADIC");
+  assert.equal(comment.comment, "雪");
+});
+
+test("compiled Unicode comments consume and decode UESCAPE", { skip: !compiled }, async () => {
+  const cjs = require("../index.js");
+  const esm = await import("../index.mjs");
+  const source = { sql: fixture("unicode-comment-escapes.sql") };
+  const facts = await cjs.parsePostgresSql(source);
+  assert.deepEqual(await esm.parsePostgresSql(source), facts);
+  assert.equal(facts.diagnostics.length, 13);
+  assert.equal(facts.statements.length, 21);
+  assert.equal(facts.statements[0].comment.comment, "data! it''s \\path");
+  assert.equal(facts.statements[1].comment.comment, "snow 雪");
+  assert.equal(facts.statements[3].comment.comment, "😀 😀 😀 😀");
+  assert.equal(facts.statements[7].block.complete, true);
+});
+
+test(
+  "compiled E continuations preserve escaped quotes and neighboring statements",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("escaped-quote-continuations.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements[0].comment.comment, "ab'c");
+    assert.equal(facts.statements[1].comment.comment, "雪'quoted'");
+    assert.equal(facts.statements[9].kind, "createIndex");
+    const malformed = { sql: fixture("escaped-quote-continuations-invalid.sql") };
+    const invalid = await cjs.parsePostgresSql(malformed);
+    assert.deepEqual(await esm.parsePostgresSql(malformed), invalid);
+    assert.deepEqual(
+      invalid.statements.map((statement) => statement.kind),
+      ["createIndex", "createIndex"],
+    );
+    assert.ok(
+      invalid.diagnostics.some((diagnostic) => diagnostic.message.includes("Unterminated")),
+    );
   },
 );

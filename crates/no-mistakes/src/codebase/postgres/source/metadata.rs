@@ -1,4 +1,5 @@
 //! Metadata grammar borrows the same prepared parser and source locations.
+mod literal;
 use super::{
     expressions::{identifier, name},
     locations::Locations,
@@ -56,7 +57,6 @@ fn comment(
             Keyword::SEQUENCE,
             Keyword::TABLE,
             Keyword::TYPE,
-            Keyword::USER,
             Keyword::VIEW,
         ])
         .ok_or("Expected a supported COMMENT object type")?;
@@ -72,7 +72,7 @@ fn comment(
     parser
         .expect_keyword_is(Keyword::IS)
         .map_err(|e| e.to_string())?;
-    let comment = comment_text(parser)?;
+    let comment = literal::text(parser, locations)?;
     Ok(PostgresSqlStatementKind::Comment {
         comment: PostgresSqlComment {
             object_type,
@@ -126,7 +126,7 @@ fn routine_comment(
     parser
         .expect_keyword_is(Keyword::IS)
         .map_err(|e| e.to_string())?;
-    let comment = comment_text(parser)?;
+    let comment = literal::text(parser, locations)?;
     Ok(PostgresSqlStatementKind::Comment {
         comment: PostgresSqlComment {
             object_type: object_type.into(),
@@ -135,24 +135,6 @@ fn routine_comment(
             comment,
         },
     })
-}
-
-fn comment_text(parser: &mut Parser<'_>) -> Result<Option<String>, String> {
-    comment_value(&parser.next_token().token)
-}
-
-/// Conditional AST comments reuse this validation over their prepared tokens.
-pub(super) fn comment_value(token: &Token) -> Result<Option<String>, String> {
-    match token {
-        Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::NULL => {
-            Ok(None)
-        }
-        Token::SingleQuotedString(value)
-        | Token::EscapedStringLiteral(value)
-        | Token::UnicodeStringLiteral(value) => Ok(Some(value.clone())),
-        Token::DollarQuotedString(value) => Ok(Some(value.value.clone())),
-        _ => Err("Expected a single-quoted COMMENT string or NULL".into()),
-    }
 }
 
 fn alter_index(parser: &mut Parser<'_>) -> Result<PostgresSqlStatementKind, String> {

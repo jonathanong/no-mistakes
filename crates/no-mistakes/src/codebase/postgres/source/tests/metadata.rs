@@ -78,9 +78,9 @@ fn valid_metadata_and_adjacent_strings_keep_typed_identity_and_original_spans() 
 #[test]
 fn malformed_metadata_and_create_table_never_become_successful_facts() {
     let result = facts("invalid-metadata.sql");
-    assert_eq!(result.diagnostics.len(), 22, "{:?}", result.diagnostics);
+    assert_eq!(result.diagnostics.len(), 23, "{:?}", result.diagnostics);
     assert_eq!(result.statements.len(), 1);
-    assert_eq!(result.statements[0].ordinal, 22);
+    assert_eq!(result.statements[0].ordinal, 23);
     assert!(matches!(
         result.statements[0].facts,
         PostgresSqlStatementKind::CreateIndex { .. }

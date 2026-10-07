@@ -13,19 +13,6 @@ pub(super) fn project(
         return PostgresSqlStatementKind::Drop { drop };
     }
     match statement {
-        Statement::Comment {
-            object_type,
-            object_name,
-            comment,
-            ..
-        } => PostgresSqlStatementKind::Comment {
-            comment: PostgresSqlComment {
-                object_type: object_type.to_string(),
-                name: name(object_name),
-                arguments: None,
-                comment: comment.clone(),
-            },
-        },
         Statement::Insert(value) => PostgresSqlStatementKind::Insert {
             insert: Box::new(super::insert::project(value, None, locations)),
         },

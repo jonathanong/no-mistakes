@@ -16,6 +16,7 @@ mod indexes;
 mod insert;
 mod locations;
 mod metadata;
+mod metadata_preparation;
 mod parsing;
 mod procedural;
 mod procedural_occurrences;

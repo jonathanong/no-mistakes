@@ -21,4 +21,5 @@ COMMENT ON MATERIALIZED t IS 'missing VIEW';
 COMMENT ON SOMETHING t IS 'unknown';
 COMMENT ON TABLE t 'missing IS';
 COMMENT ON TABLE;
+COMMENT ON USER alice IS 'bad';
 CREATE INDEX valid_neighbor ON neighbor(label);

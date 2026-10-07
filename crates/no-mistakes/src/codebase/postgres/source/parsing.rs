@@ -34,7 +34,12 @@ pub(super) fn collect_program(
     } else {
         Vec::new()
     };
-    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
+    let parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
+    let (mut parser, mut comments) = if depth > 0 {
+        super::metadata_preparation::prepare(parser, locations)
+    } else {
+        (parser, super::metadata_preparation::Comments::new())
+    };
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
         if parser.consume_token(&Token::SemiColon) {
@@ -42,7 +47,12 @@ pub(super) fn collect_program(
         }
         let start = parser.peek_token().span.start;
         let start_index = parser.index();
-        let parsed = if super::procedural::starts(&parser) {
+        let parsed = if let Some(facts) = comments.remove(&start) {
+            while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
+                parser.next_token();
+            }
+            facts
+        } else if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
         } else if super::metadata::starts(&parser) {
             super::metadata::collect(&mut parser, locations)
@@ -87,6 +97,7 @@ pub(super) fn collect_program(
                             locations,
                             &generated,
                             &prepared.recursive_views,
+                            &mut comments,
                         )
                     } else {
                         let tables =
@@ -102,7 +113,10 @@ pub(super) fn collect_program(
                     }
                 })
         };
-        let complete = matches!(parser.peek_token().token, Token::SemiColon | Token::EOF);
+        // A lexical failure can leave a valid-looking statement prefix at EOF.
+        // The missing tail belongs to that occurrence, never a successful fact.
+        let complete = matches!(parser.peek_token().token, Token::SemiColon | Token::EOF)
+            && !(parser.peek_token().token == Token::EOF && prepared.lexical_error.is_some());
         // Move projected facts once; cloning a nested program here repeats its subtree.
         let (facts, error) = match parsed {
             Ok(facts) if complete => (Some(facts), None),
