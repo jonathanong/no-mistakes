@@ -93,7 +93,14 @@ test(
     for (const api of [cjs, esm]) {
       const { modules } = await api.analyzeTypeScriptModules({
         root,
-        files: ["dynamic.ts", "invalid.ts", "missing.ts", "unsupported.txt", "empty.ts"],
+        files: [
+          "dynamic.ts",
+          "invalid.ts",
+          "missing.ts",
+          "unsupported.txt",
+          "empty.ts",
+          "wrapped-eval.ts",
+        ],
       });
       for (const module of modules) {
         assert.equal(module.complete, module.fileName.endsWith("empty.ts"));

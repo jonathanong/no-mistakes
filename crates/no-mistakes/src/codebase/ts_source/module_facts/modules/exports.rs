@@ -37,18 +37,14 @@ pub(super) fn named(value: &ExportNamedDeclaration<'_>, facts: &mut TypeScriptMo
 
 pub(super) fn inline(
     value: &ExportDeclaration<'_>,
-    semantic: &Semantic<'_>,
+    inline_bindings: &[usize],
     facts: &mut TypeScriptModuleFacts,
 ) {
     let span = value.declaration.span();
-    for binding in &facts.bindings {
-        let scope = semantic
-            .scoping()
-            .symbol_scope_id(oxc_semantic::SymbolId::from_usize(binding.id));
-        if scope == semantic.scoping().root_scope_id()
-            && binding.span.start >= span.start
-            && binding.span.end <= span.end
-        {
+    let candidates = inline_candidates(inline_bindings, &facts.bindings, span);
+    for &index in candidates {
+        let binding = &facts.bindings[index];
+        if binding.span.end <= span.end {
             facts.exports.push(ModuleExport {
                 specifier: None,
                 local: binding.name.clone(),
@@ -59,6 +55,17 @@ pub(super) fn inline(
         }
     }
 }
+
+fn inline_candidates<'a>(
+    indices: &'a [usize],
+    bindings: &[ModuleBinding],
+    span: oxc_span::Span,
+) -> &'a [usize] {
+    let start = indices.partition_point(|&index| bindings[index].span.start < span.start);
+    let end = indices.partition_point(|&index| bindings[index].span.start < span.end);
+    &indices[start..end]
+}
+
 pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
     let (local, type_only) = match &value.declaration {
         ExportDefaultDeclarationKind::Identifier(value) => (value.name.to_string(), false),
@@ -91,3 +98,6 @@ pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScri
         span: value.span.into(),
     });
 }
+
+#[cfg(test)]
+mod tests;

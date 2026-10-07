@@ -207,6 +207,38 @@ fn selected_module_demand_shares_one_source_read_and_parse_with_existing_facts()
     assert!(!facts[&path].imports.is_empty());
     assert!(facts[&path].symbols.is_some());
     assert!(facts[&path].module_bindings.is_some());
+    let payload = facts[&path]
+        .module_bindings
+        .as_ref()
+        .unwrap()
+        .bindings
+        .as_ptr();
+    let report = super::report::project_modules(vec![path.clone()], facts);
+    assert_eq!(report.modules[0].facts.bindings.as_ptr(), payload);
     assert_eq!(sources.physical_read_count(), 1);
     assert_eq!(session.work_snapshot().parse_attempts[&path], 1);
+}
+
+#[test]
+fn wrapped_direct_eval_is_an_explicit_binding_gap() {
+    let module = report(&["wrapped-eval.ts"]).modules.remove(0);
+    assert!(!module.complete);
+    assert_eq!(module.facts.diagnostics.len(), 5);
+    assert!(module
+        .facts
+        .diagnostics
+        .iter()
+        .all(|diagnostic| diagnostic.message == "Dynamic eval may change binding semantics"));
+}
+
+#[test]
+fn public_boundary_records_source_and_fact_work() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    crate::diagnostics::with_observer(Some(observer.clone()), || {
+        assert!(report(&["bindings.ts", "bindings.ts"]).modules[0].complete);
+    });
+    let snapshot = observer.snapshot();
+    assert_eq!(snapshot.work["source.reads"], 1);
+    assert_eq!(snapshot.work["ts_facts.collections"], 1);
+    assert_eq!(snapshot.work["ts_facts.files"], 1);
 }

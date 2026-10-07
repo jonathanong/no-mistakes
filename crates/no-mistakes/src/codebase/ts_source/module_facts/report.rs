@@ -1,7 +1,11 @@
 use super::*;
-use crate::codebase::ts_source::facts::{collect_ts_facts_with_context, TsFactContext, TsFactPlan};
+use crate::codebase::ts_source::facts::{
+    collect_ts_facts_with_context_sources_and_session, TsFactContext, TsFactMap, TsFactPlan,
+};
+use crate::codebase::ts_source::{FileInventory, SourceStore};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -52,22 +56,39 @@ pub fn analyze_typescript_modules(
         root,
         ..TsFactContext::default()
     };
-    let map = collect_ts_facts_with_context(
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let sources = SourceStore::new_observed(
+        Arc::new(FileInventory::from_paths(&files)),
+        session.observer().cloned(),
+    );
+    let map = collect_ts_facts_with_context_sources_and_session(
+        &session,
         &files,
         TsFactPlan {
             module_bindings: true,
             ..TsFactPlan::default()
         },
         &context,
+        &sources,
     );
+    Ok(project_modules(files, map))
+}
+
+// The owner may union module demand with other facts and then consume the map
+// here, transferring the uniquely owned payload without copying its vectors.
+pub(super) fn project_modules(files: Vec<PathBuf>, map: TsFactMap) -> TypeScriptModulesReport {
+    let mut map = map.into_iter().collect::<crate::fx::FxHashMap<_, _>>();
     let modules = files
         .into_iter()
         .map(|file_name| {
-            let mut facts = map
-                .get(&file_name)
-                .and_then(|facts| facts.module_bindings.as_deref().cloned())
+            let mut collected = map.remove(&file_name);
+            let mut facts = collected
+                .as_mut()
+                .and_then(|facts| facts.module_bindings.take())
+                .map(Arc::unwrap_or_clone)
                 .unwrap_or_default();
-            if let Some(collected) = map.get(&file_name) {
+            if let Some(collected) = &collected {
                 if let Some(error) = &collected.operational_error {
                     facts.diagnostics.push(ModuleDiagnostic {
                         kind: "sourceError".into(),
@@ -95,5 +116,5 @@ pub fn analyze_typescript_modules(
             }
         })
         .collect();
-    Ok(TypeScriptModulesReport { modules })
+    TypeScriptModulesReport { modules }
 }

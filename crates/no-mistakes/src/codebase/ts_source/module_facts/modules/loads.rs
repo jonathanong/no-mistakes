@@ -16,10 +16,8 @@ pub(super) fn require(
     semantic: &Semantic<'_>,
     facts: &mut TypeScriptModuleFacts,
 ) {
-    let Expression::Identifier(callee) = &value.callee else {
-        return;
-    };
-    if callee.name == "eval" {
+    if matches!(value.callee.get_inner_expression(), Expression::Identifier(callee) if callee.name == "eval")
+    {
         unsupported(
             facts,
             value.span,
@@ -27,6 +25,9 @@ pub(super) fn require(
         );
         return;
     }
+    let Expression::Identifier(callee) = &value.callee else {
+        return;
+    };
     if callee.name != "require" {
         return;
     }
