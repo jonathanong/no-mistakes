@@ -737,6 +737,8 @@ uses that value. `typeOnly` distinguishes type uses, including `typeof Value` in
 type query. A value import used only in annotations has no runtime references.
 Local named exports of type declarations are type-only even without an explicit
 `type` modifier; source re-exports retain their syntactic flags.
+An empty sourced export (`export {} from "./dep"`) retains its module request
+with empty `local` and `exported` names.
 `shadows` identifies the nearest enclosing same-name binding. IDs are local to a
 module and are not persistent identities.
 
@@ -751,7 +753,8 @@ The facts do not prove that an imported value exists in another module.
 Check `complete` and `diagnostics` before relying on a module. Non-literal module
 loads, shadowed or indirect `require`, direct `eval`, `with`, TypeScript import-equals and legacy
 export-assignment/namespace-export forms, CommonJS export assignments, and merged
-declarations are explicit diagnostic gaps. Source I/O,
+declarations are explicit diagnostic gaps. Ambient modules and namespaces also
+produce a gap; their nested import and export declarations are not file-level module facts. Source I/O,
 unsupported source extensions, and parser/semantic errors also make the module
 incomplete; any recovered facts remain available for inspection. Empty `files`
 returns an empty report, without a global fallback.

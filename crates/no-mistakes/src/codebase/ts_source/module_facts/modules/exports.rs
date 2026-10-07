@@ -1,5 +1,14 @@
 use super::*;
 pub(super) fn from(value: &ExportFromDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
+    if value.specifiers.is_empty() {
+        facts.exports.push(ModuleExport {
+            specifier: Some(value.source.value.to_string()),
+            local: String::new(),
+            exported: String::new(),
+            type_only: value.export_kind.is_type(),
+            span: value.span.into(),
+        });
+    }
     for specifier in &value.specifiers {
         facts.exports.push(ModuleExport {
             specifier: Some(value.source.value.to_string()),

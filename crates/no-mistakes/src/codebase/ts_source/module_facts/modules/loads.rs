@@ -22,7 +22,7 @@ pub(super) fn require(
     let reference = semantic
         .scoping()
         .get_reference(callee.reference_id.get().expect("semantic call reference"));
-    if callee.name == "eval" && reference.symbol_id().is_none() {
+    if callee.name == "eval" && !value.optional && !has_runtime_binding(reference, semantic) {
         unsupported(
             facts,
             value.span,
@@ -33,7 +33,7 @@ pub(super) fn require(
     if callee.name != "require" {
         return;
     }
-    if reference.symbol_id().is_some() {
+    if has_runtime_binding(reference, semantic) {
         unsupported(facts, value.span, "Shadowed require is not a module loader");
         return;
     }
@@ -74,7 +74,7 @@ pub(super) fn indirect(
     );
     if !reference.is_value()
         || reference.flags().is_value_as_type()
-        || reference.symbol_id().is_some()
+        || has_runtime_binding(reference, semantic)
     {
         return;
     }
@@ -100,4 +100,10 @@ pub(super) fn indirect(
         value.span,
         "Indirect require reference is unsupported",
     );
+}
+
+fn has_runtime_binding(reference: &oxc_semantic::Reference, semantic: &Semantic<'_>) -> bool {
+    reference
+        .symbol_id()
+        .is_some_and(|id| !semantic.scoping().symbol_flags(id).is_ambient())
 }

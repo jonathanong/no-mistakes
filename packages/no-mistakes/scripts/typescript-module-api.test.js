@@ -112,6 +112,35 @@ test(
           .exports.slice(0, 3)
           .every((entry) => entry.typeOnly),
       );
+      const ambient = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "empty-source-exports.ts",
+          "optional-eval.cjs",
+          "ambient-require.cts",
+          "ambient-modules.d.ts",
+        ],
+      });
+      assert.equal(
+        ambient.modules.find((entry) => entry.fileName.endsWith("empty-source-exports.ts")).exports
+          .length,
+        2,
+      );
+      assert.equal(
+        ambient.modules.find((entry) => entry.fileName.endsWith("optional-eval.cjs")).complete,
+        true,
+      );
+      assert.equal(
+        ambient.modules.find((entry) => entry.fileName.endsWith("ambient-require.cts")).loads
+          .length,
+        2,
+      );
+      assert.deepEqual(
+        ambient.modules
+          .find((entry) => entry.fileName.endsWith("ambient-modules.d.ts"))
+          .exports.map((entry) => entry.exported),
+        ["rootValue"],
+      );
       assert.equal("ast" in module, false);
       assert.equal("source" in module, false);
     }

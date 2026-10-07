@@ -326,3 +326,43 @@ fn local_export_types_wrapped_loads_and_commonjs_gaps_are_explicit() {
         }
     }
 }
+
+#[test]
+fn source_only_exports_optional_eval_and_ambient_ownership_are_preserved() {
+    for module in report(&[
+        "empty-source-exports.ts",
+        "optional-eval.cjs",
+        "ambient-require.cts",
+        "ambient-indirect-require.cts",
+        "ambient-modules.d.ts",
+    ])
+    .modules
+    {
+        if module.file_name.ends_with("ambient-modules.d.ts") {
+            assert!(!module.complete);
+            assert_eq!(module.facts.exports.len(), 1);
+            assert_eq!(module.facts.exports[0].exported, "rootValue");
+            assert!(module.facts.imports.is_empty());
+        } else if module.file_name.ends_with("ambient-indirect-require.cts") {
+            assert!(!module.complete);
+            assert!(module.facts.diagnostics.iter().any(
+                |diagnostic| diagnostic.message == "Indirect require reference is unsupported"
+            ));
+        } else {
+            assert!(module.complete, "{:?}", module.facts.diagnostics);
+        }
+        if module.file_name.ends_with("empty-source-exports.ts") {
+            assert_eq!(module.facts.exports.len(), 2);
+            assert_eq!(
+                module.facts.exports[0].specifier.as_deref(),
+                Some("./runtime")
+            );
+            assert_eq!(module.facts.exports[0].exported, "");
+            assert!(!module.facts.exports[0].type_only);
+            assert!(module.facts.exports[1].type_only);
+        }
+        if module.file_name.ends_with("ambient-require.cts") {
+            assert_eq!(module.facts.loads.len(), 2);
+        }
+    }
+}
