@@ -11,6 +11,8 @@ pub(crate) struct Options {
     pub(crate) app_root: Option<String>,
     #[serde(default = "default_include_rewrites")]
     pub(crate) include_rewrites: bool,
+    #[serde(default)]
+    pub(crate) tracked_routes_only: bool,
 }
 
 impl Default for Options {
@@ -19,6 +21,7 @@ impl Default for Options {
             config_path: None,
             app_root: None,
             include_rewrites: true,
+            tracked_routes_only: false,
         }
     }
 }

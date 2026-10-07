@@ -17,6 +17,7 @@ pub struct VisiblePathSnapshot {
 struct SnapshotPathView {
     sources: Arc<SourceStore>,
     tracked_paths: Arc<Vec<PathBuf>>,
+    git_index_available: bool,
 }
 
 impl VisiblePathSnapshot {
@@ -71,6 +72,13 @@ impl VisiblePathSnapshot {
     #[doc(hidden)]
     pub fn tracked_paths_for(&self, root: &Path) -> Arc<Vec<PathBuf>> {
         Arc::clone(&self.path_view_for(root).tracked_paths)
+    }
+
+    /// Whether this prepared scope has an actual Git index inventory.
+    /// Supplied path lists and non-Git fallbacks cannot prove tracked membership.
+    #[doc(hidden)]
+    pub fn git_index_available_for(&self, root: &Path) -> bool {
+        self.path_view_for(root).git_index_available
     }
 
     /// Restrict candidates to the tracked (or non-Git fallback) inventories
@@ -177,6 +185,7 @@ fn snapshot_path_view(
             observer,
         )),
         tracked_paths: Arc::new(tracked_paths),
+        git_index_available: paths.git_index_available,
     })
 }
 
@@ -189,6 +198,7 @@ fn snapshot_path_view_from_paths(
     Arc::new(SnapshotPathView {
         sources: Arc::new(SourceStore::new_observed(inventory, observer)),
         tracked_paths,
+        git_index_available: false,
     })
 }
 

@@ -17,9 +17,14 @@ use scan::scan;
 pub const RULE_ID: &str = "nextjs-redirect-destinations";
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let files =
-        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
-    check_with_files(root, config, &files)
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        &snapshot.paths_for(root),
+    );
+    let sources = snapshot.source_store_for(root);
+    check_with_files_sources_and_snapshot(root, config, &files, &sources, Some(&snapshot))
 }
 
 pub(crate) fn check_with_files(
@@ -37,12 +42,27 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_snapshot(root, config, all_files, sources, None)
+}
+
+pub(crate) fn check_with_files_sources_and_snapshot(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
+            if opts.tracked_routes_only
+                && !snapshot.is_some_and(|snapshot| snapshot.git_index_available_for(root))
+            {
+                anyhow::bail!("nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory");
+            }
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
                 .iter()
@@ -52,7 +72,10 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            Ok(scan(root, &opts, &files, &target_roots, sources))
+            let tracked = snapshot
+                .filter(|_| opts.tracked_routes_only)
+                .map(|snapshot| snapshot.tracked_paths_from(&files));
+            Ok(scan(root, &opts, &files, tracked.as_deref().unwrap_or(&files), &target_roots, sources))
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

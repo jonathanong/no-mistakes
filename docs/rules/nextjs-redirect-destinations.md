@@ -19,10 +19,10 @@ it reports incomplete extraction alongside any known missing destinations.
 
 ## Options
 
-`configPath`, `appRoot`, and `includeRewrites` are the rule's options.
+`configPath`, `appRoot`, `includeRewrites`, and `trackedRoutesOnly` are the rule's options.
 `configPath` and `appRoot` are optional; when omitted, the rule discovers the
 standard `next.config.{ts,mjs,js}` and uses `app`. `includeRewrites` defaults
-to `true`.
+to `true`. `trackedRoutesOnly` defaults to `false`.
 
 ## Valid example
 
@@ -51,10 +51,25 @@ rules:
       configPath: next.config.ts
       appRoot: app
       includeRewrites: true
+      trackedRoutesOnly: false
 ```
 
 `includeRewrites` defaults to `true`, so rewrite destinations in `beforeFiles`,
 `afterFiles`, and `fallback` are checked unless you set `includeRewrites: false`.
+
+Set `trackedRoutesOnly: true` to require pages present in the prepared Git index
+inventory. Untracked and ignored pages cannot satisfy literal or tuple-map
+destinations, even when present on disk; staging a page with `git add` makes it
+eligible on the next invocation. This also applies to rewrites. The default
+uses the existing ignore-aware filesystem inventory. Route groups and
+dynamic/catch-all matching are identical in both modes. A tracked-route request
+without a prepared Git index inventory returns an error instead of falling back
+to filesystem pages. Next.js configuration code is never executed.
+
+For example, `/new` is valid with a staged `app/new/page.tsx`; with the option
+enabled, the same page left untracked is a missing destination. Fix the finding
+by adding the intended page to Git, removing the redirect, or targeting a tracked
+route.
 
 External destinations (`://`, `//`) and parameterized `:[A-Za-z]` destinations
 are skipped. Query strings and hashes are stripped before matching. Dynamic

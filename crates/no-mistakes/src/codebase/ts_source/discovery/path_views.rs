@@ -2,6 +2,7 @@ struct DiscoveredClassifiedPathViews {
     visible: Vec<ClassifiedPath>,
     tracked: Vec<PathBuf>,
     metadata_stats: usize,
+    git_index_available: bool,
 }
 
 fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews {
@@ -9,6 +10,7 @@ fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews 
         visible: Vec::new(),
         tracked: Vec::new(),
         metadata_stats: 0,
+        git_index_available: false,
     })
 }
 
@@ -24,6 +26,7 @@ fn try_discover_classified_path_views(
                 visible,
                 tracked,
                 metadata_stats: 0,
+                git_index_available: false,
             }
         }
     })
@@ -52,6 +55,7 @@ fn classify_git_path_views(root: &Path, views: DiscoveredPathViews) -> Discovere
         visible,
         tracked,
         metadata_stats,
+        git_index_available: true,
     }
 }
 
