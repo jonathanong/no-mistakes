@@ -5,17 +5,13 @@ pub(super) fn collect(
     parser: &mut Parser<'_>,
     context: &Context<'_, '_>,
     depth: usize,
+    sql_language: bool,
 ) {
     let start = parser.index();
     parser.next_token();
     let atomic = parser.parse_keyword(Keyword::ATOMIC);
     let end = end(parser, start);
-    let supported = atomic
-        && depth < 16
-        && function
-            .language
-            .as_ref()
-            .is_none_or(|value| value.eq_ignore_ascii_case("sql"));
+    let supported = atomic && depth < 16 && sql_language;
     let mut wrapper = empty(
         PostgresSqlWrapperKind::FunctionDeclaration,
         PostgresSqlExecution::NonExecuting,
@@ -159,5 +155,16 @@ fn end(parser: &Parser<'_>, start: usize) -> usize {
             }
         }
         index += 1;
+    }
+}
+
+/// Conflicting bodies remain one incomplete declaration and preserve the AS body.
+pub(super) fn discard(parser: &mut Parser<'_>) {
+    let boundary = parser.token_at(end(parser, parser.index())).span.start;
+    while parser.peek_token().span.start != boundary && parser.peek_token().token != Token::EOF {
+        parser.next_token();
+    }
+    if keyword(&parser.peek_token().token, Keyword::END) {
+        parser.next_token();
     }
 }

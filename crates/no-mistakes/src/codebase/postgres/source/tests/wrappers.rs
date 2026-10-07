@@ -99,7 +99,7 @@ fn unsupported_options_fail_closed_without_losing_neighboring_statements() {
         let PostgresSqlStatementKind::Wrapper { wrapper } = &statement.facts else {
             panic!("wrapper {index} expected")
         };
-        let known = matches!(index, 0 | 1 | 9 | 16 | 19 | 28);
+        let known = matches!(index, 0 | 1 | 9 | 16);
         assert_eq!(
             wrapper.complete, known,
             "index {index}: {:?}",

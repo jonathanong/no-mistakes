@@ -94,11 +94,5 @@ fn boolean(expr: Option<&Expr>) -> Option<bool> {
 }
 
 pub(super) fn legacy_format(format: Option<sqlparser::ast::AnalyzeFormatKind>) -> bool {
-    use sqlparser::ast::{AnalyzeFormat, AnalyzeFormatKind};
-    matches!(
-        format,
-        None | Some(AnalyzeFormatKind::Keyword(
-            AnalyzeFormat::TEXT | AnalyzeFormat::JSON
-        ))
-    )
+    format.is_none()
 }

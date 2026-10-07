@@ -124,3 +124,70 @@ fn wrappers_share_data_modifying_cte_facts_and_original_source_context() {
         assert_eq!(child.sql, sql[span.start.offset..span.end.offset]);
     }
 }
+
+#[test]
+fn quoted_languages_conflicting_bodies_and_conditional_wrappers_fail_closed() {
+    let result = facts("wrapper-review-boundaries.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 12, "{:?}", result.statements);
+    for (index, complete) in [(0, true), (1, false), (2, false), (4, false), (11, false)] {
+        let PostgresSqlStatementKind::CreateFunction { function } = &result.statements[index].facts
+        else {
+            panic!("function expected")
+        };
+        assert_eq!(
+            function.wrapper.complete, complete,
+            "{:?}",
+            function.wrapper.diagnostics
+        );
+        if [2, 11].contains(&index) {
+            assert_eq!(function.body_sql.as_deref(), Some("AS 'SELECT 1'"));
+        }
+    }
+    assert_eq!(result.statements[3].sql, "SELECT 61;");
+    for index in 5..9 {
+        let PostgresSqlStatementKind::Wrapper { wrapper } = &result.statements[index].facts else {
+            panic!("wrapper expected")
+        };
+        assert_eq!(wrapper.complete, index < 7);
+        assert_eq!(
+            wrapper.execution,
+            if index < 7 {
+                PostgresSqlExecution::NonExecuting
+            } else {
+                PostgresSqlExecution::Unknown
+            }
+        );
+    }
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[9].facts else {
+        panic!("DO expected")
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    let PostgresSqlStatementKind::Conditional { branches } = &block.statements[0].facts else {
+        panic!("IF expected")
+    };
+    let PostgresSqlStatementKind::Wrapper { wrapper } = &branches[0].statements[0].facts else {
+        panic!("EXPLAIN expected")
+    };
+    assert_eq!(wrapper.execution, PostgresSqlExecution::NonExecuting);
+    assert_eq!(wrapper.span.as_ref(), Some(&branches[0].statements[0].span));
+    let PostgresSqlStatementKind::Conditional { branches: nested } =
+        &branches[0].statements[1].facts
+    else {
+        panic!("nested IF expected")
+    };
+    let PostgresSqlStatementKind::Wrapper { wrapper } = &nested[0].statements[0].facts else {
+        panic!("PREPARE expected")
+    };
+    assert_eq!(wrapper.execution, PostgresSqlExecution::NonExecuting);
+    assert_eq!(wrapper.wrapper_kind, PostgresSqlWrapperKind::Prepare);
+    let PostgresSqlStatementKind::Wrapper { wrapper } = &branches[1].statements[0].facts else {
+        panic!("ANALYZE expected")
+    };
+    assert_eq!(wrapper.execution, PostgresSqlExecution::ExecutesForAnalysis);
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[10].facts else {
+        panic!("DO expected")
+    };
+    assert!(!block.complete);
+    assert!(!block.diagnostics.is_empty());
+}

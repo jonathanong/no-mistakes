@@ -72,12 +72,33 @@ test(
       "wrapper-compatibility.sql",
       "wrapper-boundaries.sql",
       "wrapper-review.sql",
+      "wrapper-review-boundaries.sql",
       "wrapper-cte-parity.sql",
     ]) {
       const result = await cjs.parsePostgresSql({ sql: fixture(name) });
       assert.deepEqual(await esm.parsePostgresSql({ sql: fixture(name) }), result);
       assert.deepEqual(result.diagnostics, []);
       assert.ok(result.statements.every((item) => item.kind !== "other"));
+      if (name === "wrapper-review-boundaries.sql") {
+        assert.equal(result.statements[0].function.wrapper.complete, true);
+        assert.equal(result.statements[1].function.wrapper.complete, false);
+        assert.equal(result.statements[2].function.bodySql, "AS 'SELECT 1'");
+        assert.equal(result.statements[11].function.bodySql, "AS 'SELECT 1'");
+        assert.deepEqual(
+          result.statements.slice(5, 9).map((item) => item.wrapper.execution),
+          ["nonExecuting", "nonExecuting", "unknown", "unknown"],
+        );
+        const block = result.statements[9].block;
+        assert.equal(block.complete, true);
+        const branches = block.statements[0].branches;
+        assert.equal(branches[0].statements[0].wrapper.execution, "nonExecuting");
+        assert.equal(
+          branches[0].statements[1].branches[0].statements[0].wrapper.wrapperKind,
+          "prepare",
+        );
+        assert.equal(branches[1].statements[0].wrapper.execution, "executesForAnalysis");
+        assert.equal(result.statements[10].block.complete, false);
+      }
       if (name === "wrapper-review.sql") {
         assert.equal(result.statements[0].function.wrapper.complete, true);
         const outer = result.statements[1].function.wrapper;

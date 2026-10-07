@@ -116,7 +116,7 @@ pub(super) fn collect_program(
                             locations,
                             &generated,
                             &prepared.recursive_views,
-                            &mut comments,
+                            &wrapper_context,
                         )
                     } else {
                         let tables =

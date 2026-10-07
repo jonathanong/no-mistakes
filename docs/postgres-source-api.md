@@ -327,9 +327,11 @@ INSERT children also retain existing conflict diagnostics. Source locking clause
 projection and explicitly make the INSERT child and query incomplete.
 
 ```js
-const [statement] = (await parsePostgresSql({
-  sql: "WITH a AS (INSERT INTO target (id) VALUES (1) RETURNING id) SELECT id FROM a",
-})).statements;
+const [statement] = (
+  await parsePostgresSql({
+    sql: "WITH a AS (INSERT INTO target (id) VALUES (1) RETURNING id) SELECT id FROM a",
+  })
+).statements;
 const child = statement.query.nestedStatements[0];
 console.log(child.kind, child.cteId, child.returning); // insert, 0, typed items
 ```
@@ -448,3 +450,10 @@ SERIALIZE values mean TEXT. Enabled SERIALIZE, WAL, and TIMING require ANALYZE.
 Invalid combinations report unknown execution and incomplete child coverage.
 Nested atomic function declarations remain one child declaration occurrence, with
 bounded nesting and their own non-executing context.
+
+Conditional IF/ELSE branches retain the same typed EXPLAIN/PREPARE wrappers.
+SQL atomic bodies accept an omitted language or an unquoted SQL name; quoted
+language identifiers preserve case, so `"sql"` is supported and `"SQL"` is not.
+A conflicting AS body followed by BEGIN ATOMIC remains incomplete and retains
+its original `bodySql`. PostgreSQL FORMAT options require parentheses; bare
+legacy FORMAT forms report unknown execution and incomplete facts.

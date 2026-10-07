@@ -19,7 +19,7 @@ impl<'a, 's> Context<'a, 's> {
     }
 }
 impl Context<'_, '_> {
-    pub(super) fn statement(
+    pub(in crate::codebase::postgres::source) fn statement(
         &self,
         statement: &Statement,
         tokens: &[TokenWithSpan],

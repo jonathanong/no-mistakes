@@ -139,11 +139,7 @@ pub(super) fn function(
     parser: &mut Parser<'_>,
     context: &Context<'_, '_>,
 ) -> PostgresSqlFunction {
-    let mut function = super::ddl::function(value, context.locations);
-    if keyword(&parser.peek_token().token, Keyword::BEGIN) {
-        atomic::collect(&mut function, parser, context, 0);
-    }
-    function
+    atomic_child::collect(value, parser, context, 0)
 }
 
 pub(super) fn declaration() -> PostgresSqlWrapper {

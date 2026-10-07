@@ -14,7 +14,7 @@ pub(super) fn project(
     locations: &Locations<'_>,
     generated: &[Span],
     recursive_views: &crate::codebase::postgres::parse::RecursiveViews,
-    comments: &mut super::metadata_preparation::Comments,
+    wrapper_context: &super::wrappers::Context<'_, '_>,
 ) -> Result<PostgresSqlStatementKind, String> {
     let mut branches = Vec::new();
     for branch in std::iter::once(&mut value.if_block)
@@ -58,17 +58,27 @@ pub(super) fn project(
                     locations,
                     generated,
                     recursive_views,
-                    comments,
+                    wrapper_context,
                 )?
+            } else if matches!(
+                statement,
+                Statement::Explain { .. } | Statement::Prepare { .. }
+            ) {
+                let tokens = owned
+                    .iter()
+                    .map(|token| (*token).clone())
+                    .collect::<Vec<_>>();
+                wrapper_context
+                    .statement(statement, &tokens, ordinal, 0, None)
+                    .ok_or("Conditional wrapper source span is unavailable")?
+                    .facts
             } else {
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
                     owned.iter().copied(),
                 );
                 super::projection::project(statement, locations, &tables, recursive_views)
             };
-            if let PostgresSqlStatementKind::Insert { insert } = &mut facts {
-                insert.span = Some(span.clone());
-            }
+            super::wrappers::finalize(&mut facts, &span);
             cursor = owned.last().unwrap().span.end;
             projected.push(PostgresSqlStatement {
                 ordinal,
