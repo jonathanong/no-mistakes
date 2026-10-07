@@ -1,7 +1,7 @@
 use super::*;
 pub(super) fn collect(value: &ImportDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
     let type_only = value.import_kind.is_type();
-    let bindings = value
+    let bindings: Vec<ModuleImportBinding> = value
         .specifiers
         .iter()
         .flatten()
@@ -36,7 +36,8 @@ pub(super) fn collect(value: &ImportDeclaration<'_>, facts: &mut TypeScriptModul
         .collect();
     facts.imports.push(ModuleImport {
         specifier: value.source.value.to_string(),
-        type_only,
+        type_only: type_only
+            || (!bindings.is_empty() && bindings.iter().all(|binding| binding.type_only)),
         span: value.span.into(),
         bindings,
     });

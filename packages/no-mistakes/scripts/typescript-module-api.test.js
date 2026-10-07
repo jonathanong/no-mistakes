@@ -78,6 +78,13 @@ test(
         literalLoads.modules[0].loads.map((load) => load.specifier),
         ["./template-import", "./template-require", "./wrapped-import", "./wrapped-require"],
       );
+      const extra = await api.analyzeTypeScriptModules({
+        root,
+        files: ["all-type-imports.ts", "default-wrapped-as.ts"],
+      });
+      assert.equal(extra.modules[0].imports[0].typeOnly, true);
+      assert.equal(extra.modules[0].imports[1].typeOnly, false);
+      assert.equal(extra.modules[1].exports[0].local, "value");
       assert.equal("ast" in module, false);
       assert.equal("source" in module, false);
     }

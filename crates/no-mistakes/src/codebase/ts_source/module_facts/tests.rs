@@ -242,3 +242,56 @@ fn public_boundary_records_source_and_fact_work() {
     assert_eq!(snapshot.work["ts_facts.collections"], 1);
     assert_eq!(snapshot.work["ts_facts.files"], 1);
 }
+
+#[test]
+fn type_only_declarations_and_wrapped_default_exports_keep_binding_links() {
+    let modules = report(&[
+        "all-type-imports.ts",
+        "default-wrapped-as.ts",
+        "default-wrapped-nonnull.ts",
+        "default-wrapped-parenthesis.ts",
+        "default-wrapped-satisfies.ts",
+    ])
+    .modules;
+    for module in modules {
+        assert!(module.complete, "{:?}", module.facts.diagnostics);
+        if module.file_name.ends_with("all-type-imports.ts") {
+            assert!(module.facts.imports[0].type_only);
+            assert!(module.facts.imports[0]
+                .bindings
+                .iter()
+                .all(|binding| binding.type_only));
+            // An empty named import still evaluates its source module.
+            assert!(!module.facts.imports[1].type_only);
+        } else {
+            assert_eq!(module.facts.exports[0].local, "value");
+        }
+    }
+}
+
+#[test]
+fn shadow_bindings_skip_empty_intermediate_scopes() {
+    let module = report(&["skipped-shadow-scope.ts"]).modules.remove(0);
+    assert!(module.complete);
+    for name in ["x", "outerName"] {
+        let bindings = module
+            .facts
+            .bindings
+            .iter()
+            .filter(|binding| binding.name == name)
+            .collect::<Vec<_>>();
+        assert_eq!(bindings.len(), 2);
+        assert_eq!(bindings[0].shadows, None);
+        assert_eq!(bindings[1].shadows, Some(bindings[0].id));
+    }
+    assert_eq!(
+        module
+            .facts
+            .bindings
+            .iter()
+            .find(|binding| binding.name == "neverShadowed")
+            .unwrap()
+            .shadows,
+        None
+    );
+}

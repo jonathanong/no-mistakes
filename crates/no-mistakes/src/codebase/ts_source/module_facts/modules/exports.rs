@@ -88,7 +88,14 @@ pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScri
         ExportDefaultDeclarationKind::TSInterfaceDeclaration(value) => {
             (value.id.name.to_string(), true)
         }
-        _ => (String::new(), false),
+        _ => match value
+            .declaration
+            .as_expression()
+            .map(Expression::get_inner_expression)
+        {
+            Some(Expression::Identifier(identifier)) => (identifier.name.to_string(), false),
+            _ => (String::new(), false),
+        },
     };
     facts.exports.push(ModuleExport {
         specifier: None,
