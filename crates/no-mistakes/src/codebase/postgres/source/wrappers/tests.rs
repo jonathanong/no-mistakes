@@ -34,6 +34,11 @@ fn missing_child_tokens_and_projection_depth_fail_closed() {
     assert!(bounded.diagnostics[0].message.contains("safety limit"));
     assert!(span(&[], &context).is_none());
     assert!(context.statement(&ast, &[], 0, 0, None).is_err());
+    // Reversed malformed bounds retain the old empty-range fallback.
+    assert_eq!(
+        context.source_end(tokens[1].span.end, tokens[0].span.start),
+        tokens[0].span.start
+    );
     assert_eq!(
         header::child_start(&tokens[..1], PostgresSqlWrapperKind::Prepare),
         1

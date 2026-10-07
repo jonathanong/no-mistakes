@@ -83,10 +83,12 @@ impl Context<'_, '_> {
         start: sqlparser::tokenizer::Location,
         end: sqlparser::tokenizer::Location,
     ) -> sqlparser::tokenizer::Location {
+        if start > end {
+            return end;
+        }
         self.comments
             .borrow()
-            .iter()
-            .filter(|(at, _)| **at >= start && **at <= end)
+            .range(start..=end)
             .map(|(_, comment)| comment.end)
             .max()
             .unwrap_or(end)

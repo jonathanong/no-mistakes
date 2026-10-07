@@ -5,13 +5,13 @@ use sqlparser::{
     parser::Parser,
     tokenizer::{Location, Token, Whitespace},
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub(super) struct Comment {
     pub facts: Option<Result<PostgresSqlStatementKind, String>>,
     pub end: Location,
 }
-pub(super) type Comments = HashMap<Location, Comment>;
+pub(super) type Comments = BTreeMap<Location, Comment>;
 
 pub(super) fn prepare<'a>(
     mut parser: Parser<'a>,
