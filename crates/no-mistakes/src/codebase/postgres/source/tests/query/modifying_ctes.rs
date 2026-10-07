@@ -383,3 +383,21 @@ fn cte_names_do_not_shadow_physical_write_target_bindings() {
         assert!(target.cte_id.is_none());
     }
 }
+
+#[test]
+fn insert_source_locks_are_explicitly_incomplete_without_changing_ordinary_selects() {
+    let q = queries("query-cte-source-locks.sql");
+    assert_eq!(q.len(), 4);
+    for query in &q[..2] {
+        assert!(!query.complete);
+        let child = &query.nested_statements[0];
+        assert!(!child.complete);
+        assert_eq!(child.unsupported.len(), 1);
+        assert_eq!(child.unsupported[0].reason, "INSERT source locking");
+        let span = child.unsupported[0].span.as_ref().unwrap();
+        assert!(span.end.offset > span.start.offset);
+    }
+    assert!(q[2].complete);
+    assert!(q[3].complete);
+    assert!(q[3].nested_statements[0].complete);
+}

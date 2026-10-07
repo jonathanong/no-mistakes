@@ -23,6 +23,7 @@ struct Collector<'a, 's> {
     facts: PostgresSqlQuery,
     states: Vec<ScopeState>,
     depth: usize,
+    insert_source: bool,
 }
 
 pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQuery {
@@ -34,6 +35,7 @@ pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQu
         },
         states: Vec::new(),
         depth: 0,
+        insert_source: false,
     };
     collector.query(
         query,

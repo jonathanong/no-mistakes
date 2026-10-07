@@ -52,6 +52,8 @@ impl Collector<'_, '_> {
                 }
             }
             Some(query) => {
+                let outer_insert_source = self.insert_source;
+                self.insert_source = true;
                 let query_scope_id = self.query(
                     query,
                     Some(scope),
@@ -60,6 +62,7 @@ impl Collector<'_, '_> {
                     env,
                     self.facts.scopes[scope].cte_definition_id,
                 );
+                self.insert_source = outer_insert_source;
                 PostgresSqlCteInsertSource::Select {
                     query_scope_id,
                     span: self.locations.span(query.span()),

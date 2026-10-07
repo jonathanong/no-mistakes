@@ -322,7 +322,9 @@ An INSERT source query references its scope in that same report; it does not
 create a separate query inventory. UPDATE/DELETE/MERGE targets and FROM/USING
 inputs reference typed entries in `query.relations`. Unsupported modifiers or
 actions retain their typed child and make both the child and query incomplete.
-INSERT children also retain existing conflict diagnostics.
+INSERT children also retain existing conflict diagnostics. Source locking clauses
+(such as `FOR UPDATE`, including inside nested source queries) have no typed
+projection and explicitly make the INSERT child and query incomplete.
 
 ```js
 const [statement] = (await parsePostgresSql({

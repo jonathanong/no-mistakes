@@ -164,3 +164,28 @@ test(
     }
   },
 );
+
+test(
+  "compiled CJS/ESM INSERT source locks report explicit incompleteness",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("query-cte-source-locks.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    for (const statement of facts.statements.slice(0, 2)) {
+      assert.equal(statement.query.complete, false);
+      const child = statement.query.nestedStatements[0];
+      assert.equal(child.complete, false);
+      assert.deepEqual(
+        child.unsupported.map((item) => item.reason),
+        ["INSERT source locking"],
+      );
+      assert.ok(child.unsupported[0].span.end.offset > child.unsupported[0].span.start.offset);
+    }
+    assert.equal(facts.statements[2].query.complete, true);
+    assert.equal(facts.statements[3].query.complete, true);
+  },
+);
