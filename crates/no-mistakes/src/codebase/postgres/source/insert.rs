@@ -25,7 +25,10 @@ pub(super) fn project(
         .table_alias
         .as_ref()
         .map(|alias| identifier(&alias.alias));
-    let mut complete = table.is_some() && supported_modifiers(value);
+    let mut complete = table.is_some()
+        && supported_modifiers(value)
+        && !facts.is_some_and(|facts| facts.unsupported_with);
+    let source_span = facts.and_then(|facts| facts.source_span);
     let source = match value.source.as_ref() {
         None => PostgresSqlInsertSource::DefaultValues,
         Some(query) => match query.body.as_ref() {
@@ -35,14 +38,14 @@ pub(super) fn project(
                     .iter()
                     .map(|row| row.iter().map(|expr| expression(expr, locations)).collect())
                     .collect(),
-                span: locations.span(query.span()),
+                span: locations.span(source_span.unwrap_or_else(|| query.span())),
             },
             SetExpr::Select(_) | SetExpr::Query(_) | SetExpr::SetOperation { .. } => {
                 let facts = super::query::project(query, locations);
                 complete &= facts.complete;
                 PostgresSqlInsertSource::Select {
                     query: facts,
-                    span: locations.span(query.span()),
+                    span: locations.span(source_span.unwrap_or_else(|| query.span())),
                 }
             }
             _ => {
@@ -108,7 +111,11 @@ pub(super) fn project(
                     .and_then(|facts| facts.predicate.as_ref())
                     .map(|expr| expression(expr, locations)),
                 action,
-                span: locations.span(facts.map_or_else(|| conflict.span(), |facts| facts.span)),
+                span: locations.span(
+                    facts
+                        .and_then(|facts| facts.span)
+                        .unwrap_or_else(|| conflict.span()),
+                ),
             })
         }
         None => None,

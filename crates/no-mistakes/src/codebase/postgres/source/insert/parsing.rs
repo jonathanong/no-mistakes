@@ -3,63 +3,26 @@ use sqlparser::{
     ast::{ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, Statement},
     keywords::Keyword,
     parser::{IsOptional, Parser, ParserError},
-    tokenizer::{Location, Token, TokenWithSpan},
+    tokenizer::{Location, Token},
 };
 
-pub(in crate::codebase::postgres::source) fn prepare(
-    tokens: &mut [TokenWithSpan],
-) -> Vec<Location> {
-    let significant = tokens
-        .iter()
-        .enumerate()
-        .filter_map(|(index, token)| {
-            (!matches!(token.token, Token::Whitespace(_))).then_some(index)
-        })
-        .collect::<Vec<_>>();
-    let mut markers = Vec::new();
-    let mut beginning = true;
-    let mut insert = false;
-    let mut depth: usize = 0;
-    for (position, index) in significant.iter().copied().enumerate() {
-        if tokens[index].token == Token::SemiColon && depth == 0 {
-            beginning = true;
-            continue;
-        }
-        if beginning {
-            insert = keyword(&tokens[index].token, Keyword::INSERT);
-            beginning = false;
-        }
-        match tokens[index].token {
-            Token::LParen => depth += 1,
-            Token::RParen => depth = depth.saturating_sub(1),
-            _ => {}
-        }
-        if insert
-            && depth == 0
-            && keyword(&tokens[index].token, Keyword::ON)
-            && significant
-                .get(position + 1)
-                .is_some_and(|next| keyword(&tokens[*next].token, Keyword::CONFLICT))
-        {
-            // A delimiter lets the standard parser finish the INSERT prefix. The
-            // same parser resumes here, retaining original expression locations.
-            markers.push(tokens[index].span.start);
-            tokens[index].token = Token::SemiColon;
-        }
-    }
-    markers
-}
+mod markers;
+mod with;
+pub(in crate::codebase::postgres::source) use markers::prepare;
 
 pub(in crate::codebase::postgres::source) struct ConflictFacts {
     pub predicate: Option<Expr>,
-    pub span: sqlparser::tokenizer::Span,
+    pub span: Option<sqlparser::tokenizer::Span>,
+    pub source_span: Option<sqlparser::tokenizer::Span>,
+    pub unsupported_with: bool,
 }
 
 pub(in crate::codebase::postgres::source) fn parse(
     parser: &mut Parser<'_>,
     markers: &[Location],
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
-    let insert = keyword(&parser.peek_token().token, Keyword::INSERT);
+    let insert = keyword(&parser.peek_token().token, Keyword::INSERT)
+        || keyword(&parser.peek_token().token, Keyword::WITH);
     let result = parse_inner(parser, markers);
     if insert && result.is_err() {
         let previous = parser.token_at(parser.index().saturating_sub(1));
@@ -78,8 +41,7 @@ fn parse_inner(
     parser: &mut Parser<'_>,
     markers: &[Location],
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
-    let mut statement = parser.parse_statement()?;
-    let mut facts = None;
+    let (mut statement, mut facts) = with::normalize(parser.parse_statement()?);
     if let Statement::Insert(insert) = &mut statement {
         if markers
             .binary_search(&parser.peek_token().span.start)
@@ -131,17 +93,29 @@ fn parse_inner(
                 conflict_target,
                 action,
             }));
-            facts = Some(ConflictFacts {
-                predicate,
-                span: sqlparser::tokenizer::Span {
-                    start,
-                    end: parser.token_at(parser.index().saturating_sub(1)).span.end,
-                },
+            let metadata = facts.get_or_insert(ConflictFacts {
+                predicate: None,
+                span: None,
+                source_span: None,
+                unsupported_with: false,
+            });
+            metadata.predicate = predicate;
+            metadata.span = Some(sqlparser::tokenizer::Span {
+                start,
+                end: parser.token_at(parser.index().saturating_sub(1)).span.end,
             });
             if parser.parse_keyword(Keyword::RETURNING) {
                 insert.returning = Some(parser.parse_comma_separated(Parser::parse_select_item)?);
             }
         }
+    }
+    if markers
+        .binary_search(&parser.peek_token().span.start)
+        .is_ok()
+    {
+        return Err(ParserError::ParserError(
+            "Duplicate ON CONFLICT clause".into(),
+        ));
     }
     Ok((statement, facts))
 }

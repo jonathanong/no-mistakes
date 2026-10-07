@@ -113,10 +113,7 @@ pub(super) fn collect(
         && nested
             .statements
             .iter()
-            .all(|statement| match &statement.facts {
-                PostgresSqlStatementKind::DoBlock { block } => block.complete,
-                _ => true,
-            });
+            .all(|statement| complete(&statement.facts));
     block.statements = nested.statements;
     block.diagnostics = nested.diagnostics;
     Ok(PostgresSqlStatementKind::DoBlock { block })
@@ -172,4 +169,18 @@ pub(super) fn relocate(
         column: span.end.column as u64,
     };
     Ok(())
+}
+
+fn complete(facts: &PostgresSqlStatementKind) -> bool {
+    match facts {
+        PostgresSqlStatementKind::Insert { insert } => insert.complete,
+        PostgresSqlStatementKind::DoBlock { block } => block.complete,
+        PostgresSqlStatementKind::Conditional { branches } => branches.iter().all(|branch| {
+            branch
+                .statements
+                .iter()
+                .all(|statement| complete(&statement.facts))
+        }),
+        _ => true,
+    }
 }

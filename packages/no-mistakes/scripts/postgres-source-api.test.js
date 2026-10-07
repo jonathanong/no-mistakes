@@ -413,5 +413,21 @@ test(
     assert.equal(malformed.statements[0].ordinal, 10);
     assert.equal(malformed.statements[0].insert.complete, true);
     assert.deepEqual(await esm.parsePostgresSql({ sql: fixture("insert-errors.sql") }), malformed);
+    const reviewSql = fixture("insert-review.sql");
+    const review = await cjs.parsePostgresSql({ sql: reviewSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: reviewSql }), review);
+    assert.deepEqual(review.diagnostics, []);
+    assert.equal(review.statements.length, 11);
+    assert.equal(review.statements[0].insert.onConflict, null);
+    assert.equal(review.statements[2].insert.onConflict.predicate.sql, "id > 0");
+    assert.equal(review.statements[2].insert.source.query.ctes.length, 1);
+    assert.deepEqual(
+      review.statements[7].insert.onConflict.action.assignments.map((item) => item.provenance),
+      ["literal", "literal", "literal", "unresolved", "unresolved", "unresolved"],
+    );
+    assert.deepEqual(
+      review.statements.slice(8).map((item) => item.block.complete),
+      [false, false, true],
+    );
   },
 );

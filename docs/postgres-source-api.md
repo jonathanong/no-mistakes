@@ -266,3 +266,10 @@ parser AST, embedded-language extraction, or consumer policy is exported. All
 INSERT contracts are named exported TypeScript types available from both Node
 facades. The asynchronous API reuses its prepared token stream and parses each
 expression once, including partial-index conflict predicates.
+
+An outer `WITH` on `INSERT ... SELECT` is retained in the source query's CTE
+facts. Outer CTEs with `VALUES` or `DEFAULT VALUES`, and overlapping outer and
+source-level `WITH` scopes, currently produce incomplete INSERT facts. Signed
+numeric constants have literal assignment provenance; unary expressions over
+columns remain unresolved. Procedural blocks inherit incomplete INSERT facts,
+including INSERT occurrences inside conditional branches.

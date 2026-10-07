@@ -1,5 +1,5 @@
 use super::super::{expressions::identifier, types::*};
-use sqlparser::ast::{Expr, Value};
+use sqlparser::ast::{Expr, UnaryOperator, Value};
 
 pub(super) fn provenance(
     expr: &Expr,
@@ -9,6 +9,12 @@ pub(super) fn provenance(
     use PostgresSqlInsertProvenance as P;
     match expr {
         Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => provenance(inner, table, alias),
+        Expr::UnaryOp {
+            op: UnaryOperator::Plus | UnaryOperator::Minus,
+            expr,
+        } if matches!(expr.as_ref(), Expr::Value(value) if matches!(value.value, Value::Number(_, _))) => {
+            P::Literal
+        }
         Expr::Identifier(_) => P::TargetColumn,
         Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
             let qualifier = parts[..parts.len() - 1]

@@ -1,0 +1,31 @@
+//! Preserve an outer WITH in the existing INSERT SELECT query facts.
+use super::ConflictFacts;
+use sqlparser::ast::{SetExpr, Spanned, Statement};
+
+pub(super) fn normalize(statement: Statement) -> (Statement, Option<ConflictFacts>) {
+    let Statement::Query(mut outer) = statement else {
+        return (statement, None);
+    };
+    let SetExpr::Insert(Statement::Insert(mut insert)) = *outer.body else {
+        return (Statement::Query(outer), None);
+    };
+    let mut facts = ConflictFacts {
+        predicate: None,
+        span: None,
+        source_span: None,
+        unsupported_with: true,
+    };
+    if let Some(source) = &mut insert.source {
+        facts.source_span = Some(source.span());
+        if source.with.is_none()
+            && matches!(
+                source.body.as_ref(),
+                SetExpr::Select(_) | SetExpr::Query(_) | SetExpr::SetOperation { .. }
+            )
+        {
+            source.with = outer.with.take();
+            facts.unsupported_with = false;
+        }
+    }
+    (Statement::Insert(insert), Some(facts))
+}
