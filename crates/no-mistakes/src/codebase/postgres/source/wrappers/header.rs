@@ -47,7 +47,14 @@ pub(super) fn child_start(tokens: &[TokenWithSpan], kind: PostgresSqlWrapperKind
         while let Some(index) = significant.get(position) {
             let token = &tokens[*index].token;
             if keyword(token, Keyword::FORMAT) {
-                position += 2;
+                position += 1;
+                if significant
+                    .get(position)
+                    .is_some_and(|index| tokens[*index].token == Token::Eq)
+                {
+                    position += 1;
+                }
+                position += 1;
             } else if [
                 Keyword::ANALYZE,
                 Keyword::VERBOSE,

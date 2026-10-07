@@ -84,10 +84,11 @@ fn project(
             options,
             query_plan,
             estimate,
+            format,
             statement,
             ..
         } => {
-            let execution = if *query_plan || *estimate {
+            let execution = if *query_plan || *estimate || !options::legacy_format(*format) {
                 PostgresSqlExecution::Unknown
             } else {
                 options::execution(*analyze, options.as_deref())
