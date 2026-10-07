@@ -148,7 +148,9 @@ fn push_tokens(
             continue;
         }
         for (denied, replacement) in &compiled.denied {
-            if token.text.eq_ignore_ascii_case(denied) {
+            if token.text.eq_ignore_ascii_case(denied)
+                && !super::replacement::contains(name, &token, replacement)
+            {
                 push(
                     findings,
                     path,

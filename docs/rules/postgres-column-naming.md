@@ -1,3 +1,5 @@
+<!-- cspell:ignore xuser xdelivery -->
+
 # `postgres-column-naming`
 
 Checks column names in a PostgreSQL schema snapshot against configured type
@@ -16,14 +18,14 @@ rules:
     options:
       schemaCatalogPath: db/schema.json
       typeRules:
-        - types: ['timestamp with time zone', 'timestamp without time zone']
-          namePattern: '_at$'
-          hint: 'end timestamp columns in _at'
+        - types: ["timestamp with time zone", "timestamp without time zone"]
+          namePattern: "_at$"
+          hint: "end timestamp columns in _at"
       foreignKeys:
         targetMatch: last-word
       allow:
-        - object: 'column:sessions.expires'
-          reason: 'Name mirrors an external protocol field'
+        - object: "column:sessions.expires"
+          reason: "Name mirrors an external protocol field"
 ```
 
 ## Why and when
@@ -46,7 +48,8 @@ matching entry reports. `forbiddenColumnNames` reports the first matching
 pattern.
 
 A single-column foreign key, other than a column named `id`, must end with a
-configured `targetSuffixes` suffix when the referenced table is listed. A table is
+configured `targetSuffixes` suffix when the referenced table is listed. A column equal to the suffix without its leading `_` also matches: `user_id`
+passes `_user_id`, while `xuser_id` does not. A table is
 listed by its name without SQL quoting: `Users` for `"Users"`, and `other.Users`
 for a schema-qualified reference.
 Otherwise, when `targetMatch` is `last-word` or `full-name`, the name must end
@@ -55,7 +58,14 @@ singular target name. Schema-qualified references derive the default target
 name from the relation after the final dot; configured `targetNames` still
 match the full relation name. Repeating a referenced column of more than one word,
 such as `external_id`, skips that check only when that column itself names
-the target, such as `github_account_id` on `github_accounts`. `targetNames`
+the target, such as `github_account_id` on `github_accounts`. With
+`foreignKeys.allowReferencedColumnName: true`, the repeated key need not name
+the target: `provider_user_id` on `provider_accounts`, `delivery_key` on
+`delivery_records`, and `post_id` on `post_recommendations` are accepted. The
+referenced key must have at least two non-empty `_` words and cannot be `id`.
+The referencing name must equal the key or end in `_<key>`;
+`source_delivery_key` passes, while `xdelivery_key` does not. Explicit
+`targetSuffixes` still take precedence. `targetNames`
 can replace that singular name using `$1`
 through `$9`. This check always skips composite foreign keys. It skips
 self-references unless `checkSelfReferences` is set; that option does not
@@ -72,8 +82,9 @@ skipped by that check. Tables matching `ignoreTablePatterns` are not checked.
 `schemaCatalogPath` is required, has no default, and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `typeRules`,
 `nameTypeRules`, `ignoreTablePatterns`, `forbiddenColumnNames`, and `allow`
 default to `[]`. `skipGeneratedColumns` defaults to `false`.
-`foreignKeys.targetMatch` defaults to `off`. `foreignKeys.checkSelfReferences`
-and `foreignKeys.followCompositeForeignKeys` default to `false`.
+`foreignKeys.targetMatch` defaults to `off`. `foreignKeys.checkSelfReferences`,
+`foreignKeys.followCompositeForeignKeys`, and
+`foreignKeys.allowReferencedColumnName` default to `false`.
 `foreignKeys.singular` defaults to `{}`. `foreignKeys.targetSuffixes`,
 `foreignKeys.reservedSuffixes`, and `foreignKeys.targetNames` default to `[]`.
 `foreignKeys.requireForeignKey` defaults to unset, which turns the check off.
@@ -89,7 +100,7 @@ replaces the built-in finding text.
 
 `invoices.due_at` with type `timestamp with time zone` matches `_at$`.
 `projects.owner_user_id` ends in `_user_id` when that suffix is required for
-`users`. `bookmarks.article_id` referencing `articles` matches `last-word`.
+`users`; the bare `user_id` also passes. `bookmarks.article_id` referencing `articles` matches `last-word`.
 `import_rows.batch_id` referencing `import_batches` matches `last-word` and
 fails `full-name`. `premium_accounts.id` and a self-reference
 `categories.parent_id` are skipped while `checkSelfReferences` is false.
@@ -98,7 +109,10 @@ fails `full-name`. `premium_accounts.id` and a self-reference
 
 `invoices.due` (`timestamp with time zone`) does not match `_at$`.
 `projects.owner_id` referencing `users` does not end in `_user_id` or
-`_by_id`. `bookmarks.item_id` referencing `articles` does not end in
+`_by_id`; `projects.xuser_id` also fails `_user_id`. With
+`allowReferencedColumnName: true`, `currency` referencing `currencies.code`
+and `item_id` referencing `articles.id` still fail target matching.
+`bookmarks.item_id` referencing `articles` does not end in
 `article_id` when `targetMatch` is `last-word`. `sessions.reviewer_user_id`
 (`uuid`) with no foreign key uses a reserved `_user_id` suffix.
 `comments.target_table` matches a forbidden table-name pattern.
@@ -125,12 +139,13 @@ the whole catalog. For example:
   "tables": {
     "orders": {
       "columns": {
-        "shipped_at": { // no-mistakes-disable-line postgres-column-naming: this is a calendar day
-          "dataType": "timestamp with time zone"
-        }
-      }
-    }
-  }
+        "shipped_at": {
+          // no-mistakes-disable-line postgres-column-naming: this is a calendar day
+          "dataType": "timestamp with time zone",
+        },
+      },
+    },
+  },
 }
 ```
 
@@ -138,8 +153,8 @@ Suppress a finding with `allow` when comments are not appropriate:
 
 ```yaml
 allow:
-  - object: 'column:orders.shipped_at'
-    reason: 'Shipped date is a calendar day in this table'
+  - object: "column:orders.shipped_at"
+    reason: "Shipped date is a calendar day in this table"
 ```
 
 One allow entry covers every finding on that object. An unused entry reports

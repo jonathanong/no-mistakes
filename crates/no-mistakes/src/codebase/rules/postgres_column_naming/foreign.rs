@@ -35,7 +35,10 @@ fn one_foreign_key(
     // The catalog spells the target as SQL (`other."Users"`); the policies see the name itself.
     let parts = decoded_parts(&foreign_key.referenced_table);
     if let Some(suffixes) = compiled.suffixes.get(&parts.join(".")) {
-        if !suffixes.iter().any(|suffix| column.name.ends_with(suffix)) {
+        if !suffixes
+            .iter()
+            .any(|suffix| super::reserved::hits(&column.name, suffix))
+        {
             let example = suffix_example(&column.name, &suffixes[0]);
             return Some(format!(
                 "foreign key to {} must end in {} (for example {example})",
@@ -47,7 +50,7 @@ fn one_foreign_key(
     }
     let target = target_name(&parts, compiled);
     let key = format!("_{referenced}");
-    if descriptive(&column.name, referenced, &target, &compiled.target_mode) {
+    if descriptive(&column.name, referenced, &target, compiled) {
         return None;
     }
     let base = column.name.strip_suffix(&key).unwrap_or(&column.name);
@@ -66,7 +69,7 @@ fn one_foreign_key(
     ))
 }
 
-fn descriptive(column: &str, referenced: &str, target: &str, mode: &TargetMode) -> bool {
+fn descriptive(column: &str, referenced: &str, target: &str, compiled: &Compiled) -> bool {
     if referenced == "id" {
         return false;
     }
@@ -75,7 +78,10 @@ fn descriptive(column: &str, referenced: &str, target: &str, mode: &TargetMode) 
         .filter(|part| !part.is_empty())
         .count();
     let repeats = column == referenced || column.ends_with(&format!("_{referenced}"));
-    tokens >= 2 && repeats && names_target(referenced, target, mode)
+    tokens >= 2
+        && repeats
+        && (compiled.allow_referenced_column_name
+            || names_target(referenced, target, &compiled.target_mode))
 }
 
 fn names_target(referenced: &str, target: &str, mode: &TargetMode) -> bool {
@@ -130,7 +136,14 @@ pub(super) fn suggestion(
 
 fn suffix_example(column: &str, suffix: &str) -> String {
     let stem = column.strip_suffix("_id").unwrap_or(column);
-    format!("{stem}{suffix}")
+    if suffix
+        .strip_prefix('_')
+        .is_some_and(|bare| bare.strip_suffix("_id") == Some(stem))
+    {
+        suffix[1..].to_string()
+    } else {
+        format!("{stem}{suffix}")
+    }
 }
 
 fn target_name(parts: &[String], compiled: &Compiled) -> String {

@@ -1,0 +1,13 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "ses_bounce_events": {},
+    "bounce_ses_events": {},
+    "amazon_x_ses_events": {},
+    "app_cfg_values": {},
+    "amazon_ses_ses_events": {},
+    "xamazon_ses_events": {},
+    "amazon__ses_events": {}
+  }
+}

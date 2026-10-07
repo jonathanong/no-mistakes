@@ -1,0 +1,9 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "ses_amazon_events": {},
+    "amazon_ses": {},
+    "ses_amazon_sesx": {}
+  }
+}

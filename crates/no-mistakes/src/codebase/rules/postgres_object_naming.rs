@@ -15,6 +15,7 @@ mod pattern_bounds;
 mod pattern_flags;
 mod pattern_walk;
 mod policy;
+mod replacement;
 mod scan;
 mod scan_name;
 

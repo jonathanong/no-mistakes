@@ -99,3 +99,25 @@ fn postgres_column_naming_jsonc_suppression_uses_column_lines() {
         }
     }
 }
+
+#[test]
+fn postgres_column_naming_regressions_have_deterministic_json() {
+    for (scenario, passes) in [
+        ("bare-suffix-pass", true),
+        ("bare-suffix-fail", false),
+        ("natural-key-pass", true),
+        ("natural-key-default-pass", true),
+        ("natural-key-fail", false),
+        ("natural-key-default-fail", false),
+    ] {
+        let root = fixture(scenario);
+        let first = check(&root, true);
+        assert_eq!(
+            first.status.success(),
+            passes,
+            "{scenario}: {}",
+            stdout(&first)
+        );
+        assert_eq!(stdout(&first), stdout(&check(&root, true)), "{scenario}");
+    }
+}

@@ -1,0 +1,41 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["user_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["id"]
+        }
+      }
+    },
+    "audits": {
+      "columns": {
+        "owner_user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["owner_user_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["id"]
+        }
+      }
+    },
+    "users": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}
