@@ -366,3 +366,40 @@ fn source_only_exports_optional_eval_and_ambient_ownership_are_preserved() {
         }
     }
 }
+
+#[test]
+fn commonjs_object_uses_and_global_defaults_do_not_claim_complete_local_exports() {
+    for module in report(&[
+        "commonjs-property-exports.cjs",
+        "commonjs-update-exports.cjs",
+        "ambient-commonjs-exports.cts",
+        "commonjs-types.cts",
+        "default-global.ts",
+        "default-undefined.ts",
+        "default-wrapped-global.ts",
+    ])
+    .modules
+    {
+        if module.file_name.ends_with("commonjs-property-exports.cjs") {
+            assert!(!module.complete);
+            assert_eq!(module.facts.diagnostics.len(), 5);
+        } else if module.file_name.ends_with("commonjs-update-exports.cjs") {
+            assert!(!module.complete);
+            assert_eq!(module.facts.diagnostics.len(), 3);
+        } else if module.file_name.ends_with("ambient-commonjs-exports.cts") {
+            assert!(!module.complete);
+            assert_eq!(module.facts.diagnostics.len(), 2);
+        } else {
+            assert!(module.complete, "{:?}", module.facts.diagnostics);
+        }
+        if module
+            .file_name
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .starts_with("default-")
+        {
+            assert_eq!(module.facts.exports[0].local, "");
+        }
+    }
+}

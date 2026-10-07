@@ -35,13 +35,13 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 exports::inline(value, &inline_bindings, facts)
             }
             AstKind::ExportDefaultDeclaration(value) if root_module => {
-                exports::default(value, facts)
+                exports::default(value, semantic, facts)
             }
             AstKind::ImportExpression(value) => loads::dynamic(value, facts),
-            AstKind::AssignmentExpression(value) => exports::commonjs(value, semantic, facts),
             AstKind::CallExpression(value) => loads::require(value, semantic, facts),
             AstKind::IdentifierReference(value) => {
-                loads::indirect(value, node.id(), semantic, facts)
+                loads::indirect(value, node.id(), semantic, facts);
+                exports::commonjs_reference(value, node.id(), semantic, facts)
             }
             AstKind::TSExternalModuleDeclaration(_)
             | AstKind::TSNamespaceDeclaration(_)

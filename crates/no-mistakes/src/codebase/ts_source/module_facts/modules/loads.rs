@@ -78,17 +78,7 @@ pub(super) fn indirect(
     {
         return;
     }
-    let parent = semantic.nodes().ancestor_kinds(node_id).find(|kind| {
-        !matches!(
-            kind,
-            AstKind::ParenthesizedExpression(_)
-                | AstKind::TSAsExpression(_)
-                | AstKind::TSSatisfiesExpression(_)
-                | AstKind::TSNonNullExpression(_)
-                | AstKind::TSInstantiationExpression(_)
-                | AstKind::TSTypeAssertion(_)
-        )
-    });
+    let parent = unwrapped_parent(node_id, semantic);
     if let Some(AstKind::CallExpression(call)) = parent {
         if matches!(call.callee.get_inner_expression(), Expression::Identifier(callee) if callee.span == value.span)
         {
@@ -102,8 +92,28 @@ pub(super) fn indirect(
     );
 }
 
-fn has_runtime_binding(reference: &oxc_semantic::Reference, semantic: &Semantic<'_>) -> bool {
+pub(super) fn has_runtime_binding(
+    reference: &oxc_semantic::Reference,
+    semantic: &Semantic<'_>,
+) -> bool {
     reference
         .symbol_id()
         .is_some_and(|id| !semantic.scoping().symbol_flags(id).is_ambient())
+}
+
+pub(super) fn unwrapped_parent<'a>(
+    node_id: oxc_semantic::NodeId,
+    semantic: &Semantic<'a>,
+) -> Option<AstKind<'a>> {
+    semantic.nodes().ancestor_kinds(node_id).find(|kind| {
+        !matches!(
+            kind,
+            AstKind::ParenthesizedExpression(_)
+                | AstKind::TSAsExpression(_)
+                | AstKind::TSSatisfiesExpression(_)
+                | AstKind::TSNonNullExpression(_)
+                | AstKind::TSInstantiationExpression(_)
+                | AstKind::TSTypeAssertion(_)
+        )
+    })
 }

@@ -746,13 +746,16 @@ All spans are half-open **UTF-8 byte offsets** into the original source. They ar
 JavaScript UTF-16 string indexes; use `Buffer.from(source).subarray(start, end)`.
 String literals and templates without substitutions use the existing static import
 extractor, including parenthesized TypeScript wrappers. Transparent wrappers on
-`require` callees and default-export identifiers preserve their binding identity. No AST or raw source is
+`require` callees and default-export identifiers preserve their binding identity.
+A default-export expression has an empty `local` name when its identifier does
+not resolve to a binding in the selected file. No AST or raw source is
 returned. Ambient declarations are not runtime values.
 The facts do not prove that an imported value exists in another module.
 
 Check `complete` and `diagnostics` before relying on a module. Non-literal module
 loads, shadowed or indirect `require`, direct `eval`, `with`, TypeScript import-equals and legacy
-export-assignment/namespace-export forms, CommonJS export assignments, and merged
+export-assignment/namespace-export forms, runtime CommonJS export-object references
+(including aliases, assignments, updates, and property-definition calls), and merged
 declarations are explicit diagnostic gaps. Ambient modules and namespaces also
 produce a gap; their nested import and export declarations are not file-level module facts. Source I/O,
 unsupported source extensions, and parser/semantic errors also make the module

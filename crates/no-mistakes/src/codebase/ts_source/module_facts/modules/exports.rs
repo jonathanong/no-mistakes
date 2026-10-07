@@ -97,9 +97,13 @@ fn inline_candidates<'a>(
     &indices[start..end]
 }
 
-pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
+pub(super) fn default(
+    value: &ExportDefaultDeclaration<'_>,
+    semantic: &Semantic<'_>,
+    facts: &mut TypeScriptModuleFacts,
+) {
     let (local, type_only) = match &value.declaration {
-        ExportDefaultDeclarationKind::Identifier(value) => (value.name.to_string(), false),
+        ExportDefaultDeclarationKind::Identifier(value) => (default_local(value, semantic), false),
         ExportDefaultDeclarationKind::FunctionDeclaration(value) => (
             value
                 .id
@@ -124,7 +128,9 @@ pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScri
             .as_expression()
             .map(Expression::get_inner_expression)
         {
-            Some(Expression::Identifier(identifier)) => (identifier.name.to_string(), false),
+            Some(Expression::Identifier(identifier)) => {
+                (default_local(identifier, semantic), false)
+            }
             _ => (String::new(), false),
         },
     };
@@ -137,38 +143,62 @@ pub(super) fn default(value: &ExportDefaultDeclaration<'_>, facts: &mut TypeScri
     });
 }
 
-pub(super) fn commonjs(
-    value: &AssignmentExpression<'_>,
+fn default_local(identifier: &IdentifierReference<'_>, semantic: &Semantic<'_>) -> String {
+    if semantic
+        .scoping()
+        .get_reference(
+            identifier
+                .reference_id
+                .get()
+                .expect("semantic default export"),
+        )
+        .symbol_id()
+        .is_some()
+    {
+        identifier.name.to_string()
+    } else {
+        String::new()
+    }
+}
+
+pub(super) fn commonjs_reference(
+    value: &IdentifierReference<'_>,
+    node_id: oxc_semantic::NodeId,
     semantic: &Semantic<'_>,
     facts: &mut TypeScriptModuleFacts,
 ) {
-    let Some(member) = value.left.as_member_expression() else {
+    if value.name != "module" && value.name != "exports" {
         return;
-    };
-    let mut property = member.static_property_name();
-    let mut object = member.object().get_inner_expression();
-    while let Some(member) = object.as_member_expression() {
-        property = member.static_property_name();
-        object = member.object().get_inner_expression();
     }
-    let Expression::Identifier(object) = object else {
-        return;
-    };
-    let commonjs = object.name == "exports"
-        || (object.name == "module" && property.is_none_or(|name| name == "exports"));
-    if commonjs
-        && semantic
-            .scoping()
-            .get_reference(object.reference_id.get().expect("semantic export object"))
-            .symbol_id()
-            .is_none()
+    let reference = semantic.scoping().get_reference(
+        value
+            .reference_id
+            .get()
+            .expect("semantic CommonJS reference"),
+    );
+    if !reference.is_value()
+        || reference.flags().is_value_as_type()
+        || loads::has_runtime_binding(reference, semantic)
     {
-        unsupported(
-            facts,
-            value.span,
-            "CommonJS export assignments are unsupported",
-        );
+        return;
     }
+    if value.name == "module" {
+        let property = match loads::unwrapped_parent(node_id, semantic) {
+            Some(AstKind::StaticMemberExpression(member)) => Some(member.property.name.as_str()),
+            Some(AstKind::ComputedMemberExpression(member)) => {
+                member.static_property_name().map(|name| name.as_str())
+            }
+            _ => None,
+        };
+        if property.is_some_and(|name| name != "exports") {
+            return;
+        }
+    }
+    unsupported(
+        facts,
+        value.span,
+        "CommonJS module/export objects are unsupported",
+    );
 }
 
 #[cfg(test)]

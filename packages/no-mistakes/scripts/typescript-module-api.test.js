@@ -141,6 +141,26 @@ test(
           .exports.map((entry) => entry.exported),
         ["rootValue"],
       );
+      const commonjs = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "commonjs-property-exports.cjs",
+          "commonjs-update-exports.cjs",
+          "ambient-commonjs-exports.cts",
+          "default-global.ts",
+          "default-wrapped-global.ts",
+        ],
+      });
+      assert.ok(
+        commonjs.modules
+          .filter((entry) => entry.fileName.includes("commonjs-"))
+          .every((entry) => !entry.complete),
+      );
+      assert.ok(
+        commonjs.modules
+          .filter((entry) => entry.fileName.includes("default-"))
+          .every((entry) => entry.exports[0].local === ""),
+      );
       assert.equal("ast" in module, false);
       assert.equal("source" in module, false);
     }

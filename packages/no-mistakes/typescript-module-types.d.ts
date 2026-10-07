@@ -49,7 +49,7 @@ export interface TypeScriptModuleImport {
 }
 export interface TypeScriptModuleExport {
   specifier: string | null;
-  /** "*" for star or namespace re-exports; empty for anonymous defaults or source-only exports. */
+  /** "*" for star or namespace re-exports; empty for defaults without a local binding or source-only exports. */
   local: string;
   /** Empty for source-only exports such as `export {} from "./dep"`. */
   exported: string;
