@@ -297,3 +297,89 @@ fn rejected_cte_conflict_predicate_has_a_source_diagnostic_and_keeps_the_neighbo
     let diagnostic = facts.diagnostics[0].span.as_ref().unwrap();
     assert!(sql[diagnostic.start.offset..diagnostic.end.offset].contains("ON CONFLICT"));
 }
+
+#[test]
+fn conflict_assignments_and_conditional_predicates_share_query_facts() {
+    let q = queries("query-cte-upsert.sql");
+    let q0 = &q[0];
+    assert!(q0.complete, "{:?}", q0.unsupported);
+    let child = &q0.nested_statements[0];
+    assert!(child.complete);
+    let columns: Vec<_> = q0
+        .columns
+        .iter()
+        .filter(|c| c.scope_id == child.query_scope_id && c.clause == PostgresSqlQueryClause::Other)
+        .collect();
+    assert_eq!(columns.len(), 3);
+    assert_eq!(
+        columns
+            .iter()
+            .filter(|c| c.name.parts[0].identity == "excluded")
+            .count(),
+        2
+    );
+    let target = columns
+        .iter()
+        .find(|c| c.name.parts[0].identity == "t")
+        .unwrap();
+    assert_eq!(
+        target.resolution,
+        PostgresSqlQueryColumnResolution::Resolved
+    );
+    let relation = &q0.relations[target.relation_id.unwrap()];
+    assert_eq!(relation.name.as_ref().unwrap().sql, "target");
+    assert_eq!(relation.alias.as_ref().unwrap().identity, "t");
+    let eq = q0
+        .equalities
+        .iter()
+        .find(|e| e.scope_id == child.query_scope_id)
+        .unwrap();
+    assert_eq!(eq.clause, PostgresSqlQueryClause::Other);
+    assert!(!eq.context.mandatory);
+    assert!(eq.left.is_some() && eq.right.is_some());
+    // Unsupported assignment provenance must not discard its nested query or CTE reference.
+    assert!(!q[1].complete);
+    assert!(q[1].ctes[0].referenced && q[1].ctes[0].used);
+    assert!(q[1].relations.iter().any(|r| r.cte_id == Some(0)));
+    let child_scope = q[2].nested_statements[0].query_scope_id;
+    let source_column = q[2]
+        .columns
+        .iter()
+        .find(|c| c.scope_id != child_scope && c.name.sql == "t.id")
+        .unwrap();
+    assert_eq!(
+        source_column.resolution,
+        PostgresSqlQueryColumnResolution::Unknown
+    );
+    let returned = q[2]
+        .columns
+        .iter()
+        .find(|c| c.scope_id == child_scope && c.name.sql == "t.id")
+        .unwrap();
+    assert_eq!(
+        returned.resolution,
+        PostgresSqlQueryColumnResolution::Resolved
+    );
+}
+
+#[test]
+fn cte_names_do_not_shadow_physical_write_target_bindings() {
+    let q = queries("query-cte-shadowed-targets.sql");
+    assert_eq!(q.len(), 4);
+    for query in &q {
+        assert!(query.complete, "{:?}", query.unsupported);
+        assert_eq!(query.nested_statements.len(), 1);
+        assert!(!query.ctes[0].referenced && !query.ctes[0].used);
+        let child = &query.nested_statements[0];
+        let target = query
+            .relations
+            .iter()
+            .find(|r| {
+                r.scope_id == child.query_scope_id
+                    && r.name.as_ref().is_some_and(|n| n.sql == "target")
+            })
+            .unwrap();
+        assert_eq!(target.kind, PostgresSqlQueryRelationKind::Table);
+        assert!(target.cte_id.is_none());
+    }
+}

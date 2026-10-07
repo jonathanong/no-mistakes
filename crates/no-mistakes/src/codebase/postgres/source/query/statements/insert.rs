@@ -1,5 +1,5 @@
 use super::*;
-use sqlparser::ast::{Insert, SetExpr};
+use sqlparser::ast::{Insert, OnConflictAction, OnInsert, SetExpr};
 impl Collector<'_, '_> {
     pub(super) fn insert(
         &mut self,
@@ -66,6 +66,33 @@ impl Collector<'_, '_> {
                 }
             }
         };
+        // Target aliases are visible to conflict/RETURNING, not to the INSERT source.
+        if let Some(table) = &core.table {
+            self.register(PostgresSqlQueryRelation {
+                id: self.facts.relations.len(),
+                scope_id: scope,
+                kind: PostgresSqlQueryRelationKind::Table,
+                name: Some(table.clone()),
+                alias: core.alias.clone(),
+                column_aliases: Vec::new(),
+                cte_id: None,
+                subquery_scope_id: None,
+                members: Vec::new(),
+                lateral: false,
+                span: self.locations.span(value.table.span()),
+            });
+        }
+        // Conflict actions are conditional; their predicates are not global row filters.
+        if let Some(OnInsert::OnConflict(conflict)) = &value.on {
+            if let OnConflictAction::DoUpdate(update) = &conflict.action {
+                for assignment in &update.assignments {
+                    self.nonpredicate(&assignment.value, scope, PostgresSqlQueryClause::Other, env);
+                }
+                if let Some(predicate) = &update.selection {
+                    self.nonpredicate(predicate, scope, PostgresSqlQueryClause::Other, env);
+                }
+            }
+        }
         PostgresSqlQueryStatementKind::Insert {
             insert: Box::new(PostgresSqlCteInsert {
                 table: core.table,

@@ -7,7 +7,7 @@ impl Collector<'_, '_> {
         scope: usize,
         env: &CteEnvironment,
     ) -> PostgresSqlQueryStatementKind {
-        let target_relation_ids = self.relation(&value.table, scope, env);
+        let target_relation_ids = self.relation(&value.table, scope, &CteEnvironment::new());
         let source_relation_ids = self.relation(&value.source, scope, env);
         // Match conditions choose actions; they are not mandatory row filters.
         self.nonpredicate(&value.on, scope, PostgresSqlQueryClause::Other, env);

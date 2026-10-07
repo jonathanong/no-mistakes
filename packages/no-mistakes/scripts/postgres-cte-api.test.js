@@ -105,3 +105,62 @@ test(
     assert.equal(facts.statements[0].sql, "SELECT 42 AS neighbor;");
   },
 );
+
+test(
+  "compiled CJS/ESM conflict actions retain canonical query expressions",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("query-cte-upsert.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const query = facts.statements[0].query;
+    assert.equal(query.complete, true);
+    const child = query.nestedStatements[0];
+    assert.equal(child.complete, true);
+    const columns = query.columns.filter(
+      (c) => c.scopeId === child.queryScopeId && c.clause === "other",
+    );
+    assert.equal(columns.length, 3);
+    assert.equal(columns.filter((c) => c.name.parts[0].identity === "excluded").length, 2);
+    const target = columns.find((c) => c.name.parts[0].identity === "t");
+    assert.equal(target.resolution, "resolved");
+    assert.equal(query.relations[target.relationId].name.sql, "target");
+    assert.ok(
+      query.equalities.some(
+        (e) => e.scopeId === child.queryScopeId && e.clause === "other" && !e.context.mandatory,
+      ),
+    );
+    const incomplete = facts.statements[1].query;
+    assert.equal(incomplete.complete, false);
+    assert.equal(incomplete.ctes[0].referenced, true);
+    assert.equal(incomplete.ctes[0].used, true);
+  },
+);
+
+test(
+  "compiled CJS/ESM write targets retain physical identity under CTE shadowing",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("query-cte-shadowed-targets.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 4);
+    for (const { query } of facts.statements) {
+      assert.equal(query.complete, true);
+      assert.equal(query.ctes[0].referenced, false);
+      assert.equal(query.ctes[0].used, false);
+      const child = query.nestedStatements[0];
+      const target = query.relations.find(
+        (r) => r.scopeId === child.queryScopeId && r.name?.sql === "target",
+      );
+      assert.equal(target.kind, "table");
+      assert.equal(target.cteId, null);
+    }
+  },
+);

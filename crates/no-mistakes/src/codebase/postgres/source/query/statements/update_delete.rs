@@ -7,7 +7,7 @@ impl Collector<'_, '_> {
         scope: usize,
         env: &CteEnvironment,
     ) -> PostgresSqlQueryStatementKind {
-        let target_relation_ids = self.from(&value.table, scope, env);
+        let target_relation_ids = self.from(&value.table, scope, &CteEnvironment::new());
         let mut from_relation_ids = Vec::new();
         if let Some(
             UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables),
@@ -53,7 +53,7 @@ impl Collector<'_, '_> {
         let mut target_relation_ids = Vec::new();
         let (FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables)) = &value.from;
         for table in tables {
-            target_relation_ids.extend(self.from(table, scope, env));
+            target_relation_ids.extend(self.from(table, scope, &CteEnvironment::new()));
         }
         let mut using_relation_ids = Vec::new();
         for table in value.using.iter().flatten() {

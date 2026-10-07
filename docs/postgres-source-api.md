@@ -351,3 +351,14 @@ MERGE ON and WHEN conditions are retained as typed predicates and query facts
 with clause `other` and non-mandatory context: they choose actions rather than
 restrict every affected row. UPDATE and DELETE WHERE conditions retain ordinary
 WHERE predicate context.
+
+ON CONFLICT assignment values and action WHERE predicates participate in the
+same query's column, equality, subquery and CTE-reference facts. Conflict action
+predicates have clause `other` and non-mandatory context because they apply only
+to that conditional action. INSERT target aliases resolve through the query's
+typed target relation; excluded-column provenance remains in the INSERT payload.
+Unsupported assignment provenance retains its nested query facts alongside the
+explicit incomplete child.
+
+Write targets bind to physical table facts even when a CTE declares the same
+unqualified name. FROM/USING sources retain ordinary lexical CTE lookup.
