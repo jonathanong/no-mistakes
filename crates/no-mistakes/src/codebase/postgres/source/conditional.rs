@@ -48,6 +48,7 @@ pub(super) fn project(
                 })
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
+            let insert_facts = super::insert::parsing::normalize(statement);
             let mut facts = if let Some(facts) = wrapper_context.take_comment(owned[0].span.start) {
                 facts.0?
             } else if let Statement::If(nested) = statement {
@@ -60,6 +61,14 @@ pub(super) fn project(
                     recursive_views,
                     wrapper_context,
                 )?
+            } else if let Statement::Insert(insert) = statement {
+                PostgresSqlStatementKind::Insert {
+                    insert: Box::new(super::insert::project(
+                        insert,
+                        insert_facts.as_ref(),
+                        locations,
+                    )),
+                }
             } else if matches!(
                 statement,
                 Statement::Explain { .. } | Statement::Prepare { .. }
@@ -70,7 +79,7 @@ pub(super) fn project(
                     .collect::<Vec<_>>();
                 wrapper_context.restore(statement, owned.last().unwrap().span.end)?;
                 wrapper_context
-                    .statement(statement, &tokens, ordinal, 0, None)?
+                    .statement(statement, &tokens, ordinal, 0, insert_facts.as_ref())?
                     .facts
             } else {
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(

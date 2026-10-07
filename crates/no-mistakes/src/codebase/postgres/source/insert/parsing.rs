@@ -17,6 +17,24 @@ pub(in crate::codebase::postgres::source) struct ConflictFacts {
     pub unsupported_with: bool,
 }
 
+/// Normalize a child already owned by the enclosing conditional AST.
+/// The temporary sentinel is replaced before projection and is never emitted.
+pub(in crate::codebase::postgres::source) fn normalize(
+    statement: &mut Statement,
+) -> Option<ConflictFacts> {
+    let original = std::mem::replace(
+        statement,
+        Statement::Commit {
+            chain: false,
+            end: false,
+            modifier: None,
+        },
+    );
+    let (normalized, facts) = with::normalize(original);
+    *statement = normalized;
+    facts
+}
+
 pub(in crate::codebase::postgres::source) fn parse(
     parser: &mut Parser<'_>,
     markers: &[Location],

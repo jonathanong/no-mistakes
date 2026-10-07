@@ -430,7 +430,11 @@ facts. Other parsed children retain their source facts but make the wrapper
 incomplete; for example, CREATE TABLE AS does not expose its query in the existing
 CREATE TABLE contract. SELECT INTO also remains incomplete because target-creation facts are not
 represented by the existing query contract. Existing parser compatibility restoration and partial
-conflict predicates also apply to supported wrapped children. Parse failures
+conflict predicates also apply to supported top-level and atomic-body wrapped children.
+Conditional wrappers reuse their enclosing AST's WITH INSERT normalization and
+source-query provenance. Partial-index conflict predicates inside procedural
+conditional grammar remain unsupported and produce incomplete body diagnostics.
+Parse failures
 remain typed incomplete wrappers and recover at original statement delimiters.
 
 CREATE FUNCTION retains `kind: "createFunction"` and all existing function

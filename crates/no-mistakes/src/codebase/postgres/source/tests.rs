@@ -1,4 +1,5 @@
 mod body;
+mod conditional_insert_compatibility;
 mod conditional_ranges;
 mod ddl;
 mod do_constraints;
