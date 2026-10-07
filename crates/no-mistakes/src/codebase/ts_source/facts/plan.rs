@@ -2,6 +2,7 @@ use super::TsFactPlan;
 
 impl TsFactPlan {
     pub fn include(&mut self, other: Self) {
+        self.module_bindings |= other.module_bindings;
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
         self.call_sites |= other.call_sites;
@@ -42,7 +43,8 @@ impl TsFactPlan {
     }
 
     pub fn is_empty(self) -> bool {
-        !self.imports
+        !self.module_bindings
+            && !self.imports
             && !self.function_calls
             && !self.call_sites
             && !self.resources
@@ -84,7 +86,8 @@ impl TsFactPlan {
     }
 
     fn covers_syntax_facts(self, required: Self) -> bool {
-        (!required.imports || self.imports)
+        (!required.module_bindings || self.module_bindings)
+            && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)

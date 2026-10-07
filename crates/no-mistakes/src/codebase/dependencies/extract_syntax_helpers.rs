@@ -154,7 +154,7 @@ fn is_require_resolve_callee(expr: &Expression<'_>) -> bool {
             && member.property.name == "resolve")
 }
 
-fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
+pub(crate) fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(s) => Some(s.value.as_str().to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {

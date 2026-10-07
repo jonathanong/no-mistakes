@@ -5,6 +5,7 @@ const cjs = require("./index.js");
 
 export const {
   analyzeProject,
+  analyzeTypeScriptModules,
   callSites,
   check,
   ciEnv,

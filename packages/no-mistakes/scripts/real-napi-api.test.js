@@ -9,6 +9,7 @@ const { setTimeout: delay } = require("node:timers/promises");
 const { Worker } = require("node:worker_threads");
 const test = globalThis.test || require("node:test").test;
 require("./integration-route-coverage.test.js");
+require("./typescript-module-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");

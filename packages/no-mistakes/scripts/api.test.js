@@ -21,6 +21,7 @@ const planningFixturePath = join(
 const RUST_NAPI_BINDING_FILES = [
   "crates/no-mistakes/src/napi_api.rs",
   "crates/no-mistakes/src/napi_api/postgres_source.rs",
+  "crates/no-mistakes/src/napi_api/typescript_modules.rs",
   "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
   "crates/no-mistakes/src/napi_api/planning_bindings.rs",
   "crates/no-mistakes/src/napi_api/wrappers_query.rs",
@@ -1076,4 +1077,33 @@ test("INSERT facts expose named exported declaration contracts", () => {
     assert.match(insert, new RegExp(`export type PostgresSql${name} =`));
   assert.match(insert, /columnsOmitted: boolean/);
   assert.match(insert, /diagnostics: PostgresSqlDiagnostic\[\]/);
+});
+
+test("TypeScript module facts expose named contracts and async invocation options", () => {
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  const types = readFileSync(join(packageRoot, "typescript-module-types.d.ts"), "utf8");
+  assert.match(index, /export type \* from "\.\/typescript-module-types"/);
+  assert.match(
+    index,
+    /options: WithInvocationOptions<TypeScriptModulesOptions>,\n\): Promise<TypeScriptModulesReport>/,
+  );
+  for (const name of [
+    "ModulesOptions",
+    "ModuleSpan",
+    "BindingReference",
+    "ModuleBinding",
+    "ModuleScope",
+    "ImportBindingKind",
+    "ModuleImportBinding",
+    "ModuleImport",
+    "ModuleExport",
+    "ModuleLoadKind",
+    "ModuleLoad",
+    "ModuleDiagnosticKind",
+    "ModuleDiagnostic",
+    "ModuleFacts",
+    "ModulesReport",
+  ]) {
+    assert.match(types, new RegExp(`export (?:interface|type) TypeScript${name}\\b`));
+  }
 });
