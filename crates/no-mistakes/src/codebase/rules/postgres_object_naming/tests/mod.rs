@@ -2,6 +2,7 @@ mod config;
 mod edges;
 mod expand;
 mod findings;
+mod replacement;
 mod support;
 mod valid;
 

@@ -21,15 +21,10 @@ fn suffix_rule_skips_behaviour_three_and_suggests_the_first_suffix() {
 }
 
 #[test]
-fn exact_user_id_does_not_satisfy_the_suffix_rule() {
-    expect(
+fn exact_user_id_satisfies_the_suffix_rule() {
+    expect_none(
         SUFFIX,
         sole_fk("account_members", "user_id", "uuid", "users", "id"),
-        &at(
-            "account_members",
-            "user_id",
-            "foreign key to users must end in _user_id or _by_id (for example user_user_id)",
-        ),
     );
 }
 

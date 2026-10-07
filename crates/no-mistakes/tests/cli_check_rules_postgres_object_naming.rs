@@ -71,3 +71,23 @@ fn postgres_object_naming_json_has_rule_id() {
     let again = check(&root, true);
     assert_eq!(stdout(&out), stdout(&again));
 }
+
+#[test]
+fn postgres_object_naming_regressions_have_deterministic_json() {
+    for (scenario, passes) in [
+        ("replacement-pass", true),
+        ("replacement-fail", false),
+        ("replacement-position-pass", true),
+        ("replacement-position-fail", false),
+    ] {
+        let root = fixture(scenario);
+        let first = check(&root, true);
+        assert_eq!(
+            first.status.success(),
+            passes,
+            "{scenario}: {}",
+            stdout(&first)
+        );
+        assert_eq!(stdout(&first), stdout(&check(&root, true)), "{scenario}");
+    }
+}

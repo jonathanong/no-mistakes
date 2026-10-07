@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        targetSuffixes:
+          - tables: [users]
+            suffixes: ["_user_id"]

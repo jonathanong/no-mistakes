@@ -1,0 +1,86 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "provider_follows": {
+      "columns": {
+        "provider_user_id": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["provider_user_id"],
+          "referencedTable": "provider_accounts",
+          "referencedColumns": ["provider_user_id"]
+        }
+      }
+    },
+    "repair_markers": {
+      "columns": {
+        "delivery_key": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["delivery_key"],
+          "referencedTable": "delivery_records",
+          "referencedColumns": ["delivery_key"]
+        }
+      }
+    },
+    "recommendation_hosts": {
+      "columns": {
+        "post_id": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["post_id"],
+          "referencedTable": "post_recommendations",
+          "referencedColumns": ["post_id"]
+        }
+      }
+    },
+    "audits": {
+      "columns": {
+        "source_delivery_key": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["source_delivery_key"],
+          "referencedTable": "delivery_records",
+          "referencedColumns": ["delivery_key"]
+        }
+      }
+    },
+    "post_recommendations": {
+      "columns": {
+        "post_id": {
+          "dataType": "text"
+        }
+      },
+      "primaryKey": {
+        "columns": ["post_id"]
+      }
+    },
+    "provider_accounts": {
+      "columns": {
+        "provider_user_id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "delivery_records": {
+      "columns": {
+        "delivery_key": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

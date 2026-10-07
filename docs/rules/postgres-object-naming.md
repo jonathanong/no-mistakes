@@ -1,4 +1,4 @@
-<!-- cspell:ignore itms ordr -->
+<!-- cspell:ignore itms ordr xamazon -->
 
 # `postgres-object-naming`
 
@@ -20,16 +20,16 @@ rules:
     options:
       schemaCatalogPath: db/schema.json
       patterns:
-        index: '^idx_{table}__[a-z0-9_]+$'
-        uniqueIndex: '^(idx|uq)_{table}__[a-z0-9_]+$'
-        trigger: '^trigger_[a-z0-9_]+$'
-        function: '^fn_[a-z0-9_]+$'
-        triggerFunction: '^fn_(reject|update|project|create|lock)_[a-z0-9_]+$'
-        view: '^view_[a-z0-9_]+$'
-        materializedView: '^mv_[a-z0-9_]+$'
-        table: '^[a-z][a-z0-9_]*$'
-        column: '^[a-z][a-z0-9_]*$'
-        enum: '^[a-z][a-z0-9_]*$'
+        index: "^idx_{table}__[a-z0-9_]+$"
+        uniqueIndex: "^(idx|uq)_{table}__[a-z0-9_]+$"
+        trigger: "^trigger_[a-z0-9_]+$"
+        function: "^fn_[a-z0-9_]+$"
+        triggerFunction: "^fn_(reject|update|project|create|lock)_[a-z0-9_]+$"
+        view: "^view_[a-z0-9_]+$"
+        materializedView: "^mv_[a-z0-9_]+$"
+        table: "^[a-z][a-z0-9_]*$"
+        column: "^[a-z][a-z0-9_]*$"
+        enum: "^[a-z][a-z0-9_]*$"
       checkConstraintBackedIndexes: false
       tableMinWords: 2
       abbreviations:
@@ -41,7 +41,7 @@ rules:
         irregularPlurals: { person: people, child: children }
         uncountable: [data, metadata, feedback, media]
         nonPluralTokens: [status, analysis, sms, news, series]
-        ignorePatterns: ['^link__']
+        ignorePatterns: ["^link__"]
       deniedTokens:
         - token: cfg
           replacement: configuration
@@ -50,10 +50,10 @@ rules:
       spelling:
         acknowledgement: acknowledgment
       doubleUnderscore:
-        allowPattern: '^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$'
+        allowPattern: "^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$"
       allow:
-        - object: 'table:legacy_cfg_values'
-          reason: 'Name owned by an external replication tool'
+        - object: "table:legacy_cfg_values"
+          reason: "Name owned by an external replication tool"
 ```
 
 Patterns are not anchored for you. Write `^` and `$` when the whole name
@@ -97,6 +97,16 @@ by dropping later ASCII vowels. Tokens inside a matched `{table}` middle are
 skipped only when that token also appears in the real table name. An
 abbreviation-only token, such as a denied `cfg` standing in for
 `configuration`, is still reported.
+
+A denied token already inside its configured replacement is accepted when the
+whole replacement aligns on `_` boundaries at that occurrence. With
+`deniedTokens: [{token: ses, replacement: amazon_ses}]`,
+`amazon_ses_bounce_events`, `prefix_amazon_ses`, and columns, indexes, or enums
+using `amazon_ses` pass. `ses_bounce_events`, `bounce_ses_events`,
+`amazon_x_ses_events`, and `xamazon_ses_events` fail. Each occurrence is checked:
+`amazon_ses_ses_events` still reports its second `ses`. Matching ignores ASCII
+case, as token denial does. Single-word replacements retain the same behavior:
+`{token: cfg, replacement: configuration}` reports `app_cfg_values`.
 
 Plural checks, when enabled, require the last word to be plural and reject
 other plural words unless they are uncountable. `tableMinWords` counts `_`

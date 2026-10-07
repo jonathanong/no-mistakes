@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        targetMatch: last-word
+        allowReferencedColumnName: true

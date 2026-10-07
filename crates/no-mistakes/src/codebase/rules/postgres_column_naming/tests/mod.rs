@@ -2,6 +2,7 @@ mod config;
 mod foreign;
 mod links;
 mod names;
+mod naming_regressions;
 mod support;
 
 use crate::config::v2::schema::{RuleDef, RuleScope};

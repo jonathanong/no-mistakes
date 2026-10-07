@@ -1,0 +1,25 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "amazon_ses_bounce_events": {
+      "columns": {
+        "amazon_ses_id": {
+          "dataType": "text"
+        }
+      },
+      "indexes": {
+        "idx_amazon_ses_events": {
+          "unique": false
+        }
+      }
+    },
+    "prefix_amazon_ses": {},
+    "AMAZON_SES_events": {}
+  },
+  "enums": {
+    "amazon_ses_status": {
+      "values": ["ok"]
+    }
+  }
+}

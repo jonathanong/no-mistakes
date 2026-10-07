@@ -18,7 +18,7 @@ pub(super) fn reserved_texts(
         .collect()
 }
 
-fn hits(name: &str, suffix: &str) -> bool {
+pub(super) fn hits(name: &str, suffix: &str) -> bool {
     name.ends_with(suffix) || suffix.strip_prefix('_').is_some_and(|bare| name == bare)
 }
 

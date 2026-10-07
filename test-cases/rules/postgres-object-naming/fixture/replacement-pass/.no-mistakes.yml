@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      deniedTokens:
+        - token: ses
+          replacement: amazon_ses
+        - token: cfg
+          replacement: configuration

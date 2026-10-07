@@ -1,0 +1,44 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "rows": {
+      "columns": {
+        "source_import_batch_id": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["source_import_batch_id"],
+          "referencedTable": "import_batches",
+          "referencedColumns": ["source_import_batch_id"]
+        }
+      }
+    },
+    "markers": {
+      "columns": {
+        "import_batch_code": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["import_batch_code"],
+          "referencedTable": "import_batches",
+          "referencedColumns": ["import_batch_code"]
+        }
+      }
+    },
+    "import_batches": {
+      "columns": {
+        "source_import_batch_id": {
+          "dataType": "text"
+        },
+        "import_batch_code": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

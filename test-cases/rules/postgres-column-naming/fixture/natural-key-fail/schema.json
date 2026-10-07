@@ -1,0 +1,69 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "currency": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["currency"],
+          "referencedTable": "currencies",
+          "referencedColumns": ["code"]
+        }
+      }
+    },
+    "bookmarks": {
+      "columns": {
+        "item_id": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["item_id"],
+          "referencedTable": "articles",
+          "referencedColumns": ["id"]
+        }
+      }
+    },
+    "audits": {
+      "columns": {
+        "xdelivery_key": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": ["xdelivery_key"],
+          "referencedTable": "delivery_records",
+          "referencedColumns": ["delivery_key"]
+        }
+      }
+    },
+    "currencies": {
+      "columns": {
+        "code": {
+          "dataType": "text"
+        }
+      }
+    },
+    "articles": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "delivery_records": {
+      "columns": {
+        "delivery_key": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}
