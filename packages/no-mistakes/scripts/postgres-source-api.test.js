@@ -352,3 +352,66 @@ test(
     assert.equal(invalid.statements[1].sql, "SELECT 2;");
   },
 );
+
+test(
+  "compiled CJS and ESM INSERT facts preserve conflict provenance and spans",
+  { skip: !compiled },
+  async () => {
+    const sql = fixture("insert.sql");
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const result = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 13);
+    for (const statement of result.statements) {
+      assert.equal(statement.kind, "insert");
+      assert.equal(
+        Buffer.from(sql)
+          .subarray(statement.span.start.offset, statement.span.end.offset)
+          .toString(),
+        statement.sql,
+      );
+    }
+    const inserts = result.statements.map((statement) => statement.insert);
+    assert.deepEqual(
+      inserts.map((insert) => insert.source.kind),
+      [
+        "values",
+        "values",
+        "defaultValues",
+        "select",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+        "values",
+      ],
+    );
+    assert.equal(inserts[1].table.parts[1].identity, "Accounts");
+    assert.equal(inserts[1].columns[0].parts[0].identity, "ID");
+    assert.equal(inserts[1].onConflict.target.kind, "omitted");
+    assert.equal(inserts[4].onConflict.target.kind, "columns");
+    assert.equal(inserts[5].onConflict.target.kind, "constraint");
+    assert.equal(inserts[6].onConflict.predicate.sql, "id > 0");
+    assert.deepEqual(
+      inserts[7].onConflict.action.assignments.map((assignment) => assignment.provenance),
+      ["targetColumn", "literal", "placeholder", "unresolved", "unresolved", "excludedColumn"],
+    );
+    assert.equal(inserts[7].complete, false);
+    assert.equal(inserts[7].diagnostics.length, 1);
+    assert.equal(inserts[8].onConflict.action.kind, "doNothing");
+    assert.equal(inserts[9].complete, false);
+    assert.equal(inserts[12].complete, false);
+    const malformed = await cjs.parsePostgresSql({ sql: fixture("insert-errors.sql") });
+    assert.equal(malformed.diagnostics.length, 10);
+    assert.equal(malformed.statements.length, 1);
+    assert.equal(malformed.statements[0].ordinal, 10);
+    assert.equal(malformed.statements[0].insert.complete, true);
+    assert.deepEqual(await esm.parsePostgresSql({ sql: fixture("insert-errors.sql") }), malformed);
+  },
+);

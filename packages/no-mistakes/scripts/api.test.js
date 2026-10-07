@@ -845,7 +845,6 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
     "PostgresSqlIndex",
     "PostgresSqlView",
     "PostgresSqlTrigger",
-    "PostgresSqlFunction",
     "PostgresSqlDiagnostic",
     "PostgresSqlPosition",
     "PostgresSqlSpan",
@@ -857,6 +856,10 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
     index,
     /parsePostgresSql\(sources: PostgresSqlSource\[\]\): Promise<PostgresSqlFacts\[\]>;/,
   );
+  const functions = readFileSync(join(packageRoot, "postgres-function-types.d.ts"), "utf8");
+  assert.match(functions, /export interface PostgresSqlFunctionArgument/);
+  assert.match(functions, /export interface PostgresSqlFunction \{/);
+  assert.match(declarations, /export type \* from "\.\/postgres-function-types";/);
   const drop = readFileSync(join(packageRoot, "postgres-drop-types.d.ts"), "utf8");
   assert.match(drop, /export interface PostgresSqlDrop/);
   assert.match(declarations, /export type \* from "\.\/postgres-drop-types";/);
@@ -1060,4 +1063,17 @@ test("SELECT scope facts expose named public contracts", () => {
     assert.match(query, new RegExp(`export type PostgresSqlQuery${name} =`));
   assert.match(query, /unsupported: PostgresSqlQueryUnsupported\[\];/);
   assert.match(query, /correlations: PostgresSqlQueryColumn\[\];/);
+});
+
+test("INSERT facts expose named exported declaration contracts", () => {
+  const declarations = readFileSync(join(__dirname, "../postgres-source-types.d.ts"), "utf8");
+  const insert = readFileSync(join(__dirname, "../postgres-insert-types.d.ts"), "utf8");
+  assert.match(declarations, /kind: "insert"; insert: PostgresSqlInsert/);
+  assert.match(declarations, /export type [*] from "\.\/postgres-insert-types"/);
+  for (const name of ["Insert", "Conflict", "InsertAssignment"])
+    assert.match(insert, new RegExp(`export interface PostgresSql${name} [{]`));
+  for (const name of ["InsertSource", "ConflictTarget", "ConflictAction", "InsertProvenance"])
+    assert.match(insert, new RegExp(`export type PostgresSql${name} =`));
+  assert.match(insert, /columnsOmitted: boolean/);
+  assert.match(insert, /diagnostics: PostgresSqlDiagnostic\[\]/);
 });

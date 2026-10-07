@@ -10,6 +10,7 @@ mod expression_roots;
 mod expressions;
 mod generated;
 mod indexes;
+mod insert;
 mod locations;
 mod parsing;
 mod procedural;

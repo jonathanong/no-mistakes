@@ -229,3 +229,40 @@ a reason, hosting scope/clause and available source span, and set
 frames and function argument clauses currently take this path. Parse failures
 remain source diagnostics. Spans use UTF-8 byte offsets and Unicode scalar
 line/column positions, including quoted identifiers and nested queries.
+
+## INSERT and ON CONFLICT facts
+
+`kind: "insert"` exposes `insert.table`, the optional target `alias`, explicit
+`columns`, and `columnsOmitted`. Names retain quoted identity. The `source` union
+identifies `values` (typed expression rows), `select` (the same scope facts used
+for SELECT), `defaultValues`, or `unsupported`. Statement spans and nested
+expression spans refer to the original input, including comments and literals.
+
+`onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
+and `constraint`. The conflict-target `predicate` is separate from the optional
+`doUpdate` action predicate. Actions are `doNothing` or `doUpdate`, whose
+`assignments` expose target columns, typed expressions, spans, and `provenance`:
+`targetColumn`, `excludedColumn`, `literal`, `placeholder`, or `unresolved`.
+Parentheses and casts preserve the underlying reference provenance; function
+calls, arithmetic, subqueries, tuple assignments, and unknown qualifiers remain
+unresolved. An alias hides the original target name. This is syntax provenance,
+not database type checking or a replay-safety decision.
+
+```js
+const facts = await parsePostgresSql({
+  sql: "INSERT INTO accounts (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id",
+});
+const { insert } = facts.statements[0];
+console.log(insert.onConflict.action.assignments[0].provenance); // excludedColumn
+```
+
+Consumers must check `insert.complete`, `insert.diagnostics`, assignment
+`complete`, and SELECT source completeness before relying on facts. Unsupported
+INSERT extensions (including RETURNING, whose output facts are outside this
+contract) and unresolved assignment provenance set completeness false and
+produce diagnostics. Syntax the prepared parser cannot represent produces the
+existing source diagnostic and preserves neighboring valid statements. No raw
+parser AST, embedded-language extraction, or consumer policy is exported. All
+INSERT contracts are named exported TypeScript types available from both Node
+facades. The asynchronous API reuses its prepared token stream and parses each
+expression once, including partial-index conflict predicates.
