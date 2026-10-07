@@ -463,3 +463,10 @@ SERIALIZE identifier values fold to lowercase; quoted string values retain their
 case, so unsupported values such as `'JSON'` and `'TEXT'` remain incomplete.
 Conditional wrapper children use the same compatibility restoration as
 top-level wrappers, including original generated-column storage modes.
+
+Atomic declarations and conditional wrappers share prepared COMMENT validation,
+including routine signatures, Unicode escapes, and string continuations.
+Malformed metadata leaves its declaration incomplete and retains independent
+following statements. EXPLAIN with a COMMENT child is invalid PostgreSQL and
+remains `unknown`/incomplete; PREPARE with that child remains non-executing and
+incomplete. Child SQL and spans retain the full original metadata occurrence.

@@ -22,6 +22,7 @@ mod procedural;
 mod procedural_occurrences;
 mod projection;
 mod query;
+mod recovery;
 mod type_facts;
 mod types;
 mod wrappers;

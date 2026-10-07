@@ -236,6 +236,7 @@ fn conditional_projection_requires_its_prepared_source_owner() {
             &[],
             &[],
             &[],
+            super::super::metadata_preparation::Comments::new(),
         );
         let empty = fixture("empty.sql");
         assert!(conditional::project(

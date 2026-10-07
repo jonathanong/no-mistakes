@@ -7,7 +7,11 @@ use sqlparser::{
 };
 use std::collections::HashMap;
 
-pub(super) type Comments = HashMap<Location, Result<PostgresSqlStatementKind, String>>;
+pub(super) struct Comment {
+    pub facts: Option<Result<PostgresSqlStatementKind, String>>,
+    pub end: Location,
+}
+pub(super) type Comments = HashMap<Location, Comment>;
 
 pub(super) fn prepare<'a>(
     mut parser: Parser<'a>,
@@ -33,7 +37,8 @@ pub(super) fn prepare<'a>(
         let start = prefix[0];
         let end = tokens[start..]
             .iter()
-            .position(|token| token.token == Token::SemiColon)
+            .position(|token| token.token == Token::SemiColon
+                || matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::END))
             .map_or(tokens.len(), |offset| start + offset);
         while parser.index() > start {
             parser.prev_token();
@@ -47,7 +52,19 @@ pub(super) fn prepare<'a>(
         {
             facts = Err("COMMENT has no complete original statement boundary".into());
         }
-        comments.insert(tokens[start].span.start, facts);
+        let original_end = tokens[start..end]
+            .iter()
+            .filter(|token| !matches!(token.token, Token::Whitespace(_)))
+            .map(|token| token.span.end)
+            .max()
+            .unwrap_or(tokens[start].span.end);
+        comments.insert(
+            tokens[start].span.start,
+            Comment {
+                facts: Some(facts),
+                end: original_end,
+            },
+        );
         // Only the native conditional grammar sees SELECT 0. The real metadata
         // was collected once above; every original position remains unchanged.
         tokens[start].token = Token::make_word("SELECT", None);

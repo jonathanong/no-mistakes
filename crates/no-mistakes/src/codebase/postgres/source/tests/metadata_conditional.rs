@@ -91,7 +91,8 @@ fn prepared_comment_collection_resets_the_borrowed_parser_cursor() {
     let (parser, comments) = super::super::metadata_preparation::prepare(parser, &locations);
     assert_eq!(parser.index(), 0);
     assert_eq!(comments.len(), 2);
-    assert!(comments
-        .values()
-        .all(|value| matches!(value, Ok(PostgresSqlStatementKind::Comment { .. }))));
+    assert!(comments.values().all(|value| matches!(
+        value.facts,
+        Some(Ok(PostgresSqlStatementKind::Comment { .. }))
+    )));
 }

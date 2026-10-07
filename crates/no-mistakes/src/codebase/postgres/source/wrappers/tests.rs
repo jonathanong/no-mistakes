@@ -21,6 +21,7 @@ fn missing_child_tokens_and_projection_depth_fail_closed() {
         &[],
         &[],
         &[],
+        super::super::metadata_preparation::Comments::new(),
     );
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
     let ast = parser.parse_statement().unwrap();
@@ -32,7 +33,7 @@ fn missing_child_tokens_and_projection_depth_fail_closed() {
     assert!(bounded.statements.is_empty());
     assert!(bounded.diagnostics[0].message.contains("safety limit"));
     assert!(span(&[], &context).is_none());
-    assert!(context.statement(&ast, &[], 0, 0, None).is_none());
+    assert!(context.statement(&ast, &[], 0, 0, None).is_err());
     assert_eq!(
         header::child_start(&tokens[..1], PostgresSqlWrapperKind::Prepare),
         1

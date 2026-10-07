@@ -68,6 +68,11 @@ test(
     for (const name of [
       "wrapper-options.sql",
       "wrapper-option-identity.sql",
+      "wrapper-metadata.sql",
+      "wrapper-comment-eof.sql",
+      "wrapper-routine-comment-eof.sql",
+      "wrapper-explain-comment-eof.sql",
+      "wrapper-prepare-comment-eof.sql",
       "wrapper-functions.sql",
       "wrapper-recovery.sql",
       "wrapper-compatibility.sql",
@@ -80,6 +85,35 @@ test(
       assert.deepEqual(await esm.parsePostgresSql({ sql: fixture(name) }), result);
       assert.deepEqual(result.diagnostics, []);
       assert.ok(result.statements.every((item) => item.kind !== "other"));
+      if (name.endsWith("comment-eof.sql")) {
+        assert.equal(result.statements[0].sql, fixture(name).trimEnd());
+        const child = result.statements[0].wrapper?.statements[0];
+        if (child) assert.equal(child.sql.endsWith("at EOF'"), true);
+      }
+      if (name === "wrapper-metadata.sql") {
+        assert.equal(result.statements[0].function.wrapper.complete, true);
+        assert.deepEqual(
+          result.statements[0].function.wrapper.statements
+            .slice(0, 3)
+            .map((child) => child.comment.comment),
+          ["café", "first second", null],
+        );
+        assert.equal(result.statements[1].function.wrapper.complete, false);
+        assert.equal(result.statements[8].sql, "SELECT 63;");
+        assert.deepEqual(
+          result.statements.slice(3, 6).map((item) => item.wrapper.execution),
+          ["unknown", "nonExecuting", "unknown"],
+        );
+        const sourceBytes = Buffer.from(fixture(name));
+        for (const parent of result.statements) {
+          for (const child of (parent.wrapper || parent.function?.wrapper)?.statements || []) {
+            assert.equal(
+              sourceBytes.subarray(child.span.start.offset, child.span.end.offset).toString(),
+              child.sql,
+            );
+          }
+        }
+      }
       if (name === "wrapper-option-identity.sql") {
         assert.deepEqual(
           result.statements.slice(0, 17).map((item) => item.wrapper.execution),

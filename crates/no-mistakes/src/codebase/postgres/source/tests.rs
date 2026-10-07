@@ -43,3 +43,5 @@ mod wrapper_recovery;
 mod wrapper_review;
 
 mod wrapper_option_identity;
+
+mod wrapper_metadata;

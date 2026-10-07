@@ -18,6 +18,7 @@ mod semantics;
 mod tests;
 use super::completeness::statement as complete;
 pub(super) use semantics::finalize;
+use semantics::{diagnostic, empty, unsupported};
 
 pub(super) struct Context<'a, 's> {
     pub source: &'s PostgresSqlSource,
@@ -25,6 +26,7 @@ pub(super) struct Context<'a, 's> {
     pub fetch: &'a [crate::codebase::postgres::parse::fetch_expression::Clause],
     pub generated: &'a [Span],
     pub markers: &'a [sqlparser::tokenizer::Location],
+    pub comments: std::cell::RefCell<super::metadata_preparation::Comments>,
     pub recursive_views: &'a RecursiveViews,
 }
 
@@ -119,11 +121,28 @@ fn project(
         return Some(wrapper);
     }
     let child_tokens = &tokens[header::child_start(tokens, kind)..];
-    if let Some(child) = context.statement(child, child_tokens, 0, depth + 1, insert_facts) {
-        wrapper.complete = known
-            && matches!(statement, Statement::Explain { statement, .. } | Statement::Prepare { statement, .. } if matches!(statement.as_ref(), Statement::Insert(_) | Statement::Query(_)))
-            && complete(&child.facts);
-        wrapper.statements.push(child);
+    if kind == PostgresSqlWrapperKind::Explain
+        && child_tokens
+            .iter()
+            .find(|token| !matches!(token.token, Token::Whitespace(_)))
+            .is_some_and(|token| context.comments.borrow().contains_key(&token.span.start))
+    {
+        wrapper.execution = PostgresSqlExecution::Unknown;
+    }
+    match context.statement(child, child_tokens, 0, depth + 1, insert_facts) {
+        Ok(child) => {
+            wrapper.complete = known
+                && matches!(
+                    child.facts,
+                    PostgresSqlStatementKind::Insert { .. }
+                        | PostgresSqlStatementKind::Select { .. }
+                )
+                && complete(&child.facts);
+            wrapper.statements.push(child);
+        }
+        Err(error) => wrapper
+            .diagnostics
+            .push(diagnostic(&error, wrapper.span.clone())),
     }
     if !wrapper.complete {
         wrapper.diagnostics.push(diagnostic(
@@ -151,32 +170,6 @@ pub(super) fn declaration() -> PostgresSqlWrapper {
     wrapper
 }
 
-fn empty(kind: PostgresSqlWrapperKind, execution: PostgresSqlExecution) -> PostgresSqlWrapper {
-    PostgresSqlWrapper {
-        wrapper_kind: kind,
-        execution,
-        statements: Vec::new(),
-        span: None,
-        complete: false,
-        diagnostics: Vec::new(),
-    }
-}
-fn unsupported(kind: PostgresSqlWrapperKind, message: &str) -> PostgresSqlWrapper {
-    let execution = if kind == PostgresSqlWrapperKind::Prepare {
-        PostgresSqlExecution::NonExecuting
-    } else {
-        PostgresSqlExecution::Unknown
-    };
-    let mut wrapper = empty(kind, execution);
-    wrapper.diagnostics.push(diagnostic(message, None));
-    wrapper
-}
-fn diagnostic(message: &str, span: Option<PostgresSqlSpan>) -> PostgresSqlDiagnostic {
-    PostgresSqlDiagnostic {
-        message: message.into(),
-        span,
-    }
-}
 fn keyword(token: &Token, keyword: Keyword) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == keyword)
 }
@@ -186,12 +179,24 @@ fn span(tokens: &[TokenWithSpan], context: &Context<'_, '_>) -> Option<PostgresS
         .filter(|token| !matches!(token.token, Token::Whitespace(_)));
     let first = significant.next()?;
     let last = significant.next_back().unwrap_or(first);
+    let original_end = tokens
+        .iter()
+        .filter_map(|token| {
+            context
+                .comments
+                .borrow()
+                .get(&token.span.start)
+                .map(|comment| comment.end)
+        })
+        .max()
+        .unwrap_or(last.span.end)
+        .max(last.span.end);
     context.locations.span(Span {
         start: first.span.start,
         end: crate::codebase::postgres::parse::fetch_expression::source_end(
             context.fetch,
             first.span.start,
-            last.span.end,
+            original_end,
         ),
     })
 }

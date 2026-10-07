@@ -62,18 +62,23 @@ pub(super) fn collect(
                     let tokens = (child_start..parser.index())
                         .map(|index| parser.token_at(index).clone())
                         .collect::<Vec<_>>();
-                    if let Some(mut child) = context.statement(
+                    match context.statement(
                         &statement,
                         &tokens,
                         child_ordinal,
                         1,
                         insert_facts.as_ref(),
                     ) {
-                        if let Some(function) = nested {
-                            child.facts = PostgresSqlStatementKind::CreateFunction { function };
-                            finalize(&mut child.facts, &child.span);
+                        Ok(mut child) => {
+                            if let Some(function) = nested {
+                                child.facts = PostgresSqlStatementKind::CreateFunction { function };
+                                finalize(&mut child.facts, &child.span);
+                            }
+                            wrapper.statements.push(child);
                         }
-                        wrapper.statements.push(child);
+                        Err(error) => wrapper
+                            .diagnostics
+                            .push(diagnostic(&error, span(&tokens, context))),
                     }
                 }
                 Err(error) => {

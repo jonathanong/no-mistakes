@@ -48,8 +48,8 @@ pub(super) fn project(
                 })
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
-            let mut facts = if let Some(facts) = comments.remove(&owned[0].span.start) {
-                facts?
+            let mut facts = if let Some(facts) = wrapper_context.take_comment(owned[0].span.start) {
+                facts.0?
             } else if let Statement::If(nested) = statement {
                 project(
                     nested,
@@ -70,8 +70,7 @@ pub(super) fn project(
                     .collect::<Vec<_>>();
                 wrapper_context.restore(statement, owned.last().unwrap().span.end)?;
                 wrapper_context
-                    .statement(statement, &tokens, ordinal, 0, None)
-                    .ok_or("Conditional wrapper source span is unavailable")?
+                    .statement(statement, &tokens, ordinal, 0, None)?
                     .facts
             } else {
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(

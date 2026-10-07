@@ -35,11 +35,7 @@ pub(super) fn collect_program(
         Vec::new()
     };
     let parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
-    let (mut parser, mut comments) = if depth > 0 {
-        super::metadata_preparation::prepare(parser, locations)
-    } else {
-        (parser, super::metadata_preparation::Comments::new())
-    };
+    let (mut parser, comments) = super::metadata_preparation::prepare(parser, locations);
     let wrapper_context = super::wrappers::Context::new(
         source,
         locations,
@@ -47,6 +43,7 @@ pub(super) fn collect_program(
         &fetch_expressions,
         &generated,
         &conflict_markers,
+        comments,
     );
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
@@ -55,11 +52,11 @@ pub(super) fn collect_program(
         }
         let start = parser.peek_token().span.start;
         let start_index = parser.index();
-        let parsed = if let Some(facts) = comments.remove(&start) {
+        let parsed = if let Some(facts) = wrapper_context.take_comment(start) {
             while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
                 parser.next_token();
             }
-            facts
+            facts.0
         } else if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
         } else if super::metadata::starts(&parser) {
@@ -166,7 +163,7 @@ pub(super) fn collect_program(
         let end = crate::codebase::postgres::parse::fetch_expression::source_end(
             &fetch_expressions,
             start,
-            end,
+            wrapper_context.source_end(start, end),
         );
         let Some(span) = locations.span(sqlparser::tokenizer::Span { start, end }) else {
             // Parser compatibility rewrites can introduce synthetic token positions.
@@ -209,16 +206,4 @@ pub(super) fn collect_program(
     result
 }
 
-pub(super) fn recover(parser: &mut Parser<'_>, markers: &[sqlparser::tokenizer::Location]) {
-    loop {
-        let token = parser.peek_token();
-        let boundary =
-            token.token == Token::SemiColon && markers.binary_search(&token.span.start).is_err();
-        if boundary || token.token == Token::EOF {
-            break;
-        }
-        // Synthetic conflict delimiters belong to this failed statement, not
-        // to the next ordinal. Only an original semicolon ends recovery.
-        parser.next_token();
-    }
-}
+pub(super) use super::recovery::recover;
