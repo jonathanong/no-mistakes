@@ -8,7 +8,7 @@ module.exports = rule(
   {
     type: "problem",
     docs: {
-      description: "cap Vitest project defaults and test/hook timeout overrides",
+      description: "require positive Vitest timeouts and cap project defaults and overrides",
       recommended: false,
     },
     schema: [
@@ -23,6 +23,8 @@ module.exports = rule(
       },
     ],
     messages: {
+      invalid:
+        "Vitest {{name}} must be positive; zero disables the timeout and negative values are invalid.",
       timeout:
         "Vitest {{name}} exceeds {{max}} ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
       unknown:
@@ -45,7 +47,9 @@ module.exports = rule(
       const node = origin || entry.origin;
       if (suppressed(node)) return;
       if (entry.value.kind === "number") {
-        if (entry.value.value > max)
+        if (!(entry.value.value > 0))
+          context.report({ node, messageId: "invalid", data: { name } });
+        else if (entry.value.value > max)
           context.report({ node, messageId: "timeout", data: { name, max } });
       } else if (option.unknownValues === "finding")
         context.report({ node, messageId: "unknown", data: { name, max } });

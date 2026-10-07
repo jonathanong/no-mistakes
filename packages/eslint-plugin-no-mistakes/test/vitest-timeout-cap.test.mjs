@@ -22,6 +22,42 @@ describe(rule, () => {
     );
     assert.deepEqual(findings("config", { defaultMax: 60000 }), []);
   });
+  it("rejects zero and negative timeouts and accepts the positive cap boundary", () => {
+    assert.deepEqual(
+      findings("positive-boundaries", { defaultMax: 30_000 }).map(({ line, messageId }) => ({
+        line,
+        messageId,
+      })),
+      [
+        { line: 12, messageId: "invalid" },
+        { line: 15, messageId: "invalid" },
+        { line: 16, messageId: "timeout" },
+        { line: 20, messageId: "invalid" },
+        { line: 21, messageId: "invalid" },
+        { line: 23, messageId: "timeout" },
+        { line: 24, messageId: "invalid" },
+        { line: 25, messageId: "invalid" },
+        { line: 26, messageId: "invalid" },
+        { line: 26, messageId: "timeout" },
+      ],
+    );
+  });
+  it("caps resolved infinity while keeping opaque NaN under the unknown-value policy", () => {
+    assert.deepEqual(
+      findings("number-shapes").map(({ line, messageId }) => ({ line, messageId })),
+      [{ line: 7, messageId: "timeout" }],
+    );
+    assert.deepEqual(
+      findings("number-shapes", { unknownValues: "finding" }).map(({ line, messageId }) => ({
+        line,
+        messageId,
+      })),
+      [
+        { line: 7, messageId: "timeout" },
+        { line: 8, messageId: "unknown" },
+      ],
+    );
+  });
   it("honors effective deep merged/spread precedence and retains project source locations", () => {
     assert.deepEqual(
       findings("merged").map((item) => item.line),
@@ -86,6 +122,17 @@ describe(rule, () => {
         .length,
       13,
     );
+    const boundaries = JSON.parse(run("positive-boundaries").stdout).diagnostics.filter((item) =>
+      item.code?.includes(rule),
+    );
+    assert.equal(boundaries.filter((item) => item.message.includes("must be positive")).length, 7);
+    assert.ok(!boundaries.some((item) => item.labels[0].span.line === 22));
+    assert.deepEqual(
+      JSON.parse(run("number-shapes").stdout)
+        .diagnostics.filter((item) => item.code?.includes(rule))
+        .map((item) => item.labels[0].span.line),
+      [7],
+    );
     assert.ok(
       !JSON.parse(run("suppression-file").stdout).diagnostics.some((item) =>
         item.code?.includes(rule),
@@ -111,11 +158,11 @@ describe("vitest-timeout-cap effective config and source boundaries", () => {
   it("handles signed constants, getters, local unknowns and suppression at module-options usage", () => {
     assert.deepEqual(
       findings("value-edges").map((item) => item.line),
-      [12, 18, 22],
+      [11, 12, 18, 22],
     );
     assert.deepEqual(
       findings("value-edges", { unknownValues: "finding" }).map((item) => item.line),
-      [12, 14, 15, 18, 19, 22, 22],
+      [11, 12, 14, 15, 18, 19, 22, 22],
     );
   });
   it("handles nested config roots and namespace/global hooks without reporting overridden fragments", () => {

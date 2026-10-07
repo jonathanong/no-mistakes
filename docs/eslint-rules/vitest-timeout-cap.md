@@ -9,9 +9,10 @@ slow.
 
 ## Disallowed
 
-This opt-in ESLint/Oxlint rule reports effective Vitest configuration values
-above the configured caps, along with oversized per-test, suite, and hook
-overrides. It recognizes imported and aliased Vitest APIs, `defineConfig`,
+This opt-in ESLint/Oxlint rule reports zero, negative, or oversized effective
+Vitest configuration values and per-test, suite, and hook overrides. Zero disables a
+Vitest timeout; negative values are invalid. It recognizes imported and aliased
+Vitest APIs, `defineConfig`,
 `defineProject`, and `mergeConfig` imported from `vitest/config` or `vite`,
 project entries, and `vi.setConfig` updates to `testTimeout` or `hookTimeout`.
 The default caps are 5,000 ms for configuration `testTimeout` and `hookTimeout`,
@@ -22,7 +23,7 @@ import { defineConfig } from "vitest/config";
 import { it, beforeEach } from "vitest";
 
 export default defineConfig({
-  test: { testTimeout: 60_000, hookTimeout: 45_000 },
+  test: { testTimeout: 0, hookTimeout: 45_000 },
 });
 
 it("waits too long", { timeout: 60_000 }, async () => {});
@@ -31,7 +32,7 @@ beforeEach(async () => {}, 45_000);
 
 ## Allowed
 
-Values at or below the cap are accepted. The rule evaluates same-module
+Positive values at or below the cap are accepted. The rule evaluates same-module
 constants, object and array literals, known spreads, and config callbacks with
 expression bodies or a single return statement. It applies deep object merges
 and concatenates merged arrays, so only effective config/project timeout
