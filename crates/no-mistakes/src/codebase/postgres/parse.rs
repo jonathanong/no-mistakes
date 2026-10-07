@@ -17,6 +17,7 @@ pub(crate) use lenient::parse_postgres_sql_with_function_sources;
 pub(crate) use lenient::LocatedStatement;
 pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
+mod recursive_view;
 mod sql_text;
 mod standalone_table;
 mod table_boundary;
@@ -90,6 +91,7 @@ fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>
     table_boundary::normalize(tokens);
     lock_strength::normalize(tokens);
     lock_of_list::normalize(tokens);
+    recursive_view::normalize(tokens);
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.

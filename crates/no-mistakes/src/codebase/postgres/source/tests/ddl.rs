@@ -368,3 +368,74 @@ fn scalar_table_views_retain_source_identity_and_original_spans() {
         );
     }
 }
+
+#[test]
+fn recursive_views_emit_typed_facts_and_preserve_ordinary_view_behavior() {
+    use super::super::PostgresSqlStatementKind;
+    let sql = super::fixture("recursive-views.sql");
+    // Both native parser paths must accept the same saved declarations.
+    let statements = crate::codebase::postgres::parse_postgres_sql(&sql).unwrap();
+    assert_eq!(statements.len(), 8);
+    assert!(statements[..7]
+        .iter()
+        .all(|statement| matches!(statement, Statement::CreateView(_))));
+    let facts = super::facts("recursive-views.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 8);
+    for (index, expected, quoted, replace, materialized) in [
+        (0, vec!["recursive_view"], false, false, false),
+        (1, vec!["App", "RecursiveView"], true, true, false),
+        (2, vec!["app", "commented"], false, false, false),
+        (3, vec!["ordinary_view"], false, false, false),
+        (4, vec!["App", "OrdinaryView"], true, true, false),
+        (5, vec!["materialized_view"], false, false, true),
+        (6, vec!["recursive"], true, false, false),
+    ] {
+        let statement = &facts.statements[index];
+        assert_eq!(
+            &sql[statement.span.start.offset..statement.span.end.offset],
+            statement.sql
+        );
+        let PostgresSqlStatementKind::CreateView { view } = &statement.facts else {
+            panic!("expected createView")
+        };
+        assert_eq!(
+            view.name
+                .parts
+                .iter()
+                .map(|part| part.identity.as_str())
+                .collect::<Vec<_>>(),
+            expected
+        );
+        assert!(view.name.parts.iter().all(|part| part.quoted == quoted));
+        assert_eq!(view.materialized, materialized);
+        assert_eq!(view.or_replace, replace);
+        assert_eq!(view.columns.len(), 1);
+        assert_eq!(
+            view.columns[0].identity,
+            if index == 1 || index == 4 { "X" } else { "x" }
+        );
+        assert!(view.dependencies_complete);
+    }
+    let view = |index: usize| {
+        let PostgresSqlStatementKind::CreateView { view } = &facts.statements[index].facts else {
+            panic!("expected createView")
+        };
+        view
+    };
+    assert_eq!(view(0).query, view(3).query);
+    assert_eq!(view(1).query, view(4).query);
+    assert_eq!(view(0).dependencies, view(3).dependencies);
+    assert_eq!(view(1).dependencies, view(4).dependencies);
+    assert!(view(6).query.starts_with("WITH RECURSIVE"));
+    assert!(view(6).dependencies.is_empty());
+}
+
+#[test]
+fn invalid_recursive_declarations_keep_diagnostics_and_valid_neighbors() {
+    let facts = super::facts("recursive-views-invalid.sql");
+    assert_eq!(facts.diagnostics.len(), 4);
+    assert_eq!(facts.statements.len(), 1);
+    assert_eq!(facts.statements[0].ordinal, 4);
+    assert_eq!(facts.statements[0].sql, "SELECT 2;");
+}

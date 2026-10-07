@@ -53,6 +53,11 @@ raw parser nodes or internal imports.
   expressions, predicates and meaningful ordering differences remain distinct.
   Identity is versioned with the facts; it is not a promise of catalog-assisted
   semantic equivalence or arbitrary SQL algebra simplification.
+- `CREATE RECURSIVE VIEW` and `CREATE OR REPLACE RECURSIVE VIEW`, including
+  explicit column lists, emit `createView` facts with `materialized: false`.
+  Declared identifier parts, column names, replacement flags and original
+  statement SQL/spans are preserved. The query retains the declared query body;
+  the API does not expand the recursive-view shorthand into a recursive CTE.
 - Views and materialized views expose relation dependencies and typed function
   references with source spans for drop/recreation ordering.
   CTE references follow their PostgreSQL visibility scope and are excluded from

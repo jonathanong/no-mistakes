@@ -676,6 +676,8 @@ See [Architecture](architecture.md) for the one-pass session rules,
 already require explicit package/project lists.
 
 PostgreSQL schema catalog generation (complete and ordering coverage) has Rust library, CLI and async Node/N-API parity, including opt-in search-path schema evidence; see [`postgres catalog`](cli/postgres.md).
+PostgreSQL source parsing accepts `CREATE [OR REPLACE] RECURSIVE VIEW` with explicit column lists through Rust and async Node ESM/CJS APIs, emitting typed `createView` facts; see [PostgreSQL source API](postgres-source-api.md).
+
 PostgreSQL bounded-statement analysis recognizes `TABLE ONLY name` query arms and retains quoted relation identity across strict and lenient parsing.
 It also recognizes `INSERT INTO target TABLE ONLY source`, including target aliases and identity overrides, while retaining the original source-token locations.
 It also analyzes standalone `TABLE name` and `TABLE ONLY name` statements, including an explicit inheritance `*` suffix, with the same catalog and temporary-relation semantics as a corresponding `SELECT * FROM name`.

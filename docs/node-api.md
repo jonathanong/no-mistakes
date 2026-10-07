@@ -103,7 +103,8 @@ rule configuration, with no additional Node export.
 ## PostgreSQL catalog generation
 
 For SQL text without a database or repository, use async
-[`parsePostgresSql(source)`](postgres-source-api.md). A source array returns
+[`parsePostgresSql(source)`](postgres-source-api.md), including typed `createView`
+facts for `CREATE [OR REPLACE] RECURSIVE VIEW`. A source array returns
 facts in input order. Expression roots and ordered direct call arguments are
 typed, including cast/parenthesis wrappers and bare SQL value functions. DO bodies expose typed IF/ELSIF/ELSE branch conditions
 and nested DDL source occurrences, without claiming that any branch executes.
