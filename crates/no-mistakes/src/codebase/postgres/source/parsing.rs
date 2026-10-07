@@ -113,9 +113,7 @@ pub(super) fn collect_program(
             Err(error) => (None, Some(error)),
         };
         if error.is_some() {
-            while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
-                parser.next_token();
-            }
+            recover(&mut parser, &conflict_markers);
         }
         let end = if parser.peek_token().token == Token::SemiColon {
             parser.next_token().span.end
@@ -175,4 +173,18 @@ pub(super) fn collect_program(
         });
     }
     result
+}
+
+fn recover(parser: &mut Parser<'_>, markers: &[sqlparser::tokenizer::Location]) {
+    loop {
+        let token = parser.peek_token();
+        let boundary =
+            token.token == Token::SemiColon && markers.binary_search(&token.span.start).is_err();
+        if boundary || token.token == Token::EOF {
+            break;
+        }
+        // Synthetic conflict delimiters belong to this failed statement, not
+        // to the next ordinal. Only an original semicolon ends recovery.
+        parser.next_token();
+    }
 }

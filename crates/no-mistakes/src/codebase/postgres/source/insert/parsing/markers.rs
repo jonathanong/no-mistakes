@@ -60,7 +60,8 @@ fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {
         .iter()
         .map(|index| {
             let token = &tokens[*index].token;
-            if depth == 0 && *token == Token::SemiColon {
+            if *token == Token::SemiColon {
+                depth = 0;
                 beginning = true;
                 insert = false;
                 return false;

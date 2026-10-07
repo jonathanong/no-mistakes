@@ -413,6 +413,21 @@ test(
     assert.equal(malformed.statements[0].ordinal, 10);
     assert.equal(malformed.statements[0].insert.complete, true);
     assert.deepEqual(await esm.parsePostgresSql({ sql: fixture("insert-errors.sql") }), malformed);
+    const recoverySql = fixture("insert-review-invalid.sql");
+    const recovery = await cjs.parsePostgresSql({ sql: recoverySql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: recoverySql }), recovery);
+    assert.equal(recovery.diagnostics.length, 3);
+    assert.deepEqual(
+      recovery.statements.map((item) => item.ordinal),
+      [1, 3, 5, 6],
+    );
+    assert.equal(recovery.statements[2].insert.complete, true);
+    for (const item of recovery.statements) {
+      assert.equal(
+        Buffer.from(recoverySql).subarray(item.span.start.offset, item.span.end.offset).toString(),
+        item.sql,
+      );
+    }
     const reviewSql = fixture("insert-review.sql");
     const review = await cjs.parsePostgresSql({ sql: reviewSql });
     assert.deepEqual(await esm.parsePostgresSql({ sql: reviewSql }), review);

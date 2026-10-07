@@ -75,7 +75,39 @@ fn joins_ctes_signed_literals_and_procedural_completeness_are_preserved() {
 #[test]
 fn duplicate_conflicts_do_not_produce_complete_prefix_facts() {
     let result = facts("insert-review-invalid.sql");
-    assert!(!result.diagnostics.is_empty());
-    assert_eq!(result.statements.len(), 1);
+    assert_eq!(result.diagnostics.len(), 3, "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 4);
+    assert_eq!(
+        result
+            .statements
+            .iter()
+            .map(|statement| statement.ordinal)
+            .collect::<Vec<_>>(),
+        vec![1, 3, 5, 6]
+    );
+    let sql = fixture("insert-review-invalid.sql");
+    for statement in &result.statements {
+        assert_eq!(
+            statement.sql,
+            sql[statement.span.start.offset..statement.span.end.offset]
+        );
+    }
     assert_eq!(result.statements[0].sql, "SELECT 42;");
+    assert_eq!(result.statements[1].sql, "SELECT 43;");
+    assert_eq!(result.statements[3].sql, "SELECT 44;");
+    let PostgresSqlStatementKind::Insert { insert } = &result.statements[2].facts else {
+        panic!("INSERT expected")
+    };
+    assert!(insert.complete);
+    assert_eq!(
+        insert
+            .on_conflict
+            .as_ref()
+            .unwrap()
+            .predicate
+            .as_ref()
+            .unwrap()
+            .sql,
+        "id > 0"
+    );
 }
