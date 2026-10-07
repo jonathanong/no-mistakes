@@ -7,11 +7,12 @@ pub(super) fn execution(legacy: bool, options: Option<&[UtilityOption]>) -> Post
     let mut generic = false;
     let mut requires_analyze = false;
     for option in options.into_iter().flatten() {
-        if option.name.quote_style.is_some() {
-            return PostgresSqlExecution::Unknown;
-        }
-        let mut name = option.name.value.to_ascii_lowercase();
-        if name == "analyse" {
+        let mut name = if option.name.quote_style.is_some() {
+            option.name.value.clone()
+        } else {
+            option.name.value.to_ascii_lowercase()
+        };
+        if name == "analyse" && option.name.quote_style.is_none() {
             name = "analyze".into();
         }
         if !seen.insert(name.clone()) {
@@ -75,15 +76,22 @@ fn boolean(expr: Option<&Expr>) -> Option<bool> {
         None => return Some(true),
         Some(Expr::Value(value)) => match &value.value {
             Value::Boolean(value) => return Some(*value),
-            Value::Number(value, _) | Value::SingleQuotedString(value) => value.as_str(),
+            Value::Number(value, _) => {
+                return match value.as_str() {
+                    "0" => Some(false),
+                    "1" => Some(true),
+                    _ => None,
+                }
+            }
+            Value::SingleQuotedString(value) => value.as_str(),
             _ => return None,
         },
-        Some(Expr::Identifier(value)) if value.quote_style.is_none() => value.value.as_str(),
+        Some(Expr::Identifier(value)) => value.value.as_str(),
         _ => return None,
     };
     match value.to_ascii_lowercase().as_str() {
-        "true" | "on" | "1" => Some(true),
-        "false" | "off" | "0" => Some(false),
+        "true" | "on" => Some(true),
+        "false" | "off" => Some(false),
         _ => None,
     }
 }
@@ -104,5 +112,27 @@ fn string(expr: &Expr) -> Option<String> {
             _ => None,
         },
         _ => None,
+    }
+}
+
+pub(in crate::codebase::postgres::source) fn prepare(
+    tokens: &mut [sqlparser::tokenizer::TokenWithSpan],
+) {
+    use sqlparser::{keywords::Keyword, tokenizer::Token};
+    let mut explain = false;
+    let mut boundary = true;
+    for token in tokens {
+        if matches!(token.token, Token::Whitespace(_)) {
+            continue;
+        }
+        if explain
+            && matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case("ANALYSE"))
+        {
+            token.token = Token::make_word("ANALYZE", None);
+        }
+        explain = boundary
+            && matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::EXPLAIN);
+        boundary = token.token == Token::SemiColon
+            || matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && [Keyword::BEGIN, Keyword::ATOMIC, Keyword::THEN, Keyword::ELSE].contains(&word.keyword));
     }
 }

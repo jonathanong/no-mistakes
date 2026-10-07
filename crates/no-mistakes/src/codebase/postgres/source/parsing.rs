@@ -23,6 +23,7 @@ pub(super) fn collect_program(
         diagnostics: Vec::new(),
     };
     super::adjacent_strings::prepare(&mut prepared.tokens);
+    super::wrappers::prepare(&mut prepared.tokens);
     ddl::prepare_trigger_arguments(&mut prepared.tokens);
     let generated = super::generated::prepare(&mut prepared.tokens);
     let fetch_expressions =

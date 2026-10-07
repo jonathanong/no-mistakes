@@ -17,6 +17,7 @@ mod semantics;
 #[cfg(test)]
 mod tests;
 use super::completeness::statement as complete;
+pub(super) use options::prepare;
 pub(super) use semantics::finalize;
 use semantics::{diagnostic, empty, unsupported};
 

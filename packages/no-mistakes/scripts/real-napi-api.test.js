@@ -383,3 +383,5 @@ require("./postgres-source-api.test.js");
 
 require("./postgres-cte-api.test.js");
 require("./postgres-wrapper-api.test.js");
+
+require("./postgres-wrapper-option-api.test.js");

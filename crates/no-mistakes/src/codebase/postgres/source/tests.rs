@@ -45,3 +45,5 @@ mod wrapper_review;
 mod wrapper_option_identity;
 
 mod wrapper_metadata;
+
+mod wrapper_boolean_identity;

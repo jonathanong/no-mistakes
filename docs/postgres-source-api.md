@@ -416,8 +416,8 @@ wrapper has its own span, completeness, and diagnostics. Execution is explicit:
 
 - Plain EXPLAIN is `nonExecuting`.
 - EXPLAIN ANALYZE is `executesForAnalysis`. The ANALYZE option accepts TRUE/ON/1,
-  FALSE/OFF/0, and an omitted value meaning TRUE. Unrelated strings and quoted
-  identifiers do not turn on analysis.
+  FALSE/OFF/0, and an omitted value meaning TRUE. Quoted boolean strings accept true/false/on/off, but quoted numeric strings
+  remain invalid. Quoted option names preserve exact lowercase identity.
 - PREPARE is `nonExecuting`; preparing a statement does not execute it.
 - Unsupported or ambiguous EXPLAIN options are `unknown` and incomplete.
   Duplicate options and incompatible ANALYZE/GENERIC_PLAN settings fail closed.
@@ -470,3 +470,6 @@ Malformed metadata leaves its declaration incomplete and retains independent
 following statements. EXPLAIN with a COMMENT child is invalid PostgreSQL and
 remains `unknown`/incomplete; PREPARE with that child remains non-executing and
 incomplete. Child SQL and spans retain the full original metadata occurrence.
+
+The legacy `EXPLAIN ANALYSE` spelling shares the same prepared token normalization
+in top-level statements, conditional branches, and atomic declarations.

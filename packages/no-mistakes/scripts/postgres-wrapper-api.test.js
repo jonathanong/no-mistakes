@@ -68,6 +68,7 @@ test(
     for (const name of [
       "wrapper-options.sql",
       "wrapper-option-identity.sql",
+      "wrapper-boolean-identity.sql",
       "wrapper-metadata.sql",
       "wrapper-comment-eof.sql",
       "wrapper-routine-comment-eof.sql",

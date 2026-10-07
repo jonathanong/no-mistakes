@@ -42,3 +42,37 @@ fn missing_child_tokens_and_projection_depth_fail_closed() {
     assert!(!missing.complete);
     assert!(!missing.diagnostics.is_empty());
 }
+
+#[test]
+fn prepared_legacy_aliases_do_not_rewrite_expression_and_returning_identifiers() {
+    let sql = std::fs::read_to_string(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/postgres-facts/source/wrapper-noncommand.sql"),
+    )
+    .unwrap();
+    let mut prepared = crate::codebase::postgres::parse::prepare_postgres_tokens(&sql);
+    prepare(&mut prepared.tokens);
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
+    let statements = parser.parse_statements().unwrap();
+    for statement in &statements[..2] {
+        let Statement::Query(query) = statement else {
+            panic!("query expected")
+        };
+        let sqlparser::ast::SetExpr::Select(select) = query.body.as_ref() else {
+            panic!("SELECT expected")
+        };
+        let sqlparser::ast::SelectItem::ExprWithAlias { alias, .. } = &select.projection[0] else {
+            panic!("alias expected")
+        };
+        assert_eq!(alias.value, "analyse");
+    }
+    let Statement::Insert(insert) = &statements[2] else {
+        panic!("INSERT expected")
+    };
+    let sqlparser::ast::SelectItem::ExprWithAlias { alias, .. } =
+        &insert.returning.as_ref().unwrap()[0]
+    else {
+        panic!("alias expected")
+    };
+    assert_eq!(alias.value, "analyse");
+}
