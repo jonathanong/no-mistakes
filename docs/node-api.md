@@ -784,3 +784,8 @@ diagnostics alongside recovered facts. See [nested constraint source facts](post
 `query.nestedStatements`, with named exported statement, DML assignment, MERGE
 and RETURNING types. Child IDs reference the same query report; source order,
 completeness and exact SQL slices are described in [PostgreSQL source facts](postgres-source-api.md#data-modifying-ctes).
+
+`parsePostgresSql()` exposes typed EXPLAIN/PREPARE execution wrappers and a
+non-executing declaration wrapper on CREATE FUNCTION facts, including supported
+SQL BEGIN ATOMIC child occurrences. See [statement wrappers](postgres-source-api.md#statement-wrappers-and-execution-context)
+for completeness, diagnostics, and ancestor execution semantics.

@@ -24,6 +24,7 @@ mod projection;
 mod query;
 mod type_facts;
 mod types;
+mod wrappers;
 pub use types::*;
 
 /// Parse source text without a repository scan, catalog, or database connection.

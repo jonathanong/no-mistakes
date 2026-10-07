@@ -117,7 +117,7 @@ All branches describe possible source occurrences; the API does not evaluate
 conditions or claim that their DDL executes. Declarations, loops, exception
 handlers, other procedural languages and escape-string DO bodies remain
 explicitly unsupported; no DDL is guessed behind unsupported control flow. Ordinary syntax errors preserve
-parseable neighboring body statements. Function bodies remain opaque.
+parseable neighboring body statements. String function bodies remain opaque; SQL-language BEGIN ATOMIC declaration wrappers expose child source occurrences without implying execution.
 
 A parser compatibility normalization with a source boundary that cannot be
 mapped (for example a synthetic COPY-data terminator) produces a diagnostic
@@ -405,3 +405,40 @@ Malformed routine defaults, multiple comment targets, missing index targets,
 and malformed SQL such as `CREATE TABLE invoices (amount_minor_units BIGINT,,);`
 remain diagnostics without successful facts. Recovery preserves the next
 independent statement even when a missing value consumes its semicolon.
+## Statement wrappers and execution context
+
+EXPLAIN and PREPARE emit `kind: "wrapper"` with a named `PostgresSqlWrapper`.
+Its `wrapperKind` is `explain` or `prepare`; `statements` contains ordered child
+source occurrences, with original SQL, byte spans, and local ordinals. The
+wrapper has its own span, completeness, and diagnostics. Execution is explicit:
+
+- Plain EXPLAIN is `nonExecuting`.
+- EXPLAIN ANALYZE is `executesForAnalysis`. The ANALYZE option accepts TRUE/ON/1,
+  FALSE/OFF/0, and an omitted value meaning TRUE. Unrelated strings and quoted
+  identifiers do not turn on analysis.
+- PREPARE is `nonExecuting`; preparing a statement does not execute it.
+- Unsupported or ambiguous EXPLAIN options are `unknown` and incomplete.
+  Duplicate options and incompatible ANALYZE/GENERIC_PLAN settings fail closed.
+
+Complete EXPLAIN/PREPARE child projection currently covers INSERT and query
+facts. Other parsed children retain their source facts but make the wrapper
+incomplete; for example, CREATE TABLE AS does not expose its query in the existing
+CREATE TABLE contract. Existing parser compatibility restoration and partial
+conflict predicates also apply to supported wrapped children. Parse failures
+remain typed incomplete wrappers and recover at original statement delimiters.
+
+CREATE FUNCTION retains `kind: "createFunction"` and all existing function
+fields, adding `function.wrapper` with `wrapperKind: "functionDeclaration"` and
+`execution: "nonExecuting"`. SQL-language BEGIN ATOMIC bodies expose ordered
+source occurrences through the same prepared parser. The body is bounded by its
+matching END; nested CASE, comments, and string literals retain original spans.
+Opaque string bodies and unsupported languages or body forms remain declarations
+with incomplete child facts and localized diagnostics. The wrapper's incomplete
+status describes its child projection, not the existing function signature.
+
+Execution context belongs to the enclosing hierarchy: a child INSERT inside a
+function declaration or PREPARE is a source occurrence, never an executed INSERT
+from that declaration. Nested wrappers retain their own syntax classification;
+consumers must also honor ancestor execution context. The parser never executes
+SQL, interprets function behavior, resolves prepared plans, exports raw parser
+ASTs, or applies replay policy. Wrapper projection has a bounded nesting limit.

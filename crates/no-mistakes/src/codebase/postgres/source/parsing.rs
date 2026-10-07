@@ -40,6 +40,14 @@ pub(super) fn collect_program(
     } else {
         (parser, super::metadata_preparation::Comments::new())
     };
+    let wrapper_context = super::wrappers::Context::new(
+        source,
+        locations,
+        &prepared.recursive_views,
+        &fetch_expressions,
+        &generated,
+        &conflict_markers,
+    );
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
         if parser.consume_token(&Token::SemiColon) {
@@ -56,6 +64,8 @@ pub(super) fn collect_program(
             super::procedural::collect(&mut parser, source, locations, depth)
         } else if super::metadata::starts(&parser) {
             super::metadata::collect(&mut parser, locations)
+        } else if super::wrappers::starts(&parser) {
+            Ok(super::wrappers::collect(&mut parser, &wrapper_context))
         } else {
             super::insert::parsing::parse(&mut parser, &conflict_markers)
                 .map_err(|error| error.to_string())
@@ -74,6 +84,15 @@ pub(super) fn collect_program(
                         &generated,
                         parser.token_at(parser.index().saturating_sub(1)).span.end,
                     );
+                    if let Statement::CreateFunction(value) = &statement {
+                        return Ok(PostgresSqlStatementKind::CreateFunction {
+                            function: super::wrappers::function(
+                                value,
+                                &mut parser,
+                                &wrapper_context,
+                            ),
+                        });
+                    }
                     if let Statement::Insert(value) = &statement {
                         return Ok(PostgresSqlStatementKind::Insert {
                             insert: Box::new(super::insert::project(
@@ -160,9 +179,7 @@ pub(super) fn collect_program(
             continue;
         };
         if let Some(mut facts) = facts {
-            if let PostgresSqlStatementKind::Insert { insert } = &mut facts {
-                insert.span = Some(span.clone());
-            }
+            super::wrappers::finalize(&mut facts, &span);
             if matches!(&facts, PostgresSqlStatementKind::CreateView { view } if !view.dependencies_complete)
             {
                 result.diagnostics.push(PostgresSqlDiagnostic { message: "View TABLE-arm dependencies have ambiguous source identity; dependencies are incomplete".into(), span: Some(span.clone()) });
@@ -192,7 +209,7 @@ pub(super) fn collect_program(
     result
 }
 
-fn recover(parser: &mut Parser<'_>, markers: &[sqlparser::tokenizer::Location]) {
+pub(super) fn recover(parser: &mut Parser<'_>, markers: &[sqlparser::tokenizer::Location]) {
     loop {
         let token = parser.peek_token();
         let boundary =

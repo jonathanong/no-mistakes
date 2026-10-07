@@ -15,6 +15,14 @@ fn collect(statements: &[PostgresSqlStatement], diagnostics: &mut Vec<PostgresSq
                     collect(&branch.statements, diagnostics);
                 }
             }
+            PostgresSqlStatementKind::Wrapper { wrapper } => {
+                collect(&wrapper.statements, diagnostics);
+                diagnostics.extend(wrapper.diagnostics.iter().cloned());
+            }
+            PostgresSqlStatementKind::CreateFunction { function } => {
+                collect(&function.wrapper.statements, diagnostics);
+                diagnostics.extend(function.wrapper.diagnostics.iter().cloned());
+            }
             // A nested DO block owns its own diagnostics and completeness.
             PostgresSqlStatementKind::DoBlock { .. } => {}
             facts if !super::completeness::statement(facts) => {

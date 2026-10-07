@@ -98,6 +98,7 @@ pub(super) fn function(
         None => (None, false),
     };
     PostgresSqlFunction {
+        wrapper: super::wrappers::declaration(),
         name: expressions::name(&function.name),
         arguments: function
             .args

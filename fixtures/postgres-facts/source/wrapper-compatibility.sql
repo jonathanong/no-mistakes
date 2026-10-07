@@ -1,0 +1,10 @@
+SELECT id FROM target FETCH FIRST (1 + 1) ROWS ONLY;
+EXPLAIN SELECT id FROM target FETCH FIRST (1 + 1) ROWS ONLY;
+PREPARE p AS SELECT id FROM target FETCH FIRST (1 + 1) ROWS ONLY;
+CREATE TABLE generated_target (id int, normalized int GENERATED ALWAYS AS (id + 1) VIRTUAL);
+EXPLAIN CREATE TABLE generated_target (id int, normalized int GENERATED ALWAYS AS (id + 1) VIRTUAL);
+CREATE FUNCTION compatibility() RETURNS void LANGUAGE SQL BEGIN ATOMIC
+  SELECT id FROM target FETCH FIRST (1 + 1) ROWS ONLY;
+  CREATE TABLE generated_child (id int, normalized int GENERATED ALWAYS AS (id + 1) VIRTUAL);
+END;
+EXPLAIN ANALYZE CREATE TABLE copied AS SELECT id FROM target;

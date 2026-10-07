@@ -21,6 +21,9 @@ pub(super) fn statement(facts: &PostgresSqlStatementKind) -> bool {
                 .iter()
                 .all(|value| statement(&value.facts))
         }),
+        PostgresSqlStatementKind::Wrapper { wrapper } => wrapper.complete,
+        PostgresSqlStatementKind::CreateFunction { function } => function.wrapper.complete,
+        PostgresSqlStatementKind::CreateView { view } => view.dependencies_complete,
         PostgresSqlStatementKind::Other => false,
         _ => true,
     }

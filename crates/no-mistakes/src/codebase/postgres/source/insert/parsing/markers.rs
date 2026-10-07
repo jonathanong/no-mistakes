@@ -67,7 +67,9 @@ fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {
                 return false;
             }
             if beginning {
-                with = keyword(token, Keyword::WITH);
+                with = keyword(token, Keyword::WITH)
+                    || keyword(token, Keyword::EXPLAIN)
+                    || keyword(token, Keyword::PREPARE);
                 insert = keyword(token, Keyword::INSERT);
                 beginning = false;
             } else if with && depth == 0 && keyword(token, Keyword::INSERT) {

@@ -1,3 +1,4 @@
+import type { PostgresSqlWrapper } from "./postgres-wrapper-types";
 import type {
   PostgresSqlExpression,
   PostgresSqlIdentifier,
@@ -11,6 +12,8 @@ export interface PostgresSqlFunctionArgument {
   default: PostgresSqlExpression | null;
 }
 export interface PostgresSqlFunction {
+  /** Non-executing declaration; opaque bodies have incomplete child facts. */
+  wrapper: PostgresSqlWrapper;
   name: PostgresSqlName;
   arguments: PostgresSqlFunctionArgument[];
   returnType: PostgresSqlType | null;
