@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
+include!("visible_snapshot_supplied.rs");
+
 /// Canonical, request-scoped view of paths that are not ignored.
 ///
 /// The request root is discovered exactly once. Configured roots outside the
@@ -9,6 +11,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 #[doc(hidden)]
 pub struct VisiblePathSnapshot {
     request_root: PathBuf,
+    authoritative_tracked_paths: bool,
     request_view: Arc<SnapshotPathView>,
     scoped_views: Mutex<HashMap<PathBuf, Arc<OnceLock<Arc<SnapshotPathView>>>>>,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
@@ -42,23 +45,10 @@ impl VisiblePathSnapshot {
         let request_view = snapshot_path_view(request_paths, observer.clone());
         Self {
             request_root: normalized_request_root,
+            authoritative_tracked_paths: false,
             request_view,
             scoped_views: Mutex::new(HashMap::new()),
             observer,
-        }
-    }
-
-    /// Build a request snapshot from candidates already discovered by the
-    /// caller. Graph requests use this to share their canonical file set with
-    /// specialized collectors instead of starting a second repository scan.
-    #[doc(hidden)]
-    pub fn from_paths(request_root: &Path, request_paths: &[PathBuf]) -> Self {
-        let normalized_request_root = normalize_discovery_path(request_root);
-        Self {
-            request_root: normalized_request_root,
-            request_view: snapshot_path_view_from_paths(request_paths, None),
-            scoped_views: Mutex::new(HashMap::new()),
-            observer: None,
         }
     }
 
@@ -74,8 +64,9 @@ impl VisiblePathSnapshot {
         Arc::clone(&self.path_view_for(root).tracked_paths)
     }
 
-    /// Whether this prepared scope has an actual Git index inventory.
-    /// Supplied path lists and non-Git fallbacks cannot prove tracked membership.
+    /// Whether this prepared scope can prove tracked membership.
+    /// Generic supplied path lists and non-Git fallbacks cannot prove tracked
+    /// membership; explicitly authoritative tracked lists can.
     #[doc(hidden)]
     pub fn git_index_available_for(&self, root: &Path) -> bool {
         self.path_view_for(root).git_index_available
@@ -124,7 +115,7 @@ impl VisiblePathSnapshot {
     }
 
     fn path_view_for(&self, root: &Path) -> Arc<SnapshotPathView> {
-        if root == self.request_root {
+        if self.authoritative_tracked_paths || root == self.request_root {
             return Arc::clone(&self.request_view);
         }
         let normalized_root = normalize_discovery_path(root);

@@ -3,7 +3,11 @@ use crate::codebase::ts_source::VisiblePathSnapshot;
 
 fn tracked_fixture() -> tempfile::TempDir {
     let fixture = crate::test_support::materialize_saved_fixture(&fixture("tracked-routes"));
-    let root = fixture.path();
+    prepare_tracked_fixture(fixture.path());
+    fixture
+}
+
+fn prepare_tracked_fixture(root: &Path) {
     std::fs::rename(root.join(".gitignore.fixture"), root.join(".gitignore")).unwrap();
     crate::test_support::git_init(root);
     crate::test_support::git_add_force(
@@ -20,7 +24,6 @@ fn tracked_fixture() -> tempfile::TempDir {
             "app/optional",
         ],
     );
-    fixture
 }
 
 #[test]
@@ -100,4 +103,143 @@ fn failed_discovery_cannot_claim_a_git_index_inventory() {
     let snapshot = VisiblePathSnapshot::new(&root);
     assert!(!snapshot.git_index_available_for(&root));
     assert!(snapshot.paths_for(&root).is_empty());
+}
+
+#[test]
+fn public_supplied_tracked_list_preserves_its_authority_without_git() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture("tracked-routes"));
+    let root = fixture.path();
+    // This API's caller guarantees index membership; no Git discovery is needed.
+    let files = vec![
+        root.join("next.config.ts"),
+        root.join("app/tracked/page.tsx"),
+    ];
+    let findings = crate::codebase::rules::run_filesystem_rules_with_files(
+        root,
+        Some(&root.join(".no-mistakes.yml")),
+        &files,
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 10, "{findings:?}");
+    let ordinary = VisiblePathSnapshot::from_paths(root, &files);
+    assert!(!ordinary.git_index_available_for(root));
+    let authoritative = VisiblePathSnapshot::from_tracked_paths(root, &files);
+    assert!(authoritative.git_index_available_for(root));
+    assert_eq!(authoritative.tracked_paths_from(&files), files);
+    assert!(authoritative.git_index_available_for(&root.join("app")));
+    assert!(authoritative.git_index_available_for(&root.parent().unwrap().join("outside-project")));
+    assert!(std::sync::Arc::ptr_eq(
+        &authoritative.source_store_for(root),
+        &authoritative.source_store_for(&root.parent().unwrap().join("outside-project")),
+    ));
+}
+
+#[test]
+fn nested_git_projects_use_their_index_not_the_umbrella_fallback() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture("nested-projects"));
+    let root = fixture.path();
+    let project = root.join("packages/web");
+    prepare_tracked_fixture(&project);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let snapshot = VisiblePathSnapshot::new_observed(root, Some(observer.clone()));
+    assert!(!snapshot.git_index_available_for(root));
+    let files = snapshot.paths_for(root);
+    assert!(files.contains(&project.join("app/untracked/page.tsx")));
+    let expected = crate::codebase::rules::run_filesystem_rules_with_visible_and_snapshot(
+        root,
+        Some(&root.join(".no-mistakes.yml")),
+        &files,
+        &snapshot,
+    )
+    .unwrap();
+    assert_eq!(expected.len(), 6, "{expected:?}");
+    assert!(snapshot.git_index_available_for(&project));
+    assert_eq!(observer.snapshot().work["discovery.roots"], 2);
+    assert_eq!(
+        crate::codebase::rules::run_filesystem_rules_with_visible_and_snapshot(
+            root,
+            Some(&root.join(".no-mistakes.yml")),
+            &files,
+            &snapshot,
+        )
+        .unwrap(),
+        expected
+    );
+    assert_eq!(observer.snapshot().work["discovery.roots"], 2);
+    assert_eq!(
+        crate::codebase::rules::run_filesystem_rules(root, Some(&root.join(".no-mistakes.yml")),)
+            .unwrap(),
+        expected
+    );
+    let supplied = snapshot.tracked_paths_for(&project);
+    assert_eq!(
+        crate::codebase::rules::run_filesystem_rules_with_files(
+            root,
+            Some(&root.join(".no-mistakes.yml")),
+            &supplied,
+        )
+        .unwrap(),
+        expected
+    );
+    crate::test_support::git_add_force(&project, &["app/untracked", "app/ignored"]);
+    assert!(crate::codebase::rules::run_filesystem_rules(
+        root,
+        Some(&root.join(".no-mistakes.yml")),
+    )
+    .unwrap()
+    .is_empty());
+    let (project_config, _) =
+        crate::config::v2::load_v2_config_with_path(root, Some(&root.join(".no-mistakes.yml")))
+            .unwrap();
+    assert!(check(root, &project_config).unwrap().is_empty());
+    // A supplied list remains authoritative across a nested Git boundary.
+    assert_eq!(
+        crate::codebase::rules::run_filesystem_rules_with_files(
+            root,
+            Some(&root.join(".no-mistakes.yml")),
+            &supplied,
+        )
+        .unwrap(),
+        expected
+    );
+}
+
+#[test]
+fn nested_projects_without_a_prepared_index_still_fail_closed() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture("nested-projects"));
+    let root = fixture.path();
+    let error =
+        crate::codebase::rules::run_filesystem_rules(root, Some(&root.join(".no-mistakes.yml")))
+            .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("prepared Git index inventory for"));
+}
+
+#[test]
+fn authoritative_routes_still_honor_scope_skip_and_rule_path_filters() {
+    let root = fixture("tracked-routes");
+    let files = vec![
+        root.join("next.config.ts"),
+        root.join("app/tracked/page.tsx"),
+        fixture("pass").join("app/about/page.tsx"),
+    ];
+    let snapshot = VisiblePathSnapshot::from_tracked_paths(&root, &files);
+    let sources = snapshot.source_store_for(&root);
+    let mut config = config("{trackedRoutesOnly: true}");
+    config.filesystem.skip_directories = vec!["app".to_string()];
+    assert_eq!(
+        check_with_files_sources_and_snapshot(&root, &config, &files, &sources, Some(&snapshot),)
+            .unwrap()
+            .len(),
+        11
+    );
+    config.filesystem.skip_directories.clear();
+    config.rules[0].exclude = vec!["app/**".to_string()];
+    assert_eq!(
+        check_with_files_sources_and_snapshot(&root, &config, &files, &sources, Some(&snapshot),)
+            .unwrap()
+            .len(),
+        11
+    );
 }

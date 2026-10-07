@@ -6,6 +6,10 @@ fn standalone_entrypoint_returns_configuration_errors() {
         .join("../../fixtures/rules/filesystem-dispatch/invalid-config");
     let error = run_filesystem_rules(&root, Some(&root.join(".no-mistakes.yml"))).unwrap_err();
     assert!(error.to_string().contains("parse"), "{error:#}");
+    let supplied =
+        run_filesystem_rules_with_files(&root, Some(&root.join(".no-mistakes.yml")), &[])
+            .unwrap_err();
+    assert!(supplied.to_string().contains("parse"), "{supplied:#}");
 }
 
 #[test]
@@ -92,4 +96,26 @@ fn mermaid_invalid_include_glob_fails_markdown_prepare() {
             .contains("rule `markdown-mermaid-validation` include contains invalid glob"),
         "{error:#}"
     );
+}
+
+#[test]
+fn standalone_entrypoint_without_enabled_filesystem_rules_is_empty() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/empty");
+    assert!(
+        run_filesystem_rules(&root, Some(&root.join(".no-mistakes.yml")))
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn supplied_tracked_entrypoint_rejects_invalid_prepared_catalog_options() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/empty");
+    let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(
+        "rules:\n  - rule: postgres-table-shape\n    scope: repository\n    options:\n      schemaCatalogPath: 42\n"
+    ).unwrap();
+    let error = run_filesystem_rules_with_config(&root, &config, &[]).unwrap_err();
+    assert!(error.to_string().contains("schemaCatalogPath"), "{error:#}");
 }

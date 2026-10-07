@@ -64,7 +64,11 @@ eligible on the next invocation. This also applies to rewrites. The default
 uses the existing ignore-aware filesystem inventory. Route groups and
 dynamic/catch-all matching are identical in both modes. A tracked-route request
 without a prepared Git index inventory returns an error instead of falling back
-to filesystem pages. Next.js configuration code is never executed.
+to filesystem pages. Each configured project uses its own prepared Git scope,
+so a non-Git umbrella directory can contain Git-backed Next.js projects. The
+Rust `run_filesystem_rules_with_files` entrypoint also accepts an authoritative
+tracked-file list; generic visible lists require the accompanying discovery
+snapshot. Next.js configuration code is never executed.
 
 For example, `/new` is valid with a staged `app/new/page.tsx`; with the option
 enabled, the same page left untracked is a missing destination. Fix the finding

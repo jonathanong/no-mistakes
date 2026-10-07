@@ -59,3 +59,39 @@ test(
     }
   },
 );
+
+test(
+  "compiled CJS and ESM checks use nested project indexes under non-Git roots",
+  { skip: !compiled },
+  async () => {
+    const root = await mkdtemp(join(tmpdir(), "no-mistakes-nested-tracked-routes-"));
+    try {
+      await cp(
+        join(
+          __dirname,
+          "../../../test-cases/rules/nextjs-redirect-destinations/fixture/nested-projects",
+        ),
+        root,
+        { recursive: true },
+      );
+      const project = join(root, "packages/web");
+      await rename(join(project, ".gitignore.fixture"), join(project, ".gitignore"));
+      git(project, ["init", "-q", "--initial-branch=main"]);
+      // The umbrella walk omits these ignored pages; the nested Git index owns them.
+      git(project, ["add", "-f", "."]);
+      git(project, ["rm", "--cached", "-r", "app/untracked"]);
+      const api = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = { root, config: join(root, ".no-mistakes.yml") };
+      const report = await api.check(options);
+      assert.equal(report.rules.length, 3);
+      assert.ok(report.rules.every((finding) => finding.message.includes("'/untracked")));
+      assert.deepEqual(await esm.check(options), report);
+      git(project, ["add", "app/untracked"]);
+      assert.deepEqual((await api.check(options)).rules, []);
+      assert.deepEqual((await esm.check(options)).rules, []);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  },
+);

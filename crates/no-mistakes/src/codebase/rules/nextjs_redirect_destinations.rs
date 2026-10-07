@@ -58,11 +58,6 @@ pub(crate) fn check_with_files_sources_and_snapshot(
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
-            if opts.tracked_routes_only
-                && !snapshot.is_some_and(|snapshot| snapshot.git_index_available_for(root))
-            {
-                anyhow::bail!("nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory");
-            }
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
                 .iter()
@@ -72,9 +67,29 @@ pub(crate) fn check_with_files_sources_and_snapshot(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let tracked = snapshot
-                .filter(|_| opts.tracked_routes_only)
-                .map(|snapshot| snapshot.tracked_paths_from(&files));
+            let tracked = if opts.tracked_routes_only {
+                let snapshot = snapshot.ok_or_else(|| anyhow::anyhow!(
+                    "nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory"
+                ))?;
+                let mut tracked = Vec::new();
+                for target_root in &target_roots {
+                    if !snapshot.git_index_available_for(target_root) {
+                        anyhow::bail!("nextjs-redirect-destinations trackedRoutesOnly requires a prepared Git index inventory for {}", target_root.display());
+                    }
+                    // A non-Git umbrella's fallback list must never prove
+                    // membership in its nested project's Git index.
+                    let inventory = snapshot.tracked_paths_for(target_root);
+                    tracked.extend(inventory.iter().filter(|path| {
+                        path.starts_with(target_root)
+                            && super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
+                    }).cloned());
+                }
+                tracked.sort();
+                tracked.dedup();
+                Some(super::path_filter::filter_rule_files(root, config, rule, &tracked)?)
+            } else {
+                None
+            };
             Ok(scan(root, &opts, &files, tracked.as_deref().unwrap_or(&files), &target_roots, sources))
         })
         .collect();
