@@ -21,7 +21,7 @@ fn atomic_boundary_preserves_identifier_aliases_and_independent_neighbors() {
     // Existing query facts explicitly omit IS DISTINCT FROM expression facts;
     // that incompleteness must propagate without changing the body boundary.
     assert!(!function.wrapper.complete);
-    assert_eq!(function.wrapper.statements.len(), 14);
+    assert_eq!(function.wrapper.statements.len(), 15);
     for (index, child) in function.wrapper.statements.iter().enumerate() {
         let PostgresSqlStatementKind::Select { query } = &child.facts else {
             panic!("query expected")

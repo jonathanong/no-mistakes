@@ -16,6 +16,8 @@ CREATE FUNCTION atomic_alias() RETURNS int BEGIN ATOMIC
   -- A bare table alias before a JOIN subquery must not become a CASE block.
   SELECT 1 FROM data case JOIN (SELECT 2) derived ON true;
   SELECT 1 FROM (SELECT 2) case JOIN (SELECT 3) derived ON true;
+  -- Qualified CREATE and unreserved aliases must not invent a declaration.
+  SELECT 1 FROM s.create function, begin atomic;
 END;
 SELECT 93;
 CREATE OR REPLACE FUNCTION nested_alias() RETURNS void BEGIN ATOMIC

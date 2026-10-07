@@ -16,7 +16,7 @@ pub(super) fn end(parser: &Parser<'_>, start: usize) -> usize {
             Token::RParen => parentheses = parentheses.saturating_sub(1),
             _ => {}
         }
-        if keyword(&token.token, Keyword::CREATE) {
+        if keyword(&token.token, Keyword::CREATE) && child_boundary(parser, index) {
             declaration = declaration_start(parser, index);
         } else if token.token == Token::SemiColon {
             declaration = false;

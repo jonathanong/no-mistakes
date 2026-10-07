@@ -74,10 +74,10 @@ test(
       ["SELECT 93;", "SELECT 94;", "SELECT 95;"],
     );
     assert.equal(result.statements[0].function.wrapper.complete, false);
-    assert.equal(result.statements[0].function.wrapper.statements.length, 14);
+    assert.equal(result.statements[0].function.wrapper.statements.length, 15);
     assert.deepEqual(
       result.statements[0].function.wrapper.statements.map((child) => child.query.complete),
-      Array.from({ length: 14 }, (_, index) => index !== 11),
+      Array.from({ length: 15 }, (_, index) => index !== 11),
     );
     assert.equal(result.statements[2].function.wrapper.complete, true);
     assert.equal(result.statements[4].function.wrapper.complete, false);
