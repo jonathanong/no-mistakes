@@ -1,5 +1,6 @@
 /** Explicit files only; no package resolution or whole-project traversal. */
 export interface TypeScriptModulesOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
   files: string[];
 }
