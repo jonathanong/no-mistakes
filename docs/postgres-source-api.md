@@ -107,7 +107,10 @@ bounded parser safety limit.
 
 `PostgresSqlProceduralBlock.complete` is false when body facts are incomplete,
 including an incomplete nested program. Inspect its `diagnostics` before using
-its occurrence list. Typed `IF`, `ELSIF`, and `ELSE` blocks expose a `conditional`
+its occurrence list. If a conditional statement's parser span cannot identify
+a nonempty source range, the block returns a diagnostic and remains incomplete;
+valid top-level statements before and after it are preserved.
+Typed `IF`, `ELSIF`, and `ELSE` blocks expose a `conditional`
 fact with ordered `PostgresSqlConditionalBranch` entries. A branch retains its
 condition expression (null for ELSE), source span, and nested statement facts.
 All branches describe possible source occurrences; the API does not evaluate
@@ -175,6 +178,7 @@ have `syntax: "value"`; parenthesized `CURRENT_TIMESTAMP(3)` has
 `syntax: "call"`. These are syntactic facts, not catalog or volatility claims.
 Function-name expectations and permitted argument forms remain consumer policy.
 Structural `identity` and flat references preserve their existing behavior.
+
 ## SELECT scope facts
 
 `parsePostgresSql()` projects query statements as `{ kind: "select", query }`.

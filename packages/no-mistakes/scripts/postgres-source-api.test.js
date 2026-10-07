@@ -8,6 +8,45 @@ const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
 
 test(
+  "compiled CJS and ESM source APIs diagnose conditional boundary gaps without aborting",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const name of [
+      "nested-conditional-locks.sql",
+      "conditional-adjacent-locks.sql",
+      "nested-conditional-locks-mixed.sql",
+    ]) {
+      const sql = fixture(name);
+      const facts = await api.parsePostgresSql({ sql });
+      assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+      assert.deepEqual(facts.diagnostics, []);
+      const statement = facts.statements.find((statement) => statement.kind === "doBlock");
+      assert.ok(statement);
+      assert.equal(
+        Buffer.from(sql)
+          .subarray(statement.span.start.offset, statement.span.end.offset)
+          .toString(),
+        statement.sql,
+      );
+      assert.equal(statement.block.complete, false);
+      assert.deepEqual(statement.block.statements, []);
+      assert.equal(statement.block.diagnostics.length, 1);
+      assert.match(
+        statement.block.diagnostics[0].message,
+        /Conditional statement source range is unavailable/,
+      );
+      assert.ok(statement.block.diagnostics[0].span);
+      assert.deepEqual(
+        facts.statements.map((statement) => statement.kind),
+        name.endsWith("-mixed.sql") ? ["createIndex", "doBlock", "createIndex"] : ["doBlock"],
+      );
+    }
+  },
+);
+
+test(
   "compiled pure-source SQL API exposes async CJS and ESM facts without a project root",
   {
     skip: !compiled,

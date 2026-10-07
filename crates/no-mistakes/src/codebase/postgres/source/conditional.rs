@@ -50,7 +50,10 @@ pub(super) fn project(
                     .iter()
                     .position(|token| token.token == Token::SemiColon)
                     .ok_or("Conditional statement delimiter is unavailable")?;
-            let owned = &tokens[start_index..=finish];
+            let owned = tokens
+                .get(start_index..=finish)
+                .filter(|owned| !owned.is_empty())
+                .ok_or("Conditional statement source range is unavailable")?;
             let span = locations
                 .span(Span {
                     start: owned[0].span.start,
