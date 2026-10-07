@@ -12,6 +12,7 @@ pub(super) fn project(
     source: &PostgresSqlSource,
     locations: &Locations<'_>,
     generated: &[Span],
+    recursive_views: &crate::codebase::postgres::parse::RecursiveViews,
 ) -> Result<PostgresSqlStatementKind, String> {
     let mut branches = Vec::new();
     for branch in std::iter::once(&mut value.if_block)
@@ -58,12 +59,12 @@ pub(super) fn project(
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
             let facts = if let Statement::If(nested) = statement {
-                project(nested, owned, source, locations, generated)?
+                project(nested, owned, source, locations, generated, recursive_views)?
             } else {
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
                     owned.iter().copied(),
                 );
-                super::parsing::project(statement, locations, &tables)
+                super::projection::project(statement, locations, &tables, recursive_views)
             };
             cursor = owned.last().unwrap().span.end;
             projected.push(PostgresSqlStatement {

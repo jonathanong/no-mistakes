@@ -32,7 +32,7 @@ fn view_dependencies_follow_cte_definition_order_and_quoted_identity() {
         let Statement::CreateView(view) = statement else {
             panic!("expected view")
         };
-        let facts = ddl::view(view, &locations, &tokens);
+        let facts = ddl::view(view, &locations, &tokens, false);
         assert_eq!(
             facts
                 .dependencies
@@ -45,17 +45,17 @@ fn view_dependencies_follow_cte_definition_order_and_quoted_identity() {
     let Statement::CreateView(view) = &statements[0] else {
         unreachable!()
     };
-    let facts = ddl::view(view, &locations, &tokens);
+    let facts = ddl::view(view, &locations, &tokens, false);
     assert!(facts.columns[0].quoted);
     assert_eq!(facts.columns[0].identity, "Total");
     let Statement::CreateView(view) = &statements[1] else {
         unreachable!()
     };
-    assert!(ddl::view(view, &locations, &tokens).materialized);
+    assert!(ddl::view(view, &locations, &tokens, false).materialized);
     let Statement::CreateView(view) = &statements[2] else {
         unreachable!()
     };
-    assert!(ddl::view(view, &locations, &tokens).temporary);
+    assert!(ddl::view(view, &locations, &tokens, false).temporary);
 }
 
 #[test]
@@ -154,7 +154,7 @@ fn dependency_facts_deduplicate_and_ignore_function_and_forward_cte_names() {
             panic!("expected view")
         };
         assert_eq!(
-            ddl::view(view, &locations, &tokens)
+            ddl::view(view, &locations, &tokens, false)
                 .dependencies
                 .iter()
                 .map(|name| name.sql.clone())
@@ -325,8 +325,8 @@ fn table_identity_rejects_other_candidates_and_accepts_an_empty_inventory() {
         panic!("expected view")
     };
     let locations = Locations::new(&sql);
-    assert!(!ddl::view(view, &locations, &index).dependencies_complete);
-    let facts = ddl::view(view, &locations, &candidates);
+    assert!(!ddl::view(view, &locations, &index, false).dependencies_complete);
+    let facts = ddl::view(view, &locations, &candidates, false);
     assert!(facts.dependencies_complete);
     assert_eq!(
         facts
@@ -438,4 +438,79 @@ fn invalid_recursive_declarations_keep_diagnostics_and_valid_neighbors() {
     assert_eq!(facts.statements.len(), 1);
     assert_eq!(facts.statements[0].ordinal, 4);
     assert_eq!(facts.statements[0].sql, "SELECT 2;");
+}
+
+#[test]
+fn recursive_view_scopes_exclude_self_reads_and_support_temporary_headers() {
+    use super::super::PostgresSqlStatementKind;
+    let sql = super::fixture("recursive-view-scope.sql");
+    assert_eq!(
+        crate::codebase::postgres::parse_postgres_sql(&sql[..sql.find("DO $$").unwrap()])
+            .unwrap()
+            .len(),
+        6
+    );
+    let facts = super::facts("recursive-view-scope.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 7);
+    for (index, expected) in [
+        (0, vec!["app.seed"]),
+        (1, vec![]),
+        (2, vec![]),
+        (3, vec![]),
+        (4, vec!["app.\"Nums\""]),
+        (5, vec!["ordinary"]),
+    ] {
+        let PostgresSqlStatementKind::CreateView { view } = &facts.statements[index].facts else {
+            panic!("expected view")
+        };
+        assert_eq!(view.temporary, index < 4);
+        assert_eq!(view.or_replace, index == 2 || index == 3);
+        assert!(!view.materialized);
+        assert!(view.dependencies_complete);
+        assert_eq!(
+            view.dependencies
+                .iter()
+                .map(|name| name.sql.as_str())
+                .collect::<Vec<_>>(),
+            expected
+        );
+    }
+    let PostgresSqlStatementKind::DoBlock { block } = &facts.statements[6].facts else {
+        panic!("expected DO")
+    };
+    assert!(block.complete);
+    let PostgresSqlStatementKind::Conditional { branches } = &block.statements[0].facts else {
+        panic!("expected IF")
+    };
+    let PostgresSqlStatementKind::CreateView { view } = &branches[0].statements[0].facts else {
+        panic!("expected nested view")
+    };
+    assert!(view.temporary);
+    assert_eq!(view.dependencies[0].sql, "app.seed");
+    assert_eq!(view.dependencies.len(), 1);
+}
+
+#[test]
+fn recursive_views_require_columns_in_strict_and_nested_source_parsing() {
+    use super::super::PostgresSqlStatementKind;
+    let sql = super::fixture("recursive-view-missing-columns.sql");
+    let error =
+        crate::codebase::postgres::parse_postgres_sql(&sql[..sql.find(';').unwrap()]).unwrap_err();
+    assert!(error.message.contains("explicit column-name list"));
+    let facts = super::facts("recursive-view-missing-columns.sql");
+    assert_eq!(facts.diagnostics.len(), 3);
+    assert!(facts.diagnostics[..2]
+        .iter()
+        .all(|diagnostic| diagnostic.message.contains("explicit column-name list")));
+    assert_eq!(facts.statements.len(), 2);
+    let PostgresSqlStatementKind::DoBlock { block } = &facts.statements[0].facts else {
+        panic!("expected DO")
+    };
+    assert!(!block.complete);
+    assert_eq!(block.diagnostics.len(), 1);
+    assert!(block.diagnostics[0]
+        .message
+        .contains("explicit column-name list"));
+    assert_eq!(facts.statements[1].sql, "SELECT 2;");
 }

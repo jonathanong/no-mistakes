@@ -13,6 +13,7 @@ mod indexes;
 mod locations;
 mod parsing;
 mod procedural;
+mod projection;
 mod query;
 mod type_facts;
 mod types;

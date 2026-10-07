@@ -4,7 +4,7 @@ use super::super::{
 };
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::TableTokenIndex;
-use sqlparser::ast::{Expr, Query, SetExpr, Spanned, Table, TableFactor, Visit, Visitor};
+use sqlparser::ast::{Expr, Ident, Query, SetExpr, Spanned, Table, TableFactor, Visit, Visitor};
 use std::{
     collections::{BTreeMap, BTreeSet},
     ops::ControlFlow,
@@ -19,6 +19,7 @@ pub(super) fn collect(
     query: &Query,
     tokens: &TableTokenIndex,
     locations: &Locations<'_>,
+    recursive_binding: Option<&Ident>,
 ) -> (
     Vec<PostgresSqlName>,
     bool,
@@ -117,7 +118,11 @@ pub(super) fn collect(
         functions: Vec::new(),
         tokens,
         complete: true,
-        scopes: Vec::new(),
+        // The view name is visible throughout its declared recursive body.
+        scopes: vec![Scope {
+            bindings: recursive_binding.map(ident_key).into_iter().collect(),
+            definitions: BTreeMap::new(),
+        }],
         relations: BTreeMap::new(),
     };
     let _ = query.visit(&mut dependencies);

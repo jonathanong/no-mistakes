@@ -1,4 +1,4 @@
-use super::{columns, ddl, expressions::name, indexes, locations::Locations, types::*};
+use super::{ddl, locations::Locations, types::*};
 use crate::codebase::postgres::parse::PreparedPostgresTokens;
 use sqlparser::{ast::Statement, dialect::PostgreSqlDialect, parser::Parser, tokenizer::Token};
 
@@ -41,6 +41,10 @@ pub(super) fn collect_program(
                 .parse_statement()
                 .map_err(|error| error.to_string())
                 .and_then(|mut statement| {
+                    prepared
+                        .recursive_views
+                        .validate(&statement)
+                        .map_err(|error| error.to_string())?;
                     crate::codebase::postgres::parse::fetch_expression::restore(
                         &mut statement,
                         &fetch_expressions,
@@ -57,13 +61,25 @@ pub(super) fn collect_program(
                         let tokens = (start_index..parser.index())
                             .map(|index| parser.token_at(index))
                             .collect::<Vec<_>>();
-                        super::conditional::project(value, &tokens, source, locations, &generated)
+                        super::conditional::project(
+                            value,
+                            &tokens,
+                            source,
+                            locations,
+                            &generated,
+                            &prepared.recursive_views,
+                        )
                     } else {
                         let tables =
                             crate::codebase::postgres::statements::TableTokenIndex::from_iter(
                                 (start_index..parser.index()).map(|index| parser.token_at(index)),
                             );
-                        Ok(project(&statement, locations, &tables))
+                        Ok(super::projection::project(
+                            &statement,
+                            locations,
+                            &tables,
+                            &prepared.recursive_views,
+                        ))
                     }
                 })
         };
@@ -140,54 +156,4 @@ pub(super) fn collect_program(
         });
     }
     result
-}
-
-pub(super) fn project(
-    statement: &Statement,
-    locations: &Locations<'_>,
-    tables: &crate::codebase::postgres::statements::TableTokenIndex,
-) -> PostgresSqlStatementKind {
-    if let Some(drop) = super::drop_facts::drop(statement) {
-        return PostgresSqlStatementKind::Drop { drop };
-    }
-    match statement {
-        Statement::Query(query) => PostgresSqlStatementKind::Select {
-            query: super::query::project(query, locations),
-        },
-        Statement::CreateTable(value) => PostgresSqlStatementKind::CreateTable {
-            table: name(&value.name),
-            columns: value
-                .columns
-                .iter()
-                .map(|column| columns::column(column, locations))
-                .collect(),
-            constraints: value
-                .constraints
-                .iter()
-                .map(|constraint| columns::table_constraint(constraint, locations))
-                .collect(),
-            temporary: value.temporary,
-        },
-        Statement::AlterTable(value) => PostgresSqlStatementKind::AlterTable {
-            table: name(&value.name),
-            operations: value
-                .operations
-                .iter()
-                .map(|operation| super::alter::alter(operation, locations))
-                .collect(),
-        },
-        Statement::CreateIndex(value) => PostgresSqlStatementKind::CreateIndex {
-            index: indexes::index(value, locations),
-        },
-        Statement::CreateView(value) => PostgresSqlStatementKind::CreateView {
-            view: ddl::view(value, locations, tables),
-        },
-        Statement::CreateTrigger(value) => PostgresSqlStatementKind::CreateTrigger {
-            trigger: ddl::trigger(value, locations),
-        },
-        Statement::CreateFunction(value) => PostgresSqlStatementKind::CreateFunction {
-            function: ddl::function(value, locations),
-        },
-        _ => PostgresSqlStatementKind::Other,
-    }
 }

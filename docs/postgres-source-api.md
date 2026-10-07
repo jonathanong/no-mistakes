@@ -58,6 +58,10 @@ raw parser nodes or internal imports.
   Declared identifier parts, column names, replacement flags and original
   statement SQL/spans are preserved. The query retains the declared query body;
   the API does not expand the recursive-view shorthand into a recursive CTE.
+  `TEMP`/`TEMPORARY` headers preserve `temporary: true`. Recursive views require
+  a nonempty column-name list; omission produces a diagnostic. Dependency facts
+  model the implicit recursive binding, excluding unqualified self-references
+  while retaining qualified physical references.
 - Views and materialized views expose relation dependencies and typed function
   references with source spans for drop/recreation ordering.
   CTE references follow their PostgreSQL visibility scope and are excluded from

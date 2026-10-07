@@ -248,3 +248,53 @@ test(
     assert.equal(invalid.statements[0].ordinal, 4);
   },
 );
+
+test(
+  "compiled recursive views preserve implicit CTE scope and require columns",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sources = [
+      { sql: fixture("recursive-view-scope.sql") },
+      { sql: fixture("recursive-view-missing-columns.sql") },
+    ];
+    const [facts, invalid] = await api.parsePostgresSql(sources);
+    assert.deepEqual(await esm.parsePostgresSql(sources), [facts, invalid]);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 7);
+    for (const [index, expected] of [
+      [0, ["app.seed"]],
+      [1, []],
+      [2, []],
+      [3, []],
+      [4, ['app."Nums"']],
+      [5, ["ordinary"]],
+    ]) {
+      const statement = facts.statements[index];
+      assert.equal(statement.kind, "createView");
+      assert.equal(statement.view.temporary, index < 4);
+      assert.equal(statement.view.orReplace, index === 2 || index === 3);
+      assert.equal(statement.view.materialized, false);
+      assert.equal(statement.view.dependenciesComplete, true);
+      assert.deepEqual(
+        statement.view.dependencies.map((name) => name.sql),
+        expected,
+      );
+    }
+    const nested = facts.statements[6].block.statements[0].branches[0].statements[0];
+    assert.deepEqual(
+      nested.view.dependencies.map((name) => name.sql),
+      ["app.seed"],
+    );
+    assert.equal(invalid.diagnostics.length, 3);
+    assert.ok(
+      invalid.diagnostics
+        .slice(0, 2)
+        .every((diagnostic) => /explicit column-name list/.test(diagnostic.message)),
+    );
+    assert.equal(invalid.statements[0].block.complete, false);
+    assert.match(invalid.statements[0].block.diagnostics[0].message, /explicit column-name list/);
+    assert.equal(invalid.statements[1].sql, "SELECT 2;");
+  },
+);

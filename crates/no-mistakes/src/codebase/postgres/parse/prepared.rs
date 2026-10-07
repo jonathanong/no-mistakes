@@ -40,12 +40,16 @@ impl<'a> PreparedSql<'a> {
         let located = self.located().map_err(Clone::clone)?;
         let mut tokens = super::radix_numbers::repair(located).unwrap_or_else(|| located.clone());
         normalize_table_queries(&mut tokens);
+        let recursive_views = super::recursive_view::prepare(&mut tokens);
         let fetch = super::fetch_expression::prepare(&mut tokens);
         let mut statements = Parser::new(&PostgreSqlDialect {})
             .with_tokens_with_locations(tokens)
             .parse_statements()
             .map_err(PostgresParseError::from)?;
         super::fetch_expression::restore(&mut statements, &fetch);
+        for statement in &statements {
+            recursive_views.validate(statement)?;
+        }
         Ok(statements)
     }
 

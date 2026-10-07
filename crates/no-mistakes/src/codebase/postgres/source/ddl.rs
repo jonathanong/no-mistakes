@@ -12,9 +12,16 @@ pub(super) fn view(
     view: &CreateView,
     locations: &Locations<'_>,
     tokens: &TableTokenIndex,
+    recursive: bool,
 ) -> PostgresSqlView {
-    let (dependencies, dependencies_complete, functions) =
-        dependencies::collect(&view.query, tokens, locations);
+    let (dependencies, dependencies_complete, functions) = dependencies::collect(
+        &view.query,
+        tokens,
+        locations,
+        recursive
+            .then(|| crate::codebase::postgres::idents::object_name_ident(&view.name))
+            .flatten(),
+    );
     PostgresSqlView {
         name: expressions::name(&view.name),
         columns: view
