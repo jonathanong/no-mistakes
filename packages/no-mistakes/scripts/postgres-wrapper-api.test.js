@@ -72,6 +72,7 @@ test(
       "wrapper-compatibility.sql",
       "wrapper-boundaries.sql",
       "wrapper-review.sql",
+      "wrapper-cte-parity.sql",
     ]) {
       const result = await cjs.parsePostgresSql({ sql: fixture(name) });
       assert.deepEqual(await esm.parsePostgresSql({ sql: fixture(name) }), result);

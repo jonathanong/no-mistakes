@@ -100,3 +100,27 @@ fn serialize_and_analyze_dependent_options_have_explicit_execution() {
         assert_eq!(wrapper.complete, execution != PostgresSqlExecution::Unknown);
     }
 }
+
+#[test]
+fn wrappers_share_data_modifying_cte_facts_and_original_source_context() {
+    let result = facts("wrapper-cte-parity.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 3);
+    let sql = fixture("wrapper-cte-parity.sql");
+    for statement in &result.statements {
+        let wrapper = match &statement.facts {
+            PostgresSqlStatementKind::Wrapper { wrapper } => wrapper,
+            PostgresSqlStatementKind::CreateFunction { function } => &function.wrapper,
+            _ => panic!("wrapper expected"),
+        };
+        assert!(wrapper.complete, "{:?}", wrapper.diagnostics);
+        let PostgresSqlStatementKind::Select { query } = &wrapper.statements[0].facts else {
+            panic!("SELECT expected")
+        };
+        assert_eq!(query.nested_statements.len(), 1);
+        let child = &query.nested_statements[0];
+        assert!(child.complete);
+        let span = child.span.as_ref().unwrap();
+        assert_eq!(child.sql, sql[span.start.offset..span.end.offset]);
+    }
+}
