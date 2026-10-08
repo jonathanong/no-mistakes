@@ -56,6 +56,55 @@ fn annotated_query_is_clean() {
 }
 
 #[test]
+fn var_sql_retains_function_scope_and_lexical_bindings_stay_local() {
+    let root = fixture("var-scopes");
+    let file = ts_file(&root);
+    let source = std::fs::read_to_string(&file).unwrap();
+    let findings = check_with_files(
+        &root,
+        &config_with_options("importSpecifier: '@example/db'"),
+        std::slice::from_ref(&file),
+    )
+    .unwrap();
+    let expected = source
+        .lines()
+        .enumerate()
+        .filter_map(|(index, line)| line.contains("// finding:").then_some(index + 1))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        expected
+    );
+
+    let facts = crate::codebase::postgres::extract_embedded_sql_from_source(
+        &file,
+        &source,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    assert!(facts
+        .calls
+        .iter()
+        .all(|call| call.declaration_line != Some(0)));
+    for (index, line) in source.lines().enumerate() {
+        if line.contains("// unknown:") || line.contains("// known:") {
+            let call = facts
+                .calls
+                .iter()
+                .find(|call| call.line as usize == index + 1)
+                .unwrap();
+            assert_eq!(
+                call.sql_text.is_some(),
+                line.contains("// known:"),
+                "{line}"
+            );
+        }
+    }
+}
+
+#[test]
 fn transaction_commands_are_clean() {
     assert!(findings_for("pass-transaction").is_empty());
 }

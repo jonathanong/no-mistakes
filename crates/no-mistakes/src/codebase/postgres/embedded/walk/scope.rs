@@ -48,6 +48,7 @@ impl ScopeVisitor<'_> {
                         sql: None,
                         kind: EmbeddedSqlKind::Dynamic,
                         line: 0,
+                        initialized: false,
                         sql_builder,
                         sql_source_positions: Vec::new(),
                     },
@@ -70,6 +71,7 @@ impl ScopeVisitor<'_> {
                     sql: None,
                     kind: EmbeddedSqlKind::Dynamic,
                     line: 0,
+                    initialized: false,
                     sql_builder: false,
                     sql_source_positions: Vec::new(),
                 },
@@ -80,6 +82,7 @@ impl ScopeVisitor<'_> {
     pub(super) fn mark_dynamic(&mut self, name: &str) {
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
+                binding.initialized = true;
                 binding.kind = EmbeddedSqlKind::Dynamic;
                 binding.sql_builder = false;
                 binding.sql = None;

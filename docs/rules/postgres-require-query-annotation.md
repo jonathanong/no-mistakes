@@ -9,6 +9,11 @@ The rule uses the shared PostgreSQL embedded-SQL facts
 `sql_requires_query_annotation`. It does not re-parse TypeScript with a
 private parser.
 
+SQL initialized in a `var` declaration stays visible in its enclosing function
+or program after a conditional or loop block ends. `let` and `const` stay inside
+their lexical block, and nested functions own their bindings. Reassigned or
+conflicting SQL initializers remain unresolved rather than selecting one branch.
+
 ```yaml
 rules:
   - rule: postgres-require-query-annotation

@@ -7,6 +7,8 @@ mod chain;
 mod compose;
 mod functions;
 mod loops;
+mod vars;
+pub(super) use vars::{hoist_vars, initialize_vars};
 
 pub(super) use append::apply_append;
 pub(in crate::codebase::postgres::embedded::walk) use compose::{
@@ -18,9 +20,7 @@ pub(super) use loops::{bind_for_statement_left, enter_classic_for, leave_classic
 use super::super::EmbeddedSqlKind;
 use super::{BindingState, ScopeVisitor};
 use compose::classify_init;
-use oxc_ast::ast::{
-    BindingPattern, Declaration, Function, Statement, VariableDeclaration, VariableDeclarator,
-};
+use oxc_ast::ast::{BindingPattern, Declaration, Function, Statement, VariableDeclaration};
 
 /// Every name a parameter or declarator's binding pattern introduces,
 /// however deeply destructured — `x`, `{ a: x }`, `[x]`, `{ x = 1 }`, and any
@@ -111,6 +111,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
                 sql: None,
                 kind: EmbeddedSqlKind::Dynamic,
                 line,
+                initialized: false,
                 sql_builder: false,
                 sql_source_positions: Vec::new(),
             },
@@ -131,50 +132,12 @@ fn record_variable_declaration(
     declaration: &VariableDeclaration<'_>,
     visitor: &mut ScopeVisitor<'_>,
 ) {
+    // Function-scoped declarations are initialized at their actual visit.
+    if declaration.kind == oxc_ast::ast::VariableDeclarationKind::Var {
+        return;
+    }
     let is_const = declaration.kind == oxc_ast::ast::VariableDeclarationKind::Const;
     for declarator in &declaration.declarations {
-        record_declarator(declarator, is_const, visitor);
-    }
-}
-
-fn record_declarator(
-    declarator: &VariableDeclarator<'_>,
-    is_const: bool,
-    visitor: &mut ScopeVisitor<'_>,
-) {
-    let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
-        // Destructuring has no single SQL init to classify; bind every name
-        // as a shadow so a nested `const { tag } = …` cannot keep a trusted
-        // imported tag alias.
-        visitor.bind_param(&declarator.id, false);
-        return;
-    };
-    let Some(init) = &declarator.init else {
-        return;
-    };
-    let line =
-        crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
-    let (sql, kind) = classify_init(init, is_const, visitor);
-    let sql_source_positions = super::super::source_positions::for_expression(
-        init,
-        visitor.source,
-        ident.span.start as usize,
-        line,
-    );
-    if let Some(scope) = visitor.current_scope() {
-        scope.insert(
-            ident.name.to_string(),
-            BindingState {
-                sql_builder: sql.is_some()
-                    && matches!(
-                        kind,
-                        EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed
-                    ),
-                sql,
-                kind,
-                line,
-                sql_source_positions,
-            },
-        );
+        vars::record_declarator(declarator, is_const, false, visitor);
     }
 }
