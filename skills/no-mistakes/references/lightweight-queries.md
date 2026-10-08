@@ -74,9 +74,11 @@ no-mistakes call-sites src/api.mts handler --format json
 ## `resolve-check <file> [file...]`
 
 Whether every import in the file resolves. Fully local, sub-second. Each import
-is `resolved`, `external` (npm/builtin/subpath), or `unresolved` (a broken
-relative or aliased import). Exits non-zero when any are unresolved. Pass
-`--tsconfig` in a monorepo so aliases resolve.
+is `resolved`, `external` (third-party/builtin/unknown package), or `unresolved`
+(a broken relative, aliased, or recognized workspace import). Workspace
+`exports`/`main` targets agree with dependency `workspace` edges; missing or blocked
+subpaths fail closed. Exits non-zero when any are unresolved. Omit `--tsconfig`
+for ordinary monorepo ownership; pass it only to force a resolver.
 
 ```bash
 no-mistakes resolve-check src/new-feature.test.ts --format json

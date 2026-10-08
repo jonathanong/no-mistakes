@@ -490,6 +490,12 @@ resolved within that report's effective scope. `reactUsages` accepts
 the request `root`/`tsconfig`/`config` and dispatch through the dedicated Node
 APIs. `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
+`resolveCheck` also resolves recognized workspace package imports through the
+same visible `exports`/`main` resolver as dependency `workspace` edges; missing or
+blocked workspace subpaths are `unresolved`. Third-party and unmatched packages
+remain `external`. The same classification applies to `resolveCheckDependencies`
+without rediscovering or reparsing its prepared closure. Configured aliases keep
+precedence, and declaration files satisfy only type imports.
 `importUsages` omits those computed rows and keeps string literals, including
 expression-free templates such as ``require(`./mod`)``.
 Reports with the same effective scope share

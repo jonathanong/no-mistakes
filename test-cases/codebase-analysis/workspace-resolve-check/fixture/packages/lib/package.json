@@ -1,0 +1,11 @@
+{
+  "name": "@fx/lib",
+  "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./*.mts",
+      "import": "./*.mts",
+      "default": "./*.mts"
+    }
+  }
+}

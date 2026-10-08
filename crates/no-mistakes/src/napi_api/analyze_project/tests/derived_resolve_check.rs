@@ -418,3 +418,27 @@ fn derived_resolve_check_propagates_source_and_fatal_parse_failures() {
 }
 
 include!("derived_resolve_batching.rs");
+
+#[test]
+fn derived_workspace_resolve_check_borrows_one_catalog_and_matches_standalone() {
+    let root = crate::codebase::ts_resolver::normalize_path(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/codebase-analysis/workspace-resolve-check/fixture")).display().to_string();
+    let standalone = crate::napi_api::queries::resolve_check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "files": ["packages/app/entry.mts"], "tsconfig": "tsconfig.json" }).to_string()
+    )).unwrap();
+    let standalone: Value = serde_json::from_str(&standalone).unwrap();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
+        "root": root, "tsconfig": "tsconfig.json", "reports": [
+            { "type": "dependencies", "id": "closure", "files": ["packages/app/entry.mts"], "relationships": ["import-static", "import-dynamic", "import-type", "workspace"], "depth": 10, "projection": "paths" },
+            { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"] }
+        ]
+    }).to_string())).unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let derived = &value["reports"][1]["result"];
+    assert_eq!(derived["allResolve"], false);
+    assert_eq!(derived["results"].as_array().unwrap().iter().find(|report| report["file"] == "packages/app/entry.mts").unwrap(), &standalone["results"][0]);
+    assert_eq!(observer.snapshot().work["workspace.builds"], 1);
+    let reads = observer.source_read_snapshot();
+    assert!(reads.values().all(|count| *count == 1), "{reads:#?}");
+}

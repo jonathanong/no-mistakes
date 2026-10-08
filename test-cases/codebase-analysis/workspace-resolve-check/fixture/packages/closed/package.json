@@ -1,0 +1,6 @@
+{
+  "name": "@fx/closed",
+  "exports": {
+    "./public": "./public.mts"
+  }
+}

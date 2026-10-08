@@ -5,17 +5,30 @@ use crate::codebase::ts_resolver::{ImportResolver, VisiblePathLookup};
 use anyhow::Result;
 use rayon::prelude::*;
 
+/// Borrow the resolver projection and ownership already prepared by the caller.
+pub(crate) struct PreparedResolveCheckResolution<'a> {
+    pub visible: &'a dyn VisiblePathLookup,
+    pub source_store: &'a crate::codebase::ts_source::SourceStore,
+    pub explicit_tsconfig: Option<&'a crate::codebase::ts_resolver::TsConfig>,
+    pub session: &'a crate::codebase::analysis_session::AnalysisSession,
+    pub workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+}
+
 /// Resolve checks for a file closure whose imports were already collected by
 /// `analyzeProject`. No source discovery or parsing occurs on this path.
 pub(crate) fn batch_report_from_prepared_facts(
     root: &std::path::Path,
     files: impl IntoIterator<Item = std::path::PathBuf>,
     facts: &crate::codebase::ts_source::facts::TsFactMap,
-    visible: &dyn VisiblePathLookup,
-    source_store: &crate::codebase::ts_source::SourceStore,
-    explicit_tsconfig: Option<&crate::codebase::ts_resolver::TsConfig>,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    resolution: PreparedResolveCheckResolution<'_>,
 ) -> Result<BatchResolveCheckReport> {
+    let PreparedResolveCheckResolution {
+        visible,
+        source_store,
+        explicit_tsconfig,
+        session,
+        workspace,
+    } = resolution;
     let mut files: Vec<_> = files
         .into_iter()
         .filter(|path| is_indexable(path))
@@ -75,7 +88,7 @@ pub(crate) fn batch_report_from_prepared_facts(
             let imports = file_facts
                 .imports
                 .iter()
-                .map(|imp| classify_prepared(imp, file, root, &resolver))
+                .map(|imp| classify_prepared(imp, file, root, &resolver, workspace, visible))
                 .collect::<Vec<_>>();
             let unresolved: Vec<String> = imports
                 .iter()

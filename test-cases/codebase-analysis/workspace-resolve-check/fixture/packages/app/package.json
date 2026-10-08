@@ -1,0 +1,13 @@
+{
+  "name": "@fx/app",
+  "type": "module",
+  "dependencies": {
+    "@fx/lib": "workspace:*",
+    "@fx/main": "workspace:*",
+    "third-party": "1.0.0"
+  },
+  "imports": {
+    "#local": "./relative.mts",
+    "#missing": "./missing.mts"
+  }
+}

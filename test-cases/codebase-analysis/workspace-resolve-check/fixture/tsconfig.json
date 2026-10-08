@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "paths": {
+      "@fx/lib/alias": [
+        "./packages/app/alias.mts"
+      ],
+      "@fx/lib/alias-missing": [
+        "./packages/app/missing-alias.mts"
+      ]
+    }
+  }
+}

@@ -52,6 +52,9 @@ computed imports.
 ## package.json#exports subpaths
 
 For workspace packages, exact subpath entries and single-`*` patterns are resolved. More complex export maps are not.
+`resolve-check` uses this same visible workspace resolver: missing or blocked
+subpaths of recognized workspace packages are `unresolved`, while third-party
+and unmatched package names remain `external`.
 
 ```json
 {

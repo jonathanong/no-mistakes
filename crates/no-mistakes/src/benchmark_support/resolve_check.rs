@@ -1,5 +1,7 @@
 use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
-use crate::codebase::queries::resolve_check::batch_report_from_prepared_facts;
+use crate::codebase::queries::resolve_check::{
+    batch_report_from_prepared_facts, PreparedResolveCheckResolution,
+};
 use crate::codebase::ts_source::facts::{TsFactMap, TsFactPlan, TsFileFacts};
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::path::PathBuf;
@@ -71,10 +73,13 @@ pub fn run_prepared_resolve_check(fixture: &PreparedResolveCheckFixture) -> usiz
         &fixture.root,
         fixture.files.clone(),
         &fixture.facts,
-        &fixture.visible,
-        &fixture.source_store,
-        None,
-        &session,
+        PreparedResolveCheckResolution {
+            visible: &fixture.visible,
+            source_store: &fixture.source_store,
+            explicit_tsconfig: None,
+            session: &session,
+            workspace: &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+        },
     )
     .expect("prepared resolve-check benchmark should succeed");
     serde_json::to_value(&report).expect("batch report should serialize")["results"]
