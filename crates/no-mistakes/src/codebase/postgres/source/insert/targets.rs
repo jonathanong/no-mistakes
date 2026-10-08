@@ -1,46 +1,60 @@
-use super::parsing::assignment::Target;
+use super::parsing::{
+    assignment::{Step, Target},
+    expressions::Located,
+};
 use crate::codebase::postgres::source::{
-    expressions::expression, locations::Locations, PostgresSqlAssignmentTarget,
+    expressions::{expression, identifier, name},
+    locations::Locations,
+    types::*,
 };
 
 pub(super) fn project(target: &Target, locations: &Locations<'_>) -> PostgresSqlAssignmentTarget {
+    let subscripts = target
+        .subscripts
+        .iter()
+        .map(|index| located(index, locations))
+        .collect::<Vec<_>>();
+    let indirection = target
+        .indirection
+        .iter()
+        .any(|step| matches!(step, Step::Field(_)))
+        .then(|| {
+            target
+                .indirection
+                .iter()
+                .map(|step| match step {
+                    Step::Subscript { index, span } => PostgresSqlAssignmentStep::Subscript {
+                        expression: subscripts[*index].clone(),
+                        span: locations.span(*span),
+                    },
+                    Step::Field(field) => PostgresSqlAssignmentStep::Field {
+                        name: identifier(field),
+                        span: locations.span(field.span),
+                    },
+                })
+                .collect()
+        });
     PostgresSqlAssignmentTarget {
         base: expression(&target.base, locations),
-        subscripts: target
-            .subscripts
-            .iter()
-            .map(|(index, span)| {
-                let mut projected = expression(index, locations);
-                projected.span = locations.span(*span);
-                projected
-            })
-            .collect(),
+        subscripts,
+        indirection,
         span: locations.span(target.span),
     }
 }
 
-/// The parser's expression spans omit closing punctuation; token boundaries retain it.
-pub(super) fn arbiter(
-    expr: &sqlparser::ast::Expr,
-    span: sqlparser::tokenizer::Span,
-    locations: &Locations<'_>,
-) -> crate::codebase::postgres::source::PostgresSqlExpression {
-    let mut projected = expression(expr, locations);
-    projected.span = locations.span(span);
-    if matches!(expr, sqlparser::ast::Expr::Function(_)) {
-        // The root function is the first function collected by the AST visitor.
-        projected.functions[0].span = projected.span.clone();
-    }
-    projected
+fn located(value: &Located, locations: &Locations<'_>) -> PostgresSqlExpression {
+    super::spans::expression(&value.expression, value.span, &value.delimiters, locations)
 }
 
 pub(super) fn value(
     expr: &sqlparser::ast::Expr,
     facts: Option<&super::parsing::assignment::Facts>,
     locations: &Locations<'_>,
-) -> crate::codebase::postgres::source::PostgresSqlExpression {
+) -> PostgresSqlExpression {
     match facts {
-        Some(facts) => arbiter(expr, facts.value_span, locations),
+        Some(facts) => {
+            super::spans::expression(expr, facts.value_span, &facts.delimiters, locations)
+        }
         None => expression(expr, locations),
     }
 }
@@ -49,19 +63,34 @@ pub(super) fn conflict(
     target: Option<&sqlparser::ast::ConflictTarget>,
     facts: Option<&super::parsing::ConflictFacts>,
     locations: &Locations<'_>,
-) -> crate::codebase::postgres::source::PostgresSqlConflictTarget {
-    use crate::codebase::postgres::source::{
-        expressions::{identifier, name},
-        PostgresSqlConflictTarget,
-    };
+) -> PostgresSqlConflictTarget {
     use sqlparser::ast::ConflictTarget;
     if let Some(facts) = facts.filter(|facts| !facts.expressions.is_empty()) {
+        let operator_classes = facts
+            .expressions
+            .iter()
+            .any(|arbiter| arbiter.operator_class.is_some())
+            .then(|| {
+                facts
+                    .expressions
+                    .iter()
+                    .map(|arbiter| {
+                        arbiter.operator_class.as_ref().map(|(class, span)| {
+                            PostgresSqlArbiterOperatorClass {
+                                name: name(class),
+                                span: locations.span(*span),
+                            }
+                        })
+                    })
+                    .collect()
+            });
         PostgresSqlConflictTarget::Expressions {
             expressions: facts
                 .expressions
                 .iter()
-                .map(|(expr, span)| arbiter(expr, *span, locations))
+                .map(|arbiter| located(&arbiter.expression, locations))
                 .collect(),
+            operator_classes,
         }
     } else {
         match target {

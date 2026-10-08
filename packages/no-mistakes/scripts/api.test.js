@@ -1088,13 +1088,27 @@ test("INSERT facts expose named exported declaration contracts", () => {
   const insert = readFileSync(join(__dirname, "../postgres-insert-types.d.ts"), "utf8");
   assert.match(declarations, /kind: "insert"; insert: PostgresSqlInsert/);
   assert.match(declarations, /export type [*] from "\.\/postgres-insert-types"/);
-  for (const name of ["Insert", "Conflict", "InsertAssignment", "AssignmentTarget"])
+  for (const name of [
+    "Insert",
+    "Conflict",
+    "InsertAssignment",
+    "AssignmentTarget",
+    "ArbiterOperatorClass",
+  ])
     assert.match(insert, new RegExp(`export interface PostgresSql${name} [{]`));
-  for (const name of ["InsertSource", "ConflictTarget", "ConflictAction", "InsertProvenance"])
+  for (const name of [
+    "InsertSource",
+    "ConflictTarget",
+    "ConflictAction",
+    "InsertProvenance",
+    "AssignmentStep",
+  ])
     assert.match(insert, new RegExp(`export type PostgresSql${name} =`));
   assert.match(insert, /target\?: PostgresSqlAssignmentTarget/);
-  assert.match(insert, /kind: "expressions"; expressions: PostgresSqlExpression\[\]/);
+  assert.match(insert, /kind: "expressions";\s*expressions: PostgresSqlExpression\[\]/);
   assert.match(insert, /subscripts: PostgresSqlExpression\[\]/);
+  assert.match(insert, /indirection\?: PostgresSqlAssignmentStep\[\]/);
+  assert.match(insert, /operatorClasses\?: \(PostgresSqlArbiterOperatorClass \| null\)\[\]/);
   assert.match(insert, /columnsOmitted: boolean/);
   assert.match(insert, /\| "derived"/);
   const expressions = readFileSync(join(__dirname, "../postgres-expression-types.d.ts"), "utf8");

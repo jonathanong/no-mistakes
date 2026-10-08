@@ -245,7 +245,9 @@ expression spans refer to the original input, including comments and literals.
 
 `onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
 `constraint`, and `expressions`. Expression arbiters retain their ordered typed
-expressions, function references, identifiers, and source spans. Plain column
+expressions, function references, identifiers, and source spans. Optional
+`operatorClasses` aligns with that list, retaining each named operator class
+and its source span (null for entries without a class). Plain column
 arbiters retain the existing `columns` shape. The conflict-target `predicate` is
 separate from the optional
 `doUpdate` action predicate. Actions are `doNothing` or `doUpdate`, whose
@@ -258,7 +260,11 @@ assignments, and unknown qualifiers remain unresolved. An alias hides the origin
 target name. This is syntax provenance,
 Subscripted assignment targets additionally expose `target.base`, ordered
 `target.subscripts`, and `target.span`; nested index expressions retain exact
-source spans. Base-column names remain in `columns`. These are syntax facts:
+source spans. Mixed array/composite targets additionally expose ordered
+`target.indirection` steps (`subscript` and `field`), including quoted field
+identity and step spans. Nested function references and call arguments keep
+complete closing-delimiter spans even inside compound expressions.
+Base-column names remain in `columns`. These are syntax facts:
 no catalog index selection, assignment target resolution, or replay policy is
 inferred. Array slices currently diagnose rather than yielding a partial target.
 not database type checking or a replay-safety decision.

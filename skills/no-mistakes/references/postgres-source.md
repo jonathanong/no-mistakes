@@ -41,3 +41,7 @@ Expression conflict arbiters expose an ordered `target.expressions` list.
 Subscripted assignments expose `target.base`, ordered `target.subscripts`, and
 source spans while preserving base names in `columns` and RHS provenance. Use
 these as syntax facts; do not infer catalog index matches or replay safety.
+
+Arbiter `operatorClasses` aligns with `target.expressions` when a class is
+specified. Mixed array/composite targets retain ordered `target.indirection`
+steps, while nested call and argument spans include their closing delimiters.

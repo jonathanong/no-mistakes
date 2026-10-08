@@ -7,14 +7,21 @@ use sqlparser::{
 
 pub(in crate::codebase::postgres::source) struct Target {
     pub base: Expr,
-    pub subscripts: Vec<(Expr, Span)>,
+    pub subscripts: Vec<super::expressions::Located>,
+    pub indirection: Vec<Step>,
     pub span: Span,
 }
 
 pub(in crate::codebase::postgres::source) struct Facts {
     pub target: Option<Target>,
     pub value_span: Span,
+    pub delimiters: Vec<Span>,
     pub span: Span,
+}
+
+pub(in crate::codebase::postgres::source) enum Step {
+    Subscript { index: usize, span: Span },
+    Field(sqlparser::ast::Ident),
 }
 
 pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), ParserError> {
@@ -22,12 +29,23 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), Pars
     let assignment_target = parser.parse_assignment_target()?;
     let target = if let AssignmentTarget::ColumnName(column) = &assignment_target {
         let mut subscripts = Vec::new();
-        while parser.consume_token(&Token::LBracket) {
-            let start = parser.peek_token().span.start;
-            let index = parser.parse_expr()?;
-            let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
-            parser.expect_token(&Token::RBracket)?;
-            subscripts.push((index, Span { start, end }));
+        let mut indirection = Vec::new();
+        loop {
+            if parser.peek_token().token == Token::LBracket {
+                let start = parser.next_token().span.start;
+                let expression = super::expressions::parse(parser)?;
+                parser.expect_token(&Token::RBracket)?;
+                let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
+                indirection.push(Step::Subscript {
+                    index: subscripts.len(),
+                    span: Span { start, end },
+                });
+                subscripts.push(expression);
+            } else if parser.consume_token(&Token::Period) {
+                indirection.push(Step::Field(parser.parse_identifier()?));
+            } else {
+                break;
+            }
         }
         let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
         if subscripts.is_empty() {
@@ -47,6 +65,7 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), Pars
             Some(Target {
                 base,
                 subscripts,
+                indirection,
                 span: Span { start, end },
             })
         }
@@ -55,20 +74,17 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), Pars
         None
     };
     parser.expect_token(&Token::Eq)?;
-    let value_start = parser.peek_token().span.start;
-    let value = parser.parse_expr()?;
+    let value = super::expressions::parse(parser)?;
     let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
     Ok((
         Assignment {
             target: assignment_target,
-            value,
+            value: value.expression,
         },
         Facts {
             target,
-            value_span: Span {
-                start: value_start,
-                end,
-            },
+            value_span: value.span,
+            delimiters: value.delimiters,
             span: Span { start, end },
         },
     ))

@@ -6,13 +6,15 @@ use sqlparser::{
     tokenizer::{Location, Token},
 };
 
+pub(super) mod arbiter;
 pub(super) mod assignment;
+pub(super) mod expressions;
 mod markers;
 mod with;
 pub(in crate::codebase::postgres::source) use markers::prepare;
 
 pub(in crate::codebase::postgres::source) struct ConflictFacts {
-    pub expressions: Vec<(Expr, sqlparser::tokenizer::Span)>,
+    pub expressions: Vec<arbiter::Arbiter>,
     pub assignments: Vec<assignment::Facts>,
     pub predicate: Option<Expr>,
     pub span: Option<sqlparser::tokenizer::Span>,
@@ -83,18 +85,13 @@ fn parse_inner(
                     parser.parse_object_name(false)?,
                 ))
             } else if parser.peek_token().token == Token::LParen {
-                parser.next_token();
-                expressions = parser.parse_comma_separated(|parser| {
-                    let start = parser.peek_token().span.start;
-                    let expr = parser.parse_expr()?;
-                    let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
-                    Ok((expr, sqlparser::tokenizer::Span { start, end }))
-                })?;
-                parser.expect_token(&Token::RParen)?;
+                expressions = arbiter::parse(parser)?;
                 let columns = expressions
                     .iter()
-                    .filter_map(|(expr, _)| match expr {
-                        Expr::Identifier(ident) => Some(ident.clone()),
+                    .filter_map(|arbiter| match &arbiter.expression.expression {
+                        Expr::Identifier(ident) if arbiter.operator_class.is_none() => {
+                            Some(ident.clone())
+                        }
                         _ => None,
                     })
                     .collect::<Vec<_>>();

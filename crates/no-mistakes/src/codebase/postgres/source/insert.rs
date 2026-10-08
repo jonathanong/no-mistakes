@@ -9,6 +9,7 @@ use sqlparser::ast::{
 };
 pub(super) mod parsing;
 mod provenance;
+mod spans;
 mod targets;
 mod values;
 use provenance::{provenance, syntax_complete};

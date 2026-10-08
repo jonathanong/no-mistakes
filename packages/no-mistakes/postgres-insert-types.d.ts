@@ -34,7 +34,11 @@ export type PostgresSqlConflictTarget =
   | { kind: "omitted" }
   | { kind: "columns"; columns: PostgresSqlIdentifier[] }
   | { kind: "constraint"; name: PostgresSqlName }
-  | { kind: "expressions"; expressions: PostgresSqlExpression[] };
+  | {
+      kind: "expressions";
+      expressions: PostgresSqlExpression[];
+      operatorClasses?: (PostgresSqlArbiterOperatorClass | null)[];
+    };
 export type PostgresSqlConflictAction =
   | { kind: "doNothing" }
   | {
@@ -46,8 +50,16 @@ export type PostgresSqlConflictAction =
 export interface PostgresSqlAssignmentTarget {
   base: PostgresSqlExpression;
   subscripts: PostgresSqlExpression[];
+  indirection?: PostgresSqlAssignmentStep[];
   span: PostgresSqlSpan | null;
 }
+export interface PostgresSqlArbiterOperatorClass {
+  name: PostgresSqlName;
+  span: PostgresSqlSpan | null;
+}
+export type PostgresSqlAssignmentStep =
+  | { kind: "subscript"; expression: PostgresSqlExpression; span: PostgresSqlSpan | null }
+  | { kind: "field"; name: PostgresSqlIdentifier; span: PostgresSqlSpan | null };
 export interface PostgresSqlInsertAssignment {
   columns: PostgresSqlName[];
   target?: PostgresSqlAssignmentTarget;

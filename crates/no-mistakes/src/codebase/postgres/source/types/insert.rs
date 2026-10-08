@@ -52,6 +52,8 @@ pub enum PostgresSqlConflictTarget {
     },
     Expressions {
         expressions: Vec<PostgresSqlExpression>,
+        #[serde(skip_serializing_if = "Option::is_none", rename = "operatorClasses")]
+        operator_classes: Option<Vec<Option<PostgresSqlArbiterOperatorClass>>>,
     },
 }
 
@@ -83,7 +85,29 @@ pub struct PostgresSqlInsertAssignment {
 pub struct PostgresSqlAssignmentTarget {
     pub base: PostgresSqlExpression,
     pub subscripts: Vec<PostgresSqlExpression>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub indirection: Option<Vec<PostgresSqlAssignmentStep>>,
     pub span: Option<PostgresSqlSpan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlArbiterOperatorClass {
+    pub name: PostgresSqlName,
+    pub span: Option<PostgresSqlSpan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PostgresSqlAssignmentStep {
+    Subscript {
+        expression: PostgresSqlExpression,
+        span: Option<PostgresSqlSpan>,
+    },
+    Field {
+        name: PostgresSqlIdentifier,
+        span: Option<PostgresSqlSpan>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
