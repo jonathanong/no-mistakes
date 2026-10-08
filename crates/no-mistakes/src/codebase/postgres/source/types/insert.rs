@@ -75,5 +75,7 @@ pub enum PostgresSqlInsertProvenance {
     ExcludedColumn,
     Literal,
     Placeholder,
+    /// A function expression derives its result rather than naming one atomic source.
+    Derived,
     Unresolved,
 }

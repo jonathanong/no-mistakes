@@ -25,3 +25,11 @@ AST or implying execution. Inspect `complete` and diagnostics: malformed nested
 SQL remains diagnostic; dynamic variables, concatenation, `format`, and EXECUTE
 modifiers remain unsupported `other` occurrences. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
+
+INSERT assignment `complete` describes represented syntax independently of
+`provenance`. Function expressions such as `COALESCE(t.v, EXCLUDED.v)` expose
+`derived` provenance and complete syntax. Unresolved column lineage does not
+itself imply unsupported syntax; inspect diagnostics for incomplete projections.
+Unary roots expose a typed `expression` operand, including signed literals;
+unsupported operand projections remain incomplete. These facts do not establish
+SQL execution or replay safety.

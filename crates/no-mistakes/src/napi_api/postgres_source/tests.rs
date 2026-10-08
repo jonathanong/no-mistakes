@@ -33,3 +33,33 @@ fn native_binding_projects_literal_execute_children() {
     assert_eq!(wrapper["execute"]["statements"][1]["kind"], "insert");
     assert_eq!(wrapper["execute"]["complete"], true);
 }
+
+#[test]
+fn composite_insert_binding_preserves_syntax_and_lineage_independently() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/insert-composite.sql"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &parse_postgres_sql_json_impl(serde_json::json!({"sql": sql})).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(result["statements"].as_array().unwrap().len(), 10);
+    assert_eq!(result["diagnostics"].as_array().unwrap().len(), 1);
+    for index in [0, 1, 3] {
+        let insert = &result["statements"][index]["insert"];
+        assert_eq!(insert["complete"], true);
+        assert_eq!(
+            insert["onConflict"]["action"]["assignments"][0]["provenance"],
+            "derived"
+        );
+        assert_eq!(
+            insert["onConflict"]["action"]["assignments"][0]["complete"],
+            true
+        );
+    }
+    assert_eq!(
+        result["statements"][2]["insert"]["onConflict"]["action"]["assignments"][0]["provenance"],
+        "excludedColumn"
+    );
+}

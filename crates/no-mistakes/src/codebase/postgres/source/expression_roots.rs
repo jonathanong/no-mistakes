@@ -32,8 +32,9 @@ pub(super) fn root(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpress
         Expr::BinaryOp { op, .. } => Root::Binary {
             operator: op.to_string(),
         },
-        Expr::UnaryOp { op, .. } => Root::Unary {
+        Expr::UnaryOp { op, expr } => Root::Unary {
             operator: op.to_string(),
+            expression: Box::new(root(expr, locations)),
         },
         Expr::Case { .. } => Root::Case,
         Expr::Subquery(_) => Root::Subquery,
