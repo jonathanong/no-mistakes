@@ -30,6 +30,14 @@ pub(super) fn name(value: &ObjectName) -> PostgresSqlName {
 }
 
 pub(super) fn expression(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpression {
+    expression_with_delimiters(expr, locations, &[])
+}
+
+pub(super) fn expression_with_delimiters(
+    expr: &Expr,
+    locations: &Locations<'_>,
+    delimiters: &[PostgresSqlSpan],
+) -> PostgresSqlExpression {
     let mut refs = References {
         locations,
         columns: Vec::new(),
@@ -43,6 +51,8 @@ pub(super) fn expression(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlE
             .collect::<Vec<_>>()
     });
     refs.columns.dedup();
+    let (children, children_complete) =
+        super::expression_children::project_with_delimiters(expr, locations, delimiters);
     PostgresSqlExpression {
         sql: expr.to_string(),
         identity: identity(expr),
@@ -50,6 +60,8 @@ pub(super) fn expression(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlE
         columns: refs.columns,
         functions: refs.functions,
         root: super::expression_roots::root(expr, locations),
+        children,
+        children_complete,
     }
 }
 
@@ -79,6 +91,7 @@ struct References<'a, 's> {
     columns: Vec<PostgresSqlName>,
     functions: Vec<PostgresSqlFunctionReference>,
 }
+
 impl Visitor for References<'_, '_> {
     type Break = ();
     fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {

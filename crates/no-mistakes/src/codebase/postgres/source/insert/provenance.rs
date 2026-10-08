@@ -1,5 +1,26 @@
 use super::super::{expressions::identifier, types::*};
-use sqlparser::ast::{Expr, UnaryOperator, Value};
+use sqlparser::ast::{Expr, Insert, UnaryOperator, Value};
+
+pub(super) fn supported_modifiers(value: &Insert, cte_core: bool) -> bool {
+    value.or.is_none()
+        && !value.ignore
+        && !value.overwrite
+        && !value.has_table_keyword
+        && value.assignments.is_empty()
+        && value.partitioned.is_none()
+        && value.after_columns.is_empty()
+        && (value.returning.is_none() || cte_core)
+        && value.output.is_none()
+        && !value.replace_into
+        && value.priority.is_none()
+        && value.insert_alias.is_none()
+        && value.settings.is_none()
+        && value.format_clause.is_none()
+        && value.multi_table_insert_type.is_none()
+        && value.multi_table_into_clauses.is_empty()
+        && value.multi_table_when_clauses.is_empty()
+        && value.multi_table_else_clause.is_none()
+}
 
 pub(super) fn provenance(
     expr: &Expr,

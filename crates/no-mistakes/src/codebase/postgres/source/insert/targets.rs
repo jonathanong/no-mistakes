@@ -24,7 +24,7 @@ pub(super) fn project(target: &Target, locations: &Locations<'_>) -> PostgresSql
                 .iter()
                 .map(|step| match step {
                     Step::Subscript { index, span } => PostgresSqlAssignmentStep::Subscript {
-                        expression: subscripts[*index].clone(),
+                        expression: Box::new(subscripts[*index].clone()),
                         span: locations.span(*span),
                     },
                     Step::Field(field) => PostgresSqlAssignmentStep::Field {

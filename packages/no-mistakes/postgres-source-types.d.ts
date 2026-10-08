@@ -6,7 +6,10 @@ export type * from "./postgres-metadata-types";
 export type * from "./postgres-function-types";
 import type { PostgresSqlInsert } from "./postgres-insert-types";
 export type * from "./postgres-insert-types";
-import type { PostgresSqlExpressionRoot } from "./postgres-expression-types";
+import type {
+  PostgresSqlExpressionChild,
+  PostgresSqlExpressionRoot,
+} from "./postgres-expression-types";
 export type * from "./postgres-expression-types";
 import type { PostgresSqlQuery } from "./postgres-query-types";
 export type * from "./postgres-query-types";
@@ -58,6 +61,8 @@ export interface PostgresSqlExpression {
   columns: PostgresSqlName[];
   functions: PostgresSqlFunctionReference[];
   root: PostgresSqlExpressionRoot;
+  children: PostgresSqlExpressionChild[];
+  childrenComplete: boolean;
 }
 export interface PostgresSqlType {
   sql: string;

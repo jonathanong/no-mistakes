@@ -64,11 +64,16 @@ pub(super) fn project(
                     wrapper_context,
                 )?
             } else if let Statement::Insert(insert) = statement {
+                let owned_tokens = owned
+                    .iter()
+                    .map(|token| (*token).clone())
+                    .collect::<Vec<_>>();
                 PostgresSqlStatementKind::Insert {
                     insert: Box::new(super::insert::project(
                         insert,
                         insert_facts.as_ref(),
                         locations,
+                        &owned_tokens,
                     )),
                 }
             } else if matches!(

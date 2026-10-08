@@ -1,5 +1,58 @@
 use super::*;
 
+/// Meaning of an immediate expression edge; `index` distinguishes repeated roles.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PostgresSqlExpressionChildRole {
+    Argument,
+    BinaryLeft,
+    BinaryRight,
+    CaseOperand,
+    CaseWhenCondition,
+    CaseWhenResult,
+    CaseElse,
+    CastOperand,
+    FilterPredicate,
+    ParenthesizedExpression,
+    UnaryOperand,
+    Other,
+}
+
+/// Shallow node kind; recursive operands are represented once by `children`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PostgresSqlExpressionChildRoot {
+    ColumnReference {
+        name: PostgresSqlName,
+    },
+    FunctionCall {
+        name: PostgresSqlName,
+        #[serde(rename = "argumentsComplete")]
+        arguments_complete: bool,
+        syntax: PostgresSqlFunctionSyntax,
+        modifiers: Vec<String>,
+    },
+    Parenthesized,
+    Cast {
+        #[serde(rename = "castKind")]
+        cast_kind: String,
+        #[serde(rename = "dataType")]
+        data_type: String,
+    },
+    Literal {
+        sql: String,
+    },
+    Binary {
+        operator: String,
+    },
+    Unary {
+        operator: String,
+    },
+    Case,
+    Subquery,
+    Other,
+}
+
 /// Typed syntactic root. Wrappers remain explicit; nested references never imply a root call.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]

@@ -1242,3 +1242,33 @@ test("literal EXECUTE contracts export decoded SQL provenance", () => {
   assert.match(procedural, /decodedSql: string;/);
   assert.match(procedural, /literalSpan: PostgresSqlSpan;/);
 });
+
+test("SQL recursive expression and INSERT lineage contracts export named additive types", () => {
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const expressions = readFileSync(join(packageRoot, "postgres-expression-types.d.ts"), "utf8");
+  const inserts = readFileSync(join(packageRoot, "postgres-insert-types.d.ts"), "utf8");
+  for (const name of [
+    "PostgresSqlExpressionChild",
+    "PostgresSqlExpressionChildRole",
+    "PostgresSqlExpressionChildRoot",
+  ])
+    assert.match(expressions, new RegExp(`export (?:interface|type) ${name}\\b`));
+  assert.match(source, /children: PostgresSqlExpressionChild\[\]/);
+  assert.match(source, /childrenComplete: boolean/);
+  assert.match(expressions, /role: PostgresSqlExpressionChildRole/);
+  assert.match(expressions, /root: PostgresSqlExpressionChildRoot/);
+  assert.match(expressions, /index: number \| null/);
+  for (const name of [
+    "PostgresSqlInsertColumnSources",
+    "PostgresSqlInsertColumnSourcesReason",
+    "PostgresSqlInsertColumnSource",
+    "PostgresSqlInsertSourceExpression",
+  ])
+    assert.match(inserts, new RegExp(`export (?:interface|type) ${name}\\b`));
+  assert.match(inserts, /columnSources: PostgresSqlInsertColumnSources/);
+  assert.match(inserts, /columnIndex: number/);
+  assert.match(inserts, /branchPath: number\[\]/);
+  assert.match(inserts, /rowIndex: number/);
+  assert.match(inserts, /expectedColumns\??: number/);
+  assert.match(inserts, /sourceColumns\??: number/);
+});

@@ -260,6 +260,24 @@ assignments, and unknown qualifiers remain unresolved. An alias hides the origin
 target name. This is syntax provenance, not database type checking or a
 replay-safety decision.
 
+Each expression also exposes ordered immediate `children` with typed `role`,
+optional argument/CASE index, a shallow typed `root`, and recursive descendants.
+`childrenComplete` reports whether the full expression structure is represented;
+it is independent of INSERT syntax diagnostics and lineage, and is also false
+when a child's full source boundary cannot be proven. Nullable spans retain the
+typed facts that remain available without guessing a boundary. Some AST-only
+projections lack a prepared delimiter catalog, so their recursive spans can be
+null and `childrenComplete` false even when typed child facts are available.
+For INSERTs with an explicit target column list, `columnSources` maps each target
+position to every VALUES row or SELECT/set-operation branch in source order.
+Set branches use `branchPath` (`0` for left, `1` for right); VALUES entries also
+include `rowIndex`. Omitted target columns, DEFAULT VALUES, wildcard/BY NAME
+projections, duplicate targets, unsupported source forms, and arity mismatches
+return a typed `unsupported` result instead of a partial map. Mapping
+`complete` describes recursive expression representation, not SQL validity or
+replay safety. INSERTs delegated to a modifying CTE report
+`reason: "cteSourceDelegated"` because the query projection owns that source.
+
 Subscripted and field-only composite assignment targets additionally expose `target.base`, ordered
 `target.subscripts`, and `target.span`; nested index expressions retain exact
 source spans. Mixed array/composite targets additionally expose ordered

@@ -12,6 +12,7 @@ export interface PostgresSqlInsert {
   alias: PostgresSqlIdentifier | null;
   columns: PostgresSqlName[];
   columnsOmitted: boolean;
+  columnSources: PostgresSqlInsertColumnSources;
   source: PostgresSqlInsertSource;
   onConflict: PostgresSqlConflict | null;
   span: PostgresSqlSpan | null;
@@ -19,6 +20,36 @@ export interface PostgresSqlInsert {
   complete: boolean;
   diagnostics: PostgresSqlDiagnostic[];
 }
+export type PostgresSqlInsertColumnSources =
+  | { kind: "mapped"; columns: PostgresSqlInsertColumnSource[]; complete: boolean }
+  | {
+      kind: "unsupported";
+      reason: PostgresSqlInsertColumnSourcesReason;
+      branchPath?: number[];
+      rowIndex?: number;
+      expectedColumns?: number;
+      sourceColumns?: number;
+    };
+export type PostgresSqlInsertColumnSourcesReason =
+  | "columnsOmitted"
+  | "defaultValues"
+  | "unsupportedSource"
+  | "wildcardProjection"
+  | "aliasExpansion"
+  | "setOperationByName"
+  | "nestingLimit"
+  | "sourceArityMismatch"
+  | "duplicateTargetColumn"
+  | "emptySource"
+  | "cteSourceDelegated";
+export interface PostgresSqlInsertColumnSource {
+  columnIndex: number;
+  column: PostgresSqlName;
+  sources: PostgresSqlInsertSourceExpression[];
+}
+export type PostgresSqlInsertSourceExpression =
+  | { kind: "values"; branchPath: number[]; rowIndex: number; expression: PostgresSqlExpression }
+  | { kind: "select"; branchPath: number[]; expression: PostgresSqlExpression };
 export type PostgresSqlInsertSource =
   | { kind: "values"; rows: PostgresSqlExpression[][]; span: PostgresSqlSpan | null }
   | { kind: "select"; query: PostgresSqlQuery; span: PostgresSqlSpan | null }

@@ -111,6 +111,13 @@ facts for `CREATE [OR REPLACE] RECURSIVE VIEW`. A source array returns
 facts in input order. Expression roots and ordered direct call arguments are
 typed, including cast/parenthesis wrappers and bare SQL value functions. DO bodies expose typed IF/ELSIF/ELSE branch conditions
 and nested DDL source occurrences, without claiming that any branch executes.
+Expression `children` expose ordered typed operands and descendants, with
+`childrenComplete` independent of INSERT source lineage. INSERT `columnSources`
+maps explicit target columns positionally across VALUES rows and SELECT/set
+branches; unsupported or ambiguous forms return a typed reason instead of a
+partial mapping. Child/source spans are nullable when prepared tokens cannot
+prove complete wrapper boundaries, and `childrenComplete` is false when that
+proof is required to represent the recursive facts faithfully.
 CREATE INDEX facts retain PostgreSQL's `ON ONLY relation` modifier as
 `index.only` in the async API and declarations.
 This pure source API accepts no invocation-lock options.

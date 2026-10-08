@@ -13,6 +13,7 @@ mod diagnostics;
 mod drop_facts;
 mod execute;
 mod execute_preparation;
+mod expression_children;
 mod expression_roots;
 mod expressions;
 mod generated;
