@@ -268,7 +268,8 @@ and `derived` provenance. Nested calls, literal/placeholder arguments, and
 parenthesized/cast roots retain this distinction. Unknown qualifiers and an
 `excluded` target-alias collision retain `unresolved` provenance but do not make
 represented column syntax incomplete. Wildcard call arguments, subqueries,
-and roots without typed operand children remain incomplete. Derived or unresolved
+roots without typed operand children, and opaque function modifiers (including
+FILTER, aggregate ORDER BY, WITHIN GROUP and window clauses) remain incomplete. Derived or unresolved
 lineage alone produces no unsupported-syntax diagnostic. Syntax the prepared
 parser cannot represent produces the
 existing source diagnostic and preserves neighboring valid statements. No raw

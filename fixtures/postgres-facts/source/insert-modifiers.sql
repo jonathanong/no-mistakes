@@ -1,0 +1,6 @@
+-- Modifier operands are retained as SQL, not typed argument children.
+INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET v = sum(t.v) FILTER (WHERE EXCLUDED.v > 0);
+INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET v = array_agg(t.v ORDER BY EXCLUDED.v);
+INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET v = percentile_cont(0.5) WITHIN GROUP (ORDER BY EXCLUDED.v);
+INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET v = sum(t.v) OVER (PARTITION BY EXCLUDED.v ORDER BY t.id);
+INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET v = sum(t.v);

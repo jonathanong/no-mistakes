@@ -55,8 +55,13 @@ pub(super) fn syntax_complete(root: &PostgresSqlExpressionRoot) -> bool {
         R::FunctionCall {
             arguments,
             arguments_complete,
+            modifiers,
             ..
-        } => *arguments_complete && arguments.iter().all(|arg| syntax_complete(&arg.root)),
+        } => {
+            *arguments_complete
+                && modifiers.is_empty()
+                && arguments.iter().all(|arg| syntax_complete(&arg.root))
+        }
         // These roots do not expose all operands as typed children.
         _ => false,
     }

@@ -588,3 +588,26 @@ test(
     });
   },
 );
+
+test(
+  "compiled modifier SQL cannot imply complete typed assignment operands",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-modifiers.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 5);
+    facts.statements.forEach(({ insert }, index) => {
+      const assignment = insert.onConflict.action.assignments[0];
+      assert.equal(assignment.expression.root.argumentsComplete, true);
+      assert.equal(assignment.expression.root.modifiers.length === 0, index === 4);
+      assert.equal(assignment.provenance, "derived");
+      assert.equal(assignment.complete, index === 4);
+      assert.equal(insert.complete, index === 4);
+      assert.equal(insert.diagnostics.length, index === 4 ? 0 : 1);
+    });
+  },
+);

@@ -245,3 +245,35 @@ fn composite_assignment_syntax_is_independent_of_provenance() {
         }
     }
 }
+
+#[test]
+fn opaque_function_modifiers_keep_assignment_syntax_incomplete() {
+    let result = facts("insert-modifiers.sql");
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(result.statements.len(), 5);
+    for (index, statement) in result.statements.iter().enumerate() {
+        let PostgresSqlStatementKind::Insert { insert } = &statement.facts else {
+            panic!("INSERT expected")
+        };
+        let PostgresSqlConflictAction::DoUpdate { assignments, .. } =
+            &insert.on_conflict.as_ref().unwrap().action
+        else {
+            panic!("UPDATE expected")
+        };
+        let assignment = &assignments[0];
+        let PostgresSqlExpressionRoot::FunctionCall {
+            arguments_complete,
+            modifiers,
+            ..
+        } = &assignment.expression.root
+        else {
+            panic!("call expected")
+        };
+        assert!(*arguments_complete); // This flag only covers ordinary call arguments.
+        assert_eq!(modifiers.is_empty(), index == 4);
+        assert_eq!(assignment.provenance, PostgresSqlInsertProvenance::Derived);
+        assert_eq!(assignment.complete, index == 4);
+        assert_eq!(insert.complete, index == 4);
+        assert_eq!(insert.diagnostics.is_empty(), index == 4);
+    }
+}
