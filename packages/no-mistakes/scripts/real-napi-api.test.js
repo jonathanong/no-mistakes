@@ -11,6 +11,7 @@ const test = globalThis.test || require("node:test").test;
 require("./integration-route-coverage.test.js");
 require("./typescript-module-api.test.js");
 require("./conditional-workspace-api.test.js");
+require("./workspace-resolve-api.test.js");
 require("./nextjs-tracked-routes.test.js");
 require("./postgres-do-constraint-api.test.js");
 require("./postgres-metadata-api.test.js");

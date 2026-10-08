@@ -1,0 +1,4 @@
+{
+  "name": "@fx/main",
+  "main": "./entry.mts"
+}

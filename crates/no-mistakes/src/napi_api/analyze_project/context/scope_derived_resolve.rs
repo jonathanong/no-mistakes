@@ -99,13 +99,13 @@ impl PreparedScope {
             self.traversal.root(),
             files,
             self.traversal.prepared_facts(),
-            &visible,
-            &source_store,
-            self.options
-                .tsconfig
-                .as_deref()
-                .map(|_| self.traversal.tsconfig()),
-            &session,
+            crate::codebase::queries::resolve_check::PreparedResolveCheckResolution {
+                visible: &visible,
+                source_store: &source_store,
+                explicit_tsconfig: self.options.tsconfig.as_deref().map(|_| self.traversal.tsconfig()),
+                session: &session,
+                workspace: &self.traversal.workspace_arc(),
+            },
         )?;
         Ok(crate::cli::json_value(&report))
     }

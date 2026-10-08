@@ -16,3 +16,5 @@ mod registry_extension;
 mod rsc_callers;
 #[path = "cli_codebase_acceptance/workspace.rs"]
 mod workspace;
+#[path = "cli_codebase_acceptance/workspace_resolve.rs"]
+mod workspace_resolve;

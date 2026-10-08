@@ -1,4 +1,4 @@
-use super::batch_report_from_prepared_facts;
+use super::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
 use crate::codebase::queries::shared::resolve_targets;
 use crate::codebase::ts_source::facts::{TsFactMap, TsFactPlan, TsFileFacts};
 use crate::codebase::ts_source::{FileInventory, SourceStore};
@@ -42,15 +42,33 @@ fn derived_resolve_check_propagates_prepared_fact_failures() {
             &target.root,
             [target.abs_file.clone()],
             &facts,
-            target.visible_files(),
-            &target.sources,
-            None,
-            &target.session,
+            PreparedResolveCheckResolution {
+                visible: target.visible_files(),
+                source_store: &target.sources,
+                explicit_tsconfig: None,
+                session: &target.session,
+                workspace: &target.session.workspace(&target.root),
+            },
         )
         .err()
         .expect("prepared fact failure must abort the report");
         assert!(error.to_string().contains(expected), "{error:#}");
     }
+    let error = batch_report_from_prepared_facts(
+        &target.root,
+        [target.abs_file.clone()],
+        &TsFactMap::default(),
+        PreparedResolveCheckResolution {
+            visible: target.visible_files(),
+            source_store: &target.sources,
+            explicit_tsconfig: None,
+            session: &target.session,
+            workspace: &target.session.workspace(&target.root),
+        },
+    )
+    .err()
+    .expect("missing prepared facts must abort instead of rereading or parsing");
+    assert!(error.to_string().contains("missing prepared facts"));
 }
 
 #[test]
@@ -80,10 +98,13 @@ fn prepared_batch_reuses_one_resolver_cache_for_one_tsconfig() {
         &root,
         files,
         &facts,
-        targets[0].visible_files(),
-        &targets[0].sources,
-        None,
-        &session,
+        PreparedResolveCheckResolution {
+            visible: targets[0].visible_files(),
+            source_store: &targets[0].sources,
+            explicit_tsconfig: None,
+            session: &session,
+            workspace: &session.workspace(&root),
+        },
     )
     .unwrap();
 
@@ -121,9 +142,19 @@ fn prepared_batch_keeps_distinct_nearest_visible_tsconfig_scopes() {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
 
-    let report =
-        batch_report_from_prepared_facts(&root, files, &facts, &visible, &sources, None, &session)
-            .unwrap();
+    let report = batch_report_from_prepared_facts(
+        &root,
+        files,
+        &facts,
+        PreparedResolveCheckResolution {
+            visible: &visible,
+            source_store: &sources,
+            explicit_tsconfig: None,
+            session: &session,
+            workspace: &session.workspace(&root),
+        },
+    )
+    .unwrap();
 
     assert_eq!(report.results.len(), 3);
     assert_eq!(

@@ -23,6 +23,7 @@ pub struct BatchResolveCheckReport {
 fn compute_target(
     target: &super::super::shared::Target,
     imports: &[ExtractedImport],
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
 ) -> Result<ResolveCheckReport> {
     let resolver = ImportResolver::new_in_session(
         target.tsconfig()?,
@@ -31,7 +32,7 @@ fn compute_target(
     );
     let imports: Vec<ImportRow> = imports
         .iter()
-        .map(|imp| classify(imp, target, &resolver))
+        .map(|imp| classify(imp, target, &resolver, workspace))
         .collect();
     let unresolved: Vec<String> = imports
         .iter()
@@ -92,9 +93,10 @@ pub(super) fn compute_many(args: &ResolveCheckArgs) -> Result<Vec<ResolveCheckRe
         );
     }
     let facts = super::super::reverse::collect_target_import_facts(&targets[0], &targets);
+    let workspace = targets[0].session.workspace(&targets[0].root);
     let mut reports = targets
         .par_iter()
-        .map(|target| compute_target(target, target_imports(target, &facts)?))
+        .map(|target| compute_target(target, target_imports(target, &facts)?, &workspace))
         .collect::<Result<Vec<_>>>()?;
     reports.sort_by(|left, right| left.file.cmp(&right.file));
     Ok(reports)
@@ -115,7 +117,7 @@ pub(super) fn batch_report(results: Vec<ResolveCheckReport>) -> BatchResolveChec
 
 #[path = "batch_prepared.rs"]
 mod prepared;
-pub(crate) use prepared::batch_report_from_prepared_facts;
+pub(crate) use prepared::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
 
 impl BatchResolveCheckReport {
     pub(super) fn exit_code(&self) -> ExitCode {

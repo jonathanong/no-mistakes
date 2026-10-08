@@ -488,6 +488,11 @@ Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse
 `http` edges. Interpolated Swift path segments are treated as `*` route
 segments for matching configured backend route definitions.
 
+`resolve-check` uses the same visible workspace targets for recognized package
+imports. Missing or blocked workspace subpaths are unresolved, including static,
+type-only, and literal dynamic references. Third-party and unmatched packages
+remain external; computed imports remain unresolved without becoming edges.
+
 Literal dynamic workspace imports retain `dynamic-import` or
 `conditional-dynamic-import` according to execution reachability, including
 wildcard package `exports` and package `#imports`. Their workspace target also

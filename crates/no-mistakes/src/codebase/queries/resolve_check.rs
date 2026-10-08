@@ -1,18 +1,16 @@
 use super::render::{render, resolve_format, to_json, Report};
 use crate::cli::Format;
-use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
-use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use serde::Serialize;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 mod batch;
-pub(crate) use batch::batch_report_from_prepared_facts;
 pub use batch::BatchResolveCheckReport;
 use batch::{batch_report, compute_many};
+pub(crate) use batch::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
 
 /// `resolve-check`: do all imports in one or more files resolve?
 #[derive(clap::Parser, Debug)]
@@ -73,76 +71,8 @@ impl ResolveCheckReport {
     }
 }
 
-fn kind_str(kind: ImportKind) -> &'static str {
-    match kind {
-        ImportKind::Static => "static",
-        ImportKind::Type => "type",
-        ImportKind::Dynamic => "dynamic",
-        ImportKind::Require => "require",
-        ImportKind::RequireResolve => "require-resolve",
-    }
-}
-
-/// Declaration files only satisfy type-only references because they do not
-/// emit a runtime module.
-fn is_declaration_file(path: &Path) -> bool {
-    let name = path.to_string_lossy();
-    name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
-}
-
-fn classify(
-    imp: &ExtractedImport,
-    target: &super::shared::Target,
-    resolver: &ImportResolver,
-) -> ImportRow {
-    classify_for_importer(imp, &target.abs_file, &target.root, resolver)
-}
-
-fn classify_for_importer(
-    imp: &ExtractedImport,
-    importing_file: &Path,
-    root: &Path,
-    resolver: &ImportResolver,
-) -> ImportRow {
-    if imp.computed {
-        return ImportRow {
-            specifier: imp.specifier.clone(),
-            kind: kind_str(imp.kind),
-            status: Status::Unresolved,
-            resolved: None,
-            computed: true,
-        };
-    }
-    let resolved = resolver
-        .resolve(&imp.specifier, importing_file)
-        .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
-    let status = if resolved.is_some() {
-        Status::Resolved
-    } else if imp.specifier.starts_with('.') || resolver.matches_alias(&imp.specifier) {
-        Status::Unresolved
-    } else {
-        Status::External
-    };
-    ImportRow {
-        specifier: imp.specifier.clone(),
-        kind: kind_str(imp.kind),
-        status,
-        resolved: resolved.map(|path| super::shared::rel_str(&path, root)),
-        computed: false,
-    }
-}
-
-/// Classify imports from facts already collected by a prepared project
-/// analysis. The resolver matches the standalone resolve-check resolver for
-/// this importer, preserving its local and alias unresolved semantics.
-pub(super) fn classify_prepared(
-    imp: &ExtractedImport,
-    importing_file: &Path,
-    root: &Path,
-    resolver: &ImportResolver,
-) -> ImportRow {
-    classify_for_importer(imp, importing_file, root, resolver)
-}
+mod classification;
+use classification::{classify, classify_prepared};
 
 fn compute(args: &ResolveCheckArgs) -> Result<ResolveCheckReport> {
     let mut reports = compute_many(args)?;
@@ -212,3 +142,6 @@ pub fn run_json_batch(args: ResolveCheckArgs) -> Result<String> {
 mod computed_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod workspace_tests;

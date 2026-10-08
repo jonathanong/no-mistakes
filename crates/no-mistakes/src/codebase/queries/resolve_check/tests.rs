@@ -1,5 +1,7 @@
+use super::classification::kind_str;
 use super::*;
 use crate::cli::Format;
+use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::queries::render::{render, resolve_format};
 use std::path::PathBuf;
 
@@ -7,7 +9,7 @@ fn fixture_root() -> PathBuf {
     named_fixture("queries")
 }
 
-fn named_fixture(name: &str) -> PathBuf {
+pub(super) fn named_fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis")
