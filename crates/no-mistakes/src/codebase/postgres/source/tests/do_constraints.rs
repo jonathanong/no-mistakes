@@ -82,6 +82,11 @@ fn nested_do_constraints_keep_typed_names_validation_and_exact_source_provenance
             constraint.columns[0].value,
             if plain { "parent_id" } else { "Parent Id" }
         );
+        let constraint_span = constraint.span.as_ref().expect("constraint source range");
+        assert!(
+            sql[constraint_span.start.offset..constraint_span.end.offset].starts_with("CONSTRAINT")
+        );
+        assert!(!sql[constraint_span.start.offset..constraint_span.end.offset].ends_with(';'));
         let referenced = constraint.referenced_table.as_ref().unwrap();
         assert_eq!(
             referenced

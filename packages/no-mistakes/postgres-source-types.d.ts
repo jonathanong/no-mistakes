@@ -97,6 +97,8 @@ export interface PostgresSqlConstraint {
   onUpdate: string | null;
   characteristics: string | null;
   sql: string;
+  /** UTF-8 source range; null when no proven token boundary is available. */
+  span: PostgresSqlSpan | null;
 }
 export type PostgresSqlAlterOperation =
   | { kind: "addColumn"; column: PostgresSqlColumn }

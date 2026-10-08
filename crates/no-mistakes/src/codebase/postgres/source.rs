@@ -7,6 +7,7 @@ mod columns;
 mod completeness;
 mod conditional;
 mod conditional_source;
+mod constraint_spans;
 mod ddl;
 mod diagnostics;
 mod drop_facts;

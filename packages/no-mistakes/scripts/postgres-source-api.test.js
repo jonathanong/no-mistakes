@@ -132,6 +132,108 @@ test(
 );
 
 test(
+  "compiled CJS and ESM expose exact source spans for PostgreSQL constraints",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("constraint-source-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const bytes = Buffer.from(sql);
+    const assertRange = (constraint, expected) => {
+      assert.ok(constraint.span);
+      assert.equal(
+        bytes.subarray(constraint.span.start.offset, constraint.span.end.offset).toString(),
+        expected,
+      );
+    };
+    const create = facts.statements[0];
+    assertRange(create.columns[0].constraints[0], "PRIMARY KEY");
+    assertRange(create.columns[1].constraints[0], "REFERENCES public.parent(id)");
+    assertRange(
+      create.columns[2].constraints[0],
+      "REFERENCES public.parent(id) ON DELETE SET DEFAULT",
+    );
+    assertRange(create.columns[3].constraints[0], "UNIQUE");
+    assertRange(create.columns[3].constraints[1], "UNIQUE");
+    assertRange(create.columns[4].constraints[0], "PRIMARY /* split keyword */ KEY");
+    assertRange(create.columns[5].constraints[0], "UNIQUE");
+    assertRange(create.columns[6].constraints[0], "UNIQUE");
+    assertRange(create.constraints[0], "CONSTRAINT \"ck_name\" CHECK (length('λ') > 0)");
+    assertRange(create.constraints[1], "UNIQUE (parent_id)");
+    assertRange(
+      facts.statements[2].operations[1].constraint,
+      "CONSTRAINT after_other_operation CHECK (parent_id > 0)",
+    );
+    assertRange(
+      facts.statements[3].operations[1].constraint,
+      "CONSTRAINT after_array_default CHECK (parent_id > 0)",
+    );
+    assertRange(facts.statements[4].operations[0].column.constraints[0], "CHECK (added > 0)");
+    const alter = facts.statements[1];
+    assertRange(
+      alter.operations[0].constraint,
+      "CONSTRAINT fk_parent FOREIGN KEY (parent_id) REFERENCES public.parent(id) NOT VALID",
+    );
+    assertRange(alter.operations[1].constraint, "CHECK (id > 0)");
+  },
+);
+
+test("constraint span issue example reports exact byte offsets", { skip: !compiled }, async () => {
+  const api = require("../index.js");
+  const esm = await import("../index.mjs");
+  const sql = fixture("constraint-source-spans-basic.sql");
+  const facts = await api.parsePostgresSql({ sql });
+  assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+  const create = facts.statements[0];
+  const alter = facts.statements[1];
+  const values = [
+    [create.columns[0].constraints[0], "REFERENCES public.parents(id)"],
+    [create.constraints[0], "CONSTRAINT children_check CHECK (parent_id IS NOT NULL)"],
+    [
+      alter.operations[0].constraint,
+      "CONSTRAINT children_parent_fk\n  FOREIGN KEY (parent_id) REFERENCES public.parents(id) NOT VALID",
+    ],
+  ];
+  for (const [constraint, expected] of values) {
+    assert.equal(
+      Buffer.from(sql)
+        .subarray(constraint.span.start.offset, constraint.span.end.offset)
+        .toString(),
+      expected,
+    );
+    assert.equal(constraint.span.start.offset, sql.indexOf(expected));
+  }
+});
+
+test(
+  "constraint spans survive wrappers and use decoded literal EXECUTE coordinates",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("constraint-source-spans-nested.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    const wrapped = facts.statements[0].wrapper.statements[0].constraints[0];
+    assert.equal(
+      Buffer.from(sql).subarray(wrapped.span.start.offset, wrapped.span.end.offset).toString(),
+      "CONSTRAINT wrapper_check CHECK (id > 0)",
+    );
+    const execute = facts.statements[1].block.statements[0].execute;
+    const decoded = execute.statements[0].constraints[0];
+    assert.equal(
+      Buffer.from(execute.decodedSql)
+        .subarray(decoded.span.start.offset, decoded.span.end.offset)
+        .toString(),
+      "CONSTRAINT decoded_check CHECK (id > 0)",
+    );
+  },
+);
+
+test(
   "compiled pure-source SQL API exposes async CJS and ESM facts without a project root",
   {
     skip: !compiled,

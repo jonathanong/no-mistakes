@@ -26,7 +26,7 @@ pub(super) fn data_type(value: &DataType, locations: &Locations<'_>) -> Postgres
         DataType::Table(Some(fields)) => {
             result.fields = fields
                 .iter()
-                .map(|field| column(field, locations))
+                .map(|field| column(field, locations, Vec::new()))
                 .collect()
         }
         _ => {

@@ -6,7 +6,11 @@ use super::{
 };
 use sqlparser::ast::{ColumnDef, ColumnOption, Expr, IndexColumn, TableConstraint};
 
-pub(super) fn column(value: &ColumnDef, locations: &Locations<'_>) -> PostgresSqlColumn {
+pub(super) fn column(
+    value: &ColumnDef,
+    locations: &Locations<'_>,
+    option_spans: Vec<Option<PostgresSqlSpan>>,
+) -> PostgresSqlColumn {
     let mut result = PostgresSqlColumn {
         name: identifier(&value.name),
         data_type: data_type(&value.data_type, locations),
@@ -17,7 +21,7 @@ pub(super) fn column(value: &ColumnDef, locations: &Locations<'_>) -> PostgresSq
         constraints: Vec::new(),
         span: locations.span(value.name.span),
     };
-    for option in &value.options {
+    for (option_index, option) in value.options.iter().enumerate() {
         let constraint = match &option.option {
             ColumnOption::NotNull => {
                 result.nullable = false;
@@ -68,7 +72,8 @@ pub(super) fn column(value: &ColumnDef, locations: &Locations<'_>) -> PostgresSq
             _ => None,
         };
         if let Some(value) = constraint {
-            let mut fact = table_constraint(&value, locations);
+            let mut fact = table_constraint(&value, locations, None);
+            fact.span = option_spans.get(option_index).cloned().flatten();
             fact.name = option.name.as_ref().map(identifier).or(fact.name);
             // Inline constraints own this column; their parser payload has no key list.
             fact.columns = vec![result.name.clone()];
@@ -91,9 +96,11 @@ fn keys(columns: &[IndexColumn]) -> Vec<PostgresSqlIdentifier> {
 pub(super) fn table_constraint(
     value: &TableConstraint,
     locations: &Locations<'_>,
+    span: Option<PostgresSqlSpan>,
 ) -> PostgresSqlConstraint {
     let mut result = PostgresSqlConstraint {
         kind: PostgresSqlConstraintKind::Other,
+        span,
         name: None,
         columns: Vec::new(),
         expression: None,

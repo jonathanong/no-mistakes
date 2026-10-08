@@ -87,12 +87,24 @@ pub(super) fn project(
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
                     owned.iter().copied(),
                 );
+                let owned_tokens = if matches!(
+                    statement,
+                    Statement::CreateTable(_) | Statement::AlterTable(_)
+                ) {
+                    owned
+                        .iter()
+                        .map(|token| (*token).clone())
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
                 super::projection::project(
                     statement,
                     locations,
                     &tables,
                     recursive_views,
                     super::index_only::contains(&wrapper_context.index_only, owned[0].span.start),
+                    &owned_tokens,
                 )
             };
             super::wrappers::finalize(&mut facts, &span);

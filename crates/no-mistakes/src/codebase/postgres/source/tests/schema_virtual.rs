@@ -10,7 +10,7 @@ fn typed_generated_column_projection_retains_virtual_storage() {
     let Statement::CreateTable(table) = &statements[0] else {
         panic!("saved generated-column fixture must create a table");
     };
-    let column = columns::column(&table.columns[1], &Locations::new(&sql));
+    let column = columns::column(&table.columns[1], &Locations::new(&sql), vec![]);
     assert_eq!(column.name.value, "computed_value");
     let generated = column.generated.unwrap();
     assert_eq!(generated.storage.as_deref(), Some("VIRTUAL"));
@@ -41,14 +41,14 @@ fn constraint_projections_preserve_expression_keys_and_unknown_constraint_sql() 
     };
     let locations = Locations::new(&sql);
     assert_eq!(table.constraints.len(), 2);
-    let unique = columns::table_constraint(&table.constraints[0], &locations);
+    let unique = columns::table_constraint(&table.constraints[0], &locations, None);
     assert_eq!(unique.kind, super::super::PostgresSqlConstraintKind::Unique);
     assert!(
         unique.columns.is_empty(),
         "an expression key is not a plain column"
     );
     assert!(unique.sql.contains("base_value + 1"));
-    let index = columns::table_constraint(&table.constraints[1], &locations);
+    let index = columns::table_constraint(&table.constraints[1], &locations, None);
     assert_eq!(index.kind, super::super::PostgresSqlConstraintKind::Other);
     assert!(index.sql.contains("helper_index"));
 }

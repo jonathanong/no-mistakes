@@ -741,3 +741,8 @@ predicates; AST-only nested conditional/CTE projections retain existing span lim
 Operator classes expose optional ordered typed `parameters` (name and value),
 including their full class source span. Leading composite fields enter the
 ordered assignment indirection after its base column.
+
+PostgreSQL CREATE/ALTER constraint source spans have Rust/native and asynchronous
+Node CJS/ESM parity. Supported inline and table constraints retain exact source
+ranges; unavailable boundaries are null rather than inferred from formatted SQL.
+See [constraint source spans](postgres-source-api.md#constraint-source-spans).
