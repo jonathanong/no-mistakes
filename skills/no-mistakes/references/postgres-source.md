@@ -55,3 +55,10 @@ predicates; AST-only nested conditional/CTE projections retain existing span lim
 Operator classes expose optional ordered typed `parameters` (name and value),
 including their full class source span. Leading composite fields enter the
 ordered assignment indirection after its base column.
+
+Use `PostgresSqlConstraint.span` to locate CREATE inline/table constraints and
+ALTER ADD COLUMN inline constraints or ADD CONSTRAINT in their owning source.
+Named ranges include `CONSTRAINT`;
+ALTER ranges exclude `ADD` and include `NOT VALID`. Coordinates refer to original
+SQL, or `decodedSql` for literal EXECUTE children. A null span means the token
+boundary is unavailable; do not guess offsets from formatted `constraint.sql`.

@@ -40,6 +40,7 @@ pub struct PostgresSqlIdentityColumn {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlConstraint {
     pub kind: PostgresSqlConstraintKind,
+    pub span: Option<PostgresSqlSpan>,
     pub name: Option<PostgresSqlIdentifier>,
     pub columns: Vec<PostgresSqlIdentifier>,
     pub expression: Option<PostgresSqlExpression>,

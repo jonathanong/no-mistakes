@@ -1,6 +1,7 @@
 mod body;
 mod conditional_insert_compatibility;
 mod conditional_ranges;
+mod constraint_spans;
 mod ddl;
 mod do_constraints;
 mod expression_roots;

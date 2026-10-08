@@ -84,6 +84,7 @@ impl Context<'_, '_> {
                 &tables,
                 self.recursive_views,
                 super::super::index_only::contains(&self.index_only, first.span.start),
+                tokens,
             )
         };
         let mut result = PostgresSqlStatement {

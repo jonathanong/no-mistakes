@@ -812,3 +812,11 @@ AST or implying execution. Inspect `complete` and diagnostics: malformed nested
 SQL remains diagnostic; dynamic variables, concatenation, `format`, and EXECUTE
 modifiers remain unsupported `other` occurrences. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
+
+`parsePostgresSql()` exposes `PostgresSqlConstraint.span` for CREATE TABLE inline
+and table constraints, ALTER TABLE ADD COLUMN inline constraints, and ALTER
+TABLE ADD CONSTRAINT. The nullable span uses
+exact source byte offsets, including comments and validation suffixes, without
+changing statement locations or formatted `constraint.sql`. See
+[constraint source spans](postgres-source-api.md#constraint-source-spans) for
+coordinate ownership and absence semantics.

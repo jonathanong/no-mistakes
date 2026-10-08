@@ -9,16 +9,18 @@ use sqlparser::ast::{AlterColumnOperation, AlterTableOperation};
 pub(super) fn alter(
     value: &AlterTableOperation,
     locations: &Locations<'_>,
+    span: Option<super::PostgresSqlSpan>,
+    option_spans: Vec<Option<super::PostgresSqlSpan>>,
 ) -> PostgresSqlAlterOperation {
     match value {
         AlterTableOperation::AddColumn { column_def, .. } => PostgresSqlAlterOperation::AddColumn {
-            column: Box::new(column(column_def, locations)),
+            column: Box::new(column(column_def, locations, option_spans)),
         },
         AlterTableOperation::AddConstraint {
             constraint,
             not_valid,
         } => PostgresSqlAlterOperation::AddConstraint {
-            constraint: Box::new(table_constraint(constraint, locations)),
+            constraint: Box::new(table_constraint(constraint, locations, span)),
             not_valid: *not_valid,
         },
         AlterTableOperation::ValidateConstraint { name } => {

@@ -843,6 +843,7 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
     "PostgresSqlFacts",
     "PostgresSqlSource",
     "PostgresSqlColumn",
+    "PostgresSqlConstraint",
     "PostgresSqlIndex",
     "PostgresSqlView",
     "PostgresSqlTrigger",
@@ -869,6 +870,10 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(declarations, /export interface PostgresSqlIndex \{[\s\S]*?only: boolean;/);
   assert.match(declarations, /functions: PostgresSqlFunctionReference\[\];/);
   assert.match(declarations, /kind: "validateConstraint"; name: PostgresSqlIdentifier/);
+  assert.match(
+    declarations,
+    /export interface PostgresSqlConstraint \{[^}]*span: PostgresSqlSpan \| null;/,
+  );
   assert.match(declarations, /dependenciesComplete: boolean;/);
   assert.match(declarations, /kind: "doBlock"; block: PostgresSqlProceduralBlock/);
   const procedural = readFileSync(join(packageRoot, "postgres-procedural-types.d.ts"), "utf8");

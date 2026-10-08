@@ -320,6 +320,40 @@ including INSERT occurrences inside conditional branches.
 locking, and other query modifiers that are absent from that row contract mark
 the INSERT incomplete rather than silently discarding their meaning.
 
+### Constraint source spans
+
+`PostgresSqlConstraint.span` is the exact UTF-8 source range for a supported
+CREATE TABLE inline or table constraint, ALTER TABLE ADD COLUMN inline
+constraint, or ALTER TABLE ADD CONSTRAINT.
+Offsets are zero-based bytes, line/column positions are one-based Unicode
+characters, and ends are exclusive. A named constraint starts at `CONSTRAINT`;
+an unnamed one starts at its constraint keyword (`REFERENCES` for an inline
+foreign key). ALTER spans exclude the `ADD` prefix and include `NOT VALID` when
+present. Commas, statement delimiters, and surrounding whitespace are excluded;
+comments and formatting inside the constraint are retained.
+
+```sql
+CREATE TABLE public.children (
+  parent_id uuid REFERENCES public.parents(id),
+  CONSTRAINT children_check CHECK (parent_id IS NOT NULL)
+);
+ALTER TABLE public.children
+  ADD CONSTRAINT children_parent_fk
+  FOREIGN KEY (parent_id) REFERENCES public.parents(id) NOT VALID;
+```
+
+The inline foreign key spans `REFERENCES public.parents(id)`, the table CHECK
+starts at `CONSTRAINT children_check`, and the ALTER foreign key starts at
+`CONSTRAINT children_parent_fk` and ends after `NOT VALID`. Existing statement
+spans and identifier/type facts remain available. `constraint.sql` retains its
+formatted parser spelling; slice the owning source with `constraint.span` to
+preserve original text. Supported procedural and wrapper children use original
+source coordinates; literal EXECUTE children use their owning `decodedSql`.
+
+A null span means the prepared tokens cannot prove the constraint's boundaries;
+consumers must not infer a location from formatted SQL. Unsupported or malformed
+syntax retains its existing diagnostic or incomplete-fact behavior.
+
 ### Constraints inside conditional DO bodies
 
 Supported `ALTER TABLE ... ADD CONSTRAINT` occurrences beneath nested `IF`,
@@ -450,6 +484,7 @@ Malformed routine defaults, multiple comment targets, missing index targets,
 and malformed SQL such as `CREATE TABLE invoices (amount_minor_units BIGINT,,);`
 remain diagnostics without successful facts. Recovery preserves the next
 independent statement even when a missing value consumes its semicolon.
+
 ## Statement wrappers and execution context
 
 EXPLAIN and PREPARE emit `kind: "wrapper"` with a named `PostgresSqlWrapper`.
