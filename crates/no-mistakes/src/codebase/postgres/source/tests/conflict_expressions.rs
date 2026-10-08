@@ -98,8 +98,8 @@ fn conflict_expressions_and_subscript_targets_retain_source_boundaries() {
 #[test]
 fn malformed_conflict_targets_remain_diagnostic_and_keep_neighbors() {
     let result = facts("insert-conflict-expressions-invalid.sql");
-    assert_eq!(result.diagnostics.len(), 8, "{:?}", result.diagnostics);
-    assert_eq!(result.statements.len(), 8);
+    assert_eq!(result.diagnostics.len(), 9, "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 9);
     assert!(result
         .statements
         .iter()

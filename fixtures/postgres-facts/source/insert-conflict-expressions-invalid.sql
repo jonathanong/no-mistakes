@@ -14,3 +14,5 @@ INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET records[1]. = 2;
 SELECT 7;
 INSERT INTO foo VALUES (1) ON CONFLICT (lower(slug) "Ops".) DO NOTHING;
 SELECT 8;
+INSERT INTO foo VALUES (1) ON CONFLICT (lower(slug) text_ops unexpected) DO NOTHING;
+SELECT 9;

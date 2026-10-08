@@ -23,12 +23,10 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<Located, ParserError> {
         match token.token {
             Token::LParen | Token::LBracket => stack.push(token.span.start),
             Token::RParen | Token::RBracket => {
-                if let Some(start) = stack.pop() {
-                    delimiters.push(Span {
-                        start,
-                        end: token.span.end,
-                    });
-                }
+                delimiters.extend(stack.pop().map(|start| Span {
+                    start,
+                    end: token.span.end,
+                }));
             }
             _ => {}
         }

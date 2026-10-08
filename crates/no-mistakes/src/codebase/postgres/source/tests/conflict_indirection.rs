@@ -42,6 +42,16 @@ fn conflict_indirection_operator_classes_and_nested_function_spans_are_complete(
     else {
         panic!("update")
     };
+    let PostgresSqlExpressionRoot::FunctionCall {
+        arguments,
+        arguments_complete,
+        ..
+    } = &assignments[2].expression.root
+    else {
+        panic!("wildcard call")
+    };
+    assert!(!arguments_complete);
+    assert!(arguments[0].span.is_none());
     let expression = &assignments[0].expression;
     let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } = &expression.root else {
         panic!("function")

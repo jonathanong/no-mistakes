@@ -773,10 +773,10 @@ test(
       await esm.parsePostgresSql({ sql: fixture("insert-conflict-expressions-invalid.sql") }),
       invalid,
     );
-    assert.equal(invalid.diagnostics.length, 8);
+    assert.equal(invalid.diagnostics.length, 9);
     assert.deepEqual(
       invalid.statements.map((statement) => statement.kind),
-      ["select", "select", "select", "select", "select", "select", "select", "select"],
+      ["select", "select", "select", "select", "select", "select", "select", "select", "select"],
     );
   },
 );
