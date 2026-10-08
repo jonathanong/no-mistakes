@@ -713,3 +713,9 @@ Literal PL/pgSQL `EXECUTE` nested SQL facts have Rust/native and asynchronous
 Node ESM/CJS parity, including decoded child spans and original wrapper
 provenance. Dynamic expressions remain explicitly unsupported; see the
 [PostgreSQL source API](postgres-source-api.md).
+
+PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
+for composite assignment syntax. Function expressions expose `derived` provenance;
+syntax completeness is independent of atomic lineage, including COALESCE and
+GREATEST over target and EXCLUDED references. Unsupported expression projections
+remain explicitly incomplete; see [INSERT source facts](postgres-source-api.md).
