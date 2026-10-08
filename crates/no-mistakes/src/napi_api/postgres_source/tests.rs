@@ -98,6 +98,6 @@ fn native_conflict_expression_binding_retains_targets_and_diagnostics() {
         &parse_postgres_sql_json_impl(serde_json::json!({ "sql": sql })).unwrap(),
     )
     .unwrap();
-    assert_eq!(facts["diagnostics"].as_array().unwrap().len(), 4);
-    assert_eq!(facts["statements"].as_array().unwrap().len(), 4);
+    assert_eq!(facts["diagnostics"].as_array().unwrap().len(), 6);
+    assert_eq!(facts["statements"].as_array().unwrap().len(), 6);
 }

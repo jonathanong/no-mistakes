@@ -13,7 +13,7 @@ pub(in crate::codebase::postgres::source) use markers::prepare;
 
 pub(in crate::codebase::postgres::source) struct ConflictFacts {
     pub expressions: Vec<(Expr, sqlparser::tokenizer::Span)>,
-    pub targets: Vec<Option<assignment::Target>>,
+    pub assignments: Vec<assignment::Facts>,
     pub predicate: Option<Expr>,
     pub span: Option<sqlparser::tokenizer::Span>,
     pub source_span: Option<sqlparser::tokenizer::Span>,
@@ -73,7 +73,7 @@ fn parse_inner(
             let start = parser.peek_token().span.start;
             let mut predicate = None;
             let mut expressions = Vec::new();
-            let mut targets = Vec::new();
+            let mut assignment_facts = Vec::new();
             // Preparation proves these two tokens; consume them without adding
             // unreachable failure paths for the synthetic delimiter.
             parser.next_token();
@@ -121,7 +121,7 @@ fn parse_inner(
                 parser.expect_keyword_is(Keyword::SET)?;
                 let assignments = parser.parse_comma_separated(|parser| {
                     let (assignment, target) = assignment::parse(parser)?;
-                    targets.push(target);
+                    assignment_facts.push(target);
                     Ok(assignment)
                 })?;
                 let selection = if parser.parse_keyword(Keyword::WHERE) {
@@ -140,14 +140,14 @@ fn parse_inner(
             }));
             let metadata = facts.get_or_insert(ConflictFacts {
                 expressions: Vec::new(),
-                targets: Vec::new(),
+                assignments: Vec::new(),
                 predicate: None,
                 span: None,
                 source_span: None,
                 unsupported_with: false,
             });
             metadata.expressions = expressions;
-            metadata.targets = targets;
+            metadata.assignments = assignment_facts;
             metadata.predicate = predicate;
             metadata.span = Some(sqlparser::tokenizer::Span {
                 start,

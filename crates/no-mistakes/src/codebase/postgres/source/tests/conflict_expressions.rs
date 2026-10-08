@@ -82,14 +82,24 @@ fn conflict_expressions_and_subscript_targets_retain_source_boundaries() {
     assert_eq!(assignments.len(), 3);
     assert_eq!(assignments[0].target.as_ref().unwrap().subscripts.len(), 2);
     assert!(assignments[1].target.is_none());
+    let rhs = assignments[1].expression.span.as_ref().unwrap();
+    assert_eq!(
+        &sql[rhs.start.offset..rhs.end.offset],
+        "coalesce(EXCLUDED.slug, lower('x'))"
+    );
+    let assignment = assignments[1].span.as_ref().unwrap();
+    assert_eq!(
+        &sql[assignment.start.offset..assignment.end.offset],
+        "slug = coalesce(EXCLUDED.slug, lower('x'))"
+    );
     assert!(predicate.is_some());
 }
 
 #[test]
 fn malformed_conflict_targets_remain_diagnostic_and_keep_neighbors() {
     let result = facts("insert-conflict-expressions-invalid.sql");
-    assert_eq!(result.diagnostics.len(), 4, "{:?}", result.diagnostics);
-    assert_eq!(result.statements.len(), 4);
+    assert_eq!(result.diagnostics.len(), 6, "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 6);
     assert!(result
         .statements
         .iter()

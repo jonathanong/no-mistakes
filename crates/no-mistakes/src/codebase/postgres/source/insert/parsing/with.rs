@@ -52,7 +52,7 @@ pub(super) fn normalize(statement: Statement) -> (Statement, Option<ConflictFact
     };
     let mut facts = ConflictFacts {
         expressions: Vec::new(),
-        targets: Vec::new(),
+        assignments: Vec::new(),
         predicate: None,
         span: None,
         source_span: None,

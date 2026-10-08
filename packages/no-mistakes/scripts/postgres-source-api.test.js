@@ -756,6 +756,16 @@ test(
     assert.equal(inserts[3].onConflict.predicate.sql, '"ID" > 0');
     assert.equal(inserts[3].onConflict.action.assignments.length, 3);
     assert.equal(inserts[3].onConflict.action.assignments[0].target.subscripts.length, 2);
+    const rhs = inserts[3].onConflict.action.assignments[1].expression.span;
+    assert.equal(
+      sql.slice(rhs.start.offset, rhs.end.offset),
+      "coalesce(EXCLUDED.slug, lower('x'))",
+    );
+    const assignment = inserts[3].onConflict.action.assignments[1].span;
+    assert.equal(
+      sql.slice(assignment.start.offset, assignment.end.offset),
+      "slug = coalesce(EXCLUDED.slug, lower('x'))",
+    );
     const invalid = await api.parsePostgresSql({
       sql: fixture("insert-conflict-expressions-invalid.sql"),
     });
@@ -763,10 +773,10 @@ test(
       await esm.parsePostgresSql({ sql: fixture("insert-conflict-expressions-invalid.sql") }),
       invalid,
     );
-    assert.equal(invalid.diagnostics.length, 4);
+    assert.equal(invalid.diagnostics.length, 6);
     assert.deepEqual(
       invalid.statements.map((statement) => statement.kind),
-      ["select", "select", "select", "select"],
+      ["select", "select", "select", "select", "select", "select"],
     );
   },
 );

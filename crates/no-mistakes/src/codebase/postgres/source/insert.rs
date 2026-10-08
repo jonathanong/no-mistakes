@@ -5,8 +5,7 @@ use super::{
     types::*,
 };
 use sqlparser::ast::{
-    AssignmentTarget, ConflictTarget, Insert, OnConflictAction, OnInsert, SetExpr, Spanned,
-    TableObject,
+    AssignmentTarget, Insert, OnConflictAction, OnInsert, SetExpr, Spanned, TableObject,
 };
 pub(super) mod parsing;
 mod provenance;
@@ -77,27 +76,7 @@ fn project_inner(
     };
     let on_conflict = match &value.on {
         Some(OnInsert::OnConflict(conflict)) => {
-            let target = if let Some(facts) = facts.filter(|facts| !facts.expressions.is_empty()) {
-                PostgresSqlConflictTarget::Expressions {
-                    expressions: facts
-                        .expressions
-                        .iter()
-                        .map(|(expr, span)| targets::arbiter(expr, *span, locations))
-                        .collect(),
-                }
-            } else {
-                match &conflict.conflict_target {
-                    None => PostgresSqlConflictTarget::Omitted,
-                    Some(ConflictTarget::Columns(columns)) => PostgresSqlConflictTarget::Columns {
-                        columns: columns.iter().map(identifier).collect(),
-                    },
-                    Some(ConflictTarget::OnConstraint(constraint)) => {
-                        PostgresSqlConflictTarget::Constraint {
-                            name: name(constraint),
-                        }
-                    }
-                }
-            };
+            let target = targets::conflict(conflict.conflict_target.as_ref(), facts, locations);
             let action = match &conflict.action {
                 OnConflictAction::DoNothing => PostgresSqlConflictAction::DoNothing,
                 OnConflictAction::DoUpdate(update) => {
@@ -114,19 +93,23 @@ fn project_inner(
                             };
                             let provenance =
                                 provenance(&assignment.value, table.as_ref(), alias.as_ref());
-                            let expression = expression(&assignment.value, locations);
+                            let assignment_facts = facts.and_then(|facts| facts.assignments.get(index));
+                            let expression = targets::value(&assignment.value, assignment_facts, locations);
                             let known = single && syntax_complete(&expression.root);
                             complete &= known;
-                            let target = facts
-                                .and_then(|facts| facts.targets.get(index))
-                                .and_then(Option::as_ref)
+                            let target = assignment_facts
+                                .and_then(|facts| facts.target.as_ref())
                                 .map(|target| targets::project(target, locations));
                             PostgresSqlInsertAssignment {
                                 columns,
                                 target,
                                 expression,
                                 provenance,
-                                span: locations.span(assignment.span()),
+                                span: locations.span(
+                                    assignment_facts
+                                        .map(|facts| facts.span)
+                                        .unwrap_or_else(|| assignment.span()),
+                                ),
                                 complete: known,
                             }
                         })

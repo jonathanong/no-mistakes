@@ -11,51 +11,65 @@ pub(in crate::codebase::postgres::source) struct Target {
     pub span: Span,
 }
 
-pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Option<Target>), ParserError> {
-    // Keep the existing tuple grammar and projection semantics.
-    if parser.peek_token().token == Token::LParen {
-        return parser
-            .parse_assignment()
-            .map(|assignment| (assignment, None));
-    }
+pub(in crate::codebase::postgres::source) struct Facts {
+    pub target: Option<Target>,
+    pub value_span: Span,
+    pub span: Span,
+}
+
+pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), ParserError> {
     let start = parser.peek_token().span.start;
-    let column = parser.parse_object_name(false)?;
-    let mut subscripts = Vec::new();
-    while parser.consume_token(&Token::LBracket) {
-        let start = parser.peek_token().span.start;
-        let index = parser.parse_expr()?;
+    let assignment_target = parser.parse_assignment_target()?;
+    let target = if let AssignmentTarget::ColumnName(column) = &assignment_target {
+        let mut subscripts = Vec::new();
+        while parser.consume_token(&Token::LBracket) {
+            let start = parser.peek_token().span.start;
+            let index = parser.parse_expr()?;
+            let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
+            parser.expect_token(&Token::RBracket)?;
+            subscripts.push((index, Span { start, end }));
+        }
         let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
-        parser.expect_token(&Token::RBracket)?;
-        subscripts.push((index, Span { start, end }));
-    }
-    let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
-    let target = if subscripts.is_empty() {
-        None
-    } else {
-        let parts = column
-            .0
-            .iter()
-            .filter_map(ObjectNamePart::as_ident)
-            .cloned()
-            .collect::<Vec<_>>();
-        let base = if parts.len() == 1 {
-            Expr::Identifier(parts[0].clone())
+        if subscripts.is_empty() {
+            None
         } else {
-            Expr::CompoundIdentifier(parts)
-        };
-        Some(Target {
-            base,
-            subscripts,
-            span: Span { start, end },
-        })
+            let parts = column
+                .0
+                .iter()
+                .filter_map(ObjectNamePart::as_ident)
+                .cloned()
+                .collect::<Vec<_>>();
+            let base = if parts.len() == 1 {
+                Expr::Identifier(parts[0].clone())
+            } else {
+                Expr::CompoundIdentifier(parts)
+            };
+            Some(Target {
+                base,
+                subscripts,
+                span: Span { start, end },
+            })
+        }
+    } else {
+        // Retain tuple grammar and existing projection completeness semantics.
+        None
     };
     parser.expect_token(&Token::Eq)?;
+    let value_start = parser.peek_token().span.start;
     let value = parser.parse_expr()?;
+    let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
     Ok((
         Assignment {
-            target: AssignmentTarget::ColumnName(column),
+            target: assignment_target,
             value,
         },
-        target,
+        Facts {
+            target,
+            value_span: Span {
+                start: value_start,
+                end,
+            },
+            span: Span { start, end },
+        },
     ))
 }

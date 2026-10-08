@@ -8,5 +8,5 @@ ON CONFLICT (id) DO UPDATE SET values[1] = 2;
 INSERT INTO "App"."Foo" ("ID", "Values", slug) VALUES (1, ARRAY[1, 2], 'a')
 ON CONFLICT ("App".lower(slug), "ID") WHERE "ID" > 0
 DO UPDATE SET "Values" /* target comment */ [coalesce("Values"[1], 2)][3] = 4,
-slug = EXCLUDED.slug, info.values[1] = 2 WHERE "Foo"."ID" > 0;
+slug = coalesce(EXCLUDED.slug, lower('x')), info.values[1] = 2 WHERE "Foo"."ID" > 0;
 SELECT 42;
