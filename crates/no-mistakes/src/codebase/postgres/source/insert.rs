@@ -103,9 +103,7 @@ fn project_inner(
                             let provenance =
                                 provenance(&assignment.value, table.as_ref(), alias.as_ref());
                             let expression = expression(&assignment.value, locations);
-                            let known = single
-                                && (syntax_complete(&expression.root)
-                                    || provenance == PostgresSqlInsertProvenance::Literal);
+                            let known = single && syntax_complete(&expression.root);
                             complete &= known;
                             PostgresSqlInsertAssignment {
                                 columns,

@@ -51,7 +51,9 @@ pub(super) fn syntax_complete(root: &PostgresSqlExpressionRoot) -> bool {
     use PostgresSqlExpressionRoot as R;
     match root {
         R::ColumnReference { .. } | R::Literal { .. } => true,
-        R::Parenthesized { expression } | R::Cast { expression, .. } => syntax_complete(expression),
+        R::Parenthesized { expression }
+        | R::Cast { expression, .. }
+        | R::Unary { expression, .. } => syntax_complete(expression),
         R::FunctionCall {
             arguments,
             arguments_complete,

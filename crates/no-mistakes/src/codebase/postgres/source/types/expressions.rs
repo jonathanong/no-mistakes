@@ -33,6 +33,7 @@ pub enum PostgresSqlExpressionRoot {
     },
     Unary {
         operator: String,
+        expression: Box<PostgresSqlExpressionRoot>,
     },
     Case,
     Subquery,

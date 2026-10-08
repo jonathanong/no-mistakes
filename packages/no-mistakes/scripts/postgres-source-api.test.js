@@ -611,3 +611,40 @@ test(
     });
   },
 );
+
+test(
+  "compiled unary assignment roots retain typed operands and independent lineage",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-unary.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 4);
+    facts.statements.forEach(({ insert }, index) => {
+      const assignment = insert.onConflict.action.assignments[0];
+      assert.equal(insert.complete, index < 3);
+      assert.equal(assignment.complete, index < 3);
+      assert.equal(insert.diagnostics.length, index < 3 ? 0 : 1);
+      assert.equal(
+        assignment.provenance,
+        index === 0 ? "literal" : index === 1 ? "derived" : "unresolved",
+      );
+      const root = assignment.expression.root;
+      if (index === 1) {
+        assert.deepEqual(
+          root.arguments.slice(1).map((arg) => arg.root.expression.kind),
+          ["literal", "literal"],
+        );
+      } else {
+        assert.equal(root.kind, "unary");
+        assert.equal(
+          root.expression.kind,
+          index === 0 ? "literal" : index === 2 ? "columnReference" : "parenthesized",
+        );
+      }
+    });
+  },
+);

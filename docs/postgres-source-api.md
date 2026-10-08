@@ -160,7 +160,8 @@ for dependency analysis and do not establish the root expression.
 Parentheses and casts remain explicit wrappers with an `expression` field.
 Consumers may unwrap those two kinds to recognize a cast-wrapped root call.
 No other root kind promotes a contained function call. `columnReference`
-retains each quoted/qualified name component; `literal`, `unary`, `binary`,
+retains each quoted/qualified name component; unary roots expose their typed
+`expression` operand; `literal`, `unary`, `binary`,
 `case`, `subquery`, and `other` remain distinct.
 
 A `functionCall` retains its exact name, ordered `PostgresSqlCallArgument`
@@ -281,8 +282,9 @@ expression once, including partial-index conflict predicates.
 An outer `WITH` on `INSERT ... SELECT` is retained in the source query's CTE
 facts. Outer CTEs with `VALUES` or `DEFAULT VALUES`, and overlapping outer and
 source-level `WITH` scopes, currently produce incomplete INSERT facts. Signed
-numeric constants have literal assignment provenance; unary expressions over
-columns remain unresolved. Procedural blocks inherit incomplete INSERT facts,
+numeric constants have literal assignment provenance and fully represented
+unary operands; unary expressions over columns remain unresolved but can have
+complete syntax. Unary wrappers around binary operands without typed children remain incomplete. Procedural blocks inherit incomplete INSERT facts,
 including INSERT occurrences inside conditional branches.
 
 `VALUES` source facts expose rows. Query-level CTEs, ordering, pagination,

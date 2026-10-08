@@ -30,4 +30,6 @@ INSERT assignment `complete` describes represented syntax independently of
 `provenance`. Function expressions such as `COALESCE(t.v, EXCLUDED.v)` expose
 `derived` provenance and complete syntax. Unresolved column lineage does not
 itself imply unsupported syntax; inspect diagnostics for incomplete projections.
-These facts do not establish SQL execution or replay safety.
+Unary roots expose a typed `expression` operand, including signed literals;
+unsupported operand projections remain incomplete. These facts do not establish
+SQL execution or replay safety.

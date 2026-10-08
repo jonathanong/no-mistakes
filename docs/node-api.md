@@ -105,7 +105,7 @@ rule configuration, with no additional Node export.
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](postgres-source-api.md), including typed INSERT/ON CONFLICT
 source forms, predicates, assignment provenance (including `derived` function
-expressions independent of syntax completeness), and typed `createView`
+expressions independent of syntax completeness), typed unary operands, and typed `createView`
 facts for `CREATE [OR REPLACE] RECURSIVE VIEW`. A source array returns
 facts in input order. Expression roots and ordered direct call arguments are
 typed, including cast/parenthesis wrappers and bare SQL value functions. DO bodies expose typed IF/ELSIF/ELSE branch conditions

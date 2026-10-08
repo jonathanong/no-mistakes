@@ -17,7 +17,8 @@ export type PostgresSqlExpressionRoot =
   | { kind: "parenthesized"; expression: PostgresSqlExpressionRoot }
   | { kind: "cast"; dataType: string; expression: PostgresSqlExpressionRoot }
   | { kind: "literal"; sql: string }
-  | { kind: "binary" | "unary"; operator: string }
+  | { kind: "binary"; operator: string }
+  | { kind: "unary"; operator: string; expression: PostgresSqlExpressionRoot }
   | { kind: "case" | "subquery" | "other" };
 /** Bare CURRENT_TIMESTAMP is a value function; CURRENT_TIMESTAMP(3) uses call syntax. */
 export type PostgresSqlFunctionSyntax = "call" | "value";

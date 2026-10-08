@@ -716,6 +716,7 @@ provenance. Dynamic expressions remain explicitly unsupported; see the
 
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;
-syntax completeness is independent of atomic lineage, including COALESCE and
+unary roots expose typed operands, and syntax completeness is independent of
+atomic lineage, including COALESCE and
 GREATEST over target and EXCLUDED references. Unsupported expression projections
 remain explicitly incomplete; see [INSERT source facts](postgres-source-api.md).

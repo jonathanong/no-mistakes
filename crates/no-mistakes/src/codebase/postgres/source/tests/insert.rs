@@ -277,3 +277,58 @@ fn opaque_function_modifiers_keep_assignment_syntax_incomplete() {
         assert_eq!(insert.diagnostics.is_empty(), index == 4);
     }
 }
+
+#[test]
+fn unary_assignment_syntax_exposes_operands_without_provenance_shortcuts() {
+    let result = facts("insert-unary.sql");
+    assert!(result.diagnostics.is_empty());
+    assert_eq!(result.statements.len(), 4);
+    for (index, statement) in result.statements.iter().enumerate() {
+        let PostgresSqlStatementKind::Insert { insert } = &statement.facts else {
+            panic!("INSERT expected")
+        };
+        let PostgresSqlConflictAction::DoUpdate { assignments, .. } =
+            &insert.on_conflict.as_ref().unwrap().action
+        else {
+            panic!("UPDATE expected")
+        };
+        assert_eq!(insert.complete, index < 3);
+        assert_eq!(insert.diagnostics.is_empty(), index < 3);
+        assert_eq!(assignments[0].complete, index < 3);
+        if index == 1 {
+            let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } =
+                &assignments[0].expression.root
+            else {
+                panic!("call expected")
+            };
+            for argument in &arguments[1..] {
+                let PostgresSqlExpressionRoot::Unary { expression, .. } = &argument.root else {
+                    panic!("unary expected")
+                };
+                assert!(matches!(
+                    expression.as_ref(),
+                    PostgresSqlExpressionRoot::Literal { .. }
+                ));
+            }
+        } else {
+            let PostgresSqlExpressionRoot::Unary { expression, .. } =
+                &assignments[0].expression.root
+            else {
+                panic!("unary expected")
+            };
+            match index {
+                0 => assert!(
+                    matches!(expression.as_ref(), PostgresSqlExpressionRoot::Literal { sql } if sql == "1")
+                ),
+                2 => assert!(matches!(
+                    expression.as_ref(),
+                    PostgresSqlExpressionRoot::ColumnReference { .. }
+                )),
+                _ => assert!(matches!(
+                    expression.as_ref(),
+                    PostgresSqlExpressionRoot::Parenthesized { .. }
+                )),
+            }
+        }
+    }
+}
