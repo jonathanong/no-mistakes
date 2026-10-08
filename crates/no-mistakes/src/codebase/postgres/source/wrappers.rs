@@ -23,6 +23,7 @@ pub(super) use semantics::finalize;
 use semantics::{diagnostic, empty, unsupported};
 
 pub(super) struct Context<'a, 's> {
+    pub executes: std::cell::RefCell<super::execute_preparation::Occurrences>,
     pub source: &'s PostgresSqlSource,
     pub locations: &'a Locations<'s>,
     pub fetch: &'a [crate::codebase::postgres::parse::fetch_expression::Clause],
@@ -65,7 +66,7 @@ pub(super) fn collect(
         Err(error) => unsupported(kind, &error.to_string()),
     };
     if !wrapper.complete {
-        super::parsing::recover(parser, context.markers);
+        super::recovery::recover(parser, context.markers);
     }
     wrapper.span = span(
         &(start..parser.index())

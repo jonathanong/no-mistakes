@@ -10,6 +10,7 @@ impl<'a, 's> Context<'a, 's> {
         comments: super::super::metadata_preparation::Comments,
     ) -> Self {
         Self {
+            executes: Default::default(),
             source,
             locations,
             recursive_views,
@@ -18,6 +19,28 @@ impl<'a, 's> Context<'a, 's> {
             markers,
             comments: std::cell::RefCell::new(comments),
         }
+    }
+}
+impl Context<'_, '_> {
+    pub(in crate::codebase::postgres::source) fn take_prepared(
+        &self,
+        start: sqlparser::tokenizer::Location,
+    ) -> Option<Result<PostgresSqlStatementKind, String>> {
+        self.take_execute(start)
+            .or_else(|| self.take_comment(start).map(|value| value.0))
+    }
+    pub(in crate::codebase::postgres::source) fn with_executes(
+        mut self,
+        executes: super::super::execute_preparation::Occurrences,
+    ) -> Self {
+        self.executes = std::cell::RefCell::new(executes);
+        self
+    }
+    pub(in crate::codebase::postgres::source) fn take_execute(
+        &self,
+        start: sqlparser::tokenizer::Location,
+    ) -> Option<Result<PostgresSqlStatementKind, String>> {
+        self.executes.borrow_mut().remove(&start)
     }
 }
 impl Context<'_, '_> {

@@ -500,3 +500,28 @@ test(
     assert.ok(block.statements.slice(3).every((value) => value.kind === "other"));
   },
 );
+
+test(
+  "compiled branch EXECUTEs share literal facts across IF ELSIF and nested ELSE",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("literal-execute-conditional.sql");
+    const result = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    const branches = result.statements[0].block.statements[0].branches;
+    const nested = branches[2].statements[0].branches[0];
+    for (const statement of [
+      branches[0].statements[0],
+      branches[1].statements[0],
+      nested.statements[1],
+    ]) {
+      assert.equal(statement.kind, "literalExecute");
+      assert.equal(statement.execute.statements[0].kind, "insert");
+      assert.equal(statement.execute.complete, true);
+    }
+    assert.equal(nested.statements[0].kind, "other");
+  },
+);

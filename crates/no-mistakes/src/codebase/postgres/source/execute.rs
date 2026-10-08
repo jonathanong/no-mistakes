@@ -1,10 +1,6 @@
 //! Project literal procedural SQL without evaluating an expression or executing SQL.
 use super::{locations::Locations, types::*};
-use sqlparser::{keywords::Keyword, parser::Parser, tokenizer::Token};
-
-pub(super) fn starts(parser: &Parser<'_>) -> bool {
-    matches!(parser.peek_token().token, Token::Word(word) if word.quote_style.is_none() && word.keyword == Keyword::EXECUTE)
-}
+use sqlparser::{parser::Parser, tokenizer::Token};
 
 pub(super) fn collect(
     parser: &mut Parser<'_>,

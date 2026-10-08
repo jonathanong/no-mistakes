@@ -502,3 +502,6 @@ to `decodedSql`, including expression spans. Escapes therefore never produce
 fabricated original source coordinates. Malformed nested SQL is diagnostic and
 incomplete. Variables, concatenation, format calls, and EXECUTE modifiers remain
 unsupported occurrences; source facts imply no execution or replay policy.
+Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
+projection. SQL CASE expressions and quoted EXECUTE identifiers retain their
+ordinary SQL meaning.

@@ -10,6 +10,7 @@ mod conditional_source;
 mod ddl;
 mod drop_facts;
 mod execute;
+mod execute_preparation;
 mod expression_roots;
 mod expressions;
 mod generated;

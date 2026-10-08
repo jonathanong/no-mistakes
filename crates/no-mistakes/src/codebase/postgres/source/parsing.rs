@@ -28,6 +28,13 @@ pub(super) fn collect_program(
     } else {
         Vec::new()
     };
+    let executes = super::execute_preparation::prepare(
+        &mut prepared.tokens,
+        source,
+        locations,
+        depth,
+        procedural,
+    );
     let parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
     let (mut parser, comments) = super::metadata_preparation::prepare(parser, locations);
     let wrapper_context = super::wrappers::Context::new(
@@ -38,7 +45,8 @@ pub(super) fn collect_program(
         &generated,
         &conflict_markers,
         comments,
-    );
+    )
+    .with_executes(executes);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
         if parser.consume_token(&Token::SemiColon) {
@@ -46,13 +54,9 @@ pub(super) fn collect_program(
         }
         let start = parser.peek_token().span.start;
         let start_index = parser.index();
-        let parsed = if let Some(facts) = wrapper_context.take_comment(start) {
-            while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
-                parser.next_token();
-            }
-            facts.0
-        } else if procedural && super::execute::starts(&parser) {
-            super::execute::collect(&mut parser, source, locations, depth)
+        let parsed = if let Some(facts) = wrapper_context.take_prepared(start) {
+            super::recovery::recover(&mut parser, &[]);
+            facts
         } else if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
         } else if super::metadata::starts(&parser) {
@@ -142,7 +146,7 @@ pub(super) fn collect_program(
             Err(error) => (None, Some(error)),
         };
         if error.is_some() {
-            recover(&mut parser, &conflict_markers);
+            super::recovery::recover(&mut parser, &conflict_markers);
         }
         let end = if parser.peek_token().token == Token::SemiColon {
             parser.next_token().span.end
@@ -201,5 +205,3 @@ pub(super) fn collect_program(
     }
     result
 }
-
-pub(super) use super::recovery::recover;

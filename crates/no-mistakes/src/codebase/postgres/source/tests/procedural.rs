@@ -478,3 +478,35 @@ fn execute_projection_bounds_nesting_and_requires_source_coordinates() {
             .contains("source span")
     );
 }
+
+#[test]
+fn conditional_execute_occurrences_use_the_same_literal_projection() {
+    use super::super::PostgresSqlStatementKind::*;
+    let result = facts("literal-execute-conditional.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 2);
+    let DoBlock { block } = &result.statements[0].facts else {
+        panic!()
+    };
+    assert!(matches!(block.statements[1].facts, Select { .. }));
+    let Conditional { branches } = &block.statements[0].facts else {
+        panic!()
+    };
+    let Conditional { branches: nested } = &branches[2].statements[0].facts else {
+        panic!()
+    };
+    for statement in [
+        &branches[0].statements[0],
+        &branches[1].statements[0],
+        &nested[0].statements[1],
+    ] {
+        let LiteralExecute { execute } = &statement.facts else {
+            panic!("{:?}", statement.facts)
+        };
+        assert!(execute.complete);
+        assert!(matches!(execute.statements[0].facts, Insert { .. }));
+    }
+    assert!(matches!(branches[0].statements[1].facts, Insert { .. }));
+    assert!(matches!(nested[0].statements[0].facts, Other));
+    assert!(!block.complete);
+}
