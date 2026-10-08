@@ -150,6 +150,14 @@ pub fn filter_discovered_files_by_skip_directories(
         .collect()
 }
 
+// Git paths use `/` even on Windows. Normalize native separators before
+// byte-identity visible membership probes compare resolver candidates.
+#[cfg(windows)]
+fn normalized_visible_path(path: &Path) -> PathBuf {
+    normalize_discovery_path(path)
+}
+
+#[cfg(not(windows))]
 fn normalized_visible_path(path: &Path) -> PathBuf {
     if path.components().any(|component| {
         matches!(

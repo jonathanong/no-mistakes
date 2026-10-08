@@ -13,7 +13,9 @@ const targets = [
   "packages/lib/target-b.mts",
 ];
 const paths = (report) =>
-  report.files.map((file) => (typeof file === "string" ? file : file.path)).sort();
+  report.files
+    .map((file) => (typeof file === "string" ? file : file.path).replaceAll("\\", "/"))
+    .sort();
 
 test(
   "compiled CJS and ESM preserve conditional workspace imports across graph projections",
@@ -38,7 +40,9 @@ test(
         assert.ok(promise instanceof Promise);
         const report = await promise;
         assert.deepEqual(paths(report), targets);
-        const library = report.files.find((entry) => entry.path === "packages/lib/target-a.mts");
+        const library = report.files.find(
+          (entry) => entry.path.replaceAll("\\", "/") === "packages/lib/target-a.mts",
+        );
         assert.ok(
           library.via.includes(
             file === "top-level.mts" ? "dynamic-import" : "conditional-dynamic-import",
