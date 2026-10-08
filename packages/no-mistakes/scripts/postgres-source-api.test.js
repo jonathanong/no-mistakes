@@ -773,10 +773,10 @@ test(
       await esm.parsePostgresSql({ sql: fixture("insert-conflict-expressions-invalid.sql") }),
       invalid,
     );
-    assert.equal(invalid.diagnostics.length, 9);
+    assert.equal(invalid.diagnostics.length, 15);
     assert.deepEqual(
       invalid.statements.map((statement) => statement.kind),
-      ["select", "select", "select", "select", "select", "select", "select", "select", "select"],
+      Array(15).fill("select"),
     );
   },
 );
@@ -816,11 +816,42 @@ test(
       ["subscript", "field", "subscript", "field"],
     );
     assert.equal(slice(target.indirection[1].span), '"Items"');
+    const leading = inserts[1].onConflict.action.assignments[2];
+    assert.equal(leading.columns[0].sql, "records");
+    assert.equal(leading.target.base.sql, "records");
+    assert.deepEqual(
+      leading.target.indirection.map((step) => step.kind),
+      ["field", "field", "subscript", "subscript", "field"],
+    );
+    const parameter = inserts[2].onConflict.target.operatorClasses[0].parameters[0];
+    assert.equal(parameter.name.identity, "siglen");
+    assert.equal(slice(parameter.value.span), "32");
+    for (const [predicate, expected, nested] of [
+      [
+        inserts[2].onConflict.predicate,
+        "coalesce(is_ready(lower(slug)), false)",
+        "is_ready(lower(slug))",
+      ],
+      [
+        inserts[2].onConflict.action.predicate,
+        "coalesce(is_ready(upper(slug)), true)",
+        "is_ready(upper(slug))",
+      ],
+    ]) {
+      assert.equal(slice(predicate.span), expected);
+      assert.equal(slice(predicate.functions[0].span), expected);
+      assert.equal(slice(predicate.functions[1].span), nested);
+      assert.equal(slice(predicate.root.arguments[0].span), nested);
+      assert.equal(
+        slice(predicate.root.arguments[0].root.arguments[0].span),
+        expected.endsWith("false)") ? "lower(slug)" : "upper(slug)",
+      );
+    }
     assert.equal(slice(target.indirection[2].span), "[coalesce(records[1].idx, 2)]");
     assert.equal(slice(target.subscripts[1].functions[0].span), "coalesce(records[1].idx, 2)");
     assert.deepEqual(
       inserts[2].onConflict.target.operatorClasses.map((value) => value && slice(value.span)),
-      ["text_pattern_ops", '"Ops"."IntOps"', null],
+      ["text_pattern_ops (siglen = 32)", '"Ops"."IntOps"', null],
     );
     assert.equal(slice(inserts[3].onConflict.target.operatorClasses[0].span), '"Ops"."TextOps"');
   },

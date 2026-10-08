@@ -94,6 +94,16 @@ fn conflict_indirection_operator_classes_and_nested_function_spans_are_complete(
         assert_eq!(target.base.sql, "records");
         assert!(slice(&sql, &target.span).ends_with(".name"));
     }
+    let leading = assignments[2].target.as_ref().unwrap();
+    assert_eq!(leading.base.sql, "records");
+    assert_eq!(assignments[2].columns[0].sql, "records");
+    assert_eq!(leading.indirection.as_ref().unwrap().len(), 5);
+    let PostgresSqlAssignmentStep::Field { name, span } = &leading.indirection.as_ref().unwrap()[0]
+    else {
+        panic!("leading field")
+    };
+    assert!(name.quoted);
+    assert_eq!(slice(&sql, span), "\"Items\"");
     let steps = assignments[1]
         .target
         .as_ref()
@@ -132,8 +142,67 @@ fn conflict_indirection_operator_classes_and_nested_function_spans_are_complete(
         }
         for (class, expected) in classes.iter().zip(expected) {
             let class = class.as_ref().unwrap();
-            assert_eq!(slice(&sql, &class.span), expected);
+            let expected_span = if !class.parameters.is_empty() {
+                format!("{expected} (siglen = 32)")
+            } else {
+                expected.to_string()
+            };
+            assert_eq!(slice(&sql, &class.span), expected_span);
             assert_eq!(class.name.sql, expected);
         }
     }
+}
+
+#[test]
+fn conflict_parameters_and_predicates_reuse_exact_prepared_spans() {
+    let sql = fixture("insert-conflict-indirection.sql");
+    let result = facts("insert-conflict-indirection.sql");
+    let PostgresSqlStatementKind::Insert { insert } = &result.statements[2].facts else {
+        panic!("insert")
+    };
+    let conflict = insert.on_conflict.as_ref().unwrap();
+    let PostgresSqlConflictAction::DoUpdate { predicate, .. } = &conflict.action else {
+        panic!("update")
+    };
+    for (predicate, expected, nested) in [
+        (
+            conflict.predicate.as_ref().unwrap(),
+            "coalesce(is_ready(lower(slug)), false)",
+            "is_ready(lower(slug))",
+        ),
+        (
+            predicate.as_ref().unwrap().as_ref(),
+            "coalesce(is_ready(upper(slug)), true)",
+            "is_ready(upper(slug))",
+        ),
+    ] {
+        assert_eq!(slice(&sql, &predicate.span), expected);
+        assert_eq!(slice(&sql, &predicate.functions[0].span), expected);
+        assert_eq!(slice(&sql, &predicate.functions[1].span), nested);
+        let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } = &predicate.root else {
+            panic!("predicate call")
+        };
+        assert_eq!(slice(&sql, &arguments[0].span), nested);
+        let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } = &arguments[0].root else {
+            panic!("nested predicate call")
+        };
+        assert_eq!(
+            slice(&sql, &arguments[0].span),
+            if expected.ends_with("false)") {
+                "lower(slug)"
+            } else {
+                "upper(slug)"
+            }
+        );
+    }
+    let PostgresSqlConflictTarget::Expressions {
+        operator_classes: Some(classes),
+        ..
+    } = &conflict.target
+    else {
+        panic!("classes")
+    };
+    let parameter = &classes[0].as_ref().unwrap().parameters[0];
+    assert_eq!(parameter.name.identity, "siglen");
+    assert_eq!(slice(&sql, &parameter.value.span), "32");
 }

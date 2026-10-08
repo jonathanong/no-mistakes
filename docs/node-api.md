@@ -104,7 +104,7 @@ rule configuration, with no additional Node export.
 
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](postgres-source-api.md), including typed INSERT/ON CONFLICT
-expression arbiters (including operator classes), mixed array/composite assignment
+expression arbiters (including operator classes and typed parameters), mixed array/composite assignment
 targets, source forms, predicates, assignment provenance (including `derived`
 functions independent of syntax completeness), typed unary operands, and typed `createView`
 facts for `CREATE [OR REPLACE] RECURSIVE VIEW`. A source array returns

@@ -264,11 +264,21 @@ Subscripted assignment targets additionally expose `target.base`, ordered
 `target.subscripts`, and `target.span`; nested index expressions retain exact
 source spans. Mixed array/composite targets additionally expose ordered
 `target.indirection` steps (`subscript` and `field`), including quoted field
-identity and step spans. Nested function references and call arguments keep
-complete closing-delimiter spans even inside compound expressions.
+identity and step spans. Prepared conflict expressions retain complete closing-delimiter spans for
+nested function references and call arguments even inside compound expressions.
 Base-column names remain in `columns`. These are syntax facts:
 no catalog index selection, assignment target resolution, or replay policy is
 inferred. Array slices currently diagnose rather than yielding a partial target.
+
+The extended conflict grammar applies to prepared outer INSERT clauses, including
+EXPLAIN/PREPARE wrappers. Expression arbiters and subscripted assignments inside
+data-modifying CTE INSERTs currently diagnose through the upstream grammar;
+neighboring statements remain available. Exact closing-delimiter spans apply
+to the prepared conflict arbiters, assignment targets/RHS, and target/action
+predicates; AST-only nested conditional/CTE projections retain existing span limits.
+Operator classes expose optional ordered typed `parameters` (name and value),
+including their full class source span. Leading composite fields enter the
+ordered assignment indirection after its base column.
 
 ```js
 const facts = await parsePostgresSql({

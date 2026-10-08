@@ -731,3 +731,13 @@ assignment targets, retaining
 ordered expressions and original source spans. Malformed targets diagnose while
 neighboring statements survive; these facts do not resolve catalog indexes or
 replay safety. See [PostgreSQL source API](postgres-source-api.md).
+
+The extended conflict grammar applies to prepared outer INSERT clauses, including
+EXPLAIN/PREPARE wrappers. Expression arbiters and subscripted assignments inside
+data-modifying CTE INSERTs currently diagnose through the upstream grammar;
+neighboring statements remain available. Exact closing-delimiter spans apply
+to the prepared conflict arbiters, assignment targets/RHS, and target/action
+predicates; AST-only nested conditional/CTE projections retain existing span limits.
+Operator classes expose optional ordered typed `parameters` (name and value),
+including their full class source span. Leading composite fields enter the
+ordered assignment indirection after its base column.

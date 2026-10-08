@@ -54,6 +54,7 @@ pub(super) fn normalize(statement: Statement) -> (Statement, Option<ConflictFact
         expressions: Vec::new(),
         assignments: Vec::new(),
         predicate: None,
+        action_predicate: None,
         span: None,
         source_span: None,
         unsupported_with: true,

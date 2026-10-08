@@ -42,7 +42,7 @@ pub(super) fn project(target: &Target, locations: &Locations<'_>) -> PostgresSql
     }
 }
 
-fn located(value: &Located, locations: &Locations<'_>) -> PostgresSqlExpression {
+pub(super) fn located(value: &Located, locations: &Locations<'_>) -> PostgresSqlExpression {
     super::spans::expression(&value.expression, value.span, &value.delimiters, locations)
 }
 
@@ -75,12 +75,22 @@ pub(super) fn conflict(
                     .expressions
                     .iter()
                     .map(|arbiter| {
-                        arbiter.operator_class.as_ref().map(|(class, span)| {
-                            PostgresSqlArbiterOperatorClass {
-                                name: name(class),
-                                span: locations.span(*span),
-                            }
-                        })
+                        arbiter
+                            .operator_class
+                            .as_ref()
+                            .map(
+                                |(class, span, parameters)| PostgresSqlArbiterOperatorClass {
+                                    name: name(class),
+                                    parameters: parameters
+                                        .iter()
+                                        .map(|(name, value)| PostgresSqlArbiterParameter {
+                                            name: identifier(name),
+                                            value: located(value, locations),
+                                        })
+                                        .collect(),
+                                    span: locations.span(*span),
+                                },
+                            )
                     })
                     .collect()
             });

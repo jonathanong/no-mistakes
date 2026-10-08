@@ -55,6 +55,7 @@ export interface PostgresSqlAssignmentTarget {
 }
 export interface PostgresSqlArbiterOperatorClass {
   name: PostgresSqlName;
+  parameters?: PostgresSqlArbiterParameter[];
   span: PostgresSqlSpan | null;
 }
 export type PostgresSqlAssignmentStep =
@@ -77,3 +78,8 @@ export type PostgresSqlInsertProvenance =
   | "placeholder"
   | "derived"
   | "unresolved";
+
+export interface PostgresSqlArbiterParameter {
+  name: PostgresSqlIdentifier;
+  value: PostgresSqlExpression;
+}

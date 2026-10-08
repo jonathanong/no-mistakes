@@ -26,10 +26,21 @@ pub(in crate::codebase::postgres::source) enum Step {
 
 pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), ParserError> {
     let start = parser.peek_token().span.start;
-    let assignment_target = parser.parse_assignment_target()?;
+    let mut assignment_target = parser.parse_assignment_target()?;
     let target = if let AssignmentTarget::ColumnName(column) = &assignment_target {
         let mut subscripts = Vec::new();
-        let mut indirection = Vec::new();
+        let parts = column
+            .0
+            .iter()
+            .filter_map(ObjectNamePart::as_ident)
+            .cloned()
+            .collect::<Vec<_>>();
+        let mut indirection = parts
+            .iter()
+            .skip(1)
+            .cloned()
+            .map(Step::Field)
+            .collect::<Vec<_>>();
         loop {
             if parser.peek_token().token == Token::LBracket {
                 let start = parser.next_token().span.start;
@@ -51,17 +62,7 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), Pars
         if subscripts.is_empty() {
             None
         } else {
-            let parts = column
-                .0
-                .iter()
-                .filter_map(ObjectNamePart::as_ident)
-                .cloned()
-                .collect::<Vec<_>>();
-            let base = if parts.len() == 1 {
-                Expr::Identifier(parts[0].clone())
-            } else {
-                Expr::CompoundIdentifier(parts)
-            };
+            let base = Expr::Identifier(parts[0].clone());
             Some(Target {
                 base,
                 subscripts,
@@ -73,6 +74,15 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), Pars
         // Retain tuple grammar and existing projection completeness semantics.
         None
     };
+    if let Some(Target {
+        base: Expr::Identifier(base),
+        ..
+    }) = &target
+    {
+        assignment_target = AssignmentTarget::ColumnName(sqlparser::ast::ObjectName(vec![
+            ObjectNamePart::Identifier(base.clone()),
+        ]));
+    }
     parser.expect_token(&Token::Eq)?;
     let value = super::expressions::parse(parser)?;
     let end = parser.token_at(parser.index().saturating_sub(1)).span.end;

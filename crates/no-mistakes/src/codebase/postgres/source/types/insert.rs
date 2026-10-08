@@ -94,6 +94,8 @@ pub struct PostgresSqlAssignmentTarget {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlArbiterOperatorClass {
     pub name: PostgresSqlName,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub parameters: Vec<PostgresSqlArbiterParameter>,
     pub span: Option<PostgresSqlSpan>,
 }
 
@@ -120,4 +122,11 @@ pub enum PostgresSqlInsertProvenance {
     /// A function expression derives its result rather than naming one atomic source.
     Derived,
     Unresolved,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlArbiterParameter {
+    pub name: PostgresSqlIdentifier,
+    pub value: PostgresSqlExpression,
 }

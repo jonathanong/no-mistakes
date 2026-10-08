@@ -119,10 +119,16 @@ fn project_inner(
                         .collect();
                     PostgresSqlConflictAction::DoUpdate {
                         assignments,
-                        predicate: update
-                            .selection
-                            .as_ref()
-                            .map(|expr| Box::new(expression(expr, locations))),
+                        predicate: update.selection.as_ref().map(|expr| {
+                            Box::new(
+                                match facts.and_then(|facts| facts.action_predicate.as_ref()) {
+                                    Some((span, delimiters)) => {
+                                        spans::expression(expr, *span, delimiters, locations)
+                                    }
+                                    None => expression(expr, locations),
+                                },
+                            )
+                        }),
                     }
                 }
             };
@@ -130,7 +136,7 @@ fn project_inner(
                 target,
                 predicate: facts
                     .and_then(|facts| facts.predicate.as_ref())
-                    .map(|expr| expression(expr, locations)),
+                    .map(|expr| targets::located(expr, locations)),
                 action,
                 span: locations.span(
                     facts

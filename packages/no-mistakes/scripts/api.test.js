@@ -1094,6 +1094,7 @@ test("INSERT facts expose named exported declaration contracts", () => {
     "InsertAssignment",
     "AssignmentTarget",
     "ArbiterOperatorClass",
+    "ArbiterParameter",
   ])
     assert.match(insert, new RegExp(`export interface PostgresSql${name} [{]`));
   for (const name of [
@@ -1107,6 +1108,7 @@ test("INSERT facts expose named exported declaration contracts", () => {
   assert.match(insert, /target\?: PostgresSqlAssignmentTarget/);
   assert.match(insert, /kind: "expressions";\s*expressions: PostgresSqlExpression\[\]/);
   assert.match(insert, /subscripts: PostgresSqlExpression\[\]/);
+  assert.match(insert, /parameters\?: PostgresSqlArbiterParameter\[\]/);
   assert.match(insert, /indirection\?: PostgresSqlAssignmentStep\[\]/);
   assert.match(insert, /operatorClasses\?: \(PostgresSqlArbiterOperatorClass \| null\)\[\]/);
   assert.match(insert, /columnsOmitted: boolean/);
