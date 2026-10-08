@@ -10,6 +10,7 @@ use sqlparser::ast::{
 };
 pub(super) mod parsing;
 mod provenance;
+mod targets;
 mod values;
 use provenance::{provenance, syntax_complete};
 
@@ -76,14 +77,24 @@ fn project_inner(
     };
     let on_conflict = match &value.on {
         Some(OnInsert::OnConflict(conflict)) => {
-            let target = match &conflict.conflict_target {
-                None => PostgresSqlConflictTarget::Omitted,
-                Some(ConflictTarget::Columns(columns)) => PostgresSqlConflictTarget::Columns {
-                    columns: columns.iter().map(identifier).collect(),
-                },
-                Some(ConflictTarget::OnConstraint(constraint)) => {
-                    PostgresSqlConflictTarget::Constraint {
-                        name: name(constraint),
+            let target = if let Some(facts) = facts.filter(|facts| !facts.expressions.is_empty()) {
+                PostgresSqlConflictTarget::Expressions {
+                    expressions: facts
+                        .expressions
+                        .iter()
+                        .map(|(expr, span)| targets::arbiter(expr, *span, locations))
+                        .collect(),
+                }
+            } else {
+                match &conflict.conflict_target {
+                    None => PostgresSqlConflictTarget::Omitted,
+                    Some(ConflictTarget::Columns(columns)) => PostgresSqlConflictTarget::Columns {
+                        columns: columns.iter().map(identifier).collect(),
+                    },
+                    Some(ConflictTarget::OnConstraint(constraint)) => {
+                        PostgresSqlConflictTarget::Constraint {
+                            name: name(constraint),
+                        }
                     }
                 }
             };
@@ -93,7 +104,8 @@ fn project_inner(
                     let assignments = update
                         .assignments
                         .iter()
-                        .map(|assignment| {
+                        .enumerate()
+                        .map(|(index, assignment)| {
                             let (columns, single) = match &assignment.target {
                                 AssignmentTarget::ColumnName(column) => (vec![name(column)], true),
                                 AssignmentTarget::Tuple(columns) => {
@@ -105,8 +117,13 @@ fn project_inner(
                             let expression = expression(&assignment.value, locations);
                             let known = single && syntax_complete(&expression.root);
                             complete &= known;
+                            let target = facts
+                                .and_then(|facts| facts.targets.get(index))
+                                .and_then(Option::as_ref)
+                                .map(|target| targets::project(target, locations));
                             PostgresSqlInsertAssignment {
                                 columns,
+                                target,
                                 expression,
                                 provenance,
                                 span: locations.span(assignment.span()),

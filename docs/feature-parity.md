@@ -724,3 +724,9 @@ unary roots expose typed operands, and syntax completeness is independent of
 atomic lineage, including COALESCE and
 GREATEST over target and EXCLUDED references. Unsupported expression projections
 remain explicitly incomplete; see [INSERT source facts](postgres-source-api.md).
+
+PostgreSQL pure-source Rust, native, and asynchronous Node ESM/CJS APIs accept
+ON CONFLICT expression arbiters and subscripted assignment targets, retaining
+ordered expressions and original source spans. Malformed targets diagnose while
+neighboring statements survive; these facts do not resolve catalog indexes or
+replay safety. See [PostgreSQL source API](postgres-source-api.md).

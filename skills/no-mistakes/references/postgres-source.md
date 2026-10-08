@@ -36,3 +36,8 @@ SQL execution or replay safety.
 `CREATE INDEX ... ON ONLY relation` is represented by `index.only: true`;
 quoted or expression-level `ONLY` identifiers remain part of their relation,
 key, or predicate facts.
+
+Expression conflict arbiters expose an ordered `target.expressions` list.
+Subscripted assignments expose `target.base`, ordered `target.subscripts`, and
+source spans while preserving base names in `columns` and RHS provenance. Use
+these as syntax facts; do not infer catalog index matches or replay safety.

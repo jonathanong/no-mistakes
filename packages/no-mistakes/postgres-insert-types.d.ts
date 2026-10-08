@@ -33,7 +33,8 @@ export interface PostgresSqlConflict {
 export type PostgresSqlConflictTarget =
   | { kind: "omitted" }
   | { kind: "columns"; columns: PostgresSqlIdentifier[] }
-  | { kind: "constraint"; name: PostgresSqlName };
+  | { kind: "constraint"; name: PostgresSqlName }
+  | { kind: "expressions"; expressions: PostgresSqlExpression[] };
 export type PostgresSqlConflictAction =
   | { kind: "doNothing" }
   | {
@@ -41,8 +42,15 @@ export type PostgresSqlConflictAction =
       assignments: PostgresSqlInsertAssignment[];
       predicate: PostgresSqlExpression | null;
     };
+/** Ordered index expressions retain source spans; catalog resolution is not implied. */
+export interface PostgresSqlAssignmentTarget {
+  base: PostgresSqlExpression;
+  subscripts: PostgresSqlExpression[];
+  span: PostgresSqlSpan | null;
+}
 export interface PostgresSqlInsertAssignment {
   columns: PostgresSqlName[];
+  target?: PostgresSqlAssignmentTarget;
   expression: PostgresSqlExpression;
   /** Conservative syntactic lineage; derived and unresolved do not imply missing syntax. */
   provenance: PostgresSqlInsertProvenance;

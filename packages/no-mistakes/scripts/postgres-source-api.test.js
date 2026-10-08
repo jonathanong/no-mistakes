@@ -718,3 +718,55 @@ test(
     });
   },
 );
+
+test(
+  "compiled CJS/ESM accepts expression arbiters and nested assignment targets",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-conflict-expressions.sql");
+    const pending = api.parsePostgresSql({ sql });
+    assert.equal(typeof pending.then, "function");
+    const result = await pending;
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 5);
+    const inserts = result.statements.slice(0, 4).map((statement) => statement.insert);
+    for (const [index, expected] of [
+      [0, "values[1]"],
+      [2, "1"],
+      [3, 'coalesce("Values"[1], 2)'],
+    ]) {
+      const target = inserts[index].onConflict.action.assignments[0].target;
+      assert.equal(target.subscripts[0].sql, expected);
+      assert.equal(
+        sql.slice(target.subscripts[0].span.start.offset, target.subscripts[0].span.end.offset),
+        expected,
+      );
+      assert.ok(sql.slice(target.span.start.offset, target.span.end.offset).endsWith("]"));
+      assert.equal(inserts[index].onConflict.action.assignments[0].provenance, "literal");
+    }
+    assert.equal(inserts[1].onConflict.target.kind, "expressions");
+    assert.equal(
+      inserts[1].onConflict.target.expressions[0].functions[0].name.parts[0].identity,
+      "lower",
+    );
+    assert.equal(inserts[3].onConflict.target.expressions.length, 2);
+    assert.equal(inserts[3].onConflict.predicate.sql, '"ID" > 0');
+    assert.equal(inserts[3].onConflict.action.assignments.length, 3);
+    assert.equal(inserts[3].onConflict.action.assignments[0].target.subscripts.length, 2);
+    const invalid = await api.parsePostgresSql({
+      sql: fixture("insert-conflict-expressions-invalid.sql"),
+    });
+    assert.deepEqual(
+      await esm.parsePostgresSql({ sql: fixture("insert-conflict-expressions-invalid.sql") }),
+      invalid,
+    );
+    assert.equal(invalid.diagnostics.length, 4);
+    assert.deepEqual(
+      invalid.statements.map((statement) => statement.kind),
+      ["select", "select", "select", "select"],
+    );
+  },
+);

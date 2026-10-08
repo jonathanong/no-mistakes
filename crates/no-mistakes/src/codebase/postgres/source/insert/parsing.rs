@@ -2,15 +2,18 @@
 use sqlparser::{
     ast::{ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, Statement},
     keywords::Keyword,
-    parser::{IsOptional, Parser, ParserError},
+    parser::{Parser, ParserError},
     tokenizer::{Location, Token},
 };
 
+pub(super) mod assignment;
 mod markers;
 mod with;
 pub(in crate::codebase::postgres::source) use markers::prepare;
 
 pub(in crate::codebase::postgres::source) struct ConflictFacts {
+    pub expressions: Vec<(Expr, sqlparser::tokenizer::Span)>,
+    pub targets: Vec<Option<assignment::Target>>,
     pub predicate: Option<Expr>,
     pub span: Option<sqlparser::tokenizer::Span>,
     pub source_span: Option<sqlparser::tokenizer::Span>,
@@ -69,6 +72,8 @@ fn parse_inner(
         {
             let start = parser.peek_token().span.start;
             let mut predicate = None;
+            let mut expressions = Vec::new();
+            let mut targets = Vec::new();
             // Preparation proves these two tokens; consume them without adding
             // unreachable failure paths for the synthetic delimiter.
             parser.next_token();
@@ -78,9 +83,25 @@ fn parse_inner(
                     parser.parse_object_name(false)?,
                 ))
             } else if parser.peek_token().token == Token::LParen {
-                Some(ConflictTarget::Columns(
-                    parser.parse_parenthesized_column_list(IsOptional::Mandatory, false)?,
-                ))
+                parser.next_token();
+                expressions = parser.parse_comma_separated(|parser| {
+                    let start = parser.peek_token().span.start;
+                    let expr = parser.parse_expr()?;
+                    let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
+                    Ok((expr, sqlparser::tokenizer::Span { start, end }))
+                })?;
+                parser.expect_token(&Token::RParen)?;
+                let columns = expressions
+                    .iter()
+                    .filter_map(|(expr, _)| match expr {
+                        Expr::Identifier(ident) => Some(ident.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>();
+                if columns.len() == expressions.len() {
+                    expressions.clear();
+                }
+                Some(ConflictTarget::Columns(columns))
             } else {
                 None
             };
@@ -98,7 +119,11 @@ fn parse_inner(
             } else {
                 parser.expect_keyword_is(Keyword::UPDATE)?;
                 parser.expect_keyword_is(Keyword::SET)?;
-                let assignments = parser.parse_comma_separated(Parser::parse_assignment)?;
+                let assignments = parser.parse_comma_separated(|parser| {
+                    let (assignment, target) = assignment::parse(parser)?;
+                    targets.push(target);
+                    Ok(assignment)
+                })?;
                 let selection = if parser.parse_keyword(Keyword::WHERE) {
                     Some(parser.parse_expr()?)
                 } else {
@@ -114,11 +139,15 @@ fn parse_inner(
                 action,
             }));
             let metadata = facts.get_or_insert(ConflictFacts {
+                expressions: Vec::new(),
+                targets: Vec::new(),
                 predicate: None,
                 span: None,
                 source_span: None,
                 unsupported_with: false,
             });
+            metadata.expressions = expressions;
+            metadata.targets = targets;
             metadata.predicate = predicate;
             metadata.span = Some(sqlparser::tokenizer::Span {
                 start,

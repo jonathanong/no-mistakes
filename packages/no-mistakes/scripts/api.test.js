@@ -1088,10 +1088,13 @@ test("INSERT facts expose named exported declaration contracts", () => {
   const insert = readFileSync(join(__dirname, "../postgres-insert-types.d.ts"), "utf8");
   assert.match(declarations, /kind: "insert"; insert: PostgresSqlInsert/);
   assert.match(declarations, /export type [*] from "\.\/postgres-insert-types"/);
-  for (const name of ["Insert", "Conflict", "InsertAssignment"])
+  for (const name of ["Insert", "Conflict", "InsertAssignment", "AssignmentTarget"])
     assert.match(insert, new RegExp(`export interface PostgresSql${name} [{]`));
   for (const name of ["InsertSource", "ConflictTarget", "ConflictAction", "InsertProvenance"])
     assert.match(insert, new RegExp(`export type PostgresSql${name} =`));
+  assert.match(insert, /target\?: PostgresSqlAssignmentTarget/);
+  assert.match(insert, /kind: "expressions"; expressions: PostgresSqlExpression\[\]/);
+  assert.match(insert, /subscripts: PostgresSqlExpression\[\]/);
   assert.match(insert, /columnsOmitted: boolean/);
   assert.match(insert, /\| "derived"/);
   const expressions = readFileSync(join(__dirname, "../postgres-expression-types.d.ts"), "utf8");

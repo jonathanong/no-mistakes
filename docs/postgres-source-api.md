@@ -244,7 +244,10 @@ for SELECT), `defaultValues`, or `unsupported`. Statement spans and nested
 expression spans refer to the original input, including comments and literals.
 
 `onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
-and `constraint`. The conflict-target `predicate` is separate from the optional
+`constraint`, and `expressions`. Expression arbiters retain their ordered typed
+expressions, function references, identifiers, and source spans. Plain column
+arbiters retain the existing `columns` shape. The conflict-target `predicate` is
+separate from the optional
 `doUpdate` action predicate. Actions are `doNothing` or `doUpdate`, whose
 `assignments` expose target columns, typed expressions, spans, and `provenance`:
 `targetColumn`, `excludedColumn`, `literal`, `placeholder`, `derived`, or
@@ -253,6 +256,11 @@ calls have `derived` provenance: their value is not one atomic source, even when
 all arguments are target/excluded references. Arithmetic, subqueries, tuple
 assignments, and unknown qualifiers remain unresolved. An alias hides the original
 target name. This is syntax provenance,
+Subscripted assignment targets additionally expose `target.base`, ordered
+`target.subscripts`, and `target.span`; nested index expressions retain exact
+source spans. Base-column names remain in `columns`. These are syntax facts:
+no catalog index selection, assignment target resolution, or replay policy is
+inferred. Array slices currently diagnose rather than yielding a partial target.
 not database type checking or a replay-safety decision.
 
 ```js

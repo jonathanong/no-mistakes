@@ -44,8 +44,15 @@ pub struct PostgresSqlConflict {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PostgresSqlConflictTarget {
     Omitted,
-    Columns { columns: Vec<PostgresSqlIdentifier> },
-    Constraint { name: PostgresSqlName },
+    Columns {
+        columns: Vec<PostgresSqlIdentifier>,
+    },
+    Constraint {
+        name: PostgresSqlName,
+    },
+    Expressions {
+        expressions: Vec<PostgresSqlExpression>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -62,10 +69,21 @@ pub enum PostgresSqlConflictAction {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlInsertAssignment {
     pub columns: Vec<PostgresSqlName>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target: Option<PostgresSqlAssignmentTarget>,
     pub expression: PostgresSqlExpression,
     pub provenance: PostgresSqlInsertProvenance,
     pub span: Option<PostgresSqlSpan>,
     pub complete: bool,
+}
+
+/// Syntactic index target; no catalog or replay-safety resolution is implied.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlAssignmentTarget {
+    pub base: PostgresSqlExpression,
+    pub subscripts: Vec<PostgresSqlExpression>,
+    pub span: Option<PostgresSqlSpan>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
