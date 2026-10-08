@@ -38,6 +38,7 @@ fn facts(name: &str) -> super::PostgresSqlFacts {
 mod query;
 
 mod insert;
+mod insert_recursive;
 mod insert_review;
 
 mod wrappers;

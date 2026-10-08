@@ -33,6 +33,13 @@ Unary roots expose a typed `expression` operand, including signed literals;
 unsupported operand projections remain incomplete. These facts do not establish
 SQL execution or replay safety.
 
+Expression `children` preserve immediate operand order and role, then recurse;
+check `childrenComplete` before relying on the whole expression tree. Explicit
+INSERT columns expose positional `columnSources` across VALUES rows and query
+branches. Unsupported source shapes carry a reason and do not produce partial
+maps. Spans can be null where the prepared tokens cannot prove complete wrapper
+boundaries.
+
 `CREATE INDEX ... ON ONLY relation` is represented by `index.only: true`;
 quoted or expression-level `ONLY` identifiers remain part of their relation,
 key, or predicate facts.

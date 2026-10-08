@@ -73,6 +73,7 @@ impl Context<'_, '_> {
                     insert,
                     insert_facts,
                     self.locations,
+                    tokens,
                 )),
             }
         } else {

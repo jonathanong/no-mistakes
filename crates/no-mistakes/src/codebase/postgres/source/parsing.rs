@@ -95,13 +95,13 @@ pub(super) fn collect_program(
                         });
                     }
                     if let Statement::Insert(value) = &statement {
-                        return Ok(PostgresSqlStatementKind::Insert {
-                            insert: Box::new(super::insert::project(
-                                value,
-                                conflict_predicate.as_ref(),
-                                locations,
-                            )),
-                        });
+                        return Ok(super::insert::source_projection::project_insert(
+                            value,
+                            conflict_predicate.as_ref(),
+                            locations,
+                            &parser,
+                            start_index,
+                        ));
                     }
                     if let Statement::If(value) = &mut statement {
                         if !procedural {

@@ -725,6 +725,12 @@ atomic lineage, including COALESCE and
 GREATEST over target and EXCLUDED references. Unsupported expression projections
 remain explicitly incomplete; see [INSERT source facts](postgres-source-api.md).
 
+PostgreSQL expression facts expose ordered typed recursive children, and INSERT
+facts map explicit target columns to VALUES rows and SELECT/set-operation
+branches in Rust and asynchronous Node ESM/CJS APIs. Unsupported or ambiguous
+source projections carry typed reasons; nullable spans do not guess wrapper
+boundaries. See [PostgreSQL source facts](postgres-source-api.md).
+
 PostgreSQL pure-source Rust, native, and asynchronous Node ESM/CJS APIs accept
 ON CONFLICT expression arbiters with operator classes and mixed array/composite
 assignment targets, retaining

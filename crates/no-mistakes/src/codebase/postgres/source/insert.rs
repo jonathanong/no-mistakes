@@ -7,24 +7,28 @@ use super::{
 use sqlparser::ast::{
     AssignmentTarget, Insert, OnConflictAction, OnInsert, SetExpr, Spanned, TableObject,
 };
+use sqlparser::tokenizer::TokenWithSpan;
+mod column_sources;
 pub(super) mod parsing;
 mod provenance;
+pub(super) mod source_projection;
 mod spans;
 mod targets;
 mod values;
-use provenance::{provenance, syntax_complete};
+use provenance::{provenance, supported_modifiers, syntax_complete};
 
 pub(super) fn project(
     value: &Insert,
     facts: Option<&parsing::ConflictFacts>,
     locations: &Locations<'_>,
+    tokens: &[TokenWithSpan],
 ) -> PostgresSqlInsert {
-    project_inner(value, facts, locations, false)
+    project_inner(value, facts, locations, false, tokens)
 }
 
 /// The query collector owns CTE sources and RETURNING; borrow only the INSERT core.
 pub(super) fn project_cte_core(value: &Insert, locations: &Locations<'_>) -> PostgresSqlInsert {
-    project_inner(value, None, locations, true)
+    project_inner(value, None, locations, true, &[])
 }
 
 fn project_inner(
@@ -32,6 +36,7 @@ fn project_inner(
     facts: Option<&parsing::ConflictFacts>,
     locations: &Locations<'_>,
     cte_core: bool,
+    tokens: &[TokenWithSpan],
 ) -> PostgresSqlInsert {
     let table = match &value.table {
         TableObject::TableName(table) => Some(name(table)),
@@ -45,6 +50,7 @@ fn project_inner(
         && supported_modifiers(value, cte_core)
         && !facts.is_some_and(|facts| facts.unsupported_with);
     let source_span = facts.and_then(|facts| facts.source_span);
+    let delimiters = spans::locate_delimiters(&spans::delimiters(tokens), locations);
     let source = match value.source.as_ref().filter(|_| !cte_core) {
         None => PostgresSqlInsertSource::DefaultValues,
         Some(query) => match query.body.as_ref() {
@@ -54,7 +60,11 @@ fn project_inner(
                     rows: values
                         .rows
                         .iter()
-                        .map(|row| row.iter().map(|expr| expression(expr, locations)).collect())
+                        .map(|row| {
+                            row.iter()
+                                .map(|expr| spans::source_expression(expr, &delimiters, locations))
+                                .collect()
+                        })
                         .collect(),
                     span: locations.span(source_span.unwrap_or_else(|| query.span())),
                 }
@@ -74,6 +84,23 @@ fn project_inner(
                 }
             }
         },
+    };
+    let column_sources = if cte_core {
+        PostgresSqlInsertColumnSources::Unsupported {
+            reason: PostgresSqlInsertColumnSourcesReason::CteSourceDelegated,
+            branch_path: None,
+            row_index: None,
+            expected_columns: None,
+            source_columns: None,
+        }
+    } else {
+        column_sources::project(
+            &value.columns,
+            value.source.as_deref(),
+            &source,
+            &delimiters,
+            locations,
+        )
     };
     let on_conflict = match &value.on {
         Some(OnInsert::OnConflict(conflict)) => {
@@ -164,33 +191,13 @@ fn project_inner(
         alias,
         columns: value.columns.iter().map(name).collect(),
         columns_omitted: value.columns.is_empty(),
+        column_sources,
         source,
         on_conflict,
         span: locations.span(value.span()),
         complete,
         diagnostics,
     }
-}
-
-fn supported_modifiers(value: &Insert, cte_core: bool) -> bool {
-    value.or.is_none()
-        && !value.ignore
-        && !value.overwrite
-        && !value.has_table_keyword
-        && value.assignments.is_empty()
-        && value.partitioned.is_none()
-        && value.after_columns.is_empty()
-        && (value.returning.is_none() || cte_core)
-        && value.output.is_none()
-        && !value.replace_into
-        && value.priority.is_none()
-        && value.insert_alias.is_none()
-        && value.settings.is_none()
-        && value.format_clause.is_none()
-        && value.multi_table_insert_type.is_none()
-        && value.multi_table_into_clauses.is_empty()
-        && value.multi_table_when_clauses.is_empty()
-        && value.multi_table_else_clause.is_none()
 }
 
 pub(super) fn values_unmodified(query: &sqlparser::ast::Query) -> bool {

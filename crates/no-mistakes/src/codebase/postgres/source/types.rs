@@ -80,6 +80,24 @@ pub struct PostgresSqlExpression {
     pub columns: Vec<PostgresSqlName>,
     pub functions: Vec<PostgresSqlFunctionReference>,
     pub root: PostgresSqlExpressionRoot,
+    /// Ordered immediate child expressions; this is a recursive syntactic projection.
+    pub children: Vec<PostgresSqlExpressionChild>,
+    /// False when any expression child could not be projected without loss.
+    pub children_complete: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlExpressionChild {
+    pub role: PostgresSqlExpressionChildRole,
+    pub index: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub argument_name: Option<PostgresSqlIdentifier>,
+    pub sql: String,
+    pub span: Option<PostgresSqlSpan>,
+    pub root: PostgresSqlExpressionChildRoot,
+    pub children: Vec<PostgresSqlExpressionChild>,
+    pub children_complete: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

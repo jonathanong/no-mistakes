@@ -162,7 +162,7 @@ fn unsupported_parser_shapes_never_imply_complete_insert_facts() {
             let sqlparser::ast::Statement::Insert(insert) = statement else {
                 panic!("INSERT expected")
             };
-            let facts = super::super::insert::project(&insert, None, &locations);
+            let facts = super::super::insert::project(&insert, None, &locations, &[]);
             assert!(!facts.complete);
             assert_eq!(facts.diagnostics.len(), 1);
         }

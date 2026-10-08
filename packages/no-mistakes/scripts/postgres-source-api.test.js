@@ -967,3 +967,329 @@ test(
     assert.equal(slice(inserts[3].onConflict.target.operatorClasses[0].span), '"Ops"."TextOps"');
   },
 );
+
+test(
+  "compiled CJS and ESM expose recursive expression roles without changing legacy summaries",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-recursive-expressions.sql");
+    const pending = api.parsePostgresSql({ sql });
+    assert.equal(typeof pending.then, "function");
+    const facts = await pending;
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const assignments = facts.statements[0].insert.onConflict.action.assignments;
+    const [
+      forward,
+      reversed,
+      direct,
+      nested,
+      choice,
+      searched,
+      wrapped,
+      opaque,
+      wildcard,
+      windowed,
+    ] = assignments;
+    const names = (expression) =>
+      expression.children.map((child) =>
+        child.root.name?.parts.map((part) => part.identity).join("."),
+      );
+    assert.deepEqual(names(forward.expression), [
+      "target.value",
+      "CURRENT_TIMESTAMP".toLowerCase(),
+    ]);
+    assert.deepEqual(names(reversed.expression), ["current_timestamp", "target.value"]);
+    assert.deepEqual(
+      forward.expression.children.map((child) => [child.role, child.index]),
+      [
+        ["argument", 0],
+        ["argument", 1],
+      ],
+    );
+    assert.equal(forward.expression.childrenComplete, true);
+    assert.equal(forward.expression.root.arguments[0].root.kind, "columnReference");
+    assert.equal(direct.provenance, "excludedColumn");
+    assert.equal(direct.expression.root.kind, "columnReference");
+    assert.deepEqual(direct.expression.children, []);
+    assert.equal(nested.expression.root.kind, "binary");
+    assert.deepEqual(
+      nested.expression.children.map((child) => child.role),
+      ["binaryLeft", "binaryRight"],
+    );
+    assert.equal(nested.expression.childrenComplete, true);
+    // Legacy syntax completeness is separate from the additive recursive contract.
+    assert.equal(nested.complete, false);
+    assert.deepEqual(
+      nested.expression.columns.map((name) => name.parts.map((part) => part.identity).join(".")),
+      ["excluded.value", "target.value"],
+    );
+    assert.deepEqual(
+      nested.expression.children[0].children[0].children.map((child) =>
+        child.root.name.parts.map((part) => part.identity).join("."),
+      ),
+      ["excluded.value", "target.value"],
+    );
+    assert.deepEqual(
+      choice.expression.children.map((child) => [child.role, child.index]),
+      [
+        ["caseOperand", null],
+        ["caseWhenCondition", 0],
+        ["caseWhenResult", 0],
+        ["caseWhenCondition", 1],
+        ["caseWhenResult", 1],
+        ["caseElse", null],
+      ],
+    );
+    assert.deepEqual(
+      searched.expression.children.map((child) => child.role),
+      ["caseWhenCondition", "caseWhenResult"],
+    );
+    assert.equal(choice.expression.childrenComplete, true);
+    assert.equal(wrapped.expression.children[0].role, "unaryOperand");
+    for (const assignment of [opaque, wildcard, windowed])
+      assert.equal(assignment.expression.childrenComplete, false);
+    const slice = (span) =>
+      Buffer.from(sql).subarray(span.start.offset, span.end.offset).toString();
+    assert.equal(
+      slice(nested.expression.children[0].span),
+      "lower(COALESCE(EXCLUDED.value, target.value))",
+    );
+    assert.equal(
+      slice(nested.expression.children[0].children[0].span),
+      "COALESCE(EXCLUDED.value, target.value)",
+    );
+    assert.equal(slice(nested.expression.children[1].span), "upper('λ')");
+    const named = assignments[10].expression;
+    assert.deepEqual(
+      named.children.map((child) => [child.index, child.argumentName.identity]),
+      [
+        [0, "first_arg"],
+        [1, "second_arg"],
+      ],
+    );
+    assert.equal(named.childrenComplete, true);
+    assert.equal(assignments[11].expression.childrenComplete, false);
+    assert.equal(assignments[12].provenance, "targetColumn");
+    assert.equal(assignments[12].expression.root.kind, "columnReference");
+    assert.deepEqual(assignments[12].expression.children, []);
+    assert.equal(assignments[12].expression.childrenComplete, true);
+    assert.equal(
+      slice(wrapped.expression.span),
+      "-(CAST((COALESCE(target.id, EXCLUDED.id)) AS integer))",
+    );
+    assert.equal(wrapped.complete, true);
+    const wrappedOperand = wrapped.expression.children[0];
+    if (wrappedOperand.span) {
+      assert.equal(
+        slice(wrappedOperand.span),
+        "(CAST((COALESCE(target.id, EXCLUDED.id)) AS integer))",
+      );
+    } else {
+      assert.equal(wrapped.expression.childrenComplete, false);
+    }
+  },
+);
+
+test(
+  "compiled CJS and ESM map every explicit INSERT column across rows and set branches",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-column-sources.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const [values, sets, mixed] = facts.statements.map((statement) => statement.insert);
+    for (const insert of [values, sets, mixed]) {
+      assert.equal(insert.columnSources.kind, "mapped");
+      assert.equal(insert.columnSources.complete, true);
+      assert.deepEqual(
+        insert.columnSources.columns.map((column) => [
+          column.columnIndex,
+          column.column.parts[0].identity,
+        ]),
+        [
+          [0, "id"],
+          [1, "value"],
+        ],
+      );
+    }
+    const rows = values.columnSources.columns[1].sources;
+    assert.deepEqual(
+      rows.map((source) => [source.kind, source.branchPath, source.rowIndex]),
+      [
+        ["values", [], 0],
+        ["values", [], 1],
+      ],
+    );
+    assert.deepEqual(
+      rows.map((source) => source.expression),
+      values.source.rows.map((row) => row[1]),
+    );
+    assert.deepEqual(
+      sets.columnSources.columns[1].sources.map((source) => source.branchPath),
+      [[0], [1, 0], [1, 1]],
+    );
+    assert.deepEqual(
+      mixed.columnSources.columns[1].sources.map((source) => [source.kind, source.branchPath]),
+      [
+        ["values", [0]],
+        ["select", [1]],
+      ],
+    );
+    const slice = (span) =>
+      Buffer.from(sql).subarray(span.start.offset, span.end.offset).toString();
+    assert.equal(slice(rows[0].expression.span), "COALESCE('λ', lower('first'))");
+    assert.equal(
+      slice(sets.columnSources.columns[1].sources[0].expression.span),
+      "COALESCE('λ', lower('left'))",
+    );
+    assert.equal(slice(sets.columnSources.columns[0].sources[0].expression.span), "1");
+    assert.equal(slice(sets.columnSources.columns[1].sources[2].expression.span), "upper('right')");
+    const typedSource = facts.statements[4].insert.columnSources.columns[1].sources[0].expression;
+    if (typedSource.span) {
+      assert.equal(slice(typedSource.span), "DATE '2026-10-08'");
+    } else {
+      assert.equal(typedSource.childrenComplete, false);
+      assert.equal(facts.statements[4].insert.columnSources.complete, false);
+    }
+    for (const [index, expected] of [
+      [5, "sum(1) OVER ()"],
+      [6, "-(1) + 2"],
+    ]) {
+      const insert = facts.statements[index].insert;
+      const expression = insert.columnSources.columns[1].sources[0].expression;
+      if (expression.span) assert.equal(slice(expression.span), expected);
+      else assert.equal(expression.childrenComplete, false);
+      assert.equal(insert.columnSources.complete, false);
+    }
+    const unarySource = facts.statements[3].insert.columnSources.columns[1].sources[0].expression;
+    if (unarySource.span) {
+      assert.equal(slice(unarySource.span), "-(CAST((COALESCE(1, 2)) AS integer))");
+    } else {
+      assert.equal(unarySource.childrenComplete, false);
+      assert.equal(facts.statements[3].insert.columnSources.complete, false);
+    }
+  },
+);
+
+test(
+  "compiled source lineage reports precise unsupported forms and malformed recovery",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-column-sources-unsupported.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const maps = facts.statements.map((statement) => statement.insert.columnSources);
+    assert.deepEqual(
+      maps.slice(0, 8).map((mapping) => [mapping.kind, mapping.reason]),
+      [
+        ["unsupported", "columnsOmitted"],
+        ["unsupported", "columnsOmitted"],
+        ["unsupported", "wildcardProjection"],
+        ["unsupported", "wildcardProjection"],
+        ["unsupported", "sourceArityMismatch"],
+        ["unsupported", "sourceArityMismatch"],
+        ["unsupported", "duplicateTargetColumn"],
+        ["unsupported", "sourceArityMismatch"],
+      ],
+    );
+    assert.deepEqual(
+      [maps[4].branchPath, maps[4].rowIndex, maps[4].expectedColumns, maps[4].sourceColumns],
+      [[], 1, 2, 1],
+    );
+    assert.deepEqual(
+      [maps[7].branchPath, maps[7].expectedColumns, maps[7].sourceColumns],
+      [[1], 2, 1],
+    );
+    assert.equal(maps[9].kind, "unsupported");
+    assert.equal(maps[9].reason, "setOperationByName");
+    assert.deepEqual(maps[9].branchPath, []);
+    assert.equal(maps[10].reason, "sourceArityMismatch");
+    assert.deepEqual(
+      [maps[10].branchPath, maps[10].rowIndex, maps[10].expectedColumns, maps[10].sourceColumns],
+      [[1], 0, 2, 1],
+    );
+    assert.equal(maps[8].kind, "mapped");
+    assert.equal(maps[8].complete, false);
+    assert.equal(maps[8].columns[1].sources[0].expression.childrenComplete, false);
+    const invalidSql = fixture("insert-recursive-invalid.sql");
+    const invalid = await api.parsePostgresSql({ sql: invalidSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: invalidSql }), invalid);
+    assert.equal(invalid.diagnostics.length, 1);
+    assert.deepEqual(
+      invalid.statements.map((statement) => statement.kind),
+      ["select"],
+    );
+    assert.equal(invalid.statements[0].sql, "SELECT 42 AS recovered;");
+  },
+);
+
+test(
+  "compiled recursive source spans retain wrapper and decoded EXECUTE ownership",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-recursive-nested.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const wrapped = facts.statements[0].wrapper.statements[0].insert;
+    const execute = facts.statements[1].block.statements[0].execute;
+    const decoded = execute.statements[0].insert;
+    for (const [owner, insert] of [
+      [sql, wrapped],
+      [execute.decodedSql, decoded],
+    ]) {
+      const expression = insert.columnSources.columns[1].sources[0].expression;
+      const slice = (span) =>
+        Buffer.from(owner).subarray(span.start.offset, span.end.offset).toString();
+      assert.equal(expression.childrenComplete, true);
+      assert.equal(slice(expression.span), "COALESCE(lower('λ'), CURRENT_TIMESTAMP)");
+      assert.equal(slice(expression.children[0].span), "lower('λ')");
+      assert.equal(slice(expression.children[0].children[0].span), "'λ'");
+    }
+  },
+);
+
+test(
+  "compiled recursive zero-argument calls retain trivia boundaries or explicit uncertainty",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-recursive-call-trivia.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const expression = facts.statements[0].insert.onConflict.action.assignments[0].expression;
+    const slice = (span) =>
+      Buffer.from(sql).subarray(span.start.offset, span.end.offset).toString();
+    assert.equal(slice(expression.span), "COALESCE(items.value, now /*keep*/ ())");
+    const partial = facts.statements[2].insert.onConflict.action.assignments[0].expression;
+    assert.equal(slice(partial.children[1].span), "EXCLUDED.value");
+    const exprNamed = facts.statements[3].insert.onConflict.action.assignments[0].expression;
+    assert.equal(exprNamed.childrenComplete, false);
+    assert.equal(exprNamed.children[0].childrenComplete, false);
+    assert.equal(exprNamed.children[0].root.argumentsComplete, false);
+    assert.equal(slice(exprNamed.children[1].span), "target.value");
+    const child = expression.children[1];
+    if (child.span) assert.equal(slice(child.span), "now /*keep*/ ()");
+    else assert.equal(expression.childrenComplete, false);
+    const mapping = facts.statements[1].insert.columnSources;
+    const source = mapping.columns[1].sources[0].expression;
+    if (source.span) assert.equal(slice(source.span), "now /*keep*/ ()");
+    else {
+      assert.equal(source.childrenComplete, false);
+      assert.equal(mapping.complete, false);
+    }
+  },
+);
