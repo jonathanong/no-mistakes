@@ -120,6 +120,7 @@ export interface PostgresSqlIndexKey {
 export interface PostgresSqlIndex {
   name: PostgresSqlName | null;
   table: PostgresSqlName;
+  only: boolean;
   method: string;
   unique: boolean;
   nullsDistinct: boolean;

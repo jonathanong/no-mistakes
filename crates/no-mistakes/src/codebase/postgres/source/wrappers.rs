@@ -9,7 +9,7 @@ use sqlparser::{
 };
 mod atomic;
 mod atomic_child;
-mod child;
+pub(super) mod child;
 mod header;
 pub(super) use header::child_start as prepared_child_start;
 mod options;
@@ -29,6 +29,7 @@ pub(super) struct Context<'a, 's> {
     pub fetch: &'a [crate::codebase::postgres::parse::fetch_expression::Clause],
     pub generated: &'a [Span],
     pub markers: &'a [sqlparser::tokenizer::Location],
+    pub index_only: Vec<sqlparser::tokenizer::Location>,
     pub comments: std::cell::RefCell<super::metadata_preparation::Comments>,
     pub recursive_views: &'a RecursiveViews,
 }

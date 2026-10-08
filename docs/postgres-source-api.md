@@ -47,10 +47,14 @@ raw parser nodes or internal imports.
   retain their SQL spelling instead of pretending to implement migration policy.
 - CREATE INDEX facts retain relation, method, ordered expressions, operator
   classes, INCLUDE columns, uniqueness, NULLS DISTINCT, options and predicates.
+  PostgreSQL's `ON ONLY relation` form is retained as `index.only: true`.
   `structuralIdentity` excludes the index name and source locations, folds
   unquoted expression names, and resolves sort defaults: ascending implies
   NULLS LAST, descending implies NULLS FIRST. Quoting, string contents,
-  expressions, predicates and meaningful ordering differences remain distinct.
+  expressions, predicates, the `ONLY` relation modifier and meaningful ordering
+  differences remain distinct.
+  The `only` discriminator is added to structural identity only when true, so
+  ordinary index identities keep their existing serialized form.
   Identity is versioned with the facts; it is not a promise of catalog-assisted
   semantic equivalence or arbitrary SQL algebra simplification.
 - `CREATE RECURSIVE VIEW` and `CREATE OR REPLACE RECURSIVE VIEW`, including

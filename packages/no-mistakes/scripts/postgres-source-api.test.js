@@ -62,6 +62,76 @@ test(
 );
 
 test(
+  "compiled CJS and ESM expose CREATE INDEX ONLY metadata without false positives",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const basicSql = fixture("create-index-only-basic.sql");
+    const basic = await cjs.parsePostgresSql({ sql: basicSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: basicSql }), basic);
+    assert.deepEqual(basic.diagnostics, []);
+    assert.equal(basic.statements.length, 1);
+    assert.equal(basic.statements[0].kind, "createIndex");
+    assert.equal(basic.statements[0].index.only, true);
+    assert.equal(basic.statements[0].index.table.parts[0].identity, "example");
+    assert.equal(basic.statements[0].index.keys[0].expression.sql, "id");
+    const sql = fixture("create-index-only.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.equal(facts.diagnostics.length, 4);
+    assert.deepEqual(
+      facts.statements.map(({ ordinal }) => ordinal),
+      [0, 1, 3, 4, 5, 7, 8, 9, 12],
+    );
+    assert.deepEqual(
+      facts.statements.map(({ kind }) => kind),
+      [
+        "createIndex",
+        "createIndex",
+        "createIndex",
+        "createIndex",
+        "createIndex",
+        "select",
+        "createView",
+        "wrapper",
+        "createIndex",
+      ],
+    );
+    assert.equal(facts.statements[0].index.only, true);
+    assert.equal(facts.statements[0].index.table.parts[0].identity, "example");
+    assert.equal(facts.statements[0].index.keys[0].expression.sql, "id");
+    const qualified = facts.statements[1].index;
+    assert.equal(qualified.only, true);
+    assert.equal(qualified.unique, true);
+    assert.deepEqual(
+      qualified.table.parts.map(({ identity }) => identity),
+      ["app", "Accounts"],
+    );
+    assert.equal(qualified.method, "gin");
+    assert.equal(qualified.predicate.sql, "active");
+    assert.equal(facts.statements[2].index.only, false);
+    assert.equal(facts.statements[2].index.table.parts[0].identity, "ONLY");
+    assert.equal(facts.statements[3].index.keys[0].expression.sql, "ONLY");
+    assert.equal(facts.statements[4].index.predicate.sql, "ONLY IS TRUE");
+    assert.match(facts.statements[6].view.query, /ON ONLY = b\.id/);
+    assert.equal(facts.statements[7].wrapper.statements[0].index.only, true);
+    assert.equal(facts.statements[8].index.only, false);
+    assert.equal(
+      facts.statements[8].index.structuralIdentity,
+      '{"table":[["example",false]],"method":"btree","unique":false,"nullsDistinct":true,"keys":[["{\\"Identifier\\":{\\"value\\":\\"id\\",\\"quote_style\\":null}}",true,false,null]],"include":[],"predicate":null,"options":[]}',
+    );
+    const bytes = Buffer.from(sql);
+    for (const statement of facts.statements) {
+      assert.equal(
+        bytes.subarray(statement.span.start.offset, statement.span.end.offset).toString(),
+        statement.sql,
+      );
+    }
+  },
+);
+
+test(
   "compiled pure-source SQL API exposes async CJS and ESM facts without a project root",
   {
     skip: !compiled,

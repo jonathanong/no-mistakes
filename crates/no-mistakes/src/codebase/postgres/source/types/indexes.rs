@@ -5,6 +5,7 @@ use super::*;
 pub struct PostgresSqlIndex {
     pub name: Option<PostgresSqlName>,
     pub table: PostgresSqlName,
+    pub only: bool,
     pub method: String,
     pub unique: bool,
     pub nulls_distinct: bool,

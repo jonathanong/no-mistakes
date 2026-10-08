@@ -110,6 +110,8 @@ facts for `CREATE [OR REPLACE] RECURSIVE VIEW`. A source array returns
 facts in input order. Expression roots and ordered direct call arguments are
 typed, including cast/parenthesis wrappers and bare SQL value functions. DO bodies expose typed IF/ELSIF/ELSE branch conditions
 and nested DDL source occurrences, without claiming that any branch executes.
+CREATE INDEX facts retain PostgreSQL's `ON ONLY relation` modifier as
+`index.only` in the async API and declarations.
 This pure source API accepts no invocation-lock options.
 
 Typed comment metadata preserves routine signatures, and ALTER INDEX metadata

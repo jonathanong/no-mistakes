@@ -866,6 +866,7 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(declarations, /export type \* from "\.\/postgres-drop-types";/);
   assert.match(declarations, /schemaVersion: 1;/);
   assert.match(declarations, /structuralIdentity: string;/);
+  assert.match(declarations, /export interface PostgresSqlIndex \{[\s\S]*?only: boolean;/);
   assert.match(declarations, /functions: PostgresSqlFunctionReference\[\];/);
   assert.match(declarations, /kind: "validateConstraint"; name: PostgresSqlIdentifier/);
   assert.match(declarations, /dependenciesComplete: boolean;/);
