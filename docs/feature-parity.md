@@ -708,3 +708,8 @@ EXPLAIN distinguishes analysis execution, PREPARE stays non-executing, and SQL
 BEGIN ATOMIC function declarations retain non-executing child source occurrences.
 Unsupported body or option projections are explicitly incomplete; see
 [statement wrappers](postgres-source-api.md#statement-wrappers-and-execution-context).
+
+Literal PL/pgSQL `EXECUTE` nested SQL facts have Rust/native and asynchronous
+Node ESM/CJS parity, including decoded child spans and original wrapper
+provenance. Dynamic expressions remain explicitly unsupported; see the
+[PostgreSQL source API](postgres-source-api.md).

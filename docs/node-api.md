@@ -789,3 +789,15 @@ completeness and exact SQL slices are described in [PostgreSQL source facts](pos
 non-executing declaration wrapper on CREATE FUNCTION facts, including supported
 SQL BEGIN ATOMIC child occurrences. See [statement wrappers](postgres-source-api.md#statement-wrappers-and-execution-context)
 for completeness, diagnostics, and ancestor execution semantics.
+
+Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
+`kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload. Dollar-quoted,
+standard single-quoted (doubled quotes), and PostgreSQL `E` escape strings are
+decoded by the prepared tokenizer and parsed through the same SQL fact pipeline.
+The enclosing statement and `literalSpan` retain original source coordinates;
+`decodedSql` owns all child statement, expression, and diagnostic coordinates.
+Children preserve order and typed facts (including INSERT), without exposing an
+AST or implying execution. Inspect `complete` and diagnostics: malformed nested
+SQL remains diagnostic; dynamic variables, concatenation, `format`, and EXECUTE
+modifiers remain unsupported `other` occurrences. This adds no SQL execution or
+replay policy. `parsePostgresSql` retains its asynchronous single/batch API.

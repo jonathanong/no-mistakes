@@ -49,7 +49,9 @@ pub(super) fn project(
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
             let insert_facts = super::insert::parsing::normalize(statement);
-            let mut facts = if let Some(facts) = wrapper_context.take_comment(owned[0].span.start) {
+            let mut facts = if let Some(facts) = wrapper_context.take_execute(owned[0].span.start) {
+                facts?
+            } else if let Some(facts) = wrapper_context.take_comment(owned[0].span.start) {
                 facts.0?
             } else if let Statement::If(nested) = statement {
                 project(

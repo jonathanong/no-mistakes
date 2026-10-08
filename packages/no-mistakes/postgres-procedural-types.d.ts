@@ -26,4 +26,16 @@ export interface PostgresSqlConditionalBranch {
 }
 
 /** Original body source slices retain this enclosing literal encoding. */
-export type PostgresSqlBodyEncoding = "dollarQuoted" | "singleQuoted";
+export type PostgresSqlBodyEncoding = "dollarQuoted" | "singleQuoted" | "escapedString";
+
+/** Wrapper literalSpan uses enclosing source coordinates. All child spans and
+ * diagnostics use decodedSql coordinates, including nested expression spans.
+ * Source occurrences never imply that SQL executes. */
+export interface PostgresSqlLiteralExecute {
+  literalSpan: PostgresSqlSpan;
+  bodyEncoding: PostgresSqlBodyEncoding;
+  decodedSql: string;
+  statements: PostgresSqlStatement[];
+  diagnostics: PostgresSqlDiagnostic[];
+  complete: boolean;
+}
