@@ -702,3 +702,9 @@ PostgreSQL pure-source Rust and async Node APIs project INSERT/UPDATE/DELETE/MER
 CTE bodies through `query.nestedStatements`, including source provenance, typed
 RETURNING/actions and explicit incomplete children. CJS and ESM use the same
 native projection. This surface reports syntax without executing SQL.
+
+PostgreSQL source wrapper facts have Rust and asynchronous Node ESM/CJS parity:
+EXPLAIN distinguishes analysis execution, PREPARE stays non-executing, and SQL
+BEGIN ATOMIC function declarations retain non-executing child source occurrences.
+Unsupported body or option projections are explicitly incomplete; see
+[statement wrappers](postgres-source-api.md#statement-wrappers-and-execution-context).

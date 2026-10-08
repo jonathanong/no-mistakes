@@ -23,6 +23,7 @@ pub(super) fn collect_program(
         diagnostics: Vec::new(),
     };
     super::adjacent_strings::prepare(&mut prepared.tokens);
+    super::wrappers::prepare(&mut prepared.tokens);
     ddl::prepare_trigger_arguments(&mut prepared.tokens);
     let generated = super::generated::prepare(&mut prepared.tokens);
     let fetch_expressions =
@@ -35,11 +36,16 @@ pub(super) fn collect_program(
         Vec::new()
     };
     let parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
-    let (mut parser, mut comments) = if depth > 0 {
-        super::metadata_preparation::prepare(parser, locations)
-    } else {
-        (parser, super::metadata_preparation::Comments::new())
-    };
+    let (mut parser, comments) = super::metadata_preparation::prepare(parser, locations);
+    let wrapper_context = super::wrappers::Context::new(
+        source,
+        locations,
+        &prepared.recursive_views,
+        &fetch_expressions,
+        &generated,
+        &conflict_markers,
+        comments,
+    );
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
         if parser.consume_token(&Token::SemiColon) {
@@ -47,15 +53,17 @@ pub(super) fn collect_program(
         }
         let start = parser.peek_token().span.start;
         let start_index = parser.index();
-        let parsed = if let Some(facts) = comments.remove(&start) {
+        let parsed = if let Some(facts) = wrapper_context.take_comment(start) {
             while !matches!(parser.peek_token().token, Token::SemiColon | Token::EOF) {
                 parser.next_token();
             }
-            facts
+            facts.0
         } else if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
         } else if super::metadata::starts(&parser) {
             super::metadata::collect(&mut parser, locations)
+        } else if super::wrappers::starts(&parser) {
+            Ok(super::wrappers::collect(&mut parser, &wrapper_context))
         } else {
             super::insert::parsing::parse(&mut parser, &conflict_markers)
                 .map_err(|error| error.to_string())
@@ -74,6 +82,15 @@ pub(super) fn collect_program(
                         &generated,
                         parser.token_at(parser.index().saturating_sub(1)).span.end,
                     );
+                    if let Statement::CreateFunction(value) = &statement {
+                        return Ok(PostgresSqlStatementKind::CreateFunction {
+                            function: super::wrappers::function(
+                                value,
+                                &mut parser,
+                                &wrapper_context,
+                            ),
+                        });
+                    }
                     if let Statement::Insert(value) = &statement {
                         return Ok(PostgresSqlStatementKind::Insert {
                             insert: Box::new(super::insert::project(
@@ -97,7 +114,7 @@ pub(super) fn collect_program(
                             locations,
                             &generated,
                             &prepared.recursive_views,
-                            &mut comments,
+                            &wrapper_context,
                         )
                     } else {
                         let tables =
@@ -147,7 +164,7 @@ pub(super) fn collect_program(
         let end = crate::codebase::postgres::parse::fetch_expression::source_end(
             &fetch_expressions,
             start,
-            end,
+            wrapper_context.source_end(start, end),
         );
         let Some(span) = locations.span(sqlparser::tokenizer::Span { start, end }) else {
             // Parser compatibility rewrites can introduce synthetic token positions.
@@ -160,9 +177,7 @@ pub(super) fn collect_program(
             continue;
         };
         if let Some(mut facts) = facts {
-            if let PostgresSqlStatementKind::Insert { insert } = &mut facts {
-                insert.span = Some(span.clone());
-            }
+            super::wrappers::finalize(&mut facts, &span);
             if matches!(&facts, PostgresSqlStatementKind::CreateView { view } if !view.dependencies_complete)
             {
                 result.diagnostics.push(PostgresSqlDiagnostic { message: "View TABLE-arm dependencies have ambiguous source identity; dependencies are incomplete".into(), span: Some(span.clone()) });
@@ -192,16 +207,4 @@ pub(super) fn collect_program(
     result
 }
 
-fn recover(parser: &mut Parser<'_>, markers: &[sqlparser::tokenizer::Location]) {
-    loop {
-        let token = parser.peek_token();
-        let boundary =
-            token.token == Token::SemiColon && markers.binary_search(&token.span.start).is_err();
-        if boundary || token.token == Token::EOF {
-            break;
-        }
-        // Synthetic conflict delimiters belong to this failed statement, not
-        // to the next ordinal. Only an original semicolon ends recovery.
-        parser.next_token();
-    }
-}
+pub(super) use super::recovery::recover;

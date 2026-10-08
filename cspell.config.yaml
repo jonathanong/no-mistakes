@@ -13,6 +13,7 @@ ignorePaths:
 words:
   - ABBA
   - Actix
+  - ANALYSE
   - arm64
   - aspnet
   - asynq

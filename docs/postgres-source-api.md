@@ -117,7 +117,7 @@ All branches describe possible source occurrences; the API does not evaluate
 conditions or claim that their DDL executes. Declarations, loops, exception
 handlers, other procedural languages and escape-string DO bodies remain
 explicitly unsupported; no DDL is guessed behind unsupported control flow. Ordinary syntax errors preserve
-parseable neighboring body statements. Function bodies remain opaque.
+parseable neighboring body statements. String function bodies remain opaque; SQL-language BEGIN ATOMIC declaration wrappers expose child source occurrences without implying execution.
 
 A parser compatibility normalization with a source boundary that cannot be
 mapped (for example a synthetic COPY-data terminator) produces a diagnostic
@@ -327,9 +327,11 @@ INSERT children also retain existing conflict diagnostics. Source locking clause
 projection and explicitly make the INSERT child and query incomplete.
 
 ```js
-const [statement] = (await parsePostgresSql({
-  sql: "WITH a AS (INSERT INTO target (id) VALUES (1) RETURNING id) SELECT id FROM a",
-})).statements;
+const [statement] = (
+  await parsePostgresSql({
+    sql: "WITH a AS (INSERT INTO target (id) VALUES (1) RETURNING id) SELECT id FROM a",
+  })
+).statements;
 const child = statement.query.nestedStatements[0];
 console.log(child.kind, child.cteId, child.returning); // insert, 0, typed items
 ```
@@ -405,3 +407,88 @@ Malformed routine defaults, multiple comment targets, missing index targets,
 and malformed SQL such as `CREATE TABLE invoices (amount_minor_units BIGINT,,);`
 remain diagnostics without successful facts. Recovery preserves the next
 independent statement even when a missing value consumes its semicolon.
+## Statement wrappers and execution context
+
+EXPLAIN and PREPARE emit `kind: "wrapper"` with a named `PostgresSqlWrapper`.
+Its `wrapperKind` is `explain` or `prepare`; `statements` contains ordered child
+source occurrences, with original SQL, byte spans, and local ordinals. The
+wrapper has its own span, completeness, and diagnostics. Execution is explicit:
+
+- Plain EXPLAIN is `nonExecuting`.
+- EXPLAIN ANALYZE is `executesForAnalysis`. The ANALYZE option accepts TRUE/ON/1,
+  FALSE/OFF/0, and an omitted value meaning TRUE. Quoted boolean strings accept true/false/on/off, but quoted numeric strings
+  remain invalid. Signed integer +1, +0, and -0 have the same boolean meaning;
+  other signed numbers remain invalid. Quoted option names preserve exact lowercase identity.
+- PREPARE is `nonExecuting`; preparing a statement does not execute it.
+- Unsupported or ambiguous EXPLAIN options are `unknown` and incomplete.
+  Repeated options use the final value of each name, including ANALYSE as an
+  alias of ANALYZE. Every occurrence must still have a valid value. Incompatible
+  final ANALYZE/GENERIC_PLAN or WAL/TIMING/SERIALIZE settings fail closed.
+
+Complete EXPLAIN/PREPARE child projection currently covers INSERT and query
+facts. Other parsed children retain their source facts but make the wrapper
+incomplete; for example, CREATE TABLE AS does not expose its query in the existing
+CREATE TABLE contract. SELECT INTO also remains incomplete because target-creation facts are not
+represented by the existing query contract. Existing parser compatibility restoration and partial
+conflict predicates also apply to supported top-level and atomic-body wrapped children.
+Conditional wrappers reuse their enclosing AST's WITH INSERT normalization and
+source-query provenance. Partial-index conflict predicates inside procedural
+conditional grammar remain unsupported and produce incomplete body diagnostics.
+Parse failures
+remain typed incomplete wrappers and recover at original statement delimiters.
+
+CREATE FUNCTION retains `kind: "createFunction"` and all existing function
+fields, adding `function.wrapper` with `wrapperKind: "functionDeclaration"` and
+`execution: "nonExecuting"`. SQL-language BEGIN ATOMIC bodies expose ordered
+source occurrences through the same prepared parser. The body is bounded by its
+matching END; nested CASE, comments, and string literals retain original spans.
+Transaction BEGIN does not introduce a nested atomic body or consume following statements.
+Unreserved BEGIN/ATOMIC names and CASE/END labels retain identifier meaning;
+function parameters and qualified names do not change the body boundary.
+Bare END labels before query continuation tokens also preserve the declaration
+boundary; where the native child grammar cannot project them, the declaration
+stays explicitly incomplete. An ambiguous END without a preceding child delimiter
+remains a recovery boundary rather than inferring unsupported label syntax.
+Opaque string bodies and unsupported languages or body forms remain declarations
+with incomplete child facts and localized diagnostics. The wrapper's incomplete
+status describes its child projection, not the existing function signature.
+
+Execution context belongs to the enclosing hierarchy: a child INSERT inside a
+function declaration or PREPARE is a source occurrence, never an executed INSERT
+from that declaration. Nested wrappers retain their own syntax classification;
+consumers must also honor ancestor execution context. The parser never executes
+SQL, interprets function behavior, resolves prepared plans, exports raw parser
+ASTs, or applies replay policy. Wrapper projection has a bounded nesting limit.
+
+Supported EXPLAIN options include `SERIALIZE NONE`, `TEXT`, or `BINARY`; omitted
+SERIALIZE values mean TEXT. Enabled SERIALIZE, WAL, and TIMING require ANALYZE.
+Invalid combinations report unknown execution and incomplete child coverage.
+Nested atomic function declarations remain one child declaration occurrence, with
+bounded nesting and their own non-executing context.
+
+Conditional IF/ELSE branches retain the same typed EXPLAIN/PREPARE wrappers.
+SQL atomic bodies accept an omitted language or an unquoted SQL name; quoted
+language identifiers preserve case, so `"sql"` is supported and `"SQL"` is not.
+A conflicting AS body followed by BEGIN ATOMIC remains incomplete and retains
+its original `bodySql`. PostgreSQL FORMAT options require parentheses; bare
+legacy FORMAT forms report unknown execution and incomplete facts.
+
+`EXPLAIN` accepts PostgreSQL's `ANALYSE` alias and `SERIALIZE OFF`. FORMAT and
+SERIALIZE identifier values fold to lowercase; quoted string values retain their
+case, so unsupported values such as `'JSON'` and `'TEXT'` remain incomplete.
+Plain, escape-prefixed, Unicode, and dollar-quoted option strings reuse their
+prepared decoded values with the same case-sensitive comparisons.
+Conditional wrapper children use the same compatibility restoration as
+top-level wrappers, including original generated-column storage modes.
+
+Atomic declarations and conditional wrappers share prepared COMMENT validation,
+anchored to statement and wrapper-child positions so query table or alias names
+such as `JOIN comment ON ...` retain their query identity,
+including routine signatures, Unicode escapes, and string continuations.
+Malformed metadata leaves its declaration incomplete and retains independent
+following statements. EXPLAIN with a COMMENT child is invalid PostgreSQL and
+remains `unknown`/incomplete; PREPARE with that child remains non-executing and
+incomplete. Child SQL and spans retain the full original metadata occurrence.
+
+The legacy `EXPLAIN ANALYSE` spelling shares the same prepared token normalization
+in top-level statements, conditional branches, and atomic declarations.

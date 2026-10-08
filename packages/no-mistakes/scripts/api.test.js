@@ -1174,3 +1174,31 @@ test("data-modifying CTE facts expose named exported declaration contracts", () 
   ])
     assert.match(child, new RegExp(`\\b${field}:`));
 });
+
+test("SQL wrappers expose named execution and child-source contracts", () => {
+  const wrappers = readFileSync(join(packageRoot, "postgres-wrapper-types.d.ts"), "utf8");
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const functions = readFileSync(join(packageRoot, "postgres-function-types.d.ts"), "utf8");
+  assert.match(
+    wrappers,
+    /export type PostgresSqlExecution = "nonExecuting" \| "executesForAnalysis" \| "unknown"/,
+  );
+  assert.match(
+    wrappers,
+    /export type PostgresSqlWrapperKind = "explain" \| "prepare" \| "functionDeclaration"/,
+  );
+  assert.match(wrappers, /export interface PostgresSqlWrapper/);
+  for (const field of [
+    "wrapperKind: PostgresSqlWrapperKind",
+    "execution: PostgresSqlExecution",
+    "statements: PostgresSqlStatement[]",
+    "span: PostgresSqlSpan | null",
+    "complete: boolean",
+    "diagnostics: PostgresSqlDiagnostic[]",
+  ]) {
+    assert.ok(wrappers.includes(field));
+  }
+  assert.match(source, /export type \* from "\.\/postgres-wrapper-types"/);
+  assert.match(source, /kind: "wrapper"; wrapper: PostgresSqlWrapper/);
+  assert.match(functions, /wrapper: PostgresSqlWrapper/);
+});

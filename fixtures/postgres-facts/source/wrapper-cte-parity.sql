@@ -1,0 +1,3 @@
+EXPLAIN WITH changed AS (INSERT INTO target VALUES (1) RETURNING id) SELECT id FROM changed;
+PREPARE cte_plan AS WITH changed AS (UPDATE target SET id = 2 RETURNING id) SELECT id FROM changed;
+CREATE FUNCTION cte_body() RETURNS int BEGIN ATOMIC WITH changed AS (DELETE FROM target RETURNING id) SELECT id FROM changed; END;

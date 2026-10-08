@@ -48,6 +48,7 @@ pub struct PostgresSqlTrigger {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlFunction {
+    pub wrapper: PostgresSqlWrapper,
     pub name: PostgresSqlName,
     pub arguments: Vec<PostgresSqlFunctionArgument>,
     pub return_type: Option<PostgresSqlType>,

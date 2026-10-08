@@ -1,3 +1,5 @@
+import type { PostgresSqlWrapper } from "./postgres-wrapper-types";
+export type * from "./postgres-wrapper-types";
 import type { PostgresSqlFunction } from "./postgres-function-types";
 import type { PostgresSqlComment, PostgresSqlAlterIndex } from "./postgres-metadata-types";
 export type * from "./postgres-metadata-types";
@@ -160,6 +162,7 @@ export interface PostgresSqlTrigger {
 export type PostgresSqlStatementKind =
   | { kind: "comment"; comment: PostgresSqlComment }
   | { kind: "alterIndex"; index: PostgresSqlAlterIndex }
+  | { kind: "wrapper"; wrapper: PostgresSqlWrapper }
   | { kind: "insert"; insert: PostgresSqlInsert }
   | { kind: "select"; query: PostgresSqlQuery }
   | {

@@ -17,12 +17,32 @@ pub(in crate::codebase::postgres::source) struct ConflictFacts {
     pub unsupported_with: bool,
 }
 
+/// Normalize a child already owned by the enclosing conditional AST.
+/// The temporary sentinel is replaced before projection and is never emitted.
+pub(in crate::codebase::postgres::source) fn normalize(
+    statement: &mut Statement,
+) -> Option<ConflictFacts> {
+    let original = std::mem::replace(
+        statement,
+        Statement::Commit {
+            chain: false,
+            end: false,
+            modifier: None,
+        },
+    );
+    let (normalized, facts) = with::normalize(original);
+    *statement = normalized;
+    facts
+}
+
 pub(in crate::codebase::postgres::source) fn parse(
     parser: &mut Parser<'_>,
     markers: &[Location],
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
     let insert = keyword(&parser.peek_token().token, Keyword::INSERT)
-        || keyword(&parser.peek_token().token, Keyword::WITH);
+        || keyword(&parser.peek_token().token, Keyword::WITH)
+        || keyword(&parser.peek_token().token, Keyword::EXPLAIN)
+        || keyword(&parser.peek_token().token, Keyword::PREPARE);
     let result = parse_inner(parser, markers);
     if insert && result.is_err() {
         let previous = parser.token_at(parser.index().saturating_sub(1));
@@ -42,7 +62,7 @@ fn parse_inner(
     markers: &[Location],
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
     let (mut statement, mut facts) = with::normalize(parser.parse_statement()?);
-    if let Statement::Insert(insert) = &mut statement {
+    if let Some(insert) = inner_insert(&mut statement) {
         if markers
             .binary_search(&parser.peek_token().span.start)
             .is_ok()
@@ -122,4 +142,14 @@ fn parse_inner(
 
 fn keyword(token: &Token, expected: Keyword) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
+}
+
+fn inner_insert(statement: &mut Statement) -> Option<&mut sqlparser::ast::Insert> {
+    match statement {
+        Statement::Insert(insert) => Some(insert),
+        Statement::Explain { statement, .. } | Statement::Prepare { statement, .. } => {
+            inner_insert(statement)
+        }
+        _ => None,
+    }
 }

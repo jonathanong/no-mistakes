@@ -1,4 +1,5 @@
 mod body;
+mod conditional_insert_compatibility;
 mod conditional_ranges;
 mod ddl;
 mod do_constraints;
@@ -9,6 +10,8 @@ mod metadata;
 mod metadata_conditional;
 mod metadata_escape;
 mod metadata_escape_values;
+mod metadata_qualified_end;
+mod metadata_statement_positions;
 mod metadata_unicode;
 mod parsing;
 mod procedural;
@@ -35,3 +38,28 @@ mod query;
 
 mod insert;
 mod insert_review;
+
+mod wrappers;
+
+mod wrapper_recovery;
+
+mod wrapper_review;
+
+mod wrapper_option_identity;
+
+mod wrapper_metadata;
+
+mod wrapper_boolean_identity;
+
+mod wrapper_with_conflict;
+
+mod wrapper_string_options;
+
+mod wrapper_signed_options;
+
+mod wrapper_atomic_identifiers;
+mod wrapper_insert_identifiers;
+
+mod wrapper_repeated_options;
+
+mod wrapper_bare_end_alias;

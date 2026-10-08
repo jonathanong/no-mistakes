@@ -3,8 +3,49 @@ use super::ConflictFacts;
 use sqlparser::ast::{SetExpr, Spanned, Statement};
 
 pub(super) fn normalize(statement: Statement) -> (Statement, Option<ConflictFacts>) {
-    let Statement::Query(mut outer) = statement else {
-        return (statement, None);
+    let mut outer = match statement {
+        Statement::Explain {
+            describe_alias,
+            analyze,
+            verbose,
+            query_plan,
+            estimate,
+            statement,
+            format,
+            options,
+        } => {
+            let (statement, facts) = normalize(*statement);
+            return (
+                Statement::Explain {
+                    describe_alias,
+                    analyze,
+                    verbose,
+                    query_plan,
+                    estimate,
+                    statement: Box::new(statement),
+                    format,
+                    options,
+                },
+                facts,
+            );
+        }
+        Statement::Prepare {
+            name,
+            data_types,
+            statement,
+        } => {
+            let (statement, facts) = normalize(*statement);
+            return (
+                Statement::Prepare {
+                    name,
+                    data_types,
+                    statement: Box::new(statement),
+                },
+                facts,
+            );
+        }
+        Statement::Query(outer) => outer,
+        _ => return (statement, None),
     };
     let SetExpr::Insert(Statement::Insert(mut insert)) = *outer.body else {
         return (Statement::Query(outer), None);

@@ -58,7 +58,8 @@ fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {
     let mut depth: usize = 0;
     significant
         .iter()
-        .map(|index| {
+        .enumerate()
+        .map(|(position, index)| {
             let token = &tokens[*index].token;
             if *token == Token::SemiColon {
                 depth = 0;
@@ -66,8 +67,25 @@ fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {
                 insert = false;
                 return false;
             }
+            if depth == 0
+                && !insert
+                && keyword(token, Keyword::ATOMIC)
+                && position > 0
+                && keyword(&tokens[significant[position - 1]].token, Keyword::BEGIN)
+                && super::super::super::metadata_preparation::boundary(
+                    tokens,
+                    significant,
+                    position,
+                )
+            {
+                beginning = true;
+                insert = false;
+                return false;
+            }
             if beginning {
-                with = keyword(token, Keyword::WITH);
+                with = keyword(token, Keyword::WITH)
+                    || keyword(token, Keyword::EXPLAIN)
+                    || keyword(token, Keyword::PREPARE);
                 insert = keyword(token, Keyword::INSERT);
                 beginning = false;
             } else if with && depth == 0 && keyword(token, Keyword::INSERT) {

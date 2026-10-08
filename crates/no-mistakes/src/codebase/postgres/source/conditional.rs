@@ -14,7 +14,7 @@ pub(super) fn project(
     locations: &Locations<'_>,
     generated: &[Span],
     recursive_views: &crate::codebase::postgres::parse::RecursiveViews,
-    comments: &mut super::metadata_preparation::Comments,
+    wrapper_context: &super::wrappers::Context<'_, '_>,
 ) -> Result<PostgresSqlStatementKind, String> {
     let mut branches = Vec::new();
     for branch in std::iter::once(&mut value.if_block)
@@ -48,8 +48,9 @@ pub(super) fn project(
                 })
                 .ok_or("Conditional statement source span is unavailable")?;
             super::generated::restore(statement, generated, owned.last().unwrap().span.end);
-            let mut facts = if let Some(facts) = comments.remove(&owned[0].span.start) {
-                facts?
+            let insert_facts = super::insert::parsing::normalize(statement);
+            let mut facts = if let Some(facts) = wrapper_context.take_comment(owned[0].span.start) {
+                facts.0?
             } else if let Statement::If(nested) = statement {
                 project(
                     nested,
@@ -58,17 +59,35 @@ pub(super) fn project(
                     locations,
                     generated,
                     recursive_views,
-                    comments,
+                    wrapper_context,
                 )?
+            } else if let Statement::Insert(insert) = statement {
+                PostgresSqlStatementKind::Insert {
+                    insert: Box::new(super::insert::project(
+                        insert,
+                        insert_facts.as_ref(),
+                        locations,
+                    )),
+                }
+            } else if matches!(
+                statement,
+                Statement::Explain { .. } | Statement::Prepare { .. }
+            ) {
+                let tokens = owned
+                    .iter()
+                    .map(|token| (*token).clone())
+                    .collect::<Vec<_>>();
+                wrapper_context.restore(statement, owned.last().unwrap().span.end)?;
+                wrapper_context
+                    .statement(statement, &tokens, ordinal, 0, insert_facts.as_ref())?
+                    .facts
             } else {
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
                     owned.iter().copied(),
                 );
                 super::projection::project(statement, locations, &tables, recursive_views)
             };
-            if let PostgresSqlStatementKind::Insert { insert } = &mut facts {
-                insert.span = Some(span.clone());
-            }
+            super::wrappers::finalize(&mut facts, &span);
             cursor = owned.last().unwrap().span.end;
             projected.push(PostgresSqlStatement {
                 ordinal,

@@ -228,6 +228,16 @@ fn conditional_projection_requires_its_prepared_source_owner() {
         let tokens = (0..parser.index())
             .map(|index| parser.token_at(index))
             .collect::<Vec<_>>();
+        let locations = Locations::new(&source.sql);
+        let wrapper_context = super::super::wrappers::Context::new(
+            &source,
+            &locations,
+            &prepared.recursive_views,
+            &[],
+            &[],
+            &[],
+            super::super::metadata_preparation::Comments::new(),
+        );
         let empty = fixture("empty.sql");
         assert!(conditional::project(
             &mut value,
@@ -236,7 +246,7 @@ fn conditional_projection_requires_its_prepared_source_owner() {
             &Locations::new(&empty),
             &[],
             &prepared.recursive_views,
-            &mut super::super::metadata_preparation::Comments::new(),
+            &wrapper_context
         )
         .is_err());
         if name == "conditional-branch.sql" {
@@ -247,7 +257,7 @@ fn conditional_projection_requires_its_prepared_source_owner() {
                 &Locations::new(&source.sql),
                 &[],
                 &prepared.recursive_views,
-                &mut super::super::metadata_preparation::Comments::new(),
+                &wrapper_context
             )
             .is_err());
             let missing = tokens
@@ -262,7 +272,7 @@ fn conditional_projection_requires_its_prepared_source_owner() {
                 &Locations::new(&source.sql),
                 &[],
                 &prepared.recursive_views,
-                &mut super::super::metadata_preparation::Comments::new(),
+                &wrapper_context
             )
             .is_err());
         }

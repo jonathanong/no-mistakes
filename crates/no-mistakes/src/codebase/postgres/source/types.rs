@@ -8,6 +8,7 @@ mod insert;
 mod metadata;
 mod query;
 mod query_statements;
+mod wrappers;
 pub use columns::*;
 pub use ddl::*;
 pub use expressions::*;
@@ -16,6 +17,7 @@ pub use insert::*;
 pub use metadata::*;
 pub use query::*;
 pub use query_statements::*;
+pub use wrappers::*;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -103,6 +105,9 @@ pub enum PostgresSqlStatementKind {
     },
     AlterIndex {
         index: PostgresSqlAlterIndex,
+    },
+    Wrapper {
+        wrapper: PostgresSqlWrapper,
     },
     Insert {
         insert: Box<PostgresSqlInsert>,
