@@ -422,3 +422,20 @@ fn discover_files_prunes_git_visible_skip_dirs() {
 
     assert_eq!(files, vec![dir.path().join("src/main.mts")]);
 }
+
+#[cfg(windows)]
+#[test]
+fn prepared_discovery_normalizes_git_separators_before_visible_membership() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/conditional-workspace-imports/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let mixed = root.join("packages/app/internal/target.mts");
+    let native = root
+        .join("packages")
+        .join("app")
+        .join("internal")
+        .join("target.mts");
+    assert!(mixed.is_file());
+    let visible = discover_files_from_visible(&root, &[], &[mixed]);
+    assert_eq!(visible[0].as_os_str(), native.as_os_str());
+}

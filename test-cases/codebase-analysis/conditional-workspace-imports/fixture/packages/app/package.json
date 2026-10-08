@@ -1,0 +1,10 @@
+{
+  "name": "@fx/app",
+  "type": "module",
+  "imports": {
+    "#local/*": "./internal/*.mts"
+  },
+  "dependencies": {
+    "@fx/lib": "workspace:*"
+  }
+}

@@ -476,3 +476,38 @@ fn bounded_compact_projection_keeps_ambiguous_ownership_diagnostics() {
         "{value}"
     );
 }
+
+#[test]
+fn conditional_workspace_imports_compact_closure_matches_lazy_and_eager() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/conditional-workspace-imports/fixture"),
+    );
+    for file in [
+        "packages/app/conditional.mts",
+        "packages/app/conditional.test.mts",
+        "packages/app/sequential.mts",
+        "packages/app/top-level.mts",
+    ] {
+        assert_compact_matches_unbounded(root.clone(), file);
+        let mut args = import_only_args(root.clone(), vec![PathBuf::from(file)]);
+        let lazy: Value =
+            serde_json::from_str(&run_json(args.clone(), Direction::Deps).unwrap()).unwrap();
+        args.relationships.push(RelationshipArg::Workspace);
+        let eager: Value = serde_json::from_str(&run_json(args, Direction::Deps).unwrap()).unwrap();
+        assert_eq!(
+            sorted_graph_paths(&lazy),
+            sorted_graph_paths(&eager),
+            "{file}"
+        );
+        assert_eq!(
+            sorted_graph_paths(&lazy),
+            vec![
+                "packages/app/internal/target.mts",
+                "packages/app/relative.mts",
+                "packages/lib/target-a.mts",
+                "packages/lib/target-b.mts"
+            ]
+        );
+    }
+}

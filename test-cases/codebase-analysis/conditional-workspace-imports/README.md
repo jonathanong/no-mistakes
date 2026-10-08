@@ -1,0 +1,1 @@
+Literal workspace wildcard exports and package imports must resolve inside unproven callbacks. The tracked node_modules symlink reproduces resolver paths that need the prepared visible workspace catalog; computed imports must not infer targets.

@@ -487,3 +487,9 @@ Service` registers `Service` in the enclosing module binding scope before
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse
 `http` edges. Interpolated Swift path segments are treated as `*` route
 segments for matching configured backend route definitions.
+
+Literal dynamic workspace imports retain `dynamic-import` or
+`conditional-dynamic-import` according to execution reachability, including
+wildcard package `exports` and package `#imports`. Their workspace target also
+has a `workspace` edge. Import-only forward walks and canonical reverse
+queries use the same prepared visible target; computed specifiers emit no edge.
