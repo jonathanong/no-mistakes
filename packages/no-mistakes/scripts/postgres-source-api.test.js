@@ -752,7 +752,7 @@ test(
         assert.equal(call.kind, "functionCall");
         assert.deepEqual(
           call.arguments.map((arg) => arg.root.kind),
-          ["functionCall", "literal", "literal"],
+          ["functionCall", "literal", "parameter"],
         );
         assert.equal(call.arguments[0].root.argumentsComplete, true);
       }
@@ -809,7 +809,7 @@ test(
       if (index === 1) {
         assert.deepEqual(
           root.arguments.slice(1).map((arg) => arg.root.expression.kind),
-          ["literal", "literal"],
+          ["literal", "parameter"],
         );
       } else {
         assert.equal(root.kind, "unary");

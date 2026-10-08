@@ -171,5 +171,5 @@ fn parser_specific_argument_lists_and_aggregate_modifiers_remain_honest() {
             matches!(&expression.root, Root::FunctionCall { modifiers, .. } if !modifiers.is_empty())
         );
     }
-    assert!(matches!(expressions[24].root, Root::Literal { .. }));
+    assert!(matches!(expressions[24].root, Root::TypedLiteral { .. }));
 }

@@ -33,6 +33,22 @@ Unary roots expose a typed `expression` operand, including signed literals;
 unsupported operand projections remain incomplete. These facts do not establish
 SQL execution or replay safety.
 
+Expression roots distinguish `nullTest` (`negated` for IS NOT NULL),
+`distinctness` (`negated` for IS NOT DISTINCT FROM), `parameter` (`placeholder`,
+including `$1`), and `typedLiteral` (`dataType`, decoded string `value`, rendered
+`sql`). Recursive children retain `nullOperand` and ordered `distinctLeft` /
+`distinctRight` operands under operators, calls, CASE, and wrappers. Temporal
+literals retain their type, precision, timezone qualifier, and value: `now`,
+`today`, and `epoch` are syntax facts, without a volatility or replay policy.
+Typed literal leaves are structurally complete. Typed literals and null-test
+children have null spans where the parser omits a type prefix or predicate
+suffix; containing expressions remain incomplete rather than claiming partial
+source boundaries. Unsupported predicates remain explicitly incomplete.
+Ordinary `literal` roots also expose `value: PostgresSqlLiteralValue`,
+distinguishing SQL null, string, number, and boolean values. Number values retain their decimal spelling as
+strings; quoted and escaped string values use the parser-decoded contents.
+Unclassified values expose `other` with SQL rather than guessed semantics.
+
 Expression `children` preserve immediate operand order and role, then recurse;
 check `childrenComplete` before relying on the whole expression tree. Explicit
 INSERT columns expose positional `columnSources` across VALUES rows and query

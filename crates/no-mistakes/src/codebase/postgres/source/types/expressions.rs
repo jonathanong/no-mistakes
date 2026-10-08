@@ -15,6 +15,9 @@ pub enum PostgresSqlExpressionChildRole {
     FilterPredicate,
     ParenthesizedExpression,
     UnaryOperand,
+    NullOperand,
+    DistinctLeft,
+    DistinctRight,
     Other,
 }
 
@@ -39,8 +42,24 @@ pub enum PostgresSqlExpressionChildRoot {
         #[serde(rename = "dataType")]
         data_type: String,
     },
+    NullTest {
+        negated: bool,
+    },
+    Distinctness {
+        negated: bool,
+    },
+    Parameter {
+        placeholder: String,
+    },
+    TypedLiteral {
+        #[serde(rename = "dataType")]
+        data_type: String,
+        value: String,
+        sql: String,
+    },
     Literal {
         sql: String,
+        value: PostgresSqlLiteralValue,
     },
     Binary {
         operator: String,
@@ -78,8 +97,24 @@ pub enum PostgresSqlExpressionRoot {
         data_type: String,
         expression: Box<PostgresSqlExpressionRoot>,
     },
+    NullTest {
+        negated: bool,
+    },
+    Distinctness {
+        negated: bool,
+    },
+    Parameter {
+        placeholder: String,
+    },
+    TypedLiteral {
+        #[serde(rename = "dataType")]
+        data_type: String,
+        value: String,
+        sql: String,
+    },
     Literal {
         sql: String,
+        value: PostgresSqlLiteralValue,
     },
     Binary {
         operator: String,
@@ -107,4 +142,15 @@ pub struct PostgresSqlCallArgument {
     pub sql: String,
     pub span: Option<PostgresSqlSpan>,
     pub root: PostgresSqlExpressionRoot,
+}
+
+/// Parser-native literal values; numbers retain their exact decimal spelling.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PostgresSqlLiteralValue {
+    Null,
+    String { value: String },
+    Number { value: String },
+    Boolean { value: bool },
+    Other { sql: String },
 }

@@ -382,6 +382,7 @@ test(
 
 // Exercise pure SQL contracts in every compiled-addon CI job.
 require("./postgres-source-api.test.js");
+require("./postgres-predicate-api.test.js");
 
 require("./postgres-cte-api.test.js");
 require("./postgres-wrapper-api.test.js");

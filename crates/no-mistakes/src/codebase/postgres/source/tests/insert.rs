@@ -301,14 +301,20 @@ fn unary_assignment_syntax_exposes_operands_without_provenance_shortcuts() {
             else {
                 panic!("call expected")
             };
-            for argument in &arguments[1..] {
+            for (argument_index, argument) in arguments[1..].iter().enumerate() {
                 let PostgresSqlExpressionRoot::Unary { expression, .. } = &argument.root else {
                     panic!("unary expected")
                 };
-                assert!(matches!(
-                    expression.as_ref(),
-                    PostgresSqlExpressionRoot::Literal { .. }
-                ));
+                if argument_index == 0 {
+                    assert!(matches!(
+                        expression.as_ref(),
+                        PostgresSqlExpressionRoot::Literal { .. }
+                    ));
+                } else {
+                    assert!(
+                        matches!(expression.as_ref(), PostgresSqlExpressionRoot::Parameter { placeholder } if placeholder == "$1")
+                    );
+                }
             }
         } else {
             let PostgresSqlExpressionRoot::Unary { expression, .. } =
@@ -318,7 +324,7 @@ fn unary_assignment_syntax_exposes_operands_without_provenance_shortcuts() {
             };
             match index {
                 0 => assert!(
-                    matches!(expression.as_ref(), PostgresSqlExpressionRoot::Literal { sql } if sql == "1")
+                    matches!(expression.as_ref(), PostgresSqlExpressionRoot::Literal { sql, .. } if sql == "1")
                 ),
                 2 => assert!(matches!(
                     expression.as_ref(),
