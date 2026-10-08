@@ -5,9 +5,11 @@ use sqlparser::{
     tokenizer::{Span, Token},
 };
 
+type OperatorClass = (ObjectName, Span, Vec<(Ident, Located)>);
+
 pub(in crate::codebase::postgres::source) struct Arbiter {
     pub expression: Located,
-    pub operator_class: Option<(ObjectName, Span, Vec<(Ident, Located)>)>,
+    pub operator_class: Option<OperatorClass>,
 }
 
 pub(super) fn parse(parser: &mut Parser<'_>) -> Result<Vec<Arbiter>, ParserError> {
