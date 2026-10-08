@@ -62,7 +62,12 @@ pub(super) fn exact_ast_span(
 ) -> Option<PostgresSqlSpan> {
     if matches!(
         expr,
-        Expr::Nested(_) | Expr::UnaryOp { .. } | Expr::Cast { .. } | Expr::TypedString { .. }
+        Expr::Nested(_)
+            | Expr::UnaryOp { .. }
+            | Expr::Cast { .. }
+            | Expr::TypedString { .. }
+            | Expr::IsNull(_)
+            | Expr::IsNotNull(_)
     ) {
         return None;
     }
@@ -100,6 +105,17 @@ fn specs(expr: &Expr) -> (Vec<Spec<'_>>, bool) {
             ],
             true,
         ),
+        Expr::IsNull(expr) | Expr::IsNotNull(expr) => {
+            (vec![spec(Role::NullOperand, None, expr)], true)
+        }
+        Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => (
+            vec![
+                spec(Role::DistinctLeft, None, left),
+                spec(Role::DistinctRight, None, right),
+            ],
+            true,
+        ),
+        Expr::TypedString(_) => (Vec::new(), true),
         Expr::UnaryOp { expr, .. } => (vec![spec(Role::UnaryOperand, None, expr)], true),
         Expr::Nested(expr) => (vec![spec(Role::ParenthesizedExpression, None, expr)], true),
         Expr::Cast {

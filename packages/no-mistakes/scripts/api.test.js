@@ -1272,3 +1272,19 @@ test("SQL recursive expression and INSERT lineage contracts export named additiv
   assert.match(inserts, /expectedColumns\??: number/);
   assert.match(inserts, /sourceColumns\??: number/);
 });
+
+test("Postgres predicate and value discriminants remain public", () => {
+  const expressions = readFileSync(join(packageRoot, "postgres-expression-types.d.ts"), "utf8");
+  for (const declaration of [
+    'kind: "nullTest"; negated: boolean',
+    'kind: "distinctness"; negated: boolean',
+    'kind: "parameter"; placeholder: string',
+    'kind: "typedLiteral"; dataType: string; value: string; sql: string',
+    "export type PostgresSqlLiteralValue =",
+    'kind: "literal"; sql: string; value: PostgresSqlLiteralValue',
+    '"nullOperand"',
+    '"distinctLeft"',
+    '"distinctRight"',
+  ])
+    assert.ok(expressions.includes(declaration), declaration);
+});

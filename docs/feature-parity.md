@@ -79,6 +79,12 @@ function-call facts in SQL files and parameterized embedded SQL, including
 recoverable PL/pgSQL expressions and static EXECUTE. Configured names preserve
 qualified and quoted identifier identity; columns and aliases are inert.
 
+PostgreSQL expression facts expose recursive null tests and distinctness
+predicates, bind parameters, typed temporal literals, and discriminated ordinary
+literal values equally through Rust and the async CJS/ESM/native source API.
+Conservative nullable spans and completeness remain independent of execution
+policy and INSERT provenance.
+
 The pure PostgreSQL source API is available through the async native Node
 binding in CJS and ESM. Its typed CREATE INDEX facts preserve the `ON ONLY`
 relation modifier in the Rust facts and Node declarations.

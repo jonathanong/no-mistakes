@@ -26,8 +26,27 @@ pub(super) fn root(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpress
             data_type: data_type.to_string(),
             expression: Box::new(root(expr, locations)),
         },
-        Expr::Value(_) | Expr::TypedString { .. } => Root::Literal {
+        Expr::IsNull(_) | Expr::IsNotNull(_) => Root::NullTest {
+            negated: matches!(expr, Expr::IsNotNull(_)),
+        },
+        Expr::IsDistinctFrom(_, _) | Expr::IsNotDistinctFrom(_, _) => Root::Distinctness {
+            negated: matches!(expr, Expr::IsNotDistinctFrom(_, _)),
+        },
+        Expr::Value(sqlparser::ast::ValueWithSpan {
+            value: sqlparser::ast::Value::Placeholder(placeholder),
+            ..
+        }) => Root::Parameter {
+            placeholder: placeholder.clone(),
+        },
+        Expr::TypedString(value) => Root::TypedLiteral {
+            data_type: value.data_type.to_string(),
+            // The parser constructs typed strings only from string-valued tokens.
+            value: value.value.clone().into_string().unwrap_or_default(),
             sql: expr.to_string(),
+        },
+        Expr::Value(value) => Root::Literal {
+            sql: expr.to_string(),
+            value: literal_value(&value.value),
         },
         Expr::BinaryOp { op, .. } => Root::Binary {
             operator: op.to_string(),
@@ -116,5 +135,29 @@ fn function_root(function: &Function, locations: &Locations<'_>) -> PostgresSqlE
         arguments_complete: complete,
         syntax,
         modifiers,
+    }
+}
+
+pub(super) fn literal_value(value: &sqlparser::ast::Value) -> PostgresSqlLiteralValue {
+    use sqlparser::ast::Value as V;
+    use PostgresSqlLiteralValue as R;
+    match value {
+        V::Null => R::Null,
+        V::Boolean(value) => R::Boolean { value: *value },
+        V::Number(value, _) => R::Number {
+            value: value.to_string(),
+        },
+        V::SingleQuotedString(value)
+        | V::EscapedStringLiteral(value)
+        | V::UnicodeStringLiteral(value)
+        | V::NationalStringLiteral(value) => R::String {
+            value: value.clone(),
+        },
+        V::DollarQuotedString(value) => R::String {
+            value: value.value.clone(),
+        },
+        _ => R::Other {
+            sql: value.to_string(),
+        },
     }
 }

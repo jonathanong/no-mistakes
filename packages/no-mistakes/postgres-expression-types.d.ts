@@ -16,7 +16,11 @@ export type PostgresSqlExpressionRoot =
     }
   | { kind: "parenthesized"; expression: PostgresSqlExpressionRoot }
   | { kind: "cast"; dataType: string; expression: PostgresSqlExpressionRoot }
-  | { kind: "literal"; sql: string }
+  | { kind: "nullTest"; negated: boolean }
+  | { kind: "distinctness"; negated: boolean }
+  | { kind: "parameter"; placeholder: string }
+  | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
+  | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
   | { kind: "binary"; operator: string }
   | { kind: "unary"; operator: string; expression: PostgresSqlExpressionRoot }
   | { kind: "case" | "subquery" | "other" };
@@ -32,6 +36,9 @@ export type PostgresSqlExpressionChildRole =
   | "filterPredicate"
   | "parenthesizedExpression"
   | "unaryOperand"
+  | "nullOperand"
+  | "distinctLeft"
+  | "distinctRight"
   | "other";
 export type PostgresSqlExpressionChildRoot =
   | { kind: "columnReference"; name: PostgresSqlName }
@@ -44,7 +51,11 @@ export type PostgresSqlExpressionChildRoot =
     }
   | { kind: "parenthesized" }
   | { kind: "cast"; castKind: string; dataType: string }
-  | { kind: "literal"; sql: string }
+  | { kind: "nullTest"; negated: boolean }
+  | { kind: "distinctness"; negated: boolean }
+  | { kind: "parameter"; placeholder: string }
+  | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
+  | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
   | { kind: "binary" | "unary"; operator: string }
   | { kind: "case" | "subquery" | "other" };
 export interface PostgresSqlExpressionChild {
@@ -65,3 +76,11 @@ export interface PostgresSqlCallArgument {
   span: PostgresSqlSpan | null;
   root: PostgresSqlExpressionRoot;
 }
+
+/** Numbers preserve decimal spelling; string values are parser-decoded. */
+export type PostgresSqlLiteralValue =
+  | { kind: "null" }
+  | { kind: "string"; value: string }
+  | { kind: "number"; value: string }
+  | { kind: "boolean"; value: boolean }
+  | { kind: "other"; sql: string };

@@ -71,7 +71,10 @@ pub(super) fn provenance(
 pub(super) fn syntax_complete(root: &PostgresSqlExpressionRoot) -> bool {
     use PostgresSqlExpressionRoot as R;
     match root {
-        R::ColumnReference { .. } | R::Literal { .. } => true,
+        R::ColumnReference { .. }
+        | R::Literal { .. }
+        | R::Parameter { .. }
+        | R::TypedLiteral { .. } => true,
         R::Parenthesized { expression }
         | R::Cast { expression, .. }
         | R::Unary { expression, .. } => syntax_complete(expression),

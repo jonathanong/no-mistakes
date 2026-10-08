@@ -72,8 +72,27 @@ pub(super) fn root(expr: &Expr) -> PostgresSqlExpressionChildRoot {
             cast_kind: format!("{kind:?}").to_ascii_lowercase(),
             data_type: data_type.to_string(),
         },
-        Expr::Value(_) | Expr::TypedString { .. } => Root::Literal {
+        Expr::IsNull(_) | Expr::IsNotNull(_) => Root::NullTest {
+            negated: matches!(expr, Expr::IsNotNull(_)),
+        },
+        Expr::IsDistinctFrom(_, _) | Expr::IsNotDistinctFrom(_, _) => Root::Distinctness {
+            negated: matches!(expr, Expr::IsNotDistinctFrom(_, _)),
+        },
+        Expr::Value(sqlparser::ast::ValueWithSpan {
+            value: sqlparser::ast::Value::Placeholder(placeholder),
+            ..
+        }) => Root::Parameter {
+            placeholder: placeholder.clone(),
+        },
+        Expr::TypedString(value) => Root::TypedLiteral {
+            data_type: value.data_type.to_string(),
+            // The parser constructs typed strings only from string-valued tokens.
+            value: value.value.clone().into_string().unwrap_or_default(),
             sql: expr.to_string(),
+        },
+        Expr::Value(value) => Root::Literal {
+            sql: expr.to_string(),
+            value: super::super::expression_roots::literal_value(&value.value),
         },
         Expr::BinaryOp { op, .. } => Root::Binary {
             operator: op.to_string(),

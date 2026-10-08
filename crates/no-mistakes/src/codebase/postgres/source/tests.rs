@@ -4,6 +4,7 @@ mod conditional_ranges;
 mod constraint_spans;
 mod ddl;
 mod do_constraints;
+mod expression_predicates;
 mod expression_roots;
 mod indexes;
 mod locations;
