@@ -591,6 +591,13 @@ positive integer pins the pool on the first N-API call in the process.
 `switch` / nested-function / JSX-handler loaders (`conditional-dynamic-import`
 when the static call graph does not prove they run).
 
+Literal dynamic imports resolve relative paths, workspace wildcard `exports`,
+and package `#imports` through the prepared visible resolver catalog, including
+inside test callbacks and `Promise.all`. Both `import` and `import-dynamic`
+follow these targets without requiring `workspace`; adding `workspace` also
+records `workspace` edges. Reverse `dependents` and `related` queries
+use the same edges. Computed specifiers remain unresolved and are not guessed.
+
 Forward `dependencies` reports stay on the lazy reachable-file walk when every
 requested relationship is an import kind (`import`, `import-static`,
 `import-dynamic`, `import-type`, `import-require`). `dependents` and `related`

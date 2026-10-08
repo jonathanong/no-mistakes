@@ -31,12 +31,26 @@ fn collect_import_edges(
                     let classification =
                         resolver.classify_import(&imp.specifier, path, workspace, graph_files);
                     let target = if kind == EdgeKind::RequireResolve {
-                        classification.preferred_path()
+                        classification
+                            .preferred_path()
+                            .and_then(|target| graph_files.visible_path(target))
                     } else {
-                        classification.resolver_path()
+                        classification
+                            .resolver_path()
+                            .and_then(|target| graph_files.visible_path(target))
+                            // Workspace exports may resolve through an invisible node_modules symlink.
+                            // Keep the literal dynamic edge kind while using the prepared visible target.
+                            .or_else(|| {
+                                matches!(imp.kind, ImportKind::Dynamic)
+                                    .then(|| {
+                                        classification
+                                            .workspace_path()
+                                            .and_then(|target| graph_files.visible_path(target))
+                                    })
+                                    .flatten()
+                            })
                     };
                     if let Some(target) = target {
-                        let target = graph_files.visible_path(target)?;
                         return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(
                             || {
                                 (
@@ -108,7 +122,7 @@ fn collect_workspace_edges(
             facts
                 .imports
                 .iter()
-                .filter(|imp| import_is_reachable(imp, facts, reachable))
+                .filter(|imp| graph_edge_kind_for_extracted_import(imp, facts, reachable).is_some())
                 .filter(|imp| !matches!(imp.kind, ImportKind::RequireResolve))
                 .filter_map(|imp| {
                     let spec = &imp.specifier;

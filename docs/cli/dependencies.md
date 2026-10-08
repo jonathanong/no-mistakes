@@ -42,6 +42,13 @@ including loaders inside `if`/`switch`, nested functions, and JSX handlers.
 Executed loaders are `dynamic-import`; the rest are
 `conditional-dynamic-import`.
 
+Literal dynamic imports resolve relative paths, workspace wildcard `exports`,
+and package `#imports` through the prepared visible resolver catalog, including
+inside test callbacks and `Promise.all`. Both `import` and `import-dynamic`
+follow these targets without requiring `workspace`; adding `workspace` also
+records `workspace` edges. Reverse `dependents` and `related` queries
+use the same edges. Computed specifiers remain unresolved and are not guessed.
+
 Use `--relationship route-import` when you need the conservative runtime module
 closure used by Playwright route analysis. It follows runtime static
 imports/re-exports and literal dynamic imports without function-reachability

@@ -435,3 +435,69 @@ fn shared_traversal_seed_uses_invocation_source_and_parser_gateways_once() {
     assert_eq!(delta("parse.requests"), 2);
     assert_eq!(delta("parse.files"), 1);
 }
+
+#[test]
+fn conditional_workspace_imports_reuse_one_prepared_source_and_fact_pass() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/conditional-workspace-imports/fixture"),
+    );
+    for relationships in [
+        vec![RelationshipArg::ImportDynamic],
+        vec![RelationshipArg::ImportDynamic, RelationshipArg::Workspace],
+    ] {
+        let session = crate::codebase::analysis_session::AnalysisSession::new(Some(
+            crate::diagnostics::InvocationObserver::new(true),
+        ));
+        let plan = graph::GraphBuildPlan {
+            imports: true,
+            workspace: relationships.contains(&RelationshipArg::Workspace),
+            ..Default::default()
+        };
+        let mut shared = SharedTraversalContext::prepare_with_session(
+            root.clone(),
+            None,
+            None,
+            plan,
+            std::sync::Arc::clone(&session),
+        )
+        .unwrap();
+        let mut args = traverse_args(
+            root.clone(),
+            vec![PathBuf::from("packages/app/conditional.mts")],
+        );
+        args.relationships = relationships;
+        let result = crate::ast::with_request_parse_cache(|| {
+            collect_and_filter_entries_shared(&args, Direction::Deps, &root, &mut shared).unwrap()
+        });
+        assert_eq!(
+            result
+                .entries
+                .iter()
+                .filter(|entry| entry.node.as_file().is_some())
+                .count(),
+            4
+        );
+        let work = session.work_snapshot();
+        assert!(
+            work.source_reads.values().all(|count| *count == 1),
+            "{:?}",
+            work.source_reads
+        );
+        assert!(
+            work.parse_attempts.values().all(|count| *count == 1),
+            "{:?}",
+            work.parse_attempts
+        );
+        if !args.relationships.contains(&RelationshipArg::Workspace) {
+            assert_eq!(
+                work.source_reads
+                    .keys()
+                    .filter(|path| path.extension().is_some_and(|extension| extension == "mts"))
+                    .count(),
+                5
+            );
+            assert_eq!(work.parse_attempts.len(), 5);
+        }
+    }
+}

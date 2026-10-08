@@ -112,34 +112,47 @@ fn import_neighbors_from_facts(
     let mut neighbors: Vec<(NodeId, EdgeKind)> = file_facts
         .imports
         .iter()
-        .filter_map(|imp| {
-            let kind = graph_edge_kind_for_extracted_import(imp, file_facts, &reachable)?;
-            let lookup = visibility.lookup();
+        .flat_map(|imp| {
+            let Some(kind) = graph_edge_kind_for_extracted_import(imp, file_facts, &reachable)
+            else {
+                return vec![];
+            };
             let classification =
-                resolver.classify_import(&imp.specifier, path, workspace, lookup);
-            if let Some(target) = classification.resolver_path() {
-                let target = visibility.visible_path(target)?;
+                resolver.classify_import(&imp.specifier, path, workspace, visibility.lookup());
+            let resolver_target = classification
+                .resolver_path()
+                .and_then(|target| visibility.visible_path(target));
+            let workspace_target = classification
+                .workspace_path()
+                .and_then(|target| visibility.visible_path(target));
+            let target = resolver_target.or_else(|| {
+                (matches!(imp.kind, ImportKind::Dynamic)
+                    || (imp.kind == ImportKind::RequireResolve
+                        && classification.resolver_path().is_none()))
+                .then(|| workspace_target.clone())
+                .flatten()
+            });
+            let mut neighbors = vec![];
+            if let Some(target) = target {
                 if is_indexable(&target) || kind == EdgeKind::RequireResolve {
-                    return Some((NodeId::file_in(interner, &target), kind));
+                    neighbors.push((NodeId::file_in(interner, &target), kind));
                 }
-                return None;
-            }
-            if let Some(target) = classification.workspace_path() {
-                let target = visibility.visible_path(target)?;
-                let kind = match imp.kind {
-                    ImportKind::Type => EdgeKind::WorkspaceTypeImport,
-                    ImportKind::RequireResolve => EdgeKind::RequireResolve,
-                    _ => EdgeKind::WorkspaceImport,
-                };
-                if is_indexable(&target) || kind == EdgeKind::RequireResolve {
-                    return Some((NodeId::file_in(interner, &target), kind));
+            } else if classification.is_unresolved_external() {
+                if let Some(module) = bare_module_node_in(interner, &imp.specifier) {
+                    neighbors.push((module, kind));
                 }
-                return None;
             }
-            if classification.is_unresolved_external() {
-                return bare_module_node_in(interner, &imp.specifier).map(|module| (module, kind));
+            if !matches!(imp.kind, ImportKind::RequireResolve) {
+                if let Some(target) = workspace_target {
+                    let workspace_kind = if imp.kind == ImportKind::Type {
+                        EdgeKind::WorkspaceTypeImport
+                    } else {
+                        EdgeKind::WorkspaceImport
+                    };
+                    neighbors.push((NodeId::file_in(interner, &target), workspace_kind));
+                }
             }
-            None
+            neighbors
         })
         .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
         .collect();
