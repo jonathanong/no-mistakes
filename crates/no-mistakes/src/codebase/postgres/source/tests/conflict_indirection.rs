@@ -94,6 +94,20 @@ fn conflict_indirection_operator_classes_and_nested_function_spans_are_complete(
         assert_eq!(target.base.sql, "records");
         assert!(slice(&sql, &target.span).ends_with(".name"));
     }
+    // A composite field needs a target even without any array subscripts.
+    let field_only = assignments[3].target.as_ref().unwrap();
+    assert_eq!(field_only.base.sql, "records");
+    assert_eq!(assignments[3].columns[0].sql, "records");
+    assert!(assignments[3].complete);
+    assert!(field_only.subscripts.is_empty());
+    assert_eq!(slice(&sql, &field_only.span), "records.\"Name\"");
+    let PostgresSqlAssignmentStep::Field { name, span } =
+        &field_only.indirection.as_ref().unwrap()[0]
+    else {
+        panic!("field-only step")
+    };
+    assert!(name.quoted);
+    assert_eq!(slice(&sql, span), "\"Name\"");
     let leading = assignments[2].target.as_ref().unwrap();
     assert_eq!(leading.base.sql, "records");
     assert_eq!(assignments[2].columns[0].sql, "records");

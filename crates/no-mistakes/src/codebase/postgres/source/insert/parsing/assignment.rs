@@ -59,7 +59,7 @@ pub(super) fn parse(parser: &mut Parser<'_>) -> Result<(Assignment, Facts), Pars
             }
         }
         let end = parser.token_at(parser.index().saturating_sub(1)).span.end;
-        if subscripts.is_empty() {
+        if indirection.is_empty() {
             None
         } else {
             let base = Expr::Identifier(parts[0].clone());

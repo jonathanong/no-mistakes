@@ -816,6 +816,14 @@ test(
       ["subscript", "field", "subscript", "field"],
     );
     assert.equal(slice(target.indirection[1].span), '"Items"');
+    const fieldOnly = inserts[1].onConflict.action.assignments[3];
+    assert.equal(fieldOnly.complete, true);
+    assert.equal(fieldOnly.columns[0].sql, "records");
+    assert.equal(fieldOnly.target.base.sql, "records");
+    assert.deepEqual(fieldOnly.target.subscripts, []);
+    assert.equal(slice(fieldOnly.target.span), 'records."Name"');
+    assert.equal(fieldOnly.target.indirection[0].name.quoted, true);
+    assert.equal(slice(fieldOnly.target.indirection[0].span), '"Name"');
     const leading = inserts[1].onConflict.action.assignments[2];
     assert.equal(leading.columns[0].sql, "records");
     assert.equal(leading.target.base.sql, "records");

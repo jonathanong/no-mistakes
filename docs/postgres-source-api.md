@@ -260,7 +260,7 @@ assignments, and unknown qualifiers remain unresolved. An alias hides the origin
 target name. This is syntax provenance, not database type checking or a
 replay-safety decision.
 
-Subscripted assignment targets additionally expose `target.base`, ordered
+Subscripted and field-only composite assignment targets additionally expose `target.base`, ordered
 `target.subscripts`, and `target.span`; nested index expressions retain exact
 source spans. Mixed array/composite targets additionally expose ordered
 `target.indirection` steps (`subscript` and `field`), including quoted field
