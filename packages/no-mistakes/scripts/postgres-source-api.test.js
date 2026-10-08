@@ -189,12 +189,13 @@ test("constraint span issue example reports exact byte offsets", { skip: !compil
   assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
   const create = facts.statements[0];
   const alter = facts.statements[1];
+  const newline = sql.includes("\r\n") ? "\r\n" : "\n";
   const values = [
     [create.columns[0].constraints[0], "REFERENCES public.parents(id)"],
     [create.constraints[0], "CONSTRAINT children_check CHECK (parent_id IS NOT NULL)"],
     [
       alter.operations[0].constraint,
-      "CONSTRAINT children_parent_fk\n  FOREIGN KEY (parent_id) REFERENCES public.parents(id) NOT VALID",
+      `CONSTRAINT children_parent_fk${newline}  FOREIGN KEY (parent_id) REFERENCES public.parents(id) NOT VALID`,
     ],
   ];
   for (const [constraint, expected] of values) {

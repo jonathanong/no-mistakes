@@ -3,7 +3,11 @@ use crate::codebase::postgres::source::{locations::Locations, PostgresSqlStateme
 
 fn assert_slice(sql: &str, span: &Option<super::super::PostgresSqlSpan>, expected: &str) {
     let span = span.as_ref().expect("parser-proven constraint source span");
-    assert_eq!(&sql[span.start.offset..span.end.offset], expected);
+    let newline = if sql.contains("\r\n") { "\r\n" } else { "\n" };
+    assert_eq!(
+        &sql[span.start.offset..span.end.offset],
+        expected.replace('\n', newline)
+    );
 }
 
 #[test]
@@ -157,13 +161,15 @@ fn issue_example_constraint_ranges_are_exact_utf8_bytes() {
         panic!()
     };
     let alter_span = constraint.span.as_ref().unwrap();
+    let newline = if sql.contains("\r\n") { "\r\n" } else { "\n" };
     for (span, expected) in [
         (inline, "REFERENCES public.parents(id)"),
         (check, "CONSTRAINT children_check CHECK (parent_id IS NOT NULL)"),
         (alter_span, "CONSTRAINT children_parent_fk\n  FOREIGN KEY (parent_id) REFERENCES public.parents(id) NOT VALID"),
     ] {
+        let expected = expected.replace('\n', newline);
         assert_eq!(&sql[span.start.offset..span.end.offset], expected);
-        assert_eq!(span.start.offset, sql.find(expected).unwrap());
+        assert_eq!(span.start.offset, sql.find(&expected).unwrap());
     }
 }
 
