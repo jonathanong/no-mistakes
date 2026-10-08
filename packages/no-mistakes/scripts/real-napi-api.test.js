@@ -398,3 +398,5 @@ require("./postgres-wrapper-repeated-options-api.test.js");
 require("./postgres-conditional-insert-api.test.js");
 
 require("./postgres-wrapper-end-alias-api.test.js");
+
+require("./postgres-var-scope-api.test.js");

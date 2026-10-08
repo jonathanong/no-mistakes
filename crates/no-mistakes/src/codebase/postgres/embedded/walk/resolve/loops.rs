@@ -1,4 +1,4 @@
-use super::{record_variable_declaration, ScopeVisitor};
+use super::ScopeVisitor;
 use oxc_ast::ast::{ForStatement, ForStatementInit, ForStatementLeft, VariableDeclarationKind};
 
 /// Binds a for-in/for-of declaration-form loop target (`for (const build of
@@ -17,6 +17,9 @@ use oxc_ast::ast::{ForStatement, ForStatementInit, ForStatementLeft, VariableDec
 pub(crate) fn bind_for_statement_left(left: &ForStatementLeft<'_>, visitor: &mut ScopeVisitor<'_>) {
     if let ForStatementLeft::VariableDeclaration(declaration) = left {
         for declarator in &declaration.declarations {
+            if declaration.kind == VariableDeclarationKind::Var {
+                super::vars::invalidate_vars(&declarator.id, visitor);
+            }
             visitor.bind_param(&declarator.id, false);
         }
     }
@@ -27,9 +30,6 @@ pub(crate) fn bind_for_statement_left(left: &ForStatementLeft<'_>, visitor: &mut
 /// and fail-closed `query(q)` after `for (var q = "SELECT 1"; false;) {}`.
 pub(crate) fn enter_classic_for(statement: &ForStatement<'_>, visitor: &mut ScopeVisitor<'_>) {
     if classic_for_init_is_var(statement) {
-        if let Some(ForStatementInit::VariableDeclaration(declaration)) = &statement.init {
-            record_variable_declaration(declaration, visitor);
-        }
         return;
     }
     visitor.push_scope();

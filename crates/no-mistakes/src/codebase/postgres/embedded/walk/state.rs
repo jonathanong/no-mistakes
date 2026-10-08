@@ -13,6 +13,7 @@ pub(crate) struct BindingState {
     pub(crate) sql: Option<String>,
     pub(crate) kind: EmbeddedSqlKind,
     pub(crate) line: u32,
+    pub(crate) initialized: bool,
     pub(crate) sql_builder: bool,
     pub(crate) sql_source_positions: Vec<super::super::EmbeddedSqlSourcePosition>,
 }
@@ -80,5 +81,15 @@ pub(crate) fn collect_calls<'a>(
         fragments: visitor.fragments,
         pending_calls: visitor.pending_calls,
         confirmed_order: visitor.confirmed_order,
+    }
+}
+
+impl ScopeVisitor<'_> {
+    pub(super) fn push_fragment(&mut self, line: u32, sql_text: Option<String>) {
+        self.fragments.push(EmbeddedSqlFragment {
+            line,
+            sql_text,
+            recovered_placeholder_positions: Vec::new(),
+        });
     }
 }

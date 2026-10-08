@@ -1,4 +1,4 @@
-use super::{EmbeddedSqlFragment, EmbeddedSqlKind};
+use super::EmbeddedSqlKind;
 use oxc_ast::ast::{
     AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType,
     Program, ReturnStatement,
@@ -14,6 +14,7 @@ pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &Program<'a>) {
         self.push_scope();
+        resolve::hoist_vars(&program.body, self);
         resolve::record_statements(&program.body, self);
         walk::walk_program(self, program);
         self.pop_scope();
@@ -38,14 +39,9 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.push_scope();
         self.record_params(&function.params);
-        // A named function expression's own name is visible only inside its
-        // own body (unlike a declaration's, hoisted into the enclosing
-        // scope by `record_function_declaration`), so it belongs in the
-        // scope this call just pushed rather than in any outer one. Without
-        // it, `shadowed_locally` can never see that the name is rebound here
-        // at all, and a same-spelled reference inside the body — e.g. using
-        // the expression's own name as a template tag — reads back as the
-        // untouched top-level/global binding instead of this local rebind.
+        // A named function expression shadows outer helpers only in its own
+        // body. LocalFunctions does not resolve through this self-reference,
+        // so record a shadow marker in the scope just pushed.
         if function.r#type == FunctionType::FunctionExpression {
             if let Some(id) = &function.id {
                 self.bind_self_name(id.name.as_str());
@@ -58,8 +54,25 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
+        resolve::hoist_vars(&body.statements, self);
         resolve::record_statements(&body.statements, self);
         walk::walk_function_body(self, body);
+    }
+
+    fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
+        // Class static blocks are also independent var ownership boundaries.
+        self.push_scope();
+        self.enter_function();
+        resolve::hoist_vars(&block.body, self);
+        resolve::record_statements(&block.body, self);
+        walk::walk_static_block(self, block);
+        self.leave_function();
+        self.pop_scope();
+    }
+
+    fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
+        resolve::initialize_vars(declaration, self);
+        walk::walk_variable_declaration(self, declaration);
     }
 
     fn visit_arrow_function_expression(
@@ -180,15 +193,5 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
         self.visit_expression(&expr.left);
         self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
-    }
-}
-
-impl ScopeVisitor<'_> {
-    fn push_fragment(&mut self, line: u32, sql_text: Option<String>) {
-        self.fragments.push(EmbeddedSqlFragment {
-            line,
-            sql_text,
-            recovered_placeholder_positions: Vec::new(),
-        });
     }
 }
