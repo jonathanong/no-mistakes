@@ -367,3 +367,114 @@ fn single_quoted_conditional_occurrences_keep_original_encoded_spans() {
     let span = default.span.as_ref().unwrap();
     assert_eq!(&sql[span.start.offset..span.end.offset], "''snow''''s''");
 }
+
+#[test]
+fn literal_execute_owns_decoded_children_and_preserves_wrapper_neighbors() {
+    use super::super::{PostgresSqlBodyEncoding, PostgresSqlStatementKind::*};
+    let sql = fixture("literal-execute.sql");
+    let result = facts("literal-execute.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 3);
+    let DoBlock { block } = &result.statements[1].facts else {
+        panic!()
+    };
+    assert!(!block.complete);
+    assert_eq!(block.statements.len(), 6);
+    for (index, count, encoding) in [
+        (0, 2, PostgresSqlBodyEncoding::DollarQuoted),
+        (1, 1, PostgresSqlBodyEncoding::SingleQuoted),
+    ] {
+        let wrapper = &block.statements[index];
+        assert_eq!(
+            &sql[wrapper.span.start.offset..wrapper.span.end.offset],
+            wrapper.sql
+        );
+        let LiteralExecute { execute } = &wrapper.facts else {
+            panic!()
+        };
+        assert!(execute.complete, "{:?}", execute.diagnostics);
+        assert_eq!(execute.body_encoding, encoding);
+        assert_eq!(execute.statements.len(), count);
+        assert!(
+            sql[execute.literal_span.start.offset..execute.literal_span.end.offset]
+                .contains("INSERT INTO prompts")
+        );
+        for (ordinal, child) in execute.statements.iter().enumerate() {
+            assert_eq!(child.ordinal, ordinal);
+            assert!(matches!(child.facts, Insert { .. }));
+            assert_eq!(
+                &execute.decoded_sql[child.span.start.offset..child.span.end.offset],
+                child.sql
+            );
+        }
+    }
+    let LiteralExecute { execute } = &block.statements[2].facts else {
+        panic!()
+    };
+    assert!(!execute.complete);
+    assert!(!execute.diagnostics.is_empty());
+    assert!(execute.statements.is_empty());
+    assert!(execute.diagnostics[0].span.as_ref().unwrap().end.offset <= execute.decoded_sql.len());
+    for dynamic in &block.statements[3..] {
+        assert!(matches!(dynamic.facts, Other));
+    }
+    let quoted = facts("literal-execute-outer-quoted.sql");
+    let DoBlock { block } = &quoted.statements[0].facts else {
+        panic!()
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    let LiteralExecute { execute } = &block.statements[0].facts else {
+        panic!()
+    };
+    assert_eq!(
+        execute.decoded_sql,
+        "INSERT INTO prompts (body) VALUES ('hi')"
+    );
+    assert!(matches!(execute.statements[0].facts, Insert { .. }));
+}
+
+#[test]
+fn escaped_execute_strings_decode_postgres_escapes() {
+    let result = facts("literal-execute-escaped.sql");
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[0].facts else {
+        panic!()
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    let PostgresSqlStatementKind::LiteralExecute { execute } = &block.statements[0].facts else {
+        panic!()
+    };
+    assert_eq!(
+        execute.body_encoding,
+        super::super::PostgresSqlBodyEncoding::EscapedString
+    );
+    assert!(matches!(
+        execute.statements[0].facts,
+        PostgresSqlStatementKind::Insert { .. }
+    ));
+}
+
+#[test]
+fn execute_projection_bounds_nesting_and_requires_source_coordinates() {
+    use super::super::{execute, locations::Locations, PostgresSqlSource};
+    use sqlparser::{dialect::PostgreSqlDialect, parser::Parser};
+    let source = PostgresSqlSource {
+        sql: fixture("execute-only.sql"),
+        file_name: None,
+    };
+    let prepared = crate::codebase::postgres::parse::prepare_postgres_tokens(&source.sql);
+    let mut parser =
+        Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens.clone());
+    let PostgresSqlStatementKind::LiteralExecute { execute } =
+        execute::collect(&mut parser, &source, &Locations::new(&source.sql), 64).unwrap()
+    else {
+        panic!()
+    };
+    assert!(!execute.complete);
+    assert!(execute.diagnostics[0].message.contains("safety limit"));
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
+    assert!(
+        execute::collect(&mut parser, &source, &Locations::new(""), 1)
+            .unwrap_err()
+            .contains("source span")
+    );
+}

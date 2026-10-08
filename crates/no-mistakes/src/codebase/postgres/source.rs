@@ -9,6 +9,7 @@ mod conditional;
 mod conditional_source;
 mod ddl;
 mod drop_facts;
+mod execute;
 mod expression_roots;
 mod expressions;
 mod generated;
@@ -32,7 +33,7 @@ pub use types::*;
 pub fn parse_postgres_source(source: &PostgresSqlSource) -> PostgresSqlFacts {
     let locations = locations::Locations::new(&source.sql);
     let prepared = super::parse::prepare_postgres_tokens(&source.sql);
-    parsing::collect(source, prepared, &locations)
+    parsing::collect_program(source, prepared, &locations, 0, false)
 }
 
 /// Batch independent sources while preserving input order and per-source ownership.

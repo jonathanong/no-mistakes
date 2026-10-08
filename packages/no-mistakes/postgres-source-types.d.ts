@@ -15,6 +15,7 @@ export type * from "./postgres-drop-types";
 import type {
   PostgresSqlConditionalBranch,
   PostgresSqlProceduralBlock,
+  PostgresSqlLiteralExecute,
 } from "./postgres-procedural-types";
 export type * from "./postgres-procedural-types";
 /** Pure SQL source input. No repository, database, or filesystem options are needed. */
@@ -178,6 +179,7 @@ export type PostgresSqlStatementKind =
   | { kind: "createTrigger"; trigger: PostgresSqlTrigger }
   | { kind: "createFunction"; function: PostgresSqlFunction }
   | { kind: "drop"; drop: PostgresSqlDrop }
+  | { kind: "literalExecute"; execute: PostgresSqlLiteralExecute }
   | { kind: "doBlock"; block: PostgresSqlProceduralBlock }
   | { kind: "conditional"; branches: PostgresSqlConditionalBranch[] }
   | { kind: "other" };

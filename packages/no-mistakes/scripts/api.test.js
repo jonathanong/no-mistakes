@@ -876,7 +876,7 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(procedural, /bodyEncoding: PostgresSqlBodyEncoding;/);
   assert.match(
     procedural,
-    /export type PostgresSqlBodyEncoding = "dollarQuoted" \| "singleQuoted";/,
+    /export type PostgresSqlBodyEncoding = "dollarQuoted" \| "singleQuoted" \| "escapedString";/,
   );
   assert.match(procedural, /export interface PostgresSqlConditionalBranch/);
   assert.match(procedural, /condition: PostgresSqlExpression \| null;/);
@@ -1201,4 +1201,13 @@ test("SQL wrappers expose named execution and child-source contracts", () => {
   assert.match(source, /export type \* from "\.\/postgres-wrapper-types"/);
   assert.match(source, /kind: "wrapper"; wrapper: PostgresSqlWrapper/);
   assert.match(functions, /wrapper: PostgresSqlWrapper/);
+});
+
+test("literal EXECUTE contracts export decoded SQL provenance", () => {
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const procedural = readFileSync(join(packageRoot, "postgres-procedural-types.d.ts"), "utf8");
+  assert.match(source, /kind: "literalExecute"; execute: PostgresSqlLiteralExecute/);
+  assert.match(procedural, /export interface PostgresSqlLiteralExecute/);
+  assert.match(procedural, /decodedSql: string;/);
+  assert.match(procedural, /literalSpan: PostgresSqlSpan;/);
 });

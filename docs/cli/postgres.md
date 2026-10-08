@@ -182,3 +182,15 @@ committed catalog after upgrading so earlier `orderingSupported: false` values f
 expression keys are replaced.
 Any unsupported or deferrable matching conflict index prevents proof, even when
 another matching index is supported.
+
+Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
+`kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload. Dollar-quoted,
+standard single-quoted (doubled quotes), and PostgreSQL `E` escape strings are
+decoded by the prepared tokenizer and parsed through the same SQL fact pipeline.
+The enclosing statement and `literalSpan` retain original source coordinates;
+`decodedSql` owns all child statement, expression, and diagnostic coordinates.
+Children preserve order and typed facts (including INSERT), without exposing an
+AST or implying execution. Inspect `complete` and diagnostics: malformed nested
+SQL remains diagnostic; dynamic variables, concatenation, `format`, and EXECUTE
+modifiers remain unsupported `other` occurrences. This adds no SQL execution or
+replay policy. `parsePostgresSql` retains its asynchronous single/batch API.

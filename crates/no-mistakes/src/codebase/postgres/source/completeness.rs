@@ -14,6 +14,7 @@ pub(super) fn statement(facts: &PostgresSqlStatementKind) -> bool {
                 _ => true,
             })
         }
+        PostgresSqlStatementKind::LiteralExecute { execute } => execute.complete,
         PostgresSqlStatementKind::DoBlock { block } => block.complete,
         PostgresSqlStatementKind::Conditional { branches } => branches.iter().all(|branch| {
             branch

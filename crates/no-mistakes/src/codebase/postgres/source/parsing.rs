@@ -2,19 +2,12 @@ use super::{ddl, locations::Locations, types::*};
 use crate::codebase::postgres::parse::PreparedPostgresTokens;
 use sqlparser::{ast::Statement, dialect::PostgreSqlDialect, parser::Parser, tokenizer::Token};
 
-pub(super) fn collect(
-    source: &PostgresSqlSource,
-    prepared: PreparedPostgresTokens,
-    locations: &Locations<'_>,
-) -> PostgresSqlFacts {
-    collect_program(source, prepared, locations, 0)
-}
-
 pub(super) fn collect_program(
     source: &PostgresSqlSource,
     mut prepared: PreparedPostgresTokens,
     locations: &Locations<'_>,
     depth: usize,
+    procedural: bool,
 ) -> PostgresSqlFacts {
     let mut result = PostgresSqlFacts {
         schema_version: 1,
@@ -30,7 +23,7 @@ pub(super) fn collect_program(
         crate::codebase::postgres::parse::fetch_expression::prepare(&mut prepared.tokens);
     // Conditional AST parsing owns its nested statements. Keep that grammar
     // intact; unsupported partial conflict targets in procedural bodies diagnose.
-    let conflict_markers = if depth == 0 {
+    let conflict_markers = if !procedural {
         super::insert::parsing::prepare(&mut prepared.tokens)
     } else {
         Vec::new()
@@ -58,6 +51,8 @@ pub(super) fn collect_program(
                 parser.next_token();
             }
             facts.0
+        } else if procedural && super::execute::starts(&parser) {
+            super::execute::collect(&mut parser, source, locations, depth)
         } else if super::procedural::starts(&parser) {
             super::procedural::collect(&mut parser, source, locations, depth)
         } else if super::metadata::starts(&parser) {
@@ -101,7 +96,7 @@ pub(super) fn collect_program(
                         });
                     }
                     if let Statement::If(value) = &mut statement {
-                        if depth == 0 {
+                        if !procedural {
                             return Err("Conditional statements require a procedural body".into());
                         }
                         let tokens = (start_index..parser.index())

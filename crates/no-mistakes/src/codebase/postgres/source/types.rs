@@ -140,6 +140,9 @@ pub enum PostgresSqlStatementKind {
     Drop {
         drop: PostgresSqlDrop,
     },
+    LiteralExecute {
+        execute: PostgresSqlLiteralExecute,
+    },
     DoBlock {
         block: PostgresSqlProceduralBlock,
     },
@@ -147,6 +150,18 @@ pub enum PostgresSqlStatementKind {
         branches: Vec<PostgresSqlConditionalBranch>,
     },
     Other,
+}
+
+/// Literal provenance uses original source coordinates; children use decoded SQL coordinates.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlLiteralExecute {
+    pub literal_span: PostgresSqlSpan,
+    pub body_encoding: PostgresSqlBodyEncoding,
+    pub decoded_sql: String,
+    pub statements: Vec<PostgresSqlStatement>,
+    pub diagnostics: Vec<PostgresSqlDiagnostic>,
+    pub complete: bool,
 }
 
 /// Nested statements are procedural source occurrences, not guaranteed execution.
@@ -174,6 +189,7 @@ pub struct PostgresSqlConditionalBranch {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PostgresSqlBodyEncoding {
+    EscapedString,
     DollarQuoted,
     SingleQuoted,
 }

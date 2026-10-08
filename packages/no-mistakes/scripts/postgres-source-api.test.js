@@ -455,3 +455,48 @@ test(
     );
   },
 );
+
+test(
+  "compiled ESM and CJS literal EXECUTE retain decoded facts and wrapper provenance",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("literal-execute.sql");
+    const result = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.deepEqual(
+      result.statements.map((value) => value.kind),
+      ["createTable", "doBlock", "createTable"],
+    );
+    const block = result.statements[1].block;
+    assert.equal(block.complete, false);
+    for (const [index, count] of [
+      [0, 2],
+      [1, 1],
+    ]) {
+      const wrapper = block.statements[index];
+      assert.equal(wrapper.kind, "literalExecute");
+      const execute = wrapper.execute;
+      assert.equal(execute.complete, true);
+      assert.equal(execute.statements.length, count);
+      for (const child of execute.statements) {
+        assert.equal(child.kind, "insert");
+        assert.equal(
+          Buffer.from(execute.decodedSql)
+            .subarray(child.span.start.offset, child.span.end.offset)
+            .toString(),
+          child.sql,
+        );
+      }
+      assert.equal(
+        Buffer.from(sql).subarray(wrapper.span.start.offset, wrapper.span.end.offset).toString(),
+        wrapper.sql,
+      );
+    }
+    assert.equal(block.statements[2].execute.complete, false);
+    assert.ok(block.statements[2].execute.diagnostics.length);
+    assert.ok(block.statements.slice(3).every((value) => value.kind === "other"));
+  },
+);

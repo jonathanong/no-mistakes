@@ -108,7 +108,7 @@ pub(super) fn collect(
             .relocate(local_start, token.span.start, &mut recursive_views);
     }
     prepared.recursive_views = recursive_views;
-    let nested = super::parsing::collect_program(source, prepared, locations, depth + 1);
+    let nested = super::parsing::collect_program(source, prepared, locations, depth + 1, true);
     block.statements = nested.statements;
     block.diagnostics = nested.diagnostics;
     block
