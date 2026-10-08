@@ -257,7 +257,9 @@ separate from the optional
 calls have `derived` provenance: their value is not one atomic source, even when
 all arguments are target/excluded references. Arithmetic, subqueries, tuple
 assignments, and unknown qualifiers remain unresolved. An alias hides the original
-target name. This is syntax provenance,
+target name. This is syntax provenance, not database type checking or a
+replay-safety decision.
+
 Subscripted assignment targets additionally expose `target.base`, ordered
 `target.subscripts`, and `target.span`; nested index expressions retain exact
 source spans. Mixed array/composite targets additionally expose ordered
@@ -267,7 +269,6 @@ complete closing-delimiter spans even inside compound expressions.
 Base-column names remain in `columns`. These are syntax facts:
 no catalog index selection, assignment target resolution, or replay policy is
 inferred. Array slices currently diagnose rather than yielding a partial target.
-not database type checking or a replay-safety decision.
 
 ```js
 const facts = await parsePostgresSql({

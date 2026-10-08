@@ -52,6 +52,24 @@ fn conflict_indirection_operator_classes_and_nested_function_spans_are_complete(
     };
     assert!(!arguments_complete);
     assert!(arguments[0].span.is_none());
+    // Unary wrappers must traverse the same prepared nested call spans.
+    let unary = &assignments[3];
+    assert!(unary.complete);
+    assert_eq!(
+        slice(&sql, &unary.expression.span),
+        "-abs(length(lower(slug)))"
+    );
+    let PostgresSqlExpressionRoot::Unary { expression, .. } = &unary.expression.root else {
+        panic!("unary")
+    };
+    let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } = expression.as_ref() else {
+        panic!("unary function")
+    };
+    assert_eq!(slice(&sql, &arguments[0].span), "length(lower(slug))");
+    let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } = &arguments[0].root else {
+        panic!("unary nested function")
+    };
+    assert_eq!(slice(&sql, &arguments[0].span), "lower(slug)");
     let expression = &assignments[0].expression;
     let PostgresSqlExpressionRoot::FunctionCall { arguments, .. } = &expression.root else {
         panic!("function")

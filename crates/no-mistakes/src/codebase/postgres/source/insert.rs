@@ -94,8 +94,10 @@ fn project_inner(
                             };
                             let provenance =
                                 provenance(&assignment.value, table.as_ref(), alias.as_ref());
-                            let assignment_facts = facts.and_then(|facts| facts.assignments.get(index));
-                            let expression = targets::value(&assignment.value, assignment_facts, locations);
+                            let assignment_facts =
+                                facts.and_then(|facts| facts.assignments.get(index));
+                            let expression =
+                                targets::value(&assignment.value, assignment_facts, locations);
                             let known = single && syntax_complete(&expression.root);
                             complete &= known;
                             let target = assignment_facts

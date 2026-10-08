@@ -803,6 +803,13 @@ test(
     assert.equal(slice(value.root.arguments[1].span), "lower(upper(slug))");
     assert.equal(slice(value.root.arguments[1].root.arguments[0].span), "upper(slug)");
     assert.equal(slice(value.functions[0].span), "coalesce(EXCLUDED.slug, lower(upper(slug)))");
+    const unary = result.statements[0].insert.onConflict.action.assignments[3];
+    assert.equal(unary.complete, true);
+    assert.equal(slice(unary.expression.span), "-abs(length(lower(slug)))");
+    assert.equal(unary.expression.root.kind, "unary");
+    const unaryCall = unary.expression.root.expression;
+    assert.equal(slice(unaryCall.arguments[0].span), "length(lower(slug))");
+    assert.equal(slice(unaryCall.arguments[0].root.arguments[0].span), "lower(slug)");
     const target = inserts[1].onConflict.action.assignments[1].target;
     assert.deepEqual(
       target.indirection.map((step) => step.kind),

@@ -45,7 +45,8 @@ fn arguments(root: &mut PostgresSqlExpressionRoot, delimiters: &[PostgresSqlSpan
             }
         }
         PostgresSqlExpressionRoot::Parenthesized { expression }
-        | PostgresSqlExpressionRoot::Cast { expression, .. } => arguments(expression, delimiters),
+        | PostgresSqlExpressionRoot::Cast { expression, .. }
+        | PostgresSqlExpressionRoot::Unary { expression, .. } => arguments(expression, delimiters),
         _ => {}
     }
 }
