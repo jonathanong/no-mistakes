@@ -494,8 +494,8 @@ APIs. `resolveCheck` import rows include `computed: true` for non-literal
 same visible `exports`/`main` resolver as dependency `workspace` edges; missing or
 blocked workspace subpaths are `unresolved`. Third-party and unmatched packages
 remain `external`. The same classification applies to `resolveCheckDependencies`
-without rediscovering or reparsing its prepared closure. Configured aliases keep
-precedence, and declaration files satisfy only type imports.
+without rediscovering files or parsing its prepared closure again. Configured
+aliases keep precedence, and declaration files satisfy only type imports.
 `importUsages` omits those computed rows and keeps string literals, including
 expression-free templates such as ``require(`./mod`)``.
 Reports with the same effective scope share
