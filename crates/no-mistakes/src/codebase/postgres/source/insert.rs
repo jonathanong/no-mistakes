@@ -5,11 +5,12 @@ use super::{
     types::*,
 };
 use sqlparser::ast::{
-    AssignmentTarget, ConflictTarget, Insert, OnConflictAction, OnInsert, SetExpr, Spanned,
-    TableObject,
+    AssignmentTarget, Insert, OnConflictAction, OnInsert, SetExpr, Spanned, TableObject,
 };
 pub(super) mod parsing;
 mod provenance;
+mod spans;
+mod targets;
 mod values;
 use provenance::{provenance, syntax_complete};
 
@@ -76,24 +77,15 @@ fn project_inner(
     };
     let on_conflict = match &value.on {
         Some(OnInsert::OnConflict(conflict)) => {
-            let target = match &conflict.conflict_target {
-                None => PostgresSqlConflictTarget::Omitted,
-                Some(ConflictTarget::Columns(columns)) => PostgresSqlConflictTarget::Columns {
-                    columns: columns.iter().map(identifier).collect(),
-                },
-                Some(ConflictTarget::OnConstraint(constraint)) => {
-                    PostgresSqlConflictTarget::Constraint {
-                        name: name(constraint),
-                    }
-                }
-            };
+            let target = targets::conflict(conflict.conflict_target.as_ref(), facts, locations);
             let action = match &conflict.action {
                 OnConflictAction::DoNothing => PostgresSqlConflictAction::DoNothing,
                 OnConflictAction::DoUpdate(update) => {
                     let assignments = update
                         .assignments
                         .iter()
-                        .map(|assignment| {
+                        .enumerate()
+                        .map(|(index, assignment)| {
                             let (columns, single) = match &assignment.target {
                                 AssignmentTarget::ColumnName(column) => (vec![name(column)], true),
                                 AssignmentTarget::Tuple(columns) => {
@@ -102,24 +94,41 @@ fn project_inner(
                             };
                             let provenance =
                                 provenance(&assignment.value, table.as_ref(), alias.as_ref());
-                            let expression = expression(&assignment.value, locations);
+                            let assignment_facts =
+                                facts.and_then(|facts| facts.assignments.get(index));
+                            let expression =
+                                targets::value(&assignment.value, assignment_facts, locations);
                             let known = single && syntax_complete(&expression.root);
                             complete &= known;
+                            let target = assignment_facts
+                                .and_then(|facts| facts.target.as_ref())
+                                .map(|target| targets::project(target, locations));
                             PostgresSqlInsertAssignment {
                                 columns,
+                                target,
                                 expression,
                                 provenance,
-                                span: locations.span(assignment.span()),
+                                span: locations.span(
+                                    assignment_facts
+                                        .map(|facts| facts.span)
+                                        .unwrap_or_else(|| assignment.span()),
+                                ),
                                 complete: known,
                             }
                         })
                         .collect();
                     PostgresSqlConflictAction::DoUpdate {
                         assignments,
-                        predicate: update
-                            .selection
-                            .as_ref()
-                            .map(|expr| Box::new(expression(expr, locations))),
+                        predicate: update.selection.as_ref().map(|expr| {
+                            Box::new(
+                                match facts.and_then(|facts| facts.action_predicate.as_ref()) {
+                                    Some((span, delimiters)) => {
+                                        spans::expression(expr, *span, delimiters, locations)
+                                    }
+                                    None => expression(expr, locations),
+                                },
+                            )
+                        }),
                     }
                 }
             };
@@ -127,7 +136,7 @@ fn project_inner(
                 target,
                 predicate: facts
                     .and_then(|facts| facts.predicate.as_ref())
-                    .map(|expr| expression(expr, locations)),
+                    .map(|expr| targets::located(expr, locations)),
                 action,
                 span: locations.span(
                     facts

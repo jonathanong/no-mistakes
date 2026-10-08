@@ -2,16 +2,22 @@
 use sqlparser::{
     ast::{ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, Statement},
     keywords::Keyword,
-    parser::{IsOptional, Parser, ParserError},
+    parser::{Parser, ParserError},
     tokenizer::{Location, Token},
 };
 
+pub(super) mod arbiter;
+pub(super) mod assignment;
+pub(super) mod expressions;
 mod markers;
 mod with;
 pub(in crate::codebase::postgres::source) use markers::prepare;
 
 pub(in crate::codebase::postgres::source) struct ConflictFacts {
-    pub predicate: Option<Expr>,
+    pub expressions: Vec<arbiter::Arbiter>,
+    pub assignments: Vec<assignment::Facts>,
+    pub predicate: Option<expressions::Located>,
+    pub action_predicate: Option<(sqlparser::tokenizer::Span, Vec<sqlparser::tokenizer::Span>)>,
     pub span: Option<sqlparser::tokenizer::Span>,
     pub source_span: Option<sqlparser::tokenizer::Span>,
     pub unsupported_with: bool,
@@ -69,6 +75,9 @@ fn parse_inner(
         {
             let start = parser.peek_token().span.start;
             let mut predicate = None;
+            let mut expressions = Vec::new();
+            let mut assignment_facts = Vec::new();
+            let mut action_predicate = None;
             // Preparation proves these two tokens; consume them without adding
             // unreachable failure paths for the synthetic delimiter.
             parser.next_token();
@@ -78,9 +87,20 @@ fn parse_inner(
                     parser.parse_object_name(false)?,
                 ))
             } else if parser.peek_token().token == Token::LParen {
-                Some(ConflictTarget::Columns(
-                    parser.parse_parenthesized_column_list(IsOptional::Mandatory, false)?,
-                ))
+                expressions = arbiter::parse(parser)?;
+                let columns = expressions
+                    .iter()
+                    .filter_map(|arbiter| match &arbiter.expression.expression {
+                        Expr::Identifier(ident) if arbiter.operator_class.is_none() => {
+                            Some(ident.clone())
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>();
+                if columns.len() == expressions.len() {
+                    expressions.clear();
+                }
+                Some(ConflictTarget::Columns(columns))
             } else {
                 None
             };
@@ -90,7 +110,7 @@ fn parse_inner(
                         "Conflict predicates require a column target".into(),
                     ));
                 }
-                predicate = Some(parser.parse_expr()?);
+                predicate = Some(expressions::parse(parser)?);
             }
             parser.expect_keyword_is(Keyword::DO)?;
             let action = if parser.parse_keyword(Keyword::NOTHING) {
@@ -98,9 +118,17 @@ fn parse_inner(
             } else {
                 parser.expect_keyword_is(Keyword::UPDATE)?;
                 parser.expect_keyword_is(Keyword::SET)?;
-                let assignments = parser.parse_comma_separated(Parser::parse_assignment)?;
+                let assignments = parser.parse_comma_separated(|parser| {
+                    let (assignment, target) = assignment::parse(parser)?;
+                    assignment_facts.push(target);
+                    Ok(assignment)
+                })?;
                 let selection = if parser.parse_keyword(Keyword::WHERE) {
-                    Some(parser.parse_expr()?)
+                    {
+                        let value = expressions::parse(parser)?;
+                        action_predicate = Some((value.span, value.delimiters));
+                        Some(value.expression)
+                    }
                 } else {
                     None
                 };
@@ -114,12 +142,18 @@ fn parse_inner(
                 action,
             }));
             let metadata = facts.get_or_insert(ConflictFacts {
+                expressions: Vec::new(),
+                assignments: Vec::new(),
                 predicate: None,
+                action_predicate: None,
                 span: None,
                 source_span: None,
                 unsupported_with: false,
             });
+            metadata.expressions = expressions;
+            metadata.assignments = assignment_facts;
             metadata.predicate = predicate;
+            metadata.action_predicate = action_predicate;
             metadata.span = Some(sqlparser::tokenizer::Span {
                 start,
                 end: parser.token_at(parser.index().saturating_sub(1)).span.end,

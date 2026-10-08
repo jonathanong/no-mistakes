@@ -51,7 +51,10 @@ pub(super) fn normalize(statement: Statement) -> (Statement, Option<ConflictFact
         return (Statement::Query(outer), None);
     };
     let mut facts = ConflictFacts {
+        expressions: Vec::new(),
+        assignments: Vec::new(),
         predicate: None,
+        action_predicate: None,
         span: None,
         source_span: None,
         unsupported_with: true,

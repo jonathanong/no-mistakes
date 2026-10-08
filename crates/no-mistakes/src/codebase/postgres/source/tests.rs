@@ -63,3 +63,7 @@ mod wrapper_insert_identifiers;
 mod wrapper_repeated_options;
 
 mod wrapper_bare_end_alias;
+
+mod conflict_expressions;
+
+mod conflict_indirection;

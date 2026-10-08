@@ -244,7 +244,12 @@ for SELECT), `defaultValues`, or `unsupported`. Statement spans and nested
 expression spans refer to the original input, including comments and literals.
 
 `onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
-and `constraint`. The conflict-target `predicate` is separate from the optional
+`constraint`, and `expressions`. Expression arbiters retain their ordered typed
+expressions, function references, identifiers, and source spans. Optional
+`operatorClasses` aligns with that list, retaining each named operator class
+and its source span (null for entries without a class). Plain column
+arbiters retain the existing `columns` shape. The conflict-target `predicate` is
+separate from the optional
 `doUpdate` action predicate. Actions are `doNothing` or `doUpdate`, whose
 `assignments` expose target columns, typed expressions, spans, and `provenance`:
 `targetColumn`, `excludedColumn`, `literal`, `placeholder`, `derived`, or
@@ -252,8 +257,28 @@ and `constraint`. The conflict-target `predicate` is separate from the optional
 calls have `derived` provenance: their value is not one atomic source, even when
 all arguments are target/excluded references. Arithmetic, subqueries, tuple
 assignments, and unknown qualifiers remain unresolved. An alias hides the original
-target name. This is syntax provenance,
-not database type checking or a replay-safety decision.
+target name. This is syntax provenance, not database type checking or a
+replay-safety decision.
+
+Subscripted and field-only composite assignment targets additionally expose `target.base`, ordered
+`target.subscripts`, and `target.span`; nested index expressions retain exact
+source spans. Mixed array/composite targets additionally expose ordered
+`target.indirection` steps (`subscript` and `field`), including quoted field
+identity and step spans. Prepared conflict expressions retain complete closing-delimiter spans for
+nested function references and call arguments even inside compound expressions.
+Base-column names remain in `columns`. These are syntax facts:
+no catalog index selection, assignment target resolution, or replay policy is
+inferred. Array slices currently diagnose rather than yielding a partial target.
+
+The extended conflict grammar applies to prepared outer INSERT clauses, including
+EXPLAIN/PREPARE wrappers. Expression arbiters and subscripted assignments inside
+data-modifying CTE INSERTs currently diagnose through the upstream grammar;
+neighboring statements remain available. Exact closing-delimiter spans apply
+to the prepared conflict arbiters, assignment targets/RHS, and target/action
+predicates; AST-only nested conditional/CTE projections retain existing span limits.
+Operator classes expose optional ordered typed `parameters` (name and value),
+including their full class source span. Leading composite fields enter the
+ordered assignment indirection after its base column.
 
 ```js
 const facts = await parsePostgresSql({

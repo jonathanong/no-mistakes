@@ -718,3 +718,149 @@ test(
     });
   },
 );
+
+test(
+  "compiled CJS/ESM accepts expression arbiters and nested assignment targets",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-conflict-expressions.sql");
+    const pending = api.parsePostgresSql({ sql });
+    assert.equal(typeof pending.then, "function");
+    const result = await pending;
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 5);
+    const inserts = result.statements.slice(0, 4).map((statement) => statement.insert);
+    for (const [index, expected] of [
+      [0, "values[1]"],
+      [2, "1"],
+      [3, 'coalesce("Values"[1], 2)'],
+    ]) {
+      const target = inserts[index].onConflict.action.assignments[0].target;
+      assert.equal(target.subscripts[0].sql, expected);
+      assert.equal(
+        sql.slice(target.subscripts[0].span.start.offset, target.subscripts[0].span.end.offset),
+        expected,
+      );
+      assert.ok(sql.slice(target.span.start.offset, target.span.end.offset).endsWith("]"));
+      assert.equal(inserts[index].onConflict.action.assignments[0].provenance, "literal");
+    }
+    assert.equal(inserts[1].onConflict.target.kind, "expressions");
+    assert.equal(
+      inserts[1].onConflict.target.expressions[0].functions[0].name.parts[0].identity,
+      "lower",
+    );
+    assert.equal(inserts[3].onConflict.target.expressions.length, 2);
+    assert.equal(inserts[3].onConflict.predicate.sql, '"ID" > 0');
+    assert.equal(inserts[3].onConflict.action.assignments.length, 3);
+    assert.equal(inserts[3].onConflict.action.assignments[0].target.subscripts.length, 2);
+    const rhs = inserts[3].onConflict.action.assignments[1].expression.span;
+    assert.equal(
+      sql.slice(rhs.start.offset, rhs.end.offset),
+      "coalesce(EXCLUDED.slug, lower('x'))",
+    );
+    const assignment = inserts[3].onConflict.action.assignments[1].span;
+    assert.equal(
+      sql.slice(assignment.start.offset, assignment.end.offset),
+      "slug = coalesce(EXCLUDED.slug, lower('x'))",
+    );
+    const invalid = await api.parsePostgresSql({
+      sql: fixture("insert-conflict-expressions-invalid.sql"),
+    });
+    assert.deepEqual(
+      await esm.parsePostgresSql({ sql: fixture("insert-conflict-expressions-invalid.sql") }),
+      invalid,
+    );
+    assert.equal(invalid.diagnostics.length, 15);
+    assert.deepEqual(
+      invalid.statements.map((statement) => statement.kind),
+      Array(15).fill("select"),
+    );
+  },
+);
+
+test(
+  "compiled CJS/ESM retains mixed indirection, opclasses and nested call spans",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-conflict-indirection.sql");
+    const result = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 5);
+    const inserts = result.statements.slice(0, 4).map((statement) => statement.insert);
+    const slice = (span) => sql.slice(span.start.offset, span.end.offset);
+    const arbiter = inserts[0].onConflict.target.expressions[0];
+    assert.deepEqual(
+      arbiter.functions.map((ref) => slice(ref.span)),
+      ["lower(upper(slug))", "upper(slug)"],
+    );
+    const value = inserts[0].onConflict.action.assignments[0].expression;
+    assert.equal(slice(value.root.arguments[1].span), "lower(upper(slug))");
+    assert.equal(slice(value.root.arguments[1].root.arguments[0].span), "upper(slug)");
+    assert.equal(slice(value.functions[0].span), "coalesce(EXCLUDED.slug, lower(upper(slug)))");
+    const unary = result.statements[0].insert.onConflict.action.assignments[3];
+    assert.equal(unary.complete, true);
+    assert.equal(slice(unary.expression.span), "-abs(length(lower(slug)))");
+    assert.equal(unary.expression.root.kind, "unary");
+    const unaryCall = unary.expression.root.expression;
+    assert.equal(slice(unaryCall.arguments[0].span), "length(lower(slug))");
+    assert.equal(slice(unaryCall.arguments[0].root.arguments[0].span), "lower(slug)");
+    const target = inserts[1].onConflict.action.assignments[1].target;
+    assert.deepEqual(
+      target.indirection.map((step) => step.kind),
+      ["subscript", "field", "subscript", "field"],
+    );
+    assert.equal(slice(target.indirection[1].span), '"Items"');
+    const fieldOnly = inserts[1].onConflict.action.assignments[3];
+    assert.equal(fieldOnly.complete, true);
+    assert.equal(fieldOnly.columns[0].sql, "records");
+    assert.equal(fieldOnly.target.base.sql, "records");
+    assert.deepEqual(fieldOnly.target.subscripts, []);
+    assert.equal(slice(fieldOnly.target.span), 'records."Name"');
+    assert.equal(fieldOnly.target.indirection[0].name.quoted, true);
+    assert.equal(slice(fieldOnly.target.indirection[0].span), '"Name"');
+    const leading = inserts[1].onConflict.action.assignments[2];
+    assert.equal(leading.columns[0].sql, "records");
+    assert.equal(leading.target.base.sql, "records");
+    assert.deepEqual(
+      leading.target.indirection.map((step) => step.kind),
+      ["field", "field", "subscript", "subscript", "field"],
+    );
+    const parameter = inserts[2].onConflict.target.operatorClasses[0].parameters[0];
+    assert.equal(parameter.name.identity, "siglen");
+    assert.equal(slice(parameter.value.span), "32");
+    for (const [predicate, expected, nested] of [
+      [
+        inserts[2].onConflict.predicate,
+        "coalesce(is_ready(lower(slug)), false)",
+        "is_ready(lower(slug))",
+      ],
+      [
+        inserts[2].onConflict.action.predicate,
+        "coalesce(is_ready(upper(slug)), true)",
+        "is_ready(upper(slug))",
+      ],
+    ]) {
+      assert.equal(slice(predicate.span), expected);
+      assert.equal(slice(predicate.functions[0].span), expected);
+      assert.equal(slice(predicate.functions[1].span), nested);
+      assert.equal(slice(predicate.root.arguments[0].span), nested);
+      assert.equal(
+        slice(predicate.root.arguments[0].root.arguments[0].span),
+        expected.endsWith("false)") ? "lower(slug)" : "upper(slug)",
+      );
+    }
+    assert.equal(slice(target.indirection[2].span), "[coalesce(records[1].idx, 2)]");
+    assert.equal(slice(target.subscripts[1].functions[0].span), "coalesce(records[1].idx, 2)");
+    assert.deepEqual(
+      inserts[2].onConflict.target.operatorClasses.map((value) => value && slice(value.span)),
+      ["text_pattern_ops (siglen = 32)", '"Ops"."IntOps"', null],
+    );
+    assert.equal(slice(inserts[3].onConflict.target.operatorClasses[0].span), '"Ops"."TextOps"');
+  },
+);

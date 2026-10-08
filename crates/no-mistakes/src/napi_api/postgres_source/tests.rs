@@ -63,3 +63,65 @@ fn composite_insert_binding_preserves_syntax_and_lineage_independently() {
         "excludedColumn"
     );
 }
+
+#[test]
+fn native_conflict_expression_binding_retains_targets_and_diagnostics() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/insert-conflict-expressions.sql"
+    ));
+    let facts: serde_json::Value = serde_json::from_str(
+        &parse_postgres_sql_json_impl(serde_json::json!({ "sql": sql })).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(facts["diagnostics"], serde_json::json!([]));
+    assert_eq!(facts["statements"].as_array().unwrap().len(), 5);
+    assert_eq!(
+        facts["statements"][0]["insert"]["onConflict"]["action"]["assignments"][0]["target"]
+            ["subscripts"][0]["sql"],
+        "values[1]"
+    );
+    assert_eq!(
+        facts["statements"][1]["insert"]["onConflict"]["target"]["kind"],
+        "expressions"
+    );
+    assert_eq!(
+        facts["statements"][2]["insert"]["onConflict"]["action"]["assignments"][0]["target"]
+            ["subscripts"][0]["sql"],
+        "1"
+    );
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/insert-conflict-expressions-invalid.sql"
+    ));
+    let facts: serde_json::Value = serde_json::from_str(
+        &parse_postgres_sql_json_impl(serde_json::json!({ "sql": sql })).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(facts["diagnostics"].as_array().unwrap().len(), 15);
+    assert_eq!(facts["statements"].as_array().unwrap().len(), 15);
+}
+
+#[test]
+fn native_conflict_indirection_and_operator_classes_keep_enclosing_inserts() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/insert-conflict-indirection.sql"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &parse_postgres_sql_json_impl(serde_json::json!({ "sql": sql })).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(result["diagnostics"], serde_json::json!([]));
+    assert_eq!(result["statements"].as_array().unwrap().len(), 5);
+    assert_eq!(
+        result["statements"][1]["insert"]["onConflict"]["action"]["assignments"][0]["target"]
+            ["indirection"][1]["kind"],
+        "field"
+    );
+    assert_eq!(
+        result["statements"][2]["insert"]["onConflict"]["target"]["operatorClasses"][0]["name"]
+            ["sql"],
+        "text_pattern_ops"
+    );
+}

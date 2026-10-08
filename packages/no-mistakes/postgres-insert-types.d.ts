@@ -33,7 +33,12 @@ export interface PostgresSqlConflict {
 export type PostgresSqlConflictTarget =
   | { kind: "omitted" }
   | { kind: "columns"; columns: PostgresSqlIdentifier[] }
-  | { kind: "constraint"; name: PostgresSqlName };
+  | { kind: "constraint"; name: PostgresSqlName }
+  | {
+      kind: "expressions";
+      expressions: PostgresSqlExpression[];
+      operatorClasses?: (PostgresSqlArbiterOperatorClass | null)[];
+    };
 export type PostgresSqlConflictAction =
   | { kind: "doNothing" }
   | {
@@ -41,8 +46,24 @@ export type PostgresSqlConflictAction =
       assignments: PostgresSqlInsertAssignment[];
       predicate: PostgresSqlExpression | null;
     };
+/** Ordered index expressions retain source spans; catalog resolution is not implied. */
+export interface PostgresSqlAssignmentTarget {
+  base: PostgresSqlExpression;
+  subscripts: PostgresSqlExpression[];
+  indirection?: PostgresSqlAssignmentStep[];
+  span: PostgresSqlSpan | null;
+}
+export interface PostgresSqlArbiterOperatorClass {
+  name: PostgresSqlName;
+  parameters?: PostgresSqlArbiterParameter[];
+  span: PostgresSqlSpan | null;
+}
+export type PostgresSqlAssignmentStep =
+  | { kind: "subscript"; expression: PostgresSqlExpression; span: PostgresSqlSpan | null }
+  | { kind: "field"; name: PostgresSqlIdentifier; span: PostgresSqlSpan | null };
 export interface PostgresSqlInsertAssignment {
   columns: PostgresSqlName[];
+  target?: PostgresSqlAssignmentTarget;
   expression: PostgresSqlExpression;
   /** Conservative syntactic lineage; derived and unresolved do not imply missing syntax. */
   provenance: PostgresSqlInsertProvenance;
@@ -57,3 +78,8 @@ export type PostgresSqlInsertProvenance =
   | "placeholder"
   | "derived"
   | "unresolved";
+
+export interface PostgresSqlArbiterParameter {
+  name: PostgresSqlIdentifier;
+  value: PostgresSqlExpression;
+}

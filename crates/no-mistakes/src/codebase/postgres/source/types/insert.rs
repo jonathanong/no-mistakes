@@ -44,8 +44,17 @@ pub struct PostgresSqlConflict {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PostgresSqlConflictTarget {
     Omitted,
-    Columns { columns: Vec<PostgresSqlIdentifier> },
-    Constraint { name: PostgresSqlName },
+    Columns {
+        columns: Vec<PostgresSqlIdentifier>,
+    },
+    Constraint {
+        name: PostgresSqlName,
+    },
+    Expressions {
+        expressions: Vec<PostgresSqlExpression>,
+        #[serde(skip_serializing_if = "Option::is_none", rename = "operatorClasses")]
+        operator_classes: Option<Vec<Option<PostgresSqlArbiterOperatorClass>>>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -62,10 +71,45 @@ pub enum PostgresSqlConflictAction {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlInsertAssignment {
     pub columns: Vec<PostgresSqlName>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target: Option<PostgresSqlAssignmentTarget>,
     pub expression: PostgresSqlExpression,
     pub provenance: PostgresSqlInsertProvenance,
     pub span: Option<PostgresSqlSpan>,
     pub complete: bool,
+}
+
+/// Syntactic index target; no catalog or replay-safety resolution is implied.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlAssignmentTarget {
+    pub base: PostgresSqlExpression,
+    pub subscripts: Vec<PostgresSqlExpression>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub indirection: Option<Vec<PostgresSqlAssignmentStep>>,
+    pub span: Option<PostgresSqlSpan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlArbiterOperatorClass {
+    pub name: PostgresSqlName,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub parameters: Vec<PostgresSqlArbiterParameter>,
+    pub span: Option<PostgresSqlSpan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PostgresSqlAssignmentStep {
+    Subscript {
+        expression: PostgresSqlExpression,
+        span: Option<PostgresSqlSpan>,
+    },
+    Field {
+        name: PostgresSqlIdentifier,
+        span: Option<PostgresSqlSpan>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -78,4 +122,11 @@ pub enum PostgresSqlInsertProvenance {
     /// A function expression derives its result rather than naming one atomic source.
     Derived,
     Unresolved,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlArbiterParameter {
+    pub name: PostgresSqlIdentifier,
+    pub value: PostgresSqlExpression,
 }

@@ -36,3 +36,22 @@ SQL execution or replay safety.
 `CREATE INDEX ... ON ONLY relation` is represented by `index.only: true`;
 quoted or expression-level `ONLY` identifiers remain part of their relation,
 key, or predicate facts.
+
+Expression conflict arbiters expose an ordered `target.expressions` list.
+Subscripted assignments expose `target.base`, ordered `target.subscripts`, and
+source spans while preserving base names in `columns` and RHS provenance. Use
+these as syntax facts; do not infer catalog index matches or replay safety.
+
+Arbiter `operatorClasses` aligns with `target.expressions` when a class is
+specified. Mixed array/composite targets retain ordered `target.indirection`
+steps, while nested call and argument spans include their closing delimiters.
+
+The extended conflict grammar applies to prepared outer INSERT clauses, including
+EXPLAIN/PREPARE wrappers. Expression arbiters and subscripted assignments inside
+data-modifying CTE INSERTs currently diagnose through the upstream grammar;
+neighboring statements remain available. Exact closing-delimiter spans apply
+to the prepared conflict arbiters, assignment targets/RHS, and target/action
+predicates; AST-only nested conditional/CTE projections retain existing span limits.
+Operator classes expose optional ordered typed `parameters` (name and value),
+including their full class source span. Leading composite fields enter the
+ordered assignment indirection after its base column.

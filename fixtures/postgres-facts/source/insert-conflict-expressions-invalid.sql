@@ -1,0 +1,34 @@
+INSERT INTO foo VALUES (1) ON CONFLICT (lower()) DO UPDATE SET values[1] = ;
+SELECT 1;
+INSERT INTO foo VALUES (1) ON CONFLICT (lower(slug),) DO NOTHING;
+SELECT 2;
+INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET lower(slug) = 2;
+SELECT 3;
+INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET values[1 = 2;
+SELECT 4;
+INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET = 2;
+SELECT 5;
+INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET values[] = 2;
+SELECT 6;
+INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET records[1]. = 2;
+SELECT 7;
+INSERT INTO foo VALUES (1) ON CONFLICT (lower(slug) "Ops".) DO NOTHING;
+SELECT 8;
+INSERT INTO foo VALUES (1) ON CONFLICT (lower(slug) text_ops unexpected) DO NOTHING;
+SELECT 9;
+
+-- Nested data-modifying CTE INSERTs still use the upstream grammar; diagnose explicitly.
+WITH changed AS (INSERT INTO foo VALUES (1) ON CONFLICT (lower(slug)) DO NOTHING RETURNING *) SELECT * FROM changed;
+SELECT 10;
+WITH changed AS (INSERT INTO foo VALUES (1) ON CONFLICT (id) DO UPDATE SET values[1] = 2 RETURNING *) SELECT * FROM changed;
+SELECT 11;
+
+INSERT INTO foo VALUES (1) ON CONFLICT (slug text_ops (siglen 32)) DO NOTHING;
+SELECT 12;
+INSERT INTO foo VALUES (1) ON CONFLICT (slug text_ops (siglen = 32,)) DO NOTHING;
+SELECT 13;
+
+INSERT INTO foo VALUES (1) ON CONFLICT (slug text_ops (siglen = )) DO NOTHING;
+SELECT 14;
+INSERT INTO foo VALUES (1) ON CONFLICT (slug text_ops (siglen = 32 unexpected)) DO NOTHING;
+SELECT 15;
