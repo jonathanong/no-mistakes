@@ -1,0 +1,14 @@
+CREATE INDEX example_idx ON ONLY example (id);
+CREATE UNIQUE INDEX CONCURRENTLY qualified_idx ON ONLY "app"."Accounts" USING gin (payload jsonb_path_ops) WHERE active;
+CREATE INDEX malformed_idx ON ONLY broken ();
+CREATE INDEX quoted_identifier_idx ON "ONLY" (id);
+CREATE INDEX quoted_relation_idx ON "t" (ONLY);
+CREATE INDEX only_predicate_idx ON t (id) WHERE ONLY IS TRUE;
+CREATE INDEX malformed_relation_idx ON (ONLY) (id);
+SELECT 42;
+CREATE VIEW index AS SELECT a.ONLY FROM a JOIN b ON ONLY = b.id;
+EXPLAIN CREATE INDEX wrapped_idx ON ONLY wrapped_table (id);
+CREATE INDEX missing_on_idx broken (id);
+CREATE INDEX missing_relation_idx ON;
+CREATE UNIQUE;
+CREATE INDEX ordinary_example_idx ON example (id);

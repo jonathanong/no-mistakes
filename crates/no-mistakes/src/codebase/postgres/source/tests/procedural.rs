@@ -235,7 +235,10 @@ fn conditional_projection_requires_its_prepared_source_owner() {
             &prepared.recursive_views,
             &[],
             &[],
-            &[],
+            super::super::wrappers::child::Markers {
+                inserts: &[],
+                index_only: Vec::new(),
+            },
             super::super::metadata_preparation::Comments::new(),
         );
         let empty = fixture("empty.sql");

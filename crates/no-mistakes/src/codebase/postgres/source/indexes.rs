@@ -5,10 +5,15 @@ use super::{
 };
 use sqlparser::ast::{CreateIndex, IndexType};
 
-pub(super) fn index(value: &CreateIndex, locations: &Locations<'_>) -> PostgresSqlIndex {
+pub(super) fn index(
+    value: &CreateIndex,
+    locations: &Locations<'_>,
+    only: bool,
+) -> PostgresSqlIndex {
     let mut result = PostgresSqlIndex {
         name: value.name.as_ref().map(name),
         table: name(&value.table_name),
+        only,
         method: value.using.as_ref().map_or_else(
             || "btree".into(),
             |method| match method {
@@ -57,12 +62,17 @@ pub(super) fn index(value: &CreateIndex, locations: &Locations<'_>) -> PostgresS
             .map(|part| (part.identity.clone(), part.quoted))
             .collect::<Vec<_>>()
     };
-    result.structural_identity = serde_json::to_string(&serde_json::json!({
+    let mut identity = serde_json::json!({
         "table": names(&result.table), "method":result.method, "unique":result.unique,
         "nullsDistinct":result.nulls_distinct,
         "keys":result.keys.iter().map(|key| serde_json::json!([key.expression.identity,key.ascending,key.nulls_first,key.operator_class.as_ref().map(names)])).collect::<Vec<_>>(),
         "include":result.include.iter().map(|part| (&part.identity,part.quoted)).collect::<Vec<_>>(),
         "predicate":result.predicate.as_ref().map(|expr| &expr.identity), "options":result.options
-    })).expect("serializable index identity");
+    });
+    if result.only {
+        identity["only"] = serde_json::Value::Bool(true);
+    }
+    result.structural_identity =
+        serde_json::to_string(&identity).expect("serializable index identity");
     result
 }

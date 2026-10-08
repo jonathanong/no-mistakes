@@ -79,6 +79,10 @@ function-call facts in SQL files and parameterized embedded SQL, including
 recoverable PL/pgSQL expressions and static EXECUTE. Configured names preserve
 qualified and quoted identifier identity; columns and aliases are inert.
 
+The pure PostgreSQL source API is available through the async native Node
+binding in CJS and ESM. Its typed CREATE INDEX facts preserve the `ON ONLY`
+relation modifier in the Rust facts and Node declarations.
+
 PostgreSQL bounded-statement checks share prepared SQL facts across the CLI and
 async Node API. Temporary view lifetimes include cascading drops of physical
 materialized views, qualified namesake separation, and transaction or savepoint

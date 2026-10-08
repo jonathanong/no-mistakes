@@ -13,7 +13,6 @@ inspect every branch without assuming its condition is true. PostgreSQL 18 virtu
 default storage. Unsupported procedural control flow remains explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
 with exclusive span ends. See [the source API](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-source-api.md)
 for exported types, structural index identity, and grammar boundaries.
-
 Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
 `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload. Dollar-quoted,
 standard single-quoted (doubled quotes), and PostgreSQL `E` escape strings are
@@ -33,3 +32,7 @@ itself imply unsupported syntax; inspect diagnostics for incomplete projections.
 Unary roots expose a typed `expression` operand, including signed literals;
 unsupported operand projections remain incomplete. These facts do not establish
 SQL execution or replay safety.
+
+`CREATE INDEX ... ON ONLY relation` is represented by `index.only: true`;
+quoted or expression-level `ONLY` identifiers remain part of their relation,
+key, or predicate facts.

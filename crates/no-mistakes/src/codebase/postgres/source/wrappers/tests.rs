@@ -20,7 +20,10 @@ fn missing_child_tokens_and_projection_depth_fail_closed() {
         &prepared.recursive_views,
         &[],
         &[],
-        &[],
+        child::Markers {
+            inserts: &[],
+            index_only: Vec::new(),
+        },
         super::super::metadata_preparation::Comments::new(),
     );
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);

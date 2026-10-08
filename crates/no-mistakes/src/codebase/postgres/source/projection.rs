@@ -3,11 +3,26 @@ use super::{columns, ddl, expressions::name, indexes, locations::Locations, type
 use crate::codebase::postgres::parse::RecursiveViews;
 use sqlparser::ast::Statement;
 
+pub(super) fn project_parsed(
+    statement: &Statement,
+    parser: &sqlparser::parser::Parser<'_>,
+    token_range: std::ops::Range<usize>,
+    locations: &Locations<'_>,
+    recursive_views: &RecursiveViews,
+    index_only: bool,
+) -> PostgresSqlStatementKind {
+    let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
+        token_range.map(|index| parser.token_at(index)),
+    );
+    project(statement, locations, &tables, recursive_views, index_only)
+}
+
 pub(super) fn project(
     statement: &Statement,
     locations: &Locations<'_>,
     tables: &crate::codebase::postgres::statements::TableTokenIndex,
     recursive_views: &RecursiveViews,
+    index_only: bool,
 ) -> PostgresSqlStatementKind {
     if let Some(drop) = super::drop_facts::drop(statement) {
         return PostgresSqlStatementKind::Drop { drop };
@@ -42,7 +57,7 @@ pub(super) fn project(
                 .collect(),
         },
         Statement::CreateIndex(value) => PostgresSqlStatementKind::CreateIndex {
-            index: indexes::index(value, locations),
+            index: indexes::index(value, locations, index_only),
         },
         Statement::CreateView(value) => PostgresSqlStatementKind::CreateView {
             view: ddl::view(value, locations, tables, recursive_views.contains(value)),

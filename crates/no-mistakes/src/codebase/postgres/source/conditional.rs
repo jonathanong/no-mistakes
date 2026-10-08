@@ -87,7 +87,13 @@ pub(super) fn project(
                 let tables = crate::codebase::postgres::statements::TableTokenIndex::from_iter(
                     owned.iter().copied(),
                 );
-                super::projection::project(statement, locations, &tables, recursive_views)
+                super::projection::project(
+                    statement,
+                    locations,
+                    &tables,
+                    recursive_views,
+                    super::index_only::contains(&wrapper_context.index_only, owned[0].span.start),
+                )
             };
             super::wrappers::finalize(&mut facts, &span);
             cursor = owned.last().unwrap().span.end;

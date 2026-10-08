@@ -16,6 +16,7 @@ pub(super) fn collect_program(
         diagnostics: Vec::new(),
     };
     super::adjacent_strings::prepare(&mut prepared.tokens);
+    let create_index_only = super::index_only::prepare(&mut prepared.tokens);
     super::wrappers::prepare(&mut prepared.tokens);
     ddl::prepare_trigger_arguments(&mut prepared.tokens);
     let generated = super::generated::prepare(&mut prepared.tokens);
@@ -43,7 +44,10 @@ pub(super) fn collect_program(
         &prepared.recursive_views,
         &fetch_expressions,
         &generated,
-        &conflict_markers,
+        super::wrappers::child::Markers {
+            inserts: &conflict_markers,
+            index_only: create_index_only,
+        },
         comments,
     )
     .with_executes(executes);
@@ -116,15 +120,13 @@ pub(super) fn collect_program(
                             &wrapper_context,
                         )
                     } else {
-                        let tables =
-                            crate::codebase::postgres::statements::TableTokenIndex::from_iter(
-                                (start_index..parser.index()).map(|index| parser.token_at(index)),
-                            );
-                        Ok(super::projection::project(
+                        Ok(super::projection::project_parsed(
                             &statement,
+                            &parser,
+                            start_index..parser.index(),
                             locations,
-                            &tables,
                             &prepared.recursive_views,
+                            super::index_only::contains(&wrapper_context.index_only, start),
                         ))
                     }
                 })
@@ -195,13 +197,11 @@ pub(super) fn collect_program(
         }
         ordinal += 1;
     }
-    if let Some(error) = prepared.lexical_error {
-        result.diagnostics.push(PostgresSqlDiagnostic {
-            message: error.to_string(),
-            span: locations
-                .position(error.location)
-                .map(|position| locations.range(position.offset, source.sql.len())),
-        });
-    }
+    super::diagnostics::append_lexical_error(
+        &mut result.diagnostics,
+        prepared.lexical_error,
+        locations,
+        source.sql.len(),
+    );
     result
 }

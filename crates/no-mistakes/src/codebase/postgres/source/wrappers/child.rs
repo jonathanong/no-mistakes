@@ -1,4 +1,8 @@
 use super::*;
+pub struct Markers<'a> {
+    pub inserts: &'a [sqlparser::tokenizer::Location],
+    pub index_only: Vec<sqlparser::tokenizer::Location>,
+}
 impl<'a, 's> Context<'a, 's> {
     pub(in crate::codebase::postgres::source) fn new(
         source: &'s PostgresSqlSource,
@@ -6,7 +10,7 @@ impl<'a, 's> Context<'a, 's> {
         recursive_views: &'a RecursiveViews,
         fetch: &'a [crate::codebase::postgres::parse::fetch_expression::Clause],
         generated: &'a [Span],
-        markers: &'a [sqlparser::tokenizer::Location],
+        markers: Markers<'a>,
         comments: super::super::metadata_preparation::Comments,
     ) -> Self {
         Self {
@@ -16,7 +20,8 @@ impl<'a, 's> Context<'a, 's> {
             recursive_views,
             fetch,
             generated,
-            markers,
+            markers: markers.inserts,
+            index_only: markers.index_only,
             comments: std::cell::RefCell::new(comments),
         }
     }
@@ -78,6 +83,7 @@ impl Context<'_, '_> {
                 self.locations,
                 &tables,
                 self.recursive_views,
+                super::super::index_only::contains(&self.index_only, first.span.start),
             )
         };
         let mut result = PostgresSqlStatement {

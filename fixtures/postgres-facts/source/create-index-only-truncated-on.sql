@@ -1,0 +1,1 @@
+CREATE INDEX truncated_idx ON
