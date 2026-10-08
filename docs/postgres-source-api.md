@@ -492,3 +492,13 @@ incomplete. Child SQL and spans retain the full original metadata occurrence.
 
 The legacy `EXPLAIN ANALYSE` spelling shares the same prepared token normalization
 in top-level statements, conditional branches, and atomic declarations.
+
+Literal PL/pgSQL `EXECUTE` in supported DO bodies exposes `literalExecute` facts
+with the exported `PostgresSqlLiteralExecute` payload. Dollar-quoted, ordinary
+single-quoted, and `E` escape strings are decoded before parsing their ordered
+SQL children through the existing fact pipeline. `literalSpan` and the enclosing
+statement span refer to original source; every child and diagnostic span refers
+to `decodedSql`, including expression spans. Escapes therefore never produce
+fabricated original source coordinates. Malformed nested SQL is diagnostic and
+incomplete. Variables, concatenation, format calls, and EXECUTE modifiers remain
+unsupported occurrences; source facts imply no execution or replay policy.
