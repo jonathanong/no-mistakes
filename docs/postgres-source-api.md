@@ -242,10 +242,12 @@ expression spans refer to the original input, including comments and literals.
 and `constraint`. The conflict-target `predicate` is separate from the optional
 `doUpdate` action predicate. Actions are `doNothing` or `doUpdate`, whose
 `assignments` expose target columns, typed expressions, spans, and `provenance`:
-`targetColumn`, `excludedColumn`, `literal`, `placeholder`, or `unresolved`.
-Parentheses and casts preserve the underlying reference provenance; function
-calls, arithmetic, subqueries, tuple assignments, and unknown qualifiers remain
-unresolved. An alias hides the original target name. This is syntax provenance,
+`targetColumn`, `excludedColumn`, `literal`, `placeholder`, `derived`, or
+`unresolved`. Parentheses and casts preserve the underlying provenance. Function
+calls have `derived` provenance: their value is not one atomic source, even when
+all arguments are target/excluded references. Arithmetic, subqueries, tuple
+assignments, and unknown qualifiers remain unresolved. An alias hides the original
+target name. This is syntax provenance,
 not database type checking or a replay-safety decision.
 
 ```js
@@ -259,8 +261,16 @@ console.log(insert.onConflict.action.assignments[0].provenance); // excludedColu
 Consumers must check `insert.complete`, `insert.diagnostics`, assignment
 `complete`, and SELECT source completeness before relying on facts. Unsupported
 INSERT extensions (including RETURNING, whose output facts are outside this
-contract) and unresolved assignment provenance set completeness false and
-produce diagnostics. Syntax the prepared parser cannot represent produces the
+contract) and incompletely represented expression shapes set completeness false
+and produce syntax diagnostics. Completeness is independent of provenance:
+`COALESCE(t.v, EXCLUDED.v)` and `GREATEST(t.v, EXCLUDED.v)` have complete syntax
+and `derived` provenance. Nested calls, literal/placeholder arguments, and
+parenthesized/cast roots retain this distinction. Unknown qualifiers and an
+`excluded` target-alias collision retain `unresolved` provenance but do not make
+represented column syntax incomplete. Wildcard call arguments, subqueries,
+and roots without typed operand children remain incomplete. Derived or unresolved
+lineage alone produces no unsupported-syntax diagnostic. Syntax the prepared
+parser cannot represent produces the
 existing source diagnostic and preserves neighboring valid statements. No raw
 parser AST, embedded-language extraction, or consumer policy is exported. All
 INSERT contracts are named exported TypeScript types available from both Node
@@ -361,7 +371,8 @@ same query's column, equality, subquery and CTE-reference facts. Conflict action
 predicates have clause `other` and non-mandatory context because they apply only
 to that conditional action. INSERT target aliases resolve through the query's
 typed target relation; excluded-column provenance remains in the INSERT payload.
-Unsupported assignment provenance retains its nested query facts alongside the
+Unsupported assignment expression shapes retain their nested query facts
+alongside the
 explicit incomplete child.
 
 Write targets bind to physical table facts even when a CTE declares the same

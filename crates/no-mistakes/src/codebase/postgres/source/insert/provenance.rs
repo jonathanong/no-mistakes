@@ -41,6 +41,23 @@ pub(super) fn provenance(
         }
         Expr::Value(value) if matches!(value.value, Value::Placeholder(_)) => P::Placeholder,
         Expr::Value(_) | Expr::TypedString { .. } => P::Literal,
+        Expr::Function(_) => P::Derived,
         _ => P::Unresolved,
+    }
+}
+
+/// Completeness describes the exposed syntax, independently of lineage resolution.
+pub(super) fn syntax_complete(root: &PostgresSqlExpressionRoot) -> bool {
+    use PostgresSqlExpressionRoot as R;
+    match root {
+        R::ColumnReference { .. } | R::Literal { .. } => true,
+        R::Parenthesized { expression } | R::Cast { expression, .. } => syntax_complete(expression),
+        R::FunctionCall {
+            arguments,
+            arguments_complete,
+            ..
+        } => *arguments_complete && arguments.iter().all(|arg| syntax_complete(&arg.root)),
+        // These roots do not expose all operands as typed children.
+        _ => false,
     }
 }

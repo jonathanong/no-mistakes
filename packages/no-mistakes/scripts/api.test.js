@@ -1092,6 +1092,7 @@ test("INSERT facts expose named exported declaration contracts", () => {
   for (const name of ["InsertSource", "ConflictTarget", "ConflictAction", "InsertProvenance"])
     assert.match(insert, new RegExp(`export type PostgresSql${name} =`));
   assert.match(insert, /columnsOmitted: boolean/);
+  assert.match(insert, /\| "derived"/);
   assert.match(insert, /diagnostics: PostgresSqlDiagnostic\[\]/);
 });
 

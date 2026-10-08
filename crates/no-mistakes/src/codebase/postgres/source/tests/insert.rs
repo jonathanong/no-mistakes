@@ -91,12 +91,12 @@ fn insert_sources_and_conflicts_retain_original_boundaries() {
             PostgresSqlInsertProvenance::Literal,
             PostgresSqlInsertProvenance::Placeholder,
             PostgresSqlInsertProvenance::Unresolved,
-            PostgresSqlInsertProvenance::Unresolved,
+            PostgresSqlInsertProvenance::Derived,
             PostgresSqlInsertProvenance::ExcludedColumn
         ]
     );
-    assert!(!inserts[7].complete);
-    assert_eq!(inserts[7].diagnostics.len(), 1);
+    assert!(inserts[7].complete);
+    assert!(inserts[7].diagnostics.is_empty());
     assert!(inserts[8].on_conflict.as_ref().unwrap().predicate.is_some());
     assert!(inserts[10]
         .on_conflict
@@ -105,8 +105,8 @@ fn insert_sources_and_conflicts_retain_original_boundaries() {
         .predicate
         .is_some());
     assert!(!inserts[11].complete);
-    assert!(!inserts[12].complete);
-    assert!(!inserts[9].complete); // Tuple RHS provenance is deliberately unresolved.
+    assert!(inserts[12].complete); // Alias collision has known syntax, unresolved lineage.
+    assert!(!inserts[9].complete); // Tuple RHS operands are not projected as typed children.
 }
 
 #[test]
@@ -178,4 +178,70 @@ fn truncated_insert_conflict_has_a_bounded_diagnostic() {
         result.diagnostics[0].span.as_ref().unwrap().end.offset,
         fixture("insert-truncated.sql").len()
     );
+}
+
+#[test]
+fn composite_assignment_syntax_is_independent_of_provenance() {
+    let sql = fixture("insert-composite.sql");
+    let result = facts("insert-composite.sql");
+    assert_eq!(result.statements.len(), 10);
+    assert_eq!(result.diagnostics.len(), 1); // Malformed syntax remains a parser diagnostic.
+    for (index, statement) in result.statements.iter().enumerate() {
+        let PostgresSqlStatementKind::Insert { insert } = &statement.facts else {
+            panic!("INSERT expected")
+        };
+        let PostgresSqlConflictAction::DoUpdate { assignments, .. } =
+            &insert.on_conflict.as_ref().unwrap().action
+        else {
+            panic!("UPDATE expected")
+        };
+        let assignment = &assignments[0];
+        assert_eq!(assignment.complete, index < 7);
+        assert_eq!(insert.complete, index < 7);
+        assert_eq!(insert.diagnostics.is_empty(), index < 7);
+        let expected = match index {
+            2 => PostgresSqlInsertProvenance::ExcludedColumn,
+            4 | 5 | 9 => PostgresSqlInsertProvenance::Unresolved,
+            _ => PostgresSqlInsertProvenance::Derived,
+        };
+        assert_eq!(assignment.provenance, expected);
+        let span = assignment.expression.span.as_ref().unwrap();
+        assert!(!sql[span.start.offset..span.end.offset].is_empty());
+        if index < 2 {
+            let PostgresSqlExpressionRoot::FunctionCall {
+                name,
+                arguments,
+                arguments_complete,
+                ..
+            } = &assignment.expression.root
+            else {
+                panic!("call expected")
+            };
+            assert_eq!(
+                name.parts[0].identity,
+                if index == 0 { "coalesce" } else { "greatest" }
+            );
+            assert!(*arguments_complete);
+            assert_eq!(
+                arguments
+                    .iter()
+                    .map(|arg| arg.sql.as_str())
+                    .collect::<Vec<_>>(),
+                ["t.v", "EXCLUDED.v"]
+            );
+            for argument in arguments {
+                assert!(matches!(
+                    argument.root,
+                    PostgresSqlExpressionRoot::ColumnReference { .. }
+                ));
+                let span = argument.span.as_ref().unwrap();
+                assert_eq!(sql[span.start.offset..span.end.offset], argument.sql);
+            }
+            assert_eq!(assignment.expression.columns.len(), 2);
+        }
+        if index >= 7 {
+            assert!(insert.diagnostics[0].message.contains("syntax"));
+            assert!(!insert.diagnostics[0].message.contains("provenance"));
+        }
+    }
 }

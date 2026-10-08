@@ -15,6 +15,7 @@ export interface PostgresSqlInsert {
   source: PostgresSqlInsertSource;
   onConflict: PostgresSqlConflict | null;
   span: PostgresSqlSpan | null;
+  /** Syntax completeness is independent of provenance and does not imply replay safety. */
   complete: boolean;
   diagnostics: PostgresSqlDiagnostic[];
 }
@@ -43,8 +44,10 @@ export type PostgresSqlConflictAction =
 export interface PostgresSqlInsertAssignment {
   columns: PostgresSqlName[];
   expression: PostgresSqlExpression;
+  /** Conservative syntactic lineage; derived and unresolved do not imply missing syntax. */
   provenance: PostgresSqlInsertProvenance;
   span: PostgresSqlSpan | null;
+  /** Whether the assignment syntax is fully represented, independently of provenance. */
   complete: boolean;
 }
 export type PostgresSqlInsertProvenance =
@@ -52,4 +55,5 @@ export type PostgresSqlInsertProvenance =
   | "excludedColumn"
   | "literal"
   | "placeholder"
+  | "derived"
   | "unresolved";

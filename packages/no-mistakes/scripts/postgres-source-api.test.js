@@ -400,13 +400,13 @@ test(
     assert.equal(inserts[6].onConflict.predicate.sql, "id > 0");
     assert.deepEqual(
       inserts[7].onConflict.action.assignments.map((assignment) => assignment.provenance),
-      ["targetColumn", "literal", "placeholder", "unresolved", "unresolved", "excludedColumn"],
+      ["targetColumn", "literal", "placeholder", "unresolved", "derived", "excludedColumn"],
     );
-    assert.equal(inserts[7].complete, false);
-    assert.equal(inserts[7].diagnostics.length, 1);
+    assert.equal(inserts[7].complete, true);
+    assert.equal(inserts[7].diagnostics.length, 0);
     assert.equal(inserts[8].onConflict.action.kind, "doNothing");
     assert.equal(inserts[9].complete, false);
-    assert.equal(inserts[12].complete, false);
+    assert.equal(inserts[12].complete, true);
     const malformed = await cjs.parsePostgresSql({ sql: fixture("insert-errors.sql") });
     assert.equal(malformed.diagnostics.length, 10);
     assert.equal(malformed.statements.length, 1);
@@ -523,5 +523,68 @@ test(
       assert.equal(statement.execute.complete, true);
     }
     assert.equal(nested.statements[0].kind, "other");
+  },
+);
+
+test(
+  "compiled CJS and ESM distinguish composite syntax from assignment lineage",
+  { skip: !compiled },
+  async () => {
+    const sql = readFileSync(
+      join(__dirname, "../../../fixtures/postgres-facts/source/insert-composite.sql"),
+      "utf8",
+    );
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.equal(facts.statements.length, 10);
+    assert.equal(facts.diagnostics.length, 1);
+    const bytes = Buffer.from(sql);
+    facts.statements.forEach(({ insert }, index) => {
+      const assignment = insert.onConflict.action.assignments[0];
+      assert.equal(insert.complete, index < 7);
+      assert.equal(assignment.complete, index < 7);
+      assert.equal(insert.diagnostics.length, index < 7 ? 0 : 1);
+      assert.equal(
+        assignment.provenance,
+        index === 2 ? "excludedColumn" : [4, 5, 9].includes(index) ? "unresolved" : "derived",
+      );
+      if (index < 2) {
+        const root = assignment.expression.root;
+        assert.equal(root.kind, "functionCall");
+        assert.equal(root.name.parts[0].identity, index === 0 ? "coalesce" : "greatest");
+        assert.equal(root.argumentsComplete, true);
+        assert.deepEqual(
+          root.arguments.map((arg) => arg.sql),
+          ["t.v", "EXCLUDED.v"],
+        );
+        assert.deepEqual(
+          root.arguments.map((arg) => arg.root.kind),
+          ["columnReference", "columnReference"],
+        );
+        assert.deepEqual(
+          assignment.expression.columns.map((column) => column.sql),
+          ["EXCLUDED.v", "t.v"],
+        );
+        for (const argument of root.arguments) {
+          assert.equal(
+            bytes.subarray(argument.span.start.offset, argument.span.end.offset).toString(),
+            argument.sql,
+          );
+        }
+      }
+      if (index === 3) {
+        const call = assignment.expression.root.expression.expression;
+        assert.equal(call.kind, "functionCall");
+        assert.deepEqual(
+          call.arguments.map((arg) => arg.root.kind),
+          ["functionCall", "literal", "literal"],
+        );
+        assert.equal(call.arguments[0].root.argumentsComplete, true);
+      }
+      if (index >= 7)
+        assert.match(insert.diagnostics[0].message, /incompletely represented syntax/);
+    });
   },
 );

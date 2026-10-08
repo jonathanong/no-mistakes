@@ -11,7 +11,7 @@ use sqlparser::ast::{
 pub(super) mod parsing;
 mod provenance;
 mod values;
-use provenance::provenance;
+use provenance::{provenance, syntax_complete};
 
 pub(super) fn project(
     value: &Insert,
@@ -102,12 +102,14 @@ fn project_inner(
                             };
                             let provenance =
                                 provenance(&assignment.value, table.as_ref(), alias.as_ref());
-                            let known =
-                                single && provenance != PostgresSqlInsertProvenance::Unresolved;
+                            let expression = expression(&assignment.value, locations);
+                            let known = single
+                                && (syntax_complete(&expression.root)
+                                    || provenance == PostgresSqlInsertProvenance::Literal);
                             complete &= known;
                             PostgresSqlInsertAssignment {
                                 columns,
-                                expression: expression(&assignment.value, locations),
+                                expression,
                                 provenance,
                                 span: locations.span(assignment.span()),
                                 complete: known,
@@ -146,8 +148,7 @@ fn project_inner(
         Vec::new()
     } else {
         vec![PostgresSqlDiagnostic {
-            message: "INSERT facts contain unsupported syntax or unresolved assignment provenance"
-                .into(),
+            message: "INSERT facts contain unsupported or incompletely represented syntax".into(),
             span: locations.span(value.span()),
         }]
     };
