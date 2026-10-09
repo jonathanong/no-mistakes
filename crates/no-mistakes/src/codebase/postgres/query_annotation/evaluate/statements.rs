@@ -136,12 +136,37 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),
             Expr::Tagged(tag, _, _) => !self.tag_trusted(tag, path, env),
-            Expr::Await(expr) | Expr::Member(expr, _) | Expr::Index(expr, _) => {
+            Expr::Await(expr) => self.effect_can_mutate(expr, path, env),
+            // A getter or proxy trap can mutate captured state. Argument-object
+            // slots and `length` are data, so those reads stay pure.
+            Expr::Member(expr, _) | Expr::Index(expr, _) => {
                 self.effect_can_mutate(expr, path, env)
+                    || !self.proven_argument_data_read(expr, env)
             }
             Expr::Discard(expr) => self.effect_can_mutate(expr, path, env),
             Expr::Primitive | Expr::Text(_) | Expr::Name(_) | Expr::Function(_) => false,
             _ => true,
         }
+    }
+
+    /// True when `receiver` is the invocation's argument object, including an
+    /// alias such as `const slots = arguments`. A parameter that shadows the
+    /// name `arguments` is an ordinary value and is not included.
+    fn proven_argument_data_read(&self, receiver: &Expr, env: Environment) -> bool {
+        let Expr::Name(name) = receiver else {
+            return false;
+        };
+        self.scopes
+            .get(env)
+            .and_then(|scope| scope.get(name))
+            .is_some_and(is_arguments_value)
+    }
+}
+
+fn is_arguments_value(value: &Value) -> bool {
+    match value {
+        Value::Arguments(_) => true,
+        Value::Evaluated(inner, _) => is_arguments_value(inner),
+        _ => false,
     }
 }

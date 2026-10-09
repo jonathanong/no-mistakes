@@ -257,7 +257,10 @@ non-index property leaves indexed slots intact; dynamic keys remain conservative
 effects still run, including inside a `void` wrapper. Comma expressions expose only
 their last value. Pure unary numeric indices such as `+0` and `-0` address slot zero.
 Non-coercive `void`, `typeof`, and `!` expressions discard
-callback values while evaluating operand effects. Numeric `+`, `-`, and `~`
+callback values while evaluating operand effects. An ordinary property read
+inside one of those wrappers can still run a getter, so captured builders do
+not stay proven. Reads of a proven argument object, including an alias and
+`length`, stay data reads. Numeric `+`, `-`, and `~`
 coercion remains conservative because conversion hooks can mutate operands. A non-arrow function called through a member or index receives that base as
 `this`. An arrow keeps its lexical `this` and ignores the call receiver. A bare
 call does not reuse a captured `this`. Named function self-bindings are shadowed by
