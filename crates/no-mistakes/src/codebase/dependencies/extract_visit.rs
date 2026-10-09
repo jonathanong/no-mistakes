@@ -118,6 +118,13 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_for_of_statement_with_scope(self, statement);
     }
 
+    fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
+        visit_while_statement_per_item(self, statement);
+    }
+    fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
+        visit_do_while_statement_per_item(self, statement);
+    }
+
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
     }
@@ -179,8 +186,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        visit_call_expression_with_imports(self, call);
-        walk::walk_call_expression(self, call);
+        visit_call_expression_per_item(self, call);
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {

@@ -120,6 +120,7 @@ impl CallSiteResolution<'_, '_> {
             .iter()
             .filter(|call| !recorded.contains(&(call.caller_id, call.offset, call.invocation)))
             .map(|call| ResolvedCallSite {
+        target_node: None,
                 file: self.path.to_path_buf(),
                 caller: call.caller.clone(),
                 caller_id: call.caller_id,

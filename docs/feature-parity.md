@@ -758,3 +758,9 @@ PostgreSQL CREATE/ALTER constraint source spans have Rust/native and asynchronou
 Node CJS/ESM parity. Supported inline and table constraints retain exact source
 ranges; unavailable boundaries are null rather than inferred from formatted SQL.
 See [constraint source spans](postgres-source-api.md#constraint-source-spans).
+
+TypeScript/JavaScript support the opt-in
+[`query-reached-per-item`](rules/query-reached-per-item.md) rule through CLI and
+asynchronous Node checks. It combines per-item AST positions with canonical
+call paths and configured effect sinks, including transaction markers and batch
+exemptions. Other languages do not yet expose equivalent call-policy facts.

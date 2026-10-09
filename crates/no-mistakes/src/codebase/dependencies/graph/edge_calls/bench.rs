@@ -17,6 +17,7 @@ pub fn benchmark_probe_call_site_files(file_count: usize) -> usize {
     let mut sites = Vec::with_capacity(file_count);
     for index in 0..file_count {
         sites.push(ResolvedCallSite {
+        target_node: None,
             file: std::path::PathBuf::from(format!("/{index}.ts")),
             caller: None,
             caller_id: None,

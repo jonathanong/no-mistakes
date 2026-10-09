@@ -39,6 +39,7 @@ the legacy fields do not change shared frontend-app resolution.
 - [Projects](projects.md)
 - [Tests and selectors](tests.md)
 - [Queues](queues.md)
+- [Effects](effects.md)
 - [Rules](rules.md)
 - [Test plan](test-plan.md)
 - [Filesystem](filesystem.md)

@@ -18,6 +18,10 @@ other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright
 sub-phases and work counts, and marks overlapping check-domain spans as
 non-additive. See [Performance diagnostics](diagnostics.md).
 
+The opt-in [query-reached-per-item](../rules/query-reached-per-item.md) rule
+uses configured effect families and canonical call paths to identify repeated
+single-item round trips through helpers.
+
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
 `path-regex-capture` matches visible symlink paths, including directory-target

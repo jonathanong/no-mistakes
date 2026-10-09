@@ -322,6 +322,14 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   edges. Call traversal is cycle-safe and reports each target once at its
   deterministic shortest path; `depth: 0` emits no targets and `depth: 1` is the
   direct-call boundary.
+  Statically named iteration callbacks, including imported callbacks in
+  `items.map(lookup)` or `items.forEach(lookup)`, produce canonical callback
+  transitions when the target resolves. Named globals remain unresolved
+  occurrences; configured effect sinks can match their source spelling without
+  inventing graph edges. Synthetic transitions are excluded from ordinary
+  source-call APIs. These call facts are independent of whether
+  [`query-reached-per-item`](rules/query-reached-per-item.md) is requested;
+  its per-item position metadata is collected only on demand.
 - `extends` edges are opt-in like `call`, but no `--relationship` value selects
   them: only a rule that reads class hierarchy asks the graph for them, through
   the build plan. The `dependencies` graph never builds them, so unfiltered

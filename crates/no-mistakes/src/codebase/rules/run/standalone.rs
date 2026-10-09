@@ -74,6 +74,7 @@ pub(super) fn run_check(
         fact_plan.graph = graph_facts;
         fact_plan.graph_context = graph_context;
     }
+    fact_plan.graph.per_item_calls |= config.rule_configured(super::QUERY_REACHED_PER_ITEM);
     let files = crate::codebase::ts_source::discover_files_from_visible(
         root,
         &config.filesystem.skip_directories,

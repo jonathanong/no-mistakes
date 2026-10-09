@@ -1,6 +1,6 @@
 use super::super::{domain, TsFactContext, TsFactPlan, TsFileFacts};
 use crate::codebase::dependencies::extract::{
-    extract_import_facts_from_program_with_source_and_resource_roots, is_indexable,
+    extract_import_facts_from_program_with_source_and_demands, is_indexable,
 };
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
@@ -102,15 +102,17 @@ pub(crate) fn collect_file_facts_from_program(
     parse_error: Option<String>,
     stored_source: Option<Arc<str>>,
 ) -> TsFileFacts {
-    let import_facts = if plan.imports || plan.function_calls || plan.effect_calls {
-        extract_import_facts_from_program_with_source_and_resource_roots(
-            program,
-            source,
-            plan.resources,
-        )
-    } else {
-        Default::default()
-    };
+    let import_facts =
+        if plan.imports || plan.function_calls || plan.effect_calls || plan.per_item_calls {
+            extract_import_facts_from_program_with_source_and_demands(
+                program,
+                source,
+                plan.resources,
+                plan.per_item_calls,
+            )
+        } else {
+            Default::default()
+        };
     let resources = if plan.resources {
         crate::codebase::ts_resources::extract(program, source)
     } else {
@@ -165,6 +167,7 @@ pub(crate) fn collect_file_facts_from_program(
         exported_bindings: import_facts.exported_bindings,
         callable_aliases: import_facts.callable_aliases,
         star_reexport_specifiers: import_facts.star_reexport_specifiers,
+        per_item_calls: import_facts.per_item_calls,
         function_calls: import_facts.function_calls,
         unknown_calls: import_facts.unknown_calls,
         call_sites,

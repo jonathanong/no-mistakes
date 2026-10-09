@@ -850,3 +850,8 @@ exact source byte offsets, including comments and validation suffixes, without
 changing statement locations or formatted `constraint.sql`. See
 [constraint source spans](postgres-source-api.md#constraint-source-spans) for
 coordinate ownership and absence semantics.
+
+The opt-in [`query-reached-per-item`](rules/query-reached-per-item.md) rule runs
+through asynchronous `check()` and `analyzeProject()` check queries. Configure
+effect families, transaction sinks, batch exemptions, and rollout allowlists in
+the same config used by the CLI; finding and suppression shapes are unchanged.

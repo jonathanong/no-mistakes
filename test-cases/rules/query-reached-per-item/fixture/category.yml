@@ -1,0 +1,10 @@
+effects:
+  postgres:
+    categories: {read: [read]}
+    transactionFunctions: [tx.query]
+    batchFunctions: [batch]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

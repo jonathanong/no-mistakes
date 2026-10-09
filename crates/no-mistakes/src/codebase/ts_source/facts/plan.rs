@@ -5,6 +5,7 @@ impl TsFactPlan {
         self.module_bindings |= other.module_bindings;
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
+        self.per_item_calls |= other.per_item_calls;
         self.call_sites |= other.call_sites;
         self.resources |= other.resources;
         self.symbols |= other.symbols;
@@ -46,6 +47,7 @@ impl TsFactPlan {
         !self.module_bindings
             && !self.imports
             && !self.function_calls
+            && !self.per_item_calls
             && !self.call_sites
             && !self.resources
             && !self.symbols
@@ -89,6 +91,7 @@ impl TsFactPlan {
         (!required.module_bindings || self.module_bindings)
             && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
+            && (!required.per_item_calls || self.per_item_calls)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)
             && (!required.symbols || self.symbols)

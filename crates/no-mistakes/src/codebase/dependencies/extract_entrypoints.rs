@@ -18,7 +18,14 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     source: &str,
     collect_resource_roots: bool,
 ) -> ImportFacts {
+    extract_import_facts_from_program_with_source_and_demands(program, source, collect_resource_roots, false)
+}
+
+pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
+    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool,
+) -> ImportFacts {
     let mut collector = ImportCollector {
+        collect_per_item_calls,
         line_starts: import_line_starts(source),
         collect_resource_roots,
         ..ImportCollector::default()
@@ -130,6 +137,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         exported_bindings: collector.call_export_bindings,
         callable_aliases,
         star_reexport_specifiers: collector.star_reexport_specifiers,
+        per_item_calls: collector.per_item_calls,
         function_calls: collector.function_calls,
         unknown_calls: collector.unknown_calls,
         symbol_references: collector.symbol_references,

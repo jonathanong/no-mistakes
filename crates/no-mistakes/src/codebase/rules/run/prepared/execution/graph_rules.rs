@@ -83,6 +83,14 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
             },
         )?);
     }
+    if rule_enabled(config, query_reached_per_item::RULE_ID) {
+        findings.extend(query_reached_per_item::check_with_graph(
+            root,
+            config,
+            dependency_graph.expect("query-reached-per-item requires canonical graph"),
+            shared,
+        )?);
+    }
     Ok(findings)
 }
 

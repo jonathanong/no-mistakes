@@ -59,5 +59,7 @@ pub(super) fn prepare(
         plan.graph.include(fact_plan);
         plan.graph_context = fact_context;
     }
+    plan.graph.per_item_calls |=
+        config.rule_configured(no_mistakes::codebase::rules::QUERY_REACHED_PER_ITEM);
     Ok(prepared_graph)
 }

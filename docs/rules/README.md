@@ -55,6 +55,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, and banned-substring checks.               |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets from source, paths, and YAML selectors.              |
+| [`query-reached-per-item`](query-reached-per-item.md) | Flag per-item helper calls that reach configured effect sinks. |
 | [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |

@@ -53,6 +53,8 @@ pub struct TsFactPlan {
     pub module_bindings: bool,
     pub imports: bool,
     pub function_calls: bool,
+    /// Per-item invocation positions, collected with canonical call facts.
+    pub per_item_calls: bool,
     pub call_sites: bool,
     pub resources: bool,
     pub symbols: bool,
@@ -92,6 +94,7 @@ pub struct TsFileFacts {
     pub exported_bindings: Vec<ExportedBinding>,
     pub callable_aliases: Vec<crate::codebase::dependencies::extract::CallableAlias>,
     pub star_reexport_specifiers: Vec<String>,
+    pub per_item_calls: Vec<crate::codebase::dependencies::extract::PerItemCall>,
     pub function_calls: Vec<FunctionCall>,
     pub unknown_calls: Vec<UnknownCall>,
     pub call_sites: Vec<CallSiteFact>,

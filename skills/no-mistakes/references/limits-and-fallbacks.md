@@ -154,3 +154,9 @@ Use `no-mistakes` instead when the question needs the dependency graph
 (`effects`, `rsc-callers`, `dependents`) or project configuration
 (`data-pw`, `registry-extension`). Use `ast-grep` when the question is purely
 "which files contain this syntactic shape?"
+
+For repeated query or cache calls hidden in helpers, enable
+[`query-reached-per-item`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/query-reached-per-item.md) with
+explicit effect families. It traces resolved per-item calls; dynamic targets
+cannot prove sink reachability. Use configured batch exemptions and reviewed
+callsite allowlists for rollout. CLI and async `check()` share the rule.

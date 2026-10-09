@@ -352,6 +352,10 @@ fn plan_empty_detection_tracks_all_flags() {
 
     for plan in [
         TsFactPlan {
+            per_item_calls: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
             imports: true,
             ..TsFactPlan::default()
         },
@@ -496,3 +500,18 @@ fn queue_factory_context_requires_specifier_and_function_even_when_glob_matches(
 
 #[path = "tests/collection_regressions.rs"]
 mod collection_regressions;
+
+#[test]
+fn per_item_demand_survives_plan_union_and_requires_complete_facts() {
+    let required = TsFactPlan {
+        function_calls: true,
+        per_item_calls: true,
+        ..TsFactPlan::default()
+    };
+    let mut shared = TsFactPlan::imports();
+    // Ordinary call facts cannot answer an iteration policy without its demand.
+    assert!(!shared.covers(required));
+    shared.include(required);
+    assert!(shared.covers(required));
+    assert!(!shared.is_empty());
+}
