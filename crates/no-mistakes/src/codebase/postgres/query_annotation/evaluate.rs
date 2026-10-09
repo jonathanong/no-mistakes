@@ -4,11 +4,12 @@ use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub(super) enum Value {
     Prefix(String, bool),
-    Function(Function, PathBuf, BTreeMap<String, Value>),
+    Function(Function, PathBuf, Arc<Environment>),
     Unknown,
     Unsupported,
 }
@@ -80,7 +81,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .cloned()
                 .unwrap_or_else(|| self.name(path, name, depth, generic)),
             Expr::Function(function) => {
-                Value::Function(function.clone(), path.to_path_buf(), env.clone())
+                // Closures retain immutable snapshots; recursively copying
+                // previously captured closures makes sibling helpers exponential.
+                Value::Function(function.clone(), path.to_path_buf(), Arc::new(env.clone()))
             }
             Expr::Template(parts) => {
                 let mut prefix = Value::Prefix(String::new(), true);

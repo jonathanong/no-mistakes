@@ -2,6 +2,9 @@ import { write } from "@app/db";
 import sql, { type SQLStatement } from "sql-template-strings";
 import { importedOrdersSql } from "./sql-builders.mjs";
 
+// Keep these sibling helpers together: captured environments must share earlier
+// closures rather than recursively copying every preceding helper.
+
 export async function direct() {
   return write(sql`SELECT 1`); // finding:direct
 }

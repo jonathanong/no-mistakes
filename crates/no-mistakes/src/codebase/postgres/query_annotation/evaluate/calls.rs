@@ -83,7 +83,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.opaque_callbacks(&arguments, depth);
             return Value::Unsupported;
         }
-        let Value::Function(function, function_path, mut locals) = target else {
+        let Value::Function(function, function_path, captured) = target else {
             self.opaque_callbacks(&arguments, depth);
             return Value::Unknown;
         };
@@ -91,6 +91,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.opaque_callbacks(&arguments, depth);
             return Value::Unsupported;
         }
+        let mut locals = (*captured).clone();
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
@@ -123,7 +124,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 if !function.supported {
                     continue;
                 }
-                let mut locals = captured.clone();
+                let mut locals = (**captured).clone();
                 for name in &function.params {
                     locals.insert(name.clone(), Value::Unknown);
                 }
