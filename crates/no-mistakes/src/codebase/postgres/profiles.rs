@@ -19,6 +19,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-sql-shape-policy",
     "postgres-sql-statement-policy",
     "postgres-no-generated-column-writes",
+    "postgres-require-query-annotation",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.

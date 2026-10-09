@@ -4,4 +4,6 @@ rules:
     scope: repository
     options:
       importSpecifier: '@example/db'
+      # Pins var scope recovery separately from default opaque-SQL reporting.
+      unanalyzableSql: ignore
       include: ['**/*.ts']

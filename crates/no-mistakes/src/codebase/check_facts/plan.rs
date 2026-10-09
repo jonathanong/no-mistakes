@@ -22,6 +22,8 @@ pub struct CheckFactPlan {
     pub raw_source: bool,
     pub postgres_schema: bool,
     pub embedded_sql: bool,
+    /// Owned helper/callback summaries for the annotation-only projection.
+    pub query_annotation: bool,
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
     pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
@@ -43,6 +45,7 @@ pub struct CheckFactPlan {
 impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
+        self.query_annotation |= other.query_annotation;
         self.symbols |= other.symbols;
         self.legacy_symbol_paths.extend(other.legacy_symbol_paths);
         self.react |= other.react;
@@ -90,6 +93,7 @@ impl CheckFactPlan {
     /// reject facts that were already collected in the same parse pass.
     pub(super) fn collected_ts_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
         let mut plan = self.graph;
+        plan.imports |= self.query_annotation;
         if self.imports {
             plan.include(crate::codebase::ts_source::facts::TsFactPlan::imports());
         }

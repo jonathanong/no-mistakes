@@ -79,6 +79,10 @@ pub(crate) struct CheckFileFacts {
         crate::codebase::postgres::EmbeddedSqlOptions,
         crate::codebase::postgres::EmbeddedSqlFileFacts,
     )>,
+    pub(crate) query_annotation: Vec<(
+        crate::codebase::postgres::EmbeddedSqlOptions,
+        crate::codebase::postgres::query_annotation::QueryAnnotationFileFacts,
+    )>,
     pub(crate) server_route_client_boundary:
         Option<crate::codebase::rules::server_route_client_boundary::FileFacts>,
     pub(crate) playwright: Option<PlaywrightTestFacts>,
@@ -94,6 +98,21 @@ pub(crate) struct CheckFileFacts {
 }
 
 impl CheckFactMap {
+    pub(crate) fn query_annotation_prefix(
+        &self,
+        path: &std::path::Path,
+        options: &crate::codebase::postgres::EmbeddedSqlOptions,
+        call: &crate::codebase::postgres::EmbeddedSqlCall,
+    ) -> Option<&Option<String>> {
+        self.ts
+            .get(path)?
+            .query_annotation
+            .iter()
+            .find(|(profile, _)| profile == options)?
+            .1
+            .calls
+            .get(&(call.line, call.callee.clone()))
+    }
     #[doc(hidden)]
     pub fn postgres_schema_file(
         &self,

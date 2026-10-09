@@ -79,6 +79,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.storybook_stories,
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
+        query_annotation: false,
         embedded_sql_options: Vec::new(),
         postgres_schema_catalog_paths: Vec::new(),
         postgres_dml: false,
@@ -111,6 +112,7 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.raw_source
         || plan.source
         || plan.embedded_sql
+        || plan.query_annotation
         || !plan.embedded_sql_options.is_empty()
         || !plan.postgres_schema_catalog_paths.is_empty()
         || !plan.graph.is_empty()

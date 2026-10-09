@@ -34,6 +34,13 @@ A language or framework is supported when an agent can ask the same structural
 questions it already asks of TS/JS, get deterministic structured output, and
 do so without shelling out to `rg` for the graph itself.
 
+The PostgreSQL query annotation rule traces straight-line TS/JS SQL helpers,
+imported helpers, and callback forwarding through request-scoped prepared facts.
+CLI `check`, Node `check()`, and batched `analyzeProject()` checks share findings
+and the default `unanalyzableSql: report` policy; explicitly choose `ignore` for
+opaque leading SQL. This annotation evidence does not imply complete SQL for
+structural PostgreSQL rules.
+
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
 dependency artifacts participate in semantic native test planning. Playwright, React,

@@ -1,6 +1,6 @@
 mod body;
 mod collect;
-mod reassigned;
+pub(crate) mod reassigned;
 mod shadows;
 
 use super::super::super::options::TrustedSqlTag;

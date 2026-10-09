@@ -22,7 +22,10 @@ pub(super) fn project_relative_executor_scopes(
     sources: &SourceStore,
     files: &mut FileIdMap<CheckFileFacts>,
 ) {
-    if !has_relative_candidates(files) {
+    let annotation = files
+        .into_iter()
+        .any(|(_, file)| !file.query_annotation.is_empty());
+    if !has_relative_candidates(files) && !annotation {
         return;
     }
     let tsconfig = tsconfig_for(session, root, sources);
@@ -49,6 +52,11 @@ pub(super) fn project_relative_executor_scopes(
                 resolver.resolve(specifier, path)
             });
         }
+    }
+    if annotation {
+        crate::codebase::postgres::query_annotation::project::project(files, |specifier, from| {
+            resolver.resolve(specifier, from)
+        });
     }
 }
 

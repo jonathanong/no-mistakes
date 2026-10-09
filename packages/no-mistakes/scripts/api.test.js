@@ -777,6 +777,21 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
 });
 
+test("query annotation configuration exposes the unknown SQL policy", () => {
+  const types = readFileSync(join(packageRoot, "postgres-query-annotation-types.d.ts"), "utf8");
+  assert.match(types, /export type PostgresUnanalyzableSql = "report" \| "ignore";/);
+  assert.match(types, /export interface PostgresRequireQueryAnnotationOptions/);
+  assert.match(types, /unanalyzableSql\?: PostgresUnanalyzableSql/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/postgres-query-annotation-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
+  );
+});
+
 test("generatePostgresCatalog declarations separate complete and ordering catalogs", () => {
   const types = readFileSync(join(packageRoot, "postgres-catalog-types.d.ts"), "utf8");
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");

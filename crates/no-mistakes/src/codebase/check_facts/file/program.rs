@@ -76,6 +76,19 @@ pub(crate) fn collect_file_facts_from_program(
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
     let embedded_sql = prepared_embedded_sql(path, source, program, plan);
+    let query_annotation = if plan.query_annotation {
+        embedded_sql
+            .iter()
+            .map(|(options, _)| {
+                (
+                    options.clone(),
+                    crate::codebase::postgres::query_annotation::collect(program, source, options),
+                )
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),
@@ -90,6 +103,7 @@ pub(crate) fn collect_file_facts_from_program(
         nextjs_caching: fused.nextjs_caching,
         storybook: fused.storybook,
         embedded_sql,
+        query_annotation,
         server_route_client_boundary,
         playwright,
         playwright_fetch,

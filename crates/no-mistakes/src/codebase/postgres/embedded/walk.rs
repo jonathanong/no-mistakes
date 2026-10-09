@@ -6,7 +6,7 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
-mod resolve;
+pub(crate) mod resolve;
 mod scope;
 mod state;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};

@@ -18,6 +18,11 @@ Common fields: `name`, `rule`, `message`, `enabled`, `projects`, `tests`,
 Rules are opt-in. `include` and `exclude` filters apply to each rule
 application and are interpreted relative to the configured root.
 
+For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
+`options.unanalyzableSql` defaults to `report`. Configure `ignore` explicitly if
+opaque executor arguments are intentional; helper and callback tracing still
+checks every recovered leading prefix.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

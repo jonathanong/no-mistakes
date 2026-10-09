@@ -14,7 +14,8 @@ mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
-mod walk;
+pub(crate) use tags::matches_trusted_sql_import;
+pub(crate) mod walk;
 
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::recovered_sql_needs_insert_check;

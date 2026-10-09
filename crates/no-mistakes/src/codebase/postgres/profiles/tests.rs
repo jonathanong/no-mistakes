@@ -154,6 +154,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-sql-shape-policy",
             "postgres-sql-statement-policy",
             "postgres-no-generated-column-writes",
+            "postgres-require-query-annotation",
         ]
     );
     assert_eq!(
