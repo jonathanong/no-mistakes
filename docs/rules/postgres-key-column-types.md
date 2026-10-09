@@ -4,7 +4,8 @@ Checks primary-key and foreign-key referencing columns against an explicit list
 of PostgreSQL types from a complete schema catalog. Stable identifiers keep
 joins and references compatible when descriptive text changes. Foreign keys are
 checked on the referencing side; the referenced table's own primary key is
-checked by the primary-key rule. Standalone unique constraints are not checked.
+checked by the primary-key rule. A referenced unique constraint does not get a
+separate finding, and standalone unique constraints are not checked.
 
 ```yaml
 rules:

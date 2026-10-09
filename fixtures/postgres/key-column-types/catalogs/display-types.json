@@ -13,6 +13,12 @@
       "columns": {"id": {"dataType": "custom(foo)"}},
       "primaryKey": {"columns": ["id"]},
       "indexes": {"non_numeric_modifier_pkey": {"primary": true}}
+    },
+    "numeric_precision": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "numeric(10,2)"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"numeric_precision_pkey": {"primary": true}}
     }
   }
 }

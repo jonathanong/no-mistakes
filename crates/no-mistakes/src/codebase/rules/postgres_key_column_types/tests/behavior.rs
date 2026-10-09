@@ -14,6 +14,12 @@ fn reports_every_bad_key_once_in_constraint_column_order() {
     assert!(messages.iter().any(|message| message == "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint"), "{messages:#?}");
     assert!(messages.iter().any(|message| message == "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint"), "{messages:#?}");
     assert!(messages.iter().any(|message| message == "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); review the referenced key's type and use a compatible configured type"), "{messages:#?}");
+    assert!(
+        !messages
+            .iter()
+            .any(|message| message.contains("constraint:currencies.currencies_code_key")),
+        "a referenced unique target is not a separately checked key: {messages:#?}"
+    );
     assert!(messages.iter().any(|message| message.contains("constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id")), "missing catalog metadata must fail closed: {messages:#?}");
     assert!(
         !messages
@@ -171,7 +177,7 @@ fn refuses_to_guess_primary_key_constraint_identity_without_primary_index_metada
 }
 
 #[test]
-fn preserves_type_strings_with_unrecognized_modifiers_in_messages() {
+fn strips_only_character_varying_modifiers_in_messages() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres/key-column-types/catalogs/display-types.json");
     let source = std::fs::read_to_string(path).unwrap();
@@ -194,6 +200,12 @@ fn preserves_type_strings_with_unrecognized_modifiers_in_messages() {
         messages
             .iter()
             .any(|message| message.contains("custom(foo) column id")),
+        "{messages:#?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("numeric(10,2) column id")),
         "{messages:#?}"
     );
 }

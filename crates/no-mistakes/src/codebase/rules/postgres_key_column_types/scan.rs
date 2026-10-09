@@ -158,9 +158,10 @@ fn display_type(data_type: &str) -> String {
     let Some(modifier) = suffix.strip_suffix(')') else {
         return data_type.to_string();
     };
-    if !modifier
-        .chars()
-        .all(|character| character.is_ascii_digit() || matches!(character, ',' | ' '))
+    if !base.eq_ignore_ascii_case("character varying")
+        || !modifier
+            .chars()
+            .all(|character| character.is_ascii_digit() || matches!(character, ',' | ' '))
     {
         return data_type.to_string();
     }
