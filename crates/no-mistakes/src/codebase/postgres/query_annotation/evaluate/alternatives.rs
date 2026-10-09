@@ -41,6 +41,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let recreated = self.recreated_argument_slots.clone();
         let disconnected = self.disconnected_argument_slots.clone();
         let mut disconnected_common = None;
         let mut private_disconnected = FxHashSet::default();
@@ -71,6 +72,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
+            self.recreated_argument_slots.clone_from(&recreated);
             self.disconnected_argument_slots.clone_from(&disconnected);
             freshness::restore(&mut self.fresh_mapped_parameters, scopes.len(), &fresh);
             for (id, slots) in &objects {
@@ -177,6 +179,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.rebuild_fresh_mapped_argument_bindings();
         self.invalidated_builders = original;
         self.deleted_argument_slots = deleted_changed;
+        // Recreation inside one arm must not make a deleted property in
+        // another arm look live. A write after the branch records its own.
+        self.recreated_argument_slots = recreated;
         let mut final_definite = definite_common.unwrap_or(definite.clone());
         final_definite.extend(private_definite);
         // These identities already represent actual arm effects. Replaying an

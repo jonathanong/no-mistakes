@@ -49,6 +49,7 @@ fn sequential_alternatives_discard_noncallback_frames() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -109,6 +110,7 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -164,6 +166,7 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -222,6 +225,7 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -277,6 +281,7 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -341,6 +346,7 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -400,6 +406,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);

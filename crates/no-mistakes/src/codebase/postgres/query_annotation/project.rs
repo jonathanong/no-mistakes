@@ -99,6 +99,7 @@ pub(crate) fn project(
                     argument_objects: Default::default(),
                     argument_extra_slots: Default::default(),
                     definite_deleted_argument_slots: Default::default(),
+                    recreated_argument_slots: Default::default(),
                     disconnected_argument_slots: Default::default(),
                 };
                 evaluator.run(path);

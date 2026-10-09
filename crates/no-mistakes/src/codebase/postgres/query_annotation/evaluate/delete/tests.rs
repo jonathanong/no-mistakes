@@ -53,6 +53,7 @@ fn outputs() -> FxHashMap<String, Value> {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -146,6 +147,7 @@ fn handled_effect_checks_fail_closed_on_mismatched_evaluated_shapes() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let children =

@@ -54,6 +54,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     evaluator.module_environment(&path);

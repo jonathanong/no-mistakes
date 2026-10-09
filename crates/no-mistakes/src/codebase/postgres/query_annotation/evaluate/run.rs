@@ -20,6 +20,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let objects = self.argument_objects.clone();
         let extra_slots = self.argument_extra_slots.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let recreated = self.recreated_argument_slots.clone();
         let disconnected = self.disconnected_argument_slots.clone();
         let builder_updates = self.builder_updates.clone();
         let captured_bindings = self.captured_bindings.clone();
@@ -38,6 +39,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.argument_objects.clone_from(&objects);
                 self.argument_extra_slots.clone_from(&extra_slots);
                 self.definite_deleted_argument_slots.clone_from(&definite);
+                self.recreated_argument_slots.clone_from(&recreated);
                 self.disconnected_argument_slots.clone_from(&disconnected);
                 self.builder_updates.clone_from(&builder_updates);
                 self.captured_bindings.clone_from(&captured_bindings);
@@ -66,6 +68,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.argument_objects.clone_from(&objects);
                 self.argument_extra_slots.clone_from(&extra_slots);
                 self.definite_deleted_argument_slots.clone_from(&definite);
+                self.recreated_argument_slots.clone_from(&recreated);
                 self.disconnected_argument_slots.clone_from(&disconnected);
                 self.builder_updates.clone_from(&builder_updates);
                 self.captured_bindings.clone_from(&captured_bindings);

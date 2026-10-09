@@ -35,9 +35,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let possibly_disconnected = self.deleted_argument_slots.contains(&(id, None))
             || self.deleted_argument_slots.contains(&(id, Some(index)));
         self.definite_deleted_argument_slots.remove(&(id, index));
+        // A definite deletion already froze the formal, so its index marker
+        // can go away. A conditional marker stays: the next write must not
+        // treat that formal as mapped again.
         if disconnected || !possibly_disconnected {
             self.deleted_argument_slots.remove(&(id, Some(index)));
         }
+        // This path assigned the property. A dynamic `(id, None)` marker
+        // still covers indices that this write did not touch.
+        self.recreated_argument_slots.insert((id, index));
         let Some(slot) = self
             .argument_objects
             .get_mut(&id)

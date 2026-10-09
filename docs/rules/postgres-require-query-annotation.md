@@ -239,7 +239,9 @@ Strict functions keep separate bindings. A later definite parameter assignment e
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping
 only when every possible branch deletes it. A later property write makes that
-index readable again without reconnecting the formal parameter. Deletion after an opaque escape
+index readable again without reconnecting the formal parameter, including when
+the deletion itself happened on only one branch. The recreated property is the
+assigned value; a dynamic deletion of an unwritten index stays uncertain. Deletion after an opaque escape
 preserves earlier uncertainty instead of restoring the original parameter value.
 Spread calls have unknown argument positions. Passing the complete argument object
 to opaque code makes its slots unknown, while an already copied immutable value

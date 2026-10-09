@@ -42,3 +42,21 @@ noDynamicDelete("SELECT 1");
 strictDynamicDeleteThenReplace("SELECT 1", dynamicKey);
 conditionalDeleteThenReplaceTwice("SELECT 1", maybeRemove);
 opaqueThenDynamicDeleteAndReplace("SELECT 1", dynamicKey);
+
+function conditionalDeleteThenReadProperty(statement, flag) {
+  "use strict";
+  const ignored = flag ? delete arguments[0] : false;
+  arguments[0] = "/* recreated */ SELECT 1";
+  database.query(arguments[0]); // known:recreated-property-is-annotated
+  database.query(statement); // finding:formal-stays-unannotated
+}
+
+function conditionalDeleteThenUnsafeProperty(statement, flag) {
+  "use strict";
+  const ignored = flag ? delete arguments[0] : false;
+  arguments[0] = "SELECT 1";
+  database.query(arguments[0]); // finding:recreated-property-is-unsafe
+}
+
+conditionalDeleteThenReadProperty("SELECT 1", flag);
+conditionalDeleteThenUnsafeProperty("SELECT 1", flag);

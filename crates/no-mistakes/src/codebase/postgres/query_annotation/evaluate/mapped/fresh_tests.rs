@@ -70,6 +70,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             argument_objects: Default::default(),
             argument_extra_slots: Default::default(),
             definite_deleted_argument_slots: Default::default(),
+            recreated_argument_slots: Default::default(),
             disconnected_argument_slots: Default::default(),
             fresh_mapped_parameters: Default::default(),
             fresh_mapped_argument_bindings: Default::default(),
