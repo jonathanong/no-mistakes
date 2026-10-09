@@ -17,6 +17,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) unmodeled_calls: Vec<Expr>,
     pub(super) trusted_tags: BTreeSet<String>,
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
+    pub(super) raw_tag_reassigned: bool,
     pub calls: BTreeMap<u32, Option<String>>,
 }
 
@@ -29,6 +30,7 @@ pub(super) enum Expr {
     Template(Vec<Expr>),
     Tagged(String, Vec<Expr>, Vec<Expr>),
     Await(Box<Expr>),
+    Spread(Box<Expr>),
     OpaqueCallback(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {
@@ -38,6 +40,7 @@ pub(super) enum Expr {
     },
     Function(Function),
     Children(Vec<Expr>),
+    Opaque(Vec<Expr>),
 }
 
 #[derive(Clone, Debug)]

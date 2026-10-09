@@ -4,6 +4,7 @@ mod bindings;
 mod conventional;
 mod hoisted;
 mod local;
+mod raw;
 mod visitor;
 use oxc_ast::ast::{ImportDeclarationSpecifier, Program, Statement};
 use std::collections::{BTreeSet, HashSet};

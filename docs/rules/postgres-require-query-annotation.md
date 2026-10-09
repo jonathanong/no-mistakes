@@ -5,7 +5,10 @@ slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
 (`-- name`) do not count. `BEGIN`, `COMMIT`, and `ROLLBACK` are exempt.
 
 The rule consumes prepared embedded-SQL and helper summaries from the request's
-shared TypeScript parse. Imported helpers use the same resolver and source session.
+shared TypeScript parse. Imported helpers use the request's prepared importer
+project catalog and source session. Package-local TypeScript aliases resolve from
+the importing file's project; an explicit `--tsconfig` deliberately overrides that
+ownership for every importer.
 
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
@@ -176,3 +179,5 @@ administrative script.
 locks.
 
 Speculative function entrypoints use isolated initialized module state. Actual helper and callback call chains retain shared builder state. Bare `var` redeclarations preserve existing parameters and hoisted functions. Logical and conditional expressions contribute every syntactically possible helper invocation; helper calls in unsupported syntax remain conservative rather than allowing a favorable modeled call to hide unknown arguments. Diamond star re-exports of the same original binding resolve to that binding.
+
+Opaque mutations invalidate previously proven prefixes of mutable builders, including method receivers, spread arguments, nested containers, property writes/deletes, and constructor inputs. Replacing or deleting `String.raw` revokes built-in tag trust; writes to a lexically shadowed `String` leave the global built-in unaffected. Spread arguments remain conservative for positional helper and callback substitution.

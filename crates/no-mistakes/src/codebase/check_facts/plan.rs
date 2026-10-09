@@ -24,6 +24,9 @@ pub struct CheckFactPlan {
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.
     pub query_annotation: bool,
+    /// The owning request's ordinary importer catalog, including explicit overrides.
+    #[doc(hidden)]
+    pub query_annotation_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
     pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
@@ -46,6 +49,9 @@ impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
         self.query_annotation |= other.query_annotation;
+        if self.query_annotation_catalog.is_none() {
+            self.query_annotation_catalog = other.query_annotation_catalog;
+        }
         self.symbols |= other.symbols;
         self.legacy_symbol_paths.extend(other.legacy_symbol_paths);
         self.react |= other.react;

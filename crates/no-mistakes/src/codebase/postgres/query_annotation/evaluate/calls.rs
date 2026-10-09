@@ -70,6 +70,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 ));
             return Value::Unknown;
         }
+        let spread = args.iter().any(|arg| matches!(arg, Expr::Spread(_)));
+        if spread {
+            // Values may mutate builders, but spread length cannot prove any
+            // positional parameter or callback substitution.
+            self.invalidate_builders(&arguments);
+            self.opaque_callbacks(&arguments, depth);
+        }
+        if !matches!(target, Value::Function(_, _, _)) {
+            self.invalidate_builders(std::slice::from_ref(&target));
+            self.opaque_callbacks(std::slice::from_ref(&target), depth);
+        }
         if matches!(target, Value::Unsupported) {
             self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
@@ -99,7 +110,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
-                arguments.get(index).cloned().unwrap_or(Value::Unknown),
+                if spread {
+                    Value::Unknown
+                } else {
+                    arguments.get(index).cloned().unwrap_or(Value::Unknown)
+                },
             );
         }
         if let Some(name) = &function.self_name {
@@ -116,9 +131,13 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
+    pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
         for argument in arguments {
-            if let Value::Function(function, path, captured) = argument {
+            if let Value::Aggregate(values) = argument {
+                self.opaque_callbacks(values, depth);
+            } else if let Value::Promise(value) = argument {
+                self.opaque_callbacks(std::slice::from_ref(value.as_ref()), depth);
+            } else if let Value::Function(function, path, captured) = argument {
                 self.invalidate_captured(*captured, function);
                 let mut locals = self.scopes[*captured].clone();
                 for name in &function.params {

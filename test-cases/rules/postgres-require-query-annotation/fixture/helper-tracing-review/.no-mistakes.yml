@@ -9,6 +9,10 @@ rules:
         - "src/destructured-tag.mts"
         - "src/local-tag.mts"
         - "src/named-tags.mts"
+        - "src/raw-assertion.ts"
+        - "src/raw-deleted.mts"
+        - "src/raw-reassigned.mts"
+        - "src/raw-shadowed.mts"
       trustedSqlTags:
         - module: "./tags.mjs"
           name: "customQuery"

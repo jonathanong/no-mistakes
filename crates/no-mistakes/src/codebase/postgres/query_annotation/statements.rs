@@ -19,6 +19,7 @@ pub(super) fn collect(
         }
     }
     let reassigned = super::trust::reassigned(program);
+    facts.raw_tag_reassigned = reassigned.contains("String");
     facts.trusted_tags.retain(|name| !reassigned.contains(name));
     for (name, value) in &mut facts.globals {
         if reassigned.contains(name) {

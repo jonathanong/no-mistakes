@@ -309,10 +309,14 @@ fn helper_review_regressions_preserve_call_identity_exports_and_live_captures() 
         "src/local-tag.mts",
         "src/named-tags.mts",
         "src/query.mts",
+        "src/raw-assertion.ts",
+        "src/raw-deleted.mts",
+        "src/raw-reassigned.mts",
+        "src/raw-shadowed.mts",
     ];
     for ignore in [false, true] {
         let policy = if ignore { "ignore" } else { "report" };
-        let config = config_with_options(&format!("importSpecifier: '@app/db'\ninclude: ['src/query.mts', 'src/import-equals.mts', 'src/destructured-tag.mts', 'src/local-tag.mts', 'src/named-tags.mts']\ntrustedSqlTags: [{{module: './tags.mjs', name: customQuery}}]\nunanalyzableSql: {policy}"));
+        let config = config_with_options(&format!("importSpecifier: '@app/db'\ninclude: ['src/query.mts', 'src/import-equals.mts', 'src/destructured-tag.mts', 'src/local-tag.mts', 'src/named-tags.mts', 'src/raw-assertion.ts', 'src/raw-deleted.mts', 'src/raw-reassigned.mts', 'src/raw-shadowed.mts']\ntrustedSqlTags: [{{module: './tags.mjs', name: customQuery}}]\nunanalyzableSql: {policy}"));
         let findings = check_with_files(&root, &config, &files).unwrap();
         for threads in [1, 3] {
             let pool = rayon::ThreadPoolBuilder::new()
@@ -438,4 +442,20 @@ fn helper_tracing_covers_straight_line_mutations_and_fail_closed_forms() {
         expected,
         "{findings:#?}"
     );
+}
+
+#[test]
+fn helpers_use_importer_owned_aliases_even_when_unknown_sql_is_ignored() {
+    let root = fixture("helper-tracing-monorepo");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    for policy in ["ignore", "report"] {
+        let config = config_with_options(&format!(
+            "importSpecifier: '@app/db'\ninclude: ['packages/*/src/query.mts']\nunanalyzableSql: {policy}"
+        ));
+        let findings = check_with_files(&root, &config, &files).unwrap();
+        assert_eq!(findings.len(), 1, "{findings:#?}");
+        assert_eq!(findings[0].file, "packages/bad/src/query.mts");
+        assert_eq!(findings[0].line, 3);
+        assert_eq!(findings[0].target.as_deref(), Some("annotation"));
+    }
 }

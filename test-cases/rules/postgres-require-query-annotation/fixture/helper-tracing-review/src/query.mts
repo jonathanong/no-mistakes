@@ -359,3 +359,87 @@ export function modeledCallbackEntry() { runOpaqueCallback(annotatedOrdersSql(),
 if (flag) runOpaqueCallback(unannotatedOrdersSql(), opaqueCallbackExecutor);
 if (flag) runOpaqueCallback(unannotatedOrdersSql(), (statement) => write(statement)); // unanalyzable:unsupported-inline-callback
 if (flag) runOpaqueCallback(annotatedOrdersSql(), 0);
+
+export function opaqueMethodReceiver() {
+  const statement = sql`/* receiver before mutation */ SELECT 1`;
+  const ignored = statement.mutate();
+  write(statement); // unanalyzable:opaque-member-receiver
+}
+export function opaqueComputedReceiver() {
+  const statement = sql`/* computed receiver */ SELECT 1`;
+  const alias = statement;
+  const ignored = alias[method]();
+  write(statement); // unanalyzable:opaque-computed-receiver
+}
+export function optionalMethodReceiver() {
+  const statement = sql`/* optional receiver */ SELECT 1`;
+  const ignored = statement.mutate?.();
+  write(statement); // unanalyzable:opaque-optional-receiver
+}
+export function spreadBuilderMutation() {
+  const statement = sql`/* spread builder */ SELECT 1`;
+  const ignored = unknownMutation(...[statement]);
+  write(statement); // unanalyzable:opaque-spread-builder
+}
+export function spreadArrayBindingMutation() {
+  const statement = sql`/* spread alias */ SELECT 1`;
+  const aliases = [statement];
+  const ignored = unknownMutation(...aliases);
+  write(statement); // unanalyzable:opaque-spread-alias
+}
+function unsupportedSpreadPositions(first: unknown, statement: unknown) {
+  write(statement); // unanalyzable:spread-positional-uncertainty
+}
+export function spreadPositions() {
+  unsupportedSpreadPositions(...values, annotatedOrdersSql());
+}
+function spreadCallbackExecutor(statement: unknown) {
+  write(statement); // unanalyzable:spread-callback-uncertainty
+}
+export function spreadCallbacks() {
+  runOpaqueCallback(...[annotatedOrdersSql(), spreadCallbackExecutor]);
+}
+export function optionalHelperCall() {
+  executeOptional(annotatedOrdersSql());
+  executeOptional?.(unannotatedOrdersSql());
+}
+function executeOptional(statement: unknown) {
+  write(statement); // unanalyzable:optional-helper-uncertainty
+}
+
+export function nestedSpreadBuilderMutation() {
+  const statement = sql`/* nested spread */ SELECT 1`;
+  const ignored = unknownMutation(...[...[statement]]);
+  write(statement); // unanalyzable:nested-spread-builder
+}
+export function objectContainerBuilderMutation() {
+  const statement = sql`/* object container */ SELECT 1`;
+  const ignored = unknownMutation({statement});
+  write(statement); // unanalyzable:object-container-builder
+}
+export function initializerPropertyAssignment() {
+  const statement = sql`/* assignment initializer */ SELECT 1`;
+  const ignored = (statement.text = 'SELECT 2');
+  write(statement); // unanalyzable:initializer-property-write
+}
+export function initializerPropertyDelete() {
+  const statement = sql`/* delete initializer */ SELECT 1`;
+  const ignored = delete statement.text;
+  write(statement); // unanalyzable:initializer-property-delete
+}
+export function opaqueConstructorMutation() {
+  const statement = sql`/* constructor input */ SELECT 1`;
+  const ignored = new unknownMutation(statement);
+  write(statement); // unanalyzable:opaque-constructor-builder
+}
+
+export function deferredClassMethod() {
+  const statement = sql`/* deferred method */ SELECT 1`;
+  const Shell = class { unused() { unknownMutation(statement); } };
+  write(statement); // known:class-method-deferred
+}
+export function initializerBindingAssignment() {
+  let statement = sql`/* reassigned binding */ SELECT 1`;
+  const ignored = (statement = unknownStatement);
+  write(statement); // unanalyzable:initializer-binding-write
+}

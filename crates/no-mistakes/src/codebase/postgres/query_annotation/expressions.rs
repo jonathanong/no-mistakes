@@ -1,3 +1,4 @@
+mod children;
 mod functions;
 use super::{Expr, Step};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -74,8 +75,15 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 .arguments
                 .iter()
                 .map(|arg| {
-                    arg.as_expression()
-                        .map_or(Expr::Unknown, |arg| expression(arg, source))
+                    if let oxc_ast::ast::Argument::SpreadElement(spread) = arg {
+                        Expr::Spread(Box::new(expression(&spread.argument, source)))
+                    } else {
+                        expression(
+                            arg.as_expression()
+                                .expect("non-spread arguments are expressions"),
+                            source,
+                        )
+                    }
                 })
                 .collect::<Vec<_>>();
             if let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&value.callee) {
@@ -88,7 +96,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             }
             Expr::Call {
                 callee: Box::new(if value.optional {
-                    Expr::Unknown
+                    Expr::Children(vec![expression(&value.callee, source)])
                 } else {
                     expression(&value.callee, source)
                 }),
@@ -122,11 +130,23 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             }
             function
         }
+        Expression::StaticMemberExpression(value) => {
+            Expr::Children(vec![expression(&value.object, source)])
+        }
+        Expression::ComputedMemberExpression(value) => Expr::Children(vec![
+            expression(&value.object, source),
+            expression(&value.expression, source),
+        ]),
         Expression::AwaitExpression(value) => {
             Expr::Await(Box::new(expression(&value.argument, source)))
         }
         Expression::UnaryExpression(value) => {
-            Expr::Children(vec![expression(&value.argument, source)])
+            let values = vec![expression(&value.argument, source)];
+            if value.operator == oxc_ast::ast::UnaryOperator::Delete {
+                Expr::Opaque(values)
+            } else {
+                Expr::Children(values)
+            }
         }
         Expression::BinaryExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
@@ -148,14 +168,9 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 .map(|expr| expression(expr, source))
                 .collect(),
         ),
-        Expression::ArrayExpression(value) => Expr::Children(
-            value
-                .elements
-                .iter()
-                .filter_map(|element| element.as_expression())
-                .map(|value| expression(value, source))
-                .collect(),
-        ),
-        _ => Expr::Unknown,
+        Expression::ArrayExpression(_) | Expression::ObjectExpression(_) => {
+            Expr::Children(children::collect(expr, source))
+        }
+        _ => Expr::Opaque(children::collect(expr, source)),
     }
 }

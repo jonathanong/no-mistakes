@@ -1,0 +1,1 @@
+{"compilerOptions":{"module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@local/query":["src/helper.mts"],"@app/db":["src/db.mts"]}}}

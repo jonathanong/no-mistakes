@@ -139,6 +139,7 @@ fn files_without_relative_candidates_are_left_untouched() {
         &AnalysisSession::disabled(),
         Path::new("/tmp"),
         &sources,
+        None,
         &mut files,
     );
     let stored = &files.get(&path).expect("file").embedded_sql[0].1;

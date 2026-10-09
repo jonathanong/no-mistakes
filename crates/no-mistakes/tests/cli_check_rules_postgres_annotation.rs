@@ -99,3 +99,31 @@ fn postgres_require_query_annotation_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+
+#[test]
+fn postgres_annotation_helpers_keep_importer_ownership_and_explicit_overrides() {
+    let root = fixture("helper-tracing-monorepo");
+    for forced in [false, true] {
+        let mut command = Command::new(bin());
+        command.args(["check", "--root"]).arg(&root);
+        command.args(["--format", "json"]);
+        if forced {
+            command.arg("--tsconfig").arg(root.join("tsconfig.json"));
+        }
+        let output = command.output().unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let rules = report["rules"].as_array().unwrap();
+        assert_eq!(output.status.success(), forced, "{report}");
+        if forced {
+            assert!(rules.is_empty(), "{report}");
+        } else {
+            assert_eq!(rules.len(), 1, "{report}");
+            assert_eq!(rules[0]["file"], "packages/bad/src/query.mts");
+            assert_eq!(rules[0]["line"], 3);
+            assert_eq!(rules[0]["target"], "annotation");
+        }
+    }
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "packages/bad/src/query.mts");
+}

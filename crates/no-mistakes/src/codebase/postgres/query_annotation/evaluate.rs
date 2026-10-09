@@ -131,6 +131,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
+            Expr::Spread(expr) => {
+                Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)])
+            }
             Expr::OpaqueCallback(expr) => match self.expr(expr, path, env, depth, generic) {
                 Value::Function(mut function, path, captured) => {
                     function.supported = false;
@@ -150,6 +153,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 args,
                 start,
             } => self.call(callee, args, *start, path, env, (depth, generic)),
+            Expr::Opaque(children) => {
+                let values = children
+                    .iter()
+                    .map(|child| self.expr(child, path, env, depth, generic))
+                    .collect::<Vec<_>>();
+                self.invalidate_builders(&values);
+                self.opaque_callbacks(&values, depth);
+                Value::Unknown
+            }
             Expr::Children(children) => Value::Aggregate(
                 children
                     .iter()

@@ -4,7 +4,8 @@ use crate::codebase::postgres::{
     package_name, package_root_for_specifier, project_relative_scoped_facts,
 };
 use crate::codebase::ts_resolver::{
-    resolve_tsconfig_from_visible_and_sources, ImportResolver, TsConfig,
+    resolve_tsconfig_from_visible_and_sources, ImportResolver, ScopedImportResolver, TsConfig,
+    TsConfigCatalog,
 };
 use crate::codebase::ts_source::{FileIdMap, SourceStore};
 use crate::codebase::workspaces::{load_indexed_from_source_store, IndexedWorkspaceMap};
@@ -20,6 +21,7 @@ pub(super) fn project_relative_executor_scopes(
     session: &AnalysisSession,
     root: &Path,
     sources: &SourceStore,
+    catalog: Option<&TsConfigCatalog>,
     files: &mut FileIdMap<CheckFileFacts>,
 ) {
     let annotation = files
@@ -54,6 +56,24 @@ pub(super) fn project_relative_executor_scopes(
         }
     }
     if annotation {
+        // Compatibility collectors lack a boundary catalog, but still reuse
+        // their supplied inventory, sources and workspace. Prepared entrypoints
+        // always pass their existing catalog, preserving forced-config semantics.
+        let fallback;
+        let catalog = match catalog {
+            Some(catalog) => catalog,
+            None => {
+                fallback = TsConfigCatalog::from_visible_and_sources_with_workspace(
+                    root,
+                    &[root.to_path_buf()],
+                    sources.inventory().paths().as_ref(),
+                    sources,
+                    &workspace,
+                );
+                &fallback
+            }
+        };
+        let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);
         crate::codebase::postgres::query_annotation::project::project(files, |specifier, from| {
             resolver.resolve(specifier, from)
         });

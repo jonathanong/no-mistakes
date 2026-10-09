@@ -88,6 +88,10 @@ test(
       "src/local-tag.mts",
       "src/named-tags.mts",
       "src/destructured-tag.mts",
+      "src/raw-assertion.ts",
+      "src/raw-deleted.mts",
+      "src/raw-reassigned.mts",
+      "src/raw-shadowed.mts",
     ];
     const report = await cjs.check({ root: reviewFixtureRoot });
     assert.deepEqual(await esm.check({ root: reviewFixtureRoot }), report);
@@ -123,5 +127,37 @@ test(
       markedFiles(reviewFixtureRoot, reviewedSources, ["finding"]),
       "a known unannotated imported helper remains a finding when unanalyzableSql is ignored",
     );
+  },
+);
+
+test(
+  "compiled helper tracing uses each importer catalog and honors a forced config",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-monorepo",
+    );
+    for (const config of [".no-mistakes.yml", ".no-mistakes-report.yml"]) {
+      const options = { root, config: join(root, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(
+        report.rules.map(({ file, line, target }) => [file, line, target]),
+        [["packages/bad/src/query.mts", 3, "annotation"]],
+      );
+      const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(batch.reports[0].result, report);
+    }
+    // Explicit ownership deliberately replaces package-local aliases.
+    const forced = { root, tsconfig: join(root, "tsconfig.json") };
+    const report = await cjs.check(forced);
+    assert.deepEqual(await esm.check(forced), report);
+    assert.deepEqual(report.rules, []);
+    const batch = await cjs.analyzeProject({ ...forced, reports: [{ type: "check" }] });
+    assert.deepEqual(batch.reports[0].result, report);
   },
 );

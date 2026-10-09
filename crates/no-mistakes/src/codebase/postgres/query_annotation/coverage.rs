@@ -20,7 +20,7 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
                 }
             }
             Expr::Function(function) => steps(&function.body, covered),
-            Expr::Template(parts) | Expr::Children(parts) => {
+            Expr::Template(parts) | Expr::Children(parts) | Expr::Opaque(parts) => {
                 for part in parts {
                     expr(part, covered);
                 }
@@ -30,7 +30,9 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
                     expr(part, covered);
                 }
             }
-            Expr::Await(value) | Expr::OpaqueCallback(value) => expr(value, covered),
+            Expr::Await(value) | Expr::Spread(value) | Expr::OpaqueCallback(value) => {
+                expr(value, covered)
+            }
             Expr::Append(base, tail) => {
                 expr(base, covered);
                 expr(tail, covered);

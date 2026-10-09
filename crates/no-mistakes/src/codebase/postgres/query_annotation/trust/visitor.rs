@@ -179,6 +179,20 @@ impl<'a> Visit<'a> for Writes {
         }
         walk::walk_assignment_target(self, value);
     }
+    fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {
+        if super::raw::target(value) {
+            self.write("String");
+        }
+        walk::walk_simple_assignment_target(self, value);
+    }
+    fn visit_unary_expression(&mut self, value: &UnaryExpression<'a>) {
+        if value.operator == oxc_ast::ast::UnaryOperator::Delete
+            && super::raw::expression(&value.argument)
+        {
+            self.write("String");
+        }
+        walk::walk_unary_expression(self, value);
+    }
     fn visit_update_expression(&mut self, value: &UpdateExpression<'a>) {
         if let SimpleAssignmentTarget::AssignmentTargetIdentifier(id) = &value.argument {
             self.write(id.name.as_str());
