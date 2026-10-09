@@ -1,10 +1,9 @@
 use super::{normalize_copy_data, normalize_table_queries, PostgresParseError};
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
-use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{TokenWithSpan, Tokenizer};
 use std::borrow::Cow;
-use std::cell::{Cell, OnceCell};
+use std::cell::{Cell, OnceCell, Ref, RefCell};
 
 /// One request's aligned SQL text and located tokens. Parser rewrites use a clone;
 /// row-bound identity and sweeps borrow the original located stream.
@@ -12,6 +11,7 @@ pub(crate) struct PreparedSql<'a> {
     normalized: Cow<'a, str>,
     source_positions_preserved: Cell<bool>,
     tokens: OnceCell<Result<Vec<TokenWithSpan>, PostgresParseError>>,
+    functions: RefCell<Vec<super::super::SqlFunctionCallFact>>,
 }
 
 impl<'a> PreparedSql<'a> {
@@ -19,6 +19,7 @@ impl<'a> PreparedSql<'a> {
         Self {
             normalized: normalize_copy_data(sql),
             tokens: OnceCell::new(),
+            functions: RefCell::new(Vec::new()),
             source_positions_preserved: Cell::new(true),
         }
     }
@@ -42,16 +43,19 @@ impl<'a> PreparedSql<'a> {
         normalize_table_queries(&mut tokens);
         let recursive_views = super::recursive_view::prepare(&mut tokens);
         let fetch = super::fetch_expression::prepare(&mut tokens);
-        let mut statements = Parser::new(&PostgreSqlDialect {})
-            .with_tokens_with_locations(tokens)
-            .parse_statements()
+        let (mut statements, functions) = super::super::source::parse_conflict_program(tokens)
             .map_err(PostgresParseError::from)?;
         super::fetch_expression::restore(&mut statements, &fetch);
         for statement in &mut statements {
             recursive_views.validate(statement)?;
             recursive_views.restore(statement);
         }
+        *self.functions.borrow_mut() = functions;
         Ok(statements)
+    }
+
+    pub(crate) fn functions(&self) -> Ref<'_, Vec<super::super::SqlFunctionCallFact>> {
+        self.functions.borrow()
     }
 
     fn located(&self) -> Result<&Vec<TokenWithSpan>, &PostgresParseError> {

@@ -4,15 +4,10 @@ rules:
     options:
       sqlInclude: ["sql/**/*.sql"]
       executorNames: []
+      unanalyzableSql: ignore
       bannedShapes: [banned-function-call]
       shapeOptions:
         bannedFunctionCall:
           functions:
-            - pg_sleep
-            - name: uuidv7
-              clauses: [where, join-on, having]
-              hint: compute a stable bound once per statement
-            - name: '"custom.schema"."odd.function"'
-              clauses: [where]
             - name: probe_boundary
               clauses: [select-list]

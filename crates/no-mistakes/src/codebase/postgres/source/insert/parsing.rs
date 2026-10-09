@@ -1,6 +1,8 @@
 //! Extend the prepared parser at ON CONFLICT; every expression is parsed once.
 use sqlparser::{
-    ast::{ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, Statement},
+    ast::{
+        ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, SetExpr, Statement,
+    },
     keywords::Keyword,
     parser::{Parser, ParserError},
     tokenizer::{Location, Token},
@@ -45,11 +47,27 @@ pub(in crate::codebase::postgres::source) fn parse(
     parser: &mut Parser<'_>,
     markers: &[Location],
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
+    parse_with_mode(parser, markers, true)
+}
+
+/// Statement-policy projections retain the native outer query and CTE identity.
+pub(in crate::codebase::postgres::source) fn parse_policy(
+    parser: &mut Parser<'_>,
+    markers: &[Location],
+) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
+    parse_with_mode(parser, markers, false)
+}
+
+fn parse_with_mode(
+    parser: &mut Parser<'_>,
+    markers: &[Location],
+    normalize_with: bool,
+) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
     let insert = keyword(&parser.peek_token().token, Keyword::INSERT)
         || keyword(&parser.peek_token().token, Keyword::WITH)
         || keyword(&parser.peek_token().token, Keyword::EXPLAIN)
         || keyword(&parser.peek_token().token, Keyword::PREPARE);
-    let result = parse_inner(parser, markers);
+    let result = parse_inner(parser, markers, normalize_with);
     if insert && result.is_err() {
         let previous = parser.token_at(parser.index().saturating_sub(1));
         if previous.token == Token::SemiColon
@@ -66,8 +84,14 @@ pub(in crate::codebase::postgres::source) fn parse(
 fn parse_inner(
     parser: &mut Parser<'_>,
     markers: &[Location],
+    normalize_with: bool,
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
-    let (mut statement, mut facts) = with::normalize(parser.parse_statement()?);
+    let parsed = parser.parse_statement()?;
+    let (mut statement, mut facts) = if normalize_with {
+        with::normalize(parsed)
+    } else {
+        (parsed, None)
+    };
     if let Some(insert) = inner_insert(&mut statement) {
         if markers
             .binary_search(&parser.peek_token().span.start)
@@ -181,6 +205,10 @@ fn keyword(token: &Token, expected: Keyword) -> bool {
 fn inner_insert(statement: &mut Statement) -> Option<&mut sqlparser::ast::Insert> {
     match statement {
         Statement::Insert(insert) => Some(insert),
+        Statement::Query(query) => match query.body.as_mut() {
+            SetExpr::Insert(statement) => inner_insert(statement),
+            _ => None,
+        },
         Statement::Explain { statement, .. } | Statement::Prepare { statement, .. } => {
             inner_insert(statement)
         }

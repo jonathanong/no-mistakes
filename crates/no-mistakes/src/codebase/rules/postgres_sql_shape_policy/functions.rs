@@ -48,7 +48,7 @@ pub(super) fn findings(
                 && entry.clauses.as_ref().is_none_or(|clauses| call.clause.is_some_and(|clause| clauses.contains(&clause)))
         })?;
         let text = if entry.clauses.is_some() {
-            format!("{}() is banned in {}", call.name_parts.join("."), call.clause.expect("matched a configured clause").label())
+            format!("{}() is banned in {}", scoped_spelling(&call.name_parts), call.clause.expect("matched a configured clause").label())
         } else {
             let spelling = call.name_parts.iter().map(|part| format!("\"{}\"", part.replace('"', "\"\""))).collect::<Vec<_>>().join(".");
             format!("function call {spelling} is banned by this SQL shape policy; remove the call or replace it with an allowed operation")
@@ -56,4 +56,29 @@ pub(super) fn findings(
         let text = entry.hint.as_ref().map_or_else(|| text.clone(), |hint| format!("{text}; {hint}"));
         Some(finding(file, line_at(call.line), &text, BANNED_FUNCTION_CALL))
     }).collect()
+}
+
+// Quote decoded components when unquoted SQL would change their identity.
+fn scoped_spelling(parts: &[String]) -> String {
+    parts
+        .iter()
+        .map(|part| {
+            let mut chars = part.chars();
+            let ordinary = chars
+                .next()
+                .is_some_and(|c| c.is_ascii_lowercase() || c == '_')
+                && chars
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '$');
+            let ordinary = ordinary
+                && sqlparser::keywords::ALL_KEYWORDS
+                    .binary_search(&part.to_ascii_uppercase().as_str())
+                    .is_err();
+            if ordinary {
+                part.clone()
+            } else {
+                format!("\"{}\"", part.replace('"', "\"\""))
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(".")
 }

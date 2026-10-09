@@ -1,7 +1,7 @@
 use super::{Roots, SqlFunctionClause};
 use sqlparser::ast::{
     Function, FunctionArgumentClause, FunctionArguments, NamedWindowExpr, OrderBy, OrderByKind,
-    Query, Select, SetExpr, WindowType,
+    Query, Select, SetExpr, WindowFrameBound, WindowSpec, WindowType,
 };
 
 impl Roots {
@@ -30,8 +30,14 @@ impl Roots {
         }
     }
 
-    pub(in crate::codebase::postgres::function_calls) fn select(&mut self, select: &Select) {
-        self.items(&select.projection, SqlFunctionClause::SelectList);
+    pub(in crate::codebase::postgres::function_calls) fn select(
+        &mut self,
+        select: &Select,
+        projection: bool,
+    ) {
+        if projection {
+            self.items(&select.projection, SqlFunctionClause::SelectList);
+        }
         if let Some(expression) = &select.selection {
             self.expr(expression, SqlFunctionClause::Where);
         }
@@ -41,7 +47,7 @@ impl Roots {
         self.joins(&select.from);
         for window in &select.named_window {
             if let NamedWindowExpr::WindowSpec(spec) = &window.1 {
-                self.order_exprs(&spec.order_by);
+                self.window(spec);
             }
         }
     }
@@ -52,7 +58,7 @@ impl Roots {
         }
         self.order_exprs(&function.within_group);
         if let Some(WindowType::WindowSpec(spec)) = &function.over {
-            self.order_exprs(&spec.order_by);
+            self.window(spec);
         }
         for arguments in [&function.parameters, &function.args] {
             if let FunctionArguments::List(list) = arguments {
@@ -69,6 +75,22 @@ impl Roots {
                 }
             }
         }
+    }
+
+    fn window(&mut self, spec: &WindowSpec) {
+        for expression in &spec.partition_by {
+            self.unscoped(expression);
+        }
+        if let Some(frame) = &spec.window_frame {
+            for bound in std::iter::once(&frame.start_bound).chain(frame.end_bound.as_ref()) {
+                if let WindowFrameBound::Preceding(Some(expr))
+                | WindowFrameBound::Following(Some(expr)) = bound
+                {
+                    self.unscoped(expr);
+                }
+            }
+        }
+        self.order_exprs(&spec.order_by);
     }
 
     pub(in crate::codebase::postgres::function_calls) fn order_by(&mut self, order_by: &OrderBy) {

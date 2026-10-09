@@ -164,6 +164,7 @@ fn extract_from_parsed_and_sources(
     );
     if sources.policy.schema.is_none() {
         function_calls.extend_from_slice(sources.policy.functions);
+        function_calls.extend_from_slice(&prepared_sql.functions());
     }
     SqlStatementFileFacts {
         path: Default::default(),

@@ -51,11 +51,13 @@ pub(super) fn collect(
             let schema = (plan.postgres_schema && schema_set.contains(path)).then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, _, _)| {
+                    .map(|(statements, functions, _, prepared)| {
+                        let mut functions = functions.clone();
+                        functions.extend_from_slice(&prepared.functions());
                         let mut value = crate::codebase::postgres::migration::extract_from_parsed(
                             source.as_ref().unwrap(),
                             statements,
-                            functions,
+                            &functions,
                         );
                         value.path = path.clone();
                         Arc::new(value)

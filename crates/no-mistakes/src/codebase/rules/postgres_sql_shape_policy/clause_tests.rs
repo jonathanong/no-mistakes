@@ -118,3 +118,42 @@ fn qualified_function_names_keep_existing_matching_and_predicate_scope() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].line, 14);
 }
+
+#[test]
+fn recovered_conflict_predicates_and_quoted_scoped_names_keep_identity() {
+    let root = root();
+    let files = [root.join("review.sql")];
+    let findings =
+        check_with_files(&root, &config("[{name: uuidv7, clauses: [where]}]"), &files).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [2, 3]
+    );
+    let global = check_with_files(&root, &config("[uuidv7]"), &files).unwrap();
+    assert_eq!(global.len(), 3);
+    for (entry, expected) in [
+        (
+            "[{name: '\"custom.schema\".\"odd.function\"', clauses: [where]}]",
+            "\"custom.schema\".\"odd.function\"() is banned in WHERE",
+        ),
+        (
+            "[{name: '\"Upper\".\"quote\"\"function\"', clauses: [where]}]",
+            "\"Upper\".\"quote\"\"function\"() is banned in WHERE",
+        ),
+        (
+            "[{name: '_simple$9', clauses: [where]}]",
+            "_simple$9() is banned in WHERE",
+        ),
+        (
+            "[{name: '\"select\"', clauses: [where]}]",
+            "\"select\"() is banned in WHERE",
+        ),
+    ] {
+        let findings = check_with_files(&root, &config(entry), &files).unwrap();
+        assert_eq!(findings.len(), 1, "{entry}: {findings:?}");
+        assert!(findings[0].message.ends_with(expected), "{:?}", findings[0]);
+    }
+}

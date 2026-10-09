@@ -8,11 +8,13 @@ pub(crate) fn partition(
 ) -> (Vec<LocatedStatement>, Vec<SqlFunctionCallFact>) {
     let mut statements = Vec::new();
     let mut functions = Vec::new();
-    for statement in located {
+    for mut statement in located {
+        functions.append(&mut statement.recovered_functions);
         if statement.function_projection {
-            crate::codebase::postgres::function_calls::collect(
+            crate::codebase::postgres::function_calls::collect_projected(
                 &statement.statement,
                 &mut functions,
+                statement.synthetic_select,
             );
         } else {
             statements.push(statement);

@@ -163,3 +163,5 @@ mod bound_demand;
 
 mod bind_column_uses;
 mod copy_recovery;
+
+mod conflict_functions;

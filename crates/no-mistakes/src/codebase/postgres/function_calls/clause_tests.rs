@@ -72,3 +72,43 @@ fn nested_queries_and_function_clauses_restore_their_enclosing_context() {
     }
     assert_eq!(again, calls);
 }
+
+#[test]
+fn unsupported_window_and_synthetic_routine_roots_remain_unscoped() {
+    use SqlFunctionClause::*;
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres/function-call-clauses/boundaries.sql"
+    ));
+    let parsed = crate::codebase::postgres::parse::parse_postgres_sql_with_function_sources(source);
+    let (statements, mut calls) =
+        crate::codebase::postgres::parse::partition_function_sources(parsed);
+    for statement in &statements {
+        collect(&statement.statement, &mut calls);
+    }
+    let actual = calls
+        .iter()
+        .filter(|call| call.name_parts[0].starts_with("probe_"))
+        .map(|call| (call.name_parts[0].as_str(), call.clause))
+        .collect::<BTreeMap<_, _>>();
+    let expected = BTreeMap::from([
+        ("probe_inline_partition", None),
+        ("probe_named_partition", None),
+        ("probe_inline_start", None),
+        ("probe_inline_end", None),
+        ("probe_named_start", None),
+        ("probe_named_end", None),
+        ("probe_inline_order", Some(OrderBy)),
+        ("probe_named_order", Some(OrderBy)),
+        ("probe_if", None),
+        ("probe_perform", None),
+        ("probe_return", None),
+        ("probe_guard", None),
+        ("probe_real_select", Some(SelectList)),
+        ("probe_real_where", Some(Where)),
+        ("probe_return_query", Some(SelectList)),
+        ("probe_nested_real_select", Some(SelectList)),
+        ("probe_nested_real_where", Some(Where)),
+    ]);
+    assert_eq!(actual, expected);
+}

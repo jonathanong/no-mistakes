@@ -20,11 +20,35 @@ pub struct SqlFunctionCallFact {
 }
 
 pub(super) fn collect(statement: &Statement, out: &mut Vec<SqlFunctionCallFact>) {
+    collect_projected(statement, out, false);
+}
+
+pub(super) fn collect_projected(
+    statement: &Statement,
+    out: &mut Vec<SqlFunctionCallFact>,
+    synthetic_select: bool,
+) {
     let _ = statement.visit(&mut Calls {
         out,
         roots: clauses::Roots::default(),
         current: None,
         contexts: Vec::new(),
+        synthetic_select,
+    });
+}
+
+/// Visit an expression owned by parser recovery using its actual clause.
+pub(super) fn collect_expression(
+    expression: &Expr,
+    out: &mut Vec<SqlFunctionCallFact>,
+    clause: Option<SqlFunctionClause>,
+) {
+    let _ = expression.visit(&mut Calls {
+        out,
+        roots: clauses::Roots::default(),
+        current: clause,
+        contexts: Vec::new(),
+        synthetic_select: false,
     });
 }
 
@@ -33,6 +57,7 @@ struct Calls<'a> {
     roots: clauses::Roots,
     current: Option<SqlFunctionClause>,
     contexts: Vec<Option<SqlFunctionClause>>,
+    synthetic_select: bool,
 }
 
 impl Calls<'_> {
@@ -73,7 +98,8 @@ impl Visitor for Calls<'_> {
     }
 
     fn pre_visit_select(&mut self, select: &Select) -> ControlFlow<()> {
-        self.roots.select(select);
+        self.roots.select(select, !self.synthetic_select);
+        self.synthetic_select = false;
         ControlFlow::Continue(())
     }
 
@@ -83,7 +109,7 @@ impl Visitor for Calls<'_> {
     }
 
     fn pre_visit_expr(&mut self, expression: &Expr) -> ControlFlow<()> {
-        self.enter(self.roots.clause(expression).or(self.current));
+        self.enter(self.roots.clause(expression).unwrap_or(self.current));
         if let Expr::Function(function) = expression {
             self.roots.function(function);
             record(&function.name, self.current, self.out);

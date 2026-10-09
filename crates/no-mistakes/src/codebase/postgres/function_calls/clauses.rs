@@ -9,16 +9,21 @@ mod queries;
 /// Expression identities belong to the borrowed AST and live only during its fact visit.
 #[derive(Default)]
 pub(super) struct Roots {
-    expressions: FxHashMap<usize, SqlFunctionClause>,
+    expressions: FxHashMap<usize, Option<SqlFunctionClause>>,
 }
 
 impl Roots {
-    pub(super) fn clause(&self, expression: &Expr) -> Option<SqlFunctionClause> {
+    // A stored None clears inherited context; a missing root inherits it.
+    pub(super) fn clause(&self, expression: &Expr) -> Option<Option<SqlFunctionClause>> {
         self.expressions.get(&identity(expression)).copied()
     }
 
     fn expr(&mut self, expression: &Expr, clause: SqlFunctionClause) {
-        self.expressions.insert(identity(expression), clause);
+        self.expressions.insert(identity(expression), Some(clause));
+    }
+
+    fn unscoped(&mut self, expression: &Expr) {
+        self.expressions.insert(identity(expression), None);
     }
 
     fn items(&mut self, items: &[SelectItem], clause: SqlFunctionClause) {
