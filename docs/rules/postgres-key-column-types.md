@@ -86,7 +86,7 @@ for intentional exceptions.
 
 With `allowedTypes: [uuid]`, this reports:
 
-`schema.json: constraint:orders.orders_pkey: primary key uses text column id; use one of uuid, and keep the string as a unique column`
+`schema.json: constraint:orders.orders_pkey: primary key uses text column id; use one of uuid, and keep any natural key as a separate unique constraint`
 
 ## Fix
 

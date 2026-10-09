@@ -81,3 +81,9 @@ rules:
       importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
       sqlInclude: ['sql/**/*.sql']
+
+  - rule: postgres-key-column-types
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: [uuid]

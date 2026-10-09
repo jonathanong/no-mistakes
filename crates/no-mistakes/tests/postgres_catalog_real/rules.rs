@@ -87,6 +87,11 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
     assert!(findings
         .iter()
         .any(|(_, _, message)| message.contains("invoice_state[]")));
+    assert!(findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types"
+            && message.contains("constraint:events.events_pkey")
+            && message.contains("bigint column id")
+    }));
 }
 
 #[test]
