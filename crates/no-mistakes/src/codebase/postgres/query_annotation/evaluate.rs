@@ -9,8 +9,10 @@ mod effects;
 mod index;
 mod mapped;
 mod modules;
+mod opaque;
 mod result;
 mod run;
+mod slot_write;
 mod statements;
 mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
@@ -58,6 +60,8 @@ pub(super) struct Evaluator<'a, F> {
     pub invalidated_builders: FxHashSet<u64>,
     pub builder_updates: FxHashMap<u64, Value>,
     pub captured_bindings: FxHashMap<Environment, FxHashMap<String, Environment>>,
+    pub captured_binding_readers: FxHashMap<(Environment, String), FxHashSet<Environment>>,
+    pub mapped_argument_owners: FxHashMap<u64, Environment>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
     pub argument_objects: FxHashMap<u64, Vec<Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
@@ -153,18 +157,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Delete(children, index) => {
                 self.deleted(children, *index, path, env, (depth, generic))
             }
-            Expr::Opaque(children) | Expr::OpaqueWrite { children, .. } => {
-                if let Expr::OpaqueWrite { targets, .. } = expr {
-                    self.invalidate_opaque_mapped_targets(targets, *env);
-                }
-                let values = children
-                    .iter()
-                    .map(|child| self.expr(child, path, env, depth, generic))
-                    .collect::<Vec<_>>();
-                self.invalidate_builders(&values);
-                self.opaque_callbacks(&values, depth);
-                Value::Unknown
+            Expr::Opaque(children) => self.opaque(children, &[], path, env, (depth, generic)),
+            Expr::OpaqueWrite { children, targets } => {
+                self.opaque(children, targets, path, env, (depth, generic))
             }
+            Expr::SlotWrite {
+                receiver,
+                index,
+                value,
+            } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
             Expr::Member(object, name) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.member(value, name)

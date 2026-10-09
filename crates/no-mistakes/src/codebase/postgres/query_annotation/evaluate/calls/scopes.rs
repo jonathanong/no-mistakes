@@ -2,6 +2,19 @@ use super::super::{Function, Value};
 use crate::codebase::postgres::query_annotation::Step;
 use crate::fx::FxHashMap;
 
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn shadows(
+    function: &Function,
+    name: &str,
+) -> bool {
+    function.params.iter().any(|param| param == name)
+        || function.self_name.as_deref() == Some(name)
+        || function.body.iter().any(|step| match step {
+            Step::Bind(local, _) | Step::Hoisted(local, _) | Step::Var(local) => local == name,
+            Step::Reserve(names) => names.iter().any(|local| local == name),
+            _ => false,
+        })
+}
+
 /// A callee's declarations shadow captured bindings even when a bare var
 /// has no initializer. The caller restores actual parameters after this step,
 /// so parameter redeclarations still preserve their runtime argument values.

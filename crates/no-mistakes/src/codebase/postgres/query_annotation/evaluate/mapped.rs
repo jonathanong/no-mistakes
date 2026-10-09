@@ -1,5 +1,6 @@
 mod bindings;
 mod fresh;
+mod owners;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use std::path::{Path, PathBuf};
@@ -42,7 +43,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         function: &Function,
         own: Option<(u64, Vec<String>)>,
     ) {
-        use crate::codebase::postgres::query_annotation::Step;
         let mut mappings = self
             .mapped_arguments
             .get(&captured)
@@ -50,26 +50,24 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .unwrap_or_default();
         for (_, params) in &mut mappings {
             for name in params {
-                let shadowed = function.params.contains(name)
-                    || function.self_name.as_ref() == Some(name)
-                    || function.body.iter().any(|step| match step {
-                        Step::Bind(local, _) | Step::Hoisted(local, _) | Step::Var(local) => {
-                            local == name
-                        }
-                        Step::Reserve(names) => names.contains(name),
-                        _ => false,
-                    });
-                if shadowed {
+                if super::calls::scopes::shadows(function, name) {
                     name.clear();
                 }
             }
         }
         self.inherit_freshness(scope, captured, &mappings);
         if let Some(own) = own {
+            self.mapped_argument_owners.insert(own.0, scope);
             mappings.push(own);
         }
         if !mappings.is_empty() {
             self.mapped_arguments.insert(scope, mappings);
+        }
+    }
+
+    pub(super) fn write_mapped_argument_slot(&mut self, id: u64, index: usize, value: &Value) {
+        if let Some((frame, name)) = self.mapped_slot_target(id, index) {
+            self.write_captured_binding(frame, &name, value);
         }
     }
 
@@ -102,32 +100,25 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         // Disconnection stops future updates; it cannot undo an opaque update
         // that already reached the parameter through the invocation object.
-        for (env, mappings) in &self.mapped_arguments {
-            for (object, params) in mappings {
-                if *object != id {
-                    continue;
-                }
-                if let Some(name) = params.get(index).filter(|name| {
-                    !name.is_empty()
-                        && params.iter().rposition(|param| param == *name) == Some(index)
-                }) {
-                    if self
-                        .fresh_mapped_parameters
-                        .get(env)
-                        .is_some_and(|names| names.contains(name))
-                    {
-                        continue;
-                    }
-                    let value = self.scopes[*env]
-                        .get_mut(name)
-                        .expect("mapped parameter binding");
-                    let previous = std::mem::replace(value, Value::Unknown);
-                    *value = match previous {
-                        Value::Prefix(_, _, _) | Value::Unknown => Value::Unknown,
-                        previous => Value::Aggregate(vec![Value::Unknown, previous]),
-                    };
-                }
+        let Some((owner, name)) = self.mapped_slot_target(id, index) else {
+            return;
+        };
+        for frame in self.captured_write_targets(owner, &name) {
+            if self
+                .fresh_mapped_parameters
+                .get(&frame)
+                .is_some_and(|names| names.contains(&name))
+            {
+                continue;
             }
+            let value = self.scopes[frame]
+                .get_mut(&name)
+                .expect("mapped parameter binding");
+            let previous = std::mem::replace(value, Value::Unknown);
+            *value = match previous {
+                Value::Prefix(_, _, _) | Value::Unknown => Value::Unknown,
+                previous => Value::Aggregate(vec![Value::Unknown, previous]),
+            };
         }
     }
 

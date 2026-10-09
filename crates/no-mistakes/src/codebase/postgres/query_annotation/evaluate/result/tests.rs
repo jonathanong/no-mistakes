@@ -40,6 +40,8 @@ fn outputs() -> Vec<(String, Value)> {
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
+        captured_binding_readers: Default::default(),
+        mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),

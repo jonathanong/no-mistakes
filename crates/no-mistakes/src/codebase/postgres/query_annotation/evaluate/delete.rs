@@ -55,8 +55,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
     ) -> bool {
         match expr {
-            Expr::Call { .. } => matches!(value, Value::Evaluated(_, true)),
-            Expr::Sequence(_) | Expr::Discard(_) => {
+            Expr::Call { .. } | Expr::Sequence(_) | Expr::Discard(_) | Expr::SlotWrite { .. } => {
                 matches!(value, Value::Evaluated(_, true))
             }
             Expr::Delete(_, _) => matches!(value, Value::SlotDeletion),

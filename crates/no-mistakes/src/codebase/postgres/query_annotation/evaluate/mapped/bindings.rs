@@ -37,6 +37,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             })
             .collect::<FxHashMap<_, _>>();
         if !bindings.is_empty() {
+            for (name, origin) in &bindings {
+                self.captured_binding_readers
+                    .entry((*origin, name.clone()))
+                    .or_default()
+                    .insert(scope);
+            }
             self.captured_bindings.insert(scope, bindings);
         }
     }
@@ -47,6 +53,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         name: &str,
         value: &Value,
     ) {
+        let frames = self.captured_write_targets(env, name);
+        for frame in frames {
+            self.update_mapped_parameter(frame, name, value);
+            self.scopes[frame].insert(name.to_string(), value.clone());
+        }
+    }
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn captured_write_targets(
+        &self,
+        env: Environment,
+        name: &str,
+    ) -> Vec<Environment> {
         let origin = self
             .captured_bindings
             .get(&env)
@@ -54,18 +71,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .copied()
             .unwrap_or(env);
         let mut frames = vec![origin];
-        frames.extend(
-            self.captured_bindings
-                .iter()
-                .filter_map(|(frame, bindings)| {
-                    (bindings.get(name) == Some(&origin)).then_some(*frame)
-                }),
-        );
-        for frame in frames {
-            self.update_mapped_parameter(frame, name, value);
-            self.scopes[frame].insert(name.to_string(), value.clone());
+        if let Some(readers) = self
+            .captured_binding_readers
+            .get(&(origin, name.to_string()))
+        {
+            frames.extend(readers.iter().copied());
+        }
+        frames
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_captured_readers(
+        &mut self,
+    ) {
+        self.captured_binding_readers.clear();
+        for (frame, bindings) in &self.captured_bindings {
+            for (name, origin) in bindings {
+                self.captured_binding_readers
+                    .entry((*origin, name.clone()))
+                    .or_default()
+                    .insert(*frame);
+            }
         }
     }
+
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn refresh_captured_bindings(
         &mut self,
     ) {

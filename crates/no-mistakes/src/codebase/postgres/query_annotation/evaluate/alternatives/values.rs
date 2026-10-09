@@ -70,8 +70,10 @@ pub(super) fn changes(
 pub(super) fn apply_taint(scopes: &mut [FxHashMap<String, Value>], changed: &FxHashSet<u64>) {
     for scope in scopes {
         for value in scope.values_mut() {
-            if matches!(value, Value::Prefix(_, _, Some(id)) if changed.contains(id)) {
-                *value = Value::Unknown;
+            if let Value::Prefix(_, _, Some(id)) = value {
+                if changed.contains(id) {
+                    *value = Value::Unknown;
+                }
             }
         }
     }

@@ -48,6 +48,12 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
                 expr(base, covered);
                 expr(tail, covered);
             }
+            Expr::SlotWrite {
+                receiver, value, ..
+            } => {
+                expr(receiver, covered);
+                expr(value, covered);
+            }
             _ => {}
         }
     }

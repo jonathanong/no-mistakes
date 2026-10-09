@@ -177,6 +177,7 @@ test(
       "helper-tracing-discarded-values",
       "helper-tracing-call-argument-order",
       "helper-tracing-live-binding",
+      "helper-tracing-argument-slot-write",
     ]) {
       const root = join(
         __dirname,

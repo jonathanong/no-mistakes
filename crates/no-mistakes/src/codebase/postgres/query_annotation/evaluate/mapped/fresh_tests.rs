@@ -11,6 +11,9 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         ("nested-callbacks.cjs", false),
         ("direct.cjs", true),
         ("opaque-read.cjs", true),
+        ("arguments-write.cjs", false),
+        ("arguments-write-formal.cjs", true),
+        ("captured-arguments-write.cjs", false),
         ("escape-again.cjs", false),
         ("inherited.cjs", true),
         ("deleted.cjs", true),
@@ -52,6 +55,8 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             invalidated_builders: Default::default(),
             builder_updates: Default::default(),
             captured_bindings: Default::default(),
+            captured_binding_readers: Default::default(),
+            mapped_argument_owners: Default::default(),
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
             argument_objects: Default::default(),
@@ -60,6 +65,18 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         };
         let env = evaluator.module_environment(&path);
         let result = &evaluator.scopes[env]["result"];
+        if name == "arguments-write-formal.cjs" {
+            assert!(
+                matches!(result, Value::Prefix(text, true, Some(_)) if text == "/* detached formal */ SELECT 1")
+            );
+            continue;
+        }
+        if name.ends_with("arguments-write.cjs") {
+            assert!(
+                matches!(result, Value::Aggregate(values) if values.iter().all(|value| matches!(value, Value::Unknown)))
+            );
+            continue;
+        }
         if name == "frame.cjs" {
             let Value::Aggregate(values) = result else {
                 panic!("conditional wrapper");
@@ -105,6 +122,12 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
                 .insert(999, crate::fx::FxHashSet::from_iter(["local".into()]));
             evaluator.invalidate_mapped_freshness(&crate::fx::FxHashSet::from_iter([id]));
             assert!(evaluator.fresh_mapped_parameters[&999].contains("local"));
+            // Disconnection uses the invocation's canonical owner projection;
+            // the overlapping read probes above are not actual invocation maps.
+            evaluator
+                .mapped_arguments
+                .insert(env, vec![(id, vec!["probe".into(), "other".into()])]);
+            evaluator.rebuild_mapped_argument_owners();
             evaluator.scopes[env].insert("probe".into(), callback.clone());
             evaluator.disconnect_mapped_slot(id, 0);
             assert!(matches!(

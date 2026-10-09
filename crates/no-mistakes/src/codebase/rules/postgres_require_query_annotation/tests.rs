@@ -471,6 +471,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-discarded-values",
         "helper-tracing-call-argument-order",
         "helper-tracing-live-binding",
+        "helper-tracing-argument-slot-write",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);

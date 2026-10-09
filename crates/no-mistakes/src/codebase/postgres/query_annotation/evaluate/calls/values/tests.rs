@@ -41,6 +41,8 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
+        captured_binding_readers: Default::default(),
+        mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),

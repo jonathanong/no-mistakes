@@ -53,6 +53,11 @@ pub(super) enum Expr {
         children: Vec<Expr>,
         targets: Vec<String>,
     },
+    SlotWrite {
+        receiver: Box<Expr>,
+        index: usize,
+        value: Box<Expr>,
+    },
     Delete(Vec<Expr>, DeleteKey),
 }
 

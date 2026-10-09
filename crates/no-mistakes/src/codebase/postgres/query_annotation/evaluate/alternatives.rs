@@ -47,6 +47,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.captured_bindings
                 .retain(|frame, _| *frame >= scopes.len());
             self.captured_bindings.extend(captured.clone());
+            self.rebuild_captured_readers();
+            self.rebuild_mapped_argument_owners();
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
@@ -101,6 +103,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut self.fresh_mapped_parameters,
                 &mut self.captured_bindings,
             );
+            self.rebuild_captured_readers();
+            self.rebuild_mapped_argument_owners();
             joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             joined = objects
                 .keys()
@@ -118,6 +122,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.captured_bindings
             .retain(|frame, _| *frame >= scopes.len());
         self.captured_bindings.extend(captured);
+        self.rebuild_captured_readers();
+        self.rebuild_mapped_argument_owners();
         if let Some(joined) = joined_scopes {
             self.scopes[..scopes.len()].clone_from_slice(&joined);
         }

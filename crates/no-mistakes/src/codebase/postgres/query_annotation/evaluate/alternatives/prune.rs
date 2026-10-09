@@ -14,6 +14,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &mut self.fresh_mapped_parameters,
             &mut self.captured_bindings,
         );
+        self.rebuild_captured_readers();
+        self.rebuild_mapped_argument_owners();
         frames::prune_state(
             &self.scopes,
             &[],
