@@ -66,3 +66,37 @@ test(
     }
   },
 );
+
+test(
+  "compiled key-type diagnostics preserve numeric precision and exact configured matching",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-key-column-types/fixture/fail-display-types",
+    );
+    const target = "constraint:numeric_precision.numeric_precision_pkey";
+    for (const allowed of [false, true]) {
+      const options = allowed
+        ? { root, config: join(root, ".no-mistakes-numeric-allowed.yml") }
+        : { root };
+      const report = await cjs.check(options);
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(await esm.check(options), report);
+      const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(batch.reports[0].result, report);
+      const finding = report.rules.find((entry) => entry.target === target);
+      if (allowed) {
+        assert.equal(finding, undefined);
+        assert.equal(report.rules.length, 2);
+      } else {
+        assert.equal(report.rules.length, 3);
+        assert.equal(finding.file, "schema.json");
+        assert.equal(finding.line, 1);
+        assert.match(finding.message, /primary key uses numeric\(10,2\) column id;/);
+      }
+    }
+  },
+);
