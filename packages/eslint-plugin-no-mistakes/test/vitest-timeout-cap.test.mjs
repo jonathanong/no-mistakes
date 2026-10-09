@@ -8,6 +8,25 @@ const code = (name) => fixture(`vitest-timeout-cap/${name}.ts`);
 const findings = (name, options) =>
   lint(code(name), { [`no-mistakes/${rule}`]: ["error", options || {}] }, "fixture.test.ts");
 describe(rule, () => {
+  it("caps numeric arithmetic without executing calls or coercing strings", () => {
+    assert.deepEqual(
+      findings("arithmetic").map(({ line, messageId }) => ({ line, messageId })),
+      [
+        ...[3, 4, 6, 7, 8, 9].map((line) => ({ line, messageId: "timeout" })),
+        { line: 10, messageId: "invalid" },
+        { line: 11, messageId: "timeout" },
+        { line: 15, messageId: "timeout" },
+        { line: 16, messageId: "timeout" },
+        { line: 17, messageId: "timeout" },
+      ],
+    );
+    assert.deepEqual(
+      findings("arithmetic", { unknownValues: "finding" })
+        .filter((item) => item.messageId === "unknown")
+        .map((item) => item.line),
+      [12, 13, 14, 19, 20],
+    );
+  });
   it("caps all test, hook, suite, table, and runtime forms with module constants", () => {
     assert.deepEqual(
       findings("overrides").map((item) => item.line),
@@ -122,6 +141,11 @@ describe(rule, () => {
         .length,
       13,
     );
+    assert.equal(
+      JSON.parse(run("arithmetic").stdout).diagnostics.filter((item) => item.code?.includes(rule))
+        .length,
+      11,
+    );
     const boundaries = JSON.parse(run("positive-boundaries").stdout).diagnostics.filter((item) =>
       item.code?.includes(rule),
     );
@@ -181,7 +205,7 @@ describe("vitest-timeout-cap effective config and source boundaries", () => {
 it("preserves oversized defaults when mergeConfig ignores null overrides, and null spreads are inert", () => {
   assert.deepEqual(
     findings("merge-null").map((item) => item.line),
-    [2, 6],
+    [2, 6, 8],
   );
   assert.deepEqual(
     findings("merge-null", { unknownValues: "finding" }).map((item) => item.line),
