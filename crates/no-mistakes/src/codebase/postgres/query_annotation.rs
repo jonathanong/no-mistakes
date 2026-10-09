@@ -4,6 +4,7 @@ mod coverage;
 mod evaluate;
 mod exports;
 mod expressions;
+mod mapped_arguments;
 pub(crate) mod project;
 mod statements;
 mod trust;
@@ -18,11 +19,13 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) trusted_tags: BTreeSet<String>,
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub(super) raw_tag_reassigned: bool,
+    pub(super) mapped_arguments: crate::fx::FxHashSet<u32>,
     pub calls: BTreeMap<u32, Option<String>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Expr {
+    Primitive,
     Unknown,
     Unsupported,
     Text(String),
@@ -31,6 +34,8 @@ pub(super) enum Expr {
     Tagged(String, Vec<Expr>, Vec<Expr>),
     Await(Box<Expr>),
     Spread(Box<Expr>),
+    Index(Box<Expr>, usize),
+    Member(Box<Expr>, String),
     OpaqueCallback(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {
@@ -40,21 +45,41 @@ pub(super) enum Expr {
     },
     Function(Function),
     Children(Vec<Expr>),
+    Sequence(Vec<Expr>),
+    Discard(Box<Expr>),
     Alternatives(Vec<Expr>),
     Opaque(Vec<Expr>),
+    OpaqueWrite {
+        children: Vec<Expr>,
+        targets: Vec<String>,
+    },
+    SlotWrite {
+        receiver: Box<Expr>,
+        index: usize,
+        value: Box<Expr>,
+    },
+    Delete(Vec<Expr>, DeleteKey),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum DeleteKey {
+    Index(usize),
+    Named,
+    Dynamic,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct Function {
     pub start: u32,
     pub params: Vec<String>,
     pub body: Vec<Step>,
     pub supported: bool,
     pub asynchronous: bool,
+    pub arrow: bool,
     pub self_name: Option<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Step {
     Reserve(Vec<String>),
     Hoisted(String, Expr),

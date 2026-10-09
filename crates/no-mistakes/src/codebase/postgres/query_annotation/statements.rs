@@ -11,6 +11,7 @@ pub(super) fn collect(
         trusted_tags: super::trust::collect(program, options),
         legacy_tag_spans: super::trust::legacy_local_tags(program),
         roots: steps(&program.body, source),
+        mapped_arguments: super::mapped_arguments::collect(program),
         ..QueryAnnotationFileFacts::default()
     };
     facts.unmodeled_calls = super::coverage::collect(program, source, &facts.roots);
@@ -68,11 +69,13 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
                     );
                     continue;
                 }
-                if matches!(
-                    &value.expression,
-                    oxc_ast::ast::Expression::AssignmentExpression(_)
-                        | oxc_ast::ast::Expression::UpdateExpression(_)
-                ) {
+                if !matches!(expr, Expr::SlotWrite { .. })
+                    && matches!(
+                        &value.expression,
+                        oxc_ast::ast::Expression::AssignmentExpression(_)
+                            | oxc_ast::ast::Expression::UpdateExpression(_)
+                    )
+                {
                     steps.push(Step::Unsupported);
                 } else {
                     steps.push(Step::Effect(expr));

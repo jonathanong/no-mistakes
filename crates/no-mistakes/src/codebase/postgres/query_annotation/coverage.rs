@@ -22,7 +22,12 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
             Expr::Function(function) => steps(&function.body, covered),
             Expr::Template(parts)
             | Expr::Children(parts)
+            | Expr::Sequence(parts)
             | Expr::Opaque(parts)
+            | Expr::OpaqueWrite {
+                children: parts, ..
+            }
+            | Expr::Delete(parts, _)
             | Expr::Alternatives(parts) => {
                 for part in parts {
                     expr(part, covered);
@@ -33,12 +38,21 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
                     expr(part, covered);
                 }
             }
-            Expr::Await(value) | Expr::Spread(value) | Expr::OpaqueCallback(value) => {
-                expr(value, covered)
-            }
+            Expr::Await(value)
+            | Expr::Spread(value)
+            | Expr::OpaqueCallback(value)
+            | Expr::Discard(value)
+            | Expr::Member(value, _)
+            | Expr::Index(value, _) => expr(value, covered),
             Expr::Append(base, tail) => {
                 expr(base, covered);
                 expr(tail, covered);
+            }
+            Expr::SlotWrite {
+                receiver, value, ..
+            } => {
+                expr(receiver, covered);
+                expr(value, covered);
             }
             _ => {}
         }

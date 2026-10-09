@@ -15,6 +15,7 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
         body,
         !value.generator,
         value.r#async,
+        false,
         value.span.start,
     ))
 }
@@ -24,6 +25,7 @@ pub(super) fn function(
     body: Vec<Step>,
     supported: bool,
     asynchronous: bool,
+    arrow: bool,
     start: u32,
 ) -> Function {
     let names = params
@@ -55,6 +57,7 @@ pub(super) fn function(
         body,
         supported,
         asynchronous,
+        arrow,
         self_name: None,
     }
 }

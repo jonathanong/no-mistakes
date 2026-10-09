@@ -280,7 +280,9 @@ fn helper_tracing_fails_closed_for_unsupported_and_shadowed_bindings() {
     let root = fixture("helper-tracing-safety");
     let files = crate::codebase::ts_source::discover_visible_paths(&root);
     let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
-    let config = config_with_options("importSpecifier: '@app/db'\ninclude: ['src/query.mts']\ntrustedSqlTags: [{module: './tags.mjs', name: customQuery}]");
+    let config = config_with_options(
+        "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\ntrustedSqlTags: [{module: './tags.mjs', name: customQuery}]",
+    );
     let findings = check_with_files(&root, &config, &files).unwrap();
     let expected = source
         .lines()
@@ -297,62 +299,6 @@ fn helper_tracing_fails_closed_for_unsupported_and_shadowed_bindings() {
         expected,
         "{findings:#?}"
     );
-}
-
-#[test]
-fn helper_review_regressions_preserve_call_identity_exports_and_live_captures() {
-    let root = fixture("helper-tracing-review");
-    let files = crate::codebase::ts_source::discover_visible_paths(&root);
-    let paths = [
-        "src/destructured-tag.mts",
-        "src/import-equals.mts",
-        "src/local-tag.mts",
-        "src/named-tags.mts",
-        "src/query.mts",
-        "src/raw-assertion.ts",
-        "src/raw-deleted.mts",
-        "src/raw-reassigned.mts",
-        "src/raw-shadowed.mts",
-    ];
-    for ignore in [false, true] {
-        let policy = if ignore { "ignore" } else { "report" };
-        let config = config_with_options(&format!("importSpecifier: '@app/db'\ninclude: ['src/query.mts', 'src/import-equals.mts', 'src/destructured-tag.mts', 'src/local-tag.mts', 'src/named-tags.mts', 'src/raw-assertion.ts', 'src/raw-deleted.mts', 'src/raw-reassigned.mts', 'src/raw-shadowed.mts']\ntrustedSqlTags: [{{module: './tags.mjs', name: customQuery}}]\nunanalyzableSql: {policy}"));
-        let findings = check_with_files(&root, &config, &files).unwrap();
-        for threads in [1, 3] {
-            let pool = rayon::ThreadPoolBuilder::new()
-                .num_threads(threads)
-                .build()
-                .unwrap();
-            let parallel = pool.install(|| check_with_files(&root, &config, &files).unwrap());
-            assert_eq!(
-                parallel, findings,
-                "helper projection differs with {threads} workers"
-            );
-        }
-        let expected = paths
-            .iter()
-            .flat_map(|path| {
-                std::fs::read_to_string(root.join(path))
-                    .unwrap()
-                    .lines()
-                    .enumerate()
-                    .filter_map(|(index, line)| {
-                        (line.contains("// finding:")
-                            || (!ignore && line.contains("// unanalyzable:")))
-                        .then_some((path.to_string(), index + 1))
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>();
-        assert_eq!(
-            findings
-                .iter()
-                .map(|finding| (finding.file.clone(), finding.line))
-                .collect::<Vec<_>>(),
-            expected,
-            "{findings:#?}"
-        );
-    }
 }
 
 #[test]
@@ -424,7 +370,9 @@ fn helper_projection_and_rule_reuse_the_request_sources_and_single_parse() {
 fn helper_tracing_covers_straight_line_mutations_and_fail_closed_forms() {
     let root = fixture("helper-tracing-coverage");
     let files = crate::codebase::ts_source::discover_visible_paths(&root);
-    let config = config_with_options("importSpecifier: './db.mjs'\ninclude: ['src/query.mts']\ntrustedSqlTags: [{module: '@custom/sql', name: fragment}]");
+    let config = config_with_options(
+        "importSpecifier: './db.mjs'\ninclude: ['src/query.mts']\ntrustedSqlTags: [{module: '@custom/sql', name: fragment}]",
+    );
     let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
     let findings = check_with_files(&root, &config, &files).unwrap();
     let expected = source
@@ -459,3 +407,6 @@ fn helpers_use_importer_owned_aliases_even_when_unknown_sql_is_ignored() {
         assert_eq!(findings[0].target.as_deref(), Some("annotation"));
     }
 }
+
+#[cfg(test)]
+mod helper_contexts;

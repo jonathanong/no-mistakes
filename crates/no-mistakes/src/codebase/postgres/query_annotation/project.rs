@@ -82,8 +82,24 @@ pub(crate) fn project(
                     events: BTreeMap::new(),
                     scopes: Vec::new(),
                     modules: crate::fx::fx_map(),
+                    active_module_initials: Default::default(),
+                    active_callback_functions: Default::default(),
+                    active_callback_executions: Default::default(),
                     next_builder: 0,
                     invalidated_builders: Default::default(),
+                    builder_updates: Default::default(),
+                    captured_bindings: Default::default(),
+                    captured_binding_readers: Default::default(),
+                    mapped_argument_owners: Default::default(),
+                    mapped_parameter_indices: Default::default(),
+                    deleted_argument_slots: Default::default(),
+                    mapped_arguments: Default::default(),
+                    fresh_mapped_parameters: Default::default(),
+                    fresh_mapped_argument_bindings: Default::default(),
+                    argument_objects: Default::default(),
+                    argument_extra_slots: Default::default(),
+                    definite_deleted_argument_slots: Default::default(),
+                    disconnected_argument_slots: Default::default(),
                 };
                 evaluator.run(path);
                 (path.clone(), evaluator.events)
@@ -140,6 +156,14 @@ pub(crate) fn project(
 }
 
 fn prefix(value: Value) -> Option<String> {
+    if let Value::Possible(values) = value {
+        // A known unsafe possibility still violates the rule. A known safe
+        // possibility cannot establish safety for the implicit unknown case.
+        return values
+            .into_iter()
+            .filter_map(prefix)
+            .find(|text| sql_requires_query_annotation(text));
+    }
     let Value::Prefix(text, complete, _) = value else {
         return None;
     };

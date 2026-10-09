@@ -1,4 +1,16 @@
-//! Alternative arms share input facts, never each other's mutable effects.
+//! Alternative arms restore input state and join effects conservatively.
+//! Imported modules keep one request-local initialization identity.
+mod arena;
+mod bindings;
+mod callback_seen;
+mod extras;
+pub(super) mod frames;
+mod freshness;
+mod merge;
+pub(super) mod modules;
+mod prune;
+mod reachable;
+mod values;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
@@ -14,34 +26,190 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         let scopes = self.scopes.clone();
-        let modules = self.modules.clone();
+        let seen = self.active_callback_functions.clone();
+        let executions = self.active_callback_executions.clone();
+        let mut joined_seen = seen.clone();
+        let captured = self.captured_bindings.clone();
+        let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
+        let mut modules = self.modules.clone();
+        self.begin_alternative_module_snapshot(scopes.len());
+        let mut module_states = modules::States::default();
+        let extra_slots = self.argument_extra_slots.clone();
+        let mut joined_extras = None;
+        let updates = self.builder_updates.clone();
+        let original_ids = self.next_builder;
         let original = self.invalidated_builders.clone();
+        let objects = self.argument_objects.clone();
+        let definite = self.definite_deleted_argument_slots.clone();
+        let disconnected = self.disconnected_argument_slots.clone();
+        let mut disconnected_common = None;
+        let mut private_disconnected = FxHashSet::default();
+        let fresh = self.fresh_mapped_parameters.clone();
+        let mut fresh_joined = fresh.clone();
+        let mut definite_common = None;
+        let mut private_definite = FxHashSet::default();
+        let mut joined = crate::fx::FxHashMap::default();
+        let deleted = self.deleted_argument_slots.clone();
+        let mut deleted_changed = deleted.clone();
+        let mut returned = Vec::new();
         let mut changed = FxHashSet::default();
-        for arm in arms {
-            self.scopes.clone_from(&scopes);
+        for (arm_index, arm) in arms.iter().enumerate() {
+            // Keep arm-created frames alive for callbacks returned from helpers.
+            self.scopes[..scopes.len()].clone_from_slice(&scopes);
+            self.active_callback_functions.clone_from(&seen);
+            self.active_callback_executions.clone_from(&executions);
             self.modules.clone_from(&modules);
+            self.argument_extra_slots
+                .retain(|id, _| !objects.contains_key(id));
+            self.argument_extra_slots.extend(extra_slots.clone());
+            self.builder_updates.retain(|id, _| *id >= original_ids);
+            self.builder_updates.extend(updates.clone());
+            self.captured_bindings
+                .retain(|frame, _| *frame >= scopes.len());
+            self.captured_bindings.extend(captured.clone());
+            self.rebuild_binding_indexes();
             self.invalidated_builders.clone_from(&original);
-            self.expr(arm, path, env, depth, generic);
+            self.deleted_argument_slots.clone_from(&deleted);
+            self.definite_deleted_argument_slots.clone_from(&definite);
+            self.disconnected_argument_slots.clone_from(&disconnected);
+            freshness::restore(&mut self.fresh_mapped_parameters, scopes.len(), &fresh);
+            for (id, slots) in &objects {
+                self.argument_objects.insert(*id, slots.clone());
+            }
+            self.restore_alternative_modules();
+            self.rebuild_binding_indexes();
+            returned.push(self.expr(arm, path, env, depth, generic));
+            deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
+            self.merge_alternative_masks(
+                &objects,
+                &mut definite_common,
+                &mut private_definite,
+                &mut disconnected_common,
+                &mut private_disconnected,
+            );
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
-                    if let Value::Prefix(text, complete, Some(id)) = value {
-                        if !matches!(after.get(name), Some(Value::Prefix(other, done, Some(other_id))) if id == other_id && ((text == other && complete == done) || (text.trim_start().starts_with("/*") && other.trim_start().starts_with("/*"))))
-                        {
-                            changed.insert(*id);
-                        }
-                    }
+                    // Evaluation replaces bindings but never removes original keys.
+                    values::changes(
+                        value,
+                        &after[name],
+                        arena::Arena {
+                            objects: &objects,
+                            extras: &extra_slots,
+                        },
+                        arena::Arena {
+                            objects: &self.argument_objects,
+                            extras: &self.argument_extra_slots,
+                        },
+                        &mut changed,
+                        &self.definite_deleted_argument_slots,
+                    );
                 }
             }
+            freshness::unchanged(
+                &mut fresh_joined,
+                &self.fresh_mapped_parameters,
+                &scopes,
+                &self.scopes,
+            );
+            merge::objects(&mut joined, &self.argument_objects);
+            extras::join(&mut joined_extras, &self.argument_extra_slots, &objects);
+            module_states.join(&self.scopes, &self.modules, scopes.len());
+            if let Some(joined) = &mut joined_scopes {
+                bindings::join(joined, &self.scopes, &scopes);
+            } else {
+                joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
+            }
+            self.scopes[..scopes.len()].clone_from_slice(joined_scopes.as_ref().unwrap());
+            for (id, slots) in &joined {
+                self.argument_objects.insert(*id, slots.clone());
+            }
+            module_states.restore(&mut self.scopes, &self.modules);
+            self.argument_extra_slots
+                .clone_from(joined_extras.as_ref().unwrap());
+            self.accumulate_callback_seen(&mut joined_seen, arm_index == 0);
+            let indices = frames::compact(
+                &mut self.scopes,
+                frames::ModuleRoots {
+                    original: scopes.len(),
+                    modules: &mut self.modules,
+                    initials: &mut self.active_module_initials,
+                },
+                &mut returned,
+                &mut self.mapped_arguments,
+                arena::ArenaMut {
+                    objects: &mut self.argument_objects,
+                    extras: &mut self.argument_extra_slots,
+                },
+                &mut self.fresh_mapped_parameters,
+                &mut self.captured_bindings,
+            );
+            self.remap_active_callbacks(scopes.len(), &indices);
+            callback_seen::remap(&mut joined_seen, scopes.len(), &indices);
+            modules.clone_from(&self.modules);
+            module_states.remapped(&self.scopes, &modules);
+            joined_extras = Some(self.argument_extra_slots.clone());
+            self.rebuild_binding_indexes();
+            joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
+            joined.clone_from(&self.argument_objects);
         }
-        self.scopes = scopes;
+        self.scopes[..scopes.len()].clone_from_slice(&scopes);
+        self.active_callback_functions = joined_seen;
         self.modules = modules;
+        module_states.restore(&mut self.scopes, &self.modules);
+        self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
+        self.builder_updates.retain(|id, _| *id >= original_ids);
+        self.builder_updates.extend(updates);
+        self.captured_bindings
+            .retain(|frame, _| *frame >= scopes.len());
+        self.captured_bindings.extend(captured);
+        self.rebuild_captured_readers();
+        self.rebuild_mapped_argument_owners();
+        if let Some(joined) = joined_scopes {
+            self.scopes[..scopes.len()].clone_from_slice(&joined);
+        }
+        freshness::restore(
+            &mut self.fresh_mapped_parameters,
+            scopes.len(),
+            &fresh_joined,
+        );
+        self.rebuild_fresh_mapped_argument_bindings();
         self.invalidated_builders = original;
-        let values = changed
-            .into_iter()
-            .map(|id| Value::Prefix(String::new(), false, Some(id)))
-            .collect::<Vec<_>>();
-        self.invalidate_builders(&values);
-        Value::Unknown
+        self.deleted_argument_slots = deleted_changed;
+        let mut final_definite = definite_common.unwrap_or(definite.clone());
+        final_definite.extend(private_definite);
+        // These identities already represent actual arm effects. Replaying an
+        // arguments escape would wrongly taint values assigned after that escape.
+        self.invalidated_builders.extend(changed.iter().copied());
+        values::apply_taint(&mut self.scopes, &changed);
+        // Restored bindings must retain any prior opaque parameter update before
+        // the common deletion disconnects them from future argument mutations.
+        self.install_disconnected_slots(&disconnected, disconnected_common, private_disconnected);
+        self.definite_deleted_argument_slots = final_definite;
+        self.refresh_captured_bindings();
+        // Speculative identities with no surviving aliases cannot affect later reads.
+        self.active_module_initials
+            .pop()
+            .expect("balanced alternatives");
+        self.prune_alternative_state(&returned);
+        // Preserve possible callback captures for opaque consumers, while an
+        // aggregate never proves the SQL prefix of a conditional return.
+        Value::Aggregate(returned)
     }
 }
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(test)]
+mod deletion_tests;
+
+#[cfg(test)]
+mod prefix_tests;
+
+#[cfg(test)]
+mod shared_module_tests;
+
+#[cfg(test)]
+mod callback_tests;

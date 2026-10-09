@@ -1,4 +1,5 @@
-mod scopes;
+pub(super) mod scopes;
+mod values;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
@@ -50,17 +51,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let target = self.expr(callee, path, env, depth, generic);
-        let mut arguments = args
+        let target = self.expr(callee, path, env, depth, generic).exposed();
+        let mut raw_arguments = args
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
             .collect::<Vec<_>>();
-        for argument in &mut arguments {
-            if matches!(argument, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
-            {
-                *argument = Value::Unknown;
-            }
-        }
+        // Later operands can mutate the object an earlier operand returned.
+        self.refresh_arguments(&mut raw_arguments);
+        let handled_projection = matches!(callee, Expr::Name(_))
+            && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
+        let arguments = raw_arguments
+            .into_iter()
+            .map(Value::exposed)
+            .collect::<Vec<_>>();
         if self.files[path].executors.contains(&start) {
             self.events
                 .entry((path.to_path_buf(), start))
@@ -90,19 +93,28 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let Value::Function(function, function_path, captured) = target else {
             self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
-            return Value::Unknown;
+            return if handled_projection {
+                Value::Evaluated(Box::new(Value::Unknown), true)
+            } else {
+                Value::Unknown
+            };
         };
         if !function.supported {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             let mut locals = scopes::locals(&self.scopes[captured], &function);
-            for name in &function.params {
-                locals.insert(name.clone(), Value::Unknown);
-            }
             if let Some(name) = &function.self_name {
                 locals.insert(name.clone(), Value::Unknown);
             }
+            let object = self.arguments_object(&arguments, spread);
+            let mapping = self.parameter_mapping(&function, &function_path, &object);
+            scopes::arguments(&mut locals, &function, object);
+            for name in &function.params {
+                locals.insert(name.clone(), Value::Unknown);
+            }
             let mut scope = self.environment(locals);
+            self.register_mappings(scope, captured, &function, mapping);
+            self.register_captured_bindings(scope, captured, &function);
             self.steps(&function.body, &function_path, &mut scope, depth, false);
             self.opaque_callbacks(&arguments, depth);
             // Unsupported control flow with possible opaque calls must not
@@ -127,6 +139,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         }
         let mut locals = scopes::locals(&self.scopes[captured], &function);
+        if let Some(name) = &function.self_name {
+            locals.insert(name.clone(), Value::Unknown);
+        }
+        let object = self.arguments_object(&arguments, spread);
+        let mapping = self.parameter_mapping(&function, &function_path, &object);
+        scopes::arguments(&mut locals, &function, object);
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
@@ -137,10 +155,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 },
             );
         }
-        if let Some(name) = &function.self_name {
-            locals.insert(name.clone(), Value::Unknown);
-        }
         let mut scope = self.environment(locals);
+        self.register_mappings(scope, captured, &function, mapping);
+        self.register_captured_bindings(scope, captured, &function);
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
         // Trace forwarded executor calls, but do not treat a helper's return
         // as immutable SQL when arbitrary effects could mutate its builder.
@@ -151,23 +168,15 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
-        for argument in arguments {
-            if let Value::Aggregate(values) = argument {
-                self.opaque_callbacks(values, depth);
-            } else if let Value::Promise(value) = argument {
-                self.opaque_callbacks(std::slice::from_ref(value.as_ref()), depth);
-            } else if let Value::Function(function, path, captured) = argument {
-                self.invalidate_captured(*captured, function);
-                let mut locals = scopes::locals(&self.scopes[*captured], function);
-                for name in &function.params {
-                    locals.insert(name.clone(), Value::Unknown);
-                }
-                if let Some(name) = &function.self_name {
-                    locals.insert(name.clone(), Value::Unknown);
-                }
-                let mut scope = self.environment(locals);
-                self.steps(&function.body, path, &mut scope, depth, false);
+    fn arguments_object(&mut self, values: &[Value], spread: bool) -> Value {
+        if spread {
+            Value::Unknown
+        } else {
+            let id = self.next_builder;
+            self.next_builder += 1;
+            {
+                self.argument_objects.insert(id, values.to_vec());
+                Value::Arguments(id)
             }
         }
     }

@@ -1,7 +1,9 @@
 mod calls;
 mod children;
 mod functions;
+mod members;
 mod tagged;
+mod writes;
 use super::{Expr, Step};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use functions::function;
@@ -55,6 +57,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 body,
                 true,
                 value.r#async,
+                true,
                 value.span.start,
             ))
         }
@@ -65,31 +68,44 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             }
             function
         }
-        Expression::StaticMemberExpression(value) => {
-            Expr::Children(vec![expression(&value.object, source)])
-        }
-        Expression::ComputedMemberExpression(value) => Expr::Children(vec![
-            expression(&value.object, source),
-            expression(&value.expression, source),
-        ]),
+        Expression::StaticMemberExpression(value) => Expr::Member(
+            Box::new(expression(&value.object, source)),
+            value.property.name.to_string(),
+        ),
+        Expression::ComputedMemberExpression(value) => members::computed(value, source),
         Expression::AwaitExpression(value) => {
             Expr::Await(Box::new(expression(&value.argument, source)))
         }
         Expression::UnaryExpression(value) => {
-            let values = vec![expression(&value.argument, source)];
             if value.operator == oxc_ast::ast::UnaryOperator::Delete {
-                Expr::Opaque(values)
+                members::deleted(&value.argument, source)
+            } else if matches!(
+                value.operator,
+                oxc_ast::ast::UnaryOperator::UnaryPlus
+                    | oxc_ast::ast::UnaryOperator::UnaryNegation
+                    | oxc_ast::ast::UnaryOperator::BitwiseNot
+            ) {
+                // Numeric coercion can invoke user-defined conversion hooks.
+                // Preserve operand effects, but do not treat the result like
+                // a harmless discarded primitive.
+                Expr::Opaque(vec![expression(&value.argument, source)])
             } else {
-                Expr::Children(values)
+                Expr::Discard(Box::new(expression(&value.argument, source)))
             }
         }
+        Expression::NumericLiteral(_) => Expr::Primitive,
         Expression::BinaryExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
             expression(&value.right, source),
         ]),
+        // Boolean control values carry no SQL text and have no side effects.
+        Expression::BooleanLiteral(_) => Expr::Primitive,
         Expression::LogicalExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
-            Expr::Alternatives(vec![expression(&value.right, source)]),
+            Expr::Alternatives(vec![
+                expression(&value.right, source),
+                Expr::Children(vec![]),
+            ]),
         ]),
         Expression::ConditionalExpression(value) => Expr::Children(vec![
             expression(&value.test, source),
@@ -98,7 +114,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 expression(&value.alternate, source),
             ]),
         ]),
-        Expression::SequenceExpression(value) => Expr::Children(
+        Expression::SequenceExpression(value) => Expr::Sequence(
             value
                 .expressions
                 .iter()
@@ -107,6 +123,9 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         ),
         Expression::ArrayExpression(_) | Expression::ObjectExpression(_) => {
             Expr::Children(children::collect(expr, source))
+        }
+        Expression::AssignmentExpression(_) | Expression::UpdateExpression(_) => {
+            writes::collect(expr, source)
         }
         _ => Expr::Opaque(children::collect(expr, source)),
     }

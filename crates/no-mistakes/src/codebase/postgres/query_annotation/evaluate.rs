@@ -1,7 +1,19 @@
 mod alternatives;
+mod callbacks;
 mod calls;
+mod concat;
+mod member;
+use concat::concat;
+mod delete;
 mod effects;
+mod index;
+mod mapped;
 mod modules;
+mod opaque;
+mod result;
+mod run;
+mod slot_write;
+mod slots;
 mod statements;
 mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
@@ -10,14 +22,29 @@ use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub(super) enum Value {
     Prefix(String, bool, Option<u64>),
     Promise(Box<Value>),
+    Evaluated(Box<Value>, bool),
     Aggregate(Vec<Value>),
+    // Candidate runtime values with an implicit unknown alternative.
+    Possible(Vec<Value>),
+    Arguments(u64),
     Function(Function, PathBuf, Environment),
     Unknown,
+    Primitive,
     Unsupported,
+    SlotDeletion,
+}
+impl Value {
+    pub(super) fn exposed(self) -> Self {
+        let mut value = self;
+        while let Self::Evaluated(inner, _) = value {
+            value = *inner;
+        }
+        value
+    }
 }
 pub(super) type Environment = usize;
 pub(super) struct File<'a> {
@@ -33,8 +60,24 @@ pub(super) struct Evaluator<'a, F> {
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
     pub scopes: Vec<FxHashMap<String, Value>>,
     pub modules: FxHashMap<PathBuf, Environment>,
+    pub active_module_initials: Vec<alternatives::modules::Initials>,
+    pub active_callback_functions: Option<FxHashSet<callbacks::CallbackIdentity>>,
+    pub active_callback_executions: Option<FxHashSet<callbacks::CallbackIdentity>>,
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
+    pub builder_updates: FxHashMap<u64, Value>,
+    pub captured_bindings: FxHashMap<Environment, FxHashMap<String, Environment>>,
+    pub captured_binding_readers: FxHashMap<Environment, FxHashMap<String, FxHashSet<Environment>>>,
+    pub mapped_argument_owners: FxHashMap<u64, Environment>,
+    pub mapped_parameter_indices: FxHashMap<u64, FxHashMap<String, usize>>,
+    pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
+    pub argument_objects: FxHashMap<u64, Vec<Value>>,
+    pub argument_extra_slots: FxHashMap<u64, BTreeMap<usize, Value>>,
+    pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
+    pub disconnected_argument_slots: FxHashSet<(u64, usize)>,
+    pub fresh_mapped_parameters: FxHashMap<Environment, FxHashSet<String>>,
+    pub fresh_mapped_argument_bindings: FxHashMap<u64, FxHashMap<Environment, FxHashSet<String>>>,
+    pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -46,45 +89,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.scopes.push(values);
         id
     }
-    pub fn run(&mut self, path: &Path) {
-        let file = &self.files[path];
-        let globals = file.facts.globals.clone();
-        let env = self.module_environment(path);
-        let unmodeled = file.facts.unmodeled_calls.clone();
-        let scopes = self.scopes.clone();
-        let modules = self.modules.clone();
-        let invalidated = self.invalidated_builders.clone();
-        for call in unmodeled {
-            if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.expr(&call, path, &env, 16, false);
-            }
-        }
-        // Function declarations describe possible entrypoints; contextual
-        // callback invocations take precedence over this unknown input.
-        for expr in globals.values() {
-            if let Expr::Function(function) = expr {
-                // Speculative entrypoints share initialized facts, never effects
-                // from an unrelated function considered earlier in name order.
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                let mut values: FxHashMap<String, Value> = function
-                    .params
-                    .iter()
-                    .map(|name| (name.clone(), Value::Unknown))
-                    .collect();
-                if let Some(name) = &function.self_name {
-                    values.insert(name.clone(), Value::Unknown);
-                }
-                let mut env = self.environment(values);
-                self.steps(&function.body, path, &mut env, 16, true);
-            }
-        }
-    }
-
     pub(super) fn expr(
         &mut self,
         expr: &Expr,
@@ -97,13 +101,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return Value::Unknown;
         };
         let value = match expr {
-            Expr::Unknown => Value::Unknown,
+            Expr::Unknown | Expr::Primitive => Value::Unknown,
             Expr::Unsupported => Value::Unsupported,
             Expr::Text(value) => Value::Prefix(value.clone(), true, None),
-            Expr::Name(name) => self.scopes[*env]
-                .get(name)
-                .cloned()
-                .unwrap_or_else(|| self.name(path, name, depth, generic)),
+            Expr::Name(name) => self.mapped_parameter_value(*env, name).unwrap_or_else(|| {
+                self.scopes[*env]
+                    .get(name)
+                    .cloned()
+                    .unwrap_or_else(|| self.name(path, name, depth, generic))
+            }),
             Expr::Function(function) => {
                 // Request-owned scope IDs retain live bindings without recursive
                 // closure copies or reference cycles between sibling functions.
@@ -117,7 +123,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 prefix
             }
             Expr::Append(base, tail) => {
-                let base = self.expr(base, path, env, depth, generic);
+                let base = self.expr(base, path, env, depth, generic).exposed();
                 let tail = self.expr(tail, path, env, depth, generic);
                 let base = if matches!(&base, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
                 {
@@ -132,21 +138,25 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
+            Expr::Sequence(parts) => self.sequence(parts, path, env, (depth, generic)),
+            Expr::Discard(expr) => self.discard(expr, path, env, (depth, generic)),
             Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
             Expr::Spread(expr) => {
                 Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)])
             }
-            Expr::OpaqueCallback(expr) => match self.expr(expr, path, env, depth, generic) {
-                Value::Function(mut function, path, captured) => {
-                    function.supported = false;
-                    Value::Function(function, path, captured)
+            Expr::OpaqueCallback(expr) => {
+                match self.expr(expr, path, env, depth, generic).exposed() {
+                    Value::Function(mut function, path, captured) => {
+                        function.supported = false;
+                        Value::Function(function, path, captured)
+                    }
+                    _ => Value::Unknown,
                 }
-                _ => Value::Unknown,
-            },
+            }
             Expr::Await(expr) => {
-                let mut value = self.expr(expr, path, env, depth, generic);
+                let mut value = self.expr(expr, path, env, depth, generic).exposed();
                 while let Value::Promise(inner) = value {
-                    value = *inner;
+                    value = inner.exposed();
                 }
                 value
             }
@@ -155,14 +165,25 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 args,
                 start,
             } => self.call(callee, args, *start, path, env, (depth, generic)),
-            Expr::Opaque(children) => {
-                let values = children
-                    .iter()
-                    .map(|child| self.expr(child, path, env, depth, generic))
-                    .collect::<Vec<_>>();
-                self.invalidate_builders(&values);
-                self.opaque_callbacks(&values, depth);
-                Value::Unknown
+            Expr::Delete(children, index) => {
+                self.deleted(children, *index, path, env, (depth, generic))
+            }
+            Expr::Opaque(children) => self.opaque(children, &[], path, env, (depth, generic)),
+            Expr::OpaqueWrite { children, targets } => {
+                self.opaque(children, targets, path, env, (depth, generic))
+            }
+            Expr::SlotWrite {
+                receiver,
+                index,
+                value,
+            } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
+            Expr::Member(object, name) => {
+                let value = self.expr(object, path, env, depth, generic).exposed();
+                self.member(value, name)
+            }
+            Expr::Index(object, index) => {
+                let value = self.expr(object, path, env, depth, generic).exposed();
+                self.index(value, *index)
             }
             Expr::Children(children) => Value::Aggregate(
                 children
@@ -177,21 +198,5 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         } else {
             value
         }
-    }
-}
-
-pub(super) fn concat(base: Value, tail: Value) -> Value {
-    match (base, tail) {
-        (Value::Unsupported, _) => Value::Unsupported,
-        (Value::Prefix(base, true, _), Value::Unsupported) if base.trim().is_empty() => {
-            Value::Unsupported
-        }
-        (Value::Prefix(base, false, id), _) => Value::Prefix(base, false, id),
-        (Value::Prefix(mut base, true, id), Value::Prefix(tail, complete, _)) => {
-            base.push_str(&tail);
-            Value::Prefix(base, complete, id)
-        }
-        (Value::Prefix(base, true, id), _) => Value::Prefix(base, false, id),
-        _ => Value::Unknown,
     }
 }

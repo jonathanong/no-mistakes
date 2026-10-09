@@ -4,24 +4,11 @@ use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_builders(&mut self, values: &[Value]) {
-        fn collect(value: &Value, ids: &mut FxHashSet<u64>) {
-            match value {
-                Value::Prefix(_, _, Some(id)) => {
-                    ids.insert(*id);
-                }
-                Value::Promise(value) => collect(value, ids),
-                Value::Aggregate(values) => {
-                    for value in values {
-                        collect(value, ids);
-                    }
-                }
-                _ => {}
-            }
-        }
         let mut ids = fx_set();
         for value in values {
-            collect(value, &mut ids);
+            self.builder_ids(value, &mut ids);
         }
+        self.invalidate_mapped_freshness(&ids);
         self.invalidated_builders.extend(ids.iter().copied());
         for scope in &mut self.scopes {
             for value in scope.values_mut() {
@@ -31,8 +18,36 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
     }
+
+    fn builder_ids(&self, value: &Value, ids: &mut FxHashSet<u64>) {
+        match value {
+            Value::Prefix(_, _, Some(id)) => {
+                ids.insert(*id);
+            }
+            Value::Promise(value) | Value::Evaluated(value, _) => self.builder_ids(value, ids),
+            Value::Aggregate(values) | Value::Possible(values) => {
+                for value in values {
+                    self.builder_ids(value, ids);
+                }
+            }
+            Value::Arguments(id) if ids.insert(*id) => {
+                // Container escape can replace live slots. Definite deletion
+                // disconnects the former value; possible deletion does not.
+                for (index, value) in self.argument_slots(*id) {
+                    if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
+                        self.builder_ids(value, ids);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
     pub(super) fn invalidate_captured(&mut self, env: Environment, function: &super::Function) {
         let mut shadowed = function.params.iter().cloned().collect::<FxHashSet<_>>();
+        shadowed.extend(function.self_name.iter().cloned());
+        if !function.arrow {
+            shadowed.insert("arguments".into());
+        }
         for step in &function.body {
             match step {
                 crate::codebase::postgres::query_annotation::Step::Bind(name, _)
@@ -62,11 +77,38 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Value::Prefix(_, _, Some(id)) = replacement else {
             return;
         };
+        self.builder_updates.insert(*id, replacement.clone());
+        fn replace(value: &mut Value, id: u64, replacement: &Value) {
+            if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
+                *value = replacement.clone();
+            } else {
+                match value {
+                    Value::Promise(value) | Value::Evaluated(value, _) => {
+                        replace(value, id, replacement)
+                    }
+                    Value::Aggregate(values) | Value::Possible(values) => {
+                        for value in values {
+                            replace(value, id, replacement);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
         for scope in &mut self.scopes {
             for value in scope.values_mut() {
-                if matches!(value, Value::Prefix(_, _, Some(other)) if other == id) {
-                    *value = replacement.clone();
-                }
+                replace(value, *id, replacement);
+            }
+        }
+        // Argument references are identity-only; update each arena slot once.
+        for values in self.argument_objects.values_mut() {
+            for value in values {
+                replace(value, *id, replacement);
+            }
+        }
+        for values in self.argument_extra_slots.values_mut() {
+            for value in values.values_mut() {
+                replace(value, *id, replacement);
             }
         }
     }

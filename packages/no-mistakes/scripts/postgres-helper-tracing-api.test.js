@@ -161,3 +161,75 @@ test(
     assert.deepEqual(batch.reports[0].result, report);
   },
 );
+
+// Keep each saved scenario within the runner's unchanged per-test deadline.
+for (const scenario of [
+  "helper-tracing-post-merge",
+  "helper-tracing-tag-callback",
+  "helper-tracing-alternative-callback",
+  "helper-tracing-named-delete",
+  "helper-tracing-argument-members",
+  "helper-tracing-discarded-values",
+  "helper-tracing-call-argument-order",
+  "helper-tracing-live-binding",
+  "helper-tracing-argument-slot-write",
+  "helper-tracing-destructuring-alias",
+  "helper-tracing-arm-module",
+  "helper-tracing-argument-length",
+  "helper-tracing-returned-callbacks",
+  "helper-tracing-deleted-slot-callback",
+  "helper-tracing-module-sibling",
+  "helper-tracing-module-sibling-reverse",
+  "helper-tracing-callback-installers",
+  "helper-tracing-mapped-scalar",
+  "helper-tracing-mapped-formal-callback",
+  "helper-tracing-argument-alias-write",
+  "helper-tracing-dynamic-delete-slot-write",
+  "helper-tracing-callback-revisit",
+  "helper-tracing-imported-callback-revisit",
+  "helper-tracing-unary-argument-index",
+]) {
+  test(
+    `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        `../../../test-cases/rules/postgres-require-query-annotation/fixture/${scenario}`,
+      );
+      for (const config of [".no-mistakes.yml", ".no-mistakes-ignore.yml"]) {
+        const options = { root, config: join(root, config) };
+        const report = await cjs.check(options);
+        assert.deepEqual(await esm.check(options), report);
+        assert.deepEqual(report.warnings, []);
+        assert.deepEqual(
+          report.rules.map(({ rule, file, line }) => [rule, file, line]),
+          markedFiles(
+            root,
+            scenario === "helper-tracing-arm-module"
+              ? ["src/query.mts", "src/state.mts"]
+              : ["helper-tracing-mapped-scalar", "helper-tracing-callback-revisit"].includes(
+                    scenario,
+                  )
+                ? ["src/query.cjs"]
+                : scenario === "helper-tracing-imported-callback-revisit"
+                  ? ["src/query.mts", "src/helper.mts"]
+                  : scenario === "helper-tracing-mapped-formal-callback"
+                    ? ["src/query.mts", "src/helper.cjs"]
+                    : [
+                          "helper-tracing-argument-alias-write",
+                          "helper-tracing-dynamic-delete-slot-write",
+                        ].includes(scenario)
+                      ? ["src/query.mts", "src/sloppy.cjs"]
+                      : ["src/query.mts"],
+            config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
+          ),
+        );
+        const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+        assert.deepEqual(batch.reports[0].result, report);
+      }
+    },
+  );
+}
