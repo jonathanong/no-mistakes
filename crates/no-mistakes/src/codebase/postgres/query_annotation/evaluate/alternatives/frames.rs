@@ -48,7 +48,7 @@ pub(super) fn compact(
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
-) {
+) -> FxHashMap<Environment, Environment> {
     let original = cache.original;
     let mut roots = (0..original).collect::<Vec<_>>();
     roots.extend(cache.modules.values().copied());
@@ -79,6 +79,7 @@ pub(super) fn compact(
             *env = *remapped;
         }
     }
+    indices
 }
 
 fn compact_from_roots(

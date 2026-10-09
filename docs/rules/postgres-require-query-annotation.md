@@ -219,6 +219,8 @@ possible returned callbacks and newly installed argument-slot callbacks within
 the existing bound. Assigning a callback into a live or recreated slot does not invoke it unless
 the argument object already escaped. Reentrant callback traversal shares an
 invocation set within one opaque consumer; separate consumers remain independent.
+Conditional branches start from the same invocation state, so analyzing one branch
+does not suppress a callback in another branch.
 Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping

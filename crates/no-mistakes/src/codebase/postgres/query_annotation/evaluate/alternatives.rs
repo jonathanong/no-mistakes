@@ -2,6 +2,7 @@
 //! Imported modules keep one request-local initialization identity.
 mod arena;
 mod bindings;
+mod callback_seen;
 mod extras;
 pub(super) mod frames;
 mod freshness;
@@ -25,13 +26,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         let scopes = self.scopes.clone();
+        let seen = self.active_callback_functions.clone();
+        let mut joined_seen = seen.clone();
         let captured = self.captured_bindings.clone();
         let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
         let mut modules = self.modules.clone();
-        let mut initial = modules::Initials::default();
-        initial.base = scopes.len();
-        initial.known = modules.keys().cloned().collect();
-        self.active_module_initials.push(initial);
+        self.begin_alternative_module_snapshot(scopes.len());
         let mut module_states = modules::States::default();
         let extra_slots = self.argument_extra_slots.clone();
         let mut joined_extras = None;
@@ -55,6 +55,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         for arm in arms {
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
+            self.active_callback_functions.clone_from(&seen);
             self.modules.clone_from(&modules);
             self.argument_extra_slots
                 .retain(|id, _| !objects.contains_key(id));
@@ -127,7 +128,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             module_states.restore(&mut self.scopes, &self.modules);
             self.argument_extra_slots
                 .clone_from(joined_extras.as_ref().unwrap());
-            frames::compact(
+            callback_seen::accumulate(&mut joined_seen, &self.active_callback_functions);
+            let indices = frames::compact(
                 &mut self.scopes,
                 frames::ModuleRoots {
                     original: scopes.len(),
@@ -143,6 +145,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut self.fresh_mapped_parameters,
                 &mut self.captured_bindings,
             );
+            callback_seen::remap(&mut self.active_callback_functions, scopes.len(), &indices);
+            callback_seen::remap(&mut joined_seen, scopes.len(), &indices);
             modules.clone_from(&self.modules);
             module_states.remapped(&self.scopes, &modules);
             joined_extras = Some(self.argument_extra_slots.clone());
@@ -152,6 +156,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             joined.clone_from(&self.argument_objects);
         }
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
+        self.active_callback_functions = joined_seen;
         self.modules = modules;
         module_states.restore(&mut self.scopes, &self.modules);
         self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
@@ -205,3 +210,6 @@ mod prefix_tests;
 
 #[cfg(test)]
 mod shared_module_tests;
+
+#[cfg(test)]
+mod callback_tests;

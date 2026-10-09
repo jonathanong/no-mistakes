@@ -44,7 +44,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
-) {
+) -> FxHashMap<Environment, Environment> {
     let roots = modules.values().copied().collect::<Vec<_>>();
     let indices = compact_from_roots(
         scopes,
@@ -63,4 +63,5 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
             *env = *remapped;
         }
     }
+    indices
 }
