@@ -51,6 +51,7 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
         definite_deleted_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
     let env = evaluator.module_environment(&path);

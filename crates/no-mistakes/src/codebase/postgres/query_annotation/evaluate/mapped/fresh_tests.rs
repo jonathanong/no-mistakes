@@ -8,6 +8,7 @@ use std::path::PathBuf;
 fn definite_parameter_assignments_remain_fresh_until_another_container_escape() {
     for (name, known) in [
         ("callback.cjs", false),
+        ("callback-reescape.cjs", false),
         ("rhs-before-target.cjs", false),
         ("nested-callbacks.cjs", false),
         ("direct.cjs", true),
@@ -67,6 +68,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             definite_deleted_argument_slots: Default::default(),
             disconnected_argument_slots: Default::default(),
             fresh_mapped_parameters: Default::default(),
+            fresh_mapped_argument_bindings: Default::default(),
         };
         let env = evaluator.module_environment(&path);
         let result = &evaluator.scopes[env]["result"];
@@ -115,10 +117,10 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             );
             evaluator.invalidated_builders.insert(id);
             let projected = evaluator.mapped_parameter_value(env, "probe").unwrap();
-            assert!(matches!(projected, Value::Aggregate(ref values) if values.len() == 3));
+            assert!(matches!(projected, Value::Possible(ref values) if values.len() == 2));
             evaluator.disconnected_argument_slots.insert((id, 1));
             assert!(
-                matches!(evaluator.mapped_parameter_value(env, "probe"), Some(Value::Aggregate(ref values)) if values.len() == 2)
+                matches!(evaluator.mapped_parameter_value(env, "probe"), Some(Value::Possible(ref values)) if values.len() == 1)
             );
             assert!(evaluator.mapped_parameter_value(env, "unmapped").is_none());
             // A proof without mapping metadata belongs to no escaping object.
@@ -141,6 +143,13 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             ));
             continue;
         }
+        if name == "callback-reescape.cjs" {
+            assert!(
+                matches!(result, Value::Possible(values) if values.iter().any(|value| matches!(value, Value::Prefix(text, true, None) if text == "/* re-escaped value */ SELECT 1"))),
+                "callback effects must not restore a guaranteed annotation"
+            );
+            continue;
+        }
         if known {
             assert!(
                 matches!(result, Value::Prefix(text, true, None) if text == "/* fresh annotation */ SELECT 1"),
@@ -148,7 +157,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             );
         } else {
             assert!(
-                matches!(result, Value::Unknown),
+                matches!(result, Value::Unknown | Value::Possible(_)),
                 "{name} must remain unproven"
             );
         }

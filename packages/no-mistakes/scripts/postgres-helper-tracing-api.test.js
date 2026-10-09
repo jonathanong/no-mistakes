@@ -181,6 +181,8 @@ for (const scenario of [
   "helper-tracing-module-sibling",
   "helper-tracing-module-sibling-reverse",
   "helper-tracing-callback-installers",
+  "helper-tracing-mapped-scalar",
+  "helper-tracing-mapped-formal-callback",
 ]) {
   test(
     `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,
@@ -203,7 +205,11 @@ for (const scenario of [
             root,
             scenario === "helper-tracing-arm-module"
               ? ["src/query.mts", "src/state.mts"]
-              : ["src/query.mts"],
+              : scenario === "helper-tracing-mapped-scalar"
+                ? ["src/query.cjs"]
+                : scenario === "helper-tracing-mapped-formal-callback"
+                  ? ["src/query.mts", "src/helper.cjs"]
+                  : ["src/query.mts"],
             config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
           ),
         );

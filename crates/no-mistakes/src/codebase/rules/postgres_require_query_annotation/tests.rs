@@ -480,11 +480,17 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-module-sibling",
         "helper-tracing-module-sibling-reverse",
         "helper-tracing-callback-installers",
+        "helper-tracing-mapped-scalar",
+        "helper-tracing-mapped-formal-callback",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);
         let names = if scenario == "helper-tracing-arm-module" {
             vec!["src/query.mts", "src/state.mts"]
+        } else if scenario == "helper-tracing-mapped-scalar" {
+            vec!["src/query.cjs"]
+        } else if scenario == "helper-tracing-mapped-formal-callback" {
+            vec!["src/query.mts", "src/helper.cjs"]
         } else {
             vec!["src/query.mts"]
         };

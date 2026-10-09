@@ -68,7 +68,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 } else {
                     unsupported.clone()
                 };
-                self.write_captured_binding(*env, name, &value);
+                self.write_captured_binding_evaluated(*env, name, &value, depth);
             }
         }
         let mut opaque_return = false;
@@ -80,7 +80,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     } else {
                         unsupported.clone()
                     };
-                    self.write_captured_binding(*env, name, &value);
+                    self.write_captured_binding_evaluated(*env, name, &value, depth);
                 }
                 Step::Append(name, expr) => {
                     let tail = self.expr(expr, path, env, depth, generic).exposed();

@@ -1,0 +1,39 @@
+// Independent escaped argument containers own independent fresh parameter proofs.
+function make(parameter) {
+  const escaped = opaque(arguments);
+  var parameter = '/* fresh annotation */ SELECT 1';
+  return () => parameter;
+}
+const call0 = make("initial");
+const call1 = make("initial");
+const call2 = make("initial");
+const call3 = make("initial");
+const call4 = make("initial");
+const call5 = make("initial");
+const call6 = make("initial");
+const call7 = make("initial");
+const call8 = make("initial");
+const call9 = make("initial");
+const call10 = make("initial");
+const call11 = make("initial");
+const call12 = make("initial");
+const call13 = make("initial");
+const call14 = make("initial");
+const call15 = make("initial");
+const call16 = make("initial");
+const call17 = make("initial");
+const call18 = make("initial");
+const call19 = make("initial");
+const call20 = make("initial");
+const call21 = make("initial");
+const call22 = make("initial");
+const call23 = make("initial");
+const call24 = make("initial");
+const call25 = make("initial");
+const call26 = make("initial");
+const call27 = make("initial");
+const call28 = make("initial");
+const call29 = make("initial");
+const call30 = make("initial");
+const call31 = make("initial");
+const result = call31();

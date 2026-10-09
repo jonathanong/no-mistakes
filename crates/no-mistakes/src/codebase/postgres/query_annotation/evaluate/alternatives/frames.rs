@@ -23,7 +23,7 @@ pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environm
             }
         }
         Value::Promise(value) | Value::Evaluated(value, _) => remap(value, indices),
-        Value::Aggregate(values) => {
+        Value::Aggregate(values) | Value::Possible(values) => {
             for value in values {
                 remap(value, indices);
             }

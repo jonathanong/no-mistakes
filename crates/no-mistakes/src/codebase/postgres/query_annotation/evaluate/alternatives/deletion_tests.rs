@@ -57,6 +57,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
             fresh_mapped_parameters: Default::default(),
+            fresh_mapped_argument_bindings: Default::default(),
             argument_objects: Default::default(),
             argument_extra_slots: Default::default(),
             definite_deleted_argument_slots: Default::default(),
@@ -68,6 +69,29 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             assert!(
                 matches!(result, Value::Prefix(text, true, None) if text == "/* definite deletion */ SELECT 1"),
                 "{name}"
+            );
+        } else if let Some(expected) = match name {
+            "single.cjs" => Some("/* possible deletion */ SELECT 1"),
+            "nested.cjs" => Some("/* nested possible deletion */ SELECT 1"),
+            "logical.cjs" => Some("/* logical possible deletion */ SELECT 1"),
+            _ => None,
+        } {
+            assert!(
+                matches!(result, Value::Possible(_)),
+                "{name} remains an uncertain value"
+            );
+            fn contains(value: &Value, expected: &str) -> bool {
+                match value {
+                    Value::Prefix(text, true, None) => text == expected,
+                    Value::Possible(values) | Value::Aggregate(values) => {
+                        values.iter().any(|value| contains(value, expected))
+                    }
+                    _ => false,
+                }
+            }
+            assert!(
+                contains(result, expected),
+                "{name} retains its possible original prefix"
             );
         } else {
             assert!(

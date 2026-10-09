@@ -28,6 +28,8 @@ pub(super) enum Value {
     Promise(Box<Value>),
     Evaluated(Box<Value>, bool),
     Aggregate(Vec<Value>),
+    // Candidate runtime values with an implicit unknown alternative.
+    Possible(Vec<Value>),
     Arguments(u64),
     Function(Function, PathBuf, Environment),
     Unknown,
@@ -72,6 +74,7 @@ pub(super) struct Evaluator<'a, F> {
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
     pub disconnected_argument_slots: FxHashSet<(u64, usize)>,
     pub fresh_mapped_parameters: FxHashMap<Environment, FxHashSet<String>>,
+    pub fresh_mapped_argument_bindings: FxHashMap<u64, FxHashMap<Environment, FxHashSet<String>>>,
     pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }
 

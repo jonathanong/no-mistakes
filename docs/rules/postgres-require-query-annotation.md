@@ -221,6 +221,10 @@ the argument object already escaped. Reentrant callback traversal shares an
 invocation set within one opaque consumer; separate consumers remain independent.
 Conditional branches start from the same invocation state, so analyzing one branch
 does not suppress a callback in another branch.
+Writes through a still-mapped formal also expose a newly installed callback when
+its argument object previously escaped. A known unannotated scalar slot value
+remains a violation alongside an unknown mapping possibility, even in ignore mode;
+an annotated possibility does not prove that every possible value is safe.
 Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping

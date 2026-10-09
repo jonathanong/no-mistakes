@@ -169,6 +169,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .extend(snapshot.definite.iter().copied());
         self.disconnected_argument_slots
             .extend(snapshot.disconnected.iter().copied());
+        self.rebuild_fresh_mapped_argument_bindings();
     }
 }
 

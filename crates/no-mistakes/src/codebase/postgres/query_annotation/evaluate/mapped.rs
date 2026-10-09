@@ -1,5 +1,6 @@
 mod bindings;
 mod fresh;
+mod fresh_index;
 mod owners;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
@@ -62,6 +63,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         if !mappings.is_empty() {
             self.mapped_arguments.insert(scope, mappings);
+            self.index_mapped_freshness(scope);
         }
     }
 
@@ -123,12 +125,24 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     pub(super) fn update_mapped_parameter(&mut self, env: Environment, name: &str, value: &Value) {
+        if self.sync_mapped_parameter(env, name, value).0 {
+            self.mark_mapped_fresh(env, name);
+        }
+    }
+    pub(super) fn sync_mapped_parameter(
+        &mut self,
+        env: Environment,
+        name: &str,
+        value: &Value,
+    ) -> (bool, bool) {
         let mut mapped = false;
+        let mut escaped = false;
         for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
             // With duplicate sloppy parameters, only the last occurrence maps.
             if let Some(index) = params.iter().rposition(|param| param == name) {
                 mapped = true;
                 if !self.disconnected_argument_slots.contains(&(*id, index)) {
+                    escaped |= self.invalidated_builders.contains(id);
                     // Callback and container values retain their modeled identities;
                     // opaque consumers must still see their captures and aliases.
                     self.argument_objects
@@ -137,12 +151,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
-        if mapped {
-            self.fresh_mapped_parameters
-                .entry(env)
-                .or_default()
-                .insert(name.to_string());
-        }
+        (mapped, escaped)
     }
 }
 

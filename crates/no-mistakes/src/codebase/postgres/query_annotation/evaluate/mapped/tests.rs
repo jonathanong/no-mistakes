@@ -42,6 +42,7 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
@@ -98,7 +99,7 @@ fn known_slot_write_updates_parameter_and_deletion_disconnects_it() {
     );
     assert!(matches!(
         values.get("inheritedResult"),
-        Some(Value::Unknown)
+        Some(Value::Possible(values)) if values.len() == 1 && matches!(&values[0], Value::Prefix(text, true, None) if text == "/* lexical mapped parameter */ SELECT 1")
     ));
     assert!(
         matches!(values.get("preserved"), Some(Value::Prefix(text, true, None)) if text == "/* disconnected parameter */ SELECT 1")
@@ -126,7 +127,9 @@ fn container_aliases_and_local_shadows_keep_mapping_boundaries() {
     );
     assert!(matches!(values.get("unknownResult"), Some(Value::Unknown)));
     assert!(matches!(values.get("deletedResult"), Some(Value::Unknown)));
-    assert!(matches!(values.get("reservedResult"), Some(Value::Unknown)));
+    assert!(
+        matches!(values.get("reservedResult"), Some(Value::Possible(values)) if values.len() == 1 && matches!(&values[0], Value::Prefix(text, true, None) if text == "/* maybe invalidated */ SELECT 1"))
+    );
     assert!(
         matches!(values.get("shadowResult"), Some(Value::Prefix(text, true, None)) if text == "/* preserved */ SELECT 1")
     );
@@ -162,11 +165,13 @@ fn deletion_cannot_restore_parameters_after_opaque_argument_escape() {
         "result",
         "capturedResult",
         "callbackResult",
-        "duplicateFirstResult",
         "duplicateLastResult",
     ] {
         assert!(matches!(values.get(name), Some(Value::Unknown)), "{name}");
     }
+    assert!(
+        matches!(values.get("duplicateFirstResult"), Some(Value::Possible(values)) if values.len() == 1 && matches!(&values[0], Value::Prefix(text, true, None) if text == "/* last value */ SELECT 1"))
+    );
     assert!(
         matches!(values.get("absentResult"), Some(Value::Prefix(text, true, None)) if text == "/* unmapped local */ SELECT 1")
     );

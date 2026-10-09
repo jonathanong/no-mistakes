@@ -56,7 +56,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     fn callback_values(&mut self, values: &[Value], depth: u8, visited: &mut CallbackState) {
         for value in values {
             match value {
-                Value::Aggregate(values) => self.callback_values(values, depth, visited),
+                Value::Aggregate(values) | Value::Possible(values) => {
+                    self.callback_values(values, depth, visited)
+                }
                 Value::Promise(value) | Value::Evaluated(value, _) => {
                     self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
                 }

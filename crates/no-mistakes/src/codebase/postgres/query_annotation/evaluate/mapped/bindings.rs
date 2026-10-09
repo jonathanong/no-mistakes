@@ -61,6 +61,32 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             self.scopes[frame].insert(name.to_string(), value.clone());
         }
     }
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn write_captured_binding_evaluated(
+        &mut self,
+        env: Environment,
+        name: &str,
+        value: &Value,
+        depth: u8,
+    ) {
+        let mut mapped = Vec::new();
+        let mut escaped = false;
+        for frame in self.captured_write_targets(env, name) {
+            let (connected, was_escaped) = self.sync_mapped_parameter(frame, name, value);
+            if connected {
+                mapped.push(frame);
+            }
+            escaped |= was_escaped;
+            self.scopes[frame].insert(name.to_string(), value.clone());
+        }
+        for frame in mapped {
+            self.mark_mapped_fresh(frame, name);
+        }
+        // Callback effects happen after assignment and may revoke its proof.
+        if escaped {
+            self.opaque_callbacks(std::slice::from_ref(value), depth);
+        }
+    }
+
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn captured_write_targets(
         &self,
         env: Environment,

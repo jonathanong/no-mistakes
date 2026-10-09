@@ -43,6 +43,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),

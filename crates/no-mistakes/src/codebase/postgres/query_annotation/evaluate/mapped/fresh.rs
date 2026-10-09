@@ -2,31 +2,23 @@ use super::{Environment, Evaluator, Value};
 use crate::fx::FxHashSet;
 use std::path::{Path, PathBuf};
 
-fn callbacks(value: &Value) -> Option<Value> {
-    match value {
-        Value::Function(..) | Value::Arguments(_) => Some(value.clone()),
-        Value::Promise(inner) => callbacks(inner).map(|value| Value::Promise(Box::new(value))),
-        Value::Evaluated(inner, _) => callbacks(inner),
-        Value::Aggregate(values) => {
-            let values = values.iter().filter_map(callbacks).collect::<Vec<_>>();
-            (!values.is_empty()).then_some(Value::Aggregate(values))
-        }
-        _ => None,
-    }
-}
-
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn invalidate_mapped_freshness(
         &mut self,
         ids: &FxHashSet<u64>,
     ) {
-        for (env, names) in &mut self.fresh_mapped_parameters {
-            if let Some(mappings) = self.mapped_arguments.get(env) {
-                names.retain(|name| {
-                    !mappings
-                        .iter()
-                        .any(|(id, params)| ids.contains(id) && params.contains(name))
-                });
+        for id in ids {
+            if let Some(bindings) = self.fresh_mapped_argument_bindings.remove(id) {
+                for (env, names) in bindings {
+                    if let std::collections::hash_map::Entry::Occupied(mut entry) =
+                        self.fresh_mapped_parameters.entry(env)
+                    {
+                        entry.get_mut().retain(|name| !names.contains(name));
+                        if entry.get().is_empty() {
+                            entry.remove();
+                        }
+                    }
+                }
             }
         }
     }
@@ -73,23 +65,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if !self.mapped_parameter_unknown(env, name) {
             return None;
         }
-        let mut possibilities = vec![Value::Unknown];
+        let mut possibilities = Vec::new();
         for (id, params) in &self.mapped_arguments[&env] {
             if let Some(index) = params.iter().rposition(|param| param == name) {
                 if !self.disconnected_argument_slots.contains(&(*id, index)) {
                     let value = &self.argument_objects[id][index];
-                    if let Some(value) = callbacks(value) {
-                        if !possibilities.contains(&value) {
-                            possibilities.push(value);
-                        }
+                    let value = value.clone().exposed();
+                    if !matches!(value, Value::Unknown) && !possibilities.contains(&value) {
+                        possibilities.push(value);
                     }
                 }
             }
         }
-        Some(if possibilities.len() == 1 {
+        Some(if possibilities.is_empty() {
             Value::Unknown
         } else {
-            Value::Aggregate(possibilities)
+            Value::Possible(possibilities)
         })
     }
 }

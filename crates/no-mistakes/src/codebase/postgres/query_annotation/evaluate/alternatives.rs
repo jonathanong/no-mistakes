@@ -65,8 +65,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.captured_bindings
                 .retain(|frame, _| *frame >= scopes.len());
             self.captured_bindings.extend(captured.clone());
-            self.rebuild_captured_readers();
-            self.rebuild_mapped_argument_owners();
+            self.rebuild_binding_indexes();
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
@@ -76,8 +75,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 self.argument_objects.insert(*id, slots.clone());
             }
             self.restore_alternative_modules();
-            self.rebuild_captured_readers();
-            self.rebuild_mapped_argument_owners();
+            self.rebuild_binding_indexes();
             returned.push(self.expr(arm, path, env, depth, generic));
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
@@ -150,8 +148,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             modules.clone_from(&self.modules);
             module_states.remapped(&self.scopes, &modules);
             joined_extras = Some(self.argument_extra_slots.clone());
-            self.rebuild_captured_readers();
-            self.rebuild_mapped_argument_owners();
+            self.rebuild_binding_indexes();
             joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             joined.clone_from(&self.argument_objects);
         }
@@ -175,6 +172,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             scopes.len(),
             &fresh_joined,
         );
+        self.rebuild_fresh_mapped_argument_bindings();
         self.invalidated_builders = original;
         self.deleted_argument_slots = deleted_changed;
         let mut final_definite = definite_common.unwrap_or(definite.clone());

@@ -127,6 +127,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         definite_deleted_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
     let strict = evaluator.slot_write(
@@ -235,6 +236,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         definite_deleted_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -329,6 +331,7 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         definite_deleted_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
     };
     let root = evaluator.module_environment(&path);
     evaluator.scopes[root].insert(
@@ -397,6 +400,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         definite_deleted_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
     evaluator.module_environment(&path);

@@ -93,6 +93,7 @@ pub(crate) fn project(
                     deleted_argument_slots: Default::default(),
                     mapped_arguments: Default::default(),
                     fresh_mapped_parameters: Default::default(),
+                    fresh_mapped_argument_bindings: Default::default(),
                     argument_objects: Default::default(),
                     argument_extra_slots: Default::default(),
                     definite_deleted_argument_slots: Default::default(),
@@ -153,6 +154,14 @@ pub(crate) fn project(
 }
 
 fn prefix(value: Value) -> Option<String> {
+    if let Value::Possible(values) = value {
+        // A known unsafe possibility still violates the rule. A known safe
+        // possibility cannot establish safety for the implicit unknown case.
+        return values
+            .into_iter()
+            .filter_map(prefix)
+            .find(|text| sql_requires_query_annotation(text));
+    }
     let Value::Prefix(text, complete, _) = value else {
         return None;
     };

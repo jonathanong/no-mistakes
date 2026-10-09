@@ -20,7 +20,7 @@ impl Reachable {
                 self.identities.insert(*id);
             }
             Value::Promise(value) | Value::Evaluated(value, _) => self.value(value),
-            Value::Aggregate(values) => {
+            Value::Aggregate(values) | Value::Possible(values) => {
                 for value in values {
                     self.value(value);
                 }

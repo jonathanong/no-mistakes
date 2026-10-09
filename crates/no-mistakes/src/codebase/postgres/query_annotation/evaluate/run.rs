@@ -33,6 +33,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.deleted_argument_slots.clone_from(&deleted);
                 self.mapped_arguments.clone_from(&mapped);
                 self.fresh_mapped_parameters.clone_from(&fresh);
+                self.rebuild_fresh_mapped_argument_bindings();
                 self.argument_objects.clone_from(&objects);
                 self.argument_extra_slots.clone_from(&extra_slots);
                 self.definite_deleted_argument_slots.clone_from(&definite);
@@ -58,6 +59,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.deleted_argument_slots.clone_from(&deleted);
                 self.mapped_arguments.clone_from(&mapped);
                 self.fresh_mapped_parameters.clone_from(&fresh);
+                self.rebuild_fresh_mapped_argument_bindings();
                 self.argument_objects.clone_from(&objects);
                 self.argument_extra_slots.clone_from(&extra_slots);
                 self.definite_deleted_argument_slots.clone_from(&definite);
