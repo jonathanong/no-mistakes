@@ -38,6 +38,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
     pub(super) fn invalidate_captured(&mut self, env: Environment, function: &super::Function) {
         let mut shadowed = function.params.iter().cloned().collect::<FxHashSet<_>>();
+        shadowed.extend(function.self_name.iter().cloned());
         if !function.arrow {
             shadowed.insert("arguments".into());
         }

@@ -205,3 +205,17 @@ export function standaloneSlotDeletionKeepsComputedKeyEffects() {
   }
   const ignored = remove(statement);
 }
+
+export function namedTagSelfBindingDoesNotCaptureOuterBuilder() {
+  const statement = sql`/* outer self-name collision */ SELECT 1`;
+  // The function's internal name shadows this builder inside the tag.
+  const tag = function statement() { return ''; };
+  const ignored = tag`x`;
+  write(statement); // known:named-tag-self-binding
+}
+export function namedTagStillInvalidatesOtherCapturedBuilders() {
+  const statement = sql`/* actual named-tag capture */ SELECT 1`;
+  const tag = function internalName() { unknownMutation(statement); return ''; };
+  const ignored = tag`x`;
+  write(statement); // unanalyzable:named-tag-other-capture
+}
