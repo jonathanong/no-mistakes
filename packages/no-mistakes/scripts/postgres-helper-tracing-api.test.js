@@ -168,25 +168,27 @@ test(
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-post-merge",
-    );
-    for (const config of [".no-mistakes.yml", ".no-mistakes-ignore.yml"]) {
-      const options = { root, config: join(root, config) };
-      const report = await cjs.check(options);
-      assert.deepEqual(await esm.check(options), report);
-      assert.deepEqual(report.warnings, []);
-      assert.deepEqual(
-        report.rules.map(({ rule, file, line }) => [rule, file, line]),
-        markedFiles(
-          root,
-          ["src/query.mts"],
-          config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
-        ),
+    for (const scenario of ["helper-tracing-post-merge", "helper-tracing-tag-callback"]) {
+      const root = join(
+        __dirname,
+        `../../../test-cases/rules/postgres-require-query-annotation/fixture/${scenario}`,
       );
-      const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
-      assert.deepEqual(batch.reports[0].result, report);
+      for (const config of [".no-mistakes.yml", ".no-mistakes-ignore.yml"]) {
+        const options = { root, config: join(root, config) };
+        const report = await cjs.check(options);
+        assert.deepEqual(await esm.check(options), report);
+        assert.deepEqual(report.warnings, []);
+        assert.deepEqual(
+          report.rules.map(({ rule, file, line }) => [rule, file, line]),
+          markedFiles(
+            root,
+            ["src/query.mts"],
+            config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
+          ),
+        );
+        const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+        assert.deepEqual(batch.reports[0].result, report);
+      }
     }
   },
 );

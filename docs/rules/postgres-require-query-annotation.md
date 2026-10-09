@@ -192,4 +192,5 @@ An initialized `var` redeclaration assigns when its initializer executes, preser
 a parameter value used earlier. Regular helpers own an `arguments` object; arrows
 inherit it from their enclosing helper, so opaque mutations through that object
 retain the same builder identity. Untrusted local tags can mutate captured
-builders even when their own bodies use supported straight-line syntax.
+builders even when their own bodies use supported straight-line syntax. They can
+also invoke interpolated callbacks, invalidating captured builder prefixes.

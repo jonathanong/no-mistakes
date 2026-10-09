@@ -39,9 +39,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         });
         if !trusted && !legacy {
             self.invalidate_builders(&values);
-            if let Some(Value::Function(function, _, captured)) = values.first() {
-                self.invalidate_captured(*captured, function);
-            }
+            self.opaque_callbacks(&values, depth);
         }
         if trusted || legacy {
             if let Value::Prefix(_, _, id) = &mut prefix {
