@@ -96,7 +96,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             let mut locals = scopes::locals(&self.scopes[captured], &function);
-            scopes::arguments(&mut locals, &function, Value::Arguments(arguments.clone()));
+            let object = self.arguments_object(&arguments, spread);
+            scopes::arguments(&mut locals, &function, object);
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
             }
@@ -128,7 +129,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         }
         let mut locals = scopes::locals(&self.scopes[captured], &function);
-        scopes::arguments(&mut locals, &function, Value::Arguments(arguments.clone()));
+        let object = self.arguments_object(&arguments, spread);
+        scopes::arguments(&mut locals, &function, object);
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
@@ -153,9 +155,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
     }
 
+    fn arguments_object(&mut self, values: &[Value], spread: bool) -> Value {
+        if spread {
+            Value::Unknown
+        } else {
+            let id = self.next_builder;
+            self.next_builder += 1;
+            Value::Arguments(id, values.to_vec())
+        }
+    }
+
     pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
         for argument in arguments {
-            if let Value::Aggregate(values) | Value::Arguments(values) = argument {
+            if let Value::Aggregate(values) | Value::Arguments(_, values) = argument {
                 self.opaque_callbacks(values, depth);
             } else if let Value::Promise(value) = argument {
                 self.opaque_callbacks(std::slice::from_ref(value.as_ref()), depth);

@@ -100,3 +100,57 @@ export function stringZeroRetainsTheSelectedBuilderIdentity() {
   const ignored = mutateFirst(statement, 'other');
   write(statement); // unanalyzable:string-zero
 }
+
+export function spreadsCannotProveArgumentSlotPositions() {
+  function forward() {
+    write(arguments[1]); // unanalyzable:spread-argument-slots
+  }
+  const ignored = forward(...['SELECT 1', 'SELECT 2'], '/* annotated */ SELECT 3');
+}
+export function escapingArgumentObjectCanReplaceImmutableSlots() {
+  function forward() {
+    const before = arguments[0];
+    const slots = arguments;
+    const ignored = unknownMutation(slots);
+    write(before); // known:copied-immutable-slot
+    write(arguments[0]); // unanalyzable:escaped-immutable-slot
+  }
+  const ignored = forward('/* original slot */ SELECT 1');
+}
+export function arrowArgumentEscapeSharesTheContainerIdentity() {
+  function forward() {
+    const ignored = (() => unknownMutation(arguments))();
+    write(arguments[0]); // unanalyzable:arrow-argument-escape
+  }
+  const ignored = forward('/* arrow slot */ SELECT 1');
+}
+export function possibleBranchEscapeTaintsArgumentSlots(flag: boolean) {
+  function forward() {
+    const ignored = flag ? unknownMutation(arguments) : undefined;
+    write(arguments[0]); // unanalyzable:branch-argument-escape
+  }
+  const ignored = forward('/* branch slot */ SELECT 1');
+}
+
+export function deletingArgumentSlotCannotRetainItsPreviousValue() {
+  function forward() {
+    const ignored = delete arguments[0];
+    write(arguments[0]); // unanalyzable:deleted-slot
+  }
+  const ignored = forward('/* deleted slot */ SELECT 1');
+}
+export function replacingArgumentSlotCannotRetainItsPreviousValue() {
+  function forward() {
+    const ignored = (arguments[0] = 'SELECT 1');
+    write(arguments[0]); // unanalyzable:replaced-slot
+  }
+  const ignored = forward('/* replaced slot */ SELECT 1');
+}
+
+export function deletingANonReferenceDoesNotMutateArgumentSlots() {
+  function forward() {
+    const ignored = delete 'unused';
+    write(arguments[0]); // known:delete-non-reference
+  }
+  const ignored = forward('/* untouched slot */ SELECT 1');
+}

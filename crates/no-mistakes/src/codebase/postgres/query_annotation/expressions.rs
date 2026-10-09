@@ -75,11 +75,10 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             Expr::Await(Box::new(expression(&value.argument, source)))
         }
         Expression::UnaryExpression(value) => {
-            let values = vec![expression(&value.argument, source)];
             if value.operator == oxc_ast::ast::UnaryOperator::Delete {
-                Expr::Opaque(values)
+                members::deleted(&value.argument, source)
             } else {
-                Expr::Children(values)
+                Expr::Children(vec![expression(&value.argument, source)])
             }
         }
         Expression::BinaryExpression(value) => Expr::Children(vec![

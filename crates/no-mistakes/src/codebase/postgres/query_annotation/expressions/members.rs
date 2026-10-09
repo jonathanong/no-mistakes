@@ -20,3 +20,16 @@ pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Ex
         None => Expr::Children(vec![object, expression(&value.expression, source)]),
     }
 }
+
+pub(super) fn deleted(value: &Expression<'_>, source: &str) -> Expr {
+    // A delete mutates the receiver, not merely the selected slot value.
+    let values = match unwrap_ts_wrappers(value) {
+        Expression::ComputedMemberExpression(value) => vec![
+            expression(&value.object, source),
+            expression(&value.expression, source),
+        ],
+        Expression::StaticMemberExpression(value) => vec![expression(&value.object, source)],
+        _ => vec![expression(value, source)],
+    };
+    Expr::Opaque(values)
+}

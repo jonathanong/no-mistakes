@@ -10,7 +10,12 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     ids.insert(*id);
                 }
                 Value::Promise(value) => collect(value, ids),
-                Value::Aggregate(values) | Value::Arguments(values) => {
+                Value::Aggregate(values) | Value::Arguments(_, values) => {
+                    // Opaque code can replace argument slots even when their
+                    // current values are immutable strings.
+                    if let Value::Arguments(id, _) = value {
+                        ids.insert(*id);
+                    }
                     for value in values {
                         collect(value, ids);
                     }
