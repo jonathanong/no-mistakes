@@ -7,16 +7,22 @@ WITH selected AS (
 ), extension_members AS (
   SELECT classid, objid FROM pg_depend WHERE deptype = 'e'
 ), relations AS (
-  -- The one relation-selection policy. Ordinary partition leaves roll up into their parent;
-  -- nested partitioned parents remain visible so relation-level checks can inspect their cloned
-  -- constraints. Sequences, TOAST, indexes, composite types and foreign tables (unsupported) are
-  -- other relkinds, and temporary and extension-owned relations never describe the app schema.
+  -- The one relation-selection policy. Ordinary partition leaves with only cloned constraints
+  -- roll up into their parent; retain leaves with their own primary or foreign key. Nested
+  -- partitioned parents remain visible so relation-level checks can inspect their constraints.
+  -- Sequences, TOAST, indexes, composite types and foreign tables (unsupported) are other relkinds.
   SELECT c.oid, c.relname, c.relkind, c.relispartition,
-    CASE WHEN c.relispartition THEN (SELECT quote_ident(parent.relname) FROM pg_inherits i
-      JOIN pg_class parent ON parent.oid = i.inhparent WHERE i.inhrelid = c.oid) END AS partition_of
+    CASE WHEN c.relispartition THEN (SELECT CASE
+      WHEN parent.relnamespace = c.relnamespace THEN quote_ident(parent.relname)
+      ELSE quote_ident(parent_ns.nspname) || '.' || quote_ident(parent.relname) END
+      FROM pg_inherits i JOIN pg_class parent ON parent.oid = i.inhparent
+      JOIN pg_namespace parent_ns ON parent_ns.oid = parent.relnamespace
+      WHERE i.inhrelid = c.oid) END AS partition_of
   FROM pg_class c JOIN selected s ON s.oid = c.relnamespace
   WHERE c.relkind IN ('r', 'p', 'v', 'm') AND c.relpersistence <> 't'
-    AND (NOT c.relispartition OR c.relkind = 'p')
+    AND (NOT c.relispartition OR c.relkind = 'p' OR EXISTS (SELECT 1 FROM pg_constraint local_key
+      WHERE local_key.conrelid = c.oid AND local_key.conparentid = 0
+        AND local_key.contype IN ('p', 'f')))
     AND NOT EXISTS (SELECT 1 FROM extension_members e
                     WHERE e.classid = 'pg_class'::regclass AND e.objid = c.oid)
 ), constraints AS (

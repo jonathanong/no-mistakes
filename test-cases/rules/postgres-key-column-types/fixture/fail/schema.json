@@ -16,24 +16,12 @@
       "primaryKey": {"columns": ["id"]},
       "indexes": {"partitioned_parent_pkey": {"primary": true}}
     },
-    "partitioned_child": {
-      "partitionOf": "partitioned_parent",
-      "columns": {"id": {"dataType": "text"}},
-      "primaryKey": {"columns": ["id"]},
-      "indexes": {"partitioned_child_pkey": {"primary": true}}
-    },
     "partitioned_subparent": {
       "relationKind": "partitioned table",
       "partitionOf": "partitioned_parent",
       "columns": {"id": {"dataType": "text"}},
       "primaryKey": {"columns": ["id"]},
       "indexes": {"partitioned_subparent_pkey": {"primary": true}}
-    },
-    "partitioned_grandchild": {
-      "partitionOf": "partitioned_subparent",
-      "columns": {"id": {"dataType": "text"}},
-      "primaryKey": {"columns": ["id"]},
-      "indexes": {"partitioned_grandchild_pkey": {"primary": true}}
     }
   }
 }

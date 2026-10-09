@@ -81,6 +81,14 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
         "nested_events"
     );
     assert!(catalog["tables"].get("nested_events_2026_a").is_none());
+    assert_eq!(
+        catalog["tables"]["local_key_leaf"]["partitionOf"],
+        "partition_roots.local_key_parent"
+    );
+    assert!(catalog["tables"]["local_key_leaf"]["primaryKey"].is_null());
+    assert!(catalog["tables"]["local_key_leaf"]["foreignKeys"]
+        .get("local_key_leaf_account_fkey")
+        .is_some());
     let (_, findings) = check(project.path(), &project.path().join(".no-mistakes.yml"));
     for rule in SCHEMA_CATALOG_RULE_IDS {
         let own: Vec<_> = findings.iter().filter(|(id, _, _)| id == rule).collect();
@@ -112,6 +120,9 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
     assert!(!findings
         .iter()
         .any(|(_, _, message)| message.contains("nested_events_2026_a")));
+    assert!(!findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types" && message.contains("local_key_leaf")
+    }));
 }
 
 #[test]

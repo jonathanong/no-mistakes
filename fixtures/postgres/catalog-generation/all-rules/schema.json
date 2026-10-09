@@ -364,6 +364,67 @@
       "triggers": {},
       "uniqueConstraints": {}
     },
+    "local_key_leaf": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {
+        "local_key_leaf_account_fkey": {
+          "columns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "referencedColumns": [
+            "id"
+          ],
+          "referencedTable": "accounts",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "local_key_leaf_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX local_key_leaf_pkey ON catalog_demo.local_key_leaf USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "partitionOf": "partition_roots.local_key_parent",
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
     "nested_events": {
       "checkConstraints": {},
       "columns": {

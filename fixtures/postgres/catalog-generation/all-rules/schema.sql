@@ -3,6 +3,7 @@
 -- Each object is built to trip one catalog rule enabled in .no-mistakes.yml.
 CREATE SCHEMA shared;
 CREATE TYPE shared.priority AS ENUM ('low', 'high');
+CREATE SCHEMA partition_roots;
 
 CREATE SCHEMA catalog_demo;
 SET search_path = catalog_demo, pg_catalog;
@@ -100,6 +101,13 @@ CREATE TABLE nested_events_2026 PARTITION OF nested_events
   FOR VALUES FROM ('2026-01-01') TO ('2027-01-01') PARTITION BY RANGE (created_at);
 CREATE TABLE nested_events_2026_a PARTITION OF nested_events_2026
   FOR VALUES FROM ('2026-01-01') TO ('2026-07-01');
+
+-- A partition leaf with its own foreign key is retained in the generated catalog.
+CREATE TABLE partition_roots.local_key_parent (id uuid PRIMARY KEY) PARTITION BY HASH (id);
+CREATE TABLE local_key_leaf PARTITION OF partition_roots.local_key_parent
+  FOR VALUES WITH (MODULUS 2, REMAINDER 0);
+ALTER TABLE local_key_leaf ADD CONSTRAINT local_key_leaf_account_fkey
+  FOREIGN KEY (id) REFERENCES accounts(id);
 
 CREATE VIEW open_orders AS SELECT id, account_id FROM orders WHERE state <> 'paid';
 COMMENT ON VIEW open_orders IS 'Orders that are not yet paid.';

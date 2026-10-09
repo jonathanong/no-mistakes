@@ -77,6 +77,19 @@ fn postgres_key_column_types_reports_composite_primary_and_foreign_keys() {
 }
 
 #[test]
+fn postgres_key_column_types_checks_local_foreign_keys_on_partition_leaves() {
+    let root = fixture("fail-local-partition-fk");
+    let output = check(&root, false);
+    let body = stdout(&output);
+    assert!(!output.status.success(), "expected failure: {body}");
+    assert!(
+        body.contains("constraint:partitioned_leaf.partitioned_leaf_external_fkey"),
+        "{body}"
+    );
+    assert!(body.contains("text column external_id"), "{body}");
+}
+
+#[test]
 fn postgres_key_column_types_supports_constraint_allow_entries() {
     let root = fixture("pass-suppressed");
     let output = check(&root, false);

@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "partitioned_parent": {
+      "relationKind": "partitioned table",
+      "columns": {"id": {"dataType": "uuid"}, "external_id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"partitioned_parent_pkey": {"primary": true}}
+    },
+    "partitioned_leaf": {
+      "partitionOf": "partitioned_parent",
+      "columns": {"id": {"dataType": "uuid"}, "external_id": {"dataType": "text"}},
+      "foreignKeys": {
+        "partitioned_leaf_external_fkey": {
+          "columns": ["external_id"],
+          "referencedTable": "external_objects",
+          "referencedColumns": ["id"]
+        }
+      }
+    }
+  }
+}

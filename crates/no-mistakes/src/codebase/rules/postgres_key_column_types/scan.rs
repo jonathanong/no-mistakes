@@ -1,8 +1,6 @@
 use super::compile::Compiled;
 use super::RULE_ID;
-use crate::codebase::postgres::{
-    catalog_finding, CatalogObjectRef, CatalogTable, RelationKind, SchemaCatalog,
-};
+use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, CatalogTable, SchemaCatalog};
 use crate::codebase::rules::RuleFinding;
 use anyhow::{bail, Result};
 
@@ -13,9 +11,6 @@ pub(super) fn scan(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for table in catalog.tables() {
-        if table.partition_of.is_some() && table.relation_kind != RelationKind::PartitionedTable {
-            continue;
-        }
         if compiled.check_primary_keys {
             if let Some(columns) = &table.primary_key {
                 let Some(name) = table

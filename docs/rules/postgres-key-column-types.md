@@ -35,11 +35,13 @@ domains do not inherit the type of their base. `character varying(32)` is
 displayed as `character varying` in messages, but type matching retains the
 catalog value. With `allowEnumTypes: true`, catalog enum types are allowed.
 
-Partitioned parent relations are checked. Ordinary partition leaves are skipped
-so their inherited keys do not duplicate findings; a nested partitioned parent
-is still checked and generated catalogs retain its `partitionOf` parent. A
-handwritten formatVersion 2 snapshot may use the same field to identify ordinary
-partition leaves.
+Partitioned parent relations are checked. Generated catalogs omit ordinary
+partition leaves that have only inherited constraint clones, and retain a leaf
+when it has its own primary or foreign key. Nested partitioned parents are also
+checked. A handwritten formatVersion 2 snapshot's explicit key facts on a leaf
+are checked as that leaf's own constraints; omit inherited clones to avoid
+duplicate findings. `partitionOf` records the immediate parent, including its
+schema when the parent is outside the catalog's schema.
 
 ## Options and defaults
 

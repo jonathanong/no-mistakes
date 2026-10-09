@@ -545,11 +545,12 @@ Apart from those required fields, a missing field takes its default so a
 hand-written fixture can state only the facts it tests; the generator always writes
 all of them.
 Generated catalogs retain nested partitioned parents and set `partitionOf` to
-the immediate parent name. Ordinary partition leaves remain omitted so their
-cloned key facts do not duplicate parent findings. Handwritten snapshots may also
-set `partitionOf` to identify partition children. Key-column checks skip ordinary
-partition leaves while still checking partitioned parents, including nested
-partitioned parents.
+the immediate parent name, schema-qualifying it when the parent is outside the
+catalog's schema. Ordinary partition leaves with only inherited key clones are
+omitted; leaves with their own primary or foreign key are retained with only
+their local constraints. Handwritten snapshots may also set `partitionOf` to
+identify partition children; explicit key facts on a leaf are interpreted as
+that leaf's own constraints.
 
 `postgres-key-column-types` reads primary-key columns, foreign-key referencing
 columns, enum types, and partition relationships. `postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`

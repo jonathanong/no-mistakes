@@ -34,6 +34,27 @@ fn reports_every_bad_key_once_in_constraint_column_order() {
 }
 
 #[test]
+fn checks_foreign_keys_declared_on_partition_leaves() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-key-column-types/fixture/fail-local-partition-fk");
+    let source = std::fs::read_to_string(root.join("schema.json")).unwrap();
+    let catalog = SchemaCatalog::from_json(&source).unwrap();
+    let options: Options =
+        serde_yaml::from_str(&format!("{}allowedTypes: [uuid]\n", super::support::PATH)).unwrap();
+    let compiled = compile(&options, None).unwrap();
+    let findings = scan(&catalog, &compiled, &options.schema_catalog_path).unwrap();
+    assert!(
+        findings.iter().any(|finding| {
+            finding
+                .message
+                .contains("constraint:partitioned_leaf.partitioned_leaf_external_fkey")
+                && finding.message.contains("text column external_id")
+        }),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn key_flags_keep_primary_and_foreign_checks_scoped() {
     let messages = findings(&format!(
         "{PATH}allowedTypes: [uuid]\ncheckPrimaryKeys: false\n"

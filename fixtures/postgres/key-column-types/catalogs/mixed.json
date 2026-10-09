@@ -57,13 +57,6 @@
       "primaryKey": {"columns": ["id", "code"]},
       "indexes": {"partitioned_orders_pkey": {"primary": true}}
     },
-    "partitioned_orders_2025": {
-      "relationKind": "table",
-      "partitionOf": "partitioned_orders",
-      "columns": {"id": {"dataType": "uuid"}, "code": {"dataType": "text"}},
-      "primaryKey": {"columns": ["id", "code"]},
-      "indexes": {"partitioned_orders_2025_pkey": {"primary": true}}
-    },
     "audit_log": {
       "relationKind": "table",
       "columns": {"message": {"dataType": "text"}},
