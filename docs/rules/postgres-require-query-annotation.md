@@ -181,3 +181,9 @@ locks.
 Speculative function entrypoints use isolated initialized module state. Actual helper and callback call chains retain shared builder state. Bare `var` redeclarations preserve existing parameters and hoisted functions. Logical and conditional expressions contribute every syntactically possible helper invocation; helper calls in unsupported syntax remain conservative rather than allowing a favorable modeled call to hide unknown arguments. Diamond star re-exports of the same original binding resolve to that binding.
 
 Opaque mutations invalidate previously proven prefixes of mutable builders, including method receivers, spread arguments, nested containers, property writes/deletes, and constructor inputs. Replacing or deleting `String.raw` revokes built-in tag trust; writes to a lexically shadowed `String` leave the global built-in unaffected. Spread arguments remain conservative for positional helper and callback substitution.
+
+Conditional and logical arms use independent mutable state. An unchanged leading
+annotation remains provable, while a possible opaque mutation makes the SQL
+unanalyzable. Unsupported control flow containing potentially mutating calls
+cannot restore an earlier prefix through legacy recovery. A hoisted local `var`
+shadows a captured binding, including when it has no initializer.

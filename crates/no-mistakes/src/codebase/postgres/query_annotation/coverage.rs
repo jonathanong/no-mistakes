@@ -20,7 +20,10 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
                 }
             }
             Expr::Function(function) => steps(&function.body, covered),
-            Expr::Template(parts) | Expr::Children(parts) | Expr::Opaque(parts) => {
+            Expr::Template(parts)
+            | Expr::Children(parts)
+            | Expr::Opaque(parts)
+            | Expr::Alternatives(parts) => {
                 for part in parts {
                     expr(part, covered);
                 }

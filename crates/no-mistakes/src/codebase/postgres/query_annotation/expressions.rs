@@ -1,5 +1,7 @@
+mod calls;
 mod children;
 mod functions;
+mod tagged;
 use super::{Expr, Step};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use functions::function;
@@ -27,41 +29,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             }
             Expr::Template(parts)
         }
-        Expression::TaggedTemplateExpression(value) => {
-            let tag = match unwrap_ts_wrappers(&value.tag) {
-                Expression::Identifier(tag) => tag.name.to_string(),
-                Expression::StaticMemberExpression(member)
-                    if member.property.name == "raw"
-                        && matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(id) if id.name == "String") =>
-                {
-                    "String.raw".into()
-                }
-                _ => String::new(),
-            };
-            let parts = if tag == "String.raw" {
-                let mut parts = Vec::new();
-                for (index, quasi) in value.quasi.quasis.iter().enumerate() {
-                    if index > 0 {
-                        parts.push(expression(&value.quasi.expressions[index - 1], source));
-                    }
-                    parts.push(Expr::Text(quasi.value.raw.to_string()));
-                }
-                parts
-            } else {
-                vec![Expr::Text(super::super::sql_text(expr).unwrap_or_default())]
-            };
-            let mut effects = vec![expression(&value.tag, source)];
-            if tag != "String.raw" {
-                effects.extend(
-                    value
-                        .quasi
-                        .expressions
-                        .iter()
-                        .map(|expr| expression(expr, source)),
-                );
-            }
-            Expr::Tagged(tag, parts, effects)
-        }
+        Expression::TaggedTemplateExpression(value) => tagged::tagged(value, expr, source),
         Expression::BinaryExpression(value)
             if value.operator == oxc_ast::ast::BinaryOperator::Addition =>
         {
@@ -70,40 +38,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 expression(&value.right, source),
             ])
         }
-        Expression::CallExpression(value) => {
-            let args = value
-                .arguments
-                .iter()
-                .map(|arg| {
-                    if let oxc_ast::ast::Argument::SpreadElement(spread) = arg {
-                        Expr::Spread(Box::new(expression(&spread.argument, source)))
-                    } else {
-                        expression(
-                            arg.as_expression()
-                                .expect("non-spread arguments are expressions"),
-                            source,
-                        )
-                    }
-                })
-                .collect::<Vec<_>>();
-            if let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&value.callee) {
-                if member.property.name == "append" && args.len() == 1 && !value.optional {
-                    return Expr::Append(
-                        Box::new(expression(&member.object, source)),
-                        Box::new(args[0].clone()),
-                    );
-                }
-            }
-            Expr::Call {
-                callee: Box::new(if value.optional {
-                    Expr::Children(vec![expression(&value.callee, source)])
-                } else {
-                    expression(&value.callee, source)
-                }),
-                args,
-                start: value.span.start,
-            }
-        }
+        Expression::CallExpression(value) => calls::calls(value, source),
         Expression::ArrowFunctionExpression(value) => {
             let body = match &value.body {
                 ArrowFunctionBody::FunctionBody(body) => {
@@ -154,12 +89,14 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         ]),
         Expression::LogicalExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
-            expression(&value.right, source),
+            Expr::Alternatives(vec![expression(&value.right, source)]),
         ]),
         Expression::ConditionalExpression(value) => Expr::Children(vec![
             expression(&value.test, source),
-            expression(&value.consequent, source),
-            expression(&value.alternate, source),
+            Expr::Alternatives(vec![
+                expression(&value.consequent, source),
+                expression(&value.alternate, source),
+            ]),
         ]),
         Expression::SequenceExpression(value) => Expr::Children(
             value

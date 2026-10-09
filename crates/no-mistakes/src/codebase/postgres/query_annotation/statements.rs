@@ -1,3 +1,4 @@
+mod unsupported;
 use super::{expressions::expression, Expr, QueryAnnotationFileFacts, Step};
 use oxc_ast::ast::{BindingPattern, Declaration, Program, Statement};
 
@@ -88,7 +89,10 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
             | Statement::ExportNamedDeclaration(_)
             | Statement::TSTypeAliasDeclaration(_)
             | Statement::TSInterfaceDeclaration(_) => {}
-            _ => steps.push(Step::Unsupported),
+            _ => {
+                steps.push(Step::PotentialCalls(unsupported::calls(statement)));
+                steps.push(Step::Unsupported);
+            }
         }
     }
     steps

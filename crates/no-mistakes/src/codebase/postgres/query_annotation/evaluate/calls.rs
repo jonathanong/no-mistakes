@@ -1,3 +1,4 @@
+mod scopes;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
@@ -94,7 +95,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         if !function.supported {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
-            let mut locals = self.scopes[captured].clone();
+            let mut locals = scopes::locals(&self.scopes[captured], &function);
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
             }
@@ -104,9 +105,28 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             let mut scope = self.environment(locals);
             self.steps(&function.body, &function_path, &mut scope, depth, false);
             self.opaque_callbacks(&arguments, depth);
-            return Value::Unsupported;
+            // Unsupported control flow with possible opaque calls must not
+            // revive a legacy SQL prefix that its effects could have invalidated.
+            let unsafe_calls = function.body.iter().any(|step| {
+                use crate::codebase::postgres::query_annotation::Step;
+                match step {
+                    Step::PotentialCalls(calls) => calls
+                        .iter()
+                        .any(|start| !self.files[&function_path].executors.contains(start)),
+                    Step::Effect(expr) | Step::Bind(_, expr) | Step::Return(expr) => {
+                        self.effect_can_mutate(expr, &function_path, scope)
+                    }
+                    Step::Append(_, _) => true,
+                    _ => false,
+                }
+            });
+            return if unsafe_calls {
+                Value::Unknown
+            } else {
+                Value::Unsupported
+            };
         }
-        let mut locals = self.scopes[captured].clone();
+        let mut locals = scopes::locals(&self.scopes[captured], &function);
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
@@ -139,7 +159,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 self.opaque_callbacks(std::slice::from_ref(value.as_ref()), depth);
             } else if let Value::Function(function, path, captured) = argument {
                 self.invalidate_captured(*captured, function);
-                let mut locals = self.scopes[*captured].clone();
+                let mut locals = scopes::locals(&self.scopes[*captured], function);
                 for name in &function.params {
                     locals.insert(name.clone(), Value::Unknown);
                 }

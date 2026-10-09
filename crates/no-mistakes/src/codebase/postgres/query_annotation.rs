@@ -40,6 +40,7 @@ pub(super) enum Expr {
     },
     Function(Function),
     Children(Vec<Expr>),
+    Alternatives(Vec<Expr>),
     Opaque(Vec<Expr>),
 }
 
@@ -63,6 +64,7 @@ pub(super) enum Step {
     Effect(Expr),
     Return(Expr),
     Unsupported,
+    PotentialCalls(Vec<u32>),
 }
 
 pub(crate) fn collect(

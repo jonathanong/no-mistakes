@@ -458,3 +458,68 @@ export function nestedAssignmentBeforeExecutor() {
   const result = (statement = sql`SELECT 2`, write(statement)); // unanalyzable:nested-sequence-assignment
   return result;
 }
+
+const capturedVarStatement = sql`/* captured outer */ SELECT 1`;
+function hoistedBareVarShadowsCapture() {
+  write(capturedVarStatement); // unanalyzable:bare-var-shadows-capture
+  var capturedVarStatement;
+}
+export function invokeBareVarShadow() { hoistedBareVarShadowsCapture(); }
+export function unsupportedBranchCanMutate() {
+  const statement = sql`/* before possible mutation */ SELECT 1`;
+  if (flag) unknownMutation(statement);
+  write(statement); // unanalyzable:unsupported-mutating-branch
+}
+export function conditionalAppendArms() {
+  const statement = sql``;
+  const ignored = flag ? statement.append('/* named */ SELECT 1') : statement.append('SELECT 2');
+  write(statement); // unanalyzable:conditional-mutation-arms
+}
+export function conditionalExecutorArms() {
+  const ignored = flag ? write(annotatedOrdersSql()) : write(unannotatedOrdersSql()); // finding:conditional-executor-arms
+}
+export function conditionalDoesNotMutateBuilder() {
+  const statement = sql`/* unchanged through arms */ SELECT 1`;
+  const ignored = flag ? 1 : 2;
+  write(statement); // known:conditional-unchanged-builder
+}
+export function logicalCanMutateBuilder() {
+  const statement = sql`/* before conditional opaque call */ SELECT 1`;
+  const ignored = flag && unknownMutation(statement);
+  write(statement); // unanalyzable:logical-mutation-arm
+}
+function unsupportedMutatingHelperReturnsBuilder() {
+  const statement = sql`/* helper before branch mutation */ SELECT 1`;
+  if (flag) unknownMutation(statement);
+  return statement;
+}
+export function invokeUnsupportedMutatingHelper() {
+  write(unsupportedMutatingHelperReturnsBuilder()); // unanalyzable:unsupported-mutating-helper-return
+}
+export function annotationBeforeConditionalAppend() {
+  const statement = sql`/* proven original prefix */ SELECT 1`;
+  const ignored = flag ? statement.append(' WHERE 1=1') : statement.append(' LIMIT 1');
+  write(statement); // known:original-prefix-survives-alternative-append
+}
+const restCapturedStatement = sql`/* before unsupported rest helper */ SELECT 1`;
+function restHelperMutatesCapture(...args: unknown[]) {
+  unknownMutation(restCapturedStatement);
+  return restCapturedStatement;
+}
+export function invokeRestMutatingHelper() {
+  write(restHelperMutatesCapture(1)); // unanalyzable:rest-mutating-helper-return
+}
+export function untrustedMemberTemplateTag() {
+  write(other.tag`/* untrusted member tag */ SELECT 1`); // unanalyzable:member-template-tag
+  write(other.raw`/* raw belongs to another object */ SELECT 1`); // unanalyzable:other-raw-template-tag
+}
+export function deferredArrowInUnsupportedBranch() {
+  const statement = sql`/* deferred callback body */ SELECT 1`;
+  if (flag) { const unused = () => unknownMutation(statement); }
+  write(statement); // known:unsupported-deferred-arrow
+}
+export function deferredFunctionInUnsupportedBranch() {
+  const statement = sql`/* deferred function body */ SELECT 1`;
+  if (flag) { function unused() { unknownMutation(statement); } }
+  write(statement); // known:unsupported-deferred-function
+}

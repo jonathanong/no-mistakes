@@ -1,3 +1,4 @@
+mod alternatives;
 mod calls;
 mod effects;
 mod modules;
@@ -131,6 +132,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
+            Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
             Expr::Spread(expr) => {
                 Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)])
             }

@@ -34,9 +34,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         let supported = !steps.iter().any(|step| matches!(step, Step::Unsupported));
+        let unsafe_scope = steps.iter().any(|step| {
+            matches!(step, Step::PotentialCalls(calls) if calls.iter().any(|start| !self.files[path].executors.contains(start)))
+        });
+        let unsupported = if unsafe_scope {
+            Value::Unknown
+        } else {
+            Value::Unsupported
+        };
         if !supported {
             for value in self.scopes[*env].values_mut() {
-                *value = Value::Unsupported;
+                *value = unsupported.clone();
             }
         }
         for step in steps {
@@ -44,7 +52,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 let value = if supported {
                     self.expr(expr, path, env, depth, generic)
                 } else {
-                    Value::Unsupported
+                    unsupported.clone()
                 };
                 self.scopes[*env].insert(name.clone(), value);
             }
@@ -56,7 +64,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let value = if supported {
                         self.expr(expr, path, env, depth, generic)
                     } else {
-                        Value::Unsupported
+                        unsupported.clone()
                     };
                     self.scopes[*env].insert(name.clone(), value);
                 }
@@ -69,7 +77,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let value = if supported {
                         concat(base, tail)
                     } else {
-                        Value::Unsupported
+                        unsupported.clone()
                     };
                     self.replace_builder(&value);
                     self.scopes[*env].insert(name.clone(), value);
@@ -83,7 +91,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         for value in self.scopes[*env].values_mut() {
                             if matches!(value, Value::Prefix(_, _, _)) {
                                 *value = if matches!(effect, Value::Unsupported) {
-                                    Value::Unsupported
+                                    unsupported.clone()
                                 } else {
                                     Value::Unknown
                                 };
@@ -95,13 +103,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let value = self.expr(expr, path, env, depth, generic);
                     return if opaque_return { Value::Unknown } else { value };
                 }
-                Step::Unsupported | Step::Reserve(_) | Step::Hoisted(_, _) | Step::Var(_) => {}
+                Step::Unsupported
+                | Step::PotentialCalls(_)
+                | Step::Reserve(_)
+                | Step::Hoisted(_, _)
+                | Step::Var(_) => {}
             }
         }
         Value::Unknown
     }
 
-    fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
+    pub(super) fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
         match expr {
             Expr::Call { start, .. } => !self.files[path].executors.contains(start),
             Expr::Template(parts) | Expr::Children(parts) => parts
