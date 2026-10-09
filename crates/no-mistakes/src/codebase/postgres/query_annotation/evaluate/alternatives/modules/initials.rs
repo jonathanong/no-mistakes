@@ -37,9 +37,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
         base: usize,
     ) {
-        let mut initial = Initials::default();
-        initial.base = base;
-        initial.known = self.modules.keys().cloned().collect();
+        let initial = Initials {
+            base,
+            known: self.modules.keys().cloned().collect(),
+            ..Initials::default()
+        };
         self.active_module_initials.push(initial);
     }
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn record_alternative_module_initial(
