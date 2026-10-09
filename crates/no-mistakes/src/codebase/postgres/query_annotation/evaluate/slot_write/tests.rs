@@ -81,10 +81,10 @@ fn argument_slot_index_classification_is_canonical_and_receiver_specific() {
         }
     }
 
-    assert_eq!(indexes, [0, 1, 2]);
-    // Fractional, unsafe/huge, noncanonical, nonnumeric, dynamic, and other
-    // receiver writes stay opaque so they cannot update a proven argument slot.
-    assert_eq!(opaque_writes, 7);
+    assert_eq!(indexes, [0, 1, 2, 0]);
+    // Fractional, unsafe/huge, noncanonical, nonnumeric, and dynamic indexes
+    // stay opaque. Other receivers are classified at runtime conservatively.
+    assert_eq!(opaque_writes, 6);
 }
 
 #[test]
@@ -442,7 +442,8 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
     };
     assert!(matches!(
         prior_escape,
-        Value::Aggregate(values) if values.contains(&Value::Unknown)
+        Value::Possible(values)
+            if values.iter().any(|value| matches!(value, Value::Unknown))
     ));
     assert!(matches!(
         events

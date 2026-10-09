@@ -86,12 +86,11 @@ fn named_and_statically_known_non_index_deletes_preserve_argument_slots() {
 #[test]
 fn numeric_indices_and_dynamic_keys_keep_their_invalidation_behavior() {
     let values = outputs();
-    let Some(Value::Aggregate(dynamic)) = values.get("dynamicResult") else {
+    let Some(Value::Possible(dynamic)) = values.get("dynamicResult") else {
         panic!("dynamic deletion preserves a possible callback slot");
     };
-    assert!(matches!(dynamic.first(), Some(Value::Unknown)));
     assert!(matches!(
-        dynamic.get(1),
+        dynamic.first(),
         Some(Value::Prefix(text, true, _)) if text == "/* dynamic key */ SELECT 1"
     ));
     for name in [

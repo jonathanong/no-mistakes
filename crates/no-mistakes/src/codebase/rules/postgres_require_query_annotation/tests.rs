@@ -482,6 +482,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-callback-installers",
         "helper-tracing-mapped-scalar",
         "helper-tracing-mapped-formal-callback",
+        "helper-tracing-argument-alias-write",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);
@@ -491,6 +492,8 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
             vec!["src/query.cjs"]
         } else if scenario == "helper-tracing-mapped-formal-callback" {
             vec!["src/query.mts", "src/helper.cjs"]
+        } else if scenario == "helper-tracing-argument-alias-write" {
+            vec!["src/query.mts", "src/sloppy.cjs"]
         } else {
             vec!["src/query.mts"]
         };

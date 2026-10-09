@@ -84,3 +84,43 @@ fn opaque_write_targets_exclude_receivers_defaults_and_keep_ts_wrapped_bindings(
         ]
     );
 }
+
+#[test]
+fn statically_indexed_writes_preserve_the_receiver_for_runtime_classification() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-alias-write/src/query.mts",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    struct SlotWrites<'s> {
+        source: &'s str,
+        receivers: Vec<String>,
+    }
+    impl<'a> Visit<'a> for SlotWrites<'_> {
+        fn visit_expression(&mut self, expression: &Expression<'a>) {
+            if matches!(expression, Expression::AssignmentExpression(_)) {
+                match collect(expression, self.source) {
+                    Expr::SlotWrite {
+                        receiver, index: 0, ..
+                    } => {
+                        let Expr::Name(name) = *receiver else {
+                            panic!("static receiver name");
+                        };
+                        self.receivers.push(name);
+                    }
+                    other => panic!("expected static slot write, got {other:?}"),
+                }
+            }
+            walk::walk_expression(self, expression);
+        }
+    }
+    let receivers = crate::ast::with_program(&path, &source, |program, _| {
+        let mut writes = SlotWrites {
+            source: &source,
+            receivers: Vec::new(),
+        };
+        writes.visit_program(program);
+        writes.receivers
+    })
+    .unwrap();
+    assert_eq!(receivers, ["slots", "slots", "slots", "target"]);
+}

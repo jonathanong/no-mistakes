@@ -220,11 +220,14 @@ the existing bound. Assigning a callback into a live or recreated slot does not 
 the argument object already escaped. Reentrant callback traversal shares an
 invocation set within one opaque consumer; separate consumers remain independent.
 Conditional branches start from the same invocation state, so analyzing one branch
-does not suppress a callback in another branch.
+does not suppress a callback in another branch. A callback is considered consumed
+after the join only if every possible branch invoked it.
 Writes through a still-mapped formal also expose a newly installed callback when
 its argument object previously escaped. A known unannotated scalar slot value
 remains a violation alongside an unknown mapping possibility, even in ignore mode;
 an annotated possibility does not prove that every possible value is safe.
+Static indexed assignments also follow argument-object aliases; assignments to
+other receiver values remain conservative.
 Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping

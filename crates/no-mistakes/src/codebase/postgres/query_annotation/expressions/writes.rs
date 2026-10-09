@@ -40,7 +40,7 @@ pub(super) fn collect(value: &Expression<'_>, source: &str) -> Expr {
     let value = unwrap_ts_wrappers(value);
     if let Expression::AssignmentExpression(assignment) = value {
         if assignment.operator == AssignmentOperator::Assign {
-            if let Some((receiver, index)) = argument_slot(&assignment.left) {
+            if let Some((receiver, index)) = static_slot(&assignment.left) {
                 return Expr::SlotWrite {
                     receiver: Box::new(super::expression(receiver, source)),
                     index,
@@ -117,14 +117,10 @@ fn assignment_reads(assignment: &AssignmentExpression<'_>, source: &str) -> Vec<
     reads.values
 }
 
-fn argument_slot<'a, 's>(target: &'s AssignmentTarget<'a>) -> Option<(&'s Expression<'a>, usize)> {
+fn static_slot<'a, 's>(target: &'s AssignmentTarget<'a>) -> Option<(&'s Expression<'a>, usize)> {
     let AssignmentTarget::ComputedMemberExpression(member) = target else {
         return None;
     };
-    if !matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(id) if id.name == "arguments")
-    {
-        return None;
-    }
     static_index(unwrap_ts_wrappers(&member.expression)).map(|index| (&member.object, index))
 }
 

@@ -69,11 +69,13 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
                     );
                     continue;
                 }
-                if matches!(
-                    &value.expression,
-                    oxc_ast::ast::Expression::AssignmentExpression(_)
-                        | oxc_ast::ast::Expression::UpdateExpression(_)
-                ) {
+                if !matches!(expr, Expr::SlotWrite { .. })
+                    && matches!(
+                        &value.expression,
+                        oxc_ast::ast::Expression::AssignmentExpression(_)
+                            | oxc_ast::ast::Expression::UpdateExpression(_)
+                    )
+                {
                     steps.push(Step::Unsupported);
                 } else {
                     steps.push(Step::Effect(expr));

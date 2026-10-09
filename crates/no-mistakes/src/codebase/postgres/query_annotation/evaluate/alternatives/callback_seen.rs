@@ -4,9 +4,12 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 type Seen = Option<FxHashSet<CallbackIdentity>>;
 
-pub(super) fn accumulate(joined: &mut Seen, current: &Seen) {
-    if let (Some(joined), Some(current)) = (joined, current) {
-        joined.extend(current.iter().cloned());
+pub(super) fn accumulate(joined: &mut Seen, current: &Seen, first: bool) {
+    if first {
+        joined.clone_from(current);
+    } else if let (Some(joined), Some(current)) = (joined, current) {
+        // Only callbacks consumed on every possible path may suppress a later call.
+        joined.retain(|key| current.contains(key));
     }
 }
 

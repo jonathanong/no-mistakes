@@ -52,7 +52,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut deleted_changed = deleted.clone();
         let mut returned = Vec::new();
         let mut changed = FxHashSet::default();
-        for arm in arms {
+        for (arm_index, arm) in arms.iter().enumerate() {
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.active_callback_functions.clone_from(&seen);
@@ -126,7 +126,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             module_states.restore(&mut self.scopes, &self.modules);
             self.argument_extra_slots
                 .clone_from(joined_extras.as_ref().unwrap());
-            callback_seen::accumulate(&mut joined_seen, &self.active_callback_functions);
+            callback_seen::accumulate(
+                &mut joined_seen,
+                &self.active_callback_functions,
+                arm_index == 0,
+            );
             let indices = frames::compact(
                 &mut self.scopes,
                 frames::ModuleRoots {
