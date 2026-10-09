@@ -46,7 +46,9 @@ pub(super) fn declaration(value: &Declaration<'_>, names: &mut HashSet<String>) 
         Declaration::TSNamespaceDeclaration(value) => {
             names.insert(value.id.name.to_string());
         }
-        Declaration::TSImportEqualsDeclaration(value) => {
+        Declaration::TSImportEqualsDeclaration(value)
+            if value.import_kind != oxc_ast::ast::ImportOrExportKind::Type =>
+        {
             names.insert(value.id.name.to_string());
         }
         Declaration::TSEnumDeclaration(value) => {
@@ -60,9 +62,16 @@ fn lexical_with_imports(statements: &[Statement<'_>], imports: bool) -> HashSet<
     let mut names = HashSet::new();
     for statement in statements {
         match statement {
-            Statement::ImportDeclaration(value) if imports => {
+            Statement::ImportDeclaration(value)
+                if imports && value.import_kind != oxc_ast::ast::ImportOrExportKind::Type =>
+            {
                 for value in value.specifiers.iter().flatten() {
                     use oxc_ast::ast::ImportDeclarationSpecifier::*;
+                    if matches!(value, ImportSpecifier(value)
+                        if value.import_kind == oxc_ast::ast::ImportOrExportKind::Type)
+                    {
+                        continue;
+                    }
                     let id = match value {
                         ImportSpecifier(value) => &value.local,
                         ImportDefaultSpecifier(value) => &value.local,

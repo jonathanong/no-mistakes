@@ -8,6 +8,7 @@ pub(super) fn collect(
 ) -> QueryAnnotationFileFacts {
     let mut facts = QueryAnnotationFileFacts {
         trusted_tags: super::trust::collect(program, options),
+        legacy_tag_spans: super::trust::legacy_local_tags(program),
         roots: steps(&program.body, source),
         ..QueryAnnotationFileFacts::default()
     };

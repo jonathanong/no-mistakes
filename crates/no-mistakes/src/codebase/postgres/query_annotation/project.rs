@@ -2,6 +2,7 @@ use super::evaluate::{Evaluator, File, Value};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::ts_source::FileIdMap;
+use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -9,7 +10,7 @@ use std::path::{Path, PathBuf};
 /// resolver. No source reads or parsing occur in this projection.
 pub(crate) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
-    resolve: impl Fn(&str, &Path) -> Option<PathBuf>,
+    resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
 ) {
     let originals = files
         .into_iter()
@@ -56,15 +57,26 @@ pub(crate) fn project(
                 ))
             })
             .collect::<BTreeMap<_, _>>();
-        let mut evaluator = Evaluator {
-            files: collected,
-            resolve: &resolve,
-            events: BTreeMap::new(),
-            scopes: Vec::new(),
-        };
-        evaluator.run();
-        let events = std::mem::take(&mut evaluator.events);
-        drop(evaluator);
+        let mut per_file = collected
+            .par_iter()
+            .map(|(path, _)| {
+                let mut evaluator = Evaluator {
+                    files: &collected,
+                    resolve: &resolve,
+                    events: BTreeMap::new(),
+                    scopes: Vec::new(),
+                };
+                evaluator.run(path);
+                (path.clone(), evaluator.events)
+            })
+            .collect::<Vec<_>>();
+        per_file.sort_by(|left, right| left.0.cmp(&right.0));
+        let mut events = BTreeMap::<_, Vec<_>>::new();
+        for (_, file_events) in per_file {
+            for (call, values) in file_events {
+                events.entry(call).or_default().extend(values);
+            }
+        }
         for ((path, start), events) in events {
             let contextual = events.iter().any(|(generic, _)| !generic);
             let values = events

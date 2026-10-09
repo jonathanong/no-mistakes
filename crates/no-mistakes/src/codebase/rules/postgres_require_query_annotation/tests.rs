@@ -306,12 +306,25 @@ fn helper_review_regressions_preserve_call_identity_exports_and_live_captures() 
     let paths = [
         "src/destructured-tag.mts",
         "src/import-equals.mts",
+        "src/local-tag.mts",
+        "src/named-tags.mts",
         "src/query.mts",
     ];
     for ignore in [false, true] {
         let policy = if ignore { "ignore" } else { "report" };
-        let config = config_with_options(&format!("importSpecifier: '@app/db'\ninclude: ['src/query.mts', 'src/import-equals.mts', 'src/destructured-tag.mts']\ntrustedSqlTags: [{{module: './tags.mjs', name: customQuery}}]\nunanalyzableSql: {policy}"));
+        let config = config_with_options(&format!("importSpecifier: '@app/db'\ninclude: ['src/query.mts', 'src/import-equals.mts', 'src/destructured-tag.mts', 'src/local-tag.mts', 'src/named-tags.mts']\ntrustedSqlTags: [{{module: './tags.mjs', name: customQuery}}]\nunanalyzableSql: {policy}"));
         let findings = check_with_files(&root, &config, &files).unwrap();
+        for threads in [1, 3] {
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .build()
+                .unwrap();
+            let parallel = pool.install(|| check_with_files(&root, &config, &files).unwrap());
+            assert_eq!(
+                parallel, findings,
+                "helper projection differs with {threads} workers"
+            );
+        }
         let expected = paths
             .iter()
             .flat_map(|path| {

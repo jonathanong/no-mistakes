@@ -90,3 +90,37 @@ fn named_default_function_redeclaration_is_a_module_write() {
     let names = crate::ast::with_program(&path, &source, |program, _| reassigned(program)).unwrap();
     assert_eq!(names, HashSet::from(["sql".to_string()]));
 }
+
+#[test]
+fn named_default_and_type_only_imports_preserve_existing_tag_trust() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/query-annotation-import-tags.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let tags = crate::ast::with_program(&path, &source, |program, _| {
+        collect(
+            program,
+            &super::super::super::EmbeddedSqlOptions::configured("", &[]),
+        )
+    })
+    .unwrap();
+    assert_eq!(
+        tags,
+        BTreeSet::from(["sql", "SQL", "anyTag", "SqL", "sQL", "sqL"].map(str::to_string))
+    );
+}
+
+#[test]
+fn canonical_module_tags_preserve_legacy_fallback_without_widening_shadows() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/query-annotation-legacy-local-tags.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let tags =
+        crate::ast::with_program(&path, &source, |program, _| legacy_local_tags(program)).unwrap();
+    assert_eq!(
+        tags.keys().map(String::as_str).collect::<Vec<_>>(),
+        vec!["SQL", "Sql", "String", "sql"]
+    );
+    for offset in tags.values() {
+        assert!(source[*offset as usize..].starts_with("function"));
+    }
+}

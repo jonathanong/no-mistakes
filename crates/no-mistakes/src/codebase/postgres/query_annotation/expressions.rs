@@ -94,7 +94,13 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                         .map_or(Expr::Unknown, |expr| expression(expr, source)),
                 )],
             };
-            Expr::Function(function(&value.params, body, true, value.r#async))
+            Expr::Function(function(
+                &value.params,
+                body,
+                true,
+                value.r#async,
+                value.span.start,
+            ))
         }
         Expression::FunctionExpression(value) => {
             let mut function = function_expression(value, source);
@@ -127,6 +133,7 @@ pub(super) fn function_expression(value: &oxc_ast::ast::Function<'_>, source: &s
         body,
         !value.generator,
         value.r#async,
+        value.span.start,
     ))
 }
 
@@ -135,6 +142,7 @@ fn function(
     body: Vec<Step>,
     supported: bool,
     asynchronous: bool,
+    start: u32,
 ) -> Function {
     let names = params
         .items
@@ -160,6 +168,7 @@ fn function(
         names.extend(super::trust::bound_names(&rest.rest.argument));
     }
     Function {
+        start,
         params: names,
         body,
         supported,

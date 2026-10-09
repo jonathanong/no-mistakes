@@ -82,7 +82,13 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const source = readFileSync(join(reviewFixtureRoot, "src/query.mts"), "utf8");
-    const reviewedSources = ["src/query.mts", "src/import-equals.mts", "src/destructured-tag.mts"];
+    const reviewedSources = [
+      "src/query.mts",
+      "src/import-equals.mts",
+      "src/local-tag.mts",
+      "src/named-tags.mts",
+      "src/destructured-tag.mts",
+    ];
     const report = await cjs.check({ root: reviewFixtureRoot });
     assert.deepEqual(await esm.check({ root: reviewFixtureRoot }), report);
     assert.deepEqual(report.warnings, []);

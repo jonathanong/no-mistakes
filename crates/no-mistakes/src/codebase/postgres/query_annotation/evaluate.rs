@@ -19,7 +19,7 @@ pub(super) struct File<'a> {
     pub executors: Vec<u32>,
 }
 pub(super) struct Evaluator<'a, F> {
-    pub files: BTreeMap<PathBuf, File<'a>>,
+    pub files: &'a BTreeMap<PathBuf, File<'a>>,
     pub resolve: F,
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
     pub scopes: Vec<BTreeMap<String, Value>>,
@@ -34,36 +34,26 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.scopes.push(values);
         id
     }
-    pub fn run(&mut self) {
-        let roots = self
-            .files
-            .iter()
-            .map(|(path, file)| {
-                (
-                    path.clone(),
-                    file.facts.roots.clone(),
-                    file.facts.globals.clone(),
-                )
-            })
-            .collect::<Vec<_>>();
-        for (path, roots, globals) in roots {
-            let mut env = self.environment(BTreeMap::new());
-            self.steps(&roots, &path, &mut env, 16, true);
-            // Function declarations describe possible entrypoints; contextual
-            // callback invocations below take precedence over this unknown input.
-            for expr in globals.values() {
-                if let Expr::Function(function) = expr {
-                    let mut values: BTreeMap<String, Value> = function
-                        .params
-                        .iter()
-                        .map(|name| (name.clone(), Value::Unknown))
-                        .collect();
-                    if let Some(name) = &function.self_name {
-                        values.insert(name.clone(), Value::Unknown);
-                    }
-                    let mut env = self.environment(values);
-                    self.steps(&function.body, &path, &mut env, 16, true);
+    pub fn run(&mut self, path: &Path) {
+        let file = &self.files[path];
+        let roots = file.facts.roots.clone();
+        let globals = file.facts.globals.clone();
+        let mut env = self.environment(BTreeMap::new());
+        self.steps(&roots, path, &mut env, 16, true);
+        // Function declarations describe possible entrypoints; contextual
+        // callback invocations take precedence over this unknown input.
+        for expr in globals.values() {
+            if let Expr::Function(function) = expr {
+                let mut values: BTreeMap<String, Value> = function
+                    .params
+                    .iter()
+                    .map(|name| (name.clone(), Value::Unknown))
+                    .collect();
+                if let Some(name) = &function.self_name {
+                    values.insert(name.clone(), Value::Unknown);
                 }
+                let mut env = self.environment(values);
+                self.steps(&function.body, path, &mut env, 16, true);
             }
         }
     }
@@ -107,12 +97,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Tagged(tag, parts) => {
                 let file = &self.files[path];
                 let name = if tag == "String.raw" { "String" } else { tag };
+                if let Some(start) = file.facts.legacy_tag_spans.get(name) {
+                    let local = self.scopes[*env].get(name);
+                    if local.is_none()
+                        || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
+                    {
+                        // Preserve legacy local-tag facts without promoting an
+                        // arbitrary tag implementation into complete SQL proof.
+                        return Value::Unsupported;
+                    }
+                }
                 let trusted = if tag == "String.raw" {
                     !file
                         .ts
                         .imported_bindings
                         .iter()
-                        .any(|binding| binding.local == name)
+                        .any(|binding| binding.local == name && !binding.is_type_only)
                 } else {
                     file.facts.trusted_tags.contains(tag)
                 };

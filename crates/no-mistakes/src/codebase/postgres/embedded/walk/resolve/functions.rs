@@ -2,6 +2,7 @@ mod body;
 mod collect;
 pub(crate) mod reassigned;
 mod shadows;
+pub(crate) use shadows::looks_like_tag_implementation;
 
 use super::super::super::options::TrustedSqlTag;
 use collect::collect_named_functions;

@@ -14,6 +14,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) globals: BTreeMap<String, Expr>,
     pub(super) roots: Vec<Step>,
     pub(super) trusted_tags: BTreeSet<String>,
+    pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub calls: BTreeMap<u32, Option<String>>,
 }
 
@@ -37,6 +38,7 @@ pub(super) enum Expr {
 
 #[derive(Clone, Debug)]
 pub(super) struct Function {
+    pub start: u32,
     pub params: Vec<String>,
     pub body: Vec<Step>,
     pub supported: bool,

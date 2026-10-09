@@ -1,3 +1,5 @@
+// A type-only name must not replace the runtime String.raw built-in.
+import type { String } from './types.mjs';
 import { write } from "@app/db";
 import sql, { type SQLStatement } from "sql-template-strings";
 import { annotatedOrdersSql, unannotatedOrdersSql } from "./sql-builders.mjs";
@@ -136,4 +138,8 @@ export async function hoistedHelperDeclaredLater() {
 
 function hoistedAnnotatedSql(): SQLStatement {
   return sql`/* hoisted helper */ SELECT id FROM orders`;
+}
+
+export function computedTemplateQuery(client: { query(statement: SQLStatement): unknown }) {
+  return client[`query`](annotatedOrdersSql()); // known:computed-template-query
 }
