@@ -1,3 +1,5 @@
+<!-- cspell:ignore uuidv -->
+
 # `postgres-sql-shape-policy`
 
 Ban configured PostgreSQL SQL shapes that the parser can prove. The default
