@@ -64,7 +64,7 @@ pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<(
     }
     for kind in &options.effects {
         if !config.effects.contains_key(kind) {
-            bail!("{RULE_ID}: unknown effects kind `{kind}");
+            bail!("{RULE_ID}: unknown effects kind `{kind}`");
         }
     }
     Ok(())
