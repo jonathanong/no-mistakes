@@ -9,3 +9,11 @@ export function untrustedTagCanInvokeItsInterpolationCallback() {
   const ignored = opaqueTag`${callback}`;
   write(statement); // unanalyzable:untrusted-tag-callback-capture
 }
+
+export function memberTagCanMutateCapturedBuilder() {
+  const statement = sql`/* member tag */ SELECT 1`;
+  function mutator() { unknownMutation(statement); return ''; }
+  const tags = { mutator };
+  const ignored = tags.mutator`x`;
+  write(statement); // unanalyzable:member-tag-capture
+}

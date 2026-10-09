@@ -96,7 +96,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             let mut locals = scopes::locals(&self.scopes[captured], &function);
-            scopes::arguments(&mut locals, &function, Value::Aggregate(arguments.clone()));
+            scopes::arguments(&mut locals, &function, Value::Arguments(arguments.clone()));
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
             }
@@ -128,7 +128,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         }
         let mut locals = scopes::locals(&self.scopes[captured], &function);
-        scopes::arguments(&mut locals, &function, Value::Aggregate(arguments.clone()));
+        scopes::arguments(&mut locals, &function, Value::Arguments(arguments.clone()));
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
@@ -155,7 +155,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
 
     pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
         for argument in arguments {
-            if let Value::Aggregate(values) = argument {
+            if let Value::Aggregate(values) | Value::Arguments(values) = argument {
                 self.opaque_callbacks(values, depth);
             } else if let Value::Promise(value) = argument {
                 self.opaque_callbacks(std::slice::from_ref(value.as_ref()), depth);

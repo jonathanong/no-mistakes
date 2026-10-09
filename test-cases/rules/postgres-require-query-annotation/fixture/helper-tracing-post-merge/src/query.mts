@@ -49,3 +49,54 @@ function nestedRegularOwnsArguments(statement: unknown) {
 export function invokeRegularOwnArguments() {
   nestedRegularOwnsArguments(sql`/* outer argument untouched */ SELECT 1`);
 }
+
+export function onlyTheSelectedArgumentCanMutate() {
+  const statement = sql`/* selected second argument */ SELECT 1`;
+  function mutateSecond() { unknownMutation(arguments[1]); }
+  const ignored = mutateSecond(statement, 'other');
+  write(statement); // known:unselected-argument
+}
+export function stringIndexAndArgumentAliasesSelectOneValue() {
+  const statement = sql`/* string index */ SELECT 1`;
+  function mutateSecond() {
+    const values = arguments;
+    unknownMutation(values['1']);
+  }
+  const ignored = mutateSecond(statement, 'other');
+  write(statement); // known:string-index
+}
+export function unknownArgumentIndexRemainsConservative(index: number) {
+  const statement = sql`/* unknown index */ SELECT 1`;
+  function mutate() { unknownMutation(arguments[index]); }
+  const ignored = mutate(statement, 'other');
+  write(statement); // unanalyzable:dynamic-index
+}
+export function missingArgumentIndexHasNoBuilderAlias() {
+  const statement = sql`/* out of range */ SELECT 1`;
+  function mutate() { unknownMutation(arguments[9]); }
+  const ignored = mutate(statement);
+  write(statement); // known:missing-index
+}
+export function ordinaryAggregateMembersStayConservative() {
+  const statement = sql`/* ordinary aggregate */ SELECT 1`;
+  const values = { other: statement };
+  const ignored = unknownMutation(values[0]);
+  write(statement); // unanalyzable:ordinary-aggregate
+}
+
+export function noncanonicalAndFractionalIndicesRemainConservative() {
+  const first = sql`/* noncanonical index */ SELECT 1`;
+  const second = sql`/* fractional index */ SELECT 1`;
+  function mutateFirst() { unknownMutation(arguments['01']); }
+  function mutateSecond() { unknownMutation(arguments[0.5]); }
+  const ignoredFirst = mutateFirst(first);
+  const ignoredSecond = mutateSecond(second);
+  write(first); // unanalyzable:noncanonical-index
+  write(second); // unanalyzable:fractional-index
+}
+export function stringZeroRetainsTheSelectedBuilderIdentity() {
+  const statement = sql`/* string zero */ SELECT 1`;
+  function mutateFirst() { unknownMutation(arguments['0']); }
+  const ignored = mutateFirst(statement, 'other');
+  write(statement); // unanalyzable:string-zero
+}

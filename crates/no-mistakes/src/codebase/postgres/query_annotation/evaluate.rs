@@ -15,6 +15,7 @@ pub(super) enum Value {
     Prefix(String, bool, Option<u64>),
     Promise(Box<Value>),
     Aggregate(Vec<Value>),
+    Arguments(Vec<Value>),
     Function(Function, PathBuf, Environment),
     Unknown,
     Unsupported,
@@ -167,6 +168,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.opaque_callbacks(&values, depth);
                 Value::Unknown
             }
+            Expr::Index(object, index) => match self.expr(object, path, env, depth, generic) {
+                Value::Arguments(values) => values.get(*index).cloned().unwrap_or(Value::Unknown),
+                value => Value::Aggregate(vec![value]),
+            },
             Expr::Children(children) => Value::Aggregate(
                 children
                     .iter()

@@ -33,9 +33,10 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
                     expr(part, covered);
                 }
             }
-            Expr::Await(value) | Expr::Spread(value) | Expr::OpaqueCallback(value) => {
-                expr(value, covered)
-            }
+            Expr::Await(value)
+            | Expr::Spread(value)
+            | Expr::OpaqueCallback(value)
+            | Expr::Index(value, _) => expr(value, covered),
             Expr::Append(base, tail) => {
                 expr(base, covered);
                 expr(tail, covered);

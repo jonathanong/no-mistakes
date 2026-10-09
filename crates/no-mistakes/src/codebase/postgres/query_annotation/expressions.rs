@@ -1,6 +1,7 @@
 mod calls;
 mod children;
 mod functions;
+mod members;
 mod tagged;
 use super::{Expr, Step};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -69,10 +70,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         Expression::StaticMemberExpression(value) => {
             Expr::Children(vec![expression(&value.object, source)])
         }
-        Expression::ComputedMemberExpression(value) => Expr::Children(vec![
-            expression(&value.object, source),
-            expression(&value.expression, source),
-        ]),
+        Expression::ComputedMemberExpression(value) => members::computed(value, source),
         Expression::AwaitExpression(value) => {
             Expr::Await(Box::new(expression(&value.argument, source)))
         }

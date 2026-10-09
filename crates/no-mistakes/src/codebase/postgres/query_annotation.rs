@@ -31,6 +31,7 @@ pub(super) enum Expr {
     Tagged(String, Vec<Expr>, Vec<Expr>),
     Await(Box<Expr>),
     Spread(Box<Expr>),
+    Index(Box<Expr>, usize),
     OpaqueCallback(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {

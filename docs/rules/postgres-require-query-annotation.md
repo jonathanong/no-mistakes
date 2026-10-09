@@ -191,6 +191,8 @@ shadows a captured binding, including when it has no initializer.
 An initialized `var` redeclaration assigns when its initializer executes, preserving
 a parameter value used earlier. Regular helpers own an `arguments` object; arrows
 inherit it from their enclosing helper, so opaque mutations through that object
-retain the same builder identity. Untrusted local tags can mutate captured
+retain the same builder identity. Static numeric and canonical numeric-string
+indices select the corresponding argument; dynamic indices remain conservative.
+Untrusted local tags can mutate captured
 builders even when their own bodies use supported straight-line syntax. They can
 also invoke interpolated callbacks, invalidating captured builder prefixes.

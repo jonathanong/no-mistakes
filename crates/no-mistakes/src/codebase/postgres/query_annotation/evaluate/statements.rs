@@ -134,7 +134,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),
             Expr::Tagged(tag, _, _) => !self.tag_trusted(tag, path, env),
-            Expr::Await(expr) => self.effect_can_mutate(expr, path, env),
+            Expr::Await(expr) | Expr::Index(expr, _) => self.effect_can_mutate(expr, path, env),
             Expr::Text(_) | Expr::Name(_) | Expr::Function(_) => false,
             _ => true,
         }
