@@ -40,9 +40,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if !trusted && !legacy {
             self.invalidate_builders(&values);
             if let Some(Value::Function(function, _, captured)) = values.first() {
-                if !function.supported {
-                    self.invalidate_captured(*captured, function);
-                }
+                self.invalidate_captured(*captured, function);
             }
         }
         if trusted || legacy {

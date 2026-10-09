@@ -51,6 +51,7 @@ pub(super) struct Function {
     pub body: Vec<Step>,
     pub supported: bool,
     pub asynchronous: bool,
+    pub arrow: bool,
     pub self_name: Option<String>,
 }
 

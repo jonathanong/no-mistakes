@@ -76,6 +76,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .iter()
                     .map(|name| (name.clone(), Value::Unknown))
                     .collect();
+                if !function.arrow {
+                    values.insert("arguments".into(), Value::Unknown);
+                }
                 if let Some(name) = &function.self_name {
                     values.insert(name.clone(), Value::Unknown);
                 }

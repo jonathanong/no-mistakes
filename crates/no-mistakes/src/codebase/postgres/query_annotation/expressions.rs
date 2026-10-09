@@ -55,6 +55,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 body,
                 true,
                 value.r#async,
+                true,
                 value.span.start,
             ))
         }

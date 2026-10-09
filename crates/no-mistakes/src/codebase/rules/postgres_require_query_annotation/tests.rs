@@ -459,3 +459,33 @@ fn helpers_use_importer_owned_aliases_even_when_unknown_sql_is_ignored() {
         assert_eq!(findings[0].target.as_deref(), Some("annotation"));
     }
 }
+
+#[test]
+fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
+    let root = fixture("helper-tracing-post-merge");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+    for policy in ["report", "ignore"] {
+        let config = config_with_options(&format!(
+            "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
+        ));
+        let findings = check_with_files(&root, &config, &files).unwrap();
+        let expected = source
+            .lines()
+            .enumerate()
+            .filter_map(|(index, line)| {
+                (line.contains("// finding:")
+                    || (policy == "report" && line.contains("// unanalyzable:")))
+                .then_some(index + 1)
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| finding.line)
+                .collect::<Vec<_>>(),
+            expected,
+            "{findings:#?}"
+        );
+    }
+}

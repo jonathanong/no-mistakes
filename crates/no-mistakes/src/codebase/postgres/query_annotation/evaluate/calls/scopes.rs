@@ -32,3 +32,10 @@ pub(super) fn locals(
     }
     locals
 }
+
+pub(super) fn arguments(locals: &mut FxHashMap<String, Value>, function: &Function, value: Value) {
+    if !function.arrow {
+        // Arrows retain lexical arguments; regular calls own a fresh object.
+        locals.insert("arguments".into(), value);
+    }
+}

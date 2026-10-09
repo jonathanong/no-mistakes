@@ -96,6 +96,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             let mut locals = scopes::locals(&self.scopes[captured], &function);
+            scopes::arguments(&mut locals, &function, Value::Aggregate(arguments.clone()));
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
             }
@@ -127,6 +128,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         }
         let mut locals = scopes::locals(&self.scopes[captured], &function);
+        scopes::arguments(&mut locals, &function, Value::Aggregate(arguments.clone()));
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
                 param.clone(),
@@ -160,6 +162,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             } else if let Value::Function(function, path, captured) = argument {
                 self.invalidate_captured(*captured, function);
                 let mut locals = scopes::locals(&self.scopes[*captured], function);
+                scopes::arguments(&mut locals, function, Value::Unknown);
                 for name in &function.params {
                     locals.insert(name.clone(), Value::Unknown);
                 }

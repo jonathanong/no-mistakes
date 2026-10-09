@@ -161,3 +161,32 @@ test(
     assert.deepEqual(batch.reports[0].result, report);
   },
 );
+
+test(
+  "compiled helper value contexts retain parameter and arguments ownership",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-post-merge",
+    );
+    for (const config of [".no-mistakes.yml", ".no-mistakes-ignore.yml"]) {
+      const options = { root, config: join(root, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(
+        report.rules.map(({ rule, file, line }) => [rule, file, line]),
+        markedFiles(
+          root,
+          ["src/query.mts"],
+          config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
+        ),
+      );
+      const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(batch.reports[0].result, report);
+    }
+  },
+);

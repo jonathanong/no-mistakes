@@ -33,6 +33,9 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
     pub(super) fn invalidate_captured(&mut self, env: Environment, function: &super::Function) {
         let mut shadowed = function.params.iter().cloned().collect::<FxHashSet<_>>();
+        if !function.arrow {
+            shadowed.insert("arguments".into());
+        }
         for step in &function.body {
             match step {
                 crate::codebase::postgres::query_annotation::Step::Bind(name, _)

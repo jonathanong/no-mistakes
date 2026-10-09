@@ -11,10 +11,24 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
+        let vars = steps
+            .iter()
+            .filter_map(|step| match step {
+                Step::Var(name) => Some(name.as_str()),
+                _ => None,
+            })
+            .collect::<crate::fx::FxHashSet<_>>();
         // Reserve lexical names before evaluation so TDZ/shadowed bindings do
         // not accidentally resolve to a module helper or trusted tag.
         for step in steps {
             match step {
+                Step::Bind(name, _) if vars.contains(name.as_str()) => {
+                    // Initialized var redeclarations assign at this statement,
+                    // rather than replacing a parameter during hoisting.
+                    self.scopes[*env]
+                        .entry(name.clone())
+                        .or_insert(Value::Unknown);
+                }
                 Step::Bind(name, _) | Step::Hoisted(name, _) => {
                     self.scopes[*env].insert(name.clone(), Value::Unknown);
                 }
