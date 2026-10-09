@@ -1,4 +1,5 @@
 use super::{expression, Expr};
+use crate::codebase::postgres::query_annotation::DeleteKey;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ComputedMemberExpression, Expression};
 
@@ -27,17 +28,31 @@ fn static_index(value: &Expression<'_>) -> Option<usize> {
 
 pub(super) fn deleted(value: &Expression<'_>, source: &str) -> Expr {
     // A delete mutates the receiver, not merely the selected slot value.
-    let values = match unwrap_ts_wrappers(value) {
-        Expression::ComputedMemberExpression(value) => vec![
-            expression(&value.object, source),
-            expression(&value.expression, source),
-        ],
-        Expression::StaticMemberExpression(value) => vec![expression(&value.object, source)],
+    let (values, key) = match unwrap_ts_wrappers(value) {
+        Expression::ComputedMemberExpression(value) => (
+            vec![
+                expression(&value.object, source),
+                expression(&value.expression, source),
+            ],
+            delete_key(&value.expression),
+        ),
+        Expression::StaticMemberExpression(value) => {
+            (vec![expression(&value.object, source)], DeleteKey::Named)
+        }
         _ => return Expr::Opaque(vec![expression(value, source)]),
     };
-    let index = match unwrap_ts_wrappers(value) {
-        Expression::ComputedMemberExpression(value) => static_index(&value.expression),
-        _ => None,
-    };
-    Expr::Delete(values, index)
+    Expr::Delete(values, key)
+}
+
+fn delete_key(value: &Expression<'_>) -> DeleteKey {
+    if let Some(index) = static_index(value) {
+        return DeleteKey::Index(index);
+    }
+    match unwrap_ts_wrappers(value) {
+        Expression::StringLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::BooleanLiteral(_)
+        | Expression::NullLiteral(_) => DeleteKey::Named,
+        _ => DeleteKey::Dynamic,
+    }
 }

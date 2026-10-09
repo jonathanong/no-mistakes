@@ -89,10 +89,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // With duplicate sloppy parameters, only the last occurrence maps.
             if let Some(index) = params.iter().rposition(|param| param == name) {
                 if !self.deleted_argument_slots.contains(&(*id, Some(index))) {
-                    let replacement = match value {
-                        Value::Prefix(..) => value.clone(),
-                        _ => Value::Unknown,
-                    };
+                    // Callback and container values retain their modeled identities;
+                    // opaque consumers must still see their captures and aliases.
+                    let replacement = value.clone();
                     for scope in &mut self.scopes {
                         for value in scope.values_mut() {
                             update_slot(value, *id, index, &replacement);

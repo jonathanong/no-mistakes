@@ -48,18 +48,20 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
         self.invalidated_builders = original;
-        frames::prune_deleted(
-            &self.scopes,
-            &returned,
-            &mut deleted_changed,
-            &self.mapped_arguments,
-        );
         self.deleted_argument_slots = deleted_changed;
         let values = changed
             .into_iter()
             .map(|id| Value::Prefix(String::new(), false, Some(id)))
             .collect::<Vec<_>>();
         self.invalidate_builders(&values);
+        // Speculative identities with no surviving aliases cannot affect later reads.
+        frames::prune_state(
+            &self.scopes,
+            &returned,
+            &mut self.deleted_argument_slots,
+            &mut self.invalidated_builders,
+            &self.mapped_arguments,
+        );
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
         Value::Aggregate(returned)

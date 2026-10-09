@@ -200,7 +200,8 @@ Spread calls have unknown argument positions. Passing the complete argument obje
 to opaque code makes its slots unknown, while an already copied immutable value
 retains its value. Appending a builder refreshes its aliases inside argument
 objects and promises. Deleting an argument slot makes the slot unknown while
-preserving other slots and the builder that the slot referenced; computed-key
+preserving other slots and the builder that the slot referenced. Deleting a known
+non-index property leaves indexed slots intact; dynamic keys remain conservative. Computed-key
 effects still run, including inside a `void` wrapper. Named function self-bindings
 are shadowed by invocation parameters and the ordinary `arguments` binding.
 Untrusted local tags can mutate captured

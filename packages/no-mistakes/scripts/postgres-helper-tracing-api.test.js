@@ -172,6 +172,7 @@ test(
       "helper-tracing-post-merge",
       "helper-tracing-tag-callback",
       "helper-tracing-alternative-callback",
+      "helper-tracing-named-delete",
     ]) {
       const root = join(
         __dirname,

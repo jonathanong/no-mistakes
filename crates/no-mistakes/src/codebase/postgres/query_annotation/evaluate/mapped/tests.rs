@@ -110,3 +110,11 @@ fn container_aliases_and_local_shadows_keep_mapping_boundaries() {
         matches!(values.get("shadowResult"), Some(Value::Prefix(text, true, None)) if text == "/* preserved */ SELECT 1")
     );
 }
+
+#[test]
+fn mapped_rebinding_preserves_callback_capture_effects() {
+    assert!(matches!(
+        outputs("callback-rebinding.cjs").get("result"),
+        Some(Value::Unknown)
+    ));
+}

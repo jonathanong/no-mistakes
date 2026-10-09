@@ -45,7 +45,14 @@ pub(super) enum Expr {
     Children(Vec<Expr>),
     Alternatives(Vec<Expr>),
     Opaque(Vec<Expr>),
-    Delete(Vec<Expr>, Option<usize>),
+    Delete(Vec<Expr>, DeleteKey),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum DeleteKey {
+    Index(usize),
+    Named,
+    Dynamic,
 }
 
 #[derive(Clone, Debug)]

@@ -87,30 +87,34 @@ pub(super) fn compact(
     scopes.extend(frames);
 }
 
-fn argument_ids(value: &Value, ids: &mut FxHashSet<u64>) {
+fn live_ids(value: &Value, ids: &mut FxHashSet<u64>) {
     match value {
+        Value::Prefix(_, _, Some(id)) => {
+            ids.insert(*id);
+        }
         Value::Arguments(id, values) => {
             ids.insert(*id);
             for value in values {
-                argument_ids(value, ids);
+                live_ids(value, ids);
             }
         }
         Value::Aggregate(values) => {
             for value in values {
-                argument_ids(value, ids);
+                live_ids(value, ids);
             }
         }
-        Value::Promise(value) => argument_ids(value, ids),
+        Value::Promise(value) => live_ids(value, ids),
         _ => {}
     }
 }
 
 /// Captured function environments are already included in the compact arena,
 /// so scanning every retained frame covers indirect aliases without cycles.
-pub(super) fn prune_deleted(
+pub(super) fn prune_state(
     scopes: &[FxHashMap<String, Value>],
     returned: &[Value],
     deleted: &mut FxHashSet<(u64, Option<usize>)>,
+    invalidated: &mut FxHashSet<u64>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 ) {
     let mut ids = FxHashSet::default();
@@ -119,7 +123,7 @@ pub(super) fn prune_deleted(
         .flat_map(|scope| scope.values())
         .chain(returned)
     {
-        argument_ids(value, &mut ids);
+        live_ids(value, &mut ids);
     }
     // A retained parameter can own a disconnected slot after every arguments
     // alias is rebound. Its mapping still needs the definite deletion fact.
@@ -127,4 +131,5 @@ pub(super) fn prune_deleted(
         ids.extend(bindings.iter().map(|(id, _)| *id));
     }
     deleted.retain(|(id, _)| ids.contains(id));
+    invalidated.retain(|id| ids.contains(id));
 }
