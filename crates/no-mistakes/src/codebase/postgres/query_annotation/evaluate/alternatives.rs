@@ -1,4 +1,6 @@
 //! Alternative arms share input facts, never each other's mutable effects.
+mod frames;
+mod values;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
@@ -31,14 +33,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             changed.extend(self.invalidated_builders.iter().copied());
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
-                    if let Value::Prefix(text, complete, Some(id)) = value {
-                        if !matches!(after.get(name), Some(Value::Prefix(other, done, Some(other_id))) if id == other_id && ((text == other && complete == done) || (text.trim_start().starts_with("/*") && other.trim_start().starts_with("/*"))))
-                        {
-                            changed.insert(*id);
-                        }
-                    }
+                    // Evaluation replaces bindings but never removes original keys.
+                    values::changes(value, &after[name], &mut changed);
                 }
             }
+            self.scopes[..scopes.len()].clone_from_slice(&scopes);
+            frames::compact(&mut self.scopes, scopes.len(), &mut returned);
         }
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
@@ -54,3 +54,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         Value::Aggregate(returned)
     }
 }
+
+#[cfg(test)]
+mod tests;

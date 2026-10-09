@@ -1,0 +1,34 @@
+// Speculative helper frames must not accumulate across sequential alternatives.
+function discard() { return 'unused'; }
+const result0 = condition ? discard() : discard();
+const result1 = condition ? discard() : discard();
+const result2 = condition ? discard() : discard();
+const result3 = condition ? discard() : discard();
+const result4 = condition ? discard() : discard();
+const result5 = condition ? discard() : discard();
+const result6 = condition ? discard() : discard();
+const result7 = condition ? discard() : discard();
+const result8 = condition ? discard() : discard();
+const result9 = condition ? discard() : discard();
+const result10 = condition ? discard() : discard();
+const result11 = condition ? discard() : discard();
+const result12 = condition ? discard() : discard();
+const result13 = condition ? discard() : discard();
+const result14 = condition ? discard() : discard();
+const result15 = condition ? discard() : discard();
+const result16 = condition ? discard() : discard();
+const result17 = condition ? discard() : discard();
+const result18 = condition ? discard() : discard();
+const result19 = condition ? discard() : discard();
+const result20 = condition ? discard() : discard();
+const result21 = condition ? discard() : discard();
+const result22 = condition ? discard() : discard();
+const result23 = condition ? discard() : discard();
+const result24 = condition ? discard() : discard();
+const result25 = condition ? discard() : discard();
+const result26 = condition ? discard() : discard();
+const result27 = condition ? discard() : discard();
+const result28 = condition ? discard() : discard();
+const result29 = condition ? discard() : discard();
+const result30 = condition ? discard() : discard();
+const result31 = condition ? discard() : discard();
