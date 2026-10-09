@@ -225,11 +225,7 @@ export function namedFunctionParameterOverridesItsSelfBinding() {
   const forward = function statement(statement) { write(statement); };
   const ignored = forward(sql`/* named parameter wins */ SELECT 1`);
 }
-export function implicitArgumentsOverridesFunctionSelfName() {
-  // Ordinary functions create an inner arguments binding before body evaluation.
-  const forward = function arguments() { write(arguments[0]); };
-  const ignored = forward(sql`/* implicit arguments wins */ SELECT 1`);
-}
+
 
 export function deletingAnotherArgumentSlotPreservesSelectedValue() {
   const forward = function () {
