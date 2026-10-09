@@ -71,7 +71,7 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
         "shared read-only state is projected once initially"
     );
     let mut memo = super::memo::Memo::default();
-    for (_, (depth, value, before)) in &state.functions {
+    for (depth, value, before) in state.functions.values() {
         let Value::Function(function, path, captured) = value else {
             panic!("saved callback");
         };
