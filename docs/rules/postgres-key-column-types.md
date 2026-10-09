@@ -53,8 +53,8 @@ reported. Catalogs accept JSONC comments, which support standard source
 suppression directives. Use
 `no-mistakes-disable-file postgres-key-column-types` at the start of the catalog
 or `no-mistakes-disable-line postgres-key-column-types` on the finding's line;
-the constraint-scoped `allow` option remains available for reasoned, targetable
-exceptions.
+the constraint-scoped `allow` option remains available for reasoned exceptions
+tied to a specific constraint.
 
 ## Valid example
 
