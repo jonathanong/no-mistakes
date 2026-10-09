@@ -1,4 +1,4 @@
-use super::super::super::{Evaluator, File, Value};
+use super::super::{Evaluator, File, Value};
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
@@ -7,9 +7,9 @@ use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
 #[test]
-fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
+fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-call-argument-order/src/query.mts",
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-returned-callbacks/src/boundary.mts",
     );
     let source = std::fs::read_to_string(&path).unwrap();
     let options = EmbeddedSqlOptions::configured("@app/db", &[]);
@@ -44,35 +44,27 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
         captured_binding_readers: Default::default(),
         mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
-        mapped_arguments: Default::default(),
-        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
+        fresh_mapped_parameters: Default::default(),
+        mapped_arguments: Default::default(),
     };
-    let root = evaluator.module_environment(&path);
-    let values = &evaluator.scopes[root];
-    for name in ["directResult", "wrappedResult"] {
-        assert!(
-            matches!(values.get(name), Some(Value::Prefix(text, true, _)) if text == "SELECT 1"),
-            "{name}"
-        );
-    }
-    assert!(
-        matches!(values.get("promiseResult"), Some(Value::Promise(inner)) if matches!(inner.as_ref(), Value::Prefix(text, true, _) if text == "SELECT 1"))
-    );
-    assert!(
-        matches!(values.get("nestedResult"), Some(Value::Aggregate(parts)) if matches!(parts.first(), Some(Value::Prefix(text, true, _)) if text == "SELECT 1"))
-    );
-    assert!(
-        matches!(values.get("annotatedResult"), Some(Value::Prefix(text, true, _)) if text == "/* later annotation */ SELECT 1")
-    );
-    assert!(
-        matches!(values.get("immutableResult"), Some(Value::Prefix(text, true, None)) if text == "/* literal copy */ SELECT 1")
-    );
-    assert!(matches!(values.get("escapedResult"), Some(Value::Unknown)));
-    assert!(
-        matches!(values.get("nestedEscapedResult"), Some(Value::Aggregate(parts)) if matches!(parts.first(), Some(Value::Unknown)))
-    );
+    let env = evaluator.module_environment(&path);
+    let callback = evaluator.scopes[env]["callback"].clone();
+    let Some(Value::Prefix(_, _, Some(id))) = evaluator.scopes[env].get("statement") else {
+        panic!("fixture builder");
+    };
+    let id = *id;
+    let frame_count = evaluator.scopes.len();
+    assert!(evaluator.events.is_empty());
+    evaluator.opaque_callbacks(&[callback], 0);
+    assert!(matches!(
+        evaluator.scopes[env].get("statement"),
+        Some(Value::Unknown)
+    ));
+    assert!(evaluator.invalidated_builders.contains(&id));
+    assert_eq!(evaluator.scopes.len(), frame_count);
+    assert!(evaluator.events.is_empty());
 }

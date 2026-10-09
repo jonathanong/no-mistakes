@@ -13,6 +13,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
         ("shadow.cjs", Some("/* local annotation */ SELECT 1")),
         ("conditional.cjs", None),
         ("sparse.cjs", None),
+        ("rebind.cjs", Some("/* surviving alias */ SELECT 1")),
     ] {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
             "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-live-binding/src",
@@ -51,6 +52,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             argument_objects: Default::default(),
             argument_extra_slots: Default::default(),
             definite_deleted_argument_slots: Default::default(),
+            disconnected_argument_slots: Default::default(),
             fresh_mapped_parameters: Default::default(),
         };
         let env = evaluator.module_environment(&path);
@@ -75,6 +77,12 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             assert!(!evaluator.captured_binding_readers[&env].contains_key("unrelated_local"));
         }
         let result = &evaluator.scopes[env]["result"];
+        if name == "rebind.cjs" {
+            assert!(
+                matches!(result, Value::Prefix(text, true, Some(_)) if text == "/* surviving alias */ SELECT 1")
+            );
+            continue;
+        }
         if let Some(expected) = expected {
             assert!(
                 matches!(result, Value::Prefix(text, true, None) if text == expected),

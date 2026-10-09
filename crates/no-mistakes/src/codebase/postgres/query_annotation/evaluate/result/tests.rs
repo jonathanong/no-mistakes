@@ -46,6 +46,7 @@ fn outputs(scenario: &str) -> Vec<(String, Value)> {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
     };
@@ -111,13 +112,47 @@ fn discarded_values_do_not_escape_callbacks_but_operand_effects_still_run() {
 #[test]
 fn primitive_argument_length_proof_requires_an_unescaped_canonical_container() {
     let values = outputs("helper-tracing-argument-length");
-    for marker in ["standalone length", "computed length", "sequence length"] {
+    for marker in [
+        "standalone length",
+        "computed length",
+        "sequence length",
+        "primitive deletion",
+    ] {
         assert!(
             matches!(event(&values, marker), Value::Prefix(text, true, _) if text.contains("SELECT 1")),
             "{marker}"
         );
     }
-    for marker in ["shadowed-callback", "escaped length", "mixed length"] {
+    for marker in [
+        "shadowed-callback",
+        "escaped length",
+        "mixed length",
+        "deletion key effect",
+    ] {
         assert!(matches!(event(&values, marker), Value::Unknown), "{marker}");
     }
+}
+
+#[test]
+fn opaque_consumers_follow_returned_callbacks_with_bounded_recursion() {
+    let values = outputs("helper-tracing-returned-callbacks");
+    for (marker, text) in [
+        ("nested-callback", "SELECT 1"),
+        ("aggregate-callback", "SELECT 2"),
+        (
+            "annotated-returned-callback",
+            "/* returned annotation */ SELECT 1",
+        ),
+        ("returned-callback-mutates-local-builder", "SELECT 3"),
+    ] {
+        assert!(
+            matches!(event(&values, marker), Value::Prefix(sql, true, _) if sql == text),
+            "{marker}"
+        );
+    }
+    assert!(matches!(
+        event(&values, "returned-callback-capture"),
+        Value::Unknown
+    ));
+    assert_eq!(values.len(), 5);
 }

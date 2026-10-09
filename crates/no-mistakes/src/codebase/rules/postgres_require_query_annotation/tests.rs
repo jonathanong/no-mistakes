@@ -475,6 +475,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-destructuring-alias",
         "helper-tracing-arm-module",
         "helper-tracing-argument-length",
+        "helper-tracing-returned-callbacks",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);

@@ -63,6 +63,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             argument_objects: Default::default(),
             argument_extra_slots: Default::default(),
             definite_deleted_argument_slots: Default::default(),
+            disconnected_argument_slots: Default::default(),
             fresh_mapped_parameters: Default::default(),
         };
         let env = evaluator.module_environment(&path);
@@ -113,7 +114,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             evaluator.invalidated_builders.insert(id);
             let projected = evaluator.mapped_parameter_value(env, "probe").unwrap();
             assert!(matches!(projected, Value::Aggregate(ref values) if values.len() == 3));
-            evaluator.definite_deleted_argument_slots.insert((id, 1));
+            evaluator.disconnected_argument_slots.insert((id, 1));
             assert!(
                 matches!(evaluator.mapped_parameter_value(env, "probe"), Some(Value::Aggregate(ref values)) if values.len() == 2)
             );

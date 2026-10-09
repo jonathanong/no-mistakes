@@ -31,6 +31,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         };
         let previously_invalidated = self.invalidated_builders.contains(&id);
+        let disconnected = self.disconnected_argument_slots.contains(&(id, index));
+        self.definite_deleted_argument_slots.remove(&(id, index));
+        self.deleted_argument_slots.remove(&(id, Some(index)));
         let Some(slot) = self
             .argument_objects
             .get_mut(&id)
@@ -40,13 +43,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .entry(id)
                 .or_default()
                 .insert(index, stored.clone());
-            if self.definite_deleted_argument_slots.contains(&(id, index)) {
+            if disconnected {
                 self.opaque_callbacks(std::slice::from_ref(&stored), depth);
             }
             return Value::Evaluated(Box::new(stored), handled_value);
         };
         *slot = stored.clone();
-        if self.definite_deleted_argument_slots.contains(&(id, index)) {
+        if disconnected {
             // A later write creates an argument property, but it does not
             // reconnect the deleted formal parameter. Preserve callback
             // effects from the new value without restoring that alias.

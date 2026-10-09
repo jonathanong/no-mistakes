@@ -64,10 +64,13 @@ pub(super) fn changes(
         definite,
     );
     for (id, (text, complete)) in previous {
-        let unchanged = current.get(&id).is_some_and(|(other, done)| {
-            (text == *other && complete == *done)
-                || (text.trim_start().starts_with("/*") && other.trim_start().starts_with("/*"))
-        });
+        // A reference disappearing from this binding is a rebind, not a mutation.
+        // Opaque mutation of the referenced identity is tracked independently.
+        let Some((other, done)) = current.get(&id) else {
+            continue;
+        };
+        let unchanged = (text == *other && complete == *done)
+            || (text.trim_start().starts_with("/*") && other.trim_start().starts_with("/*"));
         if !unchanged {
             changed.insert(id);
         }

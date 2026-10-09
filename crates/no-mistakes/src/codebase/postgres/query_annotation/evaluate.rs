@@ -68,6 +68,7 @@ pub(super) struct Evaluator<'a, F> {
     pub argument_objects: FxHashMap<u64, Vec<Value>>,
     pub argument_extra_slots: FxHashMap<u64, BTreeMap<usize, Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
+    pub disconnected_argument_slots: FxHashSet<(u64, usize)>,
     pub fresh_mapped_parameters: FxHashMap<Environment, FxHashSet<String>>,
     pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }

@@ -110,6 +110,13 @@ async function awaitedStrictDelete(statement) {
   return statement;
 }
 
+function writeRecreatedDeletedProperty(statement) {
+  delete arguments[0];
+  const ignored = (arguments[0] = "SELECT 1");
+  write(arguments[0]); // finding:recreated-deleted-property
+  return statement;
+}
+
 write(strictReplacement(sql`/* preserved formal */ SELECT 1`)); // known:strict-formal
 write(dynamicReplacement(sql`/* dynamic slot */ SELECT 1`, key)); // unanalyzable:dynamic-slot
 write(sloppyReplacement(sql`/* sloppy mapped slot */ SELECT 1`)); // unanalyzable:sloppy-mapped-slot
@@ -131,3 +138,4 @@ write(opaqueRightHandSide(sql`/* opaque slot right hand side */ SELECT 1`)); // 
 write(shadowedDelete({}, sql`/* shadowed delete receiver */ SELECT 1`)); // unanalyzable:shadowed-delete-receiver
 write(deleteAsSlotValue(sql`/* delete used as slot value */ SELECT 1`, "unused")); // known:delete-slot-value
 write(await awaitedStrictDelete(sql`/* awaited strict delete */ SELECT 1`)); // known:awaited-strict-delete
+writeRecreatedDeletedProperty(sql`/* original property */ SELECT 1`);

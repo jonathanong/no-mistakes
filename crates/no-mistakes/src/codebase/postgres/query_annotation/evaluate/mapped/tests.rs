@@ -43,6 +43,7 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
     (

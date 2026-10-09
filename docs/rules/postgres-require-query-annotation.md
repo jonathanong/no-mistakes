@@ -212,11 +212,14 @@ resizing the invocation object; storing a reference does not mutate its builder.
 Unsupported assignments evaluate their RHS before invalidating written bindings.
 Destructuring targets are bindings, while computed keys, defaults, and member
 targets retain their evaluation effects. Conditional callbacks retain imported
-module state initialized in their possible arms.
+module state initialized in their possible arms. Rebinding one variable leaves
+other aliases to its former builder intact. Opaque callback traversal also follows
+possible returned callbacks within the existing bound.
 Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping
-only when every possible branch deletes it. Deletion after an opaque escape
+only when every possible branch deletes it. A later property write makes that
+index readable again without reconnecting the formal parameter. Deletion after an opaque escape
 preserves earlier uncertainty instead of restoring the original parameter value.
 Spread calls have unknown argument positions. Passing the complete argument object
 to opaque code makes its slots unknown, while an already copied immutable value

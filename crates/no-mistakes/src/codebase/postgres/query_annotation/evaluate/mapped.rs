@@ -86,7 +86,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .rposition(|param| param == name)
                     .is_some_and(|index| {
                         self.invalidated_builders.contains(id)
-                            && !self.definite_deleted_argument_slots.contains(&(*id, index))
+                            && !self.disconnected_argument_slots.contains(&(*id, index))
                     })
             })
         })
@@ -94,7 +94,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     pub(super) fn disconnect_mapped_slot(&mut self, id: u64, index: usize) {
         if !self.invalidated_builders.contains(&id)
-            || self.definite_deleted_argument_slots.contains(&(id, index))
+            || self.disconnected_argument_slots.contains(&(id, index))
         {
             return;
         }
@@ -128,7 +128,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // With duplicate sloppy parameters, only the last occurrence maps.
             if let Some(index) = params.iter().rposition(|param| param == name) {
                 mapped = true;
-                if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
+                if !self.disconnected_argument_slots.contains(&(*id, index)) {
                     // Callback and container values retain their modeled identities;
                     // opaque consumers must still see their captures and aliases.
                     self.argument_objects

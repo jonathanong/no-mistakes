@@ -25,6 +25,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             frames::MutationState {
                 deleted: &mut self.deleted_argument_slots,
                 definite: &mut self.definite_deleted_argument_slots,
+                disconnected: &mut self.disconnected_argument_slots,
                 invalidated: &mut self.invalidated_builders,
             },
             &self.mapped_arguments,
@@ -55,6 +56,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             frames::MutationState {
                 deleted: &mut self.deleted_argument_slots,
                 definite: &mut self.definite_deleted_argument_slots,
+                disconnected: &mut self.disconnected_argument_slots,
                 invalidated: &mut self.invalidated_builders,
             },
             &self.mapped_arguments,
@@ -77,5 +79,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         );
         self.builder_updates
             .retain(|id, _| live.identities.contains(id));
+    }
+    pub(super) fn install_disconnected_slots(
+        &mut self,
+        original: &crate::fx::FxHashSet<(u64, usize)>,
+        common: Option<crate::fx::FxHashSet<(u64, usize)>>,
+        private: crate::fx::FxHashSet<(u64, usize)>,
+    ) {
+        let mut final_disconnected = common.unwrap_or(original.clone());
+        final_disconnected.extend(private);
+        self.disconnected_argument_slots = original.clone();
+        for (id, index) in final_disconnected.difference(original) {
+            self.disconnect_mapped_slot(*id, *index);
+        }
+        self.disconnected_argument_slots = final_disconnected;
     }
 }

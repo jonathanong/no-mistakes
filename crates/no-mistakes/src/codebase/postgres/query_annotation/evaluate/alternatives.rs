@@ -36,6 +36,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let disconnected = self.disconnected_argument_slots.clone();
+        let mut disconnected_common = None;
+        let mut private_disconnected = FxHashSet::default();
         let fresh = self.fresh_mapped_parameters.clone();
         let mut fresh_joined = fresh.clone();
         let mut definite_common = None;
@@ -63,6 +66,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
+            self.disconnected_argument_slots.clone_from(&disconnected);
             freshness::restore(&mut self.fresh_mapped_parameters, scopes.len(), &fresh);
             for (id, slots) in &objects {
                 self.argument_objects.insert(*id, slots.clone());
@@ -74,6 +78,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut definite_common,
                 &mut private_definite,
                 &self.definite_deleted_argument_slots,
+                &objects,
+            );
+            merge::definite(
+                &mut disconnected_common,
+                &mut private_disconnected,
+                &self.disconnected_argument_slots,
                 &objects,
             );
             for (before, after) in scopes.iter().zip(&self.scopes) {
@@ -168,10 +178,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         values::apply_taint(&mut self.scopes, &changed);
         // Restored bindings must retain any prior opaque parameter update before
         // the common deletion disconnects them from future argument mutations.
-        self.definite_deleted_argument_slots = definite.clone();
-        for (id, index) in final_definite.difference(&definite) {
-            self.disconnect_mapped_slot(*id, *index);
-        }
+        self.install_disconnected_slots(&disconnected, disconnected_common, private_disconnected);
         self.definite_deleted_argument_slots = final_definite;
         self.refresh_captured_bindings();
         // Speculative identities with no surviving aliases cannot affect later reads.
@@ -187,3 +194,6 @@ mod tests;
 
 #[cfg(test)]
 mod deletion_tests;
+
+#[cfg(test)]
+mod prefix_tests;

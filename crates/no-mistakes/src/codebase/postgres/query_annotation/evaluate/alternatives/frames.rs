@@ -11,6 +11,7 @@ struct Roots<'a> {
 pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationState<'a> {
     pub deleted: &'a mut FxHashSet<(u64, Option<usize>)>,
     pub definite: &'a mut FxHashSet<(u64, usize)>,
+    pub disconnected: &'a mut FxHashSet<(u64, usize)>,
     pub invalidated: &'a mut FxHashSet<u64>,
 }
 

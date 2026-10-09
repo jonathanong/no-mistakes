@@ -38,3 +38,15 @@ function mixedLength(statement) {
   return statement;
 }
 write(mixedLength(sql`/* mixed length */ SELECT 1`)); // unanalyzable:unknown-operand
+
+function deletionResult(statement) {
+  unknownConsumer(delete arguments[0]);
+  return statement;
+}
+write(deletionResult(sql`/* primitive deletion */ SELECT 1`)); // known:deletion-result
+
+function deletionKeyEffect(statement) {
+  unknownConsumer(delete arguments[unknownMutation(statement)]);
+  return statement;
+}
+write(deletionKeyEffect(sql`/* deletion key effect */ SELECT 1`)); // unanalyzable:deletion-key-effect

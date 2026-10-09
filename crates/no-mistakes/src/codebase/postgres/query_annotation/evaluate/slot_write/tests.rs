@@ -120,6 +120,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         argument_objects: FxHashMap::from_iter([(1, vec![original.clone()])]),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
     };
@@ -225,6 +226,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
     };
@@ -248,6 +250,30 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         evaluator.scopes[*frame].get("statement"),
         Some(Value::Prefix(text, true, None)) if text == "replacement"
     ));
+
+    let recreated = query_annotation::Expr::Call {
+        callee: Box::new(query_annotation::Expr::Name("deleteAndRecreate".into())),
+        args: vec![query_annotation::Expr::Text(
+            "/* disconnected formal */ SELECT 1".into(),
+        )],
+        start: 1,
+    };
+    let recreated_result = evaluator.expr(&recreated, &path, &root, 16, false);
+    assert!(matches!(
+        recreated_result,
+        Value::Prefix(text, true, None) if text == "/* disconnected formal */ SELECT 1"
+    ));
+    let Some((id, _)) = evaluator
+        .disconnected_argument_slots
+        .iter()
+        .find(|(_, index)| *index == 0)
+    else {
+        panic!("deleted sloppy parameter lost its permanent disconnection");
+    };
+    assert!(!evaluator
+        .definite_deleted_argument_slots
+        .contains(&(*id, 0)));
+    assert!(!evaluator.deleted_argument_slots.contains(&(*id, Some(0))));
 }
 
 #[test]
@@ -292,6 +318,7 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -357,6 +384,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
     };

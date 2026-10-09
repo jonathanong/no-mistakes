@@ -42,6 +42,7 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
     };
@@ -132,6 +133,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
     };

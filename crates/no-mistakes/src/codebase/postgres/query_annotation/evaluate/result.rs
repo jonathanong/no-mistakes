@@ -54,7 +54,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
 fn runtime_primitive(value: &Value) -> bool {
     match value {
-        Value::Primitive => true,
+        Value::Primitive | Value::SlotDeletion => true,
         Value::Evaluated(value, _) => runtime_primitive(value),
         _ => false,
     }

@@ -2,6 +2,10 @@ use super::{calls::scopes, Evaluator, Value};
 use crate::fx::FxHashSet;
 use std::path::{Path, PathBuf};
 
+fn callback_depth(depth: u8) -> impl Iterator<Item = u8> {
+    depth.checked_sub(1).into_iter()
+}
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
         self.callback_values(arguments, depth, &mut FxHashSet::default());
@@ -28,21 +32,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
                 Value::Function(function, path, captured) => {
                     self.invalidate_captured(*captured, function);
-                    let mut locals = scopes::locals(&self.scopes[*captured], function);
-                    if let Some(name) = &function.self_name {
-                        locals.insert(name.clone(), Value::Unknown);
+                    for next_depth in callback_depth(depth) {
+                        let mut locals = scopes::locals(&self.scopes[*captured], function);
+                        if let Some(name) = &function.self_name {
+                            locals.insert(name.clone(), Value::Unknown);
+                        }
+                        scopes::arguments(&mut locals, function, Value::Unknown);
+                        for name in &function.params {
+                            locals.insert(name.clone(), Value::Unknown);
+                        }
+                        let mut scope = self.environment(locals);
+                        self.register_mappings(scope, *captured, function, None);
+                        self.register_captured_bindings(scope, *captured, function);
+                        let returned =
+                            self.steps(&function.body, path, &mut scope, next_depth, false);
+                        self.callback_values(std::slice::from_ref(&returned), next_depth, visited);
                     }
-                    scopes::arguments(&mut locals, function, Value::Unknown);
-                    for name in &function.params {
-                        locals.insert(name.clone(), Value::Unknown);
-                    }
-                    let mut scope = self.environment(locals);
-                    self.register_mappings(scope, *captured, function, None);
-                    self.register_captured_bindings(scope, *captured, function);
-                    self.steps(&function.body, path, &mut scope, depth, false);
                 }
                 _ => {}
             }
         }
     }
 }
+
+#[cfg(test)]
+#[path = "callbacks/tests.rs"]
+mod tests;

@@ -21,6 +21,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             match key {
                 DeleteKey::Index(index) => {
                     self.disconnect_mapped_slot(*id, index);
+                    self.disconnected_argument_slots.insert((*id, index));
                     self.deleted_argument_slots.insert((*id, Some(index)));
                     self.definite_deleted_argument_slots.insert((*id, index));
                     if let Some(slot) = self

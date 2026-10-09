@@ -76,7 +76,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut possibilities = vec![Value::Unknown];
         for (id, params) in &self.mapped_arguments[&env] {
             if let Some(index) = params.iter().rposition(|param| param == name) {
-                if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
+                if !self.disconnected_argument_slots.contains(&(*id, index)) {
                     let value = &self.argument_objects[id][index];
                     if let Some(value) = callbacks(value) {
                         if !possibilities.contains(&value) {

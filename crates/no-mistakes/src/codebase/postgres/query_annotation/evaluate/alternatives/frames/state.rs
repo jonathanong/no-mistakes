@@ -28,6 +28,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
         .definite
         .retain(|(id, _)| reachable.arguments.contains(id));
     state
+        .disconnected
+        .retain(|(id, _)| reachable.arguments.contains(id));
+    state
         .invalidated
         .retain(|id| reachable.identities.contains(id));
 }
