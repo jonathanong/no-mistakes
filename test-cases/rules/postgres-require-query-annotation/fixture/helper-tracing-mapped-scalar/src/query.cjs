@@ -17,3 +17,11 @@ function actualArray(statement) {
 unsafe('/* original */ SELECT 1');
 annotated('/* original */ SELECT 1');
 actualArray('/* original */ SELECT 1');
+
+function unsafeBeforeDisconnection(statement) {
+  const escaped = opaque(arguments);
+  arguments[0] = 'SELECT 1';
+  delete arguments[0];
+  database.query(statement); // finding:known-slot-before-disconnection
+}
+unsafeBeforeDisconnection('/* original */ SELECT 1');

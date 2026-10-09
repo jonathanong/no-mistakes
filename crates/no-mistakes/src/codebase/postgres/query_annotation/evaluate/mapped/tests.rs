@@ -33,6 +33,7 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
         modules: Default::default(),
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
+        active_callback_executions: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -161,14 +162,17 @@ fn escaped_arguments_keep_possible_rebound_callbacks() {
 #[test]
 fn deletion_cannot_restore_parameters_after_opaque_argument_escape() {
     let values = outputs("escaped-then-deleted.cjs");
-    for name in [
-        "result",
-        "capturedResult",
-        "callbackResult",
-        "duplicateLastResult",
+    for (name, expected) in [
+        ("result", "/* stale original */ SELECT 1"),
+        ("capturedResult", "/* stale capture */ SELECT 1"),
+        ("duplicateLastResult", "/* last value */ SELECT 1"),
     ] {
-        assert!(matches!(values.get(name), Some(Value::Unknown)), "{name}");
+        assert!(
+            matches!(values.get(name), Some(Value::Possible(candidates)) if candidates.iter().any(|value| matches!(value, Value::Prefix(text, true, None) if text == expected))),
+            "{name} retains only an uncertain candidate"
+        );
     }
+    assert!(matches!(values.get("callbackResult"), Some(Value::Unknown)));
     assert!(
         matches!(values.get("duplicateFirstResult"), Some(Value::Possible(values)) if values.len() == 1 && matches!(&values[0], Value::Prefix(text, true, None) if text == "/* last value */ SELECT 1"))
     );

@@ -222,10 +222,15 @@ invocation set within one opaque consumer; separate consumers remain independent
 Conditional branches start from the same invocation state, so analyzing one branch
 does not suppress a callback in another branch. A callback is considered consumed
 after the join only if every possible branch invoked it.
+A stateful callback may be revisited when its observed captured inputs change,
+within the same depth bound and with a guard against reentrant execution.
 Writes through a still-mapped formal also expose a newly installed callback when
 its argument object previously escaped. A known unannotated scalar slot value
 remains a violation alongside an unknown mapping possibility, even in ignore mode;
 an annotated possibility does not prove that every possible value is safe.
+Deletion preserves known slot possibilities before disconnecting a formal. A
+dynamic deletion may disconnect a formal, so later slot writes retain both its
+previous value and the assigned value as possibilities.
 Static indexed assignments also follow argument-object aliases; assignments to
 other receiver values remain conservative.
 Strict functions keep separate bindings. A later definite parameter assignment establishes

@@ -32,8 +32,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         };
         let previously_invalidated = self.invalidated_builders.contains(&id);
         let disconnected = self.disconnected_argument_slots.contains(&(id, index));
+        let possibly_disconnected = self.deleted_argument_slots.contains(&(id, None))
+            || self.deleted_argument_slots.contains(&(id, Some(index)));
         self.definite_deleted_argument_slots.remove(&(id, index));
-        self.deleted_argument_slots.remove(&(id, Some(index)));
+        if disconnected || !possibly_disconnected {
+            self.deleted_argument_slots.remove(&(id, Some(index)));
+        }
         let Some(slot) = self
             .argument_objects
             .get_mut(&id)
@@ -55,6 +59,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // A later write creates an argument property, but it does not
             // reconnect the deleted formal parameter. A later escape will
             // visit any callbacks stored in the live property.
+        } else if possibly_disconnected {
+            self.write_possibly_disconnected_mapped_slot(id, index, &stored);
         } else {
             self.write_mapped_argument_slot(id, index, &stored);
         }

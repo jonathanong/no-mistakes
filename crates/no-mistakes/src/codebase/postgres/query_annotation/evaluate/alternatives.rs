@@ -27,6 +27,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
     ) -> Value {
         let scopes = self.scopes.clone();
         let seen = self.active_callback_functions.clone();
+        let executions = self.active_callback_executions.clone();
         let mut joined_seen = seen.clone();
         let captured = self.captured_bindings.clone();
         let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
@@ -56,6 +57,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.active_callback_functions.clone_from(&seen);
+            self.active_callback_executions.clone_from(&executions);
             self.modules.clone_from(&modules);
             self.argument_extra_slots
                 .retain(|id, _| !objects.contains_key(id));
@@ -126,11 +128,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             module_states.restore(&mut self.scopes, &self.modules);
             self.argument_extra_slots
                 .clone_from(joined_extras.as_ref().unwrap());
-            callback_seen::accumulate(
-                &mut joined_seen,
-                &self.active_callback_functions,
-                arm_index == 0,
-            );
+            self.accumulate_callback_seen(&mut joined_seen, arm_index == 0);
             let indices = frames::compact(
                 &mut self.scopes,
                 frames::ModuleRoots {
@@ -147,7 +145,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut self.fresh_mapped_parameters,
                 &mut self.captured_bindings,
             );
-            callback_seen::remap(&mut self.active_callback_functions, scopes.len(), &indices);
+            self.remap_active_callbacks(scopes.len(), &indices);
             callback_seen::remap(&mut joined_seen, scopes.len(), &indices);
             modules.clone_from(&self.modules);
             module_states.remapped(&self.scopes, &modules);

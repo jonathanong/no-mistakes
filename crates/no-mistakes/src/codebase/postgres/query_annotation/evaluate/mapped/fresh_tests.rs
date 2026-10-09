@@ -8,6 +8,8 @@ use std::path::PathBuf;
 fn definite_parameter_assignments_remain_fresh_until_another_container_escape() {
     for (name, known) in [
         ("callback.cjs", false),
+        ("scalar-disconnect.cjs", false),
+        ("escaped-dynamic-disconnect.cjs", false),
         ("callback-reescape.cjs", false),
         ("rhs-before-target.cjs", false),
         ("nested-callbacks.cjs", false),
@@ -55,6 +57,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             modules: Default::default(),
             active_module_initials: Default::default(),
             active_callback_functions: Default::default(),
+            active_callback_executions: Default::default(),
             next_builder: 0,
             invalidated_builders: Default::default(),
             builder_updates: Default::default(),
@@ -72,6 +75,12 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         };
         let env = evaluator.module_environment(&path);
         let result = &evaluator.scopes[env]["result"];
+        if name == "scalar-disconnect.cjs" || name == "escaped-dynamic-disconnect.cjs" {
+            assert!(
+                matches!(result, Value::Possible(values) if values.iter().any(|value| matches!(value, Value::Prefix(text, true, None) if text == "SELECT 1")))
+            );
+            continue;
+        }
         if name == "arguments-write-formal.cjs" {
             assert!(
                 matches!(result, Value::Prefix(text, true, Some(_)) if text == "/* detached formal */ SELECT 1")
@@ -135,12 +144,25 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
                 .mapped_arguments
                 .insert(env, vec![(id, vec!["probe".into(), "other".into()])]);
             evaluator.rebuild_mapped_argument_owners();
+            // A stale mapped reader may lack a scoped copy; live candidates
+            // still survive without inventing a missing formal value.
+            evaluator.deleted_argument_slots.insert((id, None));
+            evaluator.scopes[env].remove("probe");
+            assert!(matches!(
+                evaluator.mapped_parameter_value(env, "probe"),
+                Some(Value::Possible(_))
+            ));
+            evaluator.scopes[env].insert("probe".into(), Value::Unknown);
+            assert!(
+                matches!(
+                    evaluator.mapped_parameter_value(env, "probe"),
+                    Some(Value::Possible(_))
+                ),
+                "unknown copied formal does not discard live callback possibilities"
+            );
             evaluator.scopes[env].insert("probe".into(), callback.clone());
             evaluator.disconnect_mapped_slot(id, 0);
-            assert!(matches!(
-                evaluator.scopes[env]["probe"],
-                Value::Aggregate(_)
-            ));
+            assert!(matches!(evaluator.scopes[env]["probe"], Value::Possible(_)));
             continue;
         }
         if name == "callback-reescape.cjs" {

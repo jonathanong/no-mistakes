@@ -39,6 +39,7 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
         modules: Default::default(),
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
+        active_callback_executions: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

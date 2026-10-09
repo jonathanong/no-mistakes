@@ -69,6 +69,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for (id, params) in &self.mapped_arguments[&env] {
             if let Some(index) = params.iter().rposition(|param| param == name) {
                 if !self.disconnected_argument_slots.contains(&(*id, index)) {
+                    // A possible deletion may have disconnected the formal
+                    // before this property's later write; retain both outcomes.
+                    if self.deleted_argument_slots.contains(&(*id, None))
+                        || self.deleted_argument_slots.contains(&(*id, Some(index)))
+                    {
+                        if let Some(previous) = self.scopes[env].get(name) {
+                            let previous = previous.clone().exposed();
+                            if !matches!(previous, Value::Unknown)
+                                && !possibilities.contains(&previous)
+                            {
+                                possibilities.push(previous);
+                            }
+                        }
+                    }
                     let value = &self.argument_objects[id][index];
                     let value = value.clone().exposed();
                     if !matches!(value, Value::Unknown) && !possibilities.contains(&value) {

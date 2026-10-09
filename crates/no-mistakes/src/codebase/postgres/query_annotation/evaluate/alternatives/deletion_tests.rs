@@ -48,6 +48,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             modules: Default::default(),
             active_module_initials: Default::default(),
             active_callback_functions: Default::default(),
+            active_callback_executions: Default::default(),
             next_builder: 0,
             invalidated_builders: Default::default(),
             builder_updates: Default::default(),
@@ -95,7 +96,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             );
         } else {
             assert!(
-                matches!(result, Value::Unknown),
+                matches!(result, Value::Unknown | Value::Possible(_)),
                 "{name} cannot prove disconnection"
             );
         }

@@ -32,3 +32,17 @@ pub(super) fn remap(
             .collect();
     }
 }
+
+impl<F: Fn(&str, &std::path::Path) -> Option<std::path::PathBuf>> super::super::Evaluator<'_, F> {
+    pub(super) fn accumulate_callback_seen(&self, joined: &mut Seen, first: bool) {
+        accumulate(joined, &self.active_callback_functions, first);
+    }
+    pub(super) fn remap_active_callbacks(
+        &mut self,
+        preserved: usize,
+        indices: &FxHashMap<Environment, Environment>,
+    ) {
+        remap(&mut self.active_callback_functions, preserved, indices);
+        remap(&mut self.active_callback_executions, preserved, indices);
+    }
+}

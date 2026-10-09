@@ -2,6 +2,7 @@ mod bindings;
 mod fresh;
 mod fresh_index;
 mod owners;
+mod possible;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use std::path::{Path, PathBuf};
@@ -113,14 +114,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             {
                 continue;
             }
-            let value = self.scopes[frame]
-                .get_mut(&name)
-                .expect("mapped parameter binding");
-            let previous = std::mem::replace(value, Value::Unknown);
-            *value = match previous {
-                Value::Prefix(_, _, _) | Value::Unknown => Value::Unknown,
-                previous => Value::Aggregate(vec![Value::Unknown, previous]),
-            };
+            // Read the live property before deletion clears it. Opaque escape
+            // leaves uncertainty, but cannot erase a later known candidate.
+            let value = self
+                .mapped_parameter_value(frame, &name)
+                .expect("dirty connected mapped parameter");
+            self.scopes[frame].insert(name.clone(), value);
         }
     }
 

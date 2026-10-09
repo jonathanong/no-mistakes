@@ -17,7 +17,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &mut self.fresh_mapped_parameters,
             &mut self.captured_bindings,
         );
-        super::callback_seen::remap(&mut self.active_callback_functions, 0, &indices);
+        self.remap_active_callbacks(0, &indices);
         self.rebuild_binding_indexes();
         frames::prune_state(
             &self.scopes,
