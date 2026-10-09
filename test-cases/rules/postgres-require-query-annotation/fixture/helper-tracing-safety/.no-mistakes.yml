@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@app/db"
+      include:
+        - "src/query.mts"
+      trustedSqlTags:
+        - module: "./tags.mjs"
+          name: "customQuery"

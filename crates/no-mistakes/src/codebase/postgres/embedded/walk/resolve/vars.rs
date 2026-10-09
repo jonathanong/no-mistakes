@@ -14,13 +14,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
     statements: &[Statement<'_>],
     visitor: &mut ScopeVisitor<'_>,
 ) {
-    let mut collector = VarNames::default();
-    for statement in statements {
-        collector.visit_statement(statement);
-    }
+    let names = hoisted_names(statements);
     let source = visitor.source;
     if let Some(scope) = visitor.current_scope() {
-        for (name, position) in collector.names {
+        for (name, position) in names {
             scope.entry(name).or_insert_with(|| BindingState {
                 sql: None,
                 kind: EmbeddedSqlKind::Dynamic,
@@ -31,6 +28,14 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
             });
         }
     }
+}
+
+pub(crate) fn hoisted_names(statements: &[Statement<'_>]) -> HashMap<String, u32> {
+    let mut collector = VarNames::default();
+    for statement in statements {
+        collector.visit_statement(statement);
+    }
+    collector.names
 }
 
 #[derive(Default)]

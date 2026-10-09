@@ -50,6 +50,7 @@ pub(super) fn requires_parse(
     playwright: Option<&PlaywrightFactPlan>,
 ) -> bool {
     plan.imports
+        || plan.query_annotation
         || plan.symbols
         || plan.react
         || plan.react_usages

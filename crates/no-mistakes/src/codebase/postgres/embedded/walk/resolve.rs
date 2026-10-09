@@ -5,9 +5,9 @@ pub(super) use provisional::record_executor_call;
 mod append;
 mod chain;
 mod compose;
-mod functions;
+pub(crate) mod functions;
 mod loops;
-mod vars;
+pub(crate) mod vars;
 pub(super) use vars::{hoist_vars, initialize_vars};
 
 pub(super) use append::apply_append;

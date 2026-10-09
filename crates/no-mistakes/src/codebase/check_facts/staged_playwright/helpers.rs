@@ -42,6 +42,7 @@ pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
 
 pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
     plan.imports
+        || plan.query_annotation
         || plan.symbols
         || plan.react
         || plan.react_usages

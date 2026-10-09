@@ -4,10 +4,11 @@ Require a leading `/* name */` block comment on executed PostgreSQL SQL so
 slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
 (`-- name`) do not count. `BEGIN`, `COMMIT`, and `ROLLBACK` are exempt.
 
-The rule uses the shared PostgreSQL embedded-SQL facts
-(`extract_embedded_sql_from_source`, `collect_postgres_facts`) and
-`sql_requires_query_annotation`. It does not re-parse TypeScript with a
-private parser.
+The rule consumes prepared embedded-SQL and helper summaries from the request's
+shared TypeScript parse. Imported helpers use the request's prepared importer
+project catalog and source session. Package-local TypeScript aliases resolve from
+the importing file's project; an explicit `--tsconfig` deliberately overrides that
+ownership for every importer.
 
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
@@ -76,6 +77,59 @@ SQL-file/native-SQL analysis where supported. See the
 | `executorFactoryNames` | Empty | Named imports (from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty) whose call result bound with `const`, `let`, `using`, or `await using` is an executor inside the declaring block. |
 | `executorTypeNames` | Empty | Imported type names (`import type` or inline `type` specifiers) from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty, whose annotated parameters, including optional and inline-destructured ones, are executors inside the declaring function. |
 | `trustedSqlTags` | Empty | Named imports of `name` from `module`, or a subpath of `module`, are parameterized SQL tags. A renamed local binding is trusted. A default import is not. A shadowed or rebound local fails closed. The same name from another module, or a sibling prefix such as `@example/dbx`, stays untrusted. |
+| `unanalyzableSql` | `report` | Report configured executor arguments whose leading SQL cannot be verified. Set `ignore` explicitly to retain the earlier behavior of skipping opaque arguments. |
+
+### SQL helpers and callbacks
+
+Straight-line same-file and imported helpers can return SQL assembled from strings,
+templates, nested SQL builders, and `.append()` calls. Empty fragments are skipped
+in composition order. Literal arguments can establish interpolated template text;
+unknown text before the first stable prefix remains unanalyzable. A leading
+`/* name */` stays valid when a later appended fragment is opaque:
+
+```ts
+function ordersSql(select: string) {
+  return sql``.append(`SELECT ${select} FROM orders`);
+}
+write(ordersSql("id")); // Missing annotation.
+write(sql`/* orders/list */ `.append(ordersSql("id"))); // Valid.
+```
+
+Named and default imports, plus named and star re-exports, can resolve helper
+functions. Namespace imports remain unanalyzable. Captured local bindings use the
+value available when the helper runs; calling before initialization remains opaque.
+Imported helpers share their module bindings during tracing, so an opaque mutator
+invalidates a module builder before a later helper reads it.
+Existing local `sql` template-tag implementations retain their previous behavior
+and can forward annotation prefixes through imported helpers. Unary and sequence
+expressions are traversed for nested executor calls without treating those
+wrappers as SQL values.
+Await an async helper before passing its returned SQL to an executor; a promise passed
+without awaiting it remains unanalyzable. Template substitutions are traversed for nested
+executor calls. Unknown calls or untrusted template tags that receive a mutable
+SQL builder invalidate its previous prefix, including aliases to that builder.
+
+Callback forwarding through a straight-line helper substitutes the statement and
+callback arguments at each analyzable callsite. Findings point to the executor
+inside the callback. Every callsite must pass; one annotated invocation cannot
+hide an unannotated or opaque invocation of the same callback.
+
+```ts
+async function runSql(statement, run) { return run(statement); }
+runSql(ordersSql("id"), statement => write(statement)); // Executor needs an annotation.
+```
+
+Tracing is bounded and conservative. Cycles, reassignment, unsupported control
+flow, unresolved imports, arbitrary external calls, and unknown leading fragments
+produce an unanalyzable finding by default. Make the leading fragment static,
+prepend a named block comment at the caller, suppress an intentional exception,
+or explicitly configure `unanalyzableSql: ignore`. This default also applies to
+opaque executor arguments that earlier versions silently skipped. Include/exclude
+filters select reported files; an imported helper outside that selection can still
+be traced through the prepared project facts. Prefix evidence is used only by this
+annotation rule and does not make dynamic SQL complete for other PostgreSQL rules.
+An incomplete transaction prefix such as `BE` plus unknown text remains
+unanalyzable because it could complete an exempt `BEGIN` statement.
 
 `executorFactoryNames` and `executorTypeNames` add scoped executors: `tx` in
 `await using tx = await openTransaction()` or `run` in `run: TxExecutor` is scanned
@@ -123,3 +177,13 @@ administrative script.
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
 [`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row
 locks.
+
+Speculative function entrypoints use isolated initialized module state. Actual helper and callback call chains retain shared builder state. Bare `var` redeclarations preserve existing parameters and hoisted functions. Logical and conditional expressions contribute every syntactically possible helper invocation; helper calls in unsupported syntax remain conservative rather than allowing a favorable modeled call to hide unknown arguments. Diamond star re-exports of the same original binding resolve to that binding.
+
+Opaque mutations invalidate previously proven prefixes of mutable builders, including method receivers, spread arguments, nested containers, property writes/deletes, and constructor inputs. Replacing or deleting `String.raw` revokes built-in tag trust; writes to a lexically shadowed `String` leave the global built-in unaffected. Spread arguments remain conservative for positional helper and callback substitution.
+
+Conditional and logical arms use independent mutable state. An unchanged leading
+annotation remains provable, while a possible opaque mutation makes the SQL
+unanalyzable. Unsupported control flow containing potentially mutating calls
+cannot restore an earlier prefix through legacy recovery. A hoisted local `var`
+shadows a captured binding, including when it has no initializer.

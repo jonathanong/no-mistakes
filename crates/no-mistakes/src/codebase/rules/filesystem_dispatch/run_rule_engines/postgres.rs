@@ -113,11 +113,14 @@ fn run_naming_and_query_rules(
         POSTGRES_FINITE_TEXT_COLUMNS => finite_text(root, config, files, sources, facts),
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
         POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
-        POSTGRES_REQUIRE_QUERY_ANNOTATION => {
-            postgres_require_query_annotation::check_with_files_and_sources(
+        POSTGRES_REQUIRE_QUERY_ANNOTATION => match facts {
+            Some(facts) => postgres_require_query_annotation::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_require_query_annotation::check_with_files_and_sources(
                 root, config, files, sources,
-            )
-        }
+            ),
+        },
         POSTGRES_REQUIRED_PREDICATES => required_predicates(root, config, files, sources, facts),
         POSTGRES_SQL_SHAPE_POLICY => shapes::shape_policy(root, config, files, sources, facts),
         POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => {

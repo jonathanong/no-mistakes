@@ -183,7 +183,7 @@ fn record_function_tag_shadow(function: &Function<'_>, shadows: &mut TagShadows)
     }
 }
 
-fn looks_like_tag_implementation(function: &Function<'_>) -> bool {
+pub(crate) fn looks_like_tag_implementation(function: &Function<'_>) -> bool {
     let has_params = !function.params.items.is_empty() || function.params.rest.is_some();
     has_params && !returns_static_sql(function)
 }

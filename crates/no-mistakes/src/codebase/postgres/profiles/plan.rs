@@ -5,6 +5,9 @@ pub fn configure_prepared_postgres_plan(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
+    plan.query_annotation |= !config
+        .rule_applications("postgres-require-query-annotation")
+        .is_empty();
     let dml_rules = [
         "postgres-required-predicates",
         "postgres-no-offset",

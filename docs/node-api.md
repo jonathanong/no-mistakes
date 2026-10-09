@@ -83,6 +83,14 @@ configured names no scanned file imports; it appears in `check()` results like a
 other finding. See the
 [executor migration notes](migrations/explicit-postgres-executors.md).
 
+`postgres-require-query-annotation` traces straight-line SQL helpers and callback
+forwarding through the same prepared project facts used by `check()` and
+`analyzeProject()`. Its `unanalyzableSql` option defaults to `"report"`; choose
+`"ignore"` explicitly to skip opaque leading SQL. Named configuration types
+`PostgresRequireQueryAnnotationOptions` and `PostgresUnanalyzableSql` are exported
+from the package. Findings retain the executor's source location. See the
+[annotation rule](rules/postgres-require-query-annotation.md).
+
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
 `shapeOptions.bannedFunctionCall.functions` list through the same YAML rule
 configuration. Entries may be strings for an unrestricted ban or objects with

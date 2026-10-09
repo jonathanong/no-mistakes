@@ -10,7 +10,7 @@ pub fn sql_requires_query_annotation(sql: &str) -> bool {
     !is_transaction_command(sql) && !has_leading_query_annotation(sql)
 }
 
-fn has_leading_query_annotation(sql: &str) -> bool {
+pub(crate) fn has_leading_query_annotation(sql: &str) -> bool {
     annotation_re().is_match(sql)
 }
 

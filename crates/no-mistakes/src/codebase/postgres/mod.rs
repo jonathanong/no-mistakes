@@ -14,6 +14,7 @@ pub(crate) mod idents;
 mod locking;
 mod migration;
 mod migration_order;
+pub(crate) mod query_annotation;
 pub(crate) use migration_order::cmp_sql_rel;
 mod numeric_literal;
 mod offset;

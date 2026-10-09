@@ -24,12 +24,22 @@ pub(crate) struct Options {
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    pub(crate) unanalyzable_sql: UnanalyzableSql,
+}
+
+#[derive(Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum UnanalyzableSql {
+    #[default]
+    Report,
+    Ignore,
 }
 
 struct CompiledOptions {
     include: GlobMatcher,
     exclude: GlobMatcher,
     embedded: EmbeddedSqlOptions,
+    unanalyzable_sql: UnanalyzableSql,
 }
 
 impl CompiledOptions {
@@ -52,7 +62,24 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        config,
+        &[RULE_ID],
+    )?;
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    _sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -74,7 +101,7 @@ pub(crate) fn check_with_files_and_sources(
                 .into_iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
                 .collect();
-            scan_with_sources(root, &compiled, &files, sources)
+            scan_with_sources(root, &compiled, &files, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -88,6 +115,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         include,
         exclude,
+        unanalyzable_sql: opts.unanalyzable_sql,
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),

@@ -42,19 +42,19 @@ use std::collections::HashSet;
 /// declared `const` — see [`record_declarator_reassignment`] for why the
 /// exemption is narrowed to that one declaration kind.
 #[derive(Default)]
-pub(super) struct ReassignedNames<'a> {
+pub(crate) struct ReassignedNames<'a> {
     names: HashSet<&'a str>,
     param_stack: Vec<HashSet<&'a str>>,
 }
 
 impl<'a> ReassignedNames<'a> {
-    pub(super) fn collect(program: &Program<'a>) -> Self {
+    pub(crate) fn collect(program: &Program<'a>) -> Self {
         let mut reassigned = Self::default();
         reassigned.visit_program(program);
         reassigned
     }
 
-    pub(super) fn contains(&self, name: &str) -> bool {
+    pub(crate) fn contains(&self, name: &str) -> bool {
         self.names.contains(name)
     }
 

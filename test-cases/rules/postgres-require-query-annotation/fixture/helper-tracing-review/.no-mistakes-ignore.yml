@@ -1,0 +1,19 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@app/db"
+      include:
+        - "src/query.mts"
+        - "src/import-equals.mts"
+        - "src/destructured-tag.mts"
+        - "src/local-tag.mts"
+        - "src/named-tags.mts"
+        - "src/raw-assertion.ts"
+        - "src/raw-deleted.mts"
+        - "src/raw-reassigned.mts"
+        - "src/raw-shadowed.mts"
+      unanalyzableSql: ignore
+      trustedSqlTags:
+        - module: "./tags.mjs"
+          name: "customQuery"

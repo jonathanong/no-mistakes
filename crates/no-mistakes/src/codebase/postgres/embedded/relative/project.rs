@@ -50,12 +50,23 @@ pub(crate) fn project_relative_scoped_facts(
         .calls
         .into_iter()
         .filter(|call| kept_owner(&kept, &call.owners))
+        .map(|call| {
+            let start = pending
+                .call_starts
+                .get(&call.seq)
+                .copied()
+                .unwrap_or_default();
+            (call, start)
+        })
         .collect::<Vec<_>>();
     if promoted.is_empty() {
         return;
     }
-    facts.calls = merge_calls(
-        std::mem::take(&mut facts.calls),
+    (facts.calls, facts.call_starts) = merge_calls(
+        std::mem::take(&mut facts.calls)
+            .into_iter()
+            .zip(std::mem::take(&mut facts.call_starts))
+            .collect(),
         &pending.confirmed_order,
         promoted,
     );
@@ -73,27 +84,35 @@ fn sort_dedup(names: &mut Vec<String>) {
 }
 
 fn merge_calls(
-    confirmed: Vec<super::super::EmbeddedSqlCall>,
+    confirmed: Vec<(super::super::EmbeddedSqlCall, u32)>,
     order: &[u32],
-    promoted: Vec<PendingRelativeCall>,
-) -> Vec<super::super::EmbeddedSqlCall> {
+    promoted: Vec<(PendingRelativeCall, u32)>,
+) -> (Vec<super::super::EmbeddedSqlCall>, Vec<u32>) {
     if order.len() != confirmed.len() {
         let mut calls = confirmed;
-        calls.extend(promoted.into_iter().map(|pending| pending.call));
-        return calls;
+        calls.extend(
+            promoted
+                .into_iter()
+                .map(|(pending, start)| (pending.call, start)),
+        );
+        return calls.into_iter().unzip();
     }
     let mut merged = Vec::with_capacity(confirmed.len() + promoted.len());
     let mut confirmed = confirmed.into_iter().zip(order.iter().copied()).peekable();
     let mut pending = promoted.into_iter().peekable();
     loop {
         match (confirmed.peek(), pending.peek()) {
-            (Some((_, seq)), Some(call)) if call.seq < *seq => {
-                merged.push(pending.next().expect("peeked pending").call);
+            (Some((_, seq)), Some((call, _))) if call.seq < *seq => {
+                let (call, start) = pending.next().expect("peeked pending");
+                merged.push((call.call, start));
             }
             (Some(_), _) => merged.push(confirmed.next().expect("peeked confirmed").0),
-            (None, Some(_)) => merged.push(pending.next().expect("peeked pending").call),
+            (None, Some(_)) => {
+                let (call, start) = pending.next().expect("peeked pending");
+                merged.push((call.call, start));
+            }
             (None, None) => break,
         }
     }
-    merged
+    merged.into_iter().unzip()
 }

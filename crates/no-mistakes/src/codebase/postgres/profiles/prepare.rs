@@ -32,8 +32,16 @@ pub(crate) fn prepare_rule_sql_facts(
             selected,
             Vec::new(),
             crate::codebase::check_facts::CheckFactPlan {
-                postgres_schema: rule_ids.iter().any(|id| *id != "postgres-sql-shape-policy"),
-                postgres_dml: !profiles.is_empty(),
+                postgres_schema: rule_ids.iter().any(|id| {
+                    !matches!(
+                        *id,
+                        "postgres-sql-shape-policy" | "postgres-require-query-annotation"
+                    )
+                }),
+                postgres_dml: !profiles.is_empty()
+                    && dml_ids
+                        .iter()
+                        .any(|id| *id != "postgres-require-query-annotation"),
                 postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,
@@ -44,6 +52,7 @@ pub(crate) fn prepare_rule_sql_facts(
                 } else {
                     Vec::new()
                 },
+                query_annotation: rule_ids.contains(&"postgres-require-query-annotation"),
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,

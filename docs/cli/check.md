@@ -2,6 +2,11 @@
 
 Run configured repository checks from `.no-mistakes.yml`.
 
+The `postgres-require-query-annotation` rule traces straight-line SQL helpers and
+callback forwarding. Unknown leading SQL reports by default; use the rule option
+`unanalyzableSql: ignore` explicitly to skip opaque executor arguments. Findings
+point to the executor call. See [the rule](../rules/postgres-require-query-annotation.md).
+
 ```sh
 no-mistakes check --root . --format json
 ```

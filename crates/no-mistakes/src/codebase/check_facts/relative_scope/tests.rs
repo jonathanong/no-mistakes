@@ -124,6 +124,7 @@ fn files_without_relative_candidates_are_left_untouched() {
                     path: path.clone(),
                     executor_bindings: Vec::new(),
                     calls: vec![call],
+                    call_starts: vec![0],
                     fragments: Vec::new(),
                     matched_factory_names: Vec::new(),
                     matched_type_names: Vec::new(),
@@ -138,6 +139,7 @@ fn files_without_relative_candidates_are_left_untouched() {
         &AnalysisSession::disabled(),
         Path::new("/tmp"),
         &sources,
+        None,
         &mut files,
     );
     let stored = &files.get(&path).expect("file").embedded_sql[0].1;

@@ -104,7 +104,7 @@ fn is_sql_tag(
 ///
 /// A named import only: the caller records the local binding. An empty
 /// module or name matches nothing, so it cannot widen to every import.
-pub(super) fn matches_trusted_sql_import(
+pub(crate) fn matches_trusted_sql_import(
     source: &str,
     imported: &str,
     tags: &[TrustedSqlTag],

@@ -85,14 +85,15 @@ pub(super) fn run_check(
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
     let sources = snapshot.source_store_for(root);
-    let prepared_tsconfig_catalog = super::prepared_tsconfig_catalog(
+    let prepared_tsconfig_catalog = Arc::new(super::prepared_tsconfig_catalog(
         root,
         tsconfig_path,
         &prepared_tsconfig,
         &visible_paths,
         &sources,
         Some(&config),
-    );
+    ));
+    fact_plan.query_annotation_catalog = Some(Arc::clone(&prepared_tsconfig_catalog));
     let prepared_vitest_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
         crate::codebase::rules::prepare_vitest_project_catalog(
             root,

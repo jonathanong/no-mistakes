@@ -1,5 +1,11 @@
 # Parse PostgreSQL source without a repository
 
+For executed TypeScript SQL, use `check` with configured
+`postgres-require-query-annotation` instead. It traces straight-line local/imported
+helpers and callback forwarding, and reports unknown leading SQL by default.
+Inspect unanalyzable findings before using `unanalyzableSql: ignore`; a static
+leading `/* name */` can establish the annotation even when later appends are opaque.
+
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration
 text and schema-authoring facts. Pass an array for a source batch. It needs no
 root, database, catalog, invocation lock, or raw AST traversal.

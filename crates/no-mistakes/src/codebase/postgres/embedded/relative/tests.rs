@@ -38,6 +38,7 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
     EmbeddedSqlFileFacts {
         path: PathBuf::from("file.ts"),
         executor_bindings: Vec::new(),
+        call_starts: vec![0; calls.len()],
         calls,
         fragments: Vec::new(),
         matched_factory_names: Vec::new(),
@@ -177,6 +178,7 @@ fn a_file_outside_the_package_or_equal_to_the_root_is_not_kept() {
                     call: call("relative"),
                 }],
                 confirmed_order: vec![1],
+                call_starts: Default::default(),
                 spans: vec![PendingRelativeSpan {
                     owners: vec![0],
                     name: "tx".to_string(),
