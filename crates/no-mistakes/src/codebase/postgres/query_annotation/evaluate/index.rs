@@ -6,7 +6,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         match value {
             Value::Arguments(id, values) => {
                 if self.invalidated_builders.contains(&id)
-                    || self.deleted_argument_slots.contains(&(id, index))
+                    || self.deleted_argument_slots.contains(&(id, Some(index)))
+                    || self.deleted_argument_slots.contains(&(id, None))
                 {
                     Value::Unknown
                 } else {

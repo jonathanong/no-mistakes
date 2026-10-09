@@ -4,6 +4,7 @@ mod coverage;
 mod evaluate;
 mod exports;
 mod expressions;
+mod mapped_arguments;
 pub(crate) mod project;
 mod statements;
 mod trust;
@@ -18,6 +19,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) trusted_tags: BTreeSet<String>,
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub(super) raw_tag_reassigned: bool,
+    pub(super) mapped_arguments: crate::fx::FxHashSet<u32>,
     pub calls: BTreeMap<u32, Option<String>>,
 }
 

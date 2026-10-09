@@ -100,11 +100,13 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 locals.insert(name.clone(), Value::Unknown);
             }
             let object = self.arguments_object(&arguments, spread);
+            let mapping = self.parameter_mapping(&function, &function_path, &object);
             scopes::arguments(&mut locals, &function, object);
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
             }
             let mut scope = self.environment(locals);
+            self.register_mappings(scope, captured, &function, mapping);
             self.steps(&function.body, &function_path, &mut scope, depth, false);
             self.opaque_callbacks(&arguments, depth);
             // Unsupported control flow with possible opaque calls must not
@@ -133,6 +135,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             locals.insert(name.clone(), Value::Unknown);
         }
         let object = self.arguments_object(&arguments, spread);
+        let mapping = self.parameter_mapping(&function, &function_path, &object);
         scopes::arguments(&mut locals, &function, object);
         for (index, param) in function.params.iter().enumerate() {
             locals.insert(
@@ -145,6 +148,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
         }
         let mut scope = self.environment(locals);
+        self.register_mappings(scope, captured, &function, mapping);
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
         // Trace forwarded executor calls, but do not treat a helper's return
         // as immutable SQL when arbitrary effects could mutate its builder.
@@ -182,6 +186,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                     locals.insert(name.clone(), Value::Unknown);
                 }
                 let mut scope = self.environment(locals);
+                self.register_mappings(scope, *captured, function, None);
                 self.steps(&function.body, path, &mut scope, depth, false);
             }
         }

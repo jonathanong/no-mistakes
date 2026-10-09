@@ -85,6 +85,7 @@ pub(crate) fn project(
                     next_builder: 0,
                     invalidated_builders: Default::default(),
                     deleted_argument_slots: Default::default(),
+                    mapped_arguments: Default::default(),
                 };
                 evaluator.run(path);
                 (path.clone(), evaluator.events)

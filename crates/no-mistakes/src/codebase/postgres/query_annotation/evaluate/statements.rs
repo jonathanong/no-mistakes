@@ -68,6 +68,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 } else {
                     unsupported.clone()
                 };
+                self.update_mapped_parameter(*env, name, &value);
                 self.scopes[*env].insert(name.clone(), value);
             }
         }
@@ -80,6 +81,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     } else {
                         unsupported.clone()
                     };
+                    self.update_mapped_parameter(*env, name, &value);
                     self.scopes[*env].insert(name.clone(), value);
                 }
                 Step::Append(name, expr) => {

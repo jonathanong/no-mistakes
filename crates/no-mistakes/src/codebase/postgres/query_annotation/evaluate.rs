@@ -5,6 +5,7 @@ use concat::concat;
 mod delete;
 mod effects;
 mod index;
+mod mapped;
 mod modules;
 mod statements;
 mod tagged;
@@ -41,7 +42,8 @@ pub(super) struct Evaluator<'a, F> {
     pub modules: FxHashMap<PathBuf, Environment>,
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
-    pub deleted_argument_slots: FxHashSet<(u64, usize)>,
+    pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
+    pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -62,12 +64,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let modules = self.modules.clone();
         let invalidated = self.invalidated_builders.clone();
         let deleted = self.deleted_argument_slots.clone();
+        let mapped = self.mapped_arguments.clone();
         for call in unmodeled {
             if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
                 self.deleted_argument_slots.clone_from(&deleted);
+                self.mapped_arguments.clone_from(&mapped);
                 self.expr(&call, path, &env, 16, false);
             }
         }
@@ -81,6 +85,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
                 self.deleted_argument_slots.clone_from(&deleted);
+                self.mapped_arguments.clone_from(&mapped);
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
@@ -113,6 +118,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Unknown => Value::Unknown,
             Expr::Unsupported => Value::Unsupported,
             Expr::Text(value) => Value::Prefix(value.clone(), true, None),
+            Expr::Name(name) if self.mapped_parameter_unknown(*env, name) => Value::Unknown,
             Expr::Name(name) => self.scopes[*env]
                 .get(name)
                 .cloned()

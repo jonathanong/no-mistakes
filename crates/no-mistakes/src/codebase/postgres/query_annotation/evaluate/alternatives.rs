@@ -38,11 +38,22 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 }
             }
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
-            frames::compact(&mut self.scopes, scopes.len(), &mut returned);
+            frames::compact(
+                &mut self.scopes,
+                scopes.len(),
+                &mut returned,
+                &mut self.mapped_arguments,
+            );
         }
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
         self.invalidated_builders = original;
+        frames::prune_deleted(
+            &self.scopes,
+            &returned,
+            &mut deleted_changed,
+            &self.mapped_arguments,
+        );
         self.deleted_argument_slots = deleted_changed;
         let values = changed
             .into_iter()

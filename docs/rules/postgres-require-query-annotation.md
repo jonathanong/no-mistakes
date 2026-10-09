@@ -193,6 +193,9 @@ a parameter value used earlier. Regular helpers own an `arguments` object; arrow
 inherit it from their enclosing helper, so opaque mutations through that object
 retain the same builder identity. Static numeric and canonical numeric-string
 indices select the corresponding argument; dynamic indices remain conservative.
+In sloppy functions with simple parameters, parameter rebindings update mapped
+argument slots; opaque slot mutations make mapped parameters unknown. Strict
+functions keep separate bindings, and deleting a known slot disconnects its mapping.
 Spread calls have unknown argument positions. Passing the complete argument object
 to opaque code makes its slots unknown, while an already copied immutable value
 retains its value. Appending a builder refreshes its aliases inside argument

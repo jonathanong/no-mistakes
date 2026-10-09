@@ -64,3 +64,14 @@ export async function alternativePromiseBuilderMutationIsMerged(condition: boole
   const ignored = condition ? (await pending).append('SELECT 1') : '';
   write(await pending); // unanalyzable:alternative-promise-builder
 }
+
+export function retainedCallbackKeepsDeletedSlotState(condition: boolean) {
+  function factory() {
+    const slots = arguments;
+    const ignored = delete slots[0];
+    return () => write(slots[0]); // unanalyzable:retained-callback-deleted-slot
+  }
+  // The returned callback still owns its arguments alias after compaction.
+  const callback = condition ? factory('/* removed */ SELECT 1') : '';
+  const ignored = unknownConsumer(callback);
+}

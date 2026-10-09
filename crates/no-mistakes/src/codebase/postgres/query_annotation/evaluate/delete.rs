@@ -18,11 +18,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .collect::<Vec<_>>();
         if let Some(Value::Arguments(id, _)) = values.first() {
             // Removing a slot does not mutate the builder it referenced.
-            if let Some(index) = index {
-                self.deleted_argument_slots.insert((*id, index));
-            } else {
-                self.invalidated_builders.insert(*id);
-            }
+            self.deleted_argument_slots.insert((*id, index));
             self.invalidate_builders(&values[1..]);
             self.opaque_callbacks(&values[1..], depth);
             // The complete receiver/key effects are handled precisely here.

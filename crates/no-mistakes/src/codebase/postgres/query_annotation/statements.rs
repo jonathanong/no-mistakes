@@ -11,6 +11,7 @@ pub(super) fn collect(
         trusted_tags: super::trust::collect(program, options),
         legacy_tag_spans: super::trust::legacy_local_tags(program),
         roots: steps(&program.body, source),
+        mapped_arguments: super::mapped_arguments::collect(program),
         ..QueryAnnotationFileFacts::default()
     };
     facts.unmodeled_calls = super::coverage::collect(program, source, &facts.roots);

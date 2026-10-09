@@ -37,6 +37,7 @@ pub(super) fn compact(
     scopes: &mut Vec<FxHashMap<String, Value>>,
     original: usize,
     returned: &mut [Value],
+    mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 ) {
     let mut pending = Vec::new();
     for value in returned.iter() {
@@ -72,6 +73,58 @@ pub(super) fn compact(
     for value in returned {
         remap(value, &indices);
     }
+    *mapped = std::mem::take(mapped)
+        .into_iter()
+        .filter_map(|(env, value)| {
+            if env < original {
+                Some((env, value))
+            } else {
+                indices.get(&env).map(|new| (*new, value))
+            }
+        })
+        .collect();
     scopes.truncate(original);
     scopes.extend(frames);
+}
+
+fn argument_ids(value: &Value, ids: &mut FxHashSet<u64>) {
+    match value {
+        Value::Arguments(id, values) => {
+            ids.insert(*id);
+            for value in values {
+                argument_ids(value, ids);
+            }
+        }
+        Value::Aggregate(values) => {
+            for value in values {
+                argument_ids(value, ids);
+            }
+        }
+        Value::Promise(value) => argument_ids(value, ids),
+        _ => {}
+    }
+}
+
+/// Captured function environments are already included in the compact arena,
+/// so scanning every retained frame covers indirect aliases without cycles.
+pub(super) fn prune_deleted(
+    scopes: &[FxHashMap<String, Value>],
+    returned: &[Value],
+    deleted: &mut FxHashSet<(u64, Option<usize>)>,
+    mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+) {
+    let mut ids = FxHashSet::default();
+    for value in scopes
+        .iter()
+        .flat_map(|scope| scope.values())
+        .chain(returned)
+    {
+        argument_ids(value, &mut ids);
+    }
+    // A retained parameter can own a disconnected slot after every arguments
+    // alias is rebound. Its mapping still needs the definite deletion fact.
+    for bindings in mapped.values() {
+        ids.extend(bindings.iter().map(|(id, _)| *id));
+    }
+    deleted.retain(|(id, _)| ids.contains(id));
 }
