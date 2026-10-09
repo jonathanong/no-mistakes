@@ -20,7 +20,7 @@ publishes partial diagnostics and source coordinates.
 `postgres-fk-index`, `postgres-redundant-index`,
 `postgres-constraint-validate`, `postgres-no-add-column`,
 `postgres-column-naming`, `postgres-finite-text-columns`,
-`postgres-array-columns`, and
+`postgres-array-columns`, `postgres-key-column-types`, and
 `postgres-identifier-length`, `postgres-required-predicates`, and
 `postgres-sql-shape-policy`
 consume the facts through `no-mistakes check`. Forthcoming DML rules
@@ -544,8 +544,13 @@ missing field `dataType``, and says to generate the catalog with
 Apart from those required fields, a missing field takes its default so a
 hand-written fixture can state only the facts it tests; the generator always writes
 all of them.
+Handwritten snapshots may set `partitionOf` on a table relation to identify a
+partition child. Key-column checks skip ordinary partition leaves because their
+parent key is already checked, while still checking partitioned parents, including
+nested partitioned parents.
 
-`postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`
+`postgres-key-column-types` reads primary-key columns, foreign-key referencing
+columns, enum types, and partition relationships. `postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`
 definitions from the catalog. `postgres-array-columns` reads column `data_type`
 values and enum names from it. A rule that needs more than ordering facts rejects an
 ordering catalog with `schemaCatalogPath <path> has ordering-only coverage; this

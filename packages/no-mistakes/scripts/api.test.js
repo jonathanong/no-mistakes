@@ -823,6 +823,7 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
   for (const fact of ["functions", "enums", "views"]) {
     assert.match(types, new RegExp(`  ${fact}: Record<string, PostgresCatalog`));
   }
+  assert.match(types, /export interface PostgresCatalogTable \{[^}]*partitionOf\?: string;/);
   for (const fact of ["foreignKeys", "checkConstraints", "triggers", "physicalPartition"]) {
     assert.match(types, new RegExp(`  ${fact}: `));
   }

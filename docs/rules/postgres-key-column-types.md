@@ -1,0 +1,105 @@
+# `postgres-key-column-types`
+
+Checks primary-key and foreign-key referencing columns against an explicit list
+of PostgreSQL types from a complete schema catalog. Stable identifiers keep
+joins and references compatible when descriptive text changes. Foreign keys are
+checked on the referencing side; the referenced table's own primary key is
+checked by the primary-key rule. Standalone unique constraints are not checked.
+
+```yaml
+rules:
+  - rule: postgres-key-column-types
+    scope: repository
+    options:
+      schemaCatalogPath: db/schema.json
+      allowedTypes: [uuid, bigint, integer, smallint]
+      allowEnumTypes: true
+      checkPrimaryKeys: true
+      checkForeignKeys: true
+      allow: []
+```
+
+## Why and when
+
+Use this rule when identifiers should use stable, compact types such as UUIDs or
+integers. Natural text keys can remain unique alternate keys, while foreign keys
+refer to the stable primary key. Enum keys are opt-in and useful when the enum
+definition itself is the intended identifier domain.
+
+## What it catches/requires
+
+The rule emits one finding per failing primary-key or foreign-key constraint and
+lists invalid columns in the constraint's declared order. Type names compare
+case-insensitively to `allowedTypes`, using the catalog's exact `data_type`;
+domains do not inherit the type of their base. `character varying(32)` is
+displayed as `character varying` in messages, but type matching retains the
+catalog value. With `allowEnumTypes: true`, catalog enum types are allowed.
+
+Partitioned parent relations are checked. Ordinary partition leaves are skipped
+so their inherited keys do not duplicate findings; a nested partitioned parent
+is still checked. Handwritten formatVersion 2 snapshots may identify such leaves
+with `partitionOf`.
+
+## Options and defaults
+
+`schemaCatalogPath` is required and points to a catalog generated with
+[`no-mistakes postgres catalog`](../cli/postgres.md). `allowedTypes` is a
+required, nonempty list of distinct type names. `allowEnumTypes` defaults to
+`false`. `checkPrimaryKeys` and `checkForeignKeys` both default to `true`, and
+at least one must remain enabled. `allow` defaults to `[]` and accepts only
+`constraint:<table>.<constraint>` entries with a reason. Stale allow entries are
+reported. This catalog rule uses its target allow list; source-line suppression
+directives do not apply to JSON catalog findings.
+
+## Valid example
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {"id": {"dataType": "uuid"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"orders_pkey": {"primary": true}}
+    }
+  }
+}
+```
+
+## Counterexample
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"orders_pkey": {"primary": true}}
+    }
+  }
+}
+```
+
+With `allowedTypes: [uuid]`, this reports:
+
+`schema.json: constraint:orders.orders_pkey: primary key uses text column id; use one of uuid, and keep the string as a unique column`
+
+## Fix
+
+Use an allowed stable key type, then keep a natural text identifier as a
+separate unique constraint. For foreign keys, reference that stable key instead
+of the natural text column.
+
+## Suppression
+
+Add an allow entry for the exact constraint identity and provide a reason. A
+renamed or removed constraint makes the entry stale and reports it.
+
+## Related rules
+
+[`postgres-fk-index`](postgres-fk-index.md) checks whether foreign keys have
+supporting indexes. [`postgres-array-columns`](postgres-array-columns.md) checks
+array-valued columns.

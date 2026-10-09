@@ -1,0 +1,68 @@
+const assert = require("node:assert/strict");
+const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+
+test(
+  "compiled CJS, ESM and prepared checks share catalog key-type findings",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(__dirname, "../../../test-cases/rules/postgres-key-column-types/fixture");
+    for (const scenario of ["pass", "fail", "fail-stale-allow", "pass-suppressed"]) {
+      const root = join(fixture, scenario);
+      const pending = cjs.check({ root });
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(await esm.check({ root }), report);
+      assert.deepEqual(await cjs.check({ root }), report, "catalog findings must be deterministic");
+      const batch = await cjs.analyzeProject({
+        root,
+        reports: [{ type: "check", id: "key-types" }],
+      });
+      assert.equal(batch.reports[0].id, "key-types");
+      assert.deepEqual(batch.reports[0].result, report);
+      if (scenario.startsWith("pass")) {
+        assert.deepEqual(report.rules, []);
+        continue;
+      }
+      assert.ok(report.rules.length > 0);
+      for (const finding of report.rules) {
+        assert.equal(finding.rule, "postgres-key-column-types");
+        assert.equal(finding.file, "schema.json");
+        assert.equal(finding.line, 1);
+        assert.match(finding.target, /^constraint:/);
+        assert.ok(finding.message.includes(finding.target));
+      }
+      if (scenario === "fail-stale-allow") {
+        assert.ok(
+          report.rules.some((finding) =>
+            finding.message.includes("stale postgres-key-column-types allow entry"),
+          ),
+        );
+      } else {
+        assert.ok(report.rules.some((finding) => finding.message.includes("primary key uses")));
+        assert.ok(report.rules.some((finding) => finding.message.includes("foreign key uses")));
+        const byTarget = new Map(report.rules.map((finding) => [finding.target, finding]));
+        assert.equal(
+          byTarget.size,
+          4,
+          "each key gets one finding and partition leaves are skipped",
+        );
+        assert.match(
+          byTarget.get("constraint:composite_orders.composite_orders_pkey").message,
+          /primary key uses text column tag, character varying column locale;/,
+        );
+        assert.match(
+          byTarget.get("constraint:legacy_order.legacy_order_fkey").message,
+          /foreign key uses text column id \(references orders\)/,
+        );
+        for (const parent of ["partitioned_parent", "partitioned_subparent"]) {
+          assert.ok(byTarget.has(`constraint:${parent}.${parent}_pkey`));
+        }
+      }
+    }
+  },
+);

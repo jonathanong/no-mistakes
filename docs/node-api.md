@@ -113,6 +113,14 @@ rule configuration, with no additional Node export.
 
 ## PostgreSQL catalog generation
 
+The `postgres-key-column-types` catalog rule is available through the existing
+async `check()` API and `analyzeProject({ reports: [{ type: "check" }] })`.
+Configure `schemaCatalogPath` and a nonempty `allowedTypes` list in the rule's
+options; `checkPrimaryKeys`, `checkForeignKeys`, and `allowEnumTypes` are also
+available there. Suppress an intentional exception with a reasoned `allow`
+entry targeting the exact `constraint:<table>.<constraint>` identity. The
+catalog schema types are exported from `no-mistakes` for typed callers.
+
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](postgres-source-api.md), including typed INSERT/ON CONFLICT
 expression arbiters (including operator classes and typed parameters), mixed array/composite assignment

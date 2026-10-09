@@ -50,6 +50,7 @@ pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
 pub use super::postgres_generated_column_predicates::RULE_ID as POSTGRES_GENERATED_COLUMN_PREDICATES;
 pub use super::postgres_idempotent_insert::RULE_ID as POSTGRES_IDEMPOTENT_INSERT;
 pub use super::postgres_identifier_length::RULE_ID as POSTGRES_IDENTIFIER_LENGTH;
+pub use super::postgres_key_column_types::RULE_ID as POSTGRES_KEY_COLUMN_TYPES;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;

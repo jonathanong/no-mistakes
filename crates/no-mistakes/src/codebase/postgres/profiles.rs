@@ -39,6 +39,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-column-naming",
     "postgres-finite-text-columns",
     "postgres-array-columns",
+    "postgres-key-column-types",
     "postgres-required-predicates",
     "postgres-explicit-columns",
     "postgres-bounded-statements",

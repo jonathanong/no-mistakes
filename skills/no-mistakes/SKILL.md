@@ -127,6 +127,12 @@ groups, limits, diffs, and deleted-file behavior.
 
 For the schema catalog that PostgreSQL rules read through `schemaCatalogPath`, use `postgres catalog --connection-env DATABASE_URL --schema public --output db/schema.json`. This reads PostgreSQL metadata directly and writes a complete catalog that every catalog rule accepts; add `--coverage ordering` for only the facts conflict and lock ordering need. It is the only catalog format no-mistakes reads, and it does not read application snapshots.
 
+To enforce primary-key and foreign-key column types, configure the
+`postgres-key-column-types` rule with a nonempty `allowedTypes` list and
+`schemaCatalogPath`. Add `allowEnumTypes: true` only when enum keys are
+intentional. Exceptions use reasoned allow entries for the exact
+`constraint:<table>.<constraint>` target; stale targets are reported.
+
 When SQL searches schemas before `pg_temp`, request their complete relation-name
 inventories explicitly with repeated `--search-path-schema` options. Include
 `pg_catalog` when it is omitted from the configured path because PostgreSQL

@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "unterminated_type": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "custom(12"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"unterminated_type_pkey": {"primary": true}}
+    },
+    "non_numeric_modifier": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "custom(foo)"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"non_numeric_modifier_pkey": {"primary": true}}
+    }
+  }
+}

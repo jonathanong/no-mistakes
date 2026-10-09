@@ -81,6 +81,23 @@ pub(super) fn identifier_length(
     }
 }
 
+pub(super) fn key_column_types(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_key_column_types::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => {
+            postgres_key_column_types::check_with_files_and_sources(root, config, files, sources)
+        }
+    }
+}
+
 pub(super) fn require_fk_on_delete(
     root: &Path,
     config: &NoMistakesConfig,

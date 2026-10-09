@@ -1,0 +1,39 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "composite_orders": {
+      "columns": {"id": {"dataType": "uuid"}, "tag": {"dataType": "text"}, "locale": {"dataType": "character varying(32)"}},
+      "primaryKey": {"columns": ["tag", "locale"]},
+      "indexes": {"composite_orders_pkey": {"primary": true}}
+    },
+    "legacy_order": {
+      "columns": {"id": {"dataType": "text"}},
+      "foreignKeys": {"legacy_order_fkey": {"columns": ["id"], "referencedTable": "orders", "referencedColumns": ["id"]}}
+    },
+    "partitioned_parent": {
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"partitioned_parent_pkey": {"primary": true}}
+    },
+    "partitioned_child": {
+      "partitionOf": "partitioned_parent",
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"partitioned_child_pkey": {"primary": true}}
+    },
+    "partitioned_subparent": {
+      "relationKind": "partitioned table",
+      "partitionOf": "partitioned_parent",
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"partitioned_subparent_pkey": {"primary": true}}
+    },
+    "partitioned_grandchild": {
+      "partitionOf": "partitioned_subparent",
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"partitioned_grandchild_pkey": {"primary": true}}
+    }
+  }
+}
