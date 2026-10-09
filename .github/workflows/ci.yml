@@ -183,6 +183,7 @@ jobs:
         with:
           args: >-
             --no-progress
+            --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
             --exclude-path ^fixtures/
             README.md
             docs/**/*.md
