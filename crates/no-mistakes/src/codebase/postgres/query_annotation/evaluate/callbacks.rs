@@ -39,6 +39,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     }
                     let mut scope = self.environment(locals);
                     self.register_mappings(scope, *captured, function, None);
+                    self.register_captured_bindings(scope, *captured, function);
                     self.steps(&function.body, path, &mut scope, depth, false);
                 }
                 _ => {}

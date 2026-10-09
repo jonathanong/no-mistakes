@@ -37,6 +37,7 @@ pub(super) fn collect(
     returned: &[Value],
     objects: &FxHashMap<u64, Vec<Value>>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
     let mut found = Reachable::default();
     found.pending_env.extend(0..originals);
@@ -46,6 +47,9 @@ pub(super) fn collect(
     while !found.pending_env.is_empty() || !found.pending_args.is_empty() {
         while let Some(env) = found.pending_env.pop() {
             if found.environments.insert(env) {
+                if let Some(origins) = captured.get(&env) {
+                    found.pending_env.extend(origins.values().copied());
+                }
                 for value in scopes[env].values() {
                     found.value(value);
                 }

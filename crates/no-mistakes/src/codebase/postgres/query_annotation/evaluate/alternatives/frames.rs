@@ -2,6 +2,12 @@ use super::super::{Environment, Value};
 use super::{freshness, reachable};
 use crate::fx::{FxHashMap, FxHashSet};
 
+pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationState<'a> {
+    pub deleted: &'a mut FxHashSet<(u64, Option<usize>)>,
+    pub definite: &'a mut FxHashSet<(u64, usize)>,
+    pub invalidated: &'a mut FxHashSet<u64>,
+}
+
 fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
     match value {
         Value::Function(_, _, env) => {
@@ -28,8 +34,9 @@ pub(super) fn compact(
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     objects: &mut FxHashMap<u64, Vec<Value>>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
+    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) {
-    let reachable = reachable::collect(scopes, original, returned, objects, mapped);
+    let reachable = reachable::collect(scopes, original, returned, objects, mapped, captured);
     let mut retained = reachable
         .environments
         .into_iter()
@@ -69,6 +76,22 @@ pub(super) fn compact(
             }
         })
         .collect();
+    *captured = std::mem::take(captured)
+        .into_iter()
+        .filter_map(|(env, mut origins)| {
+            let key = if env < original {
+                Some(env)
+            } else {
+                indices.get(&env).copied()
+            }?;
+            for origin in origins.values_mut() {
+                if let Some(index) = indices.get(origin) {
+                    *origin = *index;
+                }
+            }
+            Some((key, origins))
+        })
+        .collect();
     freshness::remap(fresh, original, &indices);
     scopes.truncate(original);
     scopes.extend(frames);
@@ -77,15 +100,34 @@ pub(super) fn compact(
 pub(super) fn prune_state(
     scopes: &[FxHashMap<String, Value>],
     returned: &[Value],
-    deleted: &mut FxHashSet<(u64, Option<usize>)>,
-    definite: &mut FxHashSet<(u64, usize)>,
-    invalidated: &mut FxHashSet<u64>,
+    state: MutationState<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     objects: &mut FxHashMap<u64, Vec<Value>>,
+    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) {
-    let reachable = reachable::collect(scopes, scopes.len(), returned, objects, mapped);
+    let reachable = reachable::collect(scopes, scopes.len(), returned, objects, mapped, captured);
     objects.retain(|id, _| reachable.arguments.contains(id));
-    deleted.retain(|(id, _)| reachable.arguments.contains(id));
-    definite.retain(|(id, _)| reachable.arguments.contains(id));
-    invalidated.retain(|id| reachable.identities.contains(id));
+    state
+        .deleted
+        .retain(|(id, _)| reachable.arguments.contains(id));
+    state
+        .definite
+        .retain(|(id, _)| reachable.arguments.contains(id));
+    state
+        .invalidated
+        .retain(|id| reachable.identities.contains(id));
+}
+
+/// Compact temporary evaluation frames before request-local snapshots.
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn prune_unreachable(
+    scopes: &mut Vec<FxHashMap<String, Value>>,
+    original: usize,
+    mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+    objects: &mut FxHashMap<u64, Vec<Value>>,
+    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
+    state: MutationState<'_>,
+    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+) {
+    compact(scopes, original, &mut [], mapped, objects, fresh, captured);
+    prune_state(scopes, &[], state, mapped, objects, captured);
 }

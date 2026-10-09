@@ -1,3 +1,4 @@
+mod bindings;
 mod fresh;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
@@ -159,3 +160,6 @@ mod tests;
 
 #[cfg(test)]
 mod fresh_tests;
+
+#[cfg(test)]
+mod binding_tests;

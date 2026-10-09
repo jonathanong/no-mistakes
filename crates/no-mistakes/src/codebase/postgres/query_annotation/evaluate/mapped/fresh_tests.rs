@@ -47,6 +47,8 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             modules: Default::default(),
             next_builder: 0,
             invalidated_builders: Default::default(),
+            builder_updates: Default::default(),
+            captured_bindings: Default::default(),
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
             argument_objects: Default::default(),

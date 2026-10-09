@@ -77,6 +77,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Value::Prefix(_, _, Some(id)) = replacement else {
             return;
         };
+        self.builder_updates.insert(*id, replacement.clone());
         fn replace(value: &mut Value, id: u64, replacement: &Value) {
             if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
                 *value = replacement.clone();

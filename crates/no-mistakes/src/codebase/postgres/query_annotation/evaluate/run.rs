@@ -8,6 +8,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let file = &self.files[path];
         let globals = file.facts.globals.clone();
         let env = self.module_environment(path);
+        self.prune_snapshot_state(env + 1);
         let unmodeled = file.facts.unmodeled_calls.clone();
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();
@@ -17,6 +18,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let fresh = self.fresh_mapped_parameters.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let builder_updates = self.builder_updates.clone();
+        let captured_bindings = self.captured_bindings.clone();
         for call in unmodeled {
             if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
                 self.scopes.clone_from(&scopes);
@@ -27,6 +30,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.fresh_mapped_parameters.clone_from(&fresh);
                 self.argument_objects.clone_from(&objects);
                 self.definite_deleted_argument_slots.clone_from(&definite);
+                self.builder_updates.clone_from(&builder_updates);
+                self.captured_bindings.clone_from(&captured_bindings);
                 self.expr(&call, path, &env, 16, false);
             }
         }
@@ -44,6 +49,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.fresh_mapped_parameters.clone_from(&fresh);
                 self.argument_objects.clone_from(&objects);
                 self.definite_deleted_argument_slots.clone_from(&definite);
+                self.builder_updates.clone_from(&builder_updates);
+                self.captured_bindings.clone_from(&captured_bindings);
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
@@ -61,3 +68,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "run/tests.rs"]
+mod tests;

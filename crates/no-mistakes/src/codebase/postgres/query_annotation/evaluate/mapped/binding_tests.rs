@@ -5,23 +5,15 @@ use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
 #[test]
-fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
-    for (name, definite) in [
-        ("single.cjs", false),
-        ("both.cjs", true),
-        ("nested.cjs", false),
-        ("logical.cjs", false),
-        (
-            "../helper-tracing-mapped-context/escaped-then-deleted-alternatives.cjs",
-            false,
-        ),
-        (
-            "../helper-tracing-mapped-context/escaped-on-one-then-deleted-alternatives.cjs",
-            false,
-        ),
+fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() {
+    for (name, expected) in [
+        ("live.cjs", Some("SELECT 1")),
+        ("strict.cjs", Some("SELECT 1")),
+        ("shadow.cjs", Some("/* local annotation */ SELECT 1")),
+        ("conditional.cjs", None),
     ] {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-deletion-merge",
+            "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-live-binding/src",
         ).join(name);
         let source = std::fs::read_to_string(&path).unwrap();
         let options = EmbeddedSqlOptions::configured("@app/db", &[]);
@@ -52,21 +44,21 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             captured_bindings: Default::default(),
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
-            fresh_mapped_parameters: Default::default(),
             argument_objects: Default::default(),
             definite_deleted_argument_slots: Default::default(),
+            fresh_mapped_parameters: Default::default(),
         };
         let env = evaluator.module_environment(&path);
         let result = &evaluator.scopes[env]["result"];
-        if definite {
+        if let Some(expected) = expected {
             assert!(
-                matches!(result, Value::Prefix(text, true, None) if text == "/* definite deletion */ SELECT 1"),
+                matches!(result, Value::Prefix(text, true, None) if text == expected),
                 "{name}"
             );
         } else {
             assert!(
-                matches!(result, Value::Unknown),
-                "{name} cannot prove disconnection"
+                !matches!(result, Value::Prefix(_, _, _)),
+                "conditional writes cannot retain old SQL proof"
             );
         }
     }

@@ -501,6 +501,12 @@ export function annotationBeforeConditionalAppend() {
   const ignored = flag ? statement.append(' WHERE 1=1') : statement.append(' LIMIT 1');
   write(statement); // known:original-prefix-survives-alternative-append
 }
+export function earlierAppendRemainsLiveAcrossAlternatives() {
+  const statement = sql`/* prior append before alternatives */ SELECT 1`;
+  const built = statement.append(' WHERE 1=1');
+  const ignored = flag ? statement.append(' LIMIT 1') : statement.append(' LIMIT 2');
+  write(built); // known:prior-canonical-builder-update-survives-alternative-join
+}
 const restCapturedStatement = sql`/* before unsupported rest helper */ SELECT 1`;
 function restHelperMutatesCapture(...args: unknown[]) {
   unknownMutation(restCapturedStatement);

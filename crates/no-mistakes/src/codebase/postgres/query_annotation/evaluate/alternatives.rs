@@ -1,7 +1,9 @@
 //! Alternative arms share input facts, never each other's mutable effects.
-mod frames;
+mod bindings;
+pub(super) mod frames;
 mod freshness;
 mod merge;
+mod prune;
 mod reachable;
 mod values;
 use super::{Environment, Evaluator, Value};
@@ -19,7 +21,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         let scopes = self.scopes.clone();
+        let captured = self.captured_bindings.clone();
+        let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
         let modules = self.modules.clone();
+        let updates = self.builder_updates.clone();
+        let original_ids = self.next_builder;
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
@@ -36,6 +42,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.modules.clone_from(&modules);
+            self.builder_updates.retain(|id, _| *id >= original_ids);
+            self.builder_updates.extend(updates.clone());
+            self.captured_bindings
+                .retain(|frame, _| *frame >= scopes.len());
+            self.captured_bindings.extend(captured.clone());
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
@@ -72,7 +83,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &self.scopes,
             );
             merge::objects(&mut joined, &self.argument_objects, &objects);
-            self.scopes[..scopes.len()].clone_from_slice(&scopes);
+            if let Some(joined) = &mut joined_scopes {
+                bindings::join(joined, &self.scopes, &scopes);
+            } else {
+                joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
+            }
+            self.scopes[..scopes.len()].clone_from_slice(joined_scopes.as_ref().unwrap());
             for (id, slots) in &joined {
                 self.argument_objects.insert(*id, slots.clone());
             }
@@ -83,7 +99,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut self.mapped_arguments,
                 &mut self.argument_objects,
                 &mut self.fresh_mapped_parameters,
+                &mut self.captured_bindings,
             );
+            joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             joined = objects
                 .keys()
                 .filter_map(|id| {
@@ -95,6 +113,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
+        self.builder_updates.retain(|id, _| *id >= original_ids);
+        self.builder_updates.extend(updates);
+        self.captured_bindings
+            .retain(|frame, _| *frame >= scopes.len());
+        self.captured_bindings.extend(captured);
+        if let Some(joined) = joined_scopes {
+            self.scopes[..scopes.len()].clone_from_slice(&joined);
+        }
         freshness::restore(
             &mut self.fresh_mapped_parameters,
             scopes.len(),
@@ -115,16 +141,30 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.disconnect_mapped_slot(*id, *index);
         }
         self.definite_deleted_argument_slots = final_definite;
+        self.refresh_captured_bindings();
         // Speculative identities with no surviving aliases cannot affect later reads.
         frames::prune_state(
             &self.scopes,
             &returned,
-            &mut self.deleted_argument_slots,
-            &mut self.definite_deleted_argument_slots,
-            &mut self.invalidated_builders,
+            frames::MutationState {
+                deleted: &mut self.deleted_argument_slots,
+                definite: &mut self.definite_deleted_argument_slots,
+                invalidated: &mut self.invalidated_builders,
+            },
             &self.mapped_arguments,
             &mut self.argument_objects,
+            &self.captured_bindings,
         );
+        let live = reachable::collect(
+            &self.scopes,
+            self.scopes.len(),
+            &returned,
+            &self.argument_objects,
+            &self.mapped_arguments,
+            &self.captured_bindings,
+        );
+        self.builder_updates
+            .retain(|id, _| live.identities.contains(id));
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
         Value::Aggregate(returned)

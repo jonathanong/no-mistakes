@@ -33,6 +33,8 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),

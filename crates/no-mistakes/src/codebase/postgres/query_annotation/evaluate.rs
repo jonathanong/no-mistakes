@@ -56,6 +56,8 @@ pub(super) struct Evaluator<'a, F> {
     pub modules: FxHashMap<PathBuf, Environment>,
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
+    pub builder_updates: FxHashMap<u64, Value>,
+    pub captured_bindings: FxHashMap<Environment, FxHashMap<String, Environment>>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
     pub argument_objects: FxHashMap<u64, Vec<Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,

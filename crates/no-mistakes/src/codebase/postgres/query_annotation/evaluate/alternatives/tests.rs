@@ -34,6 +34,8 @@ fn sequential_alternatives_discard_noncallback_frames() {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
@@ -79,6 +81,8 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
@@ -123,6 +127,8 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
@@ -170,6 +176,8 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
@@ -214,6 +222,8 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
@@ -267,6 +277,8 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         modules: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
@@ -283,4 +295,65 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
     assert!(evaluator.invalidated_builders.is_empty());
     assert!(evaluator.deleted_argument_slots.is_empty());
     assert!(evaluator.mapped_arguments.is_empty());
+}
+
+#[test]
+fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-live-binding/src/nested-scalars.cjs",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let options = EmbeddedSqlOptions::configured("@app/db", &[]);
+    let facts = crate::ast::with_program(&path, &source, |program, _| {
+        query_annotation::collect(program, &source, &options)
+    })
+    .unwrap();
+    let ts = TsFileFacts::default();
+    let files = FxHashMap::from_iter([(
+        path.clone(),
+        File {
+            facts: &facts,
+            ts: &ts,
+            executors: Default::default(),
+            imports: Default::default(),
+            exports: Default::default(),
+        },
+    )]);
+    let mut evaluator = Evaluator {
+        files: &files,
+        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        events: Default::default(),
+        scopes: Vec::new(),
+        modules: Default::default(),
+        next_builder: 0,
+        invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
+        deleted_argument_slots: Default::default(),
+        mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
+        argument_objects: Default::default(),
+        definite_deleted_argument_slots: Default::default(),
+    };
+    let root = evaluator.module_environment(&path);
+    for (name, references) in [("scalar", false), ("callback", true)] {
+        let original = vec![FxHashMap::from_iter([(
+            "value".into(),
+            evaluator.scopes[root][name].clone(),
+        )])];
+        let mut joined = original.clone();
+        let current = vec![FxHashMap::from_iter([(
+            "value".into(),
+            super::super::Value::Unknown,
+        )])];
+        super::bindings::join(&mut joined, &current, &original);
+        if references {
+            assert!(matches!(
+                joined[0]["value"],
+                super::super::Value::Aggregate(_)
+            ));
+        } else {
+            assert!(matches!(joined[0]["value"], super::super::Value::Unknown));
+        }
+    }
 }

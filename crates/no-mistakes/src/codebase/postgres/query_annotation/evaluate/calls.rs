@@ -1,4 +1,5 @@
 pub(super) mod scopes;
+mod values;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
@@ -51,22 +52,18 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
     ) -> Value {
         let (depth, generic) = context;
         let target = self.expr(callee, path, env, depth, generic).exposed();
-        let raw_arguments = args
+        let mut raw_arguments = args
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
             .collect::<Vec<_>>();
+        // Later operands can mutate the object an earlier operand returned.
+        self.refresh_arguments(&mut raw_arguments);
         let handled_projection = matches!(callee, Expr::Name(_))
             && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
-        let mut arguments = raw_arguments
+        let arguments = raw_arguments
             .into_iter()
             .map(Value::exposed)
             .collect::<Vec<_>>();
-        for argument in &mut arguments {
-            if matches!(argument, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
-            {
-                *argument = Value::Unknown;
-            }
-        }
         if self.files[path].executors.contains(&start) {
             self.events
                 .entry((path.to_path_buf(), start))
@@ -117,6 +114,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             }
             let mut scope = self.environment(locals);
             self.register_mappings(scope, captured, &function, mapping);
+            self.register_captured_bindings(scope, captured, &function);
             self.steps(&function.body, &function_path, &mut scope, depth, false);
             self.opaque_callbacks(&arguments, depth);
             // Unsupported control flow with possible opaque calls must not
@@ -159,6 +157,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         let mut scope = self.environment(locals);
         self.register_mappings(scope, captured, &function, mapping);
+        self.register_captured_bindings(scope, captured, &function);
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
         // Trace forwarded executor calls, but do not treat a helper's return
         // as immutable SQL when arbitrary effects could mutate its builder.
