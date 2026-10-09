@@ -29,7 +29,7 @@ pub(super) fn deleted(value: &Expression<'_>, source: &str) -> Expr {
             expression(&value.expression, source),
         ],
         Expression::StaticMemberExpression(value) => vec![expression(&value.object, source)],
-        _ => vec![expression(value, source)],
+        _ => return Expr::Opaque(vec![expression(value, source)]),
     };
-    Expr::Opaque(values)
+    Expr::Delete(values)
 }

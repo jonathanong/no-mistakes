@@ -70,11 +70,24 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Value::Prefix(_, _, Some(id)) = replacement else {
             return;
         };
+        fn replace(value: &mut Value, id: u64, replacement: &Value) {
+            if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
+                *value = replacement.clone();
+            } else {
+                match value {
+                    Value::Promise(value) => replace(value, id, replacement),
+                    Value::Arguments(_, values) | Value::Aggregate(values) => {
+                        for value in values {
+                            replace(value, id, replacement);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
         for scope in &mut self.scopes {
             for value in scope.values_mut() {
-                if matches!(value, Value::Prefix(_, _, Some(other)) if other == id) {
-                    *value = replacement.clone();
-                }
+                replace(value, *id, replacement);
             }
         }
     }

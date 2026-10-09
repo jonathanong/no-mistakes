@@ -1,5 +1,6 @@
 mod alternatives;
 mod calls;
+mod delete;
 mod effects;
 mod index;
 mod modules;
@@ -20,6 +21,7 @@ pub(super) enum Value {
     Function(Function, PathBuf, Environment),
     Unknown,
     Unsupported,
+    SlotDeletion,
 }
 pub(super) type Environment = usize;
 pub(super) struct File<'a> {
@@ -160,6 +162,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 args,
                 start,
             } => self.call(callee, args, *start, path, env, (depth, generic)),
+            Expr::Delete(children) => self.deleted(children, path, env, (depth, generic)),
             Expr::Opaque(children) => {
                 let values = children
                     .iter()

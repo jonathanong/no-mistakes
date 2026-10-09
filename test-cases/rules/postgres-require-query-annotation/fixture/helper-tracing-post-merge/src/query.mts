@@ -154,3 +154,54 @@ export function deletingANonReferenceDoesNotMutateArgumentSlots() {
   }
   const ignored = forward('/* untouched slot */ SELECT 1');
 }
+
+export function appendedBuilderRefreshesItsArgumentSlot() {
+  function forward(statement) {
+    const wrapper = { statement };
+    statement.append('/* appended alias */ SELECT 1');
+    write(arguments[0]); // known:appended-argument-slot
+  }
+  const ignored = forward(sql``);
+}
+export async function appendedBuilderRefreshesPromiseAliases() {
+  const statement = sql``;
+  const pending = (async () => statement)();
+  statement.append('/* pending alias */ SELECT 1');
+  write(await pending); // known:appended-promise-alias
+}
+export function deletingSlotPreservesTheReferencedBuilder() {
+  const statement = sql`/* retained builder */ SELECT 1`;
+  function remove(parameter) {
+    const ignored = delete arguments[0];
+    write(parameter); // known:deleted-slot-parameter-alias
+  }
+  const ignored = remove(statement);
+  write(statement); // known:deleted-slot-outer-alias
+}
+export function deletingSlotStillEvaluatesComputedKeyEffects() {
+  const statement = sql`/* key effects */ SELECT 1`;
+  function remove(parameter) {
+    const ignored = delete arguments[unknownMutation(parameter)];
+  }
+  const ignored = remove(statement);
+  write(statement); // unanalyzable:deleted-slot-key-effect
+}
+
+export function standaloneSlotDeletionPreservesReferencedBuilder() {
+  const statement = sql`/* standalone removal */ SELECT 1`;
+  function remove(parameter) {
+    delete arguments[0];
+    write(parameter); // known:standalone-delete-parameter
+    return parameter;
+  }
+  const returned = remove(statement);
+  write(returned); // known:standalone-delete-returned-alias
+}
+export function standaloneSlotDeletionKeepsComputedKeyEffects() {
+  const statement = sql`/* standalone key */ SELECT 1`;
+  function remove(parameter) {
+    delete arguments[unknownMutation(parameter)];
+    write(parameter); // unanalyzable:standalone-delete-key-effect
+  }
+  const ignored = remove(statement);
+}

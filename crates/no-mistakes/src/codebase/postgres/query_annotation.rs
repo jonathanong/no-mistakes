@@ -43,6 +43,7 @@ pub(super) enum Expr {
     Children(Vec<Expr>),
     Alternatives(Vec<Expr>),
     Opaque(Vec<Expr>),
+    Delete(Vec<Expr>),
 }
 
 #[derive(Clone, Debug)]

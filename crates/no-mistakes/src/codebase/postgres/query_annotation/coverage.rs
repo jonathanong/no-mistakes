@@ -23,6 +23,7 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
             Expr::Template(parts)
             | Expr::Children(parts)
             | Expr::Opaque(parts)
+            | Expr::Delete(parts)
             | Expr::Alternatives(parts) => {
                 for part in parts {
                     expr(part, covered);

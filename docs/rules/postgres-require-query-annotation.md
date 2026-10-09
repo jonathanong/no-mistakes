@@ -195,7 +195,9 @@ retain the same builder identity. Static numeric and canonical numeric-string
 indices select the corresponding argument; dynamic indices remain conservative.
 Spread calls have unknown argument positions. Passing the complete argument object
 to opaque code makes its slots unknown, while an already copied immutable value
-retains its value.
+retains its value. Appending a builder refreshes its aliases inside argument
+objects and promises. Deleting an argument slot makes the slot unknown while
+preserving the builder that the slot referenced; computed-key effects still run.
 Untrusted local tags can mutate captured
 builders even when their own bodies use supported straight-line syntax. They can
 also invoke interpolated callbacks, invalidating captured builder prefixes.
