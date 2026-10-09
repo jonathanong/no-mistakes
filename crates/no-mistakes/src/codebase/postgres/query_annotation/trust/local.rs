@@ -17,8 +17,8 @@ pub(super) fn collect(program: &Program<'_>) -> BTreeMap<String, u32> {
             _ => return None,
         };
         let name = function.id.as_ref()?.name.as_str();
-        // Preserve the existing local-tag heuristic only as a legacy fallback.
-        // A candidate never promotes otherwise unknown SQL to a known prefix.
+        // Reuse the existing module-local tag contract with canonical spans.
+        // Shadowed or reassigned bindings cannot inherit its prefix evidence.
         ((name.eq_ignore_ascii_case("sql") || name == "String")
             && !reassigned.contains(name)
             && super::super::super::embedded::walk::resolve::functions::looks_like_tag_implementation(function))

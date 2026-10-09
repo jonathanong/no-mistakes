@@ -1,7 +1,9 @@
 // A type-only name must not replace the runtime String.raw built-in.
 import type { String } from "./types.mjs";
 import { write } from "@app/db";
-import { sharedStatement, mutateSharedStatement } from "./shared-state.mjs";
+import { sharedStatement, mutateSharedStatement, appendSharedStatement } from "./shared-state.mjs";
+import { localAnnotatedStatement, localUnannotatedStatement } from "./local-tag.mjs";
+import { asyncLocalStatement } from "./async-local-tag.mjs";
 import sql, { type SQLStatement } from "sql-template-strings";
 import { annotatedOrdersSql, unannotatedOrdersSql } from "./sql-builders.mjs";
 import defaultFunctionSql from "./default-function.mjs";
@@ -253,4 +255,25 @@ export function importedModuleCaptureMutation() {
   write(sharedStatement()); // known:initial-module-capture
   const ignored = mutateSharedStatement();
   write(sharedStatement()); // unanalyzable:mutated-module-capture
+}
+
+export function importedModuleAppend() {
+  write(appendSharedStatement()); // known:module-append
+}
+export function importedLocalTags() {
+  write(localAnnotatedStatement()); // known:imported-local-tag
+  write(localUnannotatedStatement()); // finding:imported-local-tag-missing
+}
+export function transparentExecutorWrappers() {
+  void write(annotatedOrdersSql()); // known:unary-annotated
+  void write(unannotatedOrdersSql()); // finding:unary-missing
+  !write(annotatedOrdersSql()); // known:unary-not
+  write(unannotatedOrdersSql()) === null; // finding:binary-missing
+  (write(annotatedOrdersSql()), 1); // known:sequence-annotated
+  (0, write(unannotatedOrdersSql())); // finding:sequence-missing
+}
+
+export async function importedAsyncLocalTag() {
+  write(asyncLocalStatement()); // unanalyzable:unawaited-local-tag
+  write(await asyncLocalStatement()); // known:awaited-local-tag
 }

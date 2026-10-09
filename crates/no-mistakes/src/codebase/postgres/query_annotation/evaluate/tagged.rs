@@ -31,30 +31,38 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for part in parts {
             prefix = concat(prefix, self.expr(part, path, env, depth, generic));
         }
-        if self.tag_trusted(tag, path, *env) {
+        let trusted = self.tag_trusted(tag, path, *env);
+        if !trusted {
+            self.invalidate_builders(&values);
+            if let Some(Value::Function(function, _, captured)) = values.first() {
+                if !function.supported {
+                    self.invalidate_captured(*captured, function);
+                }
+            }
+        }
+        let name = if tag == "String.raw" { "String" } else { tag };
+        let legacy = self.files[path].facts.legacy_tag_spans.get(name).is_some_and(|start| {
+            let local = self.scopes[*env].get(name);
+            local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
+        });
+        if trusted || legacy {
             if let Value::Prefix(_, _, id) = &mut prefix {
-                if tag != "String.raw" {
+                if tag != "String.raw" || legacy {
                     *id = Some(self.next_builder);
                     self.next_builder += 1;
                 }
             }
-            return prefix;
-        }
-        self.invalidate_builders(&values);
-        if let Some(Value::Function(function, _, captured)) = values.first() {
-            if !function.supported {
-                self.invalidate_captured(*captured, function);
-            }
-        }
-        let name = if tag == "String.raw" { "String" } else { tag };
-        if let Some(start) = self.files[path].facts.legacy_tag_spans.get(name) {
-            let local = self.scopes[*env].get(name);
-            if local.is_none()
-                || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
+            // Reuse the existing local-tag contract only for this annotation
+            // prefix; no complete-SQL fact is promoted for structural rules.
+            if legacy
+                && matches!(values.first(), Some(Value::Function(function, _, _)) if function.asynchronous)
             {
-                return Value::Unsupported;
+                Value::Promise(Box::new(prefix))
+            } else {
+                prefix
             }
+        } else {
+            Value::Unknown
         }
-        Value::Unknown
     }
 }

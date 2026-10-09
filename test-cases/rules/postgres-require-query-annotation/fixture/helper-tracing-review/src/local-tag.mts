@@ -18,3 +18,6 @@ export function differentLocalTagImplementation() {
 
 // The original module tag retains legacy facts when invoked before any shadow.
 write(sql`/* module local tag */ SELECT 1`); // known:module-local-tag
+
+export function localAnnotatedStatement() { return sql`/* imported local tag */ SELECT 1`; }
+export function localUnannotatedStatement() { return sql`SELECT 1`; }

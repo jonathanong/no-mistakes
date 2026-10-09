@@ -122,6 +122,20 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         Expression::AwaitExpression(value) => {
             Expr::Await(Box::new(expression(&value.argument, source)))
         }
+        Expression::UnaryExpression(value) => {
+            Expr::Children(vec![expression(&value.argument, source)])
+        }
+        Expression::BinaryExpression(value) => Expr::Children(vec![
+            expression(&value.left, source),
+            expression(&value.right, source),
+        ]),
+        Expression::SequenceExpression(value) => Expr::Children(
+            value
+                .expressions
+                .iter()
+                .map(|expr| expression(expr, source))
+                .collect(),
+        ),
         Expression::ArrayExpression(value) => Expr::Children(
             value
                 .elements
