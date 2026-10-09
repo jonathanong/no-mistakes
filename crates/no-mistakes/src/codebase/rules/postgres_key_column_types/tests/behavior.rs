@@ -129,6 +129,28 @@ fn enum_allowance_is_explicit_and_domains_do_not_inherit_allowed_base_types() {
 }
 
 #[test]
+fn allows_a_directly_referenced_enum_from_another_schema_when_enabled() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/key-column-types/catalogs/cross-schema-enum.json");
+    let source = std::fs::read_to_string(path).unwrap();
+    let catalog = SchemaCatalog::from_json(&source).unwrap();
+    let options_with_enum: Options = serde_yaml::from_str(
+        "schemaCatalogPath: schema.json\nallowedTypes: [uuid]\nallowEnumTypes: true\n",
+    )
+    .unwrap();
+    let compiled = compile(&options_with_enum, None).unwrap();
+    assert!(scan(&catalog, &compiled, "schema.json").unwrap().is_empty());
+
+    let options_without_enum: Options =
+        serde_yaml::from_str("schemaCatalogPath: schema.json\nallowedTypes: [uuid]\n").unwrap();
+    let compiled = compile(&options_without_enum, None).unwrap();
+    let findings = scan(&catalog, &compiled, "schema.json").unwrap();
+    assert!(findings.iter().any(|finding| {
+        finding.target.as_deref() == Some("constraint:external_enum_keys.external_enum_keys_pkey")
+    }));
+}
+
+#[test]
 fn allowed_types_match_catalog_values_before_message_display_normalization() {
     let allowed_messages = findings(&format!(
         "{PATH}allowedTypes: [UUID, 'CHARACTER VARYING(32)']\n"
@@ -174,6 +196,35 @@ fn refuses_to_guess_primary_key_constraint_identity_without_primary_index_metada
         error.to_string().contains("regenerate the schema catalog"),
         "{error:#}"
     );
+}
+
+#[test]
+fn refuses_empty_primary_and_foreign_key_column_lists() {
+    for (fixture, expected) in [
+        (
+            "fail-empty-primary",
+            "primary key orders.orders_pkey has no columns",
+        ),
+        (
+            "fail-empty-foreign",
+            "foreign key orders.invalid_fkey has no columns",
+        ),
+    ] {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-key-column-types/fixture")
+            .join(fixture);
+        let source = std::fs::read_to_string(root.join("schema.json")).unwrap();
+        let catalog = SchemaCatalog::from_json(&source).unwrap();
+        let options: Options =
+            serde_yaml::from_str("schemaCatalogPath: schema.json\nallowedTypes: [uuid]\n").unwrap();
+        let compiled = compile(&options, None).unwrap();
+        let error = scan(&catalog, &compiled, "schema.json").unwrap_err();
+        assert!(error.to_string().contains(expected), "{error:#}");
+        assert!(
+            error.to_string().contains("regenerate the schema catalog"),
+            "{error:#}"
+        );
+    }
 }
 
 #[test]

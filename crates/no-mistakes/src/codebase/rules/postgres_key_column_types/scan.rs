@@ -21,6 +21,9 @@ pub(super) fn scan(
                 else {
                     bail!("schemaCatalogPath {path}: table {} has a primary key but no primary index name; regenerate the schema catalog", table.name);
                 };
+                if columns.is_empty() {
+                    bail!("schemaCatalogPath {path}: primary key {}.{} has no columns; regenerate the schema catalog", table.name, name);
+                }
                 add_key_finding(
                     catalog,
                     compiled,
@@ -34,6 +37,9 @@ pub(super) fn scan(
         }
         if compiled.check_foreign_keys {
             for key in &table.foreign_keys {
+                if key.columns.is_empty() {
+                    bail!("schemaCatalogPath {path}: foreign key {}.{} has no columns; regenerate the schema catalog", table.name, key.name);
+                }
                 add_key_finding(
                     catalog,
                     compiled,

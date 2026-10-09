@@ -1,0 +1,13 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "app",
+  "tables": {
+    "external_enum_keys": {
+      "columns": {"id": {"dataType": "shared.priority"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"external_enum_keys_pkey": {"primary": true}}
+    }
+  },
+  "enums": {"shared.priority": {"values": ["low", "high"]}}
+}

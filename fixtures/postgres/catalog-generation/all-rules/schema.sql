@@ -3,6 +3,8 @@
 -- Each object is built to trip one catalog rule enabled in .no-mistakes.yml.
 CREATE SCHEMA shared;
 CREATE TYPE shared.priority AS ENUM ('low', 'high');
+CREATE TYPE shared.unused_priority AS ENUM ('off', 'on');
+CREATE DOMAIN shared.unused_priority_domain AS shared.unused_priority;
 CREATE SCHEMA partition_roots;
 
 CREATE SCHEMA catalog_demo;
@@ -37,6 +39,14 @@ CREATE TABLE accounts (
   CONSTRAINT accounts_email_key UNIQUE (email)
 );
 COMMENT ON TABLE accounts IS 'People and organizations that own orders.';
+CREATE TABLE external_enum_keys (
+  id shared.priority PRIMARY KEY
+);
+COMMENT ON TABLE external_enum_keys IS 'A key using a shared schema enum.';
+CREATE TABLE external_enum_domain_keys (
+  id shared.unused_priority_domain PRIMARY KEY
+);
+COMMENT ON TABLE external_enum_domain_keys IS 'A domain over an external enum is not an enum key.';
 CREATE TRIGGER trigger_accounts_touch BEFORE UPDATE ON accounts
   FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at();
 CREATE TRIGGER trigger_accounts_no_delete BEFORE DELETE ON accounts

@@ -87,3 +87,4 @@ rules:
     options:
       schemaCatalogPath: schema.json
       allowedTypes: [uuid]
+      allowEnumTypes: true

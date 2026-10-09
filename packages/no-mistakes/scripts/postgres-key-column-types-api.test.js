@@ -100,3 +100,28 @@ test(
     }
   },
 );
+
+test(
+  "compiled key-type checks reject catalog keys with empty column lists",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(__dirname, "../../../test-cases/rules/postgres-key-column-types/fixture");
+    for (const [scenario, detail] of [
+      ["fail-empty-primary", "primary key orders.orders_pkey has no columns"],
+      ["fail-empty-foreign", "foreign key orders.invalid_fkey has no columns"],
+    ]) {
+      const root = join(fixture, scenario);
+      const validate = (error) => {
+        assert.ok(error.message.includes("schemaCatalogPath schema.json"));
+        assert.ok(error.message.includes(detail));
+        assert.ok(error.message.includes("regenerate the schema catalog"));
+        return true;
+      };
+      await assert.rejects(cjs.check({ root }), validate);
+      await assert.rejects(esm.check({ root }), validate);
+      await assert.rejects(cjs.analyzeProject({ root, reports: [{ type: "check" }] }), validate);
+    }
+  },
+);
