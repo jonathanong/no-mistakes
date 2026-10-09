@@ -48,11 +48,28 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
         let file = &self.files[path];
         let globals = file.facts.globals.clone();
-        self.module_environment(path);
+        let env = self.module_environment(path);
+        let unmodeled = file.facts.unmodeled_calls.clone();
+        let scopes = self.scopes.clone();
+        let modules = self.modules.clone();
+        let invalidated = self.invalidated_builders.clone();
+        for call in unmodeled {
+            if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
+                self.scopes.clone_from(&scopes);
+                self.modules.clone_from(&modules);
+                self.invalidated_builders.clone_from(&invalidated);
+                self.expr(&call, path, &env, 16, false);
+            }
+        }
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
         for expr in globals.values() {
             if let Expr::Function(function) = expr {
+                // Speculative entrypoints share initialized facts, never effects
+                // from an unrelated function considered earlier in name order.
+                self.scopes.clone_from(&scopes);
+                self.modules.clone_from(&modules);
+                self.invalidated_builders.clone_from(&invalidated);
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
@@ -114,6 +131,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
+            Expr::OpaqueCallback(expr) => match self.expr(expr, path, env, depth, generic) {
+                Value::Function(mut function, path, captured) => {
+                    function.supported = false;
+                    Value::Function(function, path, captured)
+                }
+                _ => Value::Unknown,
+            },
             Expr::Await(expr) => {
                 let mut value = self.expr(expr, path, env, depth, generic);
                 while let Value::Promise(inner) = value {

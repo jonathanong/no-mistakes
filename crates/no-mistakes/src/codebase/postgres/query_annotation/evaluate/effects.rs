@@ -36,7 +36,8 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for step in &function.body {
             match step {
                 crate::codebase::postgres::query_annotation::Step::Bind(name, _)
-                | crate::codebase::postgres::query_annotation::Step::Hoisted(name, _) => {
+                | crate::codebase::postgres::query_annotation::Step::Hoisted(name, _)
+                | crate::codebase::postgres::query_annotation::Step::Var(name) => {
                     shadowed.insert(name.clone());
                 }
                 crate::codebase::postgres::query_annotation::Step::Reserve(names) => {

@@ -1,6 +1,9 @@
-use super::{Expr, Function, Step};
+mod functions;
+use super::{Expr, Step};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{ArrowFunctionBody, BindingPattern, Expression, FormalParameters};
+use functions::function;
+pub(super) use functions::function_expression;
+use oxc_ast::ast::{ArrowFunctionBody, Expression};
 
 pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
     match unwrap_ts_wrappers(expr) {
@@ -129,6 +132,15 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             expression(&value.left, source),
             expression(&value.right, source),
         ]),
+        Expression::LogicalExpression(value) => Expr::Children(vec![
+            expression(&value.left, source),
+            expression(&value.right, source),
+        ]),
+        Expression::ConditionalExpression(value) => Expr::Children(vec![
+            expression(&value.test, source),
+            expression(&value.consequent, source),
+            expression(&value.alternate, source),
+        ]),
         Expression::SequenceExpression(value) => Expr::Children(
             value
                 .expressions
@@ -145,60 +157,5 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 .collect(),
         ),
         _ => Expr::Unknown,
-    }
-}
-
-pub(super) fn function_expression(value: &oxc_ast::ast::Function<'_>, source: &str) -> Expr {
-    let body = value
-        .body
-        .as_ref()
-        .map(|body| super::statements::steps(&body.statements, source))
-        .unwrap_or_default();
-    Expr::Function(function(
-        &value.params,
-        body,
-        !value.generator,
-        value.r#async,
-        value.span.start,
-    ))
-}
-
-fn function(
-    params: &FormalParameters<'_>,
-    body: Vec<Step>,
-    supported: bool,
-    asynchronous: bool,
-    start: u32,
-) -> Function {
-    let names = params
-        .items
-        .iter()
-        .map(|param| match &param.pattern {
-            BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
-            _ => None,
-        })
-        .collect::<Option<Vec<_>>>();
-    let supported = supported
-        && names.is_some()
-        && params.rest.is_none()
-        && !body.iter().any(|step| matches!(step, Step::Unsupported));
-    let names = names.unwrap_or_else(|| {
-        params
-            .items
-            .iter()
-            .flat_map(|param| super::trust::bound_names(&param.pattern))
-            .collect()
-    });
-    let mut names = names;
-    if let Some(rest) = &params.rest {
-        names.extend(super::trust::bound_names(&rest.rest.argument));
-    }
-    Function {
-        start,
-        params: names,
-        body,
-        supported,
-        asynchronous,
-        self_name: None,
     }
 }

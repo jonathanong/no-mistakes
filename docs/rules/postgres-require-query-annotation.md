@@ -174,3 +174,5 @@ administrative script.
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
 [`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row
 locks.
+
+Speculative function entrypoints use isolated initialized module state. Actual helper and callback call chains retain shared builder state. Bare `var` redeclarations preserve existing parameters and hoisted functions. Logical and conditional expressions contribute every syntactically possible helper invocation; helper calls in unsupported syntax remain conservative rather than allowing a favorable modeled call to hide unknown arguments. Diamond star re-exports of the same original binding resolve to that binding.

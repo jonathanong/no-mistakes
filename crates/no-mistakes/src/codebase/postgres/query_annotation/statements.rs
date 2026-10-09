@@ -12,6 +12,7 @@ pub(super) fn collect(
         roots: steps(&program.body, source),
         ..QueryAnnotationFileFacts::default()
     };
+    facts.unmodeled_calls = super::coverage::collect(program, source, &facts.roots);
     for step in &facts.roots {
         if let Step::Bind(name, value) | Step::Hoisted(name, value) = step {
             facts.globals.insert(name.clone(), value.clone());
@@ -36,11 +37,8 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
         .into_keys()
         .collect::<Vec<_>>();
     names.sort();
-    let mut steps = names
-        .into_iter()
-        .map(|name| Step::Bind(name, Expr::Unsupported))
-        .collect::<Vec<_>>();
-    steps.insert(0, Step::Reserve(declared));
+    let mut steps = names.into_iter().map(Step::Var).collect::<Vec<_>>();
+    steps.push(Step::Reserve(declared));
     for statement in statements {
         match statement {
             Statement::FunctionDeclaration(value) => bind_function(value, source, &mut steps),
@@ -124,6 +122,10 @@ fn bind_variables(
     steps: &mut Vec<Step>,
 ) {
     for declaration in &value.declarations {
+        // A bare var redeclaration preserves parameters and hoisted functions.
+        if value.kind == oxc_ast::ast::VariableDeclarationKind::Var && declaration.init.is_none() {
+            continue;
+        }
         let BindingPattern::BindingIdentifier(id) = &declaration.id else {
             steps.push(Step::Unsupported);
             continue;

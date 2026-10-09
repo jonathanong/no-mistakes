@@ -1,5 +1,6 @@
 //! Annotation-only syntactic summaries. These never claim complete SQL for
 //! structural PostgreSQL checks, and are collected from the shared OXC program.
+mod coverage;
 mod evaluate;
 mod exports;
 mod expressions;
@@ -13,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(crate) struct QueryAnnotationFileFacts {
     pub(super) globals: BTreeMap<String, Expr>,
     pub(super) roots: Vec<Step>,
+    pub(super) unmodeled_calls: Vec<Expr>,
     pub(super) trusted_tags: BTreeSet<String>,
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub calls: BTreeMap<u32, Option<String>>,
@@ -27,6 +29,7 @@ pub(super) enum Expr {
     Template(Vec<Expr>),
     Tagged(String, Vec<Expr>, Vec<Expr>),
     Await(Box<Expr>),
+    OpaqueCallback(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {
         callee: Box<Expr>,
@@ -51,6 +54,7 @@ pub(super) struct Function {
 pub(super) enum Step {
     Reserve(Vec<String>),
     Hoisted(String, Expr),
+    Var(String),
     Bind(String, Expr),
     Append(String, Expr),
     Effect(Expr),

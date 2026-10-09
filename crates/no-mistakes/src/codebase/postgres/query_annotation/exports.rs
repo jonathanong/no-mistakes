@@ -26,6 +26,21 @@ pub(super) fn default_steps(export: &ExportDefaultDeclaration<'_>, source: &str)
     }
 }
 
+// ESM ambiguity depends on the originating binding, not the number of paths.
+struct ResolvedExport {
+    identity: Option<(PathBuf, String)>,
+    value: Value,
+}
+
+impl ResolvedExport {
+    fn unknown() -> Self {
+        Self {
+            identity: None,
+            value: Value::Unknown,
+        }
+    }
+}
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn lookup_export(
         &mut self,
@@ -35,6 +50,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Option<Value> {
         self.lookup_export_inner(path, name, depth.min(16), generic, &mut fx_set())
+            .map(|provider| provider.value)
     }
 
     fn lookup_export_inner(
@@ -44,13 +60,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
         visiting: &mut FxHashSet<(PathBuf, String)>,
-    ) -> Option<Value> {
+    ) -> Option<ResolvedExport> {
         let Some(depth) = depth.checked_sub(1) else {
-            return Some(Value::Unknown);
+            return Some(ResolvedExport::unknown());
         };
         let key = (path.to_path_buf(), name.to_string());
         if !visiting.insert(key.clone()) {
-            return Some(Value::Unknown);
+            return Some(ResolvedExport::unknown());
         }
         let value = self.lookup_export_provider(path, name, depth, generic, visiting);
         visiting.remove(&key);
@@ -64,9 +80,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
         visiting: &mut FxHashSet<(PathBuf, String)>,
-    ) -> Option<Value> {
+    ) -> Option<ResolvedExport> {
         let Some(file) = self.files.get(path) else {
-            return Some(Value::Unknown);
+            return Some(ResolvedExport::unknown());
         };
         let binding = file
             .exports
@@ -74,33 +90,45 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .map(|index| file.ts.exported_bindings[*index].clone());
         let stars = file.ts.star_reexport_specifiers.clone();
         if let Some(binding) = binding {
-            return Some(if let Some(specifier) = binding.specifier {
-                match (self.resolve)(&specifier, path) {
+            let import = (!file.facts.globals.contains_key(&binding.local))
+                .then(|| file.imports.get(&binding.local))
+                .flatten()
+                .map(|index| file.ts.imported_bindings[*index].clone());
+            let forwarded = binding
+                .specifier
+                .map(|specifier| (specifier, binding.local.clone()))
+                .or_else(|| import.map(|binding| (binding.specifier, binding.imported)));
+            if let Some((specifier, name)) = forwarded {
+                return Some(match (self.resolve)(&specifier, path) {
                     Some(target) => self
-                        .lookup_export_inner(&target, &binding.local, depth, generic, visiting)
-                        .unwrap_or(Value::Unknown),
-                    None => Value::Unknown,
-                }
-            } else {
-                self.name(path, &binding.local, depth, generic)
+                        .lookup_export_inner(&target, &name, depth, generic, visiting)
+                        .unwrap_or_else(ResolvedExport::unknown),
+                    None => ResolvedExport::unknown(),
+                });
+            }
+            return Some(ResolvedExport {
+                identity: Some((path.to_path_buf(), binding.local.clone())),
+                value: self.name(path, &binding.local, depth, generic),
             });
         }
-        // ESM star exports never forward a default binding. Explicit bindings
-        // above take precedence; multiple star providers remain conservative.
+        // Default is never forwarded by stars; explicit bindings take precedence.
         if name == "default" {
             return None;
         }
-        let mut provider = None;
+        let mut provider: Option<ResolvedExport> = None;
         for specifier in stars {
             let value = match (self.resolve)(&specifier, path) {
                 Some(target) => self.lookup_export_inner(&target, name, depth, generic, visiting),
-                None => Some(Value::Unknown),
+                None => Some(ResolvedExport::unknown()),
             };
             if let Some(value) = value {
-                if provider.is_some() {
-                    return Some(Value::Unknown);
+                if let Some(existing) = &provider {
+                    if existing.identity.is_none() || existing.identity != value.identity {
+                        return Some(ResolvedExport::unknown());
+                    }
+                } else {
+                    provider = Some(value);
                 }
-                provider = Some(value);
             }
         }
         provider

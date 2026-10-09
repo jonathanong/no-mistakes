@@ -32,7 +32,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             prefix = concat(prefix, self.expr(part, path, env, depth, generic));
         }
         let trusted = self.tag_trusted(tag, path, *env);
-        if !trusted {
+        let name = if tag == "String.raw" { "String" } else { tag };
+        let legacy = self.files[path].facts.legacy_tag_spans.get(name).is_some_and(|start| {
+            let local = self.scopes[*env].get(name);
+            local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
+        });
+        if !trusted && !legacy {
             self.invalidate_builders(&values);
             if let Some(Value::Function(function, _, captured)) = values.first() {
                 if !function.supported {
@@ -40,11 +45,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
-        let name = if tag == "String.raw" { "String" } else { tag };
-        let legacy = self.files[path].facts.legacy_tag_spans.get(name).is_some_and(|start| {
-            let local = self.scopes[*env].get(name);
-            local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
-        });
         if trusted || legacy {
             if let Value::Prefix(_, _, id) = &mut prefix {
                 if tag != "String.raw" || legacy {

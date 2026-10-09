@@ -3,6 +3,7 @@ import type { String } from "./types.mjs";
 import { write } from "@app/db";
 import { sharedStatement, mutateSharedStatement, appendSharedStatement } from "./shared-state.mjs";
 import { localAnnotatedStatement, localUnannotatedStatement } from "./local-tag.mjs";
+import { diamondStatement } from "./diamond-barrel.mjs";
 import { asyncLocalStatement } from "./async-local-tag.mjs";
 import sql, { type SQLStatement } from "sql-template-strings";
 import { annotatedOrdersSql, unannotatedOrdersSql } from "./sql-builders.mjs";
@@ -277,3 +278,84 @@ export async function importedAsyncLocalTag() {
   write(asyncLocalStatement()); // unanalyzable:unawaited-local-tag
   write(await asyncLocalStatement()); // known:awaited-local-tag
 }
+
+function executeLogical(statement: unknown) {
+  write(statement); // finding:logical-callsite-conflict
+}
+export function logicalCallsites() {
+  executeLogical(annotatedOrdersSql());
+  flag && executeLogical(unannotatedOrdersSql());
+}
+function executeConditional(statement: unknown) {
+  write(statement); // finding:conditional-callsite-conflict
+}
+export function conditionalCallsites() {
+  executeConditional(annotatedOrdersSql());
+  flag ? executeConditional(unannotatedOrdersSql()) : 0;
+}
+function executeOpaque(statement: unknown) {
+  write(statement); // unanalyzable:unsupported-callsite-conflict
+}
+export function unsupportedCallsites() {
+  executeOpaque(annotatedOrdersSql());
+  if (flag) executeOpaque(unannotatedOrdersSql());
+}
+
+export function importedDiamondBinding() {
+  write(diamondStatement()); // known:diamond-binding
+}
+
+// Unsupported lexical shadows must not invoke the same-name module helper.
+function shadowedOpaqueExecutor(statement: unknown) {
+  write(statement); // known:unmodeled-shadow-does-not-poison
+}
+export function modeledShadowedEntry() { shadowedOpaqueExecutor(annotatedOrdersSql()); }
+export function unsupportedLexicalShadows(shadowedOpaqueExecutor: unknown, ...args: unknown[]) {
+  if (flag) shadowedOpaqueExecutor(unannotatedOrdersSql());
+}
+export function unsupportedLoopShadow() {
+  for (let n = 0, shadowedOpaqueExecutor = other; n < 1; n++) {
+    if (flag) shadowedOpaqueExecutor(unannotatedOrdersSql());
+  }
+  for (const shadowedOpaqueExecutor of []) { shadowedOpaqueExecutor(); }
+  for (const shadowedOpaqueExecutor in {}) { shadowedOpaqueExecutor(); }
+  let shadowedOpaqueExecutor;
+  for (; flag;) { shadowedOpaqueExecutor(); }
+  for (shadowedOpaqueExecutor of []) { shadowedOpaqueExecutor(); }
+  for (shadowedOpaqueExecutor in {}) { shadowedOpaqueExecutor(); }
+}
+export function unsupportedSwitchShadow() {
+  switch (flag) {
+    case true:
+      const shadowedOpaqueExecutor = other;
+      shadowedOpaqueExecutor(unannotatedOrdersSql());
+  }
+}
+export function unsupportedCatchShadow() {
+  try { throw 1; } catch (shadowedOpaqueExecutor) { shadowedOpaqueExecutor(); }
+  try { throw 1; } catch { opaque(); }
+}
+namespace UnsupportedNamespace {
+  const shadowedOpaqueExecutor = other;
+  shadowedOpaqueExecutor();
+}
+class UnsupportedStatic {
+  static { const shadowedOpaqueExecutor = other; shadowedOpaqueExecutor(); }
+}
+export const unsupportedNamedExpression = function shadowedOpaqueExecutor() {
+  if (flag) shadowedOpaqueExecutor();
+};
+export const unsupportedArrowShadow = (shadowedOpaqueExecutor: unknown) => {
+  if (flag) shadowedOpaqueExecutor();
+};
+
+function runOpaqueCallback(statement: unknown, callback: (value: unknown) => unknown) {
+  return callback(statement);
+}
+function opaqueCallbackExecutor(statement: unknown) {
+  write(statement); // unanalyzable:unsupported-callback-callsite-conflict
+}
+export function modeledCallbackEntry() { runOpaqueCallback(annotatedOrdersSql(), opaqueCallbackExecutor); }
+if (flag) runOpaqueCallback(unannotatedOrdersSql(), opaqueCallbackExecutor);
+if (flag) runOpaqueCallback(unannotatedOrdersSql(), (statement) => write(statement)); // unanalyzable:unsupported-inline-callback
+if (flag) runOpaqueCallback(annotatedOrdersSql(), 0);

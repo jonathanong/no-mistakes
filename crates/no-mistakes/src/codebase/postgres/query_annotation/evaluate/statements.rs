@@ -18,9 +18,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Step::Bind(name, _) | Step::Hoisted(name, _) => {
                     self.scopes[*env].insert(name.clone(), Value::Unknown);
                 }
+                Step::Var(name) => {
+                    self.scopes[*env]
+                        .entry(name.clone())
+                        .or_insert(Value::Unsupported);
+                }
                 Step::Reserve(names) => {
                     for name in names {
-                        self.scopes[*env].insert(name.clone(), Value::Unknown);
+                        self.scopes[*env]
+                            .entry(name.clone())
+                            .or_insert(Value::Unknown);
                     }
                 }
                 _ => {}
@@ -88,7 +95,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let value = self.expr(expr, path, env, depth, generic);
                     return if opaque_return { Value::Unknown } else { value };
                 }
-                Step::Unsupported | Step::Reserve(_) | Step::Hoisted(_, _) => {}
+                Step::Unsupported | Step::Reserve(_) | Step::Hoisted(_, _) | Step::Var(_) => {}
             }
         }
         Value::Unknown
