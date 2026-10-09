@@ -33,6 +33,48 @@ function createSparseCallbackAfterEscape(statement) {
   return statement;
 }
 
+function overwriteLiveDenseSlotAfterEscape(statement) {
+  const escaped = opaque(arguments);
+  const ignored = (arguments[0] = () => unknownMutation(statement));
+  return statement;
+}
+
+function createSparseSlotAfterEscape(statement) {
+  const escaped = opaque(arguments);
+  const ignored = (arguments[9] = () => unknownMutation(statement));
+  return statement;
+}
+
+function installDenseLiteralCallbackAfterEscape(statement, second) {
+  const escaped = opaque(arguments);
+  const ignored = (arguments[1] = () => write("SELECT 1")); // finding:dense-literal-callback-after-escape
+  return statement;
+}
+
+function installSparseLiteralCallbackAfterEscape(statement) {
+  const escaped = opaque(arguments);
+  const ignored = (arguments[9] = () => write("SELECT 1")); // finding:sparse-literal-callback-after-escape
+  return statement;
+}
+
+function invokeNestedDenseLiteralInstaller(statement) {
+  function install(second) {
+    const escaped = opaque(arguments);
+    const ignored = (arguments[0] = () => write("SELECT 1")); // finding:nested-dense-literal-callback-after-escape
+  }
+  install("unused");
+  return statement;
+}
+
+function invokeNestedSparseLiteralInstaller(statement) {
+  function install() {
+    const escaped = opaque(arguments);
+    const ignored = (arguments[9] = () => write("SELECT 1")); // finding:nested-sparse-literal-callback-after-escape
+  }
+  install();
+  return statement;
+}
+
 function deletedSlotScalar(statement) {
   delete arguments[0];
   const ignored = (arguments[0] = "replacement");
@@ -137,6 +179,12 @@ write(sloppyReplacement(sql`/* sloppy mapped slot */ SELECT 1`)); // unanalyzabl
 write(deletedSlotCallback(sql`/* deleted slot callback */ SELECT 1`)); // unanalyzable:deleted-slot-callback
 write(recreateDenseCallbackAfterEscape(sql`/* dense callback after escape */ SELECT 1`)); // unanalyzable:dense-callback-after-escape
 write(createSparseCallbackAfterEscape(sql`/* sparse callback after escape */ SELECT 1`)); // unanalyzable:sparse-callback-after-escape
+write(overwriteLiveDenseSlotAfterEscape(sql`/* live dense callback after escape */ SELECT 1`)); // unanalyzable:live-dense-callback-after-escape
+write(createSparseSlotAfterEscape(sql`/* live sparse callback after escape */ SELECT 1`)); // unanalyzable:live-sparse-callback-after-escape
+write(installDenseLiteralCallbackAfterEscape(sql`/* dense literal callback */ SELECT 1`, "unused")); // unanalyzable:dense-literal-callback-after-escape
+write(installSparseLiteralCallbackAfterEscape(sql`/* sparse literal callback */ SELECT 1`)); // unanalyzable:sparse-literal-callback-after-escape
+write(invokeNestedDenseLiteralInstaller(sql`/* nested dense literal callback */ SELECT 1`)); // unanalyzable:nested-dense-literal-callback-after-escape
+write(invokeNestedSparseLiteralInstaller(sql`/* nested sparse literal callback */ SELECT 1`)); // unanalyzable:nested-sparse-literal-callback-after-escape
 write(deletedSlotScalar(sql`/* deleted slot scalar */ SELECT 1`)); // known:deleted-slot-scalar
 write(outOfRangeSlot(sql`/* out of range slot */ SELECT 1`)); // known:out-of-range-slot
 write(outOfRangeStoredValue(sql`/* out of range stored value */ SELECT 1`)); // known:out-of-range-stored-value

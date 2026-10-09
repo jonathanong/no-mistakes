@@ -31,6 +31,7 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
+        active_callback_functions: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

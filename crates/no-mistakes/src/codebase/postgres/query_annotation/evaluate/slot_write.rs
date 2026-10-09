@@ -43,21 +43,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .entry(id)
                 .or_default()
                 .insert(index, stored.clone());
-            if disconnected && previously_invalidated {
+            if previously_invalidated {
                 self.opaque_callbacks(std::slice::from_ref(&stored), depth);
             }
             return Value::Evaluated(Box::new(stored), handled_value);
         };
         *slot = stored.clone();
-        if disconnected {
+        if previously_invalidated {
+            self.opaque_callbacks(std::slice::from_ref(&stored), depth);
+        } else if disconnected {
             // A later write creates an argument property, but it does not
-            // reconnect the deleted formal parameter. If the arguments object
-            // already escaped, preserve callback effects from the new value;
-            // otherwise a later escape will visit the live property.
-            if previously_invalidated {
-                self.opaque_callbacks(std::slice::from_ref(&stored), depth);
-            }
-        } else if !previously_invalidated {
+            // reconnect the deleted formal parameter. A later escape will
+            // visit any callbacks stored in the live property.
+        } else {
             self.write_mapped_argument_slot(id, index, &stored);
         }
         if previously_invalidated {

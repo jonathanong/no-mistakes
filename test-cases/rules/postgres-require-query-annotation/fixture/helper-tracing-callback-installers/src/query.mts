@@ -31,3 +31,10 @@ function duplicateInstaller(value) {
   const consumed = opaque(arguments, installer, installer);
 }
 const duplicate = duplicateInstaller("original");
+
+function separateConsumers(value) {
+  const callback = () => write("SELECT 6"); // finding:separate-consumers
+  const first = opaque(callback);
+  const second = opaque(callback);
+}
+const separate = separateConsumers("original");

@@ -216,8 +216,9 @@ module state initialized in their possible arms, while sibling arms start from
 the same pristine state. Rebinding one variable leaves
 other aliases to its former builder intact. Opaque callback traversal also follows
 possible returned callbacks and newly installed argument-slot callbacks within
-the existing bound. Assigning a callback into a deleted slot does not invoke it
-unless the argument object already escaped.
+the existing bound. Assigning a callback into a live or recreated slot does not invoke it unless
+the argument object already escaped. Reentrant callback traversal shares an
+invocation set within one opaque consumer; separate consumers remain independent.
 Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping

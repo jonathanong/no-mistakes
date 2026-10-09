@@ -33,6 +33,7 @@ fn recreated_deleted_slot_callback_runs_only_after_the_arguments_object_escapes(
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
+        active_callback_functions: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

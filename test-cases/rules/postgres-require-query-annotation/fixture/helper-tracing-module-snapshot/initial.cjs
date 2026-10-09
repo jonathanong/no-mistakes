@@ -1,9 +1,9 @@
 function create(parameter, removed) {
   const escaped = opaque(arguments);
   const deleted = delete arguments[1];
-  // A definite parameter write remains fresh after the prior escape.
-  var parameter = '/* fresh module callback */ SELECT 1';
   const sparse = (arguments[1000] = () => parameter);
+  // Establish freshness after escaped-object callback stores have run.
+  var parameter = '/* fresh module callback */ SELECT 1';
   return () => parameter;
 }
 const callback = create('/* initial parameter */ SELECT 1', 'removed');

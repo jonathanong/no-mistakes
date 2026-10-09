@@ -1,5 +1,5 @@
-use super::{calls::scopes, Evaluator, Value};
-use crate::fx::FxHashMap;
+use super::{calls::scopes, Environment, Evaluator, Value};
+use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
 fn callback_depth(depth: u8) -> impl Iterator<Item = u8> {
@@ -9,11 +9,16 @@ fn callback_depth(depth: u8) -> impl Iterator<Item = u8> {
 #[derive(Default)]
 struct CallbackState {
     objects: FxHashMap<u64, (u8, Vec<Value>)>,
-    functions: FxHashMap<(PathBuf, u32, usize, Vec<String>), u8>,
 }
+
+pub(in crate::codebase::postgres::query_annotation) type CallbackIdentity =
+    (PathBuf, u32, Environment, Vec<String>);
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
+        let outermost = self.active_callback_functions.is_none();
+        self.active_callback_functions
+            .get_or_insert_with(FxHashSet::default);
         let mut state = CallbackState::default();
         self.callback_values(arguments, depth, &mut state);
         // Only objects reached by this consumer participate. Each revisit
@@ -35,6 +40,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 state.objects.get_mut(&id).unwrap().1 = live.clone();
                 self.callback_values(&live, budget, &mut state);
             }
+        }
+        if outermost {
+            self.active_callback_functions = None;
         }
     }
 
@@ -64,35 +72,38 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
                 Value::Function(function, path, captured) => {
                     self.invalidate_captured(*captured, function);
-                    let key = (
-                        path.clone(),
-                        function.start,
-                        *captured,
-                        function.params.clone(),
-                    );
-                    if visited
-                        .functions
-                        .get(&key)
-                        .is_some_and(|budget| *budget >= depth)
-                    {
-                        continue;
-                    }
-                    visited.functions.insert(key, depth);
                     for next_depth in callback_depth(depth) {
-                        let mut locals = scopes::locals(&self.scopes[*captured], function);
-                        if let Some(name) = &function.self_name {
-                            locals.insert(name.clone(), Value::Unknown);
+                        let key = (
+                            path.clone(),
+                            function.start,
+                            *captured,
+                            function.params.clone(),
+                        );
+                        if self
+                            .active_callback_functions
+                            .as_mut()
+                            .expect("active opaque consumer")
+                            .insert(key)
+                        {
+                            let mut locals = scopes::locals(&self.scopes[*captured], function);
+                            if let Some(name) = &function.self_name {
+                                locals.insert(name.clone(), Value::Unknown);
+                            }
+                            scopes::arguments(&mut locals, function, Value::Unknown);
+                            for name in &function.params {
+                                locals.insert(name.clone(), Value::Unknown);
+                            }
+                            let mut scope = self.environment(locals);
+                            self.register_mappings(scope, *captured, function, None);
+                            self.register_captured_bindings(scope, *captured, function);
+                            let returned =
+                                self.steps(&function.body, path, &mut scope, next_depth, false);
+                            self.callback_values(
+                                std::slice::from_ref(&returned),
+                                next_depth,
+                                visited,
+                            );
                         }
-                        scopes::arguments(&mut locals, function, Value::Unknown);
-                        for name in &function.params {
-                            locals.insert(name.clone(), Value::Unknown);
-                        }
-                        let mut scope = self.environment(locals);
-                        self.register_mappings(scope, *captured, function, None);
-                        self.register_captured_bindings(scope, *captured, function);
-                        let returned =
-                            self.steps(&function.body, path, &mut scope, next_depth, false);
-                        self.callback_values(std::slice::from_ref(&returned), next_depth, visited);
                     }
                 }
                 _ => {}

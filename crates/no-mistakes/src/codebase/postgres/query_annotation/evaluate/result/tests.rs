@@ -37,6 +37,7 @@ fn outputs(scenario: &str) -> Vec<(String, Value)> {
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
+        active_callback_functions: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -52,6 +53,7 @@ fn outputs(scenario: &str) -> Vec<(String, Value)> {
         mapped_arguments: Default::default(),
     };
     evaluator.module_environment(&path);
+    assert!(evaluator.active_callback_functions.is_none());
     embedded
         .calls
         .iter()
@@ -173,5 +175,12 @@ fn opaque_consumers_revisit_mutated_argument_slots_without_repeating_installers(
             "{marker}"
         );
     }
-    assert_eq!(values.len(), 5);
+    assert_eq!(
+        values
+            .iter()
+            .filter(|(sql, _)| sql.contains("separate-consumers"))
+            .count(),
+        2
+    );
+    assert_eq!(values.len(), 7);
 }
