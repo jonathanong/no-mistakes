@@ -51,7 +51,25 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let target = self.expr(callee, path, env, depth, generic).exposed();
+        // Keep the member/index base so a non-arrow callee receives it as `this`.
+        // Evaluating the callee expression alone would drop that reference.
+        let (target, receiver) = match callee {
+            Expr::Index(object, index) => {
+                let receiver = self.expr(object, path, env, depth, generic).exposed();
+                (
+                    self.index(receiver.clone(), *index).exposed(),
+                    Some(receiver),
+                )
+            }
+            Expr::Member(object, name) => {
+                let receiver = self.expr(object, path, env, depth, generic).exposed();
+                (
+                    self.member(receiver.clone(), name).exposed(),
+                    Some(receiver),
+                )
+            }
+            other => (self.expr(other, path, env, depth, generic).exposed(), None),
+        };
         let mut raw_arguments = args
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
@@ -112,6 +130,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
             }
+            scopes::bind_this(&mut locals, &function, receiver.as_ref());
             let mut scope = self.environment(locals);
             self.register_mappings(scope, captured, &function, mapping);
             self.register_captured_bindings(scope, captured, &function);
@@ -155,6 +174,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 },
             );
         }
+        scopes::bind_this(&mut locals, &function, receiver.as_ref());
         let mut scope = self.environment(locals);
         self.register_mappings(scope, captured, &function, mapping);
         self.register_captured_bindings(scope, captured, &function);

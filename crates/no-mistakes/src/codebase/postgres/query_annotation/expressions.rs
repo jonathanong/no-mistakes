@@ -14,6 +14,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(value) => Expr::Text(value.value.to_string()),
         Expression::Identifier(value) => Expr::Name(value.name.to_string()),
+        Expression::ThisExpression(_) => Expr::Name("this".to_string()),
         Expression::TemplateLiteral(value) => {
             let mut parts = Vec::new();
             for (index, quasi) in value.quasis.iter().enumerate() {

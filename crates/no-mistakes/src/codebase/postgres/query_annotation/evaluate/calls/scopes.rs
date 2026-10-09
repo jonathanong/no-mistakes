@@ -28,7 +28,8 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn shadow_names(
     }
     if !function.arrow {
         shadowed.names.insert("arguments");
-        shadowed.construction_work += 1;
+        shadowed.names.insert("this");
+        shadowed.construction_work += 2;
     }
     for step in &function.body {
         shadowed.construction_work += 1;
@@ -88,6 +89,19 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn arguments(
         // Arrows retain lexical arguments; regular calls own a fresh object.
         locals.insert("arguments".into(), value);
     }
+}
+
+/// Non-arrow calls take `this` from the member or index receiver. A bare call
+/// has no receiver. Arrows keep the lexical `this` already copied into locals.
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn bind_this(
+    locals: &mut FxHashMap<String, Value>,
+    function: &Function,
+    receiver: Option<&Value>,
+) {
+    if function.arrow {
+        return;
+    }
+    locals.insert("this".into(), receiver.cloned().unwrap_or(Value::Unknown));
 }
 
 #[cfg(test)]
