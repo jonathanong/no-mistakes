@@ -1,3 +1,4 @@
+mod fresh;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use std::path::{Path, PathBuf};
@@ -62,6 +63,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
+        self.inherit_freshness(scope, captured, &mappings);
         if let Some(own) = own {
             mappings.push(own);
         }
@@ -71,6 +73,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     pub(super) fn mapped_parameter_unknown(&self, env: Environment, name: &str) -> bool {
+        if self
+            .fresh_mapped_parameters
+            .get(&env)
+            .is_some_and(|names| names.contains(name))
+        {
+            return false;
+        }
         self.mapped_arguments.get(&env).is_some_and(|mappings| {
             mappings.iter().any(|(id, params)| {
                 params
@@ -101,6 +110,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     !name.is_empty()
                         && params.iter().rposition(|param| param == *name) == Some(index)
                 }) {
+                    if self
+                        .fresh_mapped_parameters
+                        .get(env)
+                        .is_some_and(|names| names.contains(name))
+                    {
+                        continue;
+                    }
                     let value = self.scopes[*env]
                         .get_mut(name)
                         .expect("mapped parameter binding");
@@ -115,9 +131,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     pub(super) fn update_mapped_parameter(&mut self, env: Environment, name: &str, value: &Value) {
+        let mut mapped = false;
         for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
             // With duplicate sloppy parameters, only the last occurrence maps.
             if let Some(index) = params.iter().rposition(|param| param == name) {
+                mapped = true;
                 if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
                     // Callback and container values retain their modeled identities;
                     // opaque consumers must still see their captures and aliases.
@@ -127,8 +145,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
+        if mapped {
+            self.fresh_mapped_parameters
+                .entry(env)
+                .or_default()
+                .insert(name.to_string());
+        }
     }
 }
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod fresh_tests;

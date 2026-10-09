@@ -9,6 +9,7 @@ mod effects;
 mod index;
 mod mapped;
 mod modules;
+mod result;
 mod run;
 mod statements;
 mod tagged;
@@ -22,12 +23,22 @@ use std::path::{Path, PathBuf};
 pub(super) enum Value {
     Prefix(String, bool, Option<u64>),
     Promise(Box<Value>),
+    Evaluated(Box<Value>, bool),
     Aggregate(Vec<Value>),
     Arguments(u64),
     Function(Function, PathBuf, Environment),
     Unknown,
     Unsupported,
     SlotDeletion,
+}
+impl Value {
+    pub(super) fn exposed(self) -> Self {
+        let mut value = self;
+        while let Self::Evaluated(inner, _) = value {
+            value = *inner;
+        }
+        value
+    }
 }
 pub(super) type Environment = usize;
 pub(super) struct File<'a> {
@@ -48,6 +59,7 @@ pub(super) struct Evaluator<'a, F> {
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
     pub argument_objects: FxHashMap<u64, Vec<Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
+    pub fresh_mapped_parameters: FxHashMap<Environment, FxHashSet<String>>,
     pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }
 
@@ -72,14 +84,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return Value::Unknown;
         };
         let value = match expr {
-            Expr::Unknown => Value::Unknown,
+            Expr::Unknown | Expr::Primitive => Value::Unknown,
             Expr::Unsupported => Value::Unsupported,
             Expr::Text(value) => Value::Prefix(value.clone(), true, None),
-            Expr::Name(name) if self.mapped_parameter_unknown(*env, name) => Value::Unknown,
-            Expr::Name(name) => self.scopes[*env]
-                .get(name)
-                .cloned()
-                .unwrap_or_else(|| self.name(path, name, depth, generic)),
+            Expr::Name(name) => self.mapped_parameter_value(*env, name).unwrap_or_else(|| {
+                self.scopes[*env]
+                    .get(name)
+                    .cloned()
+                    .unwrap_or_else(|| self.name(path, name, depth, generic))
+            }),
             Expr::Function(function) => {
                 // Request-owned scope IDs retain live bindings without recursive
                 // closure copies or reference cycles between sibling functions.
@@ -93,7 +106,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 prefix
             }
             Expr::Append(base, tail) => {
-                let base = self.expr(base, path, env, depth, generic);
+                let base = self.expr(base, path, env, depth, generic).exposed();
                 let tail = self.expr(tail, path, env, depth, generic);
                 let base = if matches!(&base, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
                 {
@@ -108,21 +121,25 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
+            Expr::Sequence(parts) => self.sequence(parts, path, env, (depth, generic)),
+            Expr::Discard(expr) => self.discard(expr, path, env, (depth, generic)),
             Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
             Expr::Spread(expr) => {
                 Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)])
             }
-            Expr::OpaqueCallback(expr) => match self.expr(expr, path, env, depth, generic) {
-                Value::Function(mut function, path, captured) => {
-                    function.supported = false;
-                    Value::Function(function, path, captured)
+            Expr::OpaqueCallback(expr) => {
+                match self.expr(expr, path, env, depth, generic).exposed() {
+                    Value::Function(mut function, path, captured) => {
+                        function.supported = false;
+                        Value::Function(function, path, captured)
+                    }
+                    _ => Value::Unknown,
                 }
-                _ => Value::Unknown,
-            },
+            }
             Expr::Await(expr) => {
-                let mut value = self.expr(expr, path, env, depth, generic);
+                let mut value = self.expr(expr, path, env, depth, generic).exposed();
                 while let Value::Promise(inner) = value {
-                    value = *inner;
+                    value = inner.exposed();
                 }
                 value
             }
@@ -135,6 +152,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.deleted(children, *index, path, env, (depth, generic))
             }
             Expr::Opaque(children) => {
+                self.invalidate_opaque_mapped_names(children, *env);
                 let values = children
                     .iter()
                     .map(|child| self.expr(child, path, env, depth, generic))
@@ -144,11 +162,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Value::Unknown
             }
             Expr::Member(object, name) => {
-                let value = self.expr(object, path, env, depth, generic);
+                let value = self.expr(object, path, env, depth, generic).exposed();
                 self.member(value, name)
             }
             Expr::Index(object, index) => {
-                let value = self.expr(object, path, env, depth, generic);
+                let value = self.expr(object, path, env, depth, generic).exposed();
                 self.index(value, *index)
             }
             Expr::Children(children) => Value::Aggregate(

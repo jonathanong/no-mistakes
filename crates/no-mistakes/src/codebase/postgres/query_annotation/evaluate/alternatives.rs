@@ -1,5 +1,6 @@
 //! Alternative arms share input facts, never each other's mutable effects.
 mod frames;
+mod freshness;
 mod merge;
 mod reachable;
 mod values;
@@ -22,6 +23,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let fresh = self.fresh_mapped_parameters.clone();
+        let mut fresh_joined = fresh.clone();
         let mut definite_common = None;
         let mut private_definite = FxHashSet::default();
         let mut joined = crate::fx::FxHashMap::default();
@@ -36,6 +39,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
+            freshness::restore(&mut self.fresh_mapped_parameters, scopes.len(), &fresh);
             for (id, slots) in &objects {
                 self.argument_objects.insert(*id, slots.clone());
             }
@@ -61,6 +65,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                     );
                 }
             }
+            freshness::unchanged(
+                &mut fresh_joined,
+                &self.fresh_mapped_parameters,
+                &scopes,
+                &self.scopes,
+            );
             merge::objects(&mut joined, &self.argument_objects, &objects);
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             for (id, slots) in &joined {
@@ -72,6 +82,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut returned,
                 &mut self.mapped_arguments,
                 &mut self.argument_objects,
+                &mut self.fresh_mapped_parameters,
             );
             joined = objects
                 .keys()
@@ -84,15 +95,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
+        freshness::restore(
+            &mut self.fresh_mapped_parameters,
+            scopes.len(),
+            &fresh_joined,
+        );
         self.invalidated_builders = original;
         self.deleted_argument_slots = deleted_changed;
         let mut final_definite = definite_common.unwrap_or(definite.clone());
         final_definite.extend(private_definite);
-        let values = changed
-            .into_iter()
-            .map(|id| Value::Prefix(String::new(), false, Some(id)))
-            .collect::<Vec<_>>();
-        self.invalidate_builders(&values);
+        // These identities already represent actual arm effects. Replaying an
+        // arguments escape would wrongly taint values assigned after that escape.
+        self.invalidated_builders.extend(changed.iter().copied());
+        values::apply_taint(&mut self.scopes, &changed);
         // Restored bindings must retain any prior opaque parameter update before
         // the common deletion disconnects them from future argument mutations.
         self.definite_deleted_argument_slots = definite.clone();

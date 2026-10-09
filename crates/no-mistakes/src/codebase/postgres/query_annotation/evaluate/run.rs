@@ -14,6 +14,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let invalidated = self.invalidated_builders.clone();
         let deleted = self.deleted_argument_slots.clone();
         let mapped = self.mapped_arguments.clone();
+        let fresh = self.fresh_mapped_parameters.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
         for call in unmodeled {
@@ -23,6 +24,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.invalidated_builders.clone_from(&invalidated);
                 self.deleted_argument_slots.clone_from(&deleted);
                 self.mapped_arguments.clone_from(&mapped);
+                self.fresh_mapped_parameters.clone_from(&fresh);
                 self.argument_objects.clone_from(&objects);
                 self.definite_deleted_argument_slots.clone_from(&definite);
                 self.expr(&call, path, &env, 16, false);
@@ -39,6 +41,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.invalidated_builders.clone_from(&invalidated);
                 self.deleted_argument_slots.clone_from(&deleted);
                 self.mapped_arguments.clone_from(&mapped);
+                self.fresh_mapped_parameters.clone_from(&fresh);
                 self.argument_objects.clone_from(&objects);
                 self.definite_deleted_argument_slots.clone_from(&definite);
                 let mut values: FxHashMap<String, Value> = function

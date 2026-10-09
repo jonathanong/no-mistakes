@@ -195,7 +195,9 @@ retain the same builder identity. Static numeric and canonical numeric-string
 indices select the corresponding argument; dynamic indices remain conservative.
 In sloppy functions with simple parameters, assigning a parameter updates its
 mapped argument slot; opaque slot mutations make mapped parameters unknown. Strict
-functions keep separate bindings. Deleting a known slot disconnects its mapping
+functions keep separate bindings. A later definite parameter assignment establishes
+its new value until another escape of the argument object makes it uncertain.
+Deleting a known slot disconnects its mapping
 only when every possible branch deletes it. Deletion after an opaque escape
 preserves earlier uncertainty instead of restoring the original parameter value.
 Spread calls have unknown argument positions. Passing the complete argument object
@@ -206,8 +208,10 @@ primitive `length` does not expose its slots. Appending a builder refreshes its 
 objects and promises. Deleting an argument slot makes the slot unknown while
 preserving other slots and the builder that the slot referenced. Deleting a known
 non-index property leaves indexed slots intact; dynamic keys remain conservative. Computed-key
-effects still run, including inside a `void` wrapper. Named function self-bindings
-are shadowed by invocation parameters and the ordinary `arguments` binding.
+effects still run, including inside a `void` wrapper. Comma expressions expose only
+their last value, and unary expressions discard callback values while still
+evaluating their operands' effects. Named function self-bindings are shadowed by
+invocation parameters and the ordinary `arguments` binding.
 Untrusted local tags can mutate captured
 builders even when their own bodies use supported straight-line syntax. They can
 also invoke interpolated callbacks, including callbacks from conditional or logical

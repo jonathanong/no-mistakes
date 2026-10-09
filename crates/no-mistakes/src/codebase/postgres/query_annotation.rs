@@ -25,6 +25,7 @@ pub(crate) struct QueryAnnotationFileFacts {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Expr {
+    Primitive,
     Unknown,
     Unsupported,
     Text(String),
@@ -44,6 +45,8 @@ pub(super) enum Expr {
     },
     Function(Function),
     Children(Vec<Expr>),
+    Sequence(Vec<Expr>),
+    Discard(Box<Expr>),
     Alternatives(Vec<Expr>),
     Opaque(Vec<Expr>),
     Delete(Vec<Expr>, DeleteKey),

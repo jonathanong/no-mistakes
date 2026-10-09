@@ -18,7 +18,7 @@ impl Reachable {
             Value::Prefix(_, _, Some(id)) => {
                 self.identities.insert(*id);
             }
-            Value::Promise(value) => self.value(value),
+            Value::Promise(value) | Value::Evaluated(value, _) => self.value(value),
             Value::Aggregate(values) => {
                 for value in values {
                     self.value(value);

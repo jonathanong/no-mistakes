@@ -12,7 +12,9 @@ fn prefixes<'a>(
         Value::Prefix(text, complete, Some(id)) => {
             found.insert(*id, (text, *complete));
         }
-        Value::Promise(value) => prefixes(value, objects, visited, found, definite),
+        Value::Promise(value) | Value::Evaluated(value, _) => {
+            prefixes(value, objects, visited, found, definite)
+        }
         Value::Aggregate(values) => {
             for value in values {
                 prefixes(value, objects, visited, found, definite);
@@ -61,6 +63,16 @@ pub(super) fn changes(
         });
         if !unchanged {
             changed.insert(id);
+        }
+    }
+}
+
+pub(super) fn apply_taint(scopes: &mut [FxHashMap<String, Value>], changed: &FxHashSet<u64>) {
+    for scope in scopes {
+        for value in scope.values_mut() {
+            if matches!(value, Value::Prefix(_, _, Some(id)) if changed.contains(id)) {
+                *value = Value::Unknown;
+            }
         }
     }
 }

@@ -36,6 +36,7 @@ fn sequential_alternatives_discard_noncallback_frames() {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
@@ -80,6 +81,7 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
@@ -123,6 +125,7 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
@@ -169,6 +172,7 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
@@ -212,6 +216,7 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
@@ -264,6 +269,7 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };

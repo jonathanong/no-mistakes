@@ -8,6 +8,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for value in values {
             self.builder_ids(value, &mut ids);
         }
+        self.invalidate_mapped_freshness(&ids);
         self.invalidated_builders.extend(ids.iter().copied());
         for scope in &mut self.scopes {
             for value in scope.values_mut() {
@@ -23,7 +24,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Prefix(_, _, Some(id)) => {
                 ids.insert(*id);
             }
-            Value::Promise(value) => self.builder_ids(value, ids),
+            Value::Promise(value) | Value::Evaluated(value, _) => self.builder_ids(value, ids),
             Value::Aggregate(values) => {
                 for value in values {
                     self.builder_ids(value, ids);
@@ -81,7 +82,9 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 *value = replacement.clone();
             } else {
                 match value {
-                    Value::Promise(value) => replace(value, id, replacement),
+                    Value::Promise(value) | Value::Evaluated(value, _) => {
+                        replace(value, id, replacement)
+                    }
                     Value::Aggregate(values) => {
                         for value in values {
                             replace(value, id, replacement);

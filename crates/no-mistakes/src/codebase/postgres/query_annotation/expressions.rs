@@ -79,15 +79,16 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             if value.operator == oxc_ast::ast::UnaryOperator::Delete {
                 members::deleted(&value.argument, source)
             } else {
-                Expr::Children(vec![expression(&value.argument, source)])
+                Expr::Discard(Box::new(expression(&value.argument, source)))
             }
         }
+        Expression::NumericLiteral(_) => Expr::Primitive,
         Expression::BinaryExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
             expression(&value.right, source),
         ]),
         // Boolean control values carry no SQL text and have no side effects.
-        Expression::BooleanLiteral(_) => Expr::Children(vec![]),
+        Expression::BooleanLiteral(_) => Expr::Primitive,
         Expression::LogicalExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
             Expr::Alternatives(vec![
@@ -102,7 +103,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 expression(&value.alternate, source),
             ]),
         ]),
-        Expression::SequenceExpression(value) => Expr::Children(
+        Expression::SequenceExpression(value) => Expr::Sequence(
             value
                 .expressions
                 .iter()

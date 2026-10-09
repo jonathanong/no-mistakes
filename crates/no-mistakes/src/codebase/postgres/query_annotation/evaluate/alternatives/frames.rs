@@ -1,5 +1,5 @@
 use super::super::{Environment, Value};
-use super::reachable;
+use super::{freshness, reachable};
 use crate::fx::{FxHashMap, FxHashSet};
 
 fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
@@ -9,7 +9,7 @@ fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
                 *env = *index;
             }
         }
-        Value::Promise(value) => remap(value, indices),
+        Value::Promise(value) | Value::Evaluated(value, _) => remap(value, indices),
         Value::Aggregate(values) => {
             for value in values {
                 remap(value, indices);
@@ -27,6 +27,7 @@ pub(super) fn compact(
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     objects: &mut FxHashMap<u64, Vec<Value>>,
+    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
 ) {
     let reachable = reachable::collect(scopes, original, returned, objects, mapped);
     let mut retained = reachable
@@ -68,6 +69,7 @@ pub(super) fn compact(
             }
         })
         .collect();
+    freshness::remap(fresh, original, &indices);
     scopes.truncate(original);
     scopes.extend(frames);
 }

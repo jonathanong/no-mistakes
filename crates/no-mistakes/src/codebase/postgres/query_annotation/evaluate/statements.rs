@@ -64,7 +64,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for step in steps {
             if let Step::Hoisted(name, expr) = step {
                 let value = if supported {
-                    self.expr(expr, path, env, depth, generic)
+                    self.expr(expr, path, env, depth, generic).exposed()
                 } else {
                     unsupported.clone()
                 };
@@ -77,7 +77,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             match step {
                 Step::Bind(name, expr) => {
                     let value = if supported {
-                        self.expr(expr, path, env, depth, generic)
+                        self.expr(expr, path, env, depth, generic).exposed()
                     } else {
                         unsupported.clone()
                     };
@@ -85,7 +85,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.scopes[*env].insert(name.clone(), value);
                 }
                 Step::Append(name, expr) => {
-                    let tail = self.expr(expr, path, env, depth, generic);
+                    let tail = self.expr(expr, path, env, depth, generic).exposed();
                     let base = self.scopes[*env]
                         .get(name)
                         .cloned()
@@ -118,7 +118,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     }
                 }
                 Step::Return(expr) => {
-                    let value = self.expr(expr, path, env, depth, generic);
+                    let value = self.expr(expr, path, env, depth, generic).exposed();
                     return if opaque_return { Value::Unknown } else { value };
                 }
                 Step::Unsupported
@@ -134,14 +134,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
         match expr {
             Expr::Call { start, .. } => !self.files[path].executors.contains(start),
-            Expr::Template(parts) | Expr::Children(parts) => parts
+            Expr::Template(parts) | Expr::Children(parts) | Expr::Sequence(parts) => parts
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),
             Expr::Tagged(tag, _, _) => !self.tag_trusted(tag, path, env),
             Expr::Await(expr) | Expr::Member(expr, _) | Expr::Index(expr, _) => {
                 self.effect_can_mutate(expr, path, env)
             }
-            Expr::Text(_) | Expr::Name(_) | Expr::Function(_) => false,
+            Expr::Discard(expr) => self.effect_can_mutate(expr, path, env),
+            Expr::Primitive | Expr::Text(_) | Expr::Name(_) | Expr::Function(_) => false,
             _ => true,
         }
     }

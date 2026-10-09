@@ -50,10 +50,16 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let target = self.expr(callee, path, env, depth, generic);
-        let mut arguments = args
+        let target = self.expr(callee, path, env, depth, generic).exposed();
+        let raw_arguments = args
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
+            .collect::<Vec<_>>();
+        let handled_projection = matches!(callee, Expr::Name(_))
+            && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
+        let mut arguments = raw_arguments
+            .into_iter()
+            .map(Value::exposed)
             .collect::<Vec<_>>();
         for argument in &mut arguments {
             if matches!(argument, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
@@ -90,7 +96,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let Value::Function(function, function_path, captured) = target else {
             self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
-            return Value::Unknown;
+            return if handled_projection {
+                Value::Evaluated(Box::new(Value::Unknown), true)
+            } else {
+                Value::Unknown
+            };
         };
         if !function.supported {
             self.invalidate_builders(&arguments);

@@ -50,6 +50,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             invalidated_builders: Default::default(),
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
+            fresh_mapped_parameters: Default::default(),
             argument_objects: Default::default(),
             definite_deleted_argument_slots: Default::default(),
         };

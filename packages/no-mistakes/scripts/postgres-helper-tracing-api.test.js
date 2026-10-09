@@ -174,6 +174,7 @@ test(
       "helper-tracing-alternative-callback",
       "helper-tracing-named-delete",
       "helper-tracing-argument-members",
+      "helper-tracing-discarded-values",
     ]) {
       const root = join(
         __dirname,
