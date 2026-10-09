@@ -162,25 +162,26 @@ test(
   },
 );
 
-test(
-  "compiled helper value contexts retain parameter and arguments ownership",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    for (const scenario of [
-      "helper-tracing-post-merge",
-      "helper-tracing-tag-callback",
-      "helper-tracing-alternative-callback",
-      "helper-tracing-named-delete",
-      "helper-tracing-argument-members",
-      "helper-tracing-discarded-values",
-      "helper-tracing-call-argument-order",
-      "helper-tracing-live-binding",
-      "helper-tracing-argument-slot-write",
-      "helper-tracing-destructuring-alias",
-      "helper-tracing-arm-module",
-    ]) {
+// Keep each saved scenario within the runner's unchanged per-test deadline.
+for (const scenario of [
+  "helper-tracing-post-merge",
+  "helper-tracing-tag-callback",
+  "helper-tracing-alternative-callback",
+  "helper-tracing-named-delete",
+  "helper-tracing-argument-members",
+  "helper-tracing-discarded-values",
+  "helper-tracing-call-argument-order",
+  "helper-tracing-live-binding",
+  "helper-tracing-argument-slot-write",
+  "helper-tracing-destructuring-alias",
+  "helper-tracing-arm-module",
+]) {
+  test(
+    `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
       const root = join(
         __dirname,
         `../../../test-cases/rules/postgres-require-query-annotation/fixture/${scenario}`,
@@ -203,6 +204,6 @@ test(
         const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
         assert.deepEqual(batch.reports[0].result, report);
       }
-    }
-  },
-);
+    },
+  );
+}
