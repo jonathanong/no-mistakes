@@ -194,11 +194,14 @@ inherit it from their enclosing helper, so opaque mutations through that object
 retain the same builder identity. Later arguments can update builder aliases
 already evaluated for the same call. Nested callbacks retain live inherited
 bindings, so a later initialized `var` assignment updates their captured value.
-Unreachable invocation objects are removed before speculative entrypoint snapshots.
+Unreachable invocation objects and frames are removed before speculative entrypoint
+snapshots, including calls interleaved with imported helper initialization.
 Static numeric and canonical numeric-string
 indices select the corresponding argument; dynamic indices remain conservative.
 In sloppy functions with simple parameters, assigning a parameter updates its
-mapped argument slot; opaque slot mutations make mapped parameters unknown. Strict
+mapped argument slot; opaque slot mutations make mapped parameters unknown. Reading
+an immutable parameter through opaque syntax preserves its value; unsupported
+binding writes remain conservative. Strict
 functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping

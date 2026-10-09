@@ -1,5 +1,4 @@
 use super::{Environment, Evaluator, Value};
-use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
 use std::path::{Path, PathBuf};
 
@@ -32,18 +31,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn invalidate_opaque_mapped_names(
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn invalidate_opaque_mapped_targets(
         &mut self,
-        children: &[Expr],
+        targets: &[String],
         env: Environment,
     ) {
         let mut ids = FxHashSet::default();
-        for child in children {
-            if let Expr::Name(name) = child {
-                for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
-                    if params.contains(name) {
-                        ids.insert(*id);
-                    }
+        for name in targets {
+            for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
+                if params.contains(name) {
+                    ids.insert(*id);
                 }
             }
         }

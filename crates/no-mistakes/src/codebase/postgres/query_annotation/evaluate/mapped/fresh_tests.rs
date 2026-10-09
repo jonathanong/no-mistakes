@@ -10,6 +10,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         ("callback.cjs", false),
         ("nested-callbacks.cjs", false),
         ("direct.cjs", true),
+        ("opaque-read.cjs", true),
         ("escape-again.cjs", false),
         ("inherited.cjs", true),
         ("deleted.cjs", true),
@@ -18,6 +19,8 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         ("conditional-escape.cjs", false),
         ("frame.cjs", true),
         ("unsupported-write.cjs", false),
+        ("update-write.cjs", false),
+        ("destructure-write.cjs", false),
     ] {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
             "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-fresh-mapped-parameter",

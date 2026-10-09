@@ -3,6 +3,7 @@ mod children;
 mod functions;
 mod members;
 mod tagged;
+mod writes;
 use super::{Expr, Step};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use functions::function;
@@ -112,6 +113,9 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         ),
         Expression::ArrayExpression(_) | Expression::ObjectExpression(_) => {
             Expr::Children(children::collect(expr, source))
+        }
+        Expression::AssignmentExpression(_) | Expression::UpdateExpression(_) => {
+            writes::collect(expr, source)
         }
         _ => Expr::Opaque(children::collect(expr, source)),
     }

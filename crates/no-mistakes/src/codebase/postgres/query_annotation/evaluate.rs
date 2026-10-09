@@ -153,8 +153,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Delete(children, index) => {
                 self.deleted(children, *index, path, env, (depth, generic))
             }
-            Expr::Opaque(children) => {
-                self.invalidate_opaque_mapped_names(children, *env);
+            Expr::Opaque(children) | Expr::OpaqueWrite { children, .. } => {
+                if let Expr::OpaqueWrite { targets, .. } = expr {
+                    self.invalidate_opaque_mapped_targets(targets, *env);
+                }
                 let values = children
                     .iter()
                     .map(|child| self.expr(child, path, env, depth, generic))

@@ -49,6 +49,10 @@ pub(super) enum Expr {
     Discard(Box<Expr>),
     Alternatives(Vec<Expr>),
     Opaque(Vec<Expr>),
+    OpaqueWrite {
+        children: Vec<Expr>,
+        targets: Vec<String>,
+    },
     Delete(Vec<Expr>, DeleteKey),
 }
 

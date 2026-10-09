@@ -7,8 +7,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
         let file = &self.files[path];
         let globals = file.facts.globals.clone();
-        let env = self.module_environment(path);
-        self.prune_snapshot_state(env + 1);
+        self.module_environment(path);
+        self.prune_snapshot_state();
+        let env = self.modules[path];
         let unmodeled = file.facts.unmodeled_calls.clone();
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();
