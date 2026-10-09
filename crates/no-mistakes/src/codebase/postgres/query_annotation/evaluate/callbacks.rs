@@ -1,4 +1,6 @@
 mod dependencies;
+mod imports;
+mod memo;
 mod state;
 use super::{calls::scopes, Environment, Evaluator, Value};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -11,7 +13,8 @@ fn callback_depth(depth: u8) -> impl Iterator<Item = u8> {
 #[derive(Default)]
 struct CallbackState {
     objects: FxHashMap<u64, (u8, Vec<Value>)>,
-    functions: FxHashMap<CallbackIdentity, (u8, Value, state::Snapshot)>,
+    functions: FxHashMap<CallbackIdentity, (u8, Value, std::sync::Arc<state::Snapshot>)>,
+    memo: memo::Memo,
 }
 
 pub(in crate::codebase::postgres::query_annotation) type CallbackIdentity =
@@ -37,17 +40,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     (live != *previous).then_some((*id, (*budget).min(revisit_depth), live))
                 })
                 .collect::<Vec<_>>();
-            let mut callbacks = state
+            let functions = state
                 .functions
                 .iter()
-                .filter_map(|(key, (budget, value, before))| {
-                    (matches!(value, Value::Function(function, _, captured) if self.callback_snapshot(*captured, function) != *before)).then_some((
-                        key.clone(),
-                        (*budget).min(revisit_depth),
-                        value.clone(),
-                    ))
+                .map(|(key, (budget, value, before))| {
+                    (key.clone(), *budget, value.clone(), before.clone())
                 })
                 .collect::<Vec<_>>();
+            let mut comparison = memo::Memo::default();
+            let mut callbacks = Vec::new();
+            for (key, budget, value, before) in functions {
+                if let Value::Function(function, path, captured) = &value {
+                    let current = self.memoized_callback_snapshot(
+                        path,
+                        *captured,
+                        function,
+                        budget,
+                        &mut comparison,
+                    );
+                    if current != before {
+                        callbacks.push((key, budget.min(revisit_depth), value));
+                    }
+                }
+            }
             if changed.is_empty() && callbacks.is_empty() {
                 break;
             }
@@ -98,7 +113,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.callback_values(&live, depth, visited);
                 }
                 Value::Function(function, path, captured) => {
+                    let taints = self.invalidated_builders.len();
                     self.invalidate_captured(*captured, function);
+                    if self.invalidated_builders.len() != taints {
+                        visited.memo.clear();
+                    }
                     for next_depth in callback_depth(depth) {
                         let key = (
                             path.clone(),
@@ -124,14 +143,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                                 .as_mut()
                                 .unwrap()
                                 .insert(key.clone());
-                            visited.functions.insert(
-                                key.clone(),
-                                (
-                                    depth,
-                                    value.clone(),
-                                    self.callback_snapshot(*captured, function),
-                                ),
+                            let snapshot = self.memoized_callback_snapshot(
+                                path,
+                                *captured,
+                                function,
+                                depth,
+                                &mut visited.memo,
                             );
+                            visited
+                                .functions
+                                .insert(key.clone(), (depth, value.clone(), snapshot));
                             let mut locals = scopes::locals(&self.scopes[*captured], function);
                             if let Some(name) = &function.self_name {
                                 locals.insert(name.clone(), Value::Unknown);
@@ -143,8 +164,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                             let mut scope = self.environment(locals);
                             self.register_mappings(scope, *captured, function, None);
                             self.register_captured_bindings(scope, *captured, function);
+                            let mutating = self.callback_may_mutate(function, path, scope);
+                            if mutating {
+                                visited.memo.clear();
+                            }
                             let returned =
                                 self.steps(&function.body, path, &mut scope, next_depth, false);
+                            if mutating {
+                                visited.memo.clear();
+                            }
                             self.callback_values(
                                 std::slice::from_ref(&returned),
                                 next_depth,
@@ -173,3 +201,11 @@ mod dependencies_tests;
 #[cfg(test)]
 #[path = "callbacks/profile_tests.rs"]
 mod profile_tests;
+
+#[cfg(test)]
+#[path = "callbacks/imported_tests.rs"]
+mod imported_tests;
+
+#[cfg(test)]
+#[path = "callbacks/memo_tests.rs"]
+mod memo_tests;

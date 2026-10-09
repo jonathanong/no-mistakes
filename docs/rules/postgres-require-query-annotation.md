@@ -224,6 +224,8 @@ does not suppress a callback in another branch. A callback is considered consume
 after the join only if every possible branch invoked it.
 A stateful callback may be revisited when its observed captured inputs change,
 within the same depth bound and with a guard against reentrant execution.
+Observed inputs include imported helpers' captured module state; shared read
+projections are reused within one callback traversal.
 Writes through a still-mapped formal also expose a newly installed callback when
 its argument object previously escaped. A known unannotated scalar slot value
 remains a violation alongside an unknown mapping possibility, even in ignore mode;
@@ -248,8 +250,9 @@ objects and promises. Deleting an argument slot makes the slot unknown while
 preserving other slots and the builder that the slot referenced. Deleting a known
 non-index property leaves indexed slots intact; dynamic keys remain conservative. Computed-key
 effects still run, including inside a `void` wrapper. Comma expressions expose only
-their last value, and unary expressions discard callback values while still
-evaluating their operands' effects. Named function self-bindings are shadowed by
+their last value. Non-coercive `void`, `typeof`, and `!` expressions discard
+callback values while evaluating operand effects. Numeric `+`, `-`, and `~`
+coercion remains conservative because conversion hooks can mutate operands. Named function self-bindings are shadowed by
 invocation parameters and the ordinary `arguments` binding.
 Untrusted local tags can mutate captured
 builders even when their own bodies use supported straight-line syntax. They can

@@ -16,7 +16,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
     fresh: FxHashMap<Environment, FxHashSet<String>>,
 }
 
-struct View<'a> {
+pub(super) struct View<'a> {
     scopes: &'a [FxHashMap<String, Value>],
     objects: &'a FxHashMap<u64, Vec<Value>>,
     extras: &'a FxHashMap<u64, BTreeMap<usize, Value>>,
@@ -30,11 +30,7 @@ struct View<'a> {
     captured: &'a FxHashMap<Environment, FxHashMap<String, Environment>>,
 }
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn callback_snapshot(
-        &self,
-        captured: Environment,
-        function: &Function,
-    ) -> Snapshot {
+    pub(super) fn callback_view(&self) -> View<'_> {
         View {
             scopes: &self.scopes,
             objects: &self.argument_objects,
@@ -48,18 +44,24 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             mapped: &self.mapped_arguments,
             captured: &self.captured_bindings,
         }
-        .snapshot(captured, function)
     }
 }
 impl View<'_> {
-    fn snapshot(&self, captured: Environment, function: &Function) -> Snapshot {
+    pub(super) fn snapshot(
+        &self,
+        path: &Path,
+        captured: Environment,
+        function: &Function,
+        imports: &FxHashMap<PathBuf, FxHashMap<String, Value>>,
+    ) -> (Snapshot, FxHashSet<(PathBuf, String)>) {
+        let mut missing = FxHashSet::default();
         let mut found = Snapshot::default();
-        let mut functions = vec![(captured, function)];
+        let mut functions = vec![(path, captured, function)];
         let mut visited = FxHashSet::default();
         let mut values = Vec::new();
         while !functions.is_empty() || !values.is_empty() {
-            while let Some((env, function)) = functions.pop() {
-                if !visited.insert((env, function.start)) {
+            while let Some((path, env, function)) = functions.pop() {
+                if !visited.insert((path, env, function.start)) {
                     continue;
                 }
                 let reads = super::dependencies::names(function);
@@ -75,7 +77,13 @@ impl View<'_> {
                         .and_then(|origins| origins.get(&name))
                         .copied()
                         .unwrap_or(env);
-                    if let Some(value) = self.scopes[origin].get(&name) {
+                    let value = self.scopes[origin]
+                        .get(&name)
+                        .or_else(|| imports.get(path).and_then(|bindings| bindings.get(&name)));
+                    if value.is_none() {
+                        missing.insert((path.to_path_buf(), name.clone()));
+                    }
+                    if let Some(value) = value {
                         found
                             .scopes
                             .entry(origin)
@@ -102,7 +110,9 @@ impl View<'_> {
             }
             while let Some(value) = values.pop() {
                 match value {
-                    Value::Function(function, _, env) => functions.push((*env, function)),
+                    Value::Function(function, path, env) => {
+                        functions.push((path.as_path(), *env, function))
+                    }
                     Value::Arguments(id) => self.snapshot_argument(*id, &mut found, &mut values),
                     Value::Prefix(_, _, Some(id)) => {
                         if let Some(value) = self.updates.get(id) {
@@ -118,7 +128,7 @@ impl View<'_> {
                 }
             }
         }
-        found
+        (found, missing)
     }
     fn snapshot_argument<'a>(&'a self, id: u64, found: &mut Snapshot, values: &mut Vec<&'a Value>) {
         if found.objects.contains_key(&id) {
@@ -154,3 +164,7 @@ impl View<'_> {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "state/tests.rs"]
+mod tests;

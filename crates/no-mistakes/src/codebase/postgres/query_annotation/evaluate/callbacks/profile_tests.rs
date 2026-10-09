@@ -62,10 +62,55 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
     let Value::Arguments(id) = evaluator.scopes[captured]["arguments"] else {
         panic!("saved invocation identity");
     };
+    for (name, mutating) in [
+        ("mutationHoisted", false),
+        ("mutationAppend", true),
+        ("mutationTemplate", true),
+        ("mutationSequence", true),
+    ] {
+        let Value::Function(summary, _, env) = &evaluator.scopes[root][name] else {
+            panic!("saved mutation summary");
+        };
+        assert_eq!(
+            evaluator.callback_may_mutate(summary, &path, *env),
+            mutating,
+            "{name}"
+        );
+    }
+    let mut memo = super::memo::Memo::default();
+    let memo_initial =
+        evaluator.memoized_callback_snapshot(&path, captured, &function, 8, &mut memo);
+    assert!(
+        memo_initial
+            == evaluator.memoized_callback_snapshot(&path, captured, &function, 8, &mut memo)
+    );
+    assert_eq!(
+        memo.constructions, 1,
+        "unchanged fresh bindings reuse their snapshot"
+    );
     let initial = evaluator.callback_snapshot(captured, &function);
     assert!(evaluator.fresh_mapped_parameters[&captured].contains("parameter"));
     evaluator.invalidate_mapped_freshness(&crate::fx::FxHashSet::from_iter([id]));
     assert!(!evaluator.fresh_mapped_parameters.contains_key(&captured));
+    let changed_proof =
+        evaluator.memoized_callback_snapshot(&path, captured, &function, 8, &mut memo);
+    assert!(changed_proof != memo_initial);
+    assert_eq!(
+        memo.constructions, 2,
+        "proof revocation invalidates the same memo key"
+    );
+    let previous = evaluator.scopes[captured]
+        .insert("parameter".into(), Value::Unknown)
+        .unwrap();
+    let changed_binding =
+        evaluator.memoized_callback_snapshot(&path, captured, &function, 8, &mut memo);
+    assert!(changed_binding != changed_proof);
+    assert_eq!(
+        memo.constructions, 3,
+        "changed actual root binding invalidates cached snapshot"
+    );
+    evaluator.scopes[captured].insert("parameter".into(), previous);
+
     evaluator.mark_mapped_fresh(captured, "parameter");
     evaluator.invalidated_builders.insert(id);
     assert!(initial != evaluator.callback_snapshot(captured, &function));

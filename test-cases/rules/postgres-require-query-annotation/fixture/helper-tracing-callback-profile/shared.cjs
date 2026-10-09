@@ -1,0 +1,36 @@
+function create(value) {
+  const callback0 = (arguments[1] = () => arguments[0]);
+  const callback1 = (arguments[2] = () => arguments[0]);
+  const callback2 = (arguments[3] = () => arguments[0]);
+  const callback3 = (arguments[4] = () => arguments[0]);
+  const callback4 = (arguments[5] = () => arguments[0]);
+  const callback5 = (arguments[6] = () => arguments[0]);
+  const callback6 = (arguments[7] = () => arguments[0]);
+  const callback7 = (arguments[8] = () => arguments[0]);
+  const callback8 = (arguments[9] = () => arguments[0]);
+  const callback9 = (arguments[10] = () => arguments[0]);
+  const callback10 = (arguments[11] = () => arguments[0]);
+  const callback11 = (arguments[12] = () => arguments[0]);
+  const callback12 = (arguments[13] = () => arguments[0]);
+  const callback13 = (arguments[14] = () => arguments[0]);
+  const callback14 = (arguments[15] = () => arguments[0]);
+  const callback15 = (arguments[16] = () => arguments[0]);
+  const callback16 = (arguments[17] = () => arguments[0]);
+  const callback17 = (arguments[18] = () => arguments[0]);
+  const callback18 = (arguments[19] = () => arguments[0]);
+  const callback19 = (arguments[20] = () => arguments[0]);
+  const callback20 = (arguments[21] = () => arguments[0]);
+  const callback21 = (arguments[22] = () => arguments[0]);
+  const callback22 = (arguments[23] = () => arguments[0]);
+  const callback23 = (arguments[24] = () => arguments[0]);
+  const callback24 = (arguments[25] = () => arguments[0]);
+  const callback25 = (arguments[26] = () => arguments[0]);
+  const callback26 = (arguments[27] = () => arguments[0]);
+  const callback27 = (arguments[28] = () => arguments[0]);
+  const callback28 = (arguments[29] = () => arguments[0]);
+  const callback29 = (arguments[30] = () => arguments[0]);
+  const callback30 = (arguments[31] = () => arguments[0]);
+  const callback31 = (arguments[32] = () => arguments[0]);
+  return arguments;
+}
+const table = create("/* shared callback table */ SELECT 1");

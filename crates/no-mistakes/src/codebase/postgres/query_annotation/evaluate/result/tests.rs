@@ -186,3 +186,25 @@ fn opaque_consumers_revisit_mutated_argument_slots_without_repeating_installers(
     );
     assert_eq!(values.len(), 7);
 }
+
+#[test]
+fn numeric_unary_operators_preserve_coercion_effects() {
+    let values = outputs("helper-tracing-discarded-values");
+    for marker in [
+        "unary plus coercion",
+        "unary negation coercion",
+        "bitwise not coercion",
+    ] {
+        assert!(matches!(event(&values, marker), Value::Unknown), "{marker}");
+    }
+    for marker in [
+        "typeof is noncoercive",
+        "logical not is noncoercive",
+        "void callback",
+    ] {
+        assert!(
+            matches!(event(&values, marker), Value::Prefix(text, true, _) if text.contains("SELECT 1")),
+            "{marker}"
+        );
+    }
+}

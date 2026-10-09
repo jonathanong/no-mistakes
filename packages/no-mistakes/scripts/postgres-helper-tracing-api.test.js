@@ -186,6 +186,7 @@ for (const scenario of [
   "helper-tracing-argument-alias-write",
   "helper-tracing-dynamic-delete-slot-write",
   "helper-tracing-callback-revisit",
+  "helper-tracing-imported-callback-revisit",
 ]) {
   test(
     `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,
@@ -212,14 +213,16 @@ for (const scenario of [
                     scenario,
                   )
                 ? ["src/query.cjs"]
-                : scenario === "helper-tracing-mapped-formal-callback"
-                  ? ["src/query.mts", "src/helper.cjs"]
-                  : [
-                        "helper-tracing-argument-alias-write",
-                        "helper-tracing-dynamic-delete-slot-write",
-                      ].includes(scenario)
-                    ? ["src/query.mts", "src/sloppy.cjs"]
-                    : ["src/query.mts"],
+                : scenario === "helper-tracing-imported-callback-revisit"
+                  ? ["src/query.mts", "src/helper.mts"]
+                  : scenario === "helper-tracing-mapped-formal-callback"
+                    ? ["src/query.mts", "src/helper.cjs"]
+                    : [
+                          "helper-tracing-argument-alias-write",
+                          "helper-tracing-dynamic-delete-slot-write",
+                        ].includes(scenario)
+                      ? ["src/query.mts", "src/sloppy.cjs"]
+                      : ["src/query.mts"],
             config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
           ),
         );

@@ -49,3 +49,23 @@ const arrayFinalStatement = sql`/* array final argument */ SELECT 1`;
 const arrayDiscardedCallback = () => unknownMutation(arrayFinalStatement);
 unknownConsumer((arrayDiscardedCallback, []));
 write(arrayFinalStatement); // unanalyzable:sequence-has-array-final-argument
+
+const unaryPlusStatement = sql`/* unary plus coercion */ SELECT 1`;
+unknownConsumer(+unaryPlusStatement);
+write(unaryPlusStatement); // unanalyzable:unary-plus-may-run-coercion-hooks
+
+const unaryNegationStatement = sql`/* unary negation coercion */ SELECT 1`;
+unknownConsumer(-unaryNegationStatement);
+write(unaryNegationStatement); // unanalyzable:unary-negation-may-run-coercion-hooks
+
+const bitwiseNotStatement = sql`/* bitwise not coercion */ SELECT 1`;
+unknownConsumer(~bitwiseNotStatement);
+write(bitwiseNotStatement); // unanalyzable:bitwise-not-may-run-coercion-hooks
+
+const typeofStatement = sql`/* typeof is noncoercive */ SELECT 1`;
+unknownConsumer(typeof typeofStatement);
+write(typeofStatement); // known:typeof-does-not-run-coercion-hooks
+
+const logicalNotStatement = sql`/* logical not is noncoercive */ SELECT 1`;
+unknownConsumer(!logicalNotStatement);
+write(logicalNotStatement); // known:logical-not-does-not-run-coercion-hooks

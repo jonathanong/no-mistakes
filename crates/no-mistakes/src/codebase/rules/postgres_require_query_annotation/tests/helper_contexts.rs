@@ -83,6 +83,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-argument-alias-write",
         "helper-tracing-dynamic-delete-slot-write",
         "helper-tracing-callback-revisit",
+        "helper-tracing-imported-callback-revisit",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);
@@ -93,6 +94,8 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
             "helper-tracing-mapped-scalar" | "helper-tracing-callback-revisit"
         ) {
             vec!["src/query.cjs"]
+        } else if scenario == "helper-tracing-imported-callback-revisit" {
+            vec!["src/query.mts", "src/helper.mts"]
         } else if scenario == "helper-tracing-mapped-formal-callback" {
             vec!["src/query.mts", "src/helper.cjs"]
         } else if matches!(
