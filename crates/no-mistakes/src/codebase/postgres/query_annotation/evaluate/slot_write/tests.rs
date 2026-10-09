@@ -6,6 +6,9 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{fx_map, FxHashMap};
 use std::path::PathBuf;
 
+#[path = "recreated_tests.rs"]
+mod recreated_tests;
+
 fn fixture(name: &str) -> (PathBuf, query_annotation::QueryAnnotationFileFacts) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-slot-write/src/{name}"
@@ -110,6 +113,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         events: Default::default(),
         scopes: vec![scope],
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 10,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -216,6 +220,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -307,6 +312,7 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -374,6 +380,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

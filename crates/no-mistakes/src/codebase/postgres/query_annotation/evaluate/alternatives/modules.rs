@@ -1,8 +1,10 @@
+mod initials;
 use super::{
     super::{Environment, Value},
     bindings,
 };
 use crate::fx::FxHashMap;
+pub(in crate::codebase::postgres::query_annotation) use initials::Initials;
 use std::path::PathBuf;
 
 #[derive(Default)]

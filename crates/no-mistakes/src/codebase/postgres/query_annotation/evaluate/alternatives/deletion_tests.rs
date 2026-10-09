@@ -46,6 +46,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             events: Default::default(),
             scopes: Vec::new(),
             modules: Default::default(),
+            active_module_initials: Default::default(),
             next_builder: 0,
             invalidated_builders: Default::default(),
             builder_updates: Default::default(),

@@ -6,7 +6,7 @@ mod extras;
 pub(super) mod frames;
 mod freshness;
 mod merge;
-mod modules;
+pub(super) mod modules;
 mod prune;
 mod reachable;
 mod values;
@@ -28,6 +28,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let captured = self.captured_bindings.clone();
         let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
         let mut modules = self.modules.clone();
+        let mut initial = modules::Initials::default();
+        initial.base = scopes.len();
+        initial.known = modules.keys().cloned().collect();
+        self.active_module_initials.push(initial);
         let mut module_states = modules::States::default();
         let extra_slots = self.argument_extra_slots.clone();
         let mut joined_extras = None;
@@ -52,7 +56,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.modules.clone_from(&modules);
-            module_states.restore(&mut self.scopes, &modules);
             self.argument_extra_slots
                 .retain(|id, _| !objects.contains_key(id));
             self.argument_extra_slots.extend(extra_slots.clone());
@@ -71,20 +74,18 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (id, slots) in &objects {
                 self.argument_objects.insert(*id, slots.clone());
             }
+            self.restore_alternative_modules();
+            self.rebuild_captured_readers();
+            self.rebuild_mapped_argument_owners();
             returned.push(self.expr(arm, path, env, depth, generic));
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
-            merge::definite(
+            self.merge_alternative_masks(
+                &objects,
                 &mut definite_common,
                 &mut private_definite,
-                &self.definite_deleted_argument_slots,
-                &objects,
-            );
-            merge::definite(
                 &mut disconnected_common,
                 &mut private_disconnected,
-                &self.disconnected_argument_slots,
-                &objects,
             );
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
@@ -131,6 +132,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 frames::ModuleRoots {
                     original: scopes.len(),
                     modules: &mut self.modules,
+                    initials: &mut self.active_module_initials,
                 },
                 &mut returned,
                 &mut self.mapped_arguments,
@@ -182,6 +184,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.definite_deleted_argument_slots = final_definite;
         self.refresh_captured_bindings();
         // Speculative identities with no surviving aliases cannot affect later reads.
+        self.active_module_initials
+            .pop()
+            .expect("balanced alternatives");
         self.prune_alternative_state(&returned);
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
@@ -197,3 +202,6 @@ mod deletion_tests;
 
 #[cfg(test)]
 mod prefix_tests;
+
+#[cfg(test)]
+mod shared_module_tests;

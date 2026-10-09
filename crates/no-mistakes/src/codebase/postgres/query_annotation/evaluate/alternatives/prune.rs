@@ -94,4 +94,31 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         self.disconnected_argument_slots = final_disconnected;
     }
+    pub(super) fn merge_alternative_masks(
+        &self,
+        objects: &crate::fx::FxHashMap<u64, Vec<super::super::Value>>,
+        definite_common: &mut Option<crate::fx::FxHashSet<(u64, usize)>>,
+        private_definite: &mut crate::fx::FxHashSet<(u64, usize)>,
+        disconnected_common: &mut Option<crate::fx::FxHashSet<(u64, usize)>>,
+        private_disconnected: &mut crate::fx::FxHashSet<(u64, usize)>,
+    ) {
+        let shared = super::merge::shared_ids(
+            objects,
+            self.active_module_initials
+                .last()
+                .expect("active alternatives"),
+        );
+        super::merge::definite(
+            definite_common,
+            private_definite,
+            &self.definite_deleted_argument_slots,
+            &shared,
+        );
+        super::merge::definite(
+            disconnected_common,
+            private_disconnected,
+            &self.disconnected_argument_slots,
+            &shared,
+        );
+    }
 }

@@ -58,6 +58,7 @@ pub(super) struct Evaluator<'a, F> {
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
     pub scopes: Vec<FxHashMap<String, Value>>,
     pub modules: FxHashMap<PathBuf, Environment>,
+    pub active_module_initials: Vec<alternatives::modules::Initials>,
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
     pub builder_updates: FxHashMap<u64, Value>,

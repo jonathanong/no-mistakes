@@ -15,7 +15,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
     pub invalidated: &'a mut FxHashSet<u64>,
 }
 
-fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
+pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
     match value {
         Value::Function(_, _, env) => {
             if let Some(index) = indices.get(env) {
@@ -37,6 +37,7 @@ fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
 pub(super) struct ModuleRoots<'a> {
     pub original: usize,
     pub modules: &'a mut FxHashMap<std::path::PathBuf, Environment>,
+    pub initials: &'a mut [super::modules::Initials],
 }
 
 pub(super) fn compact(
@@ -51,18 +52,28 @@ pub(super) fn compact(
     let original = cache.original;
     let mut roots = (0..original).collect::<Vec<_>>();
     roots.extend(cache.modules.values().copied());
+    let count = returned.len();
+    let mut rooted_values = returned.to_vec();
+    for initial in cache.initials.iter() {
+        roots.extend(initial.roots());
+        rooted_values.extend(initial.arguments().map(Value::Arguments));
+    }
     let indices = compact_from_roots(
         scopes,
         Roots {
             environments: &roots,
             preserved: original,
         },
-        returned,
+        &mut rooted_values,
         mapped,
         arena,
         fresh,
         captured,
     );
+    returned.clone_from_slice(&rooted_values[..count]);
+    for initial in cache.initials.iter_mut() {
+        initial.remap(&indices);
+    }
     for env in cache.modules.values_mut() {
         if let Some(remapped) = indices.get(env) {
             *env = *remapped;

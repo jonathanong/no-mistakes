@@ -32,6 +32,7 @@ fn sequential_alternatives_discard_noncallback_frames() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -48,6 +49,10 @@ fn sequential_alternatives_discard_noncallback_frames() {
     };
     let root = evaluator.module_environment(&path);
     assert_eq!(root, 0);
+    assert!(
+        evaluator.active_module_initials.is_empty(),
+        "module snapshots must remain invocation-local"
+    );
     assert!(
         evaluator.next_builder >= 64,
         "both helper arms must execute"
@@ -83,6 +88,7 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -133,6 +139,7 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -186,6 +193,7 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -236,6 +244,7 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -295,6 +304,7 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -349,6 +359,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

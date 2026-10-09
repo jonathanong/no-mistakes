@@ -82,6 +82,7 @@ pub(crate) fn project(
                     events: BTreeMap::new(),
                     scopes: Vec::new(),
                     modules: crate::fx::fx_map(),
+                    active_module_initials: Default::default(),
                     next_builder: 0,
                     invalidated_builders: Default::default(),
                     builder_updates: Default::default(),

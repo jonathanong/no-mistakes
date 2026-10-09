@@ -1,37 +1,83 @@
 use super::{calls::scopes, Evaluator, Value};
-use crate::fx::FxHashSet;
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 fn callback_depth(depth: u8) -> impl Iterator<Item = u8> {
     depth.checked_sub(1).into_iter()
 }
 
+#[derive(Default)]
+struct CallbackState {
+    objects: FxHashMap<u64, (u8, Vec<Value>)>,
+    functions: FxHashMap<(PathBuf, u32, usize, Vec<String>), u8>,
+}
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
-        self.callback_values(arguments, depth, &mut FxHashSet::default());
+        let mut state = CallbackState::default();
+        self.callback_values(arguments, depth, &mut state);
+        // Only objects reached by this consumer participate. Each revisit
+        // spends the existing depth budget, including cyclic installers.
+        for revisit_depth in (0..depth).rev() {
+            let mut changed = state
+                .objects
+                .iter()
+                .filter_map(|(id, (budget, previous))| {
+                    let live = self.live_callbacks(*id);
+                    (live != *previous).then_some((*id, (*budget).min(revisit_depth), live))
+                })
+                .collect::<Vec<_>>();
+            if changed.is_empty() {
+                break;
+            }
+            changed.sort_unstable_by_key(|(id, _, _)| *id);
+            for (id, budget, live) in changed {
+                state.objects.get_mut(&id).unwrap().1 = live.clone();
+                self.callback_values(&live, budget, &mut state);
+            }
+        }
     }
 
-    fn callback_values(&mut self, values: &[Value], depth: u8, visited: &mut FxHashSet<u64>) {
+    fn live_callbacks(&self, id: u64) -> Vec<Value> {
+        self.argument_slots(id)
+            .filter(|(index, _)| !self.definite_deleted_argument_slots.contains(&(id, *index)))
+            .map(|(_, value)| value.clone())
+            .collect()
+    }
+
+    fn callback_values(&mut self, values: &[Value], depth: u8, visited: &mut CallbackState) {
         for value in values {
             match value {
                 Value::Aggregate(values) => self.callback_values(values, depth, visited),
                 Value::Promise(value) | Value::Evaluated(value, _) => {
                     self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
                 }
-                Value::Arguments(id) if visited.insert(*id) => {
-                    let live = self
-                        .argument_slots(*id)
-                        .filter(|(index, _)| {
-                            !self
-                                .definite_deleted_argument_slots
-                                .contains(&(*id, *index))
-                        })
-                        .map(|(_, value)| value.clone())
-                        .collect::<Vec<_>>();
+                Value::Arguments(id)
+                    if visited
+                        .objects
+                        .get(id)
+                        .is_none_or(|(budget, _)| *budget < depth) =>
+                {
+                    let live = self.live_callbacks(*id);
+                    visited.objects.insert(*id, (depth, live.clone()));
                     self.callback_values(&live, depth, visited);
                 }
                 Value::Function(function, path, captured) => {
                     self.invalidate_captured(*captured, function);
+                    let key = (
+                        path.clone(),
+                        function.start,
+                        *captured,
+                        function.params.clone(),
+                    );
+                    if visited
+                        .functions
+                        .get(&key)
+                        .is_some_and(|budget| *budget >= depth)
+                    {
+                        continue;
+                    }
+                    visited.functions.insert(key, depth);
                     for next_depth in callback_depth(depth) {
                         let mut locals = scopes::locals(&self.scopes[*captured], function);
                         if let Some(name) = &function.self_name {

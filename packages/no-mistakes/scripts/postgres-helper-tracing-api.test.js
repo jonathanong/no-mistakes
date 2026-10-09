@@ -177,6 +177,10 @@ for (const scenario of [
   "helper-tracing-arm-module",
   "helper-tracing-argument-length",
   "helper-tracing-returned-callbacks",
+  "helper-tracing-deleted-slot-callback",
+  "helper-tracing-module-sibling",
+  "helper-tracing-module-sibling-reverse",
+  "helper-tracing-callback-installers",
 ]) {
   test(
     `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,

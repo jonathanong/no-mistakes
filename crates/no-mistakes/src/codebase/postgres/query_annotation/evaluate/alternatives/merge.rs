@@ -41,19 +41,19 @@ pub(super) fn definite(
     common: &mut Option<FxHashSet<(u64, usize)>>,
     private: &mut FxHashSet<(u64, usize)>,
     current: &FxHashSet<(u64, usize)>,
-    original: &FxHashMap<u64, Vec<Value>>,
+    shared: &FxHashSet<u64>,
 ) {
     // An arm-created identity exists only on that arm, so its deletions remain
     // definite whenever that object is returned. Shared objects need intersection.
     private.extend(
         current
             .iter()
-            .filter(|(id, _)| !original.contains_key(id))
+            .filter(|(id, _)| !shared.contains(id))
             .copied(),
     );
     let shared = current
         .iter()
-        .filter(|(id, _)| original.contains_key(id))
+        .filter(|(id, _)| shared.contains(id))
         .copied()
         .collect::<FxHashSet<_>>();
     if let Some(common) = common {
@@ -71,4 +71,13 @@ pub(super) fn value(before: Value, after: Value) -> Value {
     alternatives(before, &mut values);
     alternatives(after, &mut values);
     Value::Aggregate(values)
+}
+
+pub(super) fn shared_ids(
+    objects: &FxHashMap<u64, Vec<Value>>,
+    initial: &super::modules::Initials,
+) -> FxHashSet<u64> {
+    let mut shared = objects.keys().copied().collect::<FxHashSet<_>>();
+    shared.extend(initial.arguments());
+    shared
 }

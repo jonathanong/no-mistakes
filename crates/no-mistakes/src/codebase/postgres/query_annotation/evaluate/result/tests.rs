@@ -36,6 +36,7 @@ fn outputs(scenario: &str) -> Vec<(String, Value)> {
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
+        active_module_initials: Default::default(),
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -154,5 +155,23 @@ fn opaque_consumers_follow_returned_callbacks_with_bounded_recursion() {
         event(&values, "returned-callback-capture"),
         Value::Unknown
     ));
+    assert_eq!(values.len(), 5);
+}
+
+#[test]
+fn opaque_consumers_revisit_mutated_argument_slots_without_repeating_installers() {
+    let values = outputs("helper-tracing-callback-installers");
+    for (marker, text) in [
+        ("object-first", "SELECT 1"),
+        ("installer-first", "SELECT 2"),
+        ("cyclic-container", "SELECT 3"),
+        ("duplicate-installed-callback", "SELECT 4"),
+        ("duplicate-installer-body", "SELECT 5"),
+    ] {
+        assert!(
+            matches!(event(&values, marker), Value::Prefix(sql, true, _) if sql == text),
+            "{marker}"
+        );
+    }
     assert_eq!(values.len(), 5);
 }

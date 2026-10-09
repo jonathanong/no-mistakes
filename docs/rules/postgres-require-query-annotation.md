@@ -212,9 +212,12 @@ resizing the invocation object; storing a reference does not mutate its builder.
 Unsupported assignments evaluate their RHS before invalidating written bindings.
 Destructuring targets are bindings, while computed keys, defaults, and member
 targets retain their evaluation effects. Conditional callbacks retain imported
-module state initialized in their possible arms. Rebinding one variable leaves
+module state initialized in their possible arms, while sibling arms start from
+the same pristine state. Rebinding one variable leaves
 other aliases to its former builder intact. Opaque callback traversal also follows
-possible returned callbacks within the existing bound.
+possible returned callbacks and newly installed argument-slot callbacks within
+the existing bound. Assigning a callback into a deleted slot does not invoke it
+unless the argument object already escaped.
 Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping

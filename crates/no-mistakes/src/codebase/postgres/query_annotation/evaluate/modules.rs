@@ -29,6 +29,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 _ => {}
             }
         }
+        self.record_alternative_module_initial(path, env);
         env
     }
 }
