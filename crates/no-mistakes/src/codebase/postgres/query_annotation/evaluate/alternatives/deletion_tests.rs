@@ -11,6 +11,14 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
         ("both.cjs", true),
         ("nested.cjs", false),
         ("logical.cjs", false),
+        (
+            "../helper-tracing-mapped-context/escaped-then-deleted-alternatives.cjs",
+            false,
+        ),
+        (
+            "../helper-tracing-mapped-context/escaped-on-one-then-deleted-alternatives.cjs",
+            false,
+        ),
     ] {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
             "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-deletion-merge",

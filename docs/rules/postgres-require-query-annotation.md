@@ -196,7 +196,8 @@ indices select the corresponding argument; dynamic indices remain conservative.
 In sloppy functions with simple parameters, assigning a parameter updates its
 mapped argument slot; opaque slot mutations make mapped parameters unknown. Strict
 functions keep separate bindings. Deleting a known slot disconnects its mapping
-only when every possible branch deletes it.
+only when every possible branch deletes it. Deletion after an opaque escape
+preserves earlier uncertainty instead of restoring the original parameter value.
 Spread calls have unknown argument positions. Passing the complete argument object
 to opaque code makes its slots unknown, while an already copied immutable value
 retains its value. Escaped slots still retain possible callback effects, without

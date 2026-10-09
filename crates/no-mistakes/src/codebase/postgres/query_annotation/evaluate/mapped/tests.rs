@@ -143,3 +143,20 @@ fn escaped_arguments_keep_possible_rebound_callbacks() {
         Some(Value::Unknown)
     ));
 }
+
+#[test]
+fn deletion_cannot_restore_parameters_after_opaque_argument_escape() {
+    let values = outputs("escaped-then-deleted.cjs");
+    for name in [
+        "result",
+        "capturedResult",
+        "callbackResult",
+        "duplicateFirstResult",
+        "duplicateLastResult",
+    ] {
+        assert!(matches!(values.get(name), Some(Value::Unknown)), "{name}");
+    }
+    assert!(
+        matches!(values.get("absentResult"), Some(Value::Prefix(text, true, None)) if text == "/* unmapped local */ SELECT 1")
+    );
+}

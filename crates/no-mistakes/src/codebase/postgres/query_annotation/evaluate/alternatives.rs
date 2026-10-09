@@ -86,14 +86,20 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.modules = modules;
         self.invalidated_builders = original;
         self.deleted_argument_slots = deleted_changed;
-        self.definite_deleted_argument_slots = definite_common.unwrap_or(definite);
-        self.definite_deleted_argument_slots
-            .extend(private_definite);
+        let mut final_definite = definite_common.unwrap_or(definite.clone());
+        final_definite.extend(private_definite);
         let values = changed
             .into_iter()
             .map(|id| Value::Prefix(String::new(), false, Some(id)))
             .collect::<Vec<_>>();
         self.invalidate_builders(&values);
+        // Restored bindings must retain any prior opaque parameter update before
+        // the common deletion disconnects them from future argument mutations.
+        self.definite_deleted_argument_slots = definite.clone();
+        for (id, index) in final_definite.difference(&definite) {
+            self.disconnect_mapped_slot(*id, *index);
+        }
+        self.definite_deleted_argument_slots = final_definite;
         // Speculative identities with no surviving aliases cannot affect later reads.
         frames::prune_state(
             &self.scopes,

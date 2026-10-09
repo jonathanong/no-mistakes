@@ -84,6 +84,36 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         })
     }
 
+    pub(super) fn disconnect_mapped_slot(&mut self, id: u64, index: usize) {
+        if !self.invalidated_builders.contains(&id)
+            || self.definite_deleted_argument_slots.contains(&(id, index))
+        {
+            return;
+        }
+        // Disconnection stops future updates; it cannot undo an opaque update
+        // that already reached the parameter through the invocation object.
+        for (env, mappings) in &self.mapped_arguments {
+            for (object, params) in mappings {
+                if *object != id {
+                    continue;
+                }
+                if let Some(name) = params.get(index).filter(|name| {
+                    !name.is_empty()
+                        && params.iter().rposition(|param| param == *name) == Some(index)
+                }) {
+                    let value = self.scopes[*env]
+                        .get_mut(name)
+                        .expect("mapped parameter binding");
+                    let previous = std::mem::replace(value, Value::Unknown);
+                    *value = match previous {
+                        Value::Prefix(_, _, _) | Value::Unknown => Value::Unknown,
+                        previous => Value::Aggregate(vec![Value::Unknown, previous]),
+                    };
+                }
+            }
+        }
+    }
+
     pub(super) fn update_mapped_parameter(&mut self, env: Environment, name: &str, value: &Value) {
         for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
             // With duplicate sloppy parameters, only the last occurrence maps.

@@ -20,6 +20,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // Removing a slot does not mutate the builder it referenced.
             match key {
                 DeleteKey::Index(index) => {
+                    self.disconnect_mapped_slot(*id, index);
                     self.deleted_argument_slots.insert((*id, Some(index)));
                     self.definite_deleted_argument_slots.insert((*id, index));
                     if let Some(slot) = self
