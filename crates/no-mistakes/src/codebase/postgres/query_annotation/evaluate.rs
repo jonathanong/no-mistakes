@@ -1,9 +1,11 @@
 mod calls;
 mod effects;
+mod modules;
 mod statements;
 mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -20,21 +22,24 @@ pub(super) type Environment = usize;
 pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
     pub ts: &'a TsFileFacts,
-    pub executors: Vec<u32>,
+    pub executors: FxHashSet<u32>,
+    pub imports: FxHashMap<String, usize>,
+    pub exports: FxHashMap<String, usize>,
 }
 pub(super) struct Evaluator<'a, F> {
-    pub files: &'a BTreeMap<PathBuf, File<'a>>,
+    pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
-    pub scopes: Vec<BTreeMap<String, Value>>,
+    pub scopes: Vec<FxHashMap<String, Value>>,
+    pub modules: FxHashMap<PathBuf, Environment>,
     pub next_builder: u64,
-    pub invalidated_builders: std::collections::BTreeSet<u64>,
+    pub invalidated_builders: FxHashSet<u64>,
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation) fn environment(
         &mut self,
-        values: BTreeMap<String, Value>,
+        values: FxHashMap<String, Value>,
     ) -> Environment {
         let id = self.scopes.len();
         self.scopes.push(values);
@@ -42,15 +47,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
     pub fn run(&mut self, path: &Path) {
         let file = &self.files[path];
-        let roots = file.facts.roots.clone();
         let globals = file.facts.globals.clone();
-        let mut env = self.environment(BTreeMap::new());
-        self.steps(&roots, path, &mut env, 16, true);
+        self.module_environment(path);
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
         for expr in globals.values() {
             if let Expr::Function(function) = expr {
-                let mut values: BTreeMap<String, Value> = function
+                let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
                     .map(|name| (name.clone(), Value::Unknown))

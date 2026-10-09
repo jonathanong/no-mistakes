@@ -1,6 +1,7 @@
 // A type-only name must not replace the runtime String.raw built-in.
 import type { String } from "./types.mjs";
 import { write } from "@app/db";
+import { sharedStatement, mutateSharedStatement } from "./shared-state.mjs";
 import sql, { type SQLStatement } from "sql-template-strings";
 import { annotatedOrdersSql, unannotatedOrdersSql } from "./sql-builders.mjs";
 import defaultFunctionSql from "./default-function.mjs";
@@ -227,4 +228,29 @@ function unsupportedRawValue() {
 }
 export function unsupportedRawInterpolation() {
   write(String.raw`${unsupportedRawValue()}`); // finding:unsupported-raw-interpolation
+}
+
+export function appendValueMutatesReceiver() {
+  const statement = sql``;
+  const alias = statement;
+  const returned = alias.append('SELECT 1');
+  write(statement); // finding:append-value-receiver
+}
+export function incompleteTransactions(tail: string) {
+  write(sql``.append('BE').append(tail)); // unanalyzable:partial-begin
+  write(sql``.append('COM').append(tail)); // unanalyzable:partial-commit
+  write(sql``.append('ROLL').append(tail)); // unanalyzable:partial-rollback
+  write(sql``.append('bEg').append(tail)); // unanalyzable:partial-case
+  write(sql``.append('BEx').append(tail)); // finding:non-transaction-prefix
+}
+
+export function opaqueVarBuilderMutation() {
+  var statement = sql`/* prior annotation */ SELECT 1`;
+  const ignored = unknownMutation(statement);
+  write(statement); // unanalyzable:opaque-var-builder-mutation
+}
+export function importedModuleCaptureMutation() {
+  write(sharedStatement()); // known:initial-module-capture
+  const ignored = mutateSharedStatement();
+  write(sharedStatement()); // unanalyzable:mutated-module-capture
 }

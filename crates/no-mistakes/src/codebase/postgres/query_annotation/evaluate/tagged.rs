@@ -7,11 +7,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let file = &self.files[path];
         let name = if tag == "String.raw" { "String" } else { tag };
         let trusted = if tag == "String.raw" {
-            !file
-                .ts
-                .imported_bindings
-                .iter()
-                .any(|binding| binding.local == name && !binding.is_type_only)
+            !file.imports.contains_key(name)
         } else {
             file.facts.trusted_tags.contains(tag)
         };

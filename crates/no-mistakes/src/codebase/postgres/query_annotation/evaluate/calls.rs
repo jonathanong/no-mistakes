@@ -11,16 +11,20 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         let file = &self.files[path];
-        if let Some(expr) = file.facts.globals.get(name).cloned() {
-            let env = self.environment(Default::default());
-            return self.expr(&expr, path, &env, depth, generic);
+        if file.facts.globals.contains_key(name) {
+            if matches!(file.facts.globals.get(name), Some(Expr::Unknown)) {
+                return Value::Unknown;
+            }
+            let env = self.module_environment(path);
+            return self.scopes[env]
+                .get(name)
+                .cloned()
+                .unwrap_or(Value::Unknown);
         }
         let import = file
-            .ts
-            .imported_bindings
-            .iter()
-            .find(|binding| binding.local == name && !binding.is_type_only)
-            .cloned();
+            .imports
+            .get(name)
+            .map(|index| file.ts.imported_bindings[*index].clone());
         let Some(import) = import else {
             return Value::Unknown;
         };

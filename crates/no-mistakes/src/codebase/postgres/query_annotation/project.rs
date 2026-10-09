@@ -2,6 +2,7 @@ use super::evaluate::{Evaluator, File, Value};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::ts_source::FileIdMap;
+use crate::fx::FxHashMap;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -20,7 +21,7 @@ pub(crate) fn project(
                 path.clone(),
             )
         })
-        .collect::<BTreeMap<_, _>>();
+        .collect::<FxHashMap<_, _>>();
     let mut profiles = files
         .into_iter()
         .flat_map(|(_, file)| {
@@ -50,13 +51,28 @@ pub(crate) fn project(
                 Some((
                     crate::codebase::ts_resolver::normalize_path(path),
                     File {
+                        imports: binding_index(
+                            file.ts
+                                .imported_bindings
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, binding)| !binding.is_type_only)
+                                .map(|(index, binding)| (binding.local.clone(), index)),
+                        ),
+                        exports: binding_index(
+                            file.ts
+                                .exported_bindings
+                                .iter()
+                                .enumerate()
+                                .map(|(index, binding)| (binding.exported.clone(), index)),
+                        ),
                         facts,
                         ts: &file.ts,
-                        executors: embedded.call_starts.clone(),
+                        executors: embedded.call_starts.iter().copied().collect(),
                     },
                 ))
             })
-            .collect::<BTreeMap<_, _>>();
+            .collect::<FxHashMap<_, _>>();
         let mut per_file = collected
             .par_iter()
             .map(|(path, _)| {
@@ -65,6 +81,7 @@ pub(crate) fn project(
                     resolve: &resolve,
                     events: BTreeMap::new(),
                     scopes: Vec::new(),
+                    modules: crate::fx::fx_map(),
                     next_builder: 0,
                     invalidated_builders: Default::default(),
                 };
@@ -129,7 +146,10 @@ fn prefix(value: Value) -> Option<String> {
     let start = text.trim_start();
     if complete
         || super::super::annotation::has_leading_query_annotation(&text)
-        || (!start.is_empty() && !start.starts_with('/') && sql_requires_query_annotation(&text))
+        || (!start.is_empty()
+            && !start.starts_with('/')
+            && !could_be_transaction(start)
+            && sql_requires_query_annotation(&text))
         || (start.starts_with('/') && start.len() > 1 && !start.starts_with("/*"))
         || (start.starts_with("/*") && start.contains("*/") && sql_requires_query_annotation(&text))
     {
@@ -137,4 +157,19 @@ fn prefix(value: Value) -> Option<String> {
     } else {
         None
     }
+}
+
+fn could_be_transaction(prefix: &str) -> bool {
+    let prefix = prefix.to_ascii_uppercase();
+    ["BEGIN", "COMMIT", "ROLLBACK"]
+        .iter()
+        .any(|statement| statement.starts_with(&prefix))
+}
+
+fn binding_index(bindings: impl Iterator<Item = (String, usize)>) -> FxHashMap<String, usize> {
+    let mut index = crate::fx::fx_map();
+    for (name, position) in bindings {
+        index.entry(name).or_insert(position);
+    }
+    index
 }

@@ -50,6 +50,8 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
                 Declaration::VariableDeclaration(value) => {
                     bind_variables(value, source, &mut steps)
                 }
+                Declaration::TSTypeAliasDeclaration(_) | Declaration::TSInterfaceDeclaration(_) => {
+                }
                 _ => steps.push(Step::Unsupported),
             },
             Statement::ExportDefaultDeclaration(value) => {

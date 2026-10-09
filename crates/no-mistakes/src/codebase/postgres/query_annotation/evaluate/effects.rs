@@ -1,9 +1,10 @@
 use super::{Environment, Evaluator, Value};
-use std::{collections::BTreeSet, path::PathBuf};
+use crate::fx::{fx_set, FxHashSet};
+use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_builders(&mut self, values: &[Value]) {
-        fn collect(value: &Value, ids: &mut BTreeSet<u64>) {
+        fn collect(value: &Value, ids: &mut FxHashSet<u64>) {
             match value {
                 Value::Prefix(_, _, Some(id)) => {
                     ids.insert(*id);
@@ -17,7 +18,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 _ => {}
             }
         }
-        let mut ids = BTreeSet::new();
+        let mut ids = fx_set();
         for value in values {
             collect(value, &mut ids);
         }
@@ -31,7 +32,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
     pub(super) fn invalidate_captured(&mut self, env: Environment, function: &super::Function) {
-        let mut shadowed = function.params.iter().cloned().collect::<BTreeSet<_>>();
+        let mut shadowed = function.params.iter().cloned().collect::<FxHashSet<_>>();
         for step in &function.body {
             match step {
                 crate::codebase::postgres::query_annotation::Step::Bind(name, _)

@@ -95,6 +95,8 @@ write(sql`/* orders/list */ `.append(ordersSql("id"))); // Valid.
 Named and default imports, plus named and star re-exports, can resolve helper
 functions. Namespace imports remain unanalyzable. Captured local bindings use the
 value available when the helper runs; calling before initialization remains opaque.
+Imported helpers share their module bindings during tracing, so an opaque mutator
+invalidates a module builder before a later helper reads it.
 Existing local `sql` template-tag implementations retain their previous behavior.
 Await an async helper before passing its returned SQL to an executor; an unawaited
 promise remains unanalyzable. Template substitutions are traversed for nested
@@ -120,6 +122,8 @@ opaque executor arguments that earlier versions silently skipped. Include/exclud
 filters select reported files; an imported helper outside that selection can still
 be traced through the prepared project facts. Prefix evidence is used only by this
 annotation rule and does not make dynamic SQL complete for other PostgreSQL rules.
+An incomplete transaction prefix such as `BE` plus unknown text remains
+unanalyzable because it could complete an exempt `BEGIN` statement.
 
 `executorFactoryNames` and `executorTypeNames` add scoped executors: `tx` in
 `await using tx = await openTransaction()` or `run` in `run: TxExecutor` is scanned

@@ -1,7 +1,7 @@
 use super::evaluate::{Evaluator, Value};
 use super::{expressions, Expr, Step};
+use crate::fx::{fx_set, FxHashSet};
 use oxc_ast::ast::{ExportDefaultDeclaration, ExportDefaultDeclarationKind};
-use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 // Mirror the shared import/export facts' local identity: named declarations
@@ -34,7 +34,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Option<Value> {
-        self.lookup_export_inner(path, name, depth.min(16), generic, &mut BTreeSet::new())
+        self.lookup_export_inner(path, name, depth.min(16), generic, &mut fx_set())
     }
 
     fn lookup_export_inner(
@@ -43,7 +43,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         name: &str,
         depth: u8,
         generic: bool,
-        visiting: &mut BTreeSet<(PathBuf, String)>,
+        visiting: &mut FxHashSet<(PathBuf, String)>,
     ) -> Option<Value> {
         let Some(depth) = depth.checked_sub(1) else {
             return Some(Value::Unknown);
@@ -63,17 +63,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         name: &str,
         depth: u8,
         generic: bool,
-        visiting: &mut BTreeSet<(PathBuf, String)>,
+        visiting: &mut FxHashSet<(PathBuf, String)>,
     ) -> Option<Value> {
         let Some(file) = self.files.get(path) else {
             return Some(Value::Unknown);
         };
         let binding = file
-            .ts
-            .exported_bindings
-            .iter()
-            .find(|binding| binding.exported == name)
-            .cloned();
+            .exports
+            .get(name)
+            .map(|index| file.ts.exported_bindings[*index].clone());
         let stars = file.ts.star_reexport_specifiers.clone();
         if let Some(binding) = binding {
             return Some(if let Some(specifier) = binding.specifier {
