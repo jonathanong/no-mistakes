@@ -2,12 +2,20 @@ use super::super::Value;
 use crate::fx::{FxHashMap, FxHashSet};
 
 fn alternatives(value: Value, values: &mut Vec<Value>) {
-    if let Value::Aggregate(children) = value {
-        for child in children {
-            alternatives(child, values);
+    match value {
+        // Flatten both wrappers so a nested branch join stays a flat candidate
+        // list. Possible carries the implicit unknown that prefix projection
+        // already treats as an unsafe-or-unproven outcome.
+        Value::Aggregate(children) | Value::Possible(children) => {
+            for child in children {
+                alternatives(child, values);
+            }
         }
-    } else if !values.contains(&value) {
-        values.push(value);
+        other => {
+            if !values.contains(&other) {
+                values.push(other);
+            }
+        }
     }
 }
 
@@ -29,7 +37,10 @@ pub(super) fn objects(
                         let mut values = Vec::new();
                         alternatives(before.clone(), &mut values);
                         alternatives(after, &mut values);
-                        *before = Value::Aggregate(values);
+                        // Differing dense slots are candidates, not an opaque
+                        // aggregate. prefix() inspects Possible, so an
+                        // unannotated arm stays a violation under ignore mode.
+                        *before = Value::Possible(values);
                     }
                 }
             }
@@ -70,7 +81,8 @@ pub(super) fn value(before: Value, after: Value) -> Value {
     let mut values = Vec::new();
     alternatives(before, &mut values);
     alternatives(after, &mut values);
-    Value::Aggregate(values)
+    // Sparse slots use the same candidate join as dense argument vectors.
+    Value::Possible(values)
 }
 
 pub(super) fn shared_ids(

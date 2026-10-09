@@ -117,7 +117,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         &FxHashMap::from_iter([(1000, vec![Value::Unknown])]),
     );
     assert!(
-        matches!(&dense_joined[&1000][0], Value::Aggregate(values) if values.contains(&callback) && values.contains(&Value::Unknown))
+        matches!(&dense_joined[&1000][0], Value::Possible(values) if values.contains(&callback) && values.contains(&Value::Unknown))
     );
     let mut sparse_joined = None;
     let first = FxHashMap::from_iter([(
@@ -140,6 +140,6 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
     let joined = sparse_joined.unwrap();
     assert!(matches!(&joined[&1001][&2000], Value::Function(..)));
     assert!(
-        matches!(&joined[&1000][&2000], Value::Aggregate(values) if values.contains(&callback) && values.contains(&Value::Unknown))
+        matches!(&joined[&1000][&2000], Value::Possible(values) if values.contains(&callback) && values.contains(&Value::Unknown))
     );
 }
