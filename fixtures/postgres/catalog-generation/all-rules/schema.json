@@ -8,6 +8,12 @@
         "paid"
       ]
     },
+    "shared.\"BadPriority\"": {
+      "values": [
+        "low",
+        "high"
+      ]
+    },
     "shared.priority": {
       "values": [
         "low",
@@ -321,6 +327,57 @@
           "accessMethod": "btree",
           "constraintBacked": true,
           "definition": "CREATE UNIQUE INDEX external_enum_keys_pkey ON catalog_demo.external_enum_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "external_enum_name_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.\"BadPriority\"",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "An external enum should not receive a local naming finding.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_name_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_name_keys_pkey ON catalog_demo.external_enum_name_keys USING btree (id)",
           "immediate": true,
           "keys": [
             {

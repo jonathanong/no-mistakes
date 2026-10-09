@@ -127,6 +127,9 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
         id == "postgres-key-column-types"
             && message.contains("constraint:external_enum_keys.external_enum_keys_pkey")
     }));
+    assert!(!findings.iter().any(|(id, _, message)| {
+        id == "postgres-object-naming" && message.contains("BadPriority")
+    }));
     assert!(findings.iter().any(|(id, _, message)| {
         id == "postgres-key-column-types"
             && message

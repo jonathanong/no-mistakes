@@ -3,6 +3,7 @@
 -- Each object is built to trip one catalog rule enabled in .no-mistakes.yml.
 CREATE SCHEMA shared;
 CREATE TYPE shared.priority AS ENUM ('low', 'high');
+CREATE TYPE shared."BadPriority" AS ENUM ('low', 'high');
 CREATE TYPE shared.unused_priority AS ENUM ('off', 'on');
 CREATE DOMAIN shared.unused_priority_domain AS shared.unused_priority;
 CREATE SCHEMA partition_roots;
@@ -43,6 +44,10 @@ CREATE TABLE external_enum_keys (
   id shared.priority PRIMARY KEY
 );
 COMMENT ON TABLE external_enum_keys IS 'A key using a shared schema enum.';
+CREATE TABLE external_enum_name_keys (
+  id shared."BadPriority" PRIMARY KEY
+);
+COMMENT ON TABLE external_enum_name_keys IS 'An external enum should not receive a local naming finding.';
 CREATE TABLE external_enum_domain_keys (
   id shared.unused_priority_domain PRIMARY KEY
 );

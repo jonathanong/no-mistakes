@@ -44,7 +44,7 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
             &mut findings,
         );
     }
-    for enum_type in catalog.enums() {
+    for enum_type in catalog.schema_enums() {
         let name = unqualified(&enum_type.name);
         consider(
             named(

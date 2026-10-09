@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "app",
+  "tables": {
+    "records": {
+      "columns": {"external_status": {"dataType": "\"other.schema\".\"Bad.Name\""}}
+    }
+  },
+  "enums": {
+    "BadLocalName": {"values": ["ok"]},
+    "app.\"BadQualifiedName\"": {"values": ["ok"]},
+    "\"other.schema\".\"Bad.Name\"": {"values": ["bad"]}
+  }
+}

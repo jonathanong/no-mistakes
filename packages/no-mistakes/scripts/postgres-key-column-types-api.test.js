@@ -49,7 +49,7 @@ test(
         assert.equal(
           byTarget.size,
           4,
-          "each key gets one finding and partition leaves are skipped",
+          "each rejected key gets one finding; configured leaf-local keys are accepted",
         );
         assert.match(
           byTarget.get("constraint:composite_orders.composite_orders_pkey").message,
