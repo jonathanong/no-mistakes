@@ -443,3 +443,18 @@ export function initializerBindingAssignment() {
   const ignored = (statement = unknownStatement);
   write(statement); // unanalyzable:initializer-binding-write
 }
+
+export function executorInObjectInitializer() {
+  const result = { value: write(annotatedOrdersSql()) }; // known:object-executor-annotated
+  return result;
+}
+export function unannotatedExecutorInObjectInitializer() {
+  const result = { value: write(unannotatedOrdersSql()) }; // finding:object-executor-unannotated
+  return result;
+}
+export function nestedAssignmentBeforeExecutor() {
+  let statement = sql`/* original annotation */ SELECT 1`;
+  // Assignment must revoke the old identity before the next sequence child.
+  const result = (statement = sql`SELECT 2`, write(statement)); // unanalyzable:nested-sequence-assignment
+  return result;
+}
