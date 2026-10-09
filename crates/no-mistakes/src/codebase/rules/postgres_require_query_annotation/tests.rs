@@ -472,28 +472,44 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-call-argument-order",
         "helper-tracing-live-binding",
         "helper-tracing-argument-slot-write",
+        "helper-tracing-destructuring-alias",
+        "helper-tracing-arm-module",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);
-        let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+        let names = if scenario == "helper-tracing-arm-module" {
+            vec!["src/query.mts", "src/state.mts"]
+        } else {
+            vec!["src/query.mts"]
+        };
+        let sources = names
+            .iter()
+            .map(|name| (*name, std::fs::read_to_string(root.join(name)).unwrap()))
+            .collect::<Vec<_>>();
+        let include = names
+            .iter()
+            .map(|name| format!("'{name}'"))
+            .collect::<Vec<_>>()
+            .join(",");
         for policy in ["report", "ignore"] {
             let config = config_with_options(&format!(
-                "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
+                "importSpecifier: '@app/db'\ninclude: [{include}]\nunanalyzableSql: {policy}"
             ));
             let findings = check_with_files(&root, &config, &files).unwrap();
-            let expected = source
-                .lines()
-                .enumerate()
-                .filter_map(|(index, line)| {
-                    (line.contains("// finding:")
-                        || (policy == "report" && line.contains("// unanalyzable:")))
-                    .then_some(index + 1)
+            let expected = sources
+                .iter()
+                .flat_map(|(name, source)| {
+                    source.lines().enumerate().filter_map(move |(index, line)| {
+                        (line.contains("// finding:")
+                            || (policy == "report" && line.contains("// unanalyzable:")))
+                        .then_some((name.to_string(), index + 1))
+                    })
                 })
                 .collect::<Vec<_>>();
             assert_eq!(
                 findings
                     .iter()
-                    .map(|finding| finding.line)
+                    .map(|finding| (finding.file.clone(), finding.line))
                     .collect::<Vec<_>>(),
                 expected,
                 "{findings:#?}"

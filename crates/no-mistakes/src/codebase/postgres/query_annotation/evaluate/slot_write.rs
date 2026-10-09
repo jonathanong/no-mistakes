@@ -35,11 +35,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .get_mut(&id)
             .and_then(|values| values.get_mut(index))
         else {
+            self.argument_extra_slots
+                .entry(id)
+                .or_default()
+                .insert(index, stored.clone());
             self.invalidated_builders.insert(id);
             self.invalidate_mapped_freshness(&FxHashSet::from_iter([id]));
-            self.invalidate_builders(std::slice::from_ref(&stored));
-            self.opaque_callbacks(std::slice::from_ref(&stored), depth);
-            return Value::Evaluated(Box::new(stored), false);
+            if self.definite_deleted_argument_slots.contains(&(id, index)) {
+                self.opaque_callbacks(std::slice::from_ref(&stored), depth);
+            }
+            return Value::Evaluated(Box::new(stored), handled_value);
         };
         *slot = stored.clone();
         self.invalidated_builders.insert(id);

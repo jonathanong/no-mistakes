@@ -1,4 +1,5 @@
 use super::super::{Environment, Value};
+use super::arena::ArenaMut;
 use super::{freshness, reachable};
 use crate::fx::{FxHashMap, FxHashSet};
 
@@ -32,17 +33,24 @@ fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
 
 /// Keep only frames and heap objects reachable from restored scopes or callback
 /// results. Original frame identities and all argument identities stay stable.
+pub(super) struct ModuleRoots<'a> {
+    pub original: usize,
+    pub modules: &'a mut FxHashMap<std::path::PathBuf, Environment>,
+}
+
 pub(super) fn compact(
     scopes: &mut Vec<FxHashMap<String, Value>>,
-    original: usize,
+    cache: ModuleRoots<'_>,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    objects: &mut FxHashMap<u64, Vec<Value>>,
+    arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) {
-    let roots = (0..original).collect::<Vec<_>>();
-    compact_from_roots(
+    let original = cache.original;
+    let mut roots = (0..original).collect::<Vec<_>>();
+    roots.extend(cache.modules.values().copied());
+    let indices = compact_from_roots(
         scopes,
         Roots {
             environments: &roots,
@@ -50,10 +58,15 @@ pub(super) fn compact(
         },
         returned,
         mapped,
-        objects,
+        arena,
         fresh,
         captured,
     );
+    for env in cache.modules.values_mut() {
+        if let Some(remapped) = indices.get(env) {
+            *env = *remapped;
+        }
+    }
 }
 
 fn compact_from_roots(
@@ -61,7 +74,7 @@ fn compact_from_roots(
     roots: Roots<'_>,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    objects: &mut FxHashMap<u64, Vec<Value>>,
+    arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> FxHashMap<Environment, Environment> {
@@ -69,7 +82,7 @@ fn compact_from_roots(
         scopes,
         roots.environments,
         returned,
-        objects,
+        arena.read(),
         mapped,
         captured,
     );
@@ -96,9 +109,19 @@ fn compact_from_roots(
     for value in returned {
         remap(value, &indices);
     }
-    objects.retain(|id, _| reachable.arguments.contains(id));
-    for values in objects.values_mut() {
+    arena
+        .objects
+        .retain(|id, _| reachable.arguments.contains(id));
+    for values in arena.objects.values_mut() {
         for value in values {
+            remap(value, &indices);
+        }
+    }
+    arena
+        .extras
+        .retain(|id, _| reachable.arguments.contains(id));
+    for slots in arena.extras.values_mut() {
+        for value in slots.values_mut() {
             remap(value, &indices);
         }
     }
@@ -134,53 +157,5 @@ fn compact_from_roots(
     indices
 }
 
-pub(super) fn prune_state(
-    scopes: &[FxHashMap<String, Value>],
-    returned: &[Value],
-    state: MutationState<'_>,
-    mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    objects: &mut FxHashMap<u64, Vec<Value>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
-) {
-    let reachable = reachable::collect(scopes, scopes.len(), returned, objects, mapped, captured);
-    objects.retain(|id, _| reachable.arguments.contains(id));
-    state
-        .deleted
-        .retain(|(id, _)| reachable.arguments.contains(id));
-    state
-        .definite
-        .retain(|(id, _)| reachable.arguments.contains(id));
-    state
-        .invalidated
-        .retain(|id| reachable.identities.contains(id));
-}
-
-/// Compact request state from explicit module roots, then remap cached module
-/// identities so later lookups continue to address their initialized frames.
-pub(super) fn compact_modules(
-    scopes: &mut Vec<FxHashMap<String, Value>>,
-    modules: &mut FxHashMap<std::path::PathBuf, Environment>,
-    mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    objects: &mut FxHashMap<u64, Vec<Value>>,
-    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
-    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
-) {
-    let roots = modules.values().copied().collect::<Vec<_>>();
-    let indices = compact_from_roots(
-        scopes,
-        Roots {
-            environments: &roots,
-            preserved: 0,
-        },
-        &mut [],
-        mapped,
-        objects,
-        fresh,
-        captured,
-    );
-    for env in modules.values_mut() {
-        if let Some(remapped) = indices.get(env) {
-            *env = *remapped;
-        }
-    }
-}
+mod state;
+pub(super) use state::{compact_modules, prune_state};

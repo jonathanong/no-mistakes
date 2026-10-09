@@ -30,6 +30,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     {
                         *slot = Value::Unknown;
                     }
+                    if let Some(slots) = self.argument_extra_slots.get_mut(id) {
+                        slots.remove(&index);
+                    }
                 }
                 DeleteKey::Named => {}
                 DeleteKey::Dynamic => {

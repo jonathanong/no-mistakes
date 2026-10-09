@@ -13,6 +13,7 @@ mod opaque;
 mod result;
 mod run;
 mod slot_write;
+mod slots;
 mod statements;
 mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
@@ -64,6 +65,7 @@ pub(super) struct Evaluator<'a, F> {
     pub mapped_argument_owners: FxHashMap<u64, Environment>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
     pub argument_objects: FxHashMap<u64, Vec<Value>>,
+    pub argument_extra_slots: FxHashMap<u64, BTreeMap<usize, Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
     pub fresh_mapped_parameters: FxHashMap<Environment, FxHashSet<String>>,
     pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,

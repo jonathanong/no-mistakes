@@ -1,5 +1,5 @@
 use super::super::Evaluator;
-use super::{frames, reachable};
+use super::{arena, frames, reachable};
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -10,7 +10,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &mut self.scopes,
             &mut self.modules,
             &mut self.mapped_arguments,
-            &mut self.argument_objects,
+            arena::ArenaMut {
+                objects: &mut self.argument_objects,
+                extras: &mut self.argument_extra_slots,
+            },
             &mut self.fresh_mapped_parameters,
             &mut self.captured_bindings,
         );
@@ -25,14 +28,50 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 invalidated: &mut self.invalidated_builders,
             },
             &self.mapped_arguments,
-            &mut self.argument_objects,
+            arena::ArenaMut {
+                objects: &mut self.argument_objects,
+                extras: &mut self.argument_extra_slots,
+            },
             &self.captured_bindings,
         );
         let live = reachable::collect_from_roots(
             &self.scopes,
             &self.modules.values().copied().collect::<Vec<_>>(),
             &[],
-            &self.argument_objects,
+            arena::Arena {
+                objects: &self.argument_objects,
+                extras: &self.argument_extra_slots,
+            },
+            &self.mapped_arguments,
+            &self.captured_bindings,
+        );
+        self.builder_updates
+            .retain(|id, _| live.identities.contains(id));
+    }
+    pub(super) fn prune_alternative_state(&mut self, returned: &[super::super::Value]) {
+        frames::prune_state(
+            &self.scopes,
+            returned,
+            frames::MutationState {
+                deleted: &mut self.deleted_argument_slots,
+                definite: &mut self.definite_deleted_argument_slots,
+                invalidated: &mut self.invalidated_builders,
+            },
+            &self.mapped_arguments,
+            arena::ArenaMut {
+                objects: &mut self.argument_objects,
+                extras: &mut self.argument_extra_slots,
+            },
+            &self.captured_bindings,
+        );
+        let live = reachable::collect(
+            &self.scopes,
+            self.scopes.len(),
+            returned,
+            arena::Arena {
+                objects: &self.argument_objects,
+                extras: &self.argument_extra_slots,
+            },
             &self.mapped_arguments,
             &self.captured_bindings,
         );

@@ -30,6 +30,50 @@ function outOfRangeSlot(statement) {
   return statement;
 }
 
+function outOfRangeStoredValue(statement) {
+  const ignored = (arguments[9] = statement);
+  return statement;
+}
+
+function extraBuilderAppend(statement) {
+  const ignored = (arguments[9] = statement);
+  statement.append(" /* changed after extra-slot storage */");
+  return statement;
+}
+
+function extraSlotRead(statement) {
+  const ignored = (arguments[9] = statement);
+  return arguments[9];
+}
+
+function extraCallbackNoEscape(statement) {
+  const ignored = (arguments[9] = () => unknownMutation(statement));
+  return statement;
+}
+
+function extraCallbackEscapes(statement) {
+  const ignored = (arguments[9] = () => unknownMutation(statement));
+  const escaped = opaque(arguments);
+  return statement;
+}
+
+function deletedExtraCallback(statement) {
+  const ignored = (arguments[9] = () => unknownMutation(statement));
+  delete arguments[9];
+  return statement;
+}
+
+function recreatedDeletedExtraCallback(statement) {
+  delete arguments[9];
+  const ignored = (arguments[9] = () => unknownMutation(statement));
+  return statement;
+}
+
+function hugeExtraSlot(statement) {
+  const ignored = (arguments[9007199254740991] = statement);
+  return statement;
+}
+
 function shadowedArguments(arguments, statement) {
   const ignored = (arguments[0] = "replacement");
   return statement;
@@ -56,6 +100,14 @@ write(sloppyReplacement(sql`/* sloppy mapped slot */ SELECT 1`)); // unanalyzabl
 write(deletedSlotCallback(sql`/* deleted slot callback */ SELECT 1`)); // unanalyzable:deleted-slot-callback
 write(deletedSlotScalar(sql`/* deleted slot scalar */ SELECT 1`)); // known:deleted-slot-scalar
 write(outOfRangeSlot(sql`/* out of range slot */ SELECT 1`)); // known:out-of-range-slot
+write(outOfRangeStoredValue(sql`/* out of range stored value */ SELECT 1`)); // known:out-of-range-stored-value
+write(extraBuilderAppend(sql`/* extra builder append */ SELECT 1`)); // known:extra-builder-append
+write(extraSlotRead(sql`/* extra slot read */ SELECT 1`)); // unanalyzable:extra-slot-read
+write(extraCallbackNoEscape(sql`/* extra callback no escape */ SELECT 1`)); // known:extra-callback-no-escape
+write(extraCallbackEscapes(sql`/* extra callback escapes */ SELECT 1`)); // unanalyzable:extra-callback-escapes
+write(deletedExtraCallback(sql`/* deleted extra callback */ SELECT 1`)); // known:deleted-extra-callback
+write(recreatedDeletedExtraCallback(sql`/* recreated deleted extra callback */ SELECT 1`)); // unanalyzable:recreated-deleted-extra-callback
+write(hugeExtraSlot(sql`/* bounded huge extra slot */ SELECT 1`)); // known:huge-extra-slot
 write(shadowedArguments({}, sql`/* shadowed arguments receiver */ SELECT 1`)); // known:shadowed-arguments-receiver
 write(opaqueRightHandSide(sql`/* opaque slot right hand side */ SELECT 1`)); // unanalyzable:opaque-slot-rhs
 write(shadowedDelete({}, sql`/* shadowed delete receiver */ SELECT 1`)); // unanalyzable:shadowed-delete-receiver

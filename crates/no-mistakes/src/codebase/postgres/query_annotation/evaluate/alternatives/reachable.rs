@@ -1,4 +1,5 @@
 use super::super::{Environment, Value};
+use super::arena::Arena;
 use crate::fx::{FxHashMap, FxHashSet};
 
 #[derive(Default)]
@@ -35,19 +36,19 @@ pub(super) fn collect(
     scopes: &[FxHashMap<String, Value>],
     originals: usize,
     returned: &[Value],
-    objects: &FxHashMap<u64, Vec<Value>>,
+    arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
     let roots = (0..originals).collect::<Vec<_>>();
-    collect_from_roots(scopes, &roots, returned, objects, mapped, captured)
+    collect_from_roots(scopes, &roots, returned, arena, mapped, captured)
 }
 
 pub(super) fn collect_from_roots(
     scopes: &[FxHashMap<String, Value>],
     roots: &[Environment],
     returned: &[Value],
-    objects: &FxHashMap<u64, Vec<Value>>,
+    arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
@@ -75,7 +76,13 @@ pub(super) fn collect_from_roots(
         while let Some(id) = found.pending_args.pop() {
             if found.arguments.insert(id) {
                 found.identities.insert(id);
-                for value in &objects[&id] {
+                for value in arena.objects[&id].iter().chain(
+                    arena
+                        .extras
+                        .get(&id)
+                        .into_iter()
+                        .flat_map(|slots| slots.values()),
+                ) {
                     found.value(value);
                 }
             }

@@ -33,7 +33,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Arguments(id) if ids.insert(*id) => {
                 // Container escape can replace live slots. Definite deletion
                 // disconnects the former value; possible deletion does not.
-                for (index, value) in self.argument_objects[id].iter().enumerate() {
+                for (index, value) in self.argument_slots(*id) {
                     if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
                         self.builder_ids(value, ids);
                     }
@@ -103,6 +103,11 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         // Argument references are identity-only; update each arena slot once.
         for values in self.argument_objects.values_mut() {
             for value in values {
+                replace(value, *id, replacement);
+            }
+        }
+        for values in self.argument_extra_slots.values_mut() {
+            for value in values.values_mut() {
                 replace(value, *id, replacement);
             }
         }

@@ -1,8 +1,12 @@
-//! Alternative arms share input facts, never each other's mutable effects.
+//! Alternative arms restore input state and join effects conservatively.
+//! Imported modules keep one request-local initialization identity.
+mod arena;
 mod bindings;
+mod extras;
 pub(super) mod frames;
 mod freshness;
 mod merge;
+mod modules;
 mod prune;
 mod reachable;
 mod values;
@@ -23,7 +27,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let scopes = self.scopes.clone();
         let captured = self.captured_bindings.clone();
         let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
-        let modules = self.modules.clone();
+        let mut modules = self.modules.clone();
+        let mut module_states = modules::States::default();
+        let extra_slots = self.argument_extra_slots.clone();
+        let mut joined_extras = None;
         let updates = self.builder_updates.clone();
         let original_ids = self.next_builder;
         let original = self.invalidated_builders.clone();
@@ -42,6 +49,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.modules.clone_from(&modules);
+            module_states.restore(&mut self.scopes, &modules);
+            self.argument_extra_slots
+                .retain(|id, _| !objects.contains_key(id));
+            self.argument_extra_slots.extend(extra_slots.clone());
             self.builder_updates.retain(|id, _| *id >= original_ids);
             self.builder_updates.extend(updates.clone());
             self.captured_bindings
@@ -71,8 +82,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                     values::changes(
                         value,
                         &after[name],
-                        &objects,
-                        &self.argument_objects,
+                        arena::Arena {
+                            objects: &objects,
+                            extras: &extra_slots,
+                        },
+                        arena::Arena {
+                            objects: &self.argument_objects,
+                            extras: &self.argument_extra_slots,
+                        },
                         &mut changed,
                         &self.definite_deleted_argument_slots,
                     );
@@ -84,7 +101,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &scopes,
                 &self.scopes,
             );
-            merge::objects(&mut joined, &self.argument_objects, &objects);
+            merge::objects(&mut joined, &self.argument_objects);
+            extras::join(&mut joined_extras, &self.argument_extra_slots, &objects);
+            module_states.join(&self.scopes, &self.modules, scopes.len());
             if let Some(joined) = &mut joined_scopes {
                 bindings::join(joined, &self.scopes, &scopes);
             } else {
@@ -94,29 +113,36 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (id, slots) in &joined {
                 self.argument_objects.insert(*id, slots.clone());
             }
+            module_states.restore(&mut self.scopes, &self.modules);
+            self.argument_extra_slots
+                .clone_from(joined_extras.as_ref().unwrap());
             frames::compact(
                 &mut self.scopes,
-                scopes.len(),
+                frames::ModuleRoots {
+                    original: scopes.len(),
+                    modules: &mut self.modules,
+                },
                 &mut returned,
                 &mut self.mapped_arguments,
-                &mut self.argument_objects,
+                arena::ArenaMut {
+                    objects: &mut self.argument_objects,
+                    extras: &mut self.argument_extra_slots,
+                },
                 &mut self.fresh_mapped_parameters,
                 &mut self.captured_bindings,
             );
+            modules.clone_from(&self.modules);
+            module_states.remapped(&self.scopes, &modules);
+            joined_extras = Some(self.argument_extra_slots.clone());
             self.rebuild_captured_readers();
             self.rebuild_mapped_argument_owners();
             joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
-            joined = objects
-                .keys()
-                .filter_map(|id| {
-                    self.argument_objects
-                        .get(id)
-                        .map(|slots| (*id, slots.clone()))
-                })
-                .collect();
+            joined.clone_from(&self.argument_objects);
         }
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
+        module_states.restore(&mut self.scopes, &self.modules);
+        self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
         self.builder_updates.retain(|id, _| *id >= original_ids);
         self.builder_updates.extend(updates);
         self.captured_bindings
@@ -149,28 +175,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.definite_deleted_argument_slots = final_definite;
         self.refresh_captured_bindings();
         // Speculative identities with no surviving aliases cannot affect later reads.
-        frames::prune_state(
-            &self.scopes,
-            &returned,
-            frames::MutationState {
-                deleted: &mut self.deleted_argument_slots,
-                definite: &mut self.definite_deleted_argument_slots,
-                invalidated: &mut self.invalidated_builders,
-            },
-            &self.mapped_arguments,
-            &mut self.argument_objects,
-            &self.captured_bindings,
-        );
-        let live = reachable::collect(
-            &self.scopes,
-            self.scopes.len(),
-            &returned,
-            &self.argument_objects,
-            &self.mapped_arguments,
-            &self.captured_bindings,
-        );
-        self.builder_updates
-            .retain(|id, _| live.identities.contains(id));
+        self.prune_alternative_state(&returned);
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
         Value::Aggregate(returned)

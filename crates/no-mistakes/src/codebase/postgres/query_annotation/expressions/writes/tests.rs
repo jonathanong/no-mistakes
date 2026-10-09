@@ -10,6 +10,7 @@ fn opaque_write_targets_exclude_receivers_defaults_and_keep_ts_wrapped_bindings(
     struct Writes<'s> {
         source: &'s str,
         targets: Vec<Vec<String>>,
+        reads: Vec<Vec<String>>,
     }
     impl<'a> Visit<'a> for Writes<'_> {
         fn visit_expression(&mut self, expression: &Expression<'a>) {
@@ -17,21 +18,35 @@ fn opaque_write_targets_exclude_receivers_defaults_and_keep_ts_wrapped_bindings(
                 expression,
                 Expression::AssignmentExpression(_) | Expression::UpdateExpression(_)
             ) {
-                let Expr::OpaqueWrite { targets, .. } = collect(expression, self.source) else {
+                let Expr::OpaqueWrite { targets, children } = collect(expression, self.source)
+                else {
                     panic!("opaque write");
                 };
                 self.targets.push(targets);
+                self.reads.push(
+                    children
+                        .into_iter()
+                        .filter_map(|child| {
+                            if let Expr::Name(name) = child {
+                                Some(name)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                );
             }
             walk::walk_expression(self, expression);
         }
     }
-    let targets = crate::ast::with_program(&path, &source, |program, _| {
+    let (targets, reads) = crate::ast::with_program(&path, &source, |program, _| {
         let mut writes = Writes {
             source: &source,
             targets: Vec::new(),
+            reads: Vec::new(),
         };
         writes.visit_program(program);
-        writes.targets
+        (writes.targets, writes.reads)
     })
     .unwrap();
     let expected = vec![
@@ -50,4 +65,22 @@ fn opaque_write_targets_exclude_receivers_defaults_and_keep_ts_wrapped_bindings(
         vec![],
     ];
     assert_eq!(targets, expected);
+    assert_eq!(
+        reads,
+        vec![
+            vec!["input"],
+            vec!["updated"],
+            vec!["fallback", "input"],
+            vec!["fallback", "input"],
+            vec!["receiver", "input"],
+            vec!["receiver", "key", "input"],
+            vec!["input"],
+            vec!["input"],
+            vec!["input"],
+            vec!["input"],
+            vec!["input"],
+            vec!["input"],
+            vec!["input"],
+        ]
+    );
 }

@@ -204,8 +204,13 @@ In sloppy functions with simple parameters, assigning a parameter updates its
 mapped argument slot; opaque slot mutations make mapped parameters unknown. Reading
 an immutable parameter through opaque syntax preserves its value; unsupported
 binding writes remain conservative, including rebinding `arguments`. Replacing a
-known argument slot preserves the builder formerly referenced by that slot. Strict
-functions keep separate bindings. A later definite parameter assignment establishes
+known argument slot preserves the builder formerly referenced by that slot.
+Static writes beyond the original argument count use sparse slots rather than
+resizing the invocation object; storing a reference does not mutate its builder.
+Destructuring targets are bindings, while computed keys, defaults, and member
+targets retain their evaluation effects. Conditional callbacks retain imported
+module state initialized in their possible arms.
+Strict functions keep separate bindings. A later definite parameter assignment establishes
 its new value until another escape of the argument object makes it uncertain.
 Deleting a known slot disconnects its mapping
 only when every possible branch deletes it. Deletion after an opaque escape

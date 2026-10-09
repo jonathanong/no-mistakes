@@ -42,6 +42,7 @@ fn sequential_alternatives_discard_noncallback_frames() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -91,6 +92,7 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -139,6 +141,7 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -190,6 +193,7 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -238,6 +242,7 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -295,6 +300,7 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -347,6 +353,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -410,6 +417,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
@@ -428,8 +436,14 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
     super::values::changes(
         &Value::Evaluated(Box::new(before.clone()), true),
         &Value::Evaluated(Box::new(after), true),
-        &Default::default(),
-        &Default::default(),
+        super::arena::Arena {
+            objects: &Default::default(),
+            extras: &Default::default(),
+        },
+        super::arena::Arena {
+            objects: &Default::default(),
+            extras: &Default::default(),
+        },
         &mut changed,
         &Default::default(),
     );
@@ -440,4 +454,40 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
     super::values::apply_taint(&mut scopes, &changed);
     assert!(matches!(scopes[0]["annotated"], Value::Unknown));
     assert!(matches!(scopes[0]["bare"], Value::Prefix(_, _, Some(_))));
+    let callback = evaluator.scopes[root]["callback"].clone();
+    let mut dense_joined = FxHashMap::default();
+    super::merge::objects(
+        &mut dense_joined,
+        &FxHashMap::from_iter([(1000, vec![callback.clone()])]),
+    );
+    super::merge::objects(
+        &mut dense_joined,
+        &FxHashMap::from_iter([(1000, vec![Value::Unknown])]),
+    );
+    assert!(
+        matches!(&dense_joined[&1000][0], Value::Aggregate(values) if values.contains(&callback) && values.contains(&Value::Unknown))
+    );
+    let mut sparse_joined = None;
+    let first = FxHashMap::from_iter([(
+        1000,
+        std::collections::BTreeMap::from([(2000, callback.clone())]),
+    )]);
+    super::extras::join(&mut sparse_joined, &first, &Default::default());
+    let second = FxHashMap::from_iter([(
+        1000,
+        std::collections::BTreeMap::from([(2000, Value::Unknown)]),
+    )]);
+    super::extras::join(&mut sparse_joined, &second, &Default::default());
+    // A genuinely distinct arm-created container retains its own callback,
+    // rather than joining an absent slot from a different runtime identity.
+    let later = FxHashMap::from_iter([(
+        1001,
+        std::collections::BTreeMap::from([(2000, callback.clone())]),
+    )]);
+    super::extras::join(&mut sparse_joined, &later, &Default::default());
+    let joined = sparse_joined.unwrap();
+    assert!(matches!(&joined[&1001][&2000], Value::Function(..)));
+    assert!(
+        matches!(&joined[&1000][&2000], Value::Aggregate(values) if values.contains(&callback) && values.contains(&Value::Unknown))
+    );
 }

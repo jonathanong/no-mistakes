@@ -118,6 +118,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: FxHashMap::from_iter([(1, vec![original.clone()])]),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
@@ -170,6 +171,27 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         Some(Value::Unknown)
     ));
     assert!(!evaluator.invalidated_builders.contains(&9));
+
+    let huge_index = 9_007_199_254_740_991usize;
+    let stable = Value::Prefix("/* stored out of range */ SELECT 1".into(), true, Some(9));
+    evaluator.scopes[0].insert("statement".into(), stable.clone());
+    evaluator.argument_objects.insert(1, vec![stable.clone()]);
+    evaluator.invalidated_builders.clear();
+    let extra = evaluator.slot_write(
+        &query_annotation::Expr::Name("arguments".into()),
+        huge_index,
+        &query_annotation::Expr::Name("statement".into()),
+        &path,
+        &0,
+        (16, false),
+    );
+    assert!(matches!(extra, Value::Evaluated(_, true)));
+    assert_eq!(evaluator.argument_objects[&1].len(), 1);
+    assert!(matches!(
+        evaluator.argument_extra_slots[&1].get(&huge_index),
+        Some(Value::Prefix(text, true, Some(9))) if text == "/* stored out of range */ SELECT 1"
+    ));
+    assert!(!evaluator.invalidated_builders.contains(&9));
 }
 
 #[test]
@@ -204,6 +226,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),
@@ -228,6 +251,72 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         evaluator.scopes[*frame].get("statement"),
         Some(Value::Prefix(text, true, None)) if text == "replacement"
     ));
+}
+
+#[test]
+fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-slot-write/src/query.mts",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let options = EmbeddedSqlOptions::configured("@app/db", &[]);
+    let (facts, embedded) = crate::ast::with_program(&path, &source, |program, _| {
+        (
+            query_annotation::collect(program, &source, &options),
+            extract_embedded_sql_from_program(&path, program, &source, &options),
+        )
+    })
+    .unwrap();
+    let ts = TsFileFacts::default();
+    let files = FxHashMap::from_iter([(
+        path.clone(),
+        File {
+            facts: &facts,
+            ts: &ts,
+            executors: embedded.call_starts.iter().copied().collect(),
+            imports: Default::default(),
+            exports: Default::default(),
+        },
+    )]);
+    let mut evaluator = Evaluator {
+        files: &files,
+        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        events: Default::default(),
+        scopes: Vec::new(),
+        modules: Default::default(),
+        next_builder: 0,
+        invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
+        captured_binding_readers: Default::default(),
+        mapped_argument_owners: Default::default(),
+        deleted_argument_slots: Default::default(),
+        mapped_arguments: Default::default(),
+        argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
+        definite_deleted_argument_slots: Default::default(),
+        fresh_mapped_parameters: Default::default(),
+    };
+    let root = evaluator.module_environment(&path);
+    evaluator.scopes[root].insert(
+        "stableBuilder".into(),
+        Value::Prefix("/* sparse alias */ SELECT 1".into(), true, Some(77)),
+    );
+    let call = query_annotation::Expr::Call {
+        callee: Box::new(query_annotation::Expr::Name("extraBuilderAppend".into())),
+        args: vec![query_annotation::Expr::Name("stableBuilder".into())],
+        start: 0,
+    };
+    let result = evaluator.expr(&call, &path, &root, 16, false);
+
+    assert!(matches!(
+        result,
+        Value::Prefix(text, true, Some(77)) if text == "/* sparse alias */ SELECT 1 /* changed after extra-slot storage */"
+    ));
+    assert!(evaluator.argument_extra_slots.values().any(|slots| {
+        matches!(slots.get(&9),
+            Some(Value::Prefix(text, true, Some(77))) if text == "/* sparse alias */ SELECT 1 /* changed after extra-slot storage */")
+    }));
 }
 
 #[test]
@@ -269,6 +358,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),

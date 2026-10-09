@@ -14,13 +14,10 @@ fn alternatives(value: Value, values: &mut Vec<Value>) {
 pub(super) fn objects(
     joined: &mut FxHashMap<u64, Vec<Value>>,
     current: &FxHashMap<u64, Vec<Value>>,
-    original: &FxHashMap<u64, Vec<Value>>,
 ) {
     for (id, after) in current {
-        // A pruned object has no surviving reference and must not be revived.
-        if !original.contains_key(id) {
-            continue;
-        }
+        // Canonical module objects created in an arm can survive into later arms.
+        // Current live IDs are joined; pruned objects are never resurrected.
         let after = after.clone();
         match joined.entry(*id) {
             std::collections::hash_map::Entry::Vacant(entry) => {
@@ -64,4 +61,14 @@ pub(super) fn definite(
     } else {
         *common = Some(shared);
     }
+}
+
+pub(super) fn value(before: Value, after: Value) -> Value {
+    if before == after {
+        return before;
+    }
+    let mut values = Vec::new();
+    alternatives(before, &mut values);
+    alternatives(after, &mut values);
+    Value::Aggregate(values)
 }

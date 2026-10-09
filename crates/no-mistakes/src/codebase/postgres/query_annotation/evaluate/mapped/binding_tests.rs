@@ -12,6 +12,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
         ("strict.cjs", Some("SELECT 1")),
         ("shadow.cjs", Some("/* local annotation */ SELECT 1")),
         ("conditional.cjs", None),
+        ("sparse.cjs", None),
     ] {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
             "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-live-binding/src",
@@ -48,6 +49,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
             argument_objects: Default::default(),
+            argument_extra_slots: Default::default(),
             definite_deleted_argument_slots: Default::default(),
             fresh_mapped_parameters: Default::default(),
         };

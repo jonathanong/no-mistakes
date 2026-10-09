@@ -15,9 +15,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
                 }
                 Value::Arguments(id) if visited.insert(*id) => {
-                    let live = self.argument_objects[id]
-                        .iter()
-                        .enumerate()
+                    let live = self
+                        .argument_slots(*id)
                         .filter(|(index, _)| {
                             !self
                                 .definite_deleted_argument_slots

@@ -1,9 +1,10 @@
 use super::super::Value;
+use super::arena::Arena;
 use crate::fx::{FxHashMap, FxHashSet};
 
 fn prefixes<'a>(
     value: &'a Value,
-    objects: &'a FxHashMap<u64, Vec<Value>>,
+    arena: Arena<'a>,
     visited: &mut FxHashSet<u64>,
     found: &mut FxHashMap<u64, (&'a str, bool)>,
     definite: &FxHashSet<(u64, usize)>,
@@ -13,18 +14,24 @@ fn prefixes<'a>(
             found.insert(*id, (text, *complete));
         }
         Value::Promise(value) | Value::Evaluated(value, _) => {
-            prefixes(value, objects, visited, found, definite)
+            prefixes(value, arena, visited, found, definite)
         }
         Value::Aggregate(values) => {
             for value in values {
-                prefixes(value, objects, visited, found, definite);
+                prefixes(value, arena, visited, found, definite);
             }
         }
         Value::Arguments(id) if visited.insert(*id) => {
-            for (index, value) in objects[id].iter().enumerate() {
+            for (index, value) in arena.objects[id].iter().enumerate().chain(
+                arena
+                    .extras
+                    .get(id)
+                    .into_iter()
+                    .flat_map(|slots| slots.iter().map(|(index, value)| (*index, value))),
+            ) {
                 // Removing a reference does not mutate the builder it held.
                 if !definite.contains(&(*id, index)) {
-                    prefixes(value, objects, visited, found, definite);
+                    prefixes(value, arena, visited, found, definite);
                 }
             }
         }
@@ -35,8 +42,8 @@ fn prefixes<'a>(
 pub(super) fn changes(
     before: &Value,
     after: &Value,
-    before_objects: &FxHashMap<u64, Vec<Value>>,
-    after_objects: &FxHashMap<u64, Vec<Value>>,
+    before_arena: Arena<'_>,
+    after_arena: Arena<'_>,
     changed: &mut FxHashSet<u64>,
     definite: &FxHashSet<(u64, usize)>,
 ) {
@@ -44,14 +51,14 @@ pub(super) fn changes(
     let mut current = FxHashMap::default();
     prefixes(
         before,
-        before_objects,
+        before_arena,
         &mut FxHashSet::default(),
         &mut previous,
         definite,
     );
     prefixes(
         after,
-        after_objects,
+        after_arena,
         &mut FxHashSet::default(),
         &mut current,
         definite,

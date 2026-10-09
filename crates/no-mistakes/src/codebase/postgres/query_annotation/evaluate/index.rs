@@ -9,9 +9,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     return Value::Unknown;
                 }
                 let slot = self
-                    .argument_objects
-                    .get(&id)
-                    .and_then(|values| values.get(index))
+                    .argument_slot(id, index)
                     .cloned()
                     .unwrap_or(Value::Unknown);
                 if self.invalidated_builders.contains(&id)

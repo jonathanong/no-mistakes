@@ -2,7 +2,7 @@
 use super::{children, Expr};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
-use oxc_ast_visit::Visit;
+use oxc_ast_visit::{walk, Visit};
 
 #[derive(Default)]
 struct Targets(Vec<String>);
@@ -58,20 +58,63 @@ pub(super) fn collect(value: &Expression<'_>, source: &str) -> Expr {
     }
     targets.0.sort();
     targets.0.dedup();
-    let mut children = children::collect(value, source);
-    if matches!(value, Expression::AssignmentExpression(assignment)
-        if assignment.operator == AssignmentOperator::Assign
-            && !matches!(&assignment.left, AssignmentTarget::ArrayAssignmentTarget(_) | AssignmentTarget::ObjectAssignmentTarget(_)))
-        && matches!(children.first(), Some(Expr::Name(name)) if targets.0.contains(name))
-    {
-        // A simple binding target is not a value passed to opaque code. Its RHS
-        // remains a separate child, including a read of the same binding.
-        children.remove(0);
-    }
+    let children = match value {
+        Expression::AssignmentExpression(assignment)
+            if assignment.operator == AssignmentOperator::Assign =>
+        {
+            assignment_reads(assignment, source)
+        }
+        _ => children::collect(value, source),
+    };
     Expr::OpaqueWrite {
         children,
         targets: targets.0,
     }
+}
+
+fn assignment_reads(assignment: &AssignmentExpression<'_>, source: &str) -> Vec<Expr> {
+    struct Reads<'s> {
+        source: &'s str,
+        values: Vec<Expr>,
+    }
+    impl Reads<'_> {
+        fn wrapped(&mut self, value: &Expression<'_>) {
+            let value = unwrap_ts_wrappers(value);
+            if !matches!(value, Expression::Identifier(_)) {
+                self.values.push(super::expression(value, self.source));
+            }
+        }
+    }
+    impl<'a> Visit<'a> for Reads<'_> {
+        fn visit_identifier_reference(&mut self, _: &IdentifierReference<'a>) {
+            // Binding destinations do not read or escape their old values.
+        }
+        fn visit_expression(&mut self, value: &Expression<'a>) {
+            // Member receivers, computed keys and defaults remain value reads.
+            self.values.push(super::expression(value, self.source));
+        }
+        fn visit_ts_as_expression(&mut self, value: &TSAsExpression<'a>) {
+            self.wrapped(&value.expression);
+        }
+        fn visit_ts_satisfies_expression(&mut self, value: &TSSatisfiesExpression<'a>) {
+            self.wrapped(&value.expression);
+        }
+        fn visit_ts_non_null_expression(&mut self, value: &TSNonNullExpression<'a>) {
+            self.wrapped(&value.expression);
+        }
+        fn visit_ts_type_assertion(&mut self, value: &TSTypeAssertion<'a>) {
+            self.wrapped(&value.expression);
+        }
+    }
+    let mut reads = Reads {
+        source,
+        values: Vec::new(),
+    };
+    walk::walk_assignment_target(&mut reads, &assignment.left);
+    reads
+        .values
+        .push(super::expression(&assignment.right, source));
+    reads.values
 }
 
 fn argument_slot<'a, 's>(target: &'s AssignmentTarget<'a>) -> Option<(&'s Expression<'a>, usize)> {

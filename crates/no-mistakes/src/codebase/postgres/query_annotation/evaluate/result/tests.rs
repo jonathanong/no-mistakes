@@ -44,6 +44,7 @@ fn outputs() -> Vec<(String, Value)> {
         mapped_argument_owners: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         mapped_arguments: Default::default(),

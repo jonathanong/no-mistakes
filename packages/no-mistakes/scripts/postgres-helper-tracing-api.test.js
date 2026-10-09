@@ -178,6 +178,8 @@ test(
       "helper-tracing-call-argument-order",
       "helper-tracing-live-binding",
       "helper-tracing-argument-slot-write",
+      "helper-tracing-destructuring-alias",
+      "helper-tracing-arm-module",
     ]) {
       const root = join(
         __dirname,
@@ -192,7 +194,9 @@ test(
           report.rules.map(({ rule, file, line }) => [rule, file, line]),
           markedFiles(
             root,
-            ["src/query.mts"],
+            scenario === "helper-tracing-arm-module"
+              ? ["src/query.mts", "src/state.mts"]
+              : ["src/query.mts"],
             config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
           ),
         );
