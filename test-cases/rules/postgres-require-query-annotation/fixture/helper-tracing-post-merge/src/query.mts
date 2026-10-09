@@ -142,7 +142,7 @@ export function deletingArgumentSlotCannotRetainItsPreviousValue() {
 export function replacingArgumentSlotCannotRetainItsPreviousValue() {
   function forward() {
     const ignored = (arguments[0] = 'SELECT 1');
-    write(arguments[0]); // unanalyzable:replaced-slot
+    write(arguments[0]); // finding:replaced-slot
   }
   const ignored = forward('/* replaced slot */ SELECT 1');
 }

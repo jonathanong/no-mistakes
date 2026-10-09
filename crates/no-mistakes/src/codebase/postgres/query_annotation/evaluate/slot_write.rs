@@ -30,6 +30,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 return Value::Evaluated(Box::new(stored), false);
             }
         };
+        let previously_invalidated = self.invalidated_builders.contains(&id);
         let Some(slot) = self
             .argument_objects
             .get_mut(&id)
@@ -39,24 +40,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .entry(id)
                 .or_default()
                 .insert(index, stored.clone());
-            self.invalidated_builders.insert(id);
-            self.invalidate_mapped_freshness(&FxHashSet::from_iter([id]));
             if self.definite_deleted_argument_slots.contains(&(id, index)) {
                 self.opaque_callbacks(std::slice::from_ref(&stored), depth);
             }
             return Value::Evaluated(Box::new(stored), handled_value);
         };
         *slot = stored.clone();
-        self.invalidated_builders.insert(id);
         if self.definite_deleted_argument_slots.contains(&(id, index)) {
             // A later write creates an argument property, but it does not
             // reconnect the deleted formal parameter. Preserve callback
             // effects from the new value without restoring that alias.
             self.opaque_callbacks(std::slice::from_ref(&stored), depth);
-        } else {
+        } else if !previously_invalidated {
             self.write_mapped_argument_slot(id, index, &stored);
         }
-        self.invalidate_mapped_freshness(&FxHashSet::from_iter([id]));
+        if previously_invalidated {
+            self.invalidate_mapped_freshness(&FxHashSet::from_iter([id]));
+        }
         Value::Evaluated(Box::new(stored), handled_value)
     }
 }

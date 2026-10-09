@@ -135,7 +135,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
     assert!(matches!(strict, Value::Evaluated(_, true)));
     assert!(evaluator.scopes[0]["statement"] == original);
     assert!(evaluator.argument_objects[&1][0] == replacement);
-    assert!(evaluator.invalidated_builders.contains(&1));
+    assert!(!evaluator.invalidated_builders.contains(&1));
     assert!(!evaluator.invalidated_builders.contains(&9));
 
     evaluator
@@ -166,10 +166,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
 
     assert!(matches!(sloppy, Value::Evaluated(_, true)));
     assert!(evaluator.scopes[0]["statement"] == replacement);
-    assert!(matches!(
-        evaluator.mapped_parameter_value(0, "statement"),
-        Some(Value::Unknown)
-    ));
+    assert!(evaluator.mapped_parameter_value(0, "statement").is_none());
     assert!(!evaluator.invalidated_builders.contains(&9));
 
     let huge_index = 9_007_199_254_740_991usize;
@@ -239,7 +236,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
     };
     let result = evaluator.expr(&call, &path, &root, 16, false);
 
-    assert!(matches!(result, Value::Unknown));
+    assert!(matches!(result, Value::Prefix(text, true, None) if text == "replacement"));
     let Some((frame, _)) = evaluator.mapped_arguments.iter().find(|(_, mappings)| {
         mappings
             .iter()
@@ -388,11 +385,39 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         events.iter().find(|(sql, _)| sql.contains("dynamic slot")),
         Some((_, Value::Unknown))
     ));
+    assert!(matches!(
+        events
+            .iter()
+            .find(|(sql, _)| sql.contains("selected slot write")),
+        Some((_, Value::Prefix(sql, true, _))) if sql.contains("selected slot write")
+    ));
+    let Some((_, prior_escape)) = events
+        .iter()
+        .find(|(sql, _)| sql.contains("prior escape taint"))
+    else {
+        panic!("missing prior-escape executor event");
+    };
+    assert!(matches!(
+        prior_escape,
+        Value::Aggregate(values) if values.contains(&Value::Unknown)
+    ));
+    assert!(matches!(
+        events
+            .iter()
+            .find(|(sql, _)| sql.contains("awaited strict delete")),
+        Some((_, Value::Prefix(sql, true, _))) if sql.contains("awaited strict delete")
+    ));
+    assert!(matches!(
+        events.iter().find(|(sql, _)| sql.contains("extra slot read")),
+        Some((_, Value::Prefix(sql, true, _))) if sql.contains("extra slot read")
+    ));
     let Some((_, sloppy)) = events
         .iter()
         .find(|(line, _)| line.contains("sloppy mapped slot"))
     else {
         panic!("missing imported sloppy helper executor event");
     };
-    assert!(!matches!(sloppy, Value::Prefix(_, true, _)));
+    // This single-file harness has no prepared imported helper facts; the
+    // separate saved CJS test checks the actual mapped replacement.
+    assert!(matches!(sloppy, Value::Unknown));
 }

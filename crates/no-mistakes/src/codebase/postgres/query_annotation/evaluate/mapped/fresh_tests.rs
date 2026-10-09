@@ -8,6 +8,7 @@ use std::path::PathBuf;
 fn definite_parameter_assignments_remain_fresh_until_another_container_escape() {
     for (name, known) in [
         ("callback.cjs", false),
+        ("rhs-before-target.cjs", false),
         ("nested-callbacks.cjs", false),
         ("direct.cjs", true),
         ("opaque-read.cjs", true),

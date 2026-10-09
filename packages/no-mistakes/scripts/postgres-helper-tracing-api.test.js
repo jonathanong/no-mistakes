@@ -175,6 +175,7 @@ for (const scenario of [
   "helper-tracing-argument-slot-write",
   "helper-tracing-destructuring-alias",
   "helper-tracing-arm-module",
+  "helper-tracing-argument-length",
 ]) {
   test(
     `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,

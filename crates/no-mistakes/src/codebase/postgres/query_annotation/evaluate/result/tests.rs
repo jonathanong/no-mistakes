@@ -6,10 +6,10 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
-fn outputs() -> Vec<(String, Value)> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-discarded-values/src/query.mts",
-    );
+fn outputs(scenario: &str) -> Vec<(String, Value)> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/{scenario}/src/query.mts",
+    ));
     let source = std::fs::read_to_string(&path).unwrap();
     let options = EmbeddedSqlOptions::configured("@app/db", &[]);
     let (facts, embedded) = crate::ast::with_program(&path, &source, |program, _| {
@@ -55,9 +55,17 @@ fn outputs() -> Vec<(String, Value)> {
         .iter()
         .zip(&embedded.call_starts)
         .filter_map(|(call, start)| {
-            let sql = call.sql_text.as_ref()?;
+            let sql = format!(
+                "{} {}",
+                call.sql_text.as_deref().unwrap_or(""),
+                source[*start as usize..].lines().next().unwrap()
+            );
             let values = evaluator.events.get(&(path.clone(), *start))?;
-            Some(values.iter().map(|(_, value)| (sql.clone(), value.clone())))
+            Some(
+                values
+                    .iter()
+                    .map(move |(_, value)| (sql.clone(), value.clone())),
+            )
         })
         .flatten()
         .collect()
@@ -73,7 +81,7 @@ fn event<'a>(values: &'a [(String, Value)], marker: &str) -> &'a Value {
 
 #[test]
 fn discarded_values_do_not_escape_callbacks_but_operand_effects_still_run() {
-    let values = outputs();
+    let values = outputs("helper-tracing-discarded-values");
     for marker in [
         "initializer sequence callback",
         "initializer void callback",
@@ -98,4 +106,18 @@ fn discarded_values_do_not_escape_callbacks_but_operand_effects_still_run() {
         event(&values, "unknown final argument"),
         Value::Unknown
     ));
+}
+
+#[test]
+fn primitive_argument_length_proof_requires_an_unescaped_canonical_container() {
+    let values = outputs("helper-tracing-argument-length");
+    for marker in ["standalone length", "computed length", "sequence length"] {
+        assert!(
+            matches!(event(&values, marker), Value::Prefix(text, true, _) if text.contains("SELECT 1")),
+            "{marker}"
+        );
+    }
+    for marker in ["shadowed-callback", "escaped length", "mixed length"] {
+        assert!(matches!(event(&values, marker), Value::Unknown), "{marker}");
+    }
 }

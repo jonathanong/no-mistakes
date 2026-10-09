@@ -39,7 +39,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if !bindings.is_empty() {
             for (name, origin) in &bindings {
                 self.captured_binding_readers
-                    .entry((*origin, name.clone()))
+                    .entry(*origin)
+                    .or_default()
+                    .entry(name.clone())
                     .or_default()
                     .insert(scope);
             }
@@ -73,7 +75,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut frames = vec![origin];
         if let Some(readers) = self
             .captured_binding_readers
-            .get(&(origin, name.to_string()))
+            .get(&origin)
+            .and_then(|bindings| bindings.get(name))
         {
             frames.extend(readers.iter().copied());
         }
@@ -87,7 +90,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for (frame, bindings) in &self.captured_bindings {
             for (name, origin) in bindings {
                 self.captured_binding_readers
-                    .entry((*origin, name.clone()))
+                    .entry(*origin)
+                    .or_default()
+                    .entry(name.clone())
                     .or_default()
                     .insert(*frame);
             }

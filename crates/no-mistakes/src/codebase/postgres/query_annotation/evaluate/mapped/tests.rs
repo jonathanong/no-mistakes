@@ -88,9 +88,11 @@ fn only_the_last_duplicate_parameter_maps() {
 }
 
 #[test]
-fn slot_mutation_invalidates_parameter_but_deletion_disconnects_it() {
+fn known_slot_write_updates_parameter_and_deletion_disconnects_it() {
     let values = outputs("reverse-rebinding.cjs");
-    assert!(matches!(values.get("result"), Some(Value::Unknown)));
+    assert!(
+        matches!(values.get("result"), Some(Value::Prefix(text, true, None)) if text == "SELECT 1")
+    );
     assert!(matches!(
         values.get("inheritedResult"),
         Some(Value::Unknown)

@@ -12,7 +12,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        self.invalidate_opaque_mapped_targets(targets, *env);
+        // Read target effects and the RHS before clearing written bindings.
         let values = children
             .iter()
             .map(|child| self.expr(child, path, env, depth, generic))

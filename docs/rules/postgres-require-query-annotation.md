@@ -204,9 +204,12 @@ In sloppy functions with simple parameters, assigning a parameter updates its
 mapped argument slot; opaque slot mutations make mapped parameters unknown. Reading
 an immutable parameter through opaque syntax preserves its value; unsupported
 binding writes remain conservative, including rebinding `arguments`. Replacing a
-known argument slot preserves the builder formerly referenced by that slot.
+known argument slot preserves the builder formerly referenced by that slot and
+other indexed arguments; prior opaque escapes remain uncertain. An unescaped
+invocation object's `length` is a primitive and does not expose its slot values.
 Static writes beyond the original argument count use sparse slots rather than
 resizing the invocation object; storing a reference does not mutate its builder.
+Unsupported assignments evaluate their RHS before invalidating written bindings.
 Destructuring targets are bindings, while computed keys, defaults, and member
 targets retain their evaluation effects. Conditional callbacks retain imported
 module state initialized in their possible arms.

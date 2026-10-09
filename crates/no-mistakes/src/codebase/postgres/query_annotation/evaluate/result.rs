@@ -10,10 +10,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         path: &Path,
         env: Environment,
     ) -> bool {
-        args.iter()
+        (args
+            .iter()
             .any(|arg| matches!(arg, Expr::Sequence(_) | Expr::Discard(_)))
+            || values.iter().any(runtime_primitive))
             && args.iter().zip(values).all(|(arg, value)| {
-                primitive_result(arg) && self.handled_deletion_effect(arg, value, path, env)
+                (primitive_result(arg) || runtime_primitive(value))
+                    && self.handled_deletion_effect(arg, value, path, env)
             })
     }
 
@@ -46,6 +49,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let value = self.expr(expr, path, env, depth, generic);
         let handled = self.handled_deletion_effect(expr, &value, path, *env);
         Value::Evaluated(Box::new(Value::Unknown), handled)
+    }
+}
+
+fn runtime_primitive(value: &Value) -> bool {
+    match value {
+        Value::Primitive => true,
+        Value::Evaluated(value, _) => runtime_primitive(value),
+        _ => false,
     }
 }
 

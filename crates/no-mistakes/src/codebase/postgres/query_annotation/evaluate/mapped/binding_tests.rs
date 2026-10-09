@@ -68,6 +68,11 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             let outer = evaluator.scopes[env]["make"].clone();
             evaluator.write_captured_binding(env, "make", &outer);
             assert!(evaluator.captured_write_targets(env, "make").len() > 1);
+            assert_eq!(
+                evaluator.captured_write_targets(env, "make").len(),
+                1 + evaluator.captured_binding_readers[&env]["make"].len()
+            );
+            assert!(!evaluator.captured_binding_readers[&env].contains_key("unrelated_local"));
         }
         let result = &evaluator.scopes[env]["result"];
         if let Some(expected) = expected {

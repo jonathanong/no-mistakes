@@ -31,6 +31,7 @@ pub(super) enum Value {
     Arguments(u64),
     Function(Function, PathBuf, Environment),
     Unknown,
+    Primitive,
     Unsupported,
     SlotDeletion,
 }
@@ -61,7 +62,7 @@ pub(super) struct Evaluator<'a, F> {
     pub invalidated_builders: FxHashSet<u64>,
     pub builder_updates: FxHashMap<u64, Value>,
     pub captured_bindings: FxHashMap<Environment, FxHashMap<String, Environment>>,
-    pub captured_binding_readers: FxHashMap<(Environment, String), FxHashSet<Environment>>,
+    pub captured_binding_readers: FxHashMap<Environment, FxHashMap<String, FxHashSet<Environment>>>,
     pub mapped_argument_owners: FxHashMap<u64, Environment>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
     pub argument_objects: FxHashMap<u64, Vec<Value>>,

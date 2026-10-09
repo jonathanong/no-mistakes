@@ -46,6 +46,17 @@ function extraSlotRead(statement) {
   return arguments[9];
 }
 
+function selectedWritePreservesOtherSlot(statement, other) {
+  const ignored = (arguments[1] = "replacement");
+  return arguments[0];
+}
+
+function priorEscapeRemainsTainted(statement, other) {
+  const escaped = opaque(arguments);
+  const ignored = (arguments[1] = "replacement");
+  return arguments[0];
+}
+
 function extraCallbackNoEscape(statement) {
   const ignored = (arguments[9] = () => unknownMutation(statement));
   return statement;
@@ -94,6 +105,11 @@ function deleteAsSlotValue(statement, other) {
   return statement;
 }
 
+async function awaitedStrictDelete(statement) {
+  await delete arguments[0];
+  return statement;
+}
+
 write(strictReplacement(sql`/* preserved formal */ SELECT 1`)); // known:strict-formal
 write(dynamicReplacement(sql`/* dynamic slot */ SELECT 1`, key)); // unanalyzable:dynamic-slot
 write(sloppyReplacement(sql`/* sloppy mapped slot */ SELECT 1`)); // unanalyzable:sloppy-mapped-slot
@@ -102,7 +118,9 @@ write(deletedSlotScalar(sql`/* deleted slot scalar */ SELECT 1`)); // known:dele
 write(outOfRangeSlot(sql`/* out of range slot */ SELECT 1`)); // known:out-of-range-slot
 write(outOfRangeStoredValue(sql`/* out of range stored value */ SELECT 1`)); // known:out-of-range-stored-value
 write(extraBuilderAppend(sql`/* extra builder append */ SELECT 1`)); // known:extra-builder-append
-write(extraSlotRead(sql`/* extra slot read */ SELECT 1`)); // unanalyzable:extra-slot-read
+write(extraSlotRead(sql`/* extra slot read */ SELECT 1`)); // known:extra-slot-read
+write(selectedWritePreservesOtherSlot(sql`/* selected slot write */ SELECT 1`, "unused")); // known:selected-slot-write
+write(priorEscapeRemainsTainted(sql`/* prior escape taint */ SELECT 1`, "unused")); // unanalyzable:prior-escape-taint
 write(extraCallbackNoEscape(sql`/* extra callback no escape */ SELECT 1`)); // known:extra-callback-no-escape
 write(extraCallbackEscapes(sql`/* extra callback escapes */ SELECT 1`)); // unanalyzable:extra-callback-escapes
 write(deletedExtraCallback(sql`/* deleted extra callback */ SELECT 1`)); // known:deleted-extra-callback
@@ -112,3 +130,4 @@ write(shadowedArguments({}, sql`/* shadowed arguments receiver */ SELECT 1`)); /
 write(opaqueRightHandSide(sql`/* opaque slot right hand side */ SELECT 1`)); // unanalyzable:opaque-slot-rhs
 write(shadowedDelete({}, sql`/* shadowed delete receiver */ SELECT 1`)); // unanalyzable:shadowed-delete-receiver
 write(deleteAsSlotValue(sql`/* delete used as slot value */ SELECT 1`, "unused")); // known:delete-slot-value
+write(await awaitedStrictDelete(sql`/* awaited strict delete */ SELECT 1`)); // known:awaited-strict-delete
