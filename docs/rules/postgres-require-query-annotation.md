@@ -104,8 +104,8 @@ Existing local `sql` template-tag implementations retain their previous behavior
 and can forward annotation prefixes through imported helpers. Unary and sequence
 expressions are traversed for nested executor calls without treating those
 wrappers as SQL values.
-Await an async helper before passing its returned SQL to an executor; an unawaited
-promise remains unanalyzable. Template substitutions are traversed for nested
+Await an async helper before passing its returned SQL to an executor; a promise passed
+without awaiting it remains unanalyzable. Template substitutions are traversed for nested
 executor calls. Unknown calls or untrusted template tags that receive a mutable
 SQL builder invalidate its previous prefix, including aliases to that builder.
 
