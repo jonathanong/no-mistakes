@@ -63,6 +63,36 @@ function createEvaluator(context, consumed) {
         ? { kind: "number", value: node.operator === "-" ? -value.value : value.value }
         : UNKNOWN;
     }
+    if (node.type === "BinaryExpression") {
+      const left = evaluate(node.left);
+      const right = evaluate(node.right);
+      if (left.kind !== "number" || right.kind !== "number") return UNKNOWN;
+      let value;
+      switch (node.operator) {
+        case "+":
+          value = left.value + right.value;
+          break;
+        case "-":
+          value = left.value - right.value;
+          break;
+        case "*":
+          value = left.value * right.value;
+          break;
+        case "/":
+          value = left.value / right.value;
+          break;
+        case "%":
+          value = left.value % right.value;
+          break;
+        case "**":
+          value = left.value ** right.value;
+          break;
+        default:
+          return UNKNOWN;
+      }
+      // Infinity remains a resolved over-cap value, as with numeric literals.
+      return Number.isNaN(value) ? UNKNOWN : { kind: "number", value };
+    }
     if (node.type === "Identifier") {
       const variable = resolveVariable(node, context);
       const def = variable?.defs[0];

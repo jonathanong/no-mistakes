@@ -119,3 +119,10 @@ also apply.
   limits Playwright assertion waits.
 - [`test-no-skips`](test-no-skips.md) prevents skipped tests from hiding
   incomplete coverage.
+
+Numeric arithmetic (`+`, `-`, `*`, `/`, `%`, `**`) is resolved when both operands
+resolve to numbers, including module constants. This catches `60 * 1000`
+and accepts a `30 * 1000` override at the cap. Infinity is over cap; NaN
+remains unknown. Bitwise operators remain unresolved rather than duration arithmetic. Strings are not coerced and arbitrary calls are not executed.
+Unresolved expressions still follow `unknownValues`; use `"finding"` to report
+them. This source rule does not inspect shell or Vitest CLI timeout flags.
