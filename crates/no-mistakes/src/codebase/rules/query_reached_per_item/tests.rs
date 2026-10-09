@@ -78,6 +78,11 @@ fn configured_baseline_and_effect_categories_preserve_occurrences() {
         .iter()
         .all(|finding| finding.file == "src/entry.mts"));
     assert!(run("disabled.yml").is_empty());
+    let unknown = crate::codebase::rules::run_check(&root, Some(&root.join("unknown.yml")), None)
+        .unwrap_err();
+    assert!(unknown
+        .to_string()
+        .contains("unknown effects kind `absent`"));
     for name in [
         "missing.yml",
         "unknown.yml",
