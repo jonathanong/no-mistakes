@@ -41,7 +41,7 @@ pub(crate) struct CompiledOptions {
     fail_unanalyzable: bool,
     shapes: BannedShapes,
     iteration: iteration::IterationOptions,
-    banned_functions: Vec<Vec<String>>,
+    banned_functions: Vec<functions::CompiledFunction>,
 }
 
 impl CompiledOptions {
@@ -170,3 +170,6 @@ mod function_tests;
 
 #[cfg(test)]
 mod function_projection_tests;
+
+#[cfg(test)]
+mod clause_tests;

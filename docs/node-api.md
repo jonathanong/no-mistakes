@@ -85,8 +85,11 @@ other finding. See the
 
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
 `shapeOptions.bannedFunctionCall.functions` list through the same YAML rule
-configuration. Calls in executor SQL use the prepared embedded SQL facts; the
-existing asynchronous `check()` API handles the query, so this option adds no
+configuration. Entries may be strings for an unrestricted ban or objects with
+`name`, optional `clauses`, and optional `hint` for clause-specific diagnostics.
+The shared SQL facts retain the innermost clause; the public functionCalls
+report keeps its existing fields. See the [SQL shape policy](rules/postgres-sql-shape-policy.md).
+Calls in executor SQL use the prepared embedded SQL facts; the existing asynchronous `check()` API handles the query, so this option adds no
 Node export or declaration.
 
 `postgres-sql-statement-policy` also supports those executor options through

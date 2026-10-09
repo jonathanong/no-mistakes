@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ['**/*.sql']
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions:
+            - name: uuidv7
+              clauses: [where, join-on, having]
+              hint: compute a stable bound once per statement

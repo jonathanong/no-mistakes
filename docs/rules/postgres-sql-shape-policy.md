@@ -77,6 +77,39 @@ rules:
           functions: [pg_sleep, pg_catalog.pg_advisory_lock]
 ```
 
+Each function entry may also be an object that limits the ban to clauses:
+
+```yaml
+shapeOptions:
+  bannedFunctionCall:
+    functions:
+      - pg_sleep
+      - name: uuidv7
+        clauses: [where, join-on, having]
+        hint: 'compare the key against a stable bound computed once per statement'
+```
+
+A string entry bans every call and retains the existing diagnostic. An object
+without `clauses` also bans every call. The optional `clauses` list accepts
+`where`, `join-on`, `having`, `select-list`, `order-by`, `values`, `set`,
+`default`, and `returning`. Calls inherit the innermost clause: a subquery's
+WHERE overrides an outer SELECT list, and nested function arguments and CASE
+expressions keep their containing clause. Column defaults in CREATE TABLE and
+ALTER TABLE SET DEFAULT use `default`. ON CONFLICT assignments use `set`, its
+predicate uses `where`, and MERGE WHEN conditions use `where`.
+
+Scoped findings name the clause, for example `uuidv7() is banned in WHERE`.
+An optional `hint` appends `; <hint>` to the finding. Function names must be
+nonempty and unique after PostgreSQL identifier decoding. An empty clause list,
+unknown or duplicate clause, or blank hint is a configuration error. This policy
+does not infer function volatility from the catalog.
+
+For the scoped example above, `DEFAULT uuidv7()`, `VALUES (uuidv7())`,
+`SELECT uuidv7()` and `UPDATE orders SET id = uuidv7()` pass. A predicate such as
+`WHERE id >= uuidv7(INTERVAL '-30 days')` fails; compute a stable bound once per
+statement and compare against that bound instead. Views, CTEs, routines and
+recovered literal EXECUTE commands use the same clause facts.
+
 An empty or omitted `functions` list is a configuration error when
 `banned-function-call` is enabled. It has no default effect on the rule's
 existing shapes. Unknown shape names remain configuration errors.
@@ -276,7 +309,7 @@ is inspected for its `LIMIT` too.
 | `shapeOptions.literalLimit.allowedValues`             | integer[] | `[1]`   | Literal values allowed in `LIMIT` / `FETCH FIRST`. A negative value is a configuration error.                                                                                                                                                                                                                                                                                          |
 | `shapeOptions.keysetOnlySweep.nonSelectivePredicates` | string[]  | `[]`    | Conjuncts (compared after SQL token normalization; keywords and unquoted identifiers fold to lower case, while string literals, dollar-quoted strings, and quoted identifiers retain their contents) that do not narrow the walk. An empty string is a configuration error.                                                                                                            |
 | `shapeOptions.keysetOnlySweep.ignoreTables`           | string[]  | `[]`    | Tables that may be walked whole (small configuration tables). Entries use SQL identifier spelling: unquoted `Orders` folds to `orders`, while `"Orders"` matches only that exact case. An empty string is a configuration error. An unqualified entry also matches the table in any schema, but a dot inside a quoted name belongs to the name: `items` does not match `"work.items"`. |
-| `shapeOptions.bannedFunctionCall.functions`            | string[]  | —       | Required and nonempty when `banned-function-call` is enabled. Function names follow PostgreSQL identifier case rules; unqualified names match the final part of any qualified call, while qualified names require all parts to match. |
+| `shapeOptions.bannedFunctionCall.functions`            | (string or object)[] | — | Required and nonempty when `banned-function-call` is enabled. Function names follow PostgreSQL identifier case rules; unqualified names match the final part of any qualified call, while qualified names require all parts to match. |
 
 Invalid with both shapes banned (and `deleted_at IS NULL` configured):
 

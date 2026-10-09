@@ -63,3 +63,42 @@ fn empty_function_list_is_a_cli_configuration_error() {
         "{diagnostic}"
     );
 }
+
+#[test]
+fn clause_scoped_function_bans_preserve_cli_diagnostics_and_suppression() {
+    let root = fixture("clause-api");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(&root)
+        .args(["--config"])
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 5, "{report}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding["rule"] == "postgres-sql-shape-policy"
+            && finding["target"] == "banned-function-call"));
+    let scoped = findings
+        .iter()
+        .filter(|finding| {
+            finding["message"]
+                .as_str()
+                .unwrap()
+                .contains("uuidv7() is banned")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(scoped.len(), 4);
+    assert!(scoped.iter().all(|finding| finding["message"]
+        .as_str()
+        .unwrap()
+        .ends_with("; compute a stable bound once per statement")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding["line"].as_u64().unwrap() < 12
+            && finding["file"] == "sql/queries.sql"));
+}
