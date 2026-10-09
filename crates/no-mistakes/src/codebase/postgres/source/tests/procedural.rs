@@ -373,7 +373,7 @@ fn single_quoted_conditional_occurrences_keep_original_encoded_spans() {
 
 #[test]
 fn literal_execute_owns_decoded_children_and_preserves_wrapper_neighbors() {
-    use super::super::{PostgresSqlBodyEncoding, PostgresSqlStatementKind::*};
+    use super::super::{PostgresSqlExecuteEncoding, PostgresSqlStatementKind::*};
     let sql = fixture("literal-execute.sql");
     let result = facts("literal-execute.sql");
     assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
@@ -384,8 +384,8 @@ fn literal_execute_owns_decoded_children_and_preserves_wrapper_neighbors() {
     assert!(!block.complete);
     assert_eq!(block.statements.len(), 6);
     for (index, count, encoding) in [
-        (0, 2, PostgresSqlBodyEncoding::DollarQuoted),
-        (1, 1, PostgresSqlBodyEncoding::SingleQuoted),
+        (0, 2, PostgresSqlExecuteEncoding::DollarQuoted),
+        (1, 1, PostgresSqlExecuteEncoding::SingleQuoted),
     ] {
         let wrapper = &block.statements[index];
         assert_eq!(
@@ -448,7 +448,7 @@ fn escaped_execute_strings_decode_postgres_escapes() {
     };
     assert_eq!(
         execute.body_encoding,
-        super::super::PostgresSqlBodyEncoding::EscapedString
+        super::super::PostgresSqlExecuteEncoding::EscapedString
     );
     assert!(matches!(
         execute.statements[0].facts,

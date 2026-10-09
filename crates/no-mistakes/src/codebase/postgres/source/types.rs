@@ -175,8 +175,10 @@ pub enum PostgresSqlStatementKind {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlLiteralExecute {
     pub literal_span: PostgresSqlSpan,
-    pub body_encoding: PostgresSqlBodyEncoding,
+    pub body_encoding: PostgresSqlExecuteEncoding,
     pub decoded_sql: String,
+    /// Expressions remain syntax in enclosing-source coordinates, never evaluated values.
+    pub using: Vec<PostgresSqlExpression>,
     pub statements: Vec<PostgresSqlStatement>,
     pub diagnostics: Vec<PostgresSqlDiagnostic>,
     pub complete: bool,
@@ -210,4 +212,13 @@ pub enum PostgresSqlBodyEncoding {
     EscapedString,
     DollarQuoted,
     SingleQuoted,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PostgresSqlExecuteEncoding {
+    EscapedString,
+    DollarQuoted,
+    SingleQuoted,
+    Concatenated,
 }

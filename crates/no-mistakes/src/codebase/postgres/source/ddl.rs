@@ -47,6 +47,7 @@ pub(super) fn trigger(trigger: &CreateTrigger, locations: &Locations<'_>) -> Pos
         table: expressions::name(&trigger.table_name),
         timing: trigger.period.as_ref().map(ToString::to_string),
         events: trigger.events.iter().map(ToString::to_string).collect(),
+        event_facts: trigger.events.iter().map(trigger_event).collect(),
         for_each: trigger.trigger_object.as_ref().map(ToString::to_string),
         condition: trigger
             .condition
@@ -81,6 +82,21 @@ pub(super) fn trigger(trigger: &CreateTrigger, locations: &Locations<'_>) -> Pos
             .exec_body
             .as_ref()
             .map(|body| body.exec_type.to_string()),
+    }
+}
+
+fn trigger_event(event: &sqlparser::ast::TriggerEvent) -> PostgresSqlTriggerEvent {
+    use sqlparser::ast::TriggerEvent;
+    let (kind, columns) = match event {
+        TriggerEvent::Insert => (PostgresSqlTriggerEventKind::Insert, &[][..]),
+        TriggerEvent::Delete => (PostgresSqlTriggerEventKind::Delete, &[][..]),
+        TriggerEvent::Truncate => (PostgresSqlTriggerEventKind::Truncate, &[][..]),
+        TriggerEvent::Update(columns) => (PostgresSqlTriggerEventKind::Update, columns.as_slice()),
+    };
+    PostgresSqlTriggerEvent {
+        kind,
+        update_columns: columns.iter().map(expressions::identifier).collect(),
+        update_of: !columns.is_empty(),
     }
 }
 

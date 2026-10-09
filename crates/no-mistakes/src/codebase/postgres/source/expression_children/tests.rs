@@ -1,10 +1,33 @@
-use super::roots::root;
+fn root(expr: &sqlparser::ast::Expr) -> super::PostgresSqlExpressionChildRoot {
+    super::roots::root(expr, &super::Locations::new(""))
+}
 use crate::codebase::postgres::source::tests::fixture;
 use sqlparser::{ast::*, dialect::PostgreSqlDialect, parser::Parser};
 use std::ops::ControlFlow;
 
 fn statements(name: &str) -> Vec<Statement> {
     Parser::parse_sql(&PostgreSqlDialect {}, &fixture(name)).unwrap()
+}
+
+#[test]
+fn structural_depth_budget_remains_independent_of_optional_provenance() {
+    let sql = fixture("insert-column-sources.sql");
+    let Statement::Insert(insert) = statements("insert-column-sources.sql").remove(0) else {
+        panic!()
+    };
+    let SetExpr::Values(values) = *insert.source.unwrap().body else {
+        panic!()
+    };
+    let mut expr = values.rows[0][0].clone();
+    assert!(super::exact_ast_span(&expr, &super::Locations::new(""), &[]).is_none());
+    // AST-only nesting pins the projection budget without runtime fixture generation.
+    for _ in 0..63 {
+        expr = Expr::Nested(Box::new(expr));
+    }
+    let locations = super::Locations::new(&sql);
+    assert!(super::project_with_delimiters(&expr, &locations, &[]).1);
+    expr = Expr::Nested(Box::new(expr));
+    assert!(!super::project_with_delimiters(&expr, &locations, &[]).1);
 }
 
 #[test]

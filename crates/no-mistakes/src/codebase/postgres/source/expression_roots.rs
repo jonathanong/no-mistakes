@@ -24,6 +24,7 @@ pub(super) fn root(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpress
             expr, data_type, ..
         } => Root::Cast {
             data_type: data_type.to_string(),
+            data_type_facts: super::type_facts::data_type(data_type, locations),
             expression: Box::new(root(expr, locations)),
         },
         Expr::IsNull(_) | Expr::IsNotNull(_) => Root::NullTest {

@@ -91,7 +91,7 @@ fn insert_recursive_roles_order_and_legacy_summaries_are_distinct() {
     );
     let operand = &wrapped["expression"]["children"][0];
     if operand["span"].is_null() {
-        assert_eq!(wrapped["expression"]["childrenComplete"], false);
+        assert_eq!(wrapped["expression"]["childrenComplete"], true);
     } else {
         assert_eq!(
             slice(&sql, &operand["span"]),
@@ -152,7 +152,7 @@ fn insert_column_sources_keep_rows_branches_and_proven_bytes() {
         let mapping = &statements[index]["insert"]["columnSources"];
         let expression = &mapping["columns"][1]["sources"][0]["expression"];
         if expression["span"].is_null() {
-            assert_eq!(expression["childrenComplete"], false);
+            assert_eq!(expression["childrenComplete"], index != 5);
             assert_eq!(mapping["complete"], false);
         } else {
             assert_eq!(slice(&sql, &expression["span"]), expected);

@@ -2,6 +2,7 @@ import type {
   PostgresSqlIdentifier,
   PostgresSqlName,
   PostgresSqlSpan,
+  PostgresSqlType,
 } from "./postgres-source-types";
 /** Syntactic root; wrappers never promote a nested call through an unrelated operator. */
 export type PostgresSqlExpressionRoot =
@@ -15,7 +16,12 @@ export type PostgresSqlExpressionRoot =
       modifiers: string[];
     }
   | { kind: "parenthesized"; expression: PostgresSqlExpressionRoot }
-  | { kind: "cast"; dataType: string; expression: PostgresSqlExpressionRoot }
+  | {
+      kind: "cast";
+      dataType: string;
+      dataTypeFacts: PostgresSqlType;
+      expression: PostgresSqlExpressionRoot;
+    }
   | { kind: "nullTest"; negated: boolean }
   | { kind: "distinctness"; negated: boolean }
   | { kind: "parameter"; placeholder: string }
@@ -50,7 +56,7 @@ export type PostgresSqlExpressionChildRoot =
       modifiers: string[];
     }
   | { kind: "parenthesized" }
-  | { kind: "cast"; castKind: string; dataType: string }
+  | { kind: "cast"; castKind: string; dataType: string; dataTypeFacts: PostgresSqlType }
   | { kind: "nullTest"; negated: boolean }
   | { kind: "distinctness"; negated: boolean }
   | { kind: "parameter"; placeholder: string }
@@ -66,6 +72,7 @@ export interface PostgresSqlExpressionChild {
   span: PostgresSqlSpan | null;
   root: PostgresSqlExpressionChildRoot;
   children: PostgresSqlExpressionChild[];
+  /** Complete represented syntax; a missing provenance span does not imply missing structure. */
   childrenComplete: boolean;
 }
 /** Bare CURRENT_TIMESTAMP is a value function; CURRENT_TIMESTAMP(3) uses call syntax. */

@@ -59,7 +59,9 @@ pub(super) fn project(
                                 PostgresSqlInsertColumnSourcesReason::UnsupportedSource,
                             );
                         };
-                        complete &= value.children_complete;
+                        complete &= value.children_complete
+                            && value.span.is_some()
+                            && exact_children(&value.children);
                         sources.push(PostgresSqlInsertSourceExpression::Values {
                             branch_path: path.clone(),
                             row_index,
@@ -73,7 +75,9 @@ pub(super) fn project(
                         delimiters,
                         locations,
                     );
-                    complete &= value.children_complete;
+                    complete &= value.children_complete
+                        && value.span.is_some()
+                        && exact_children(&value.children);
                     sources.push(PostgresSqlInsertSourceExpression::Select {
                         branch_path: path.clone(),
                         expression: value,
@@ -92,6 +96,12 @@ pub(super) fn project(
         columns: mapped,
         complete,
     }
+}
+
+fn exact_children(children: &[PostgresSqlExpressionChild]) -> bool {
+    children
+        .iter()
+        .all(|child| child.span.is_some() && exact_children(&child.children))
 }
 
 fn duplicate_columns(columns: &[sqlparser::ast::ObjectName]) -> bool {

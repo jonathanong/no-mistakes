@@ -19,6 +19,7 @@ mod parsing;
 mod procedural;
 mod schema;
 mod schema_virtual;
+mod structured_replay;
 
 pub(super) fn fixture(name: &str) -> String {
     std::fs::read_to_string(

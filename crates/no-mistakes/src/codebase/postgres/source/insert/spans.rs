@@ -43,12 +43,10 @@ pub(super) fn source_expression(
     locations: &Locations<'_>,
 ) -> PostgresSqlExpression {
     let mut projected = expression_prepared(expr, expr.span(), delimiters, locations);
-    if projected.children_complete {
+    if projected.children_complete && projected.children.iter().all(|child| child.span.is_some()) {
         projected.span =
             super::super::expression_children::exact_ast_span(expr, locations, delimiters);
-        projected.children_complete &= projected.span.is_some();
-    }
-    if !projected.children_complete {
+    } else {
         projected.span = None;
     }
     projected

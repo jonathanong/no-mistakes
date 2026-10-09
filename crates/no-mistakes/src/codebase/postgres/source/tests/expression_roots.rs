@@ -32,6 +32,7 @@ fn direct_calls_are_distinct_from_enclosing_case_operators_and_casts() {
     let Root::Cast {
         expression,
         data_type,
+        ..
     } = &expressions[4].root
     else {
         panic!()

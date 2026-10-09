@@ -1,3 +1,5 @@
+import type { PostgresSqlTrigger } from "./postgres-trigger-types";
+export type * from "./postgres-trigger-types";
 import type { PostgresSqlWrapper } from "./postgres-wrapper-types";
 export type * from "./postgres-wrapper-types";
 import type { PostgresSqlFunction } from "./postgres-function-types";
@@ -62,6 +64,7 @@ export interface PostgresSqlExpression {
   functions: PostgresSqlFunctionReference[];
   root: PostgresSqlExpressionRoot;
   children: PostgresSqlExpressionChild[];
+  /** True only when the entire represented expression structure is complete, independently of spans. */
   childrenComplete: boolean;
 }
 export interface PostgresSqlType {
@@ -147,26 +150,6 @@ export interface PostgresSqlView {
   dependencies: PostgresSqlName[];
   dependenciesComplete: boolean;
   functions: PostgresSqlFunctionReference[];
-}
-export interface PostgresSqlTriggerTransition {
-  kind: string;
-  name: PostgresSqlName;
-}
-export interface PostgresSqlTrigger {
-  name: PostgresSqlName;
-  table: PostgresSqlName;
-  timing: string | null;
-  events: string[];
-  forEach: string | null;
-  condition: PostgresSqlExpression | null;
-  function: PostgresSqlName | null;
-  arguments: string[];
-  constraint: boolean;
-  orReplace: boolean;
-  referencedTable: PostgresSqlName | null;
-  transitions: PostgresSqlTriggerTransition[];
-  executionKind: string | null;
-  characteristics: string | null;
 }
 export type PostgresSqlStatementKind =
   | { kind: "comment"; comment: PostgresSqlComment }

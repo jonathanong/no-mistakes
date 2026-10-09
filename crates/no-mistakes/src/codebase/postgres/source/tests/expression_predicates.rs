@@ -38,7 +38,7 @@ fn expression_facts_retain_predicate_parameter_and_typed_literal_structure() {
     assert_eq!(and["children"][1]["root"]["kind"], "nullTest");
     assert_eq!(and["children"][0]["span"], serde_json::Value::Null);
     assert_eq!(and["children"][1]["span"], serde_json::Value::Null);
-    assert_eq!(and["childrenComplete"], false);
+    assert_eq!(and["childrenComplete"], true);
     assert_ne!(
         and["children"][0]["children"][0]["span"],
         serde_json::Value::Null
