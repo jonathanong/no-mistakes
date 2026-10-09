@@ -98,7 +98,8 @@ without `clauses` also bans every call. The optional `clauses` list accepts
 WHERE overrides an outer SELECT list, and nested function arguments and CASE
 expressions keep their containing clause. Column defaults in CREATE TABLE and
 ALTER TABLE SET DEFAULT use `default`. ON CONFLICT assignments use `set`, its
-arbiter and action WHERE predicates use `where`, and MERGE WHEN conditions use
+arbiter and action WHERE predicates and partial-index WHERE predicates use `where`,
+and MERGE WHEN conditions use
 `where`. Recovered procedural IF, PERFORM, and RETURN expression wrappers and
 window PARTITION BY or frame expressions stay unscoped. Genuine nested SELECT
 clauses and window ORDER BY expressions retain their clauses.

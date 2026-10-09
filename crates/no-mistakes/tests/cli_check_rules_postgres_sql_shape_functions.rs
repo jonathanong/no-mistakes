@@ -78,7 +78,7 @@ fn clause_scoped_function_bans_preserve_cli_diagnostics_and_suppression() {
     assert!(!output.status.success());
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 9, "{report}");
+    assert_eq!(findings.len(), 10, "{report}");
     assert!(findings
         .iter()
         .all(|finding| finding["rule"] == "postgres-sql-shape-policy"
@@ -92,7 +92,7 @@ fn clause_scoped_function_bans_preserve_cli_diagnostics_and_suppression() {
                 .contains("uuidv7() is banned")
         })
         .collect::<Vec<_>>();
-    assert_eq!(scoped.len(), 6);
+    assert_eq!(scoped.len(), 7);
     assert!(scoped.iter().all(|finding| finding["message"]
         .as_str()
         .unwrap()
@@ -105,7 +105,7 @@ fn clause_scoped_function_bans_preserve_cli_diagnostics_and_suppression() {
             .iter()
             .map(|finding| finding["line"].as_u64().unwrap())
             .collect::<Vec<_>>(),
-        [6, 8, 9, 10, 11, 16, 17, 19, 23]
+        [6, 8, 9, 10, 11, 16, 17, 19, 23, 25]
     );
     assert!(findings.iter().any(|finding| finding["message"]
         .as_str()

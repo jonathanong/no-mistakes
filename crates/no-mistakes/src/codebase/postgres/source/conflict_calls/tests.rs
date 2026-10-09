@@ -102,9 +102,31 @@ fn failed_prepared_projection_does_not_publish_partial_conflict_calls() {
         "/../../fixtures/postgres/function-call-clauses/conflict-invalid-view.sql"
     ));
     let prepared = crate::codebase::postgres::parse::PreparedSql::new(fixture);
-    assert!(prepared.parse().is_err());
+    assert!(prepared.parse_policy().is_err());
     assert!(prepared.functions().is_empty());
     let statements = crate::codebase::postgres::extract_sql_statement_facts(fixture);
     assert!(statements.parse_failed);
     assert_eq!(statements.function_calls.len(), 1);
+}
+
+#[test]
+fn public_parser_never_returns_a_lossy_conflict_ast() {
+    let fixture = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres/function-call-clauses/conflict-recovery.sql"
+    ));
+    let sql = fixture.lines().nth(5).unwrap();
+    let native = Parser::new(&PostgreSqlDialect {})
+        .try_with_sql(sql)
+        .unwrap()
+        .parse_statements();
+    let public = crate::codebase::postgres::parse_postgres_sql(sql);
+    assert!(native.is_err());
+    assert!(public.is_err());
+    let prepared = crate::codebase::postgres::parse::PreparedSql::new(sql);
+    assert!(prepared.parse_policy().is_ok());
+    assert_eq!(prepared.functions().len(), 2);
+    // Request-owned facts are a separate projection, not a successful public AST.
+    assert!(prepared.parse().is_err());
+    assert!(prepared.functions().is_empty());
 }

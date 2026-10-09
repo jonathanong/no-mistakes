@@ -36,7 +36,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     placeholder_positions: PlaceholderPositions<'_>,
 ) -> SqlStatementFileFacts {
     let prepared = PreparedSql::new(sql);
-    let parsed = prepared.parse();
+    let parsed = prepared.parse_policy();
     let parse_failed = parsed.is_err();
     match parsed {
         Ok(statements) => super::extract_from_parsed_and_sources(

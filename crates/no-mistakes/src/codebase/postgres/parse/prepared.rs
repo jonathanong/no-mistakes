@@ -1,6 +1,7 @@
 use super::{normalize_copy_data, normalize_table_queries, PostgresParseError};
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{TokenWithSpan, Tokenizer};
 use std::borrow::Cow;
 use std::cell::{Cell, OnceCell, Ref, RefCell};
@@ -38,13 +39,30 @@ impl<'a> PreparedSql<'a> {
     }
 
     pub(crate) fn parse(&self) -> Result<Vec<Statement>, PostgresParseError> {
+        self.parse_with_policy(false)
+    }
+
+    /// Prepared checks retain auxiliary conflict syntax as facts, never public ASTs.
+    pub(crate) fn parse_policy(&self) -> Result<Vec<Statement>, PostgresParseError> {
+        self.parse_with_policy(true)
+    }
+
+    fn parse_with_policy(&self, policy: bool) -> Result<Vec<Statement>, PostgresParseError> {
+        self.functions.borrow_mut().clear();
         let located = self.located().map_err(Clone::clone)?;
         let mut tokens = super::radix_numbers::repair(located).unwrap_or_else(|| located.clone());
         normalize_table_queries(&mut tokens);
         let recursive_views = super::recursive_view::prepare(&mut tokens);
         let fetch = super::fetch_expression::prepare(&mut tokens);
-        let (mut statements, functions) = super::super::source::parse_conflict_program(tokens)
-            .map_err(PostgresParseError::from)?;
+        let (mut statements, functions) = if policy {
+            super::super::source::parse_conflict_program(tokens)
+        } else {
+            Parser::new(&PostgreSqlDialect {})
+                .with_tokens_with_locations(tokens)
+                .parse_statements()
+                .map(|statements| (statements, Vec::new()))
+        }
+        .map_err(PostgresParseError::from)?;
         super::fetch_expression::restore(&mut statements, &fetch);
         for statement in &mut statements {
             recursive_views.validate(statement)?;

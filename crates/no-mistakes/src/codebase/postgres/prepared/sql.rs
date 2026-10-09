@@ -34,7 +34,7 @@ pub(super) fn collect(
             });
             let parsed = source.as_ref().map(|source| {
                 let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
-                let parsed = prepared.parse();
+                let parsed = prepared.parse_policy();
                 let failed = parsed.is_err();
                 let (statements, functions) = match parsed {
                     Ok(statements) => (statements, Vec::new()),

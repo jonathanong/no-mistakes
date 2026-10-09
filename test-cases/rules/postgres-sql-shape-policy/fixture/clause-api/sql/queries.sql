@@ -21,3 +21,6 @@ SELECT 1 WHERE "custom.schema"."odd.function"() IS NOT NULL; -- finding: quoted
 SELECT sum(1) OVER (PARTITION BY probe_boundary() ROWS probe_boundary() PRECEDING);
 SELECT sum(1) OVER w FROM orders WINDOW w AS (PARTITION BY probe_boundary() ROWS probe_boundary() PRECEDING);
 SELECT probe_boundary(); -- finding: boundary
+
+CREATE INDEX orders_partial_idx ON orders (id) WHERE id >= uuidv7(INTERVAL '-30 days'); -- finding: scoped
+CREATE INDEX orders_expression_idx ON orders (probe_boundary(id)); -- permitted: index expressions are unscoped

@@ -112,3 +112,29 @@ fn unsupported_window_and_synthetic_routine_roots_remain_unscoped() {
     ]);
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn partial_index_predicates_use_where_without_scoping_index_expressions() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres/function-call-clauses/partial-index.sql"
+    ));
+    let statements = crate::codebase::postgres::parse::parse_postgres_sql(source).unwrap();
+    let mut calls = Vec::new();
+    for statement in &statements {
+        collect(statement, &mut calls);
+    }
+    let actual = calls
+        .iter()
+        .map(|call| (call.name_parts[0].as_str(), call.clause))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        actual,
+        BTreeMap::from([
+            ("probe_index_expression", None),
+            ("probe_partial_where", Some(SqlFunctionClause::Where)),
+            ("probe_predicate_arg", Some(SqlFunctionClause::Where)),
+            ("probe_plain_index", None),
+        ])
+    );
+}

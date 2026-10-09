@@ -1,8 +1,8 @@
 use super::{Roots, SqlFunctionClause as Clause};
 use sqlparser::ast::{
     AlterColumnOperation, AlterTableOperation, Assignment, ColumnDef, ColumnOption, FromTable,
-    MergeAction, MergeInsertKind, MergeUpdateKind, OnConflictAction, OnInsert, OutputClause,
-    Statement, UpdateTableFromKind,
+    Insert, Merge, MergeAction, MergeInsertKind, MergeUpdateKind, OnConflictAction, OnInsert,
+    OutputClause, Statement, UpdateTableFromKind,
 };
 
 impl Roots {
@@ -11,25 +11,7 @@ impl Roots {
         statement: &Statement,
     ) {
         match statement {
-            Statement::Insert(insert) => {
-                if let Some(on) = &insert.on {
-                    match on {
-                        OnInsert::DuplicateKeyUpdate(assignments) => self.assignments(assignments),
-                        OnInsert::OnConflict(conflict) => {
-                            if let OnConflictAction::DoUpdate(update) = &conflict.action {
-                                self.assignments(&update.assignments);
-                                if let Some(selection) = &update.selection {
-                                    self.expr(selection, Clause::Where);
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                if let Some(items) = &insert.returning {
-                    self.items(items, Clause::Returning);
-                }
-            }
+            Statement::Insert(insert) => self.insert(insert),
             Statement::Update(update) => {
                 self.assignments(&update.assignments);
                 self.joins(std::slice::from_ref(&update.table));
@@ -62,39 +44,10 @@ impl Roots {
                 }
                 self.order_exprs(&delete.order_by);
             }
-            Statement::Merge(merge) => {
-                if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
-                    self.items(select_items, Clause::Returning);
-                }
-                self.expr(&merge.on, Clause::JoinOn);
-                for clause in &merge.clauses {
-                    if let Some(predicate) = &clause.predicate {
-                        self.expr(predicate, Clause::Where);
-                    }
-                    match &clause.action {
-                        MergeAction::Update(update) => {
-                            if let MergeUpdateKind::Set(assignments) = &update.kind {
-                                self.assignments(assignments);
-                            }
-                            for expr in [&update.update_predicate, &update.delete_predicate]
-                                .into_iter()
-                                .flatten()
-                            {
-                                self.expr(expr, Clause::Where);
-                            }
-                        }
-                        MergeAction::Insert(insert) => {
-                            if let MergeInsertKind::Values(values) = &insert.kind {
-                                for expr in values.rows.iter().flat_map(|row| row.iter()) {
-                                    self.expr(expr, Clause::Values);
-                                }
-                            }
-                            if let Some(expr) = &insert.insert_predicate {
-                                self.expr(expr, Clause::Where);
-                            }
-                        }
-                        _ => {}
-                    }
+            Statement::Merge(merge) => self.merge(merge),
+            Statement::CreateIndex(index) => {
+                if let Some(predicate) = &index.predicate {
+                    self.expr(predicate, Clause::Where);
                 }
             }
             Statement::CreateTable(table) => self.defaults(&table.columns),
@@ -113,6 +66,62 @@ impl Roots {
                 }
             }
             _ => {}
+        }
+    }
+
+    fn insert(&mut self, insert: &Insert) {
+        if let Some(on) = &insert.on {
+            match on {
+                OnInsert::DuplicateKeyUpdate(assignments) => self.assignments(assignments),
+                OnInsert::OnConflict(conflict) => {
+                    if let OnConflictAction::DoUpdate(update) = &conflict.action {
+                        self.assignments(&update.assignments);
+                        if let Some(selection) = &update.selection {
+                            self.expr(selection, Clause::Where);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        if let Some(items) = &insert.returning {
+            self.items(items, Clause::Returning);
+        }
+    }
+
+    fn merge(&mut self, merge: &Merge) {
+        if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
+            self.items(select_items, Clause::Returning);
+        }
+        self.expr(&merge.on, Clause::JoinOn);
+        for clause in &merge.clauses {
+            if let Some(predicate) = &clause.predicate {
+                self.expr(predicate, Clause::Where);
+            }
+            match &clause.action {
+                MergeAction::Update(update) => {
+                    if let MergeUpdateKind::Set(assignments) = &update.kind {
+                        self.assignments(assignments);
+                    }
+                    for expr in [&update.update_predicate, &update.delete_predicate]
+                        .into_iter()
+                        .flatten()
+                    {
+                        self.expr(expr, Clause::Where);
+                    }
+                }
+                MergeAction::Insert(insert) => {
+                    if let MergeInsertKind::Values(values) = &insert.kind {
+                        for expr in values.rows.iter().flat_map(|row| row.iter()) {
+                            self.expr(expr, Clause::Values);
+                        }
+                    }
+                    if let Some(expr) = &insert.insert_predicate {
+                        self.expr(expr, Clause::Where);
+                    }
+                }
+                _ => {}
+            }
         }
     }
 
