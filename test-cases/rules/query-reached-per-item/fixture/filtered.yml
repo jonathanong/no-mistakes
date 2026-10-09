@@ -1,0 +1,11 @@
+effects:
+  postgres:
+    functions: [read]
+    transactionFunctions: [tx.query]
+    batchFunctions: [batch]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    include: [src/entry.mts]
+    options:
+      effects: [postgres]

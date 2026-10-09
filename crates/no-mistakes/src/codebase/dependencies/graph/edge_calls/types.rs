@@ -14,6 +14,8 @@ pub struct ResolvedCallSite {
     /// Exact source spelling, kept apart from canonical target selectors.
     pub source_callee: String,
     pub target: ResolvedCallTarget,
+    /// Exact target of this occurrence in the canonical call graph.
+    pub target_node: Option<NodeId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

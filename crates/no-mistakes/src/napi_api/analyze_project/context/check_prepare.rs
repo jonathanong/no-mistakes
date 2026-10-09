@@ -144,6 +144,8 @@ impl SharedCheckContext {
             plan.graph.include(fact_plan);
             plan.graph_context = fact_context;
         }
+        plan.graph.per_item_calls |=
+            config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM);
         let fact_demand = crate::check_runner::finite_set_plan::prepare(
             &root,
             config,

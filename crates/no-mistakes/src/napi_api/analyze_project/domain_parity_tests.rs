@@ -51,6 +51,7 @@ fn assert_each_indexable_file_parsed_once(
 }
 
 include!("domain_parity_tests/check_effects.rs");
+include!("domain_parity_tests/check_per_item.rs");
 include!("domain_parity_tests/finite_set_consistency.rs");
 include!("domain_parity_tests/check_isolation.rs");
 include!("domain_parity_tests/repository_inventory.rs");

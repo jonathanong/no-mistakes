@@ -19,6 +19,7 @@ impl CallSiteResolution<'_, '_> {
             callable_id,
         )
         .map(|target| (source, target, EdgeKind::Call));
+        let target_node = edge.as_ref().map(|(_, target, _)| target.clone());
         (
             edge,
             ResolvedCallSite {
@@ -30,6 +31,7 @@ impl CallSiteResolution<'_, '_> {
                 offset: call.offset,
                 invocation: call.invocation,
                 target: resolved_target,
+                target_node,
             },
         )
     }

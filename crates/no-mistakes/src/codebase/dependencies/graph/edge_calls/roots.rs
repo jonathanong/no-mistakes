@@ -99,6 +99,15 @@ impl DepGraph {
         traversal: CallTraversal,
         max_depth: Option<usize>,
     ) -> Vec<CallTrace> {
+        self.call_traces_excluding(roots, traversal, max_depth, &[])
+    }
+
+    /// Follow canonical calls while pruning explicitly exempted callable nodes.
+    /// Other paths to the same sink remain eligible, with the usual stable BFS.
+    pub fn call_traces_excluding(
+        &self, roots: &[NodeId], traversal: CallTraversal, max_depth: Option<usize>, excluded: &[NodeId],
+    ) -> Vec<CallTrace> {
+        let excluded: FxHashSet<_> = excluded.iter().collect();
         let roots = normalize_nodes(
             &roots
                 .iter()
@@ -108,6 +117,7 @@ impl DepGraph {
         let edges = self.traversal_edges().forward();
         let mut out = Vec::new();
         for root in roots {
+            if excluded.contains(&root) { continue; }
             let root_file = root.as_file().map(std::path::Path::to_path_buf);
             let cap = match traversal {
                 CallTraversal::Direct => Some(1),
@@ -125,7 +135,7 @@ impl DepGraph {
                     continue;
                 };
                 for (neighbor, kind) in &neighbors.neighbors {
-                    if *kind != EdgeKind::Call {
+                    if *kind != EdgeKind::Call || excluded.contains(neighbor) {
                         continue;
                     }
                     if traversal == CallTraversal::File

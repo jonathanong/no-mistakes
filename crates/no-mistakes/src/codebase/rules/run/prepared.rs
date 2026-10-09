@@ -1,3 +1,4 @@
+use super::super::query_reached_per_item;
 use super::{
     any_codebase_rule_enabled, forbidden_calls, forbidden_dependencies, nextjs_no_api_routes,
     nextjs_no_caching, require_storybook_stories, required_entrypoint_reachability, rule_enabled,
@@ -65,6 +66,10 @@ pub fn canonical_graph_plan(
         plan.include(unconstructed_plan);
         needed = true;
     }
+    if let Some(query_plan) = query_reached_per_item::graph_plan(config) {
+        plan.include(query_plan);
+        needed = true;
+    }
     needed.then_some(plan)
 }
 
@@ -95,6 +100,10 @@ pub fn try_canonical_graph_plan(
         plan.include(unconstructed_plan);
         needed = true;
     }
+    if let Some(query_plan) = query_reached_per_item::graph_plan(config) {
+        plan.include(query_plan);
+        needed = true;
+    }
     Ok(needed.then_some(plan))
 }
 
@@ -103,7 +112,8 @@ pub fn try_canonical_graph_plan(
 pub fn canonical_graph_requires_full_file_universe(
     config: &crate::config::v2::NoMistakesConfig,
 ) -> bool {
-    required_entrypoint_reachability::graph_plan(config).is_some()
+    config.rule_configured(query_reached_per_item::RULE_ID)
+        || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
         || config.rule_configured(FORBIDDEN_CALLS)
         || config.rule_configured(UNCONSTRUCTED_ERROR_CLASS)

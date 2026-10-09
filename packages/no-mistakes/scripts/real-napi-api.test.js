@@ -400,3 +400,5 @@ require("./postgres-conditional-insert-api.test.js");
 require("./postgres-wrapper-end-alias-api.test.js");
 
 require("./postgres-var-scope-api.test.js");
+
+require("./query-reached-per-item-api.test.js");

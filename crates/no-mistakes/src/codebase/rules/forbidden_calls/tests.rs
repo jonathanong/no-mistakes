@@ -171,6 +171,7 @@ fn function_and_terminal_selectors_use_canonical_repository_targets() {
         "roots: [{ file: src/selectors.mts }]\ntargets: [{ function: { file: src/targets.mts, symbol: repositoryTarget } }]",
     );
     let repository_site = ResolvedCallSite {
+        target_node: None,
         file: root.join("src/selectors.mts"),
         caller: Some("selectorCalls".to_string()),
         caller_id: None,

@@ -78,6 +78,7 @@ fn unique_scope_id_is_none_when_display_names_collide() {
 
 fn test_call_site(file: &str) -> ResolvedCallSite {
     ResolvedCallSite {
+        target_node: None,
         file: std::path::PathBuf::from(file),
         caller: None,
         caller_id: None,

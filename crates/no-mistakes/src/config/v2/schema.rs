@@ -72,6 +72,10 @@ pub struct ReactTraitsConfig {
 pub struct EffectKindConfig {
     pub categories: BTreeMap<String, Vec<String>>,
     pub functions: Vec<String>,
+    /// Configured transaction-client sinks for per-item query diagnostics.
+    pub transaction_functions: Vec<String>,
+    /// Configured batch/pipeline builders which exempt their own call paths.
+    pub batch_functions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

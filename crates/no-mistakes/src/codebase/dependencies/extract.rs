@@ -101,6 +101,7 @@ pub struct FunctionCall {
 }
 
 include!("extract_kinds.rs");
+include!("extract_per_item.rs");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownCall {

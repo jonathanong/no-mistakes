@@ -1,0 +1,4 @@
+effects:
+  postgres:
+    functions: [read]
+rules: []
