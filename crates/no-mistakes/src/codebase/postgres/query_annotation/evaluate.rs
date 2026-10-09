@@ -1,5 +1,7 @@
 mod calls;
+mod effects;
 mod statements;
+mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::collections::BTreeMap;
@@ -7,7 +9,9 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
 pub(super) enum Value {
-    Prefix(String, bool),
+    Prefix(String, bool, Option<u64>),
+    Promise(Box<Value>),
+    Aggregate(Vec<Value>),
     Function(Function, PathBuf, Environment),
     Unknown,
     Unsupported,
@@ -23,6 +27,8 @@ pub(super) struct Evaluator<'a, F> {
     pub resolve: F,
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
     pub scopes: Vec<BTreeMap<String, Value>>,
+    pub next_builder: u64,
+    pub invalidated_builders: std::collections::BTreeSet<u64>,
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -69,10 +75,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Some(depth) = depth.checked_sub(1) else {
             return Value::Unknown;
         };
-        match expr {
+        let value = match expr {
             Expr::Unknown => Value::Unknown,
             Expr::Unsupported => Value::Unsupported,
-            Expr::Text(value) => Value::Prefix(value.clone(), true),
+            Expr::Text(value) => Value::Prefix(value.clone(), true, None),
             Expr::Name(name) => self.scopes[*env]
                 .get(name)
                 .cloned()
@@ -83,7 +89,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Value::Function(function.clone(), path.to_path_buf(), *env)
             }
             Expr::Template(parts) => {
-                let mut prefix = Value::Prefix(String::new(), true);
+                let mut prefix = Value::Prefix(String::new(), true, None);
                 for part in parts {
                     prefix = concat(prefix, self.expr(part, path, env, depth, generic));
                 }
@@ -92,54 +98,43 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Append(base, tail) => {
                 let base = self.expr(base, path, env, depth, generic);
                 let tail = self.expr(tail, path, env, depth, generic);
-                concat(base, tail)
-            }
-            Expr::Tagged(tag, parts) => {
-                let file = &self.files[path];
-                let name = if tag == "String.raw" { "String" } else { tag };
-                if let Some(start) = file.facts.legacy_tag_spans.get(name) {
-                    let local = self.scopes[*env].get(name);
-                    if local.is_none()
-                        || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
-                    {
-                        // Preserve legacy local-tag facts without promoting an
-                        // arbitrary tag implementation into complete SQL proof.
-                        return Value::Unsupported;
-                    }
-                }
-                let trusted = if tag == "String.raw" {
-                    !file
-                        .ts
-                        .imported_bindings
-                        .iter()
-                        .any(|binding| binding.local == name && !binding.is_type_only)
-                } else {
-                    file.facts.trusted_tags.contains(tag)
-                };
-                if !self.scopes[*env].contains_key(name)
-                    && !file.facts.globals.contains_key(name)
-                    && trusted
+                let base = if matches!(&base, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
                 {
-                    let mut prefix = Value::Prefix(String::new(), true);
-                    for part in parts {
-                        prefix = concat(prefix, self.expr(part, path, env, depth, generic));
-                    }
-                    prefix
-                } else {
                     Value::Unknown
+                } else {
+                    base
+                };
+                let value = concat(base, tail);
+                self.replace_builder(&value);
+                value
+            }
+            Expr::Tagged(tag, parts, effects) => {
+                self.tagged(tag, parts, effects, path, env, (depth, generic))
+            }
+            Expr::Await(expr) => {
+                let mut value = self.expr(expr, path, env, depth, generic);
+                while let Value::Promise(inner) = value {
+                    value = *inner;
                 }
+                value
             }
             Expr::Call {
                 callee,
                 args,
                 start,
             } => self.call(callee, args, *start, path, env, (depth, generic)),
-            Expr::Children(children) => {
-                for child in children {
-                    self.expr(child, path, env, depth, generic);
-                }
-                Value::Unknown
-            }
+            Expr::Children(children) => Value::Aggregate(
+                children
+                    .iter()
+                    .map(|child| self.expr(child, path, env, depth, generic))
+                    .collect(),
+            ),
+        };
+        if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
+        {
+            Value::Unknown
+        } else {
+            value
         }
     }
 }
@@ -147,15 +142,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 pub(super) fn concat(base: Value, tail: Value) -> Value {
     match (base, tail) {
         (Value::Unsupported, _) => Value::Unsupported,
-        (Value::Prefix(base, true), Value::Unsupported) if base.trim().is_empty() => {
+        (Value::Prefix(base, true, _), Value::Unsupported) if base.trim().is_empty() => {
             Value::Unsupported
         }
-        (Value::Prefix(base, false), _) => Value::Prefix(base, false),
-        (Value::Prefix(mut base, true), Value::Prefix(tail, complete)) => {
+        (Value::Prefix(base, false, id), _) => Value::Prefix(base, false, id),
+        (Value::Prefix(mut base, true, id), Value::Prefix(tail, complete, _)) => {
             base.push_str(&tail);
-            Value::Prefix(base, complete)
+            Value::Prefix(base, complete, id)
         }
-        (Value::Prefix(base, true), _) => Value::Prefix(base, false),
+        (Value::Prefix(base, true, id), _) => Value::Prefix(base, false, id),
         _ => Value::Unknown,
     }
 }

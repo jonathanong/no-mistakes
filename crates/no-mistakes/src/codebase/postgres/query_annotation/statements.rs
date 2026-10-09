@@ -20,7 +20,7 @@ pub(super) fn collect(
     let reassigned = super::trust::reassigned(program);
     facts.trusted_tags.retain(|name| !reassigned.contains(name));
     for (name, value) in &mut facts.globals {
-        if matches!(value, Expr::Function(_)) && reassigned.contains(name) {
+        if reassigned.contains(name) {
             *value = Expr::Unknown;
         }
     }
@@ -84,7 +84,9 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
             )),
             Statement::EmptyStatement(_)
             | Statement::ImportDeclaration(_)
-            | Statement::ExportNamedDeclaration(_) => {}
+            | Statement::ExportNamedDeclaration(_)
+            | Statement::TSTypeAliasDeclaration(_)
+            | Statement::TSInterfaceDeclaration(_) => {}
             _ => steps.push(Step::Unsupported),
         }
     }

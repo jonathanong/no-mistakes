@@ -59,23 +59,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         .get(name)
                         .cloned()
                         .unwrap_or(Value::Unknown);
-                    self.scopes[*env].insert(
-                        name.clone(),
-                        if supported {
-                            concat(base, tail)
-                        } else {
-                            Value::Unsupported
-                        },
-                    );
+                    let value = if supported {
+                        concat(base, tail)
+                    } else {
+                        Value::Unsupported
+                    };
+                    self.replace_builder(&value);
+                    self.scopes[*env].insert(name.clone(), value);
                 }
                 Step::Effect(expr) => {
                     let effect = self.expr(expr, path, env, depth, generic);
-                    if self.effect_can_mutate(expr, path) {
+                    if self.effect_can_mutate(expr, path, *env) {
                         opaque_return = true;
                         // Arbitrary effects can mutate a builder passed by
                         // reference. Its previous prefix is no longer proof.
                         for value in self.scopes[*env].values_mut() {
-                            if matches!(value, Value::Prefix(_, _)) {
+                            if matches!(value, Value::Prefix(_, _, _)) {
                                 *value = if matches!(effect, Value::Unsupported) {
                                     Value::Unsupported
                                 } else {
@@ -95,13 +94,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         Value::Unknown
     }
 
-    fn effect_can_mutate(&self, expr: &Expr, path: &Path) -> bool {
+    fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
         match expr {
             Expr::Call { start, .. } => !self.files[path].executors.contains(start),
-            Expr::Template(parts) | Expr::Children(parts) => {
-                parts.iter().any(|part| self.effect_can_mutate(part, path))
-            }
-            Expr::Text(_) | Expr::Name(_) | Expr::Function(_) | Expr::Tagged(_, _) => false,
+            Expr::Template(parts) | Expr::Children(parts) => parts
+                .iter()
+                .any(|part| self.effect_can_mutate(part, path, env)),
+            Expr::Tagged(tag, _, _) => !self.tag_trusted(tag, path, env),
+            Expr::Await(expr) => self.effect_can_mutate(expr, path, env),
+            Expr::Text(_) | Expr::Name(_) | Expr::Function(_) => false,
             _ => true,
         }
     }

@@ -1,5 +1,5 @@
 // A type-only name must not replace the runtime String.raw built-in.
-import type { String } from './types.mjs';
+import type { String } from "./types.mjs";
 import { write } from "@app/db";
 import sql, { type SQLStatement } from "sql-template-strings";
 import { annotatedOrdersSql, unannotatedOrdersSql } from "./sql-builders.mjs";
@@ -142,4 +142,89 @@ function hoistedAnnotatedSql(): SQLStatement {
 
 export function computedTemplateQuery(client: { query(statement: SQLStatement): unknown }) {
   return client[`query`](annotatedOrdersSql()); // known:computed-template-query
+}
+
+async function asynchronousAnnotatedSql() {
+  return annotatedOrdersSql();
+}
+async function asynchronousUnannotatedSql() {
+  return unannotatedOrdersSql();
+}
+export async function awaitedHelperResults() {
+  write(await asynchronousAnnotatedSql()); // known:await-annotated
+  write(await asynchronousUnannotatedSql()); // finding:await-unannotated
+  write(asynchronousAnnotatedSql()); // unanalyzable:unawaited-promise
+}
+export function initializerMutation() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  const ignored = unknownMutation(statement);
+  write(statement); // unanalyzable:initializer-mutation
+}
+export function aliasArrayMutation() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  const alias = statement;
+  const ignored = unknownMutation([alias]);
+  write(statement); // unanalyzable:alias-array-mutation
+}
+export function primitiveStringIsNotMutable() {
+  const statement = "/* immutable */ SELECT 1";
+  const ignored = unknownMutation(statement);
+  write(statement); // known:primitive-string
+}
+export function arbitraryTagMutation() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  arbitraryTag`${statement}`;
+  write(statement); // unanalyzable:arbitrary-tag-mutation
+}
+export function erasedLocalDeclarations() {
+  type Local = { id: number };
+  interface Other {
+    id: number;
+  }
+  write(annotatedOrdersSql()); // known:erased-local
+  write(unannotatedOrdersSql()); // finding:erased-local-unannotated
+}
+export function templateSubstitutionExecutors() {
+  const annotated = sql`SELECT ${write(annotatedOrdersSql())}`; // known:template-inner-annotated
+  const missing = sql`SELECT ${write(unannotatedOrdersSql())}`; // finding:template-inner-unannotated
+}
+export function orderedNestedEffects() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  const results = [unknownMutation(statement), write(statement)]; // unanalyzable:ordered-effects
+}
+export function capturedBuilderMutation() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  function mutate() {
+    statement.text = "SELECT 2";
+  }
+  const ignored = mutate();
+  write(statement); // unanalyzable:captured-builder-mutation
+}
+
+export function appendMutatesAliases() {
+  const statement = sql``;
+  const alias = statement;
+  alias.append("SELECT 1");
+  write(statement); // finding:append-alias
+}
+export function appendTailCanInvalidateItsBase() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  write(statement.append(unknownMutation(statement))); // unanalyzable:append-tail-mutation
+}
+
+export function laterExecutorArgumentMutation() {
+  const statement = sql`/* prior annotation */ SELECT 1`;
+  write(statement, unknownMutation(statement)); // unanalyzable:later-argument-mutation
+}
+export async function promisedBuilderMutation() {
+  const statement = asynchronousAnnotatedSql();
+  const ignored = unknownMutation(statement);
+  write(await statement); // unanalyzable:promised-builder-mutation
+}
+
+function unsupportedRawValue() {
+  if (flag) return 'SELECT 1';
+}
+export function unsupportedRawInterpolation() {
+  write(String.raw`${unsupportedRawValue()}`); // finding:unsupported-raw-interpolation
 }

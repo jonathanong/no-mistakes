@@ -65,6 +65,8 @@ pub(crate) fn project(
                     resolve: &resolve,
                     events: BTreeMap::new(),
                     scopes: Vec::new(),
+                    next_builder: 0,
+                    invalidated_builders: Default::default(),
                 };
                 evaluator.run(path);
                 (path.clone(), evaluator.events)
@@ -121,7 +123,7 @@ pub(crate) fn project(
 }
 
 fn prefix(value: Value) -> Option<String> {
-    let Value::Prefix(text, complete) = value else {
+    let Value::Prefix(text, complete, _) = value else {
         return None;
     };
     let start = text.trim_start();

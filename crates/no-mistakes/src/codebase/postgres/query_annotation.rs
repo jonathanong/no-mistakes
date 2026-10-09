@@ -25,7 +25,8 @@ pub(super) enum Expr {
     Text(String),
     Name(String),
     Template(Vec<Expr>),
-    Tagged(String, Vec<Expr>),
+    Tagged(String, Vec<Expr>, Vec<Expr>),
+    Await(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {
         callee: Box<Expr>,

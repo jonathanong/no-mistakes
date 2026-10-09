@@ -45,10 +45,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let arguments = args
+        let target = self.expr(callee, path, env, depth, generic);
+        let mut arguments = args
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
             .collect::<Vec<_>>();
+        for argument in &mut arguments {
+            if matches!(argument, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
+            {
+                *argument = Value::Unknown;
+            }
+        }
         if self.files[path].executors.contains(&start) {
             self.events
                 .entry((path.to_path_buf(), start))
@@ -59,16 +66,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 ));
             return Value::Unknown;
         }
-        let target = self.expr(callee, path, env, depth, generic);
         if matches!(target, Value::Unsupported) {
+            self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
             return Value::Unsupported;
         }
         let Value::Function(function, function_path, captured) = target else {
+            self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
             return Value::Unknown;
         };
         if !function.supported {
+            self.invalidate_builders(&arguments);
+            self.invalidate_captured(captured, &function);
             let mut locals = self.scopes[captured].clone();
             for name in &function.params {
                 locals.insert(name.clone(), Value::Unknown);
@@ -98,13 +108,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         if !function.asynchronous {
             value
         } else {
-            Value::Unknown
+            Value::Promise(Box::new(value))
         }
     }
 
     fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
         for argument in arguments {
             if let Value::Function(function, path, captured) = argument {
+                self.invalidate_captured(*captured, function);
                 let mut locals = self.scopes[*captured].clone();
                 for name in &function.params {
                     locals.insert(name.clone(), Value::Unknown);

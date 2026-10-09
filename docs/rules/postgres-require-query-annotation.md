@@ -96,6 +96,10 @@ Named and default imports, plus named and star re-exports, can resolve helper
 functions. Namespace imports remain unanalyzable. Captured local bindings use the
 value available when the helper runs; calling before initialization remains opaque.
 Existing local `sql` template-tag implementations retain their previous behavior.
+Await an async helper before passing its returned SQL to an executor; an unawaited
+promise remains unanalyzable. Template substitutions are traversed for nested
+executor calls. Unknown calls or untrusted template tags that receive a mutable
+SQL builder invalidate its previous prefix, including aliases to that builder.
 
 Callback forwarding through a straight-line helper substitutes the statement and
 callback arguments at each analyzable callsite. Findings point to the executor

@@ -32,7 +32,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 {
                     "String.raw".into()
                 }
-                _ => return Expr::Unknown,
+                _ => String::new(),
             };
             let parts = if tag == "String.raw" {
                 let mut parts = Vec::new();
@@ -46,7 +46,17 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             } else {
                 vec![Expr::Text(super::super::sql_text(expr).unwrap_or_default())]
             };
-            Expr::Tagged(tag, parts)
+            let mut effects = vec![expression(&value.tag, source)];
+            if tag != "String.raw" {
+                effects.extend(
+                    value
+                        .quasi
+                        .expressions
+                        .iter()
+                        .map(|expr| expression(expr, source)),
+                );
+            }
+            Expr::Tagged(tag, parts, effects)
         }
         Expression::BinaryExpression(value)
             if value.operator == oxc_ast::ast::BinaryOperator::Addition =>
@@ -109,7 +119,9 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             }
             function
         }
-        Expression::AwaitExpression(value) => expression(&value.argument, source),
+        Expression::AwaitExpression(value) => {
+            Expr::Await(Box::new(expression(&value.argument, source)))
+        }
         Expression::ArrayExpression(value) => Expr::Children(
             value
                 .elements
