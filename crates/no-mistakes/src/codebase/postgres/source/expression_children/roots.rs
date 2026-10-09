@@ -2,7 +2,10 @@ use super::super::expressions::name;
 use super::super::types::*;
 use sqlparser::ast::{Expr, ObjectName};
 
-pub(super) fn root(expr: &Expr) -> PostgresSqlExpressionChildRoot {
+pub(super) fn root(
+    expr: &Expr,
+    locations: &super::super::locations::Locations<'_>,
+) -> PostgresSqlExpressionChildRoot {
     use PostgresSqlExpressionChildRoot as Root;
     match expr {
         Expr::Identifier(ident) => Root::ColumnReference {
@@ -71,6 +74,7 @@ pub(super) fn root(expr: &Expr) -> PostgresSqlExpressionChildRoot {
         } => Root::Cast {
             cast_kind: format!("{kind:?}").to_ascii_lowercase(),
             data_type: data_type.to_string(),
+            data_type_facts: super::super::type_facts::data_type(data_type, locations),
         },
         Expr::IsNull(_) | Expr::IsNotNull(_) => Root::NullTest {
             negated: matches!(expr, Expr::IsNotNull(_)),

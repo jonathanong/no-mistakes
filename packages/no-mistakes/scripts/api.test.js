@@ -846,7 +846,6 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
     "PostgresSqlConstraint",
     "PostgresSqlIndex",
     "PostgresSqlView",
-    "PostgresSqlTrigger",
     "PostgresSqlDiagnostic",
     "PostgresSqlPosition",
     "PostgresSqlSpan",
@@ -1241,6 +1240,34 @@ test("literal EXECUTE contracts export decoded SQL provenance", () => {
   assert.match(procedural, /export interface PostgresSqlLiteralExecute/);
   assert.match(procedural, /decodedSql: string;/);
   assert.match(procedural, /literalSpan: PostgresSqlSpan;/);
+  assert.match(procedural, /using: PostgresSqlExpression\[\];/);
+  assert.match(
+    procedural,
+    /export type PostgresSqlExecuteEncoding = PostgresSqlBodyEncoding \| "concatenated";/,
+  );
+  assert.match(procedural, /bodyEncoding: PostgresSqlExecuteEncoding;/);
+});
+
+test("structured trigger events and cast types remain named public contracts", () => {
+  const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  const triggers = readFileSync(join(packageRoot, "postgres-trigger-types.d.ts"), "utf8");
+  assert.match(triggers, /export interface PostgresSqlTrigger \{/);
+  assert.match(source, /export type \* from "\.\/postgres-trigger-types"/);
+  const expressions = readFileSync(join(packageRoot, "postgres-expression-types.d.ts"), "utf8");
+  assert.match(
+    triggers,
+    /export type PostgresSqlTriggerEventKind = "insert" \| "delete" \| "truncate" \| "update";/,
+  );
+  assert.match(triggers, /export interface PostgresSqlTriggerEvent/);
+  assert.match(triggers, /kind: PostgresSqlTriggerEventKind;/);
+  assert.match(triggers, /updateOf: boolean;/);
+  assert.match(triggers, /updateColumns: PostgresSqlIdentifier\[\];/);
+  assert.match(triggers, /eventFacts: PostgresSqlTriggerEvent\[\];/);
+  assert.match(expressions, /dataTypeFacts: PostgresSqlType;/);
+  assert.match(
+    expressions,
+    /kind: "cast"; castKind: string; dataType: string; dataTypeFacts: PostgresSqlType/,
+  );
 });
 
 test("SQL recursive expression and INSERT lineage contracts export named additive types", () => {

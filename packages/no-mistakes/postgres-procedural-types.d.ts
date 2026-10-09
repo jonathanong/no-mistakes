@@ -27,14 +27,20 @@ export interface PostgresSqlConditionalBranch {
 
 /** Original body source slices retain this enclosing literal encoding. */
 export type PostgresSqlBodyEncoding = "dollarQuoted" | "singleQuoted" | "escapedString";
+/** Concatenated command literals can contain several original string encodings. */
+export type PostgresSqlExecuteEncoding = PostgresSqlBodyEncoding | "concatenated";
 
-/** Wrapper literalSpan uses enclosing source coordinates. All child spans and
- * diagnostics use decodedSql coordinates, including nested expression spans.
+/** literalSpan and USING expression spans use enclosing source coordinates.
+ * Command child spans and diagnostics use decodedSql coordinates, including
+ * nested command expression spans.
  * Source occurrences never imply that SQL executes. */
 export interface PostgresSqlLiteralExecute {
+  /** The whole literal command expression, including concatenation and parentheses. */
   literalSpan: PostgresSqlSpan;
-  bodyEncoding: PostgresSqlBodyEncoding;
+  bodyEncoding: PostgresSqlExecuteEncoding;
   decodedSql: string;
+  /** Ordered source expressions, with enclosing source spans and no runtime evaluation. */
+  using: PostgresSqlExpression[];
   statements: PostgresSqlStatement[];
   diagnostics: PostgresSqlDiagnostic[];
   complete: boolean;

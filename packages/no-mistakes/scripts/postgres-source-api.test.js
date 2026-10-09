@@ -1088,7 +1088,7 @@ test(
         "(CAST((COALESCE(target.id, EXCLUDED.id)) AS integer))",
       );
     } else {
-      assert.equal(wrapped.expression.childrenComplete, false);
+      assert.equal(wrapped.expression.childrenComplete, true);
     }
   },
 );
@@ -1154,24 +1154,24 @@ test(
     if (typedSource.span) {
       assert.equal(slice(typedSource.span), "DATE '2026-10-08'");
     } else {
-      assert.equal(typedSource.childrenComplete, false);
+      assert.equal(typedSource.childrenComplete, true);
       assert.equal(facts.statements[4].insert.columnSources.complete, false);
     }
-    for (const [index, expected] of [
-      [5, "sum(1) OVER ()"],
-      [6, "-(1) + 2"],
+    for (const [index, expected, structurallyComplete] of [
+      [5, "sum(1) OVER ()", false],
+      [6, "-(1) + 2", true],
     ]) {
       const insert = facts.statements[index].insert;
       const expression = insert.columnSources.columns[1].sources[0].expression;
+      assert.equal(expression.childrenComplete, structurallyComplete);
       if (expression.span) assert.equal(slice(expression.span), expected);
-      else assert.equal(expression.childrenComplete, false);
       assert.equal(insert.columnSources.complete, false);
     }
     const unarySource = facts.statements[3].insert.columnSources.columns[1].sources[0].expression;
     if (unarySource.span) {
       assert.equal(slice(unarySource.span), "-(CAST((COALESCE(1, 2)) AS integer))");
     } else {
-      assert.equal(unarySource.childrenComplete, false);
+      assert.equal(unarySource.childrenComplete, true);
       assert.equal(facts.statements[3].insert.columnSources.complete, false);
     }
   },

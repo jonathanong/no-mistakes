@@ -267,10 +267,11 @@ including `$1`), and `typedLiteral` (`dataType`, decoded string `value`, rendere
 `distinctRight` operands under operators, calls, CASE, and wrappers. Temporal
 literals retain their type, precision, timezone qualifier, and value: `now`,
 `today`, and `epoch` are syntax facts, without a volatility or replay policy.
-Typed literal leaves are structurally complete. Typed literals and null-test
-children have null spans where the parser omits a type prefix or predicate
-suffix; containing expressions remain incomplete rather than claiming partial
-source boundaries. Unsupported predicates remain explicitly incomplete.
+`childrenComplete` describes represented syntax independently of source spans.
+AND/OR trees, null tests, and qualified casts are complete when every operand is
+represented. A null span still means that its exact source boundary is unknown;
+it does not erase complete structure. Unsupported expressions, omitted children,
+and depth limits remain explicitly incomplete and callers must fail closed.
 Ordinary `literal` roots also expose `value: PostgresSqlLiteralValue`,
 distinguishing SQL null, string, number, and boolean values. Number values retain their decimal spelling as
 strings; quoted and escaped string values use the parser-decoded contents.
@@ -278,12 +279,13 @@ Unclassified values expose `other` with SQL rather than guessed semantics.
 
 Each expression also exposes ordered immediate `children` with typed `role`,
 optional argument/CASE index, a shallow typed `root`, and recursive descendants.
-`childrenComplete` reports whether the full expression structure is represented;
-it is independent of INSERT syntax diagnostics and lineage, and is also false
-when a child's full source boundary cannot be proven. Nullable spans retain the
-typed facts that remain available without guessing a boundary. Some AST-only
-projections lack a prepared delimiter catalog, so their recursive spans can be
-null and `childrenComplete` false even when typed child facts are available.
+`childrenComplete` reports whether the full expression structure is represented,
+independently of INSERT syntax diagnostics, lineage, and source-span availability.
+Every represented child must also be structurally complete. Unsupported roots,
+omitted operands, modifiers that are not represented, and depth limits remain
+incomplete. Nullable spans retain typed facts without guessing source boundaries;
+a null span does not make an otherwise complete AND/OR, null-test, or cast tree
+incomplete. Callers must inspect completeness and spans separately.
 For INSERTs with an explicit target column list, `columnSources` maps each target
 position to every VALUES row or SELECT/set-operation branch in source order.
 Set branches use `branchPath` (`0` for left, `1` for right); VALUES entries also
@@ -612,8 +614,30 @@ SQL children through the existing fact pipeline. `literalSpan` and the enclosing
 statement span refer to original source; every child and diagnostic span refers
 to `decodedSql`, including expression spans. Escapes therefore never produce
 fabricated original source coordinates. Malformed nested SQL is diagnostic and
-incomplete. Variables, concatenation, format calls, and EXECUTE modifiers remain
-unsupported occurrences; source facts imply no execution or replay policy.
+incomplete. Wholly literal `||` concatenations are decoded through the same
+pipeline; `bodyEncoding: "concatenated"` distinguishes them and `literalSpan`
+covers the complete command expression. EXECUTE `USING` arguments appear in
+ordered `using: PostgresSqlExpression[]`, with enclosing source coordinates.
+The decoded command still contains typed `$1` placeholders: parameter expressions
+are preserved as syntax and never substituted or interpreted at runtime.
+Variables, unknown concatenation operands, format calls, and unsupported modifiers
+remain incomplete occurrences; source facts imply no execution or replay policy.
 Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
 projection. SQL CASE expressions and quoted EXECUTE identifiers retain their
 ordinary SQL meaning.
+
+### Structured trigger events and cast types
+
+Trigger `events` retain their display strings. Additive `eventFacts` expose
+`PostgresSqlTriggerEvent` values with a named `kind` (`insert`, `delete`, `truncate`,
+or `update`), `updateOf`, and ordered `updateColumns`. For
+`UPDATE OF "Mixed", a`, the identifiers preserve both their spelling and quoted
+state; unrestricted UPDATE has `updateOf: false` and an empty column list.
+Other event kinds also have an empty column list and `updateOf: false`.
+
+Cast roots and recursive cast child roots retain `dataType` display text and
+add `dataTypeFacts: PostgresSqlType`. Its `name.parts` preserve qualified and
+quoted identifiers: `"schema.with.dot".date` has two parts, not four. Builtin
+forms use the existing `builtin` field, with modifiers and array dimensions
+retained. Callers can inspect this structure without parsing display strings.
+This describes source syntax and makes no volatility or replay-safety decision.

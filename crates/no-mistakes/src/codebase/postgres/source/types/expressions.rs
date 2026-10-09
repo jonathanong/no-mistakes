@@ -41,6 +41,8 @@ pub enum PostgresSqlExpressionChildRoot {
         cast_kind: String,
         #[serde(rename = "dataType")]
         data_type: String,
+        #[serde(rename = "dataTypeFacts")]
+        data_type_facts: PostgresSqlType,
     },
     NullTest {
         negated: bool,
@@ -95,6 +97,8 @@ pub enum PostgresSqlExpressionRoot {
     Cast {
         #[serde(rename = "dataType")]
         data_type: String,
+        #[serde(rename = "dataTypeFacts")]
+        data_type_facts: PostgresSqlType,
         expression: Box<PostgresSqlExpressionRoot>,
     },
     NullTest {

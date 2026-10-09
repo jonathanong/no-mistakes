@@ -34,20 +34,20 @@ fn children(
     let mut projected = Vec::with_capacity(specs.len());
     for spec in specs {
         let (nested, nested_complete) = children(spec.expr, locations, delimiters, depth + 1);
-        let span = if nested_complete {
+        let span = if nested_complete && nested.iter().all(|child| child.span.is_some()) {
             exact_ast_span(spec.expr, locations, delimiters)
         } else {
             None
         };
-        let span_complete = span.is_some();
-        complete &= nested_complete && span_complete;
+        // Structural coverage is independent of nullable source provenance.
+        complete &= nested_complete;
         projected.push(PostgresSqlExpressionChild {
             role: spec.role,
             index: spec.index,
             argument_name: spec.argument_name,
             sql: spec.expr.to_string(),
             span,
-            root: roots::root(spec.expr),
+            root: roots::root(spec.expr, locations),
             children: nested,
             children_complete: nested_complete,
         });
@@ -122,7 +122,10 @@ fn specs(expr: &Expr) -> (Vec<Spec<'_>>, bool) {
             kind, expr, format, ..
         } => (
             vec![spec(Role::CastOperand, None, expr)],
-            *kind == sqlparser::ast::CastKind::Cast && format.is_none(),
+            matches!(
+                kind,
+                sqlparser::ast::CastKind::Cast | sqlparser::ast::CastKind::DoubleColon
+            ) && format.is_none(),
         ),
         Expr::Case {
             operand,

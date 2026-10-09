@@ -75,7 +75,7 @@ test(
       and.children.map((child) => child.span),
       [null, null],
     );
-    assert.equal(and.childrenComplete, false);
+    assert.equal(and.childrenComplete, true);
     assert.ok(slice(and.children[0].children[0].span));
     const or = byTarget.or_check.expression;
     assert.equal(or.root.kind, "parenthesized");

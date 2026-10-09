@@ -33,6 +33,7 @@ pub struct PostgresSqlTrigger {
     pub table: PostgresSqlName,
     pub timing: Option<String>,
     pub events: Vec<String>,
+    pub event_facts: Vec<PostgresSqlTriggerEvent>,
     pub for_each: Option<String>,
     pub condition: Option<PostgresSqlExpression>,
     pub function: Option<PostgresSqlName>,
@@ -77,4 +78,21 @@ pub struct PostgresSqlFunctionArgument {
 pub struct PostgresSqlTriggerTransition {
     pub kind: String,
     pub name: PostgresSqlName,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlTriggerEvent {
+    pub kind: PostgresSqlTriggerEventKind,
+    pub update_columns: Vec<PostgresSqlIdentifier>,
+    pub update_of: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PostgresSqlTriggerEventKind {
+    Insert,
+    Update,
+    Delete,
+    Truncate,
 }

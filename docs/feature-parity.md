@@ -764,3 +764,8 @@ TypeScript/JavaScript support the opt-in
 asynchronous Node checks. It combines per-item AST positions with canonical
 call paths and configured effect sinks, including transaction markers and batch
 exemptions. Other languages do not yet expose equivalent call-policy facts.
+
+Structured PostgreSQL source facts expose trigger event kinds and quoted UPDATE
+OF identifiers, cast type components, literal EXECUTE concatenations and USING
+expressions, and structural expression completeness through the Rust/native and
+asynchronous Node CJS/ESM single/batch APIs. Dynamic commands remain incomplete.

@@ -18,11 +18,15 @@ Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
 standard single-quoted (doubled quotes), and PostgreSQL `E` escape strings are
 decoded by the prepared tokenizer and parsed through the same SQL fact pipeline.
 The enclosing statement and `literalSpan` retain original source coordinates;
-`decodedSql` owns all child statement, expression, and diagnostic coordinates.
+`decodedSql` owns nested command statement, expression, and diagnostic coordinates.
 Children preserve order and typed facts (including INSERT), without exposing an
 AST or implying execution. Inspect `complete` and diagnostics: malformed nested
-SQL remains diagnostic; dynamic variables, concatenation, `format`, and EXECUTE
-modifiers remain unsupported `other` occurrences. This adds no SQL execution or
+SQL remains diagnostic. Wholly literal `||` concatenations use the same nested
+pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the full
+command expression. `using` retains ordered parameter expressions and their
+original source spans, without resolving runtime values; `$1` and other command
+placeholders remain typed parameters. Dynamic operands, `format` calls, and
+unsupported EXECUTE modifiers remain incomplete `other` occurrences. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
 INSERT assignment `complete` describes represented syntax independently of
@@ -40,10 +44,11 @@ including `$1`), and `typedLiteral` (`dataType`, decoded string `value`, rendere
 `distinctRight` operands under operators, calls, CASE, and wrappers. Temporal
 literals retain their type, precision, timezone qualifier, and value: `now`,
 `today`, and `epoch` are syntax facts, without a volatility or replay policy.
-Typed literal leaves are structurally complete. Typed literals and null-test
-children have null spans where the parser omits a type prefix or predicate
-suffix; containing expressions remain incomplete rather than claiming partial
-source boundaries. Unsupported predicates remain explicitly incomplete.
+`childrenComplete` describes represented syntax independently of source spans.
+AND/OR trees, null tests, and qualified casts are complete when every operand is
+represented. A null span still means that its exact source boundary is unknown;
+it does not erase complete structure. Unsupported expressions, omitted children,
+and depth limits remain explicitly incomplete and callers must fail closed.
 Ordinary `literal` roots also expose `value: PostgresSqlLiteralValue`,
 distinguishing SQL null, string, number, and boolean values. Number values retain their decimal spelling as
 strings; quoted and escaped string values use the parser-decoded contents.
@@ -85,3 +90,10 @@ Named ranges include `CONSTRAINT`;
 ALTER ranges exclude `ADD` and include `NOT VALID`. Coordinates refer to original
 SQL, or `decodedSql` for literal EXECUTE children. A null span means the token
 boundary is unavailable; do not guess offsets from formatted `constraint.sql`.
+
+Use trigger `eventFacts` for event kinds and ordered `updateColumns`; `updateOf`
+distinguishes restricted from unrestricted UPDATE. Compare cast
+`dataTypeFacts.name.parts` or `builtin` rather than parsing `dataType` display
+text. Literal EXECUTE `using` expressions are source syntax, never resolved
+runtime parameters. Require `childrenComplete` for represented structure and
+check nullable spans separately before relying on exact source boundaries.
