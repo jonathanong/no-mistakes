@@ -7,7 +7,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
     let tables = compiled.objects.contains(&ObjectKind::Table);
     let columns = compiled.objects.contains(&ObjectKind::Column);
     if tables || columns {
-        for table in catalog.tables() {
+        for table in catalog.logical_tables() {
             if tables {
                 push(
                     &mut findings,

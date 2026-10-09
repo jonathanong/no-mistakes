@@ -10,7 +10,7 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
     let mut ordinary = Vec::new();
     let mut never = Vec::new();
     let mut never_types = BTreeMap::new();
-    for table in catalog.tables() {
+    for table in catalog.logical_tables() {
         for column in &table.columns {
             let Some(element) = element_type(&column.data_type) else {
                 continue;
@@ -83,9 +83,15 @@ fn skipped(element: &str, compiled: &Compiled, enums: &BTreeSet<String>) -> bool
 
 fn enum_names(catalog: &SchemaCatalog) -> BTreeSet<String> {
     let mut names = BTreeSet::new();
+    let local_names = catalog
+        .schema_enums()
+        .map(|enum_type| enum_type.name.to_ascii_lowercase())
+        .collect::<BTreeSet<_>>();
     for enum_type in catalog.enums() {
         let lower = enum_type.name.to_ascii_lowercase();
-        names.insert(unqualified(&lower).to_string());
+        if local_names.contains(&lower) {
+            names.insert(unqualified(&lower).to_string());
+        }
         names.insert(lower);
     }
     names

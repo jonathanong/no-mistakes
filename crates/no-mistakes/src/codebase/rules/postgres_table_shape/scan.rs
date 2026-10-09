@@ -5,7 +5,7 @@ use crate::codebase::rules::RuleFinding;
 
 pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    for table in catalog.tables() {
+    for table in catalog.logical_tables() {
         let object = CatalogObjectRef::Table(table.name.clone());
         for shape in &compiled.shapes {
             if shape.table_pattern.is_match(&table.name) {

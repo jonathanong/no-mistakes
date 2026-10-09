@@ -12,7 +12,7 @@ use rayon::prelude::*;
 
 pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
     let mut findings = catalog
-        .tables()
+        .logical_tables()
         .collect::<Vec<_>>()
         .into_par_iter()
         .flat_map_iter(|table| {

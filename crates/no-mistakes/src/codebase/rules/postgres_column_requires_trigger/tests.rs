@@ -201,3 +201,20 @@ fn option_errors_name_the_field() {
         );
     }
 }
+
+#[test]
+fn missing_after_insert_and_truncate_requirements_render_exact_diagnostics() {
+    // Reuse the saved trigger catalog: its UPDATE triggers cannot satisfy these events.
+    for (event, each, expected) in [
+        ("insert", true, "AFTER INSERT FOR EACH ROW"),
+        ("truncate", false, "AFTER TRUNCATE FOR EACH STATEMENT"),
+    ] {
+        let options = format!(
+            "schemaCatalogPath: schema.json\nrequirements:\n  - column: updated_at\n    function: fn_touch_updated_at\n    timing: after\n    events: [{event}]\n    forEachRow: {each}\n"
+        );
+        let expected = format!(
+            "table has column updated_at but no {expected} trigger executing fn_touch_updated_at()"
+        );
+        assert!(texts(&options).contains(&expected), "{expected}");
+    }
+}

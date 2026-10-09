@@ -6,7 +6,7 @@ use crate::codebase::rules::RuleFinding;
 
 pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    for table in catalog.tables() {
+    for table in catalog.logical_tables() {
         scan_table(table, compiled, path, &mut findings);
     }
     for function in catalog.functions() {

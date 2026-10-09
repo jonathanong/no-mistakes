@@ -151,6 +151,41 @@ fn allows_a_directly_referenced_enum_from_another_schema_when_enabled() {
 }
 
 #[test]
+fn an_external_enum_does_not_allow_a_local_type_with_the_same_bare_name() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/key-column-types/catalogs/external-enum-domain-shadow.json");
+    let source = std::fs::read_to_string(path).unwrap();
+    let catalog = SchemaCatalog::from_json(&source).unwrap();
+    let options: Options = serde_yaml::from_str(
+        "schemaCatalogPath: schema.json\nallowedTypes: [uuid]\nallowEnumTypes: true\n",
+    )
+    .unwrap();
+    let compiled = compile(&options, None).unwrap();
+    let findings = scan(&catalog, &compiled, "schema.json").unwrap();
+    assert!(
+        findings.iter().any(|finding| {
+            finding.target.as_deref()
+                == Some("constraint:domain_priority_keys.domain_priority_keys_pkey")
+        }),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn unqualified_enum_lookup_prefers_the_selected_schema_identity() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/key-column-types/catalogs/selected-schema-enum-shadow.json");
+    let source = std::fs::read_to_string(path).unwrap();
+    let catalog = SchemaCatalog::from_json(&source).unwrap();
+    let options: Options = serde_yaml::from_str(
+        "schemaCatalogPath: schema.json\nallowedTypes: [uuid]\nallowEnumTypes: true\n",
+    )
+    .unwrap();
+    let compiled = compile(&options, None).unwrap();
+    assert!(scan(&catalog, &compiled, "schema.json").unwrap().is_empty());
+}
+
+#[test]
 fn allowed_types_match_catalog_values_before_message_display_normalization() {
     let allowed_messages = findings(&format!(
         "{PATH}allowedTypes: [UUID, 'CHARACTER VARYING(32)']\n"

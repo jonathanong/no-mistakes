@@ -85,8 +85,9 @@ It also holds the schema's functions and procedures (`pg_get_functiondef`
 text, keyed by name and identity arguments so every overload has its own stable
 key, such as `over(a integer)` and `over(a text)`), enums with their values in
 sort order, and views and materialized views (`pg_get_viewdef` text and comment).
-Enums directly used by catalog columns are also included when defined in another
-schema, under their qualified type names.
+Enums directly used by scalar columns or as array elements are also included when
+defined in another schema, under their qualified type names. Domains remain
+distinct types; their underlying enums are not included unless directly used.
 
 ### What the catalog leaves out
 
@@ -97,13 +98,16 @@ which relations exist:
   constraints. Nested partitioned parents remain entries with their own key facts;
   an ordinary leaf appears only when it has a local primary or foreign key, and
   cloned keys are not repeated. A foreign key that references a partitioned table
-  is one entry rather than one per partition.
+  is one entry rather than one per partition. The key-type rule checks those local
+  leaf keys; other catalog rules retain their logical table scope and inspect
+  ordinary partition leaves through their parent.
 - **Extension-owned objects** are excluded: functions, types, tables and views that
   belong to an installed extension. A column still names such a type in its
   `dataType`; configure the relevant rule's allowed types when needed.
 - **Unreferenced enums in other schemas** are excluded. An external enum directly
-  used by a catalog column is included, so rules can recognize that column as an
-  enum without adding unrelated schemas' relations or types.
+  used by a scalar column or array element is included, so rules can recognize its
+  type without adding unrelated schemas' relations or types. External metadata
+  does not add those enums to the selected schema's naming checks.
 - **Internal triggers**, such as the triggers behind foreign keys and deferrable
   unique constraints, are excluded.
 - **NOT NULL constraints**, which PostgreSQL 18 stores as constraints, are not check

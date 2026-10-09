@@ -79,6 +79,15 @@ allow:
 }
 
 #[test]
+fn external_enum_names_do_not_alias_a_local_domain_array() {
+    expect(
+        "schemaCatalogPath: schema.json\nallowEnumElements: true\n",
+        catalog("external-enum-domain-shadow"),
+        "column:domain_arrays.values: column is an array (priority[]); store the values as child rows or an enum, or add an allow entry with a reason",
+    );
+}
+
+#[test]
 fn multidimensional_and_spaced_element_types() {
     expect_none(
         "schemaCatalogPath: schema.json\nallowElementTypes: [integer]\n",

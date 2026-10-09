@@ -13,7 +13,7 @@ pub(super) fn catalog_findings(
     opts: &CompiledOptions,
 ) -> Vec<RuleFinding> {
     let tables: Vec<_> = catalog
-        .tables()
+        .logical_tables()
         .filter(|table| table.relation_kind == RelationKind::PartitionedTable)
         .collect();
     let mut expressions = Vec::new();

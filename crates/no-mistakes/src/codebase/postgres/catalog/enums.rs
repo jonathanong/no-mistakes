@@ -27,7 +27,14 @@ impl SchemaCatalog {
         }
         let mut matches = self.enums.iter().filter(|(key, _)| {
             let (key_qualifier, key_bare) = names::split_key(key);
-            key_bare == bare && (qualifier.is_none() || key_qualifier.is_none())
+            let key_is_local = self.schema.as_deref().is_none_or(|schema| {
+                key_qualifier
+                    .as_deref()
+                    .is_none_or(|key_schema| key_schema == schema)
+            });
+            key_bare == bare
+                && (qualifier.is_some() || key_is_local)
+                && (qualifier.is_none() || key_qualifier.is_none())
         });
         let (_, entry) = matches.next()?;
         matches.next().is_none().then_some(entry)

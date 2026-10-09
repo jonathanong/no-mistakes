@@ -125,7 +125,8 @@ WITH selected AS (
 ), enums AS (
   -- Keyed by the type as a column renders it (format_type under the same search_path), so a
   -- column's element type always finds its enum, including an external enum directly used by
-  -- a selected table and one named like a pg_catalog type. Unreferenced external enums stay out.
+  -- a selected table's scalar or array column and one named like a pg_catalog type.
+  -- Unreferenced external enums and enums reached only through domains stay out.
   -- A zero-label enum is legal, and jsonb_agg of no rows is NULL, so it is coalesced to [].
   SELECT format_type(t.oid, NULL) AS key, jsonb_build_object('values', COALESCE((SELECT
     jsonb_agg(v.enumlabel ORDER BY v.enumsortorder) FROM pg_enum v WHERE v.enumtypid = t.oid),
@@ -133,7 +134,9 @@ WITH selected AS (
   FROM pg_type t
   WHERE t.typtype = 'e' AND (t.typnamespace = (SELECT oid FROM selected) OR EXISTS (
       SELECT 1 FROM pg_attribute a JOIN relations r ON r.oid = a.attrelid
-      WHERE a.atttypid = t.oid AND a.attnum > 0 AND NOT a.attisdropped
+      JOIN pg_type column_type ON column_type.oid = a.atttypid
+      WHERE (a.atttypid = t.oid OR column_type.typelem = t.oid)
+        AND a.attnum > 0 AND NOT a.attisdropped
         AND r.relkind IN ('r', 'p')))
     AND NOT EXISTS (SELECT 1 FROM extension_members e
                                         WHERE e.classid = 'pg_type'::regclass AND e.objid = t.oid)
