@@ -544,10 +544,12 @@ missing field `dataType``, and says to generate the catalog with
 Apart from those required fields, a missing field takes its default so a
 hand-written fixture can state only the facts it tests; the generator always writes
 all of them.
-Handwritten snapshots may set `partitionOf` on a table relation to identify a
-partition child. Key-column checks skip ordinary partition leaves because their
-parent key is already checked, while still checking partitioned parents, including
-nested partitioned parents.
+Generated catalogs retain nested partitioned parents and set `partitionOf` to
+the immediate parent name. Ordinary partition leaves remain omitted so their
+cloned key facts do not duplicate parent findings. Handwritten snapshots may also
+set `partitionOf` to identify partition children. Key-column checks skip ordinary
+partition leaves while still checking partitioned parents, including nested
+partitioned parents.
 
 `postgres-key-column-types` reads primary-key columns, foreign-key referencing
 columns, enum types, and partition relationships. `postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`

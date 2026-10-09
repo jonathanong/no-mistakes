@@ -37,8 +37,9 @@ catalog value. With `allowEnumTypes: true`, catalog enum types are allowed.
 
 Partitioned parent relations are checked. Ordinary partition leaves are skipped
 so their inherited keys do not duplicate findings; a nested partitioned parent
-is still checked. Handwritten formatVersion 2 snapshots may identify such leaves
-with `partitionOf`.
+is still checked and generated catalogs retain its `partitionOf` parent. A
+handwritten formatVersion 2 snapshot may use the same field to identify ordinary
+partition leaves.
 
 ## Options and defaults
 
@@ -48,9 +49,12 @@ required, nonempty list of distinct type names. `allowEnumTypes` defaults to
 `false`. `checkPrimaryKeys` and `checkForeignKeys` both default to `true`, and
 at least one must remain enabled. `allow` defaults to `[]` and accepts only
 `constraint:<table>.<constraint>` entries with a reason. Stale allow entries are
-reported. Catalogs are strict JSON, so comment-based suppression directives
-cannot be added to the catalog file; use the constraint-scoped `allow` option
-for intentional exceptions.
+reported. Catalogs accept JSONC comments, which support standard source
+suppression directives. Use
+`no-mistakes-disable-file postgres-key-column-types` at the start of the catalog
+or `no-mistakes-disable-line postgres-key-column-types` on the finding's line;
+the constraint-scoped `allow` option remains available for reasoned, targetable
+exceptions.
 
 ## Valid example
 

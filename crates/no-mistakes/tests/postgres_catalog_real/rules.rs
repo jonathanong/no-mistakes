@@ -69,6 +69,18 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
         &project.path().join("schema.json"),
     );
     assert!(output.status.success());
+    let catalog: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(project.path().join("schema.json")).unwrap())
+            .unwrap();
+    assert_eq!(
+        catalog["tables"]["nested_events_2026"]["relationKind"],
+        "partitioned table"
+    );
+    assert_eq!(
+        catalog["tables"]["nested_events_2026"]["partitionOf"],
+        "nested_events"
+    );
+    assert!(catalog["tables"].get("nested_events_2026_a").is_none());
     let (_, findings) = check(project.path(), &project.path().join(".no-mistakes.yml"));
     for rule in SCHEMA_CATALOG_RULE_IDS {
         let own: Vec<_> = findings.iter().filter(|(id, _, _)| id == rule).collect();
@@ -92,6 +104,14 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
             && message.contains("constraint:events.events_pkey")
             && message.contains("bigint column id")
     }));
+    assert!(findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types"
+            && message.contains("constraint:nested_events_2026.nested_events_2026_pkey")
+            && message.contains("bigint column id")
+    }));
+    assert!(!findings
+        .iter()
+        .any(|(_, _, message)| message.contains("nested_events_2026_a")));
 }
 
 #[test]

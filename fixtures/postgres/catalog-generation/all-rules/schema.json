@@ -364,6 +364,153 @@
       "triggers": {},
       "uniqueConstraints": {}
     },
+    "nested_events": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "date",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nested_events_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nested_events_pkey ON ONLY catalog_demo.nested_events USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.date_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "nested_events_2026": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "date",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nested_events_2026_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nested_events_2026_pkey ON ONLY catalog_demo.nested_events_2026 USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.date_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "partitionOf": "nested_events",
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
     "order_history": {
       "checkConstraints": {},
       "columns": {

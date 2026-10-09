@@ -84,6 +84,15 @@ fn postgres_key_column_types_supports_constraint_allow_entries() {
 }
 
 #[test]
+fn postgres_key_column_types_supports_jsonc_file_and_line_suppressions() {
+    for scenario in ["pass-file-disabled", "pass-line-disabled"] {
+        let root = fixture(scenario);
+        let output = check(&root, false);
+        assert!(output.status.success(), "{scenario}: {}", stdout(&output));
+    }
+}
+
+#[test]
 fn postgres_key_column_types_reports_stale_allow_entries() {
     let root = fixture("fail-stale-allow");
     let output = check(&root, false);

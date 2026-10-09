@@ -7,17 +7,22 @@ WITH selected AS (
 ), extension_members AS (
   SELECT classid, objid FROM pg_depend WHERE deptype = 'e'
 ), relations AS (
-  -- The one relation-selection policy. Partition leaves roll up into their parent, so only the
-  -- partitioned parent appears and nothing cloned onto a leaf is a separate entry. Sequences,
-  -- TOAST, indexes, composite types and foreign tables (unsupported) are other relkinds, and
-  -- temporary and extension-owned relations never describe the application schema.
-  SELECT c.oid, c.relname, c.relkind FROM pg_class c JOIN selected s ON s.oid = c.relnamespace
-  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND c.relpersistence <> 't' AND NOT c.relispartition
+  -- The one relation-selection policy. Ordinary partition leaves roll up into their parent;
+  -- nested partitioned parents remain visible so relation-level checks can inspect their cloned
+  -- constraints. Sequences, TOAST, indexes, composite types and foreign tables (unsupported) are
+  -- other relkinds, and temporary and extension-owned relations never describe the app schema.
+  SELECT c.oid, c.relname, c.relkind, c.relispartition,
+    CASE WHEN c.relispartition THEN (SELECT quote_ident(parent.relname) FROM pg_inherits i
+      JOIN pg_class parent ON parent.oid = i.inhparent WHERE i.inhrelid = c.oid) END AS partition_of
+  FROM pg_class c JOIN selected s ON s.oid = c.relnamespace
+  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND c.relpersistence <> 't'
+    AND (NOT c.relispartition OR c.relkind = 'p')
     AND NOT EXISTS (SELECT 1 FROM extension_members e
                     WHERE e.classid = 'pg_class'::regclass AND e.objid = c.oid)
 ), constraints AS (
-  -- conparentid = 0 drops the per-partition clones PostgreSQL adds to a table whose foreign
-  -- key references a partitioned table. contype 'n' (PostgreSQL 18 NOT NULL) is not a check.
+  -- conparentid = 0 drops per-partition clones on ordinary leaves. Keep clones on nested
+  -- partitioned parents so their own keys remain visible to catalog rules. contype 'n'
+  -- (PostgreSQL 18 NOT NULL) is not a check.
   SELECT c.conrelid, quote_ident(c.conname) AS name, c.contype, c.convalidated AS validated,
     (SELECT jsonb_agg(a.attname ORDER BY k.ordinality)
      FROM unnest(c.conkey) WITH ORDINALITY k(attnum, ordinality)
@@ -38,7 +43,8 @@ WITH selected AS (
       WHEN 'n' THEN 'SET NULL' WHEN 'd' THEN 'SET DEFAULT' END AS on_update,
     pg_get_constraintdef(c.oid) AS definition
   FROM pg_constraint c JOIN relations r ON r.oid = c.conrelid
-  WHERE c.conparentid = 0 AND c.contype IN ('p', 'u', 'f', 'c')
+  WHERE (c.conparentid = 0 OR (r.relkind = 'p' AND r.relispartition))
+    AND c.contype IN ('p', 'u', 'f', 'c')
 ), tables AS (
   SELECT quote_ident(r.relname) AS name, jsonb_build_object(
     'relationKind', CASE r.relkind WHEN 'p' THEN 'partitioned table' ELSE 'table' END,
@@ -100,7 +106,9 @@ WITH selected AS (
     'triggers', COALESCE((SELECT jsonb_object_agg(quote_ident(t.tgname),
       jsonb_build_object('definition', pg_get_triggerdef(t.oid))) FROM pg_trigger t
       WHERE t.tgrelid = r.oid AND NOT t.tgisinternal AND t.tgenabled IN ('O', 'A')), '{}'::jsonb)
-  ) ELSE '{}'::jsonb END AS value FROM relations r WHERE r.relkind IN ('r', 'p')
+  ) || CASE WHEN r.partition_of IS NULL THEN '{}'::jsonb
+       ELSE jsonb_build_object('partitionOf', r.partition_of) END
+  ELSE '{}'::jsonb END AS value FROM relations r WHERE r.relkind IN ('r', 'p')
 ), functions AS (
   -- pg_get_functiondef fails on aggregates and does not describe window functions: prokind f/p only.
   SELECT quote_ident(p.proname) || '(' || pg_get_function_identity_arguments(p.oid) || ')' AS key,

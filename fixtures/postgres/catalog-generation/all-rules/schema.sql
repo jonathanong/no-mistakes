@@ -91,5 +91,15 @@ CREATE TABLE events (
 COMMENT ON TABLE events IS 'Append-only event log.';
 CREATE TABLE events_2026 PARTITION OF events FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
 
+CREATE TABLE nested_events (
+  id bigint NOT NULL,
+  created_at date NOT NULL,
+  PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
+CREATE TABLE nested_events_2026 PARTITION OF nested_events
+  FOR VALUES FROM ('2026-01-01') TO ('2027-01-01') PARTITION BY RANGE (created_at);
+CREATE TABLE nested_events_2026_a PARTITION OF nested_events_2026
+  FOR VALUES FROM ('2026-01-01') TO ('2026-07-01');
+
 CREATE VIEW open_orders AS SELECT id, account_id FROM orders WHERE state <> 'paid';
 COMMENT ON VIEW open_orders IS 'Orders that are not yet paid.';
