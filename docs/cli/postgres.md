@@ -85,21 +85,29 @@ It also holds the schema's functions and procedures (`pg_get_functiondef`
 text, keyed by name and identity arguments so every overload has its own stable
 key, such as `over(a integer)` and `over(a text)`), enums with their values in
 sort order, and views and materialized views (`pg_get_viewdef` text and comment).
+Enums directly used by scalar columns or as array elements are also included when
+defined in another schema, under their qualified type names. Domains remain
+distinct types; their underlying enums are not included unless directly used.
 
 ### What the catalog leaves out
 
 One selection policy applies to both coverages, so they can never disagree about
 which relations exist:
 
-- **Partition children** are not tables. Only the partitioned parent appears, with
-  its partition key. The indexes, constraints and triggers PostgreSQL clones onto
-  each leaf are not separate entries, and a foreign key that references a
-  partitioned table is one entry rather than one per partition.
+- **Partition children** are omitted when PostgreSQL only cloned their parent’s
+  constraints. Nested partitioned parents remain entries with their own key facts;
+  an ordinary leaf appears only when it has a local primary or foreign key, and
+  cloned keys are not repeated. A foreign key that references a partitioned table
+  is one entry rather than one per partition. The key-type rule checks those local
+  leaf keys; other catalog rules retain their logical table scope and inspect
+  ordinary partition leaves through their parent.
 - **Extension-owned objects** are excluded: functions, types, tables and views that
-  belong to an installed extension. So are the enums of other schemas. A column that uses
-  one still names it in its `dataType` (qualified, for another schema), but it is not an
-  entry of `enums`: the catalog describes one schema, and `postgres-array-columns`
-  `allowTypes` is where such a type is listed.
+  belong to an installed extension. A column still names such a type in its
+  `dataType`; configure the relevant rule's allowed types when needed.
+- **Unreferenced enums in other schemas** are excluded. An external enum directly
+  used by a scalar column or array element is included, so rules can recognize its
+  type without adding unrelated schemas' relations or types. External metadata
+  does not add those enums to the selected schema's naming checks.
 - **Internal triggers**, such as the triggers behind foreign keys and deferrable
   unique constraints, are excluded.
 - **NOT NULL constraints**, which PostgreSQL 18 stores as constraints, are not check

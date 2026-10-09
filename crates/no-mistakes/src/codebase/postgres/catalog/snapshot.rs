@@ -29,6 +29,8 @@ pub(super) struct Snapshot {
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct SnapshotTable {
     pub(super) relation_kind: String,
+    /// Optional parent identity for hand-authored snapshots that retain partition leaves.
+    pub(super) partition_of: Option<String>,
     pub(super) comment: Option<String>,
     pub(super) columns: BTreeMap<String, SnapshotColumn>,
     pub(super) primary_key: Option<SnapshotPrimaryKey>,

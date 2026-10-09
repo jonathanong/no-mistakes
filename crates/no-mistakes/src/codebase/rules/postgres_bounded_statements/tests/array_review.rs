@@ -24,7 +24,7 @@ fn finite_array_constructors_require_bounded_scalar_catalog_leaves() {
         found,
         [
             5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20, 27, 28, 29, 30, 33, 35, 36, 40, 43, 46,
-            49, 52, 53, 54, 79, 80, 81
+            49, 52, 54, 79, 80, 81
         ]
         .map(|line| ("accounts".to_string(), line))
     );
@@ -130,5 +130,5 @@ fn enum_casts_and_interval_literals_preserve_finite_array_cardinality() {
         .flat_map(|fact| super::offenders(fact, &catalog))
         .map(|finding| finding.line)
         .collect();
-    assert_eq!(found, [3, 4, 9]);
+    assert_eq!(found, [3, 9]);
 }

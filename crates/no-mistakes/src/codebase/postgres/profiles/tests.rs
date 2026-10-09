@@ -171,6 +171,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-column-naming",
             "postgres-finite-text-columns",
             "postgres-array-columns",
+            "postgres-key-column-types",
             "postgres-required-predicates",
             "postgres-explicit-columns",
             "postgres-bounded-statements",

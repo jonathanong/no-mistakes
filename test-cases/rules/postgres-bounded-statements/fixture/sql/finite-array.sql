@@ -47,7 +47,7 @@ SELECT * FROM accounts a(email, id) WHERE a.id = $1;
 -- Unshadowed system columns are scalar even though catalogs omit them.
 SELECT 1 FROM accounts a, orders o WHERE o.id = $1 AND a.ctid = ANY(ARRAY[o.ctid]);
 SELECT 1 FROM accounts a, orders o(id, account_id, status, ctid) WHERE o.id = $1 AND a.ctid = ANY(ARRAY[o.ctid]);
--- Enum matching follows schema-aware catalog names and rejects ambiguity or unknown schemas.
+-- Unqualified names prefer the selected schema; foreign and unknown qualified names fail closed.
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY(ARRAY[o.enum_qualified]::text[]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY(ARRAY[o.enum_foreign]::text[]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.email = ANY(ARRAY[o.enum_ambiguous]::text[]);

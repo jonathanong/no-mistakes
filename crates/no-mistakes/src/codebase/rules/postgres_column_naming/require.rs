@@ -67,7 +67,7 @@ fn exempt_matches(
     require: &super::compile::RequireCheck,
     pattern: &regex::Regex,
 ) -> bool {
-    catalog.tables().any(|table| {
+    catalog.logical_tables().any(|table| {
         !ignored(&table.name, compiled)
             && table.columns.iter().any(|column| {
                 column.generated.is_none()

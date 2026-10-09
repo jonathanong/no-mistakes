@@ -66,6 +66,7 @@ macro_rules! filesystem_rules {
             POSTGRES_NO_OFFSET => postgres_no_offset::check_with_files,
             POSTGRES_IDENTIFIER_LENGTH => postgres_identifier_length::check_with_files,
             POSTGRES_ARRAY_COLUMNS => postgres_array_columns::check_with_files,
+            POSTGRES_KEY_COLUMN_TYPES => postgres_key_column_types::check_with_files,
             POSTGRES_COLUMN_NAMING => postgres_column_naming::check_with_files,
             POSTGRES_OBJECT_NAMING => postgres_object_naming::check_with_files,
             POSTGRES_REQUIRE_FK_ON_DELETE => postgres_require_fk_on_delete::check_with_files,

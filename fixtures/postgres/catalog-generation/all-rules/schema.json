@@ -7,6 +7,18 @@
         "sent",
         "paid"
       ]
+    },
+    "shared.\"BadPriority\"": {
+      "values": [
+        "low",
+        "high"
+      ]
+    },
+    "shared.priority": {
+      "values": [
+        "low",
+        "high"
+      ]
     }
   },
   "formatVersion": 2,
@@ -243,6 +255,159 @@
       "triggers": {},
       "uniqueConstraints": {}
     },
+    "external_enum_domain_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.unused_priority_domain",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "A domain over an external enum is not an enum key.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_domain_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_domain_keys_pkey ON catalog_demo.external_enum_domain_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "external_enum_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.priority",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "A key using a shared schema enum.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_keys_pkey ON catalog_demo.external_enum_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "external_enum_name_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.\"BadPriority\"",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "An external enum should not receive a local naming finding.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_name_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_name_keys_pkey ON catalog_demo.external_enum_name_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
     "invoices": {
       "checkConstraints": {
         "invoices_status_check": {
@@ -361,6 +526,214 @@
         ]
       },
       "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "local_key_leaf": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {
+        "local_key_leaf_account_fkey": {
+          "columns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "referencedColumns": [
+            "id"
+          ],
+          "referencedTable": "accounts",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "local_key_leaf_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX local_key_leaf_pkey ON catalog_demo.local_key_leaf USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "partitionOf": "partition_roots.local_key_parent",
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "nested_events": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "date",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nested_events_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nested_events_pkey ON ONLY catalog_demo.nested_events USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.date_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "nested_events_2026": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "date",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nested_events_2026_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nested_events_2026_pkey ON ONLY catalog_demo.nested_events_2026 USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.date_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "partitionOf": "nested_events",
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
       "triggers": {},
       "uniqueConstraints": {}
     },

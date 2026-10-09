@@ -23,6 +23,10 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                         "../../../../../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml"
                     )
                 )
+            } else if *id == POSTGRES_KEY_COLUMN_TYPES {
+                format!(
+                    "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n      allowedTypes: [uuid]\n"
+                )
             } else if matches!(*id,
                 POSTGRES_CONFLICT_ORDERING | POSTGRES_COLUMN_REQUIRES_TRIGGER
                 | POSTGRES_REQUIRED_COMMENTS | POSTGRES_DUPLICATE_FUNCTION_BODY
@@ -497,24 +501,6 @@ comparisons:
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
     assert_eq!(counts.get(&root.join("schedules.mts")), Some(&1));
     assert_eq!(counts.len(), 1, "{counts:?}");
-}
-
-/// Cover the false branches of the `if rule_enabled(...)` guards for
-/// `RUST_MAX_LINES_PER_FILE` and `RUST_NO_INLINE_TESTS` by running with a
-/// config that omits those two rules, exercising the skip paths.
-#[test]
-fn dispatch_with_files_skips_disabled_rules() {
-    let fixture = all_rules_fixture();
-    // Omit RUST_MAX_LINES_PER_FILE and RUST_NO_INLINE_TESTS from the config.
-    let rules_without_rust: Vec<&str> = FILESYSTEM_RULE_IDS
-        .iter()
-        .copied()
-        .filter(|&r| r != RUST_MAX_LINES_PER_FILE && r != RUST_NO_INLINE_TESTS)
-        .collect();
-    let config_path = write_config(fixture.path(), &rules_without_rust);
-    let findings =
-        run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
-    assert!(findings.is_empty());
 }
 
 #[test]

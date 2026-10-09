@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-key-column-types
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: [uuid, 'numeric(10,2)']

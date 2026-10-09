@@ -69,6 +69,26 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
         &project.path().join("schema.json"),
     );
     assert!(output.status.success());
+    let catalog: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(project.path().join("schema.json")).unwrap())
+            .unwrap();
+    assert_eq!(
+        catalog["tables"]["nested_events_2026"]["relationKind"],
+        "partitioned table"
+    );
+    assert_eq!(
+        catalog["tables"]["nested_events_2026"]["partitionOf"],
+        "nested_events"
+    );
+    assert!(catalog["tables"].get("nested_events_2026_a").is_none());
+    assert_eq!(
+        catalog["tables"]["local_key_leaf"]["partitionOf"],
+        "partition_roots.local_key_parent"
+    );
+    assert!(catalog["tables"]["local_key_leaf"]["primaryKey"].is_null());
+    assert!(catalog["tables"]["local_key_leaf"]["foreignKeys"]
+        .get("local_key_leaf_account_fkey")
+        .is_some());
     let (_, findings) = check(project.path(), &project.path().join(".no-mistakes.yml"));
     for rule in SCHEMA_CATALOG_RULE_IDS {
         let own: Vec<_> = findings.iter().filter(|(id, _, _)| id == rule).collect();
@@ -87,6 +107,41 @@ fn every_catalog_rule_reports_a_finding_on_a_generated_catalog() {
     assert!(findings
         .iter()
         .any(|(_, _, message)| message.contains("invoice_state[]")));
+    assert!(findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types"
+            && message.contains("constraint:events.events_pkey")
+            && message.contains("bigint column id")
+    }));
+    assert!(findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types"
+            && message.contains("constraint:nested_events_2026.nested_events_2026_pkey")
+            && message.contains("bigint column id")
+    }));
+    assert_eq!(
+        catalog["tables"]["external_enum_keys"]["columns"]["id"]["dataType"],
+        "shared.priority"
+    );
+    assert_eq!(catalog["enums"]["shared.priority"]["values"][0], "low");
+    assert!(catalog["enums"].get("shared.unused_priority").is_none());
+    assert!(!findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types"
+            && message.contains("constraint:external_enum_keys.external_enum_keys_pkey")
+    }));
+    assert!(!findings.iter().any(|(id, _, message)| {
+        id == "postgres-object-naming" && message.contains("BadPriority")
+    }));
+    assert!(findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types"
+            && message
+                .contains("constraint:external_enum_domain_keys.external_enum_domain_keys_pkey")
+            && message.contains("shared.unused_priority_domain")
+    }));
+    assert!(!findings
+        .iter()
+        .any(|(_, _, message)| message.contains("nested_events_2026_a")));
+    assert!(!findings.iter().any(|(id, _, message)| {
+        id == "postgres-key-column-types" && message.contains("local_key_leaf")
+    }));
 }
 
 #[test]

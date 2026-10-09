@@ -88,7 +88,7 @@ fn column_finding(
 
 fn collect(catalog: &SchemaCatalog, compiled: &Compiled) -> Vec<Seen> {
     let mut seen = Vec::new();
-    for table in catalog.tables() {
+    for table in catalog.logical_tables() {
         if compiled.ignores(&table.name) {
             continue;
         }

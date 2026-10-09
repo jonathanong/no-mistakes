@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {}
+    }
+  }
+}

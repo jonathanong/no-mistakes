@@ -1,0 +1,10 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "app",
+  "tables": {},
+  "enums": {
+    "BadLocalName": {"values": ["ok"]},
+    "app.\"BadQualifiedName\"": {"values": ["ok"]}
+  }
+}

@@ -73,6 +73,9 @@ fn run_schema_rules(
         POSTGRES_IDENTIFIER_LENGTH => {
             prepared_schema::identifier_length(root, config, files, sources, facts)
         }
+        POSTGRES_KEY_COLUMN_TYPES => {
+            prepared_schema::key_column_types(root, config, files, sources, facts)
+        }
         POSTGRES_REQUIRE_FK_ON_DELETE => {
             prepared_schema::require_fk_on_delete(root, config, files, sources, facts)
         }

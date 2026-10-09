@@ -11,7 +11,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
         return Vec::new();
     }
     let mut findings = Vec::new();
-    for table in catalog.tables() {
+    for table in catalog.logical_tables() {
         if let Some(finding) = table_finding(&compiled, table) {
             findings.push(finding);
         }

@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allowEnumElements: true

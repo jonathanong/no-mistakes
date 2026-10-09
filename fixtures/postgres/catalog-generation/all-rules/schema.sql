@@ -3,6 +3,10 @@
 -- Each object is built to trip one catalog rule enabled in .no-mistakes.yml.
 CREATE SCHEMA shared;
 CREATE TYPE shared.priority AS ENUM ('low', 'high');
+CREATE TYPE shared."BadPriority" AS ENUM ('low', 'high');
+CREATE TYPE shared.unused_priority AS ENUM ('off', 'on');
+CREATE DOMAIN shared.unused_priority_domain AS shared.unused_priority;
+CREATE SCHEMA partition_roots;
 
 CREATE SCHEMA catalog_demo;
 SET search_path = catalog_demo, pg_catalog;
@@ -36,6 +40,18 @@ CREATE TABLE accounts (
   CONSTRAINT accounts_email_key UNIQUE (email)
 );
 COMMENT ON TABLE accounts IS 'People and organizations that own orders.';
+CREATE TABLE external_enum_keys (
+  id shared.priority PRIMARY KEY
+);
+COMMENT ON TABLE external_enum_keys IS 'A key using a shared schema enum.';
+CREATE TABLE external_enum_name_keys (
+  id shared."BadPriority" PRIMARY KEY
+);
+COMMENT ON TABLE external_enum_name_keys IS 'An external enum should not receive a local naming finding.';
+CREATE TABLE external_enum_domain_keys (
+  id shared.unused_priority_domain PRIMARY KEY
+);
+COMMENT ON TABLE external_enum_domain_keys IS 'A domain over an external enum is not an enum key.';
 CREATE TRIGGER trigger_accounts_touch BEFORE UPDATE ON accounts
   FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at();
 CREATE TRIGGER trigger_accounts_no_delete BEFORE DELETE ON accounts
@@ -90,6 +106,23 @@ CREATE TABLE events (
 ) PARTITION BY RANGE (created_at);
 COMMENT ON TABLE events IS 'Append-only event log.';
 CREATE TABLE events_2026 PARTITION OF events FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
+
+CREATE TABLE nested_events (
+  id bigint NOT NULL,
+  created_at date NOT NULL,
+  PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
+CREATE TABLE nested_events_2026 PARTITION OF nested_events
+  FOR VALUES FROM ('2026-01-01') TO ('2027-01-01') PARTITION BY RANGE (created_at);
+CREATE TABLE nested_events_2026_a PARTITION OF nested_events_2026
+  FOR VALUES FROM ('2026-01-01') TO ('2026-07-01');
+
+-- A partition leaf with its own foreign key is retained in the generated catalog.
+CREATE TABLE partition_roots.local_key_parent (id uuid PRIMARY KEY) PARTITION BY HASH (id);
+CREATE TABLE local_key_leaf PARTITION OF partition_roots.local_key_parent
+  FOR VALUES WITH (MODULUS 2, REMAINDER 0);
+ALTER TABLE local_key_leaf ADD CONSTRAINT local_key_leaf_account_fkey
+  FOREIGN KEY (id) REFERENCES accounts(id);
 
 CREATE VIEW open_orders AS SELECT id, account_id FROM orders WHERE state <> 'paid';
 COMMENT ON VIEW open_orders IS 'Orders that are not yet paid.';

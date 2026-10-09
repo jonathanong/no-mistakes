@@ -1,0 +1,12 @@
+// no-mistakes-disable-file postgres-key-column-types
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {"id": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"orders_pkey": {"primary": true}}
+    }
+  }
+}

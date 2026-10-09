@@ -79,6 +79,8 @@ export interface PostgresCatalogIndex {
 }
 export interface PostgresCatalogTable {
   relationKind: "table" | "partitioned table";
+  /** Optional parent table for hand-authored snapshots that include partition leaves. */
+  partitionOf?: string;
   columns: Record<string, PostgresCatalogColumn>;
   primaryKey: { columns: string[] } | null;
   uniqueConstraints: Record<string, { columns: string[] }>;

@@ -1,4 +1,5 @@
-use super::support::{expect, expect_none, index};
+use super::support::{expect, expect_none, findings, index};
+use std::path::PathBuf;
 
 fn plural() -> String {
     "schemaCatalogPath: schema.json\nplural:\n  enabled: true\n  irregularPlurals: {person: people, child: children}\n  uncountable: [data, metadata, feedback, media]\n  nonPluralTokens: [status, analysis, sms, news, series]\n".to_string()
@@ -75,6 +76,33 @@ fn valid_plural_names() {
         &yaml,
         serde_json::json!({"enums": {"invoice_status": {"values": ["open"]}}}),
     );
+}
+
+#[test]
+fn external_referenced_enums_do_not_change_schema_local_naming() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/object-naming/external-enum-scope");
+    let yaml = "schemaCatalogPath: schema.json\npatterns:\n  enum: '^[a-z][a-z0-9_]*$'\n";
+    let run = |file: &str| {
+        let source = std::fs::read_to_string(root.join(file)).unwrap();
+        let catalog = serde_json::from_str(&source).unwrap();
+        findings(yaml, catalog)
+    };
+    let baseline = run("baseline.json");
+    let with_external = run("with-external-enum.json");
+    assert_eq!(baseline, with_external);
+    assert!(baseline
+        .iter()
+        .any(|finding| finding.target.as_deref() == Some("enum:BadLocalName")));
+    assert!(baseline.iter().any(|finding| {
+        finding
+            .target
+            .as_deref()
+            .is_some_and(|target| target.contains("BadQualifiedName"))
+    }));
+    assert!(!with_external.iter().any(|finding| {
+        finding.target.as_deref() == Some("enum:\"other.schema\".\"Bad.Name\"")
+    }));
 }
 
 #[test]

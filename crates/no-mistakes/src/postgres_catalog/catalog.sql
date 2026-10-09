@@ -7,17 +7,28 @@ WITH selected AS (
 ), extension_members AS (
   SELECT classid, objid FROM pg_depend WHERE deptype = 'e'
 ), relations AS (
-  -- The one relation-selection policy. Partition leaves roll up into their parent, so only the
-  -- partitioned parent appears and nothing cloned onto a leaf is a separate entry. Sequences,
-  -- TOAST, indexes, composite types and foreign tables (unsupported) are other relkinds, and
-  -- temporary and extension-owned relations never describe the application schema.
-  SELECT c.oid, c.relname, c.relkind FROM pg_class c JOIN selected s ON s.oid = c.relnamespace
-  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND c.relpersistence <> 't' AND NOT c.relispartition
+  -- The one relation-selection policy. Ordinary partition leaves with only cloned constraints
+  -- roll up into their parent; retain leaves with their own primary or foreign key. Nested
+  -- partitioned parents remain visible so relation-level checks can inspect their constraints.
+  -- Sequences, TOAST, indexes, composite types and foreign tables (unsupported) are other relkinds.
+  SELECT c.oid, c.relname, c.relkind, c.relispartition,
+    CASE WHEN c.relispartition THEN (SELECT CASE
+      WHEN parent.relnamespace = c.relnamespace THEN quote_ident(parent.relname)
+      ELSE quote_ident(parent_ns.nspname) || '.' || quote_ident(parent.relname) END
+      FROM pg_inherits i JOIN pg_class parent ON parent.oid = i.inhparent
+      JOIN pg_namespace parent_ns ON parent_ns.oid = parent.relnamespace
+      WHERE i.inhrelid = c.oid) END AS partition_of
+  FROM pg_class c JOIN selected s ON s.oid = c.relnamespace
+  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND c.relpersistence <> 't'
+    AND (NOT c.relispartition OR c.relkind = 'p' OR EXISTS (SELECT 1 FROM pg_constraint local_key
+      WHERE local_key.conrelid = c.oid AND local_key.conparentid = 0
+        AND local_key.contype IN ('p', 'f')))
     AND NOT EXISTS (SELECT 1 FROM extension_members e
                     WHERE e.classid = 'pg_class'::regclass AND e.objid = c.oid)
 ), constraints AS (
-  -- conparentid = 0 drops the per-partition clones PostgreSQL adds to a table whose foreign
-  -- key references a partitioned table. contype 'n' (PostgreSQL 18 NOT NULL) is not a check.
+  -- conparentid = 0 drops per-partition clones on ordinary leaves. Keep clones on nested
+  -- partitioned parents so their own keys remain visible to catalog rules. contype 'n'
+  -- (PostgreSQL 18 NOT NULL) is not a check.
   SELECT c.conrelid, quote_ident(c.conname) AS name, c.contype, c.convalidated AS validated,
     (SELECT jsonb_agg(a.attname ORDER BY k.ordinality)
      FROM unnest(c.conkey) WITH ORDINALITY k(attnum, ordinality)
@@ -38,7 +49,8 @@ WITH selected AS (
       WHEN 'n' THEN 'SET NULL' WHEN 'd' THEN 'SET DEFAULT' END AS on_update,
     pg_get_constraintdef(c.oid) AS definition
   FROM pg_constraint c JOIN relations r ON r.oid = c.conrelid
-  WHERE c.conparentid = 0 AND c.contype IN ('p', 'u', 'f', 'c')
+  WHERE (c.conparentid = 0 OR (r.relkind = 'p' AND r.relispartition))
+    AND c.contype IN ('p', 'u', 'f', 'c')
 ), tables AS (
   SELECT quote_ident(r.relname) AS name, jsonb_build_object(
     'relationKind', CASE r.relkind WHEN 'p' THEN 'partitioned table' ELSE 'table' END,
@@ -100,7 +112,9 @@ WITH selected AS (
     'triggers', COALESCE((SELECT jsonb_object_agg(quote_ident(t.tgname),
       jsonb_build_object('definition', pg_get_triggerdef(t.oid))) FROM pg_trigger t
       WHERE t.tgrelid = r.oid AND NOT t.tgisinternal AND t.tgenabled IN ('O', 'A')), '{}'::jsonb)
-  ) ELSE '{}'::jsonb END AS value FROM relations r WHERE r.relkind IN ('r', 'p')
+  ) || CASE WHEN r.partition_of IS NULL THEN '{}'::jsonb
+       ELSE jsonb_build_object('partitionOf', r.partition_of) END
+  ELSE '{}'::jsonb END AS value FROM relations r WHERE r.relkind IN ('r', 'p')
 ), functions AS (
   -- pg_get_functiondef fails on aggregates and does not describe window functions: prokind f/p only.
   SELECT quote_ident(p.proname) || '(' || pg_get_function_identity_arguments(p.oid) || ')' AS key,
@@ -110,13 +124,21 @@ WITH selected AS (
                                                 WHERE e.classid = 'pg_proc'::regclass AND e.objid = p.oid)
 ), enums AS (
   -- Keyed by the type as a column renders it (format_type under the same search_path), so a
-  -- column's element type always finds its enum, including one named like a pg_catalog type.
+  -- column's element type always finds its enum, including an external enum directly used by
+  -- a selected table's scalar or array column and one named like a pg_catalog type.
+  -- Unreferenced external enums and enums reached only through domains stay out.
   -- A zero-label enum is legal, and jsonb_agg of no rows is NULL, so it is coalesced to [].
   SELECT format_type(t.oid, NULL) AS key, jsonb_build_object('values', COALESCE((SELECT
     jsonb_agg(v.enumlabel ORDER BY v.enumsortorder) FROM pg_enum v WHERE v.enumtypid = t.oid),
     '[]'::jsonb)) AS value
-  FROM pg_type t JOIN selected s ON s.oid = t.typnamespace
-  WHERE t.typtype = 'e' AND NOT EXISTS (SELECT 1 FROM extension_members e
+  FROM pg_type t
+  WHERE t.typtype = 'e' AND (t.typnamespace = (SELECT oid FROM selected) OR EXISTS (
+      SELECT 1 FROM pg_attribute a JOIN relations r ON r.oid = a.attrelid
+      JOIN pg_type column_type ON column_type.oid = a.atttypid
+      WHERE (a.atttypid = t.oid OR column_type.typelem = t.oid)
+        AND a.attnum > 0 AND NOT a.attisdropped
+        AND r.relkind IN ('r', 'p')))
+    AND NOT EXISTS (SELECT 1 FROM extension_members e
                                         WHERE e.classid = 'pg_type'::regclass AND e.objid = t.oid)
 ), views AS (
   SELECT quote_ident(r.relname) AS key, jsonb_build_object('materialized', r.relkind = 'm',

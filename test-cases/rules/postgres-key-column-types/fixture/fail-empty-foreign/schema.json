@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {"id": {"dataType": "uuid"}},
+      "foreignKeys": {
+        "invalid_fkey": {"columns": [], "referencedTable": "customers", "referencedColumns": []}
+      }
+    }
+  }
+}

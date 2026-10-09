@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-key-column-types
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: [uuid]
+      allow:
+        - object: constraint:orders.missing_pkey
+          reason: the key was removed

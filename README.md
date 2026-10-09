@@ -175,6 +175,10 @@ within their ten-minute step deadlines. Development and test profiles use the sa
 setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
 Linux still runs the full suite and enforces the coverage gates.
 
+CI checks links to this repository's `main` documentation against the checked-out
+`docs/` files, including new pages in a pull request. Missing targets still fail;
+links outside that documentation prefix continue to be checked over the network.
+
 ARM macOS release builds use ThinLTO and 16 code generation units so LLVM can
 optimize the combined CLI and N-API build in parallel on a cold runner. The
 workflow sets these Cargo profile overrides before restoring its build cache.

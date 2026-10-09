@@ -3,6 +3,7 @@
 mod bounded;
 mod current_database;
 mod edges;
+mod enum_arrays;
 mod parity;
 mod rules;
 mod shadowing;

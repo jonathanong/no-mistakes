@@ -1,0 +1,11 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {"id": {"dataType": "uuid"}},
+      "primaryKey": {"columns": []},
+      "indexes": {"orders_pkey": {"primary": true}}
+    }
+  }
+}

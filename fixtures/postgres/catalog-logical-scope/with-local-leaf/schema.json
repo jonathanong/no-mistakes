@@ -1,0 +1,1207 @@
+{
+  "coverage": "complete",
+  "enums": {
+    "invoice_state": {
+      "values": [
+        "draft",
+        "sent",
+        "paid"
+      ]
+    },
+    "shared.\"BadPriority\"": {
+      "values": [
+        "low",
+        "high"
+      ]
+    },
+    "shared.priority": {
+      "values": [
+        "low",
+        "high"
+      ]
+    }
+  },
+  "formatVersion": 2,
+  "functions": {
+    "fn_reject_account_delete()": {
+      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_reject_account_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'rows are immutable' USING ERRCODE = '23514'; END\n$function$\n"
+    },
+    "fn_reject_order_delete()": {
+      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_reject_order_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'rows are immutable' USING ERRCODE = '23514'; END\n$function$\n"
+    },
+    "fn_touch_updated_at()": {
+      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_touch_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  NEW.updated_at := now();\n  RETURN NEW;\nEND\n$function$\n"
+    }
+  },
+  "schema": "catalog_demo",
+  "tables": {
+    "accounts": {
+      "checkConstraints": {},
+      "columns": {
+        "active": {
+          "comment": null,
+          "dataType": "boolean",
+          "defaultExpression": "true",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "email": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "priority": {
+          "comment": null,
+          "dataType": "shared.priority",
+          "defaultExpression": "'low'::shared.priority",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "tags": {
+          "comment": null,
+          "dataType": "text[]",
+          "defaultExpression": "'{}'::text[]",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "updated_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": "now()",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "comment": "People and organizations that own orders.",
+      "foreignKeys": {},
+      "indexes": {
+        "accounts_email_key": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX accounts_email_key ON catalog_demo.accounts USING btree (email)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "email",
+              "descending": false,
+              "expression": "email",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        },
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX accounts_pkey ON catalog_demo.accounts USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {
+        "trigger_accounts_no_delete": {
+          "definition": "CREATE TRIGGER trigger_accounts_no_delete BEFORE DELETE ON catalog_demo.accounts FOR EACH ROW EXECUTE FUNCTION fn_reject_account_delete()"
+        },
+        "trigger_accounts_touch": {
+          "definition": "CREATE TRIGGER trigger_accounts_touch BEFORE UPDATE ON catalog_demo.accounts FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+        }
+      },
+      "uniqueConstraints": {
+        "accounts_email_key": {
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    },
+    "events": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": "a",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "kind": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "comment": "Append-only event log.",
+      "foreignKeys": {},
+      "indexes": {
+        "events_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX events_pkey ON ONLY catalog_demo.events USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.timestamptz_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "external_enum_domain_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.unused_priority_domain",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "A domain over an external enum is not an enum key.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_domain_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_domain_keys_pkey ON catalog_demo.external_enum_domain_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "external_enum_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.priority",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "A key using a shared schema enum.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_keys_pkey ON catalog_demo.external_enum_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "external_enum_name_keys": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "shared.\"BadPriority\"",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "An external enum should not receive a local naming finding.",
+      "foreignKeys": {},
+      "indexes": {
+        "external_enum_name_keys_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX external_enum_name_keys_pkey ON catalog_demo.external_enum_name_keys USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.enum_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "invoices": {
+      "checkConstraints": {
+        "invoices_status_check": {
+          "definition": "CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'paid'::text])))",
+          "validated": true
+        }
+      },
+      "columns": {
+        "failed_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "line_no": {
+          "comment": null,
+          "dataType": "integer",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "order_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "sent_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "status": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "comment": "Billing documents.",
+      "foreignKeys": {
+        "invoices_line_fkey": {
+          "columns": [
+            "order_id",
+            "line_no"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "RESTRICT",
+          "referencedColumns": [
+            "order_id",
+            "line_no"
+          ],
+          "referencedTable": "order_lines",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "invoices_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX invoices_pkey ON catalog_demo.invoices USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "nested_events": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "date",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nested_events_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nested_events_pkey ON ONLY catalog_demo.nested_events USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.date_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "nested_events_2026": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "date",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "bigint",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nested_events_2026_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nested_events_2026_pkey ON ONLY catalog_demo.nested_events_2026 USING btree (id, created_at)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int8_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "created_at",
+              "descending": false,
+              "expression": "created_at",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.date_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "partitionOf": "nested_events",
+      "physicalPartition": {
+        "key": "RANGE (created_at)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id",
+          "created_at"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "order_history": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "Prior order states.",
+      "foreignKeys": {},
+      "indexes": {
+        "order_history_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX order_history_pkey ON catalog_demo.order_history USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "order_lines": {
+      "checkConstraints": {},
+      "columns": {
+        "line_no": {
+          "comment": null,
+          "dataType": "integer",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "order_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": "One row per order line.",
+      "foreignKeys": {
+        "order_lines_order_id_fkey": {
+          "columns": [
+            "order_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "NO ACTION",
+          "referencedColumns": [
+            "id"
+          ],
+          "referencedTable": "orders",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX order_lines_pkey ON catalog_demo.order_lines USING btree (order_id, line_no)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "order_id",
+              "descending": false,
+              "expression": "order_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "line_no",
+              "descending": false,
+              "expression": "line_no",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int4_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "order_id",
+          "line_no"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "orders": {
+      "checkConstraints": {},
+      "columns": {
+        "account_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "state": {
+          "comment": null,
+          "dataType": "invoice_state",
+          "defaultExpression": "'draft'::invoice_state",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "states": {
+          "comment": null,
+          "dataType": "invoice_state[]",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "total_cents": {
+          "comment": null,
+          "dataType": "integer",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "total_dollars": {
+          "comment": null,
+          "dataType": "numeric",
+          "defaultExpression": null,
+          "generated": "virtual",
+          "generatedExpression": "((total_cents)::numeric / 100.0)",
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "total_is_even": {
+          "comment": null,
+          "dataType": "boolean",
+          "defaultExpression": null,
+          "generated": "stored",
+          "generatedExpression": "((total_cents % 2) = 0)",
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "updated_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": "now()",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 8
+        }
+      },
+      "comment": null,
+      "foreignKeys": {
+        "orders_account_id_fkey": {
+          "columns": [
+            "account_id"
+          ],
+          "onDelete": "CASCADE",
+          "onUpdate": "NO ACTION",
+          "referencedColumns": [
+            "id"
+          ],
+          "referencedTable": "accounts",
+          "validated": true
+        }
+      },
+      "indexes": {
+        "orders_account_id_idx": {
+          "accessMethod": "btree",
+          "constraintBacked": false,
+          "definition": "CREATE INDEX orders_account_id_idx ON catalog_demo.orders USING btree (account_id) WHERE (state <> 'paid'::invoice_state)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "account_id",
+              "descending": false,
+              "expression": "account_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": "(state <> 'paid'::invoice_state)",
+          "primary": false,
+          "ready": true,
+          "unique": false,
+          "valid": true
+        },
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX orders_pkey ON catalog_demo.orders USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {
+        "trigger_orders_no_delete": {
+          "definition": "CREATE TRIGGER trigger_orders_no_delete BEFORE DELETE ON catalog_demo.orders FOR EACH ROW EXECUTE FUNCTION fn_reject_order_delete()"
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "parent_accounts": {
+      "checkConstraints": {},
+      "columns": {
+        "active": {
+          "comment": null,
+          "dataType": "boolean",
+          "defaultExpression": "true",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "email": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "priority": {
+          "comment": null,
+          "dataType": "shared.priority",
+          "defaultExpression": "'low'::shared.priority",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "tags": {
+          "comment": null,
+          "dataType": "text[]",
+          "defaultExpression": "'{}'::text[]",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "updated_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": "now()",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "comment": "People and organizations that own orders.",
+      "foreignKeys": {},
+      "indexes": {
+        "accounts_email_key": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX accounts_email_key ON catalog_demo.accounts USING btree (email)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "email",
+              "descending": false,
+              "expression": "email",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        },
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX accounts_pkey ON catalog_demo.accounts USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": {
+        "key": "HASH (id)"
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "partitioned table",
+      "triggers": {
+        "trigger_accounts_no_delete": {
+          "definition": "CREATE TRIGGER trigger_accounts_no_delete BEFORE DELETE ON catalog_demo.accounts FOR EACH ROW EXECUTE FUNCTION fn_reject_account_delete()"
+        },
+        "trigger_accounts_touch": {
+          "definition": "CREATE TRIGGER trigger_accounts_touch BEFORE UPDATE ON catalog_demo.accounts FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+        }
+      },
+      "uniqueConstraints": {
+        "accounts_email_key": {
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    },
+    "BadLeaf": {
+      "checkConstraints": {},
+      "columns": {
+        "active": {
+          "comment": null,
+          "dataType": "boolean",
+          "defaultExpression": "true",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "email": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "priority": {
+          "comment": null,
+          "dataType": "shared.priority",
+          "defaultExpression": "'low'::shared.priority",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "tags": {
+          "comment": null,
+          "dataType": "text[]",
+          "defaultExpression": "'{}'::text[]",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "updated_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": "now()",
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "comment": "People and organizations that own orders.",
+      "foreignKeys": {
+        "BadLeaf_email_fkey": {
+          "columns": [
+            "email"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "email"
+          ],
+          "validated": true
+        }
+      },
+      "indexes": {},
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {},
+      "partitionOf": "parent_accounts"
+    }
+  },
+  "views": {
+    "open_orders": {
+      "comment": "Orders that are not yet paid.",
+      "definition": " SELECT id,\n    account_id\n   FROM orders\n  WHERE state <> 'paid'::invoice_state;",
+      "materialized": false
+    }
+  }
+}
