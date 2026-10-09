@@ -5,7 +5,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn index(&self, value: Value, index: usize) -> Value {
         match value {
             Value::Arguments(id, values) => {
-                if self.invalidated_builders.contains(&id) {
+                if self.invalidated_builders.contains(&id)
+                    || self.deleted_argument_slots.contains(&(id, index))
+                {
                     Value::Unknown
                 } else {
                     values.get(index).cloned().unwrap_or(Value::Unknown)

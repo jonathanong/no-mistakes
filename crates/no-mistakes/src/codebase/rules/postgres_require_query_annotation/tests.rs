@@ -462,7 +462,11 @@ fn helpers_use_importer_owned_aliases_even_when_unknown_sql_is_ignored() {
 
 #[test]
 fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
-    for scenario in ["helper-tracing-post-merge", "helper-tracing-tag-callback"] {
+    for scenario in [
+        "helper-tracing-post-merge",
+        "helper-tracing-tag-callback",
+        "helper-tracing-alternative-callback",
+    ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);
         let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();

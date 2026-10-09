@@ -1,5 +1,7 @@
 mod alternatives;
 mod calls;
+mod concat;
+use concat::concat;
 mod delete;
 mod effects;
 mod index;
@@ -39,6 +41,7 @@ pub(super) struct Evaluator<'a, F> {
     pub modules: FxHashMap<PathBuf, Environment>,
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
+    pub deleted_argument_slots: FxHashSet<(u64, usize)>,
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -58,11 +61,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();
         let invalidated = self.invalidated_builders.clone();
+        let deleted = self.deleted_argument_slots.clone();
         for call in unmodeled {
             if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
+                self.deleted_argument_slots.clone_from(&deleted);
                 self.expr(&call, path, &env, 16, false);
             }
         }
@@ -75,6 +80,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
+                self.deleted_argument_slots.clone_from(&deleted);
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
@@ -162,7 +168,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 args,
                 start,
             } => self.call(callee, args, *start, path, env, (depth, generic)),
-            Expr::Delete(children) => self.deleted(children, path, env, (depth, generic)),
+            Expr::Delete(children, index) => {
+                self.deleted(children, *index, path, env, (depth, generic))
+            }
             Expr::Opaque(children) => {
                 let values = children
                     .iter()
@@ -189,21 +197,5 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         } else {
             value
         }
-    }
-}
-
-pub(super) fn concat(base: Value, tail: Value) -> Value {
-    match (base, tail) {
-        (Value::Unsupported, _) => Value::Unsupported,
-        (Value::Prefix(base, true, _), Value::Unsupported) if base.trim().is_empty() => {
-            Value::Unsupported
-        }
-        (Value::Prefix(base, false, id), _) => Value::Prefix(base, false, id),
-        (Value::Prefix(mut base, true, id), Value::Prefix(tail, complete, _)) => {
-            base.push_str(&tail);
-            Value::Prefix(base, complete, id)
-        }
-        (Value::Prefix(base, true, id), _) => Value::Prefix(base, false, id),
-        _ => Value::Unknown,
     }
 }

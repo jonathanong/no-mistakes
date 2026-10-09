@@ -96,12 +96,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             let mut locals = scopes::locals(&self.scopes[captured], &function);
+            if let Some(name) = &function.self_name {
+                locals.insert(name.clone(), Value::Unknown);
+            }
             let object = self.arguments_object(&arguments, spread);
             scopes::arguments(&mut locals, &function, object);
             for name in &function.params {
-                locals.insert(name.clone(), Value::Unknown);
-            }
-            if let Some(name) = &function.self_name {
                 locals.insert(name.clone(), Value::Unknown);
             }
             let mut scope = self.environment(locals);
@@ -129,6 +129,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         }
         let mut locals = scopes::locals(&self.scopes[captured], &function);
+        if let Some(name) = &function.self_name {
+            locals.insert(name.clone(), Value::Unknown);
+        }
         let object = self.arguments_object(&arguments, spread);
         scopes::arguments(&mut locals, &function, object);
         for (index, param) in function.params.iter().enumerate() {
@@ -140,9 +143,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                     arguments.get(index).cloned().unwrap_or(Value::Unknown)
                 },
             );
-        }
-        if let Some(name) = &function.self_name {
-            locals.insert(name.clone(), Value::Unknown);
         }
         let mut scope = self.environment(locals);
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
@@ -174,11 +174,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             } else if let Value::Function(function, path, captured) = argument {
                 self.invalidate_captured(*captured, function);
                 let mut locals = scopes::locals(&self.scopes[*captured], function);
-                scopes::arguments(&mut locals, function, Value::Unknown);
-                for name in &function.params {
+                if let Some(name) = &function.self_name {
                     locals.insert(name.clone(), Value::Unknown);
                 }
-                if let Some(name) = &function.self_name {
+                scopes::arguments(&mut locals, function, Value::Unknown);
+                for name in &function.params {
                     locals.insert(name.clone(), Value::Unknown);
                 }
                 let mut scope = self.environment(locals);

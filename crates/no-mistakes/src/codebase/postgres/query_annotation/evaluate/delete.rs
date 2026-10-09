@@ -6,6 +6,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn deleted(
         &mut self,
         children: &[Expr],
+        index: Option<usize>,
         path: &Path,
         env: &Environment,
         context: (u8, bool),
@@ -17,7 +18,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .collect::<Vec<_>>();
         if let Some(Value::Arguments(id, _)) = values.first() {
             // Removing a slot does not mutate the builder it referenced.
-            self.invalidated_builders.insert(*id);
+            if let Some(index) = index {
+                self.deleted_argument_slots.insert((*id, index));
+            } else {
+                self.invalidated_builders.insert(*id);
+            }
             self.invalidate_builders(&values[1..]);
             self.opaque_callbacks(&values[1..], depth);
             // The complete receiver/key effects are handled precisely here.
@@ -27,5 +32,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             self.opaque_callbacks(&values, depth);
         }
         Value::Unknown
+    }
+}
+
+impl Value {
+    pub(super) fn handled_deletion(&self) -> bool {
+        match self {
+            Self::SlotDeletion => true,
+            Self::Aggregate(values) => {
+                !values.is_empty() && values.iter().all(Self::handled_deletion)
+            }
+            _ => false,
+        }
     }
 }

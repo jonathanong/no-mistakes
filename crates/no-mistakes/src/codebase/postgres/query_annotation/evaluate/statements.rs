@@ -98,9 +98,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
                 Step::Effect(expr) => {
                     let effect = self.expr(expr, path, env, depth, generic);
-                    if self.effect_can_mutate(expr, path, *env)
-                        && !matches!(effect, Value::SlotDeletion)
-                    {
+                    if self.effect_can_mutate(expr, path, *env) && !effect.handled_deletion() {
                         opaque_return = true;
                         // Arbitrary effects can mutate a builder passed by
                         // reference. Its previous prefix is no longer proof.

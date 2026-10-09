@@ -219,3 +219,44 @@ export function namedTagStillInvalidatesOtherCapturedBuilders() {
   const ignored = tag`x`;
   write(statement); // unanalyzable:named-tag-other-capture
 }
+
+export function namedFunctionParameterOverridesItsSelfBinding() {
+  // Invocation parameters shadow the named-expression self binding.
+  const forward = function statement(statement) { write(statement); };
+  const ignored = forward(sql`/* named parameter wins */ SELECT 1`);
+}
+export function implicitArgumentsOverridesFunctionSelfName() {
+  // Ordinary functions create an inner arguments binding before body evaluation.
+  const forward = function arguments() { write(arguments[0]); };
+  const ignored = forward(sql`/* implicit arguments wins */ SELECT 1`);
+}
+
+export function deletingAnotherArgumentSlotPreservesSelectedValue() {
+  const forward = function () {
+    delete arguments[9];
+    delete arguments['1'];
+    write(arguments[0]); // known:unrelated-deleted-slots
+    write(arguments[1]); // unanalyzable:deleted-selected-slot
+  };
+  const ignored = forward('/* retained slot */ SELECT 1', '/* deleted slot */ SELECT 1');
+}
+export function voidWrappedDeletionPreservesBuilderAlias() {
+  const statement = sql`/* void removal */ SELECT 1`;
+  const forward = function (parameter) {
+    void delete arguments[0];
+    write(parameter); // known:void-delete-alias
+  };
+  const ignored = forward(statement);
+}
+export function selectedArgumentDeletionInAlternativeRemainsUnknown() {
+  const forward = function () {
+    const ignored = flag ? delete arguments[0] : false;
+    write(arguments[0]); // unanalyzable:alternative-deleted-slot
+  };
+  const ignored = forward('/* branch removal */ SELECT 1');
+}
+export function namedFunctionSelfReferenceHidesOuterBuilder() {
+  const statement = sql`/* outer hidden by self */ SELECT 1`;
+  const forward = function statement() { write(statement); }; // unanalyzable:self-reference
+  const ignored = forward();
+}

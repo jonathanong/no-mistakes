@@ -16,12 +16,18 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();
         let original = self.invalidated_builders.clone();
+        let deleted = self.deleted_argument_slots.clone();
+        let mut deleted_changed = deleted.clone();
+        let mut returned = Vec::new();
         let mut changed = FxHashSet::default();
         for arm in arms {
-            self.scopes.clone_from(&scopes);
+            // Keep arm-created frames alive for callbacks returned from helpers.
+            self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.modules.clone_from(&modules);
             self.invalidated_builders.clone_from(&original);
-            self.expr(arm, path, env, depth, generic);
+            self.deleted_argument_slots.clone_from(&deleted);
+            returned.push(self.expr(arm, path, env, depth, generic));
+            deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
@@ -34,14 +40,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
-        self.scopes = scopes;
+        self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.modules = modules;
         self.invalidated_builders = original;
+        self.deleted_argument_slots = deleted_changed;
         let values = changed
             .into_iter()
             .map(|id| Value::Prefix(String::new(), false, Some(id)))
             .collect::<Vec<_>>();
         self.invalidate_builders(&values);
-        Value::Unknown
+        // Preserve possible callback captures for opaque consumers, while an
+        // aggregate never proves the SQL prefix of a conditional return.
+        Value::Aggregate(returned)
     }
 }

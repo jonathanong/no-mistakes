@@ -197,7 +197,10 @@ Spread calls have unknown argument positions. Passing the complete argument obje
 to opaque code makes its slots unknown, while an already copied immutable value
 retains its value. Appending a builder refreshes its aliases inside argument
 objects and promises. Deleting an argument slot makes the slot unknown while
-preserving the builder that the slot referenced; computed-key effects still run.
+preserving other slots and the builder that the slot referenced; computed-key
+effects still run, including inside a `void` wrapper. Named function self-bindings
+are shadowed by invocation parameters and the ordinary `arguments` binding.
 Untrusted local tags can mutate captured
 builders even when their own bodies use supported straight-line syntax. They can
-also invoke interpolated callbacks, invalidating captured builder prefixes.
+also invoke interpolated callbacks, including callbacks from conditional or logical
+arms, invalidating captured builder prefixes.

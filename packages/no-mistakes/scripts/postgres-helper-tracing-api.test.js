@@ -168,7 +168,11 @@ test(
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    for (const scenario of ["helper-tracing-post-merge", "helper-tracing-tag-callback"]) {
+    for (const scenario of [
+      "helper-tracing-post-merge",
+      "helper-tracing-tag-callback",
+      "helper-tracing-alternative-callback",
+    ]) {
       const root = join(
         __dirname,
         `../../../test-cases/rules/postgres-require-query-annotation/fixture/${scenario}`,

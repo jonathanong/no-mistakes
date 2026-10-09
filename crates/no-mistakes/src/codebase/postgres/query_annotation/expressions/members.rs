@@ -3,7 +3,16 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ComputedMemberExpression, Expression};
 
 pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Expr {
-    let index = match unwrap_ts_wrappers(&value.expression) {
+    let index = static_index(&value.expression);
+    let object = expression(&value.object, source);
+    match index {
+        Some(index) => Expr::Index(Box::new(object), index),
+        None => Expr::Children(vec![object, expression(&value.expression, source)]),
+    }
+}
+
+fn static_index(value: &Expression<'_>) -> Option<usize> {
+    match unwrap_ts_wrappers(value) {
         Expression::NumericLiteral(value) if value.value.fract() == 0.0 => {
             Some(value.value as usize)
         }
@@ -13,11 +22,6 @@ pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Ex
             .ok()
             .filter(|index| index.to_string() == value.value.as_str()),
         _ => None,
-    };
-    let object = expression(&value.object, source);
-    match index {
-        Some(index) => Expr::Index(Box::new(object), index),
-        None => Expr::Children(vec![object, expression(&value.expression, source)]),
     }
 }
 
@@ -31,5 +35,9 @@ pub(super) fn deleted(value: &Expression<'_>, source: &str) -> Expr {
         Expression::StaticMemberExpression(value) => vec![expression(&value.object, source)],
         _ => return Expr::Opaque(vec![expression(value, source)]),
     };
-    Expr::Delete(values)
+    let index = match unwrap_ts_wrappers(value) {
+        Expression::ComputedMemberExpression(value) => static_index(&value.expression),
+        _ => None,
+    };
+    Expr::Delete(values, index)
 }
