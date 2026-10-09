@@ -11,9 +11,9 @@ fn reports_every_bad_key_once_in_constraint_column_order() {
     .into_iter()
     .map(|finding| finding.message)
     .collect::<Vec<_>>();
-    assert!(messages.iter().any(|message| message == "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of uuid, bigint, integer, smallint, or an enum, and keep the string as a unique column"), "{messages:#?}");
-    assert!(messages.iter().any(|message| message == "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of uuid, bigint, integer, smallint, or an enum, and keep the string as a unique column"), "{messages:#?}");
-    assert!(messages.iter().any(|message| message == "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); reference the target's id instead"), "{messages:#?}");
+    assert!(messages.iter().any(|message| message == "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint"), "{messages:#?}");
+    assert!(messages.iter().any(|message| message == "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint"), "{messages:#?}");
+    assert!(messages.iter().any(|message| message == "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); review the referenced key's type and use a compatible configured type"), "{messages:#?}");
     assert!(messages.iter().any(|message| message.contains("constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id")), "missing catalog metadata must fail closed: {messages:#?}");
     assert!(
         !messages
@@ -90,6 +90,14 @@ fn enum_allowance_is_explicit_and_domains_do_not_inherit_allowed_base_types() {
             .iter()
             .any(|message| message.contains("primary key uses order_id_domain column id")),
         "domain over an allowed base type remains disallowed: {messages:#?}"
+    );
+    assert!(
+        messages.iter().any(|message| {
+            message.contains("order_id_domain column id")
+                && message.contains("keep any natural key as a separate unique constraint")
+                && !message.contains("string")
+        }),
+        "advice should not assume the rejected key type is text: {messages:#?}"
     );
 }
 

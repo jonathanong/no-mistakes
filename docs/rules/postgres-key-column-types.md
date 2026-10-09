@@ -48,8 +48,9 @@ required, nonempty list of distinct type names. `allowEnumTypes` defaults to
 `false`. `checkPrimaryKeys` and `checkForeignKeys` both default to `true`, and
 at least one must remain enabled. `allow` defaults to `[]` and accepts only
 `constraint:<table>.<constraint>` entries with a reason. Stale allow entries are
-reported. This catalog rule uses its target allow list; source-line suppression
-directives do not apply to JSON catalog findings.
+reported. Catalogs are strict JSON, so comment-based suppression directives
+cannot be added to the catalog file; use the constraint-scoped `allow` option
+for intentional exceptions.
 
 ## Valid example
 

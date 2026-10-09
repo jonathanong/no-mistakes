@@ -126,8 +126,8 @@ fn add_key_finding(
         .collect::<Vec<_>>()
         .join(", ");
     let text = match key_kind {
-        KeyKind::Primary(_) => format!("primary key uses {descriptions}; use one of {}, and keep the string as a unique column", allowed_description(compiled)),
-        KeyKind::Foreign { referenced_table, .. } => format!("foreign key uses {descriptions} (references {referenced_table}); reference the target's id instead"),
+        KeyKind::Primary(_) => format!("primary key uses {descriptions}; use one of {}, and keep any natural key as a separate unique constraint", allowed_description(compiled)),
+        KeyKind::Foreign { referenced_table, .. } => format!("foreign key uses {descriptions} (references {referenced_table}); review the referenced key's type and use a compatible configured type"),
     };
     findings.push(catalog_finding(RULE_ID, path, &object, &text));
 }
