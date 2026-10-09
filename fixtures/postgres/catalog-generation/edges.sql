@@ -40,8 +40,8 @@ COMMENT ON TABLE "Order Items" IS 'it''s quoted';
 COMMENT ON COLUMN "Order Items".note IS 'a note';
 CREATE INDEX "Mixed Index" ON "Order Items" (lower(note), "Parent Id" DESC);
 
--- A multi-level partitioned table: only the top-level parent is a catalog table. The index,
--- trigger and constraints cloned onto each leaf are not separate entries.
+-- A multi-level partitioned table: nested partitioned parents remain visible with key facts,
+-- while the ordinary leaf that only clones its parent's constraints is omitted.
 CREATE TABLE events (
   id bigint,
   created_at timestamptz NOT NULL,

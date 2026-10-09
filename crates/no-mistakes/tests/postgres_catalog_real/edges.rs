@@ -21,11 +21,17 @@ fn count(database: &Database, statement: &str) -> usize {
 }
 
 #[test]
-fn partition_children_are_excluded_and_only_the_parent_carries_the_key() {
+fn nested_partition_parents_are_retained_and_cloned_leaves_are_omitted() {
     let Some(database) = edge_database("partitions") else {
         return;
     };
-    let tables = ["\"Order Items\"", "deferred", "event_refs", "events"];
+    let tables = [
+        "\"Order Items\"",
+        "deferred",
+        "event_refs",
+        "events",
+        "events_2026",
+    ];
     let complete = database.catalog("edge_demo", None);
     assert_eq!(keys(&complete["tables"]), tables);
     // One relation-selection policy: ordering coverage selects exactly the same tables.
@@ -37,7 +43,15 @@ fn partition_children_are_excluded_and_only_the_parent_carries_the_key() {
     let events = &complete["tables"]["events"];
     assert_eq!(events["relationKind"], "partitioned table");
     assert_eq!(events["physicalPartition"]["key"], "RANGE (created_at)");
-    // The index, trigger and constraints cloned onto each leaf are not separate entries.
+    let nested = &complete["tables"]["events_2026"];
+    assert_eq!(nested["relationKind"], "partitioned table");
+    assert_eq!(nested["partitionOf"], "events");
+    assert_eq!(
+        nested["primaryKey"]["columns"],
+        serde_json::json!(["id", "created_at"])
+    );
+    assert!(complete["tables"].get("events_2026_h1").is_none());
+    // A nested partitioned parent has key facts; its ordinary leaf only clones them.
     assert_eq!(keys(&events["indexes"]), ["events_pkey", "events_tenant"]);
     assert_eq!(keys(&events["triggers"]), ["events_touch"]);
     assert_eq!(
@@ -74,7 +88,7 @@ fn extension_owned_objects_are_excluded() {
         .iter()
         .any(|key| key.contains("citext") || key.contains("pg_stat") || key.contains("member")));
     assert!(functions.contains(&"touch()"));
-    assert_eq!(keys(&catalog["enums"]), ["\"Mood\"", "tone"]);
+    assert_eq!(keys(&catalog["enums"]), ["\"Mood\"", "other.shade", "tone"]);
     assert_eq!(keys(&catalog["views"]), ["order_items_m", "order_items_v"]);
     assert!(!keys(&catalog["tables"]).contains(&"member_table"));
     for owned in ["member_table", "member_view", "pg_stat_statements"] {
@@ -269,7 +283,7 @@ fn types_render_relative_to_the_selected_schema() {
     let consumers = &other["tables"]["consumers"]["columns"];
     assert_eq!(consumers["tone"]["dataType"], "edge_demo.tone");
     assert_eq!(consumers["shade"]["dataType"], "shade");
-    assert_eq!(keys(&other["enums"]), ["shade"]);
+    assert_eq!(keys(&other["enums"]), ["edge_demo.tone", "shade"]);
 }
 
 #[test]
