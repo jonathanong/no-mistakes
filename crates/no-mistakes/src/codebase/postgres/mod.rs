@@ -9,7 +9,7 @@ mod conflict;
 pub mod dml;
 mod embedded;
 mod function_calls;
-pub use function_calls::SqlFunctionCallFact;
+pub use function_calls::{SqlFunctionCallFact, SqlFunctionClause};
 pub(crate) mod idents;
 mod locking;
 mod migration;

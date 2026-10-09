@@ -10,6 +10,9 @@ pub(crate) struct LocatedStatement {
     /// Recovered procedural expressions supply calls without changing legacy
     /// statement, query, or lifecycle projections.
     pub(crate) function_projection: bool,
+    /// Only the recovery wrapper projection is synthetic; nested SQL stays scoped.
+    pub(crate) synthetic_select: bool,
+    pub(crate) recovered_functions: Vec<crate::codebase::postgres::SqlFunctionCallFact>,
 }
 
 impl LocatedStatement {
@@ -18,12 +21,15 @@ impl LocatedStatement {
             statement,
             source: None,
             function_projection: false,
+            synthetic_select: false,
+            recovered_functions: Vec::new(),
         }
     }
 
-    pub(super) fn functions(statement: Statement) -> Self {
+    pub(super) fn functions(statement: Statement, synthetic_select: bool) -> Self {
         Self {
             function_projection: true,
+            synthetic_select,
             ..Self::plain(statement)
         }
     }

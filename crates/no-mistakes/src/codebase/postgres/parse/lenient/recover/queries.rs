@@ -5,7 +5,10 @@ use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
 
-pub(super) fn recover(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> Vec<Statement> {
+pub(super) fn recover(
+    tokens: &[Token],
+    original: Option<&[TokenWithSpan]>,
+) -> Vec<(Statement, bool)> {
     let mut at = next(tokens, 0);
     let begin = tokens
         .get(at)
@@ -26,7 +29,7 @@ pub(super) fn recover(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> V
             original.map(|tokens| &tokens[at + 1..then]),
             true,
         ) {
-            result.push(condition);
+            result.push((condition, true));
         }
         at = next(tokens, then + 1);
     }
@@ -48,7 +51,7 @@ pub(super) fn recover(tokens: &[Token], original: Option<&[TokenWithSpan]>) -> V
         original.map(|tokens| &tokens[start..]),
         replace,
     ) {
-        result.push(statement);
+        result.push((statement, replace));
     }
     result
 }

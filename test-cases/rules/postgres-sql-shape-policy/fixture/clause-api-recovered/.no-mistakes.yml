@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]
+      executorNames: []
+      unanalyzableSql: ignore
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions:
+            - name: probe_boundary
+              clauses: [select-list]
