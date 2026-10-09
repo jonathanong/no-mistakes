@@ -20,8 +20,8 @@ pub(super) fn scan_with_sources(
             .embedded_sql(path, &opts.embedded)
             .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
-        for call in &file.calls {
-            let prefix = facts.query_annotation_prefix(path, &opts.embedded, call);
+        for (call, start) in file.calls.iter().zip(&file.call_starts) {
+            let prefix = facts.query_annotation_prefix(path, &opts.embedded, *start);
             let sql = match prefix {
                 Some(value) => value.as_deref(),
                 None => call.sql_text.as_deref(),

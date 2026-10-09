@@ -1,59 +1,22 @@
 use super::{expressions::expression, Expr, QueryAnnotationFileFacts, Step};
-use oxc_ast::ast::{
-    BindingPattern, Declaration, ImportDeclarationSpecifier, Program, Statement,
-    VariableDeclarationKind,
-};
+use oxc_ast::ast::{BindingPattern, Declaration, Program, Statement};
 
 pub(super) fn collect(
     program: &Program<'_>,
     source: &str,
     options: &super::super::EmbeddedSqlOptions,
 ) -> QueryAnnotationFileFacts {
-    let mut facts = QueryAnnotationFileFacts::default();
-    facts.trusted_tags.insert("sql".into());
-    for statement in &program.body {
-        if let Statement::ImportDeclaration(import) = statement {
-            for specifier in import.specifiers.iter().flatten() {
-                let local = match specifier {
-                    ImportDeclarationSpecifier::ImportDefaultSpecifier(value) => {
-                        value.local.name.as_str()
-                    }
-                    ImportDeclarationSpecifier::ImportSpecifier(value) => value.local.name.as_str(),
-                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(value) => {
-                        value.local.name.as_str()
-                    }
-                };
-                facts.trusted_tags.remove(local);
-                match specifier {
-                    ImportDeclarationSpecifier::ImportDefaultSpecifier(value)
-                        if import.source.value == "sql-template-strings" =>
-                    {
-                        facts.trusted_tags.insert(value.local.name.to_string());
-                    }
-                    ImportDeclarationSpecifier::ImportSpecifier(value)
-                        if super::super::embedded::matches_trusted_sql_import(
-                            import.source.value.as_str(),
-                            value.imported.name().as_str(),
-                            &options.trusted_sql_tags,
-                        ) =>
-                    {
-                        facts.trusted_tags.insert(value.local.name.to_string());
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-    facts.roots = steps(&program.body, source);
+    let mut facts = QueryAnnotationFileFacts {
+        trusted_tags: super::trust::collect(program, options),
+        roots: steps(&program.body, source),
+        ..QueryAnnotationFileFacts::default()
+    };
     for step in &facts.roots {
-        if let Step::Bind(name, value) = step {
+        if let Step::Bind(name, value) | Step::Hoisted(name, value) = step {
             facts.globals.insert(name.clone(), value.clone());
         }
     }
-    let reassigned =
-        super::super::embedded::walk::resolve::functions::reassigned::ReassignedNames::collect(
-            program,
-        );
+    let reassigned = super::trust::reassigned(program);
     facts.trusted_tags.retain(|name| !reassigned.contains(name));
     for (name, value) in &mut facts.globals {
         if matches!(value, Expr::Function(_)) && reassigned.contains(name) {
@@ -64,6 +27,10 @@ pub(super) fn collect(
 }
 
 pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
+    let mut declared: Vec<_> = super::trust::declared_names(statements)
+        .into_iter()
+        .collect();
+    declared.sort();
     let mut names = super::super::embedded::walk::resolve::vars::hoisted_names(statements)
         .into_keys()
         .collect::<Vec<_>>();
@@ -72,6 +39,7 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
         .into_iter()
         .map(|name| Step::Bind(name, Expr::Unsupported))
         .collect::<Vec<_>>();
+    steps.insert(0, Step::Reserve(declared));
     for statement in statements {
         match statement {
             Statement::FunctionDeclaration(value) => bind_function(value, source, &mut steps),
@@ -83,6 +51,9 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
                 }
                 _ => steps.push(Step::Unsupported),
             },
+            Statement::ExportDefaultDeclaration(value) => {
+                steps.extend(super::exports::default_steps(value, source))
+            }
             Statement::ExpressionStatement(value) => {
                 let expr = expression(&value.expression, source);
                 let mut appended = Vec::new();
@@ -136,7 +107,7 @@ fn bind_function(value: &oxc_ast::ast::Function<'_>, source: &str, steps: &mut V
         .id
         .as_ref()
         .expect("successful function declarations have a binding");
-    steps.push(Step::Bind(
+    steps.push(Step::Hoisted(
         id.name.to_string(),
         super::expressions::function_expression(value, source),
     ));
@@ -152,14 +123,12 @@ fn bind_variables(
             steps.push(Step::Unsupported);
             continue;
         };
-        let expr = if value.kind == VariableDeclarationKind::Const {
-            declaration
-                .init
-                .as_ref()
-                .map_or(Expr::Unknown, |value| expression(value, source))
-        } else {
-            Expr::Unsupported
-        };
-        steps.push(Step::Bind(id.name.to_string(), expr));
+        let init = declaration
+            .init
+            .as_ref()
+            .map_or(Expr::Unknown, |value| expression(value, source));
+        // Mutable declaration initializers still execute. Later assignments
+        // make the containing helper unsupported instead of hiding these calls.
+        steps.push(Step::Bind(id.name.to_string(), init));
     }
 }

@@ -51,11 +51,7 @@ pub(crate) fn project(
                     File {
                         facts,
                         ts: &file.ts,
-                        executors: embedded
-                            .calls
-                            .iter()
-                            .map(|call| (call.line, call.callee.clone()))
-                            .collect(),
+                        executors: embedded.call_starts.clone(),
                     },
                 ))
             })
@@ -64,11 +60,12 @@ pub(crate) fn project(
             files: collected,
             resolve: &resolve,
             events: BTreeMap::new(),
+            scopes: Vec::new(),
         };
         evaluator.run();
         let events = std::mem::take(&mut evaluator.events);
         drop(evaluator);
-        for ((path, line, callee), events) in events {
+        for ((path, start), events) in events {
             let contextual = events.iter().any(|(generic, _)| !generic);
             let values = events
                 .into_iter()
@@ -106,7 +103,7 @@ pub(crate) fn project(
                 .iter_mut()
                 .find(|(profile, _)| profile == &options)
                 .expect("projected annotation profile remains prepared");
-            facts.calls.insert((line, callee), value);
+            facts.calls.insert(start, value);
         }
     }
 }

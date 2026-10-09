@@ -92,3 +92,34 @@ function reassignedGlobalHelper() { return sql`/* initially safe */ SELECT 1`; }
 reassignedGlobalHelper = external;
 export function globalHelperRevoked() { write(reassignedGlobalHelper()); } // unanalyzable:reassigned-global-helper
 params?.();
+
+import directDefault from './direct-default.mjs';
+import opaqueClass from './default-class.mjs';
+import missingStar from './star-default.mjs';
+import { absentStar } from './star-missing.mjs';
+import { deepSql } from './deep-export-0.mjs';
+export function exportBoundaryCoverage() {
+  write(directDefault()); // known:direct-default
+  write(opaqueClass()); // unanalyzable:default-class
+  write(missingStar()); // unanalyzable:star-default-excluded
+  write(absentStar()); // unanalyzable:missing-star-target
+  write(deepSql()); // unanalyzable:bounded-export-depth
+}
+export function harmlessExpressions() {
+  String.raw`just text`;
+  `text ${'literal'}`;
+  ['literal'];
+  return write('SELECT 1'); // finding:harmless-expressions
+}
+
+import anonymousDefault from './anonymous-default.mjs';
+import { absentFromRealStar } from './star-default.mjs';
+export function remainingExportForms() {
+  write(anonymousDefault()); // known:anonymous-default
+  write(absentFromRealStar()); // unanalyzable:absent-star-binding
+}
+
+const unsupportedNamed = function self(...parts: unknown[]) { return parts[0]; };
+export function unsupportedNamedFunction() {
+  write(unsupportedNamed('SELECT 1')); // unanalyzable:unsupported-named-function
+}

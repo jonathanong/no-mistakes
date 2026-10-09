@@ -92,6 +92,10 @@ write(ordersSql("id")); // Missing annotation.
 write(sql`/* orders/list */ `.append(ordersSql("id"))); // Valid.
 ```
 
+Named and default imports, plus named and star re-exports, can resolve helper
+functions. Namespace imports remain unanalyzable. Captured local bindings use the
+value available when the helper runs; calling before initialization remains opaque.
+
 Callback forwarding through a straight-line helper substitutes the statement and
 callback arguments at each analyzable callsite. Findings point to the executor
 inside the callback. Every callsite must pass; one annotated invocation cannot

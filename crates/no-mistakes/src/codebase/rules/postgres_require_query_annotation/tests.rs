@@ -300,6 +300,45 @@ fn helper_tracing_fails_closed_for_unsupported_and_shadowed_bindings() {
 }
 
 #[test]
+fn helper_review_regressions_preserve_call_identity_exports_and_live_captures() {
+    let root = fixture("helper-tracing-review");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let paths = [
+        "src/destructured-tag.mts",
+        "src/import-equals.mts",
+        "src/query.mts",
+    ];
+    for ignore in [false, true] {
+        let policy = if ignore { "ignore" } else { "report" };
+        let config = config_with_options(&format!("importSpecifier: '@app/db'\ninclude: ['src/query.mts', 'src/import-equals.mts', 'src/destructured-tag.mts']\ntrustedSqlTags: [{{module: './tags.mjs', name: customQuery}}]\nunanalyzableSql: {policy}"));
+        let findings = check_with_files(&root, &config, &files).unwrap();
+        let expected = paths
+            .iter()
+            .flat_map(|path| {
+                std::fs::read_to_string(root.join(path))
+                    .unwrap()
+                    .lines()
+                    .enumerate()
+                    .filter_map(|(index, line)| {
+                        (line.contains("// finding:")
+                            || (!ignore && line.contains("// unanalyzable:")))
+                        .then_some((path.to_string(), index + 1))
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| (finding.file.clone(), finding.line))
+                .collect::<Vec<_>>(),
+            expected,
+            "{findings:#?}"
+        );
+    }
+}
+
+#[test]
 fn helper_projection_and_rule_reuse_the_request_sources_and_single_parse() {
     use crate::codebase::ts_source::{FileInventory, SourceStore};
     use std::sync::Arc;

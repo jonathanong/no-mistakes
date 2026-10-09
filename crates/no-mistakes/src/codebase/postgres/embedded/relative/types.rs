@@ -35,4 +35,5 @@ pub(crate) struct PendingRelativeScope {
     pub(crate) calls: Vec<PendingRelativeCall>,
     /// Sequence numbers parallel to confirmed `calls`, set only when provisional spans exist.
     pub(crate) confirmed_order: Vec<u32>,
+    pub(crate) call_starts: std::collections::BTreeMap<u32, u32>,
 }

@@ -102,7 +102,7 @@ impl CheckFactMap {
         &self,
         path: &std::path::Path,
         options: &crate::codebase::postgres::EmbeddedSqlOptions,
-        call: &crate::codebase::postgres::EmbeddedSqlCall,
+        start: u32,
     ) -> Option<&Option<String>> {
         self.ts
             .get(path)?
@@ -111,7 +111,7 @@ impl CheckFactMap {
             .find(|(profile, _)| profile == options)?
             .1
             .calls
-            .get(&(call.line, call.callee.clone()))
+            .get(&start)
     }
     #[doc(hidden)]
     pub fn postgres_schema_file(

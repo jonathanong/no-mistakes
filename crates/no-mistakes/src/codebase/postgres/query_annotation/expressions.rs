@@ -28,14 +28,25 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 Expression::Identifier(tag) => tag.name.to_string(),
                 Expression::StaticMemberExpression(member)
                     if member.property.name == "raw"
-                        && value.quasi.expressions.is_empty()
                         && matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(id) if id.name == "String") =>
                 {
                     "String.raw".into()
                 }
                 _ => return Expr::Unknown,
             };
-            Expr::Tagged(tag, super::super::sql_text(expr).unwrap_or_default())
+            let parts = if tag == "String.raw" {
+                let mut parts = Vec::new();
+                for (index, quasi) in value.quasi.quasis.iter().enumerate() {
+                    if index > 0 {
+                        parts.push(expression(&value.quasi.expressions[index - 1], source));
+                    }
+                    parts.push(Expr::Text(quasi.value.raw.to_string()));
+                }
+                parts
+            } else {
+                vec![Expr::Text(super::super::sql_text(expr).unwrap_or_default())]
+            };
+            Expr::Tagged(tag, parts)
         }
         Expression::BinaryExpression(value)
             if value.operator == oxc_ast::ast::BinaryOperator::Addition =>
@@ -62,22 +73,6 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                     );
                 }
             }
-            let spelling = match unwrap_ts_wrappers(&value.callee) {
-                Expression::Identifier(id) => id.name.to_string(),
-                Expression::StaticMemberExpression(member) => {
-                    if member.property.name == "query" {
-                        "query".into()
-                    } else if let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) {
-                        format!("{}.{}", id.name, member.property.name)
-                    } else {
-                        String::new()
-                    }
-                }
-                Expression::ComputedMemberExpression(member) if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(value) if value.value == "query") => {
-                    "query".into()
-                }
-                _ => String::new(),
-            };
             Expr::Call {
                 callee: Box::new(if value.optional {
                     Expr::Unknown
@@ -85,12 +80,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                     expression(&value.callee, source)
                 }),
                 args,
-                line: source[..value.span.start as usize]
-                    .bytes()
-                    .filter(|byte| *byte == b'\n')
-                    .count() as u32
-                    + 1,
-                spelling,
+                start: value.span.start,
             }
         }
         Expression::ArrowFunctionExpression(value) => {
@@ -158,8 +148,19 @@ fn function(
         && names.is_some()
         && params.rest.is_none()
         && !body.iter().any(|step| matches!(step, Step::Unsupported));
+    let names = names.unwrap_or_else(|| {
+        params
+            .items
+            .iter()
+            .flat_map(|param| super::trust::bound_names(&param.pattern))
+            .collect()
+    });
+    let mut names = names;
+    if let Some(rest) = &params.rest {
+        names.extend(super::trust::bound_names(&rest.rest.argument));
+    }
     Function {
-        params: names.unwrap_or_default(),
+        params: names,
         body,
         supported,
         asynchronous,
