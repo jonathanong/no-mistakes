@@ -42,8 +42,7 @@ pub(super) fn static_index(value: &Expression<'_>) -> Option<usize> {
         _ => return None,
     };
     (value.is_finite()
-        && value >= 0.0
-        && value <= MAX_SAFE_INTEGER
+        && (0.0..=MAX_SAFE_INTEGER).contains(&value)
         && value.fract() == 0.0
         && (value as usize) as f64 == value)
         .then_some(value as usize)
