@@ -4,28 +4,9 @@ use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_builders(&mut self, values: &[Value]) {
-        fn collect(value: &Value, ids: &mut FxHashSet<u64>) {
-            match value {
-                Value::Prefix(_, _, Some(id)) => {
-                    ids.insert(*id);
-                }
-                Value::Promise(value) => collect(value, ids),
-                Value::Aggregate(values) | Value::Arguments(_, values) => {
-                    // Opaque code can replace argument slots even when their
-                    // current values are immutable strings.
-                    if let Value::Arguments(id, _) = value {
-                        ids.insert(*id);
-                    }
-                    for value in values {
-                        collect(value, ids);
-                    }
-                }
-                _ => {}
-            }
-        }
         let mut ids = fx_set();
         for value in values {
-            collect(value, &mut ids);
+            self.builder_ids(value, &mut ids);
         }
         self.invalidated_builders.extend(ids.iter().copied());
         for scope in &mut self.scopes {
@@ -34,6 +15,30 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     *value = Value::Unknown;
                 }
             }
+        }
+    }
+
+    fn builder_ids(&self, value: &Value, ids: &mut FxHashSet<u64>) {
+        match value {
+            Value::Prefix(_, _, Some(id)) => {
+                ids.insert(*id);
+            }
+            Value::Promise(value) => self.builder_ids(value, ids),
+            Value::Aggregate(values) => {
+                for value in values {
+                    self.builder_ids(value, ids);
+                }
+            }
+            Value::Arguments(id) if ids.insert(*id) => {
+                // Container escape can replace live slots. Definite deletion
+                // disconnects the former value; possible deletion does not.
+                for (index, value) in self.argument_objects[id].iter().enumerate() {
+                    if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
+                        self.builder_ids(value, ids);
+                    }
+                }
+            }
+            _ => {}
         }
     }
     pub(super) fn invalidate_captured(&mut self, env: Environment, function: &super::Function) {
@@ -77,7 +82,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             } else {
                 match value {
                     Value::Promise(value) => replace(value, id, replacement),
-                    Value::Arguments(_, values) | Value::Aggregate(values) => {
+                    Value::Aggregate(values) => {
                         for value in values {
                             replace(value, id, replacement);
                         }
@@ -88,6 +93,12 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         for scope in &mut self.scopes {
             for value in scope.values_mut() {
+                replace(value, *id, replacement);
+            }
+        }
+        // Argument references are identity-only; update each arena slot once.
+        for values in self.argument_objects.values_mut() {
+            for value in values {
                 replace(value, *id, replacement);
             }
         }

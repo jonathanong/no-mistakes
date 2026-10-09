@@ -16,11 +16,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .iter()
             .map(|child| self.expr(child, path, env, depth, generic))
             .collect::<Vec<_>>();
-        if let Some(Value::Arguments(id, _)) = values.first() {
+        if let Some(Value::Arguments(id)) = values.first() {
             // Removing a slot does not mutate the builder it referenced.
             match key {
                 DeleteKey::Index(index) => {
                     self.deleted_argument_slots.insert((*id, Some(index)));
+                    self.definite_deleted_argument_slots.insert((*id, index));
+                    if let Some(slot) = self
+                        .argument_objects
+                        .get_mut(id)
+                        .and_then(|values| values.get_mut(index))
+                    {
+                        *slot = Value::Unknown;
+                    }
                 }
                 DeleteKey::Named => {}
                 DeleteKey::Dynamic => {
@@ -37,16 +45,31 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         Value::Unknown
     }
-}
 
-impl Value {
-    pub(super) fn handled_deletion(&self) -> bool {
-        match self {
-            Self::SlotDeletion => true,
-            Self::Aggregate(values) => {
-                !values.is_empty() && values.iter().all(Self::handled_deletion)
+    pub(super) fn handled_deletion_effect(
+        &self,
+        expr: &Expr,
+        value: &Value,
+        path: &Path,
+        env: Environment,
+    ) -> bool {
+        match expr {
+            Expr::Delete(_, _) => matches!(value, Value::SlotDeletion),
+            Expr::Children(parts) | Expr::Alternatives(parts) => {
+                let Value::Aggregate(values) = value else {
+                    return false;
+                };
+                parts.len() == values.len()
+                    && parts
+                        .iter()
+                        .zip(values)
+                        .all(|(part, value)| self.handled_deletion_effect(part, value, path, env))
             }
-            _ => false,
+            Expr::Name(_) | Expr::Text(_) | Expr::Function(_) => true,
+            // Configured executor calls and trusted SQL tags do not mutate a
+            // local builder. Unknown calls and opaque expressions remain
+            // conservative, even when another conditional arm deletes a slot.
+            _ => !self.effect_can_mutate(expr, path, env),
         }
     }
 }

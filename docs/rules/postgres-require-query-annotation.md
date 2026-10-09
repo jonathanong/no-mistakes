@@ -195,10 +195,13 @@ retain the same builder identity. Static numeric and canonical numeric-string
 indices select the corresponding argument; dynamic indices remain conservative.
 In sloppy functions with simple parameters, assigning a parameter updates its
 mapped argument slot; opaque slot mutations make mapped parameters unknown. Strict
-functions keep separate bindings, and deleting a known slot disconnects its mapping.
+functions keep separate bindings. Deleting a known slot disconnects its mapping
+only when every possible branch deletes it.
 Spread calls have unknown argument positions. Passing the complete argument object
 to opaque code makes its slots unknown, while an already copied immutable value
-retains its value. Appending a builder refreshes its aliases inside argument
+retains its value. Escaped slots still retain possible callback effects, without
+proving their SQL value. Argument aliases share one invocation object; reading its
+primitive `length` does not expose its slots. Appending a builder refreshes its aliases inside argument
 objects and promises. Deleting an argument slot makes the slot unknown while
 preserving other slots and the builder that the slot referenced. Deleting a known
 non-index property leaves indexed slots intact; dynamic keys remain conservative. Computed-key

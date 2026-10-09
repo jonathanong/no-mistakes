@@ -51,6 +51,21 @@ function dynamicPropertyWithKeyEffect(statement) {
   return statement;
 }
 
+function conditionalDelete(statement, flag) {
+  flag ? delete arguments[0] : false;
+  return statement;
+}
+
+function conditionalDeleteWithOpaqueArm(statement, flag) {
+  flag ? delete arguments[0] : unknownMutation(statement);
+  return statement;
+}
+
+function conditionalDeleteWithOpaqueTest(statement) {
+  unknownMutation(statement) ? delete arguments[0] : false;
+  return statement;
+}
+
 const namedResult = namedProperty("/* named property */ SELECT 1");
 const computedNamedResult = computedNamedProperty("/* computed named property */ SELECT 1");
 const nonIndexResult = computedNamedNonIndex("/* known non-index key */ SELECT 1");
@@ -72,6 +87,17 @@ const dynamicResult = dynamicProperty("/* dynamic key */ SELECT 1", "extra");
 const dynamicEffectResult = dynamicPropertyWithKeyEffect(
   sql`/* dynamic key side effect */ SELECT 1`,
 );
+const conditionalDeleteResult = conditionalDelete(
+  sql`/* conditional slot deletion */ SELECT 1`,
+  true,
+);
+const conditionalOpaqueArmResult = conditionalDeleteWithOpaqueArm(
+  sql`/* opaque alternate arm */ SELECT 1`,
+  true,
+);
+const conditionalOpaqueTestResult = conditionalDeleteWithOpaqueTest(
+  sql`/* opaque condition */ SELECT 1`,
+);
 
 write(namedResult); // known:named-property
 write(computedNamedResult); // known:computed-named-property
@@ -83,3 +109,6 @@ write(deletedNumericIndexResult); // unanalyzable:deleted-numeric-index
 write(preservedIndexResult); // known:preserved-index
 write(dynamicResult); // unanalyzable:dynamic-property
 write(dynamicEffectResult); // unanalyzable:dynamic-key-side-effect
+write(conditionalDeleteResult); // known:conditional-slot-deletion
+write(conditionalOpaqueArmResult); // unanalyzable:conditional-opaque-arm
+write(conditionalOpaqueTestResult); // unanalyzable:conditional-opaque-test

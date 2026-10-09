@@ -5,7 +5,7 @@ use crate::fx::FxHashMap;
 /// A callee's declarations shadow captured bindings even when a bare var
 /// has no initializer. The caller restores actual parameters after this step,
 /// so parameter redeclarations still preserve their runtime argument values.
-pub(super) fn locals(
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn locals(
     captured: &FxHashMap<String, Value>,
     function: &Function,
 ) -> FxHashMap<String, Value> {
@@ -33,7 +33,11 @@ pub(super) fn locals(
     locals
 }
 
-pub(super) fn arguments(locals: &mut FxHashMap<String, Value>, function: &Function, value: Value) {
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn arguments(
+    locals: &mut FxHashMap<String, Value>,
+    function: &Function,
+    value: Value,
+) {
     if !function.arrow {
         // Arrows retain lexical arguments; regular calls own a fresh object.
         locals.insert("arguments".into(), value);

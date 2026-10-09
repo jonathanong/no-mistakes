@@ -10,7 +10,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         object: &Value,
     ) -> Option<(u64, Vec<String>)> {
         match object {
-            Value::Arguments(id, values)
+            Value::Arguments(id)
                 if self.files[path]
                     .facts
                     .mapped_arguments
@@ -22,7 +22,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         .params
                         .iter()
                         .rposition(|param| param == name)
-                        .is_some_and(|index| index >= values.len())
+                        .is_some_and(|index| index >= self.argument_objects[id].len())
                     {
                         name.clear();
                     }
@@ -78,7 +78,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .rposition(|param| param == name)
                     .is_some_and(|index| {
                         self.invalidated_builders.contains(id)
-                            && !self.deleted_argument_slots.contains(&(*id, Some(index)))
+                            && !self.definite_deleted_argument_slots.contains(&(*id, index))
                     })
             })
         })
@@ -88,35 +88,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
             // With duplicate sloppy parameters, only the last occurrence maps.
             if let Some(index) = params.iter().rposition(|param| param == name) {
-                if !self.deleted_argument_slots.contains(&(*id, Some(index))) {
+                if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
                     // Callback and container values retain their modeled identities;
                     // opaque consumers must still see their captures and aliases.
-                    let replacement = value.clone();
-                    for scope in &mut self.scopes {
-                        for value in scope.values_mut() {
-                            update_slot(value, *id, index, &replacement);
-                        }
-                    }
+                    self.argument_objects
+                        .get_mut(id)
+                        .expect("mapped arguments object")[index] = value.clone();
                 }
             }
         }
-    }
-}
-
-fn update_slot(value: &mut Value, id: u64, index: usize, replacement: &Value) {
-    match value {
-        Value::Arguments(found, values) if *found == id => {
-            // Mapping registration includes only supplied slots; container
-            // values keep their length when a slot is deleted or invalidated.
-            values[index] = replacement.clone();
-        }
-        Value::Arguments(_, values) | Value::Aggregate(values) => {
-            for value in values {
-                update_slot(value, id, index, replacement);
-            }
-        }
-        Value::Promise(value) => update_slot(value, id, index, replacement),
-        _ => {}
     }
 }
 

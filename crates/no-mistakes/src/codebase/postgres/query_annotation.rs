@@ -23,7 +23,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub calls: BTreeMap<u32, Option<String>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Expr {
     Unknown,
     Unsupported,
@@ -34,6 +34,7 @@ pub(super) enum Expr {
     Await(Box<Expr>),
     Spread(Box<Expr>),
     Index(Box<Expr>, usize),
+    Member(Box<Expr>, String),
     OpaqueCallback(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {
@@ -55,7 +56,7 @@ pub(super) enum DeleteKey {
     Dynamic,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct Function {
     pub start: u32,
     pub params: Vec<String>,
@@ -66,7 +67,7 @@ pub(super) struct Function {
     pub self_name: Option<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Step {
     Reserve(Vec<String>),
     Hoisted(String, Expr),

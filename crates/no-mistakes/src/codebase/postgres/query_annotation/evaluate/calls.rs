@@ -1,4 +1,4 @@
-mod scopes;
+pub(super) mod scopes;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
@@ -165,29 +165,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         } else {
             let id = self.next_builder;
             self.next_builder += 1;
-            Value::Arguments(id, values.to_vec())
-        }
-    }
-
-    pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
-        for argument in arguments {
-            if let Value::Aggregate(values) | Value::Arguments(_, values) = argument {
-                self.opaque_callbacks(values, depth);
-            } else if let Value::Promise(value) = argument {
-                self.opaque_callbacks(std::slice::from_ref(value.as_ref()), depth);
-            } else if let Value::Function(function, path, captured) = argument {
-                self.invalidate_captured(*captured, function);
-                let mut locals = scopes::locals(&self.scopes[*captured], function);
-                if let Some(name) = &function.self_name {
-                    locals.insert(name.clone(), Value::Unknown);
-                }
-                scopes::arguments(&mut locals, function, Value::Unknown);
-                for name in &function.params {
-                    locals.insert(name.clone(), Value::Unknown);
-                }
-                let mut scope = self.environment(locals);
-                self.register_mappings(scope, *captured, function, None);
-                self.steps(&function.body, path, &mut scope, depth, false);
+            {
+                self.argument_objects.insert(id, values.to_vec());
+                Value::Arguments(id)
             }
         }
     }

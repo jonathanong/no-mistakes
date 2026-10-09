@@ -67,9 +67,10 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             }
             function
         }
-        Expression::StaticMemberExpression(value) => {
-            Expr::Children(vec![expression(&value.object, source)])
-        }
+        Expression::StaticMemberExpression(value) => Expr::Member(
+            Box::new(expression(&value.object, source)),
+            value.property.name.to_string(),
+        ),
         Expression::ComputedMemberExpression(value) => members::computed(value, source),
         Expression::AwaitExpression(value) => {
             Expr::Await(Box::new(expression(&value.argument, source)))
@@ -85,9 +86,14 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             expression(&value.left, source),
             expression(&value.right, source),
         ]),
+        // Boolean control values carry no SQL text and have no side effects.
+        Expression::BooleanLiteral(_) => Expr::Children(vec![]),
         Expression::LogicalExpression(value) => Expr::Children(vec![
             expression(&value.left, source),
-            Expr::Alternatives(vec![expression(&value.right, source)]),
+            Expr::Alternatives(vec![
+                expression(&value.right, source),
+                Expr::Children(vec![]),
+            ]),
         ]),
         Expression::ConditionalExpression(value) => Expr::Children(vec![
             expression(&value.test, source),

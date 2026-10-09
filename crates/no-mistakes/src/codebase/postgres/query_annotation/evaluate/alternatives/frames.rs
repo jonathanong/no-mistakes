@@ -1,18 +1,6 @@
 use super::super::{Environment, Value};
+use super::reachable;
 use crate::fx::{FxHashMap, FxHashSet};
-
-fn environments(value: &Value, pending: &mut Vec<Environment>) {
-    match value {
-        Value::Function(_, _, env) => pending.push(*env),
-        Value::Promise(value) => environments(value, pending),
-        Value::Aggregate(values) | Value::Arguments(_, values) => {
-            for value in values {
-                environments(value, pending);
-            }
-        }
-        _ => {}
-    }
-}
 
 fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
     match value {
@@ -22,7 +10,7 @@ fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
             }
         }
         Value::Promise(value) => remap(value, indices),
-        Value::Aggregate(values) | Value::Arguments(_, values) => {
+        Value::Aggregate(values) => {
             for value in values {
                 remap(value, indices);
             }
@@ -31,27 +19,18 @@ fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
     }
 }
 
-/// Keep only speculative frames reachable from returned callbacks. Original
-/// frames retain their identities; cycles in captured environments are bounded.
+/// Keep only frames and heap objects reachable from restored scopes or callback
+/// results. Original frame identities and all argument identities stay stable.
 pub(super) fn compact(
     scopes: &mut Vec<FxHashMap<String, Value>>,
     original: usize,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+    objects: &mut FxHashMap<u64, Vec<Value>>,
 ) {
-    let mut pending = Vec::new();
-    for value in returned.iter() {
-        environments(value, &mut pending);
-    }
-    let mut visited = FxHashSet::default();
-    while let Some(env) = pending.pop() {
-        if visited.insert(env) {
-            for value in scopes[env].values() {
-                environments(value, &mut pending);
-            }
-        }
-    }
-    let mut retained = visited
+    let reachable = reachable::collect(scopes, original, returned, objects, mapped);
+    let mut retained = reachable
+        .environments
         .into_iter()
         .filter(|env| *env >= original)
         .collect::<Vec<_>>();
@@ -73,6 +52,12 @@ pub(super) fn compact(
     for value in returned {
         remap(value, &indices);
     }
+    objects.retain(|id, _| reachable.arguments.contains(id));
+    for values in objects.values_mut() {
+        for value in values {
+            remap(value, &indices);
+        }
+    }
     *mapped = std::mem::take(mapped)
         .into_iter()
         .filter_map(|(env, value)| {
@@ -87,49 +72,18 @@ pub(super) fn compact(
     scopes.extend(frames);
 }
 
-fn live_ids(value: &Value, ids: &mut FxHashSet<u64>) {
-    match value {
-        Value::Prefix(_, _, Some(id)) => {
-            ids.insert(*id);
-        }
-        Value::Arguments(id, values) => {
-            ids.insert(*id);
-            for value in values {
-                live_ids(value, ids);
-            }
-        }
-        Value::Aggregate(values) => {
-            for value in values {
-                live_ids(value, ids);
-            }
-        }
-        Value::Promise(value) => live_ids(value, ids),
-        _ => {}
-    }
-}
-
-/// Captured function environments are already included in the compact arena,
-/// so scanning every retained frame covers indirect aliases without cycles.
 pub(super) fn prune_state(
     scopes: &[FxHashMap<String, Value>],
     returned: &[Value],
     deleted: &mut FxHashSet<(u64, Option<usize>)>,
+    definite: &mut FxHashSet<(u64, usize)>,
     invalidated: &mut FxHashSet<u64>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+    objects: &mut FxHashMap<u64, Vec<Value>>,
 ) {
-    let mut ids = FxHashSet::default();
-    for value in scopes
-        .iter()
-        .flat_map(|scope| scope.values())
-        .chain(returned)
-    {
-        live_ids(value, &mut ids);
-    }
-    // A retained parameter can own a disconnected slot after every arguments
-    // alias is rebound. Its mapping still needs the definite deletion fact.
-    for bindings in mapped.values() {
-        ids.extend(bindings.iter().map(|(id, _)| *id));
-    }
-    deleted.retain(|(id, _)| ids.contains(id));
-    invalidated.retain(|id| ids.contains(id));
+    let reachable = reachable::collect(scopes, scopes.len(), returned, objects, mapped);
+    objects.retain(|id, _| reachable.arguments.contains(id));
+    deleted.retain(|(id, _)| reachable.arguments.contains(id));
+    definite.retain(|(id, _)| reachable.arguments.contains(id));
+    invalidated.retain(|id| reachable.identities.contains(id));
 }

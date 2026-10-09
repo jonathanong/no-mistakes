@@ -467,6 +467,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-tag-callback",
         "helper-tracing-alternative-callback",
         "helper-tracing-named-delete",
+        "helper-tracing-argument-members",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);

@@ -4,7 +4,7 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
-fn outputs(name: &str) -> FxHashMap<String, Value> {
+fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-mapped-context/{name}",
     ));
@@ -35,9 +35,19 @@ fn outputs(name: &str) -> FxHashMap<String, Value> {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        argument_objects: Default::default(),
+        definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
-    evaluator.scopes[root].clone()
+    (
+        evaluator.scopes[root].clone(),
+        evaluator.argument_objects.len(),
+        evaluator.argument_objects.values().map(Vec::len).sum(),
+    )
+}
+
+fn outputs(name: &str) -> FxHashMap<String, Value> {
+    evaluated(name).0
 }
 
 #[test]
@@ -115,6 +125,21 @@ fn container_aliases_and_local_shadows_keep_mapping_boundaries() {
 fn mapped_rebinding_preserves_callback_capture_effects() {
     assert!(matches!(
         outputs("callback-rebinding.cjs").get("result"),
+        Some(Value::Unknown)
+    ));
+}
+
+#[test]
+fn repeated_argument_aliases_are_identity_only() {
+    let (values, objects, slots) = evaluated("cyclic-aliases.cjs");
+    assert!(matches!(values.get("result"), Some(Value::Arguments(_))));
+    assert_eq!((objects, slots), (1, 2));
+}
+
+#[test]
+fn escaped_arguments_keep_possible_rebound_callbacks() {
+    assert!(matches!(
+        outputs("escaped-callback.cjs").get("result"),
         Some(Value::Unknown)
     ));
 }

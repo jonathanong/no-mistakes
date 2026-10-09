@@ -40,6 +40,8 @@ fn outputs() -> FxHashMap<String, Value> {
         invalidated_builders: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
+        argument_objects: Default::default(),
+        definite_deleted_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
     evaluator.scopes[root].clone()
@@ -62,6 +64,10 @@ fn named_and_statically_known_non_index_deletes_preserve_argument_slots() {
         ("nonCanonicalResult", "/* non-canonical index */ SELECT 1"),
         ("fractionalResult", "/* fractional property */ SELECT 1"),
         ("preservedIndexResult", "/* retained slot */ SELECT 1"),
+        (
+            "conditionalDeleteResult",
+            "/* conditional slot deletion */ SELECT 1",
+        ),
     ] {
         assert!(is_prefix(&values, name, expected), "{name}");
     }
@@ -70,11 +76,20 @@ fn named_and_statically_known_non_index_deletes_preserve_argument_slots() {
 #[test]
 fn numeric_indices_and_dynamic_keys_keep_their_invalidation_behavior() {
     let values = outputs();
+    let Some(Value::Aggregate(dynamic)) = values.get("dynamicResult") else {
+        panic!("dynamic deletion preserves a possible callback slot");
+    };
+    assert!(matches!(dynamic.first(), Some(Value::Unknown)));
+    assert!(matches!(
+        dynamic.get(1),
+        Some(Value::Prefix(text, true, _)) if text == "/* dynamic key */ SELECT 1"
+    ));
     for name in [
         "deletedIndexResult",
         "deletedNumericIndexResult",
-        "dynamicResult",
         "dynamicEffectResult",
+        "conditionalOpaqueArmResult",
+        "conditionalOpaqueTestResult",
     ] {
         assert!(matches!(values.get(name), Some(Value::Unknown)), "{name}");
     }

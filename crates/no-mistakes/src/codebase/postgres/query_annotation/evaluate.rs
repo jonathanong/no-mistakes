@@ -1,12 +1,15 @@
 mod alternatives;
+mod callbacks;
 mod calls;
 mod concat;
+mod member;
 use concat::concat;
 mod delete;
 mod effects;
 mod index;
 mod mapped;
 mod modules;
+mod run;
 mod statements;
 mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
@@ -15,12 +18,12 @@ use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub(super) enum Value {
     Prefix(String, bool, Option<u64>),
     Promise(Box<Value>),
     Aggregate(Vec<Value>),
-    Arguments(u64, Vec<Value>),
+    Arguments(u64),
     Function(Function, PathBuf, Environment),
     Unknown,
     Unsupported,
@@ -43,6 +46,8 @@ pub(super) struct Evaluator<'a, F> {
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
+    pub argument_objects: FxHashMap<u64, Vec<Value>>,
+    pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
     pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }
 
@@ -55,54 +60,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.scopes.push(values);
         id
     }
-    pub fn run(&mut self, path: &Path) {
-        let file = &self.files[path];
-        let globals = file.facts.globals.clone();
-        let env = self.module_environment(path);
-        let unmodeled = file.facts.unmodeled_calls.clone();
-        let scopes = self.scopes.clone();
-        let modules = self.modules.clone();
-        let invalidated = self.invalidated_builders.clone();
-        let deleted = self.deleted_argument_slots.clone();
-        let mapped = self.mapped_arguments.clone();
-        for call in unmodeled {
-            if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.expr(&call, path, &env, 16, false);
-            }
-        }
-        // Function declarations describe possible entrypoints; contextual
-        // callback invocations take precedence over this unknown input.
-        for expr in globals.values() {
-            if let Expr::Function(function) = expr {
-                // Speculative entrypoints share initialized facts, never effects
-                // from an unrelated function considered earlier in name order.
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                let mut values: FxHashMap<String, Value> = function
-                    .params
-                    .iter()
-                    .map(|name| (name.clone(), Value::Unknown))
-                    .collect();
-                if !function.arrow {
-                    values.insert("arguments".into(), Value::Unknown);
-                }
-                if let Some(name) = &function.self_name {
-                    values.insert(name.clone(), Value::Unknown);
-                }
-                let mut env = self.environment(values);
-                self.steps(&function.body, path, &mut env, 16, true);
-            }
-        }
-    }
-
     pub(super) fn expr(
         &mut self,
         expr: &Expr,
@@ -185,6 +142,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.invalidate_builders(&values);
                 self.opaque_callbacks(&values, depth);
                 Value::Unknown
+            }
+            Expr::Member(object, name) => {
+                let value = self.expr(object, path, env, depth, generic);
+                self.member(value, name)
             }
             Expr::Index(object, index) => {
                 let value = self.expr(object, path, env, depth, generic);

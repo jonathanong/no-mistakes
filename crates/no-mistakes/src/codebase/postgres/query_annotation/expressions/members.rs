@@ -6,9 +6,12 @@ use oxc_ast::ast::{ComputedMemberExpression, Expression};
 pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Expr {
     let index = static_index(&value.expression);
     let object = expression(&value.object, source);
-    match index {
-        Some(index) => Expr::Index(Box::new(object), index),
-        None => Expr::Children(vec![object, expression(&value.expression, source)]),
+    match (index, unwrap_ts_wrappers(&value.expression)) {
+        (Some(index), _) => Expr::Index(Box::new(object), index),
+        (None, Expression::StringLiteral(name)) => {
+            Expr::Member(Box::new(object), name.value.to_string())
+        }
+        (None, _) => Expr::Children(vec![object, expression(&value.expression, source)]),
     }
 }
 
