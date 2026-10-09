@@ -15,16 +15,58 @@ pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Ex
     }
 }
 
-fn static_index(value: &Expression<'_>) -> Option<usize> {
-    match unwrap_ts_wrappers(value) {
-        Expression::NumericLiteral(value) if value.value.fract() == 0.0 => {
-            Some(value.value as usize)
+pub(super) fn static_index(value: &Expression<'_>) -> Option<usize> {
+    const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+    let value = match unwrap_ts_wrappers(value) {
+        Expression::StringLiteral(value) => {
+            return value
+                .value
+                .parse::<usize>()
+                .ok()
+                .filter(|index| index.to_string() == value.value.as_str());
         }
-        Expression::StringLiteral(value) => value
-            .value
-            .parse::<usize>()
-            .ok()
-            .filter(|index| index.to_string() == value.value.as_str()),
+        Expression::NumericLiteral(value) => value.value,
+        Expression::UnaryExpression(unary)
+            if matches!(
+                unary.operator,
+                oxc_ast::ast::UnaryOperator::UnaryPlus | oxc_ast::ast::UnaryOperator::UnaryNegation
+            ) =>
+        {
+            let value = static_number(&unary.argument)?;
+            if unary.operator == oxc_ast::ast::UnaryOperator::UnaryNegation {
+                -value
+            } else {
+                value
+            }
+        }
+        _ => return None,
+    };
+    (value.is_finite()
+        && value >= 0.0
+        && value <= MAX_SAFE_INTEGER
+        && value.fract() == 0.0
+        && (value as usize) as f64 == value)
+        .then_some(value as usize)
+}
+
+fn static_number(value: &Expression<'_>) -> Option<f64> {
+    match unwrap_ts_wrappers(value) {
+        Expression::NumericLiteral(value) => Some(value.value),
+        Expression::UnaryExpression(unary)
+            if matches!(
+                unary.operator,
+                oxc_ast::ast::UnaryOperator::UnaryPlus | oxc_ast::ast::UnaryOperator::UnaryNegation
+            ) =>
+        {
+            let value = static_number(&unary.argument)?;
+            Some(
+                if unary.operator == oxc_ast::ast::UnaryOperator::UnaryNegation {
+                    -value
+                } else {
+                    value
+                },
+            )
+        }
         _ => None,
     }
 }
@@ -59,3 +101,6 @@ fn delete_key(value: &Expression<'_>) -> DeleteKey {
         _ => DeleteKey::Dynamic,
     }
 }
+
+#[cfg(test)]
+mod tests;

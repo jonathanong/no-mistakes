@@ -15,7 +15,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .expect("canonical argument mapping")
             .1;
         let name = params.get(index)?;
-        (!name.is_empty() && params.iter().rposition(|param| param == name) == Some(index))
+        (!name.is_empty() && self.mapped_parameter_index(id, params, name) == Some(index))
             .then(|| (owner, name.clone()))
     }
 
@@ -23,6 +23,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
     ) {
         self.mapped_argument_owners.clear();
+        self.mapped_parameter_indices.clear();
         // Rebuild this projection once after scope restoration/remapping. The
         // index does not make otherwise unreachable invocation frames live.
         for (frame, mappings) in &self.mapped_arguments {
@@ -37,6 +38,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.mapped_argument_owners.entry(*id).or_insert(owner);
                 }
             }
+        }
+        for (id, owner) in &self.mapped_argument_owners {
+            let params = &self.mapped_arguments[owner]
+                .iter()
+                .find(|(object, _)| object == id)
+                .expect("canonical argument mapping")
+                .1;
+            self.mapped_parameter_indices
+                .insert(*id, super::positions::collect(params.iter()));
         }
     }
 }

@@ -250,7 +250,8 @@ objects and promises. Deleting an argument slot makes the slot unknown while
 preserving other slots and the builder that the slot referenced. Deleting a known
 non-index property leaves indexed slots intact; dynamic keys remain conservative. Computed-key
 effects still run, including inside a `void` wrapper. Comma expressions expose only
-their last value. Non-coercive `void`, `typeof`, and `!` expressions discard
+their last value. Pure unary numeric indices such as `+0` and `-0` address slot zero.
+Non-coercive `void`, `typeof`, and `!` expressions discard
 callback values while evaluating operand effects. Numeric `+`, `-`, and `~`
 coercion remains conservative because conversion hooks can mutate operands. Named function self-bindings are shadowed by
 invocation parameters and the ordinary `arguments` binding.

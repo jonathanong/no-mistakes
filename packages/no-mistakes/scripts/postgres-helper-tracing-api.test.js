@@ -187,6 +187,7 @@ for (const scenario of [
   "helper-tracing-dynamic-delete-slot-write",
   "helper-tracing-callback-revisit",
   "helper-tracing-imported-callback-revisit",
+  "helper-tracing-unary-argument-index",
 ]) {
   test(
     `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,

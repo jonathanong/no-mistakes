@@ -64,6 +64,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             captured_bindings: Default::default(),
             captured_binding_readers: Default::default(),
             mapped_argument_owners: Default::default(),
+            mapped_parameter_indices: Default::default(),
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
             argument_objects: Default::default(),
@@ -116,15 +117,22 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
                     Value::Aggregate(vec![callback.clone()]),
                 ],
             );
+            // Distinct invocation objects retain their own canonical positions;
+            // inherited copies can shadow names but cannot move a slot.
+            let other_id = id + 1;
+            evaluator
+                .argument_objects
+                .insert(other_id, evaluator.argument_objects[&id].clone());
             evaluator.mapped_arguments.insert(
                 env,
                 vec![
                     (id, vec!["probe".into(), "probe".into()]),
-                    (id, vec!["probe".into(), "other".into()]),
-                    (id, vec!["probe".into(), "other".into()]),
+                    (other_id, vec!["probe".into(), "other".into()]),
+                    (other_id, vec!["probe".into(), "other".into()]),
                 ],
             );
-            evaluator.invalidated_builders.insert(id);
+            evaluator.rebuild_mapped_argument_owners();
+            evaluator.invalidated_builders.extend([id, other_id]);
             let projected = evaluator.mapped_parameter_value(env, "probe").unwrap();
             assert!(matches!(projected, Value::Possible(ref values) if values.len() == 2));
             evaluator.disconnected_argument_slots.insert((id, 1));

@@ -22,11 +22,9 @@ pub(super) fn names(function: &Function) -> Reads {
             _ => {}
         }
     }
+    let shadowed = super::super::calls::scopes::shadow_names(function);
     for set in [&mut names.values, &mut names.identities] {
-        set.retain(|name| {
-            !super::super::calls::scopes::shadows(function, name)
-                && (function.arrow || name != "arguments")
-        });
+        set.retain(|name| !shadowed.contains(name));
     }
     names.identities.retain(|name| !names.values.contains(name));
     names

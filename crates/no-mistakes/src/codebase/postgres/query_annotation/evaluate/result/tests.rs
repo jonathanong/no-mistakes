@@ -45,6 +45,7 @@ fn outputs(scenario: &str) -> Vec<(String, Value)> {
         captured_bindings: Default::default(),
         captured_binding_readers: Default::default(),
         mapped_argument_owners: Default::default(),
+        mapped_parameter_indices: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
@@ -204,6 +205,22 @@ fn numeric_unary_operators_preserve_coercion_effects() {
     ] {
         assert!(
             matches!(event(&values, marker), Value::Prefix(text, true, _) if text.contains("SELECT 1")),
+            "{marker}"
+        );
+    }
+}
+
+#[test]
+fn unary_zero_indices_match_canonical_arguments_slot_zero_for_reads_and_writes() {
+    let values = outputs("helper-tracing-unary-argument-index");
+    for (marker, sql) in [
+        ("positive-zero-read", "SELECT 1"),
+        ("negative-zero-read", "SELECT 2"),
+        ("positive-zero-write", "SELECT 3"),
+        ("negative-zero-write", "SELECT 4"),
+    ] {
+        assert!(
+            matches!(event(&values, marker), Value::Prefix(value, true, None) if value == sql),
             "{marker}"
         );
     }

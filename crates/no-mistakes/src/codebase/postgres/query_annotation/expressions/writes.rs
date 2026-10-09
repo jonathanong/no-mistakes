@@ -1,5 +1,5 @@
 //! Opaque writes retain explicit binding targets separately from value reads.
-use super::{children, Expr};
+use super::{children, members::static_index, Expr};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
 use oxc_ast_visit::{walk, Visit};
@@ -122,26 +122,6 @@ fn static_slot<'a, 's>(target: &'s AssignmentTarget<'a>) -> Option<(&'s Expressi
         return None;
     };
     static_index(unwrap_ts_wrappers(&member.expression)).map(|index| (&member.object, index))
-}
-
-fn static_index(value: &Expression<'_>) -> Option<usize> {
-    const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
-    match unwrap_ts_wrappers(value) {
-        Expression::NumericLiteral(value)
-            if value.value.is_finite()
-                && value.value <= MAX_SAFE_INTEGER
-                && value.value.fract() == 0.0
-                && (value.value as usize) as f64 == value.value =>
-        {
-            Some(value.value as usize)
-        }
-        Expression::StringLiteral(value) => value
-            .value
-            .parse::<usize>()
-            .ok()
-            .filter(|index| index.to_string() == value.value.as_str()),
-        _ => None,
-    }
 }
 
 #[cfg(test)]

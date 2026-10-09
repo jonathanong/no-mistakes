@@ -31,7 +31,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut ids = FxHashSet::default();
         for name in targets {
             for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
-                if params.contains(name) {
+                if self.mapped_parameter_index(*id, params, name).is_some() {
                     ids.insert(*id);
                 }
             }
@@ -51,7 +51,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .get(&captured)
             .cloned()
             .unwrap_or_default();
-        fresh.retain(|name| mappings.iter().any(|(_, params)| params.contains(name)));
+        fresh.retain(|name| {
+            mappings
+                .iter()
+                .any(|(id, params)| self.mapped_parameter_index(*id, params, name).is_some())
+        });
         if !fresh.is_empty() {
             self.fresh_mapped_parameters.insert(scope, fresh);
         }
@@ -67,7 +71,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let mut possibilities = Vec::new();
         for (id, params) in &self.mapped_arguments[&env] {
-            if let Some(index) = params.iter().rposition(|param| param == name) {
+            if let Some(index) = self.mapped_parameter_index(*id, params, name) {
                 if !self.disconnected_argument_slots.contains(&(*id, index)) {
                     // A possible deletion may have disconnected the formal
                     // before this property's later write; retain both outcomes.

@@ -46,6 +46,7 @@ fn callback_seen_in_one_arm_remains_available_after_join() {
         captured_bindings: Default::default(),
         captured_binding_readers: Default::default(),
         mapped_argument_owners: Default::default(),
+        mapped_parameter_indices: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),

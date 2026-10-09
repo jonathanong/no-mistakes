@@ -51,6 +51,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             captured_bindings: Default::default(),
             captured_binding_readers: Default::default(),
             mapped_argument_owners: Default::default(),
+            mapped_parameter_indices: Default::default(),
             deleted_argument_slots: Default::default(),
             mapped_arguments: Default::default(),
             argument_objects: Default::default(),

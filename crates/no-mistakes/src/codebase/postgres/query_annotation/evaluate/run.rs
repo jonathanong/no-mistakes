@@ -25,6 +25,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let captured_bindings = self.captured_bindings.clone();
         let captured_binding_readers = self.captured_binding_readers.clone();
         let mapped_argument_owners = self.mapped_argument_owners.clone();
+        let mapped_parameter_indices = self.mapped_parameter_indices.clone();
         for call in unmodeled {
             if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
                 self.scopes.clone_from(&scopes);
@@ -44,6 +45,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .clone_from(&captured_binding_readers);
                 self.mapped_argument_owners
                     .clone_from(&mapped_argument_owners);
+                self.mapped_parameter_indices
+                    .clone_from(&mapped_parameter_indices);
                 self.expr(&call, path, &env, 16, false);
             }
         }
@@ -70,6 +73,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .clone_from(&captured_binding_readers);
                 self.mapped_argument_owners
                     .clone_from(&mapped_argument_owners);
+                self.mapped_parameter_indices
+                    .clone_from(&mapped_parameter_indices);
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()

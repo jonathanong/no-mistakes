@@ -1,5 +1,5 @@
 use super::{Environment, Evaluator, Value};
-use crate::codebase::postgres::query_annotation::{Function, Step};
+use crate::codebase::postgres::query_annotation::Function;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
@@ -12,20 +12,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         captured: Environment,
         function: &Function,
     ) {
+        let shadowed = super::super::calls::scopes::shadow_names(function);
         let bindings = self.scopes[captured]
             .keys()
-            .filter(|name| {
-                !function.params.contains(name)
-                    && function.self_name.as_ref() != Some(*name)
-                    && (function.arrow || name.as_str() != "arguments")
-                    && !function.body.iter().any(|step| match step {
-                        Step::Bind(local, _) | Step::Hoisted(local, _) | Step::Var(local) => {
-                            local == *name
-                        }
-                        Step::Reserve(names) => names.contains(name),
-                        _ => false,
-                    })
-            })
+            .filter(|name| !shadowed.contains(name.as_str()))
             .map(|name| {
                 let origin = self
                     .captured_bindings

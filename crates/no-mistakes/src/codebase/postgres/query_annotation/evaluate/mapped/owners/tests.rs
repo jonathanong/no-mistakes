@@ -46,6 +46,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         captured_bindings: Default::default(),
         captured_binding_readers: Default::default(),
         mapped_argument_owners: Default::default(),
+        mapped_parameter_indices: Default::default(),
         deleted_argument_slots: Default::default(),
         mapped_arguments: Default::default(),
         fresh_mapped_parameters: Default::default(),

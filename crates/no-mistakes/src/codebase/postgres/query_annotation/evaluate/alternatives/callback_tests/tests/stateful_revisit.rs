@@ -46,6 +46,7 @@ fn stateful_callback_revisits_observe_changed_lexical_arguments() {
         captured_bindings: Default::default(),
         captured_binding_readers: Default::default(),
         mapped_argument_owners: Default::default(),
+        mapped_parameter_indices: Default::default(),
         deleted_argument_slots: Default::default(),
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),

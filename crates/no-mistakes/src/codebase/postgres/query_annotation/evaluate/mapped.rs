@@ -2,6 +2,7 @@ mod bindings;
 mod fresh;
 mod fresh_index;
 mod owners;
+mod positions;
 mod possible;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
@@ -21,17 +22,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .mapped_arguments
                     .contains(&function.start) =>
             {
-                let mut params = function.params.clone();
-                for name in &mut params {
-                    if function
-                        .params
-                        .iter()
-                        .rposition(|param| param == name)
-                        .is_some_and(|index| index >= self.argument_objects[id].len())
-                    {
-                        name.clear();
-                    }
-                }
+                let positions = positions::collect(function.params.iter());
+                let params = function
+                    .params
+                    .iter()
+                    .map(|name| {
+                        if positions[name] < self.argument_objects[id].len() {
+                            name.clone()
+                        } else {
+                            String::new()
+                        }
+                    })
+                    .collect();
                 Some((*id, params))
             }
             _ => None,
@@ -50,9 +52,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .get(&captured)
             .cloned()
             .unwrap_or_default();
+        let shadowed = super::calls::scopes::shadow_names(function);
         for (_, params) in &mut mappings {
             for name in params {
-                if super::calls::scopes::shadows(function, name) {
+                if shadowed.contains(name) {
                     name.clear();
                 }
             }
@@ -60,6 +63,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.inherit_freshness(scope, captured, &mappings);
         if let Some(own) = own {
             self.mapped_argument_owners.insert(own.0, scope);
+            self.mapped_parameter_indices
+                .insert(own.0, positions::collect(own.1.iter()));
             mappings.push(own);
         }
         if !mappings.is_empty() {
@@ -84,9 +89,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         self.mapped_arguments.get(&env).is_some_and(|mappings| {
             mappings.iter().any(|(id, params)| {
-                params
-                    .iter()
-                    .rposition(|param| param == name)
+                self.mapped_parameter_index(*id, params, name)
                     .is_some_and(|index| {
                         self.invalidated_builders.contains(id)
                             && !self.disconnected_argument_slots.contains(&(*id, index))
@@ -138,7 +141,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut escaped = false;
         for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
             // With duplicate sloppy parameters, only the last occurrence maps.
-            if let Some(index) = params.iter().rposition(|param| param == name) {
+            if let Some(index) = self.mapped_parameter_index(*id, params, name) {
                 mapped = true;
                 if !self.disconnected_argument_slots.contains(&(*id, index)) {
                     escaped |= self.invalidated_builders.contains(id);

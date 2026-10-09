@@ -8,7 +8,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) {
         if let Some(names) = self.fresh_mapped_parameters.get(&env) {
             for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
-                for name in names.iter().filter(|name| params.contains(name)) {
+                for name in names {
+                    if self.mapped_parameter_index(*id, params, name).is_none() {
+                        continue;
+                    }
                     self.fresh_mapped_argument_bindings
                         .entry(*id)
                         .or_default()
@@ -29,7 +32,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .or_default()
             .insert(name.to_string());
         for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
-            if let Some(index) = params.iter().rposition(|param| param == name) {
+            if let Some(index) = self.mapped_parameter_index(*id, params, name) {
                 if !self.disconnected_argument_slots.contains(&(*id, index)) {
                     self.fresh_mapped_argument_bindings
                         .entry(*id)
