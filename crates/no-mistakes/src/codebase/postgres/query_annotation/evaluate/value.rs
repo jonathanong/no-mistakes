@@ -1,5 +1,6 @@
 use super::Environment;
 use crate::codebase::postgres::query_annotation::Function;
+use crate::fx::FxHashSet;
 use std::{
     ops::{Deref, DerefMut},
     path::PathBuf,
@@ -10,12 +11,14 @@ use std::{
 struct Data {
     values: Vec<Value>,
     contains_reference: OnceLock<bool>,
+    environments: OnceLock<FxHashSet<Environment>>,
 }
 impl Clone for Data {
     fn clone(&self) -> Self {
         Self {
             values: self.values.clone(),
             contains_reference: OnceLock::new(),
+            environments: OnceLock::new(),
         }
     }
 }
@@ -32,6 +35,34 @@ impl PartialEq for Values {
 impl Eq for Values {}
 
 impl Values {
+    pub(super) fn contains_environment(&self) -> bool {
+        !self.environment_indices().is_empty()
+    }
+
+    pub(super) fn environment_indices(&self) -> &FxHashSet<Environment> {
+        self.0.environments.get_or_init(|| {
+            fn collect(value: &Value, environments: &mut FxHashSet<Environment>) {
+                match value {
+                    Value::Function(_, _, env) => {
+                        environments.insert(*env);
+                    }
+                    Value::Promise(value) | Value::Evaluated(value, _) => {
+                        collect(value, environments)
+                    }
+                    Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+                        environments.extend(values.environment_indices());
+                    }
+                    _ => {}
+                }
+            }
+            let mut environments = FxHashSet::default();
+            for value in &self.0.values {
+                collect(value, &mut environments);
+            }
+            environments
+        })
+    }
+
     pub(super) fn identity(&self) -> *const () {
         Arc::as_ptr(&self.0).cast()
     }
@@ -58,6 +89,7 @@ impl From<Vec<Value>> for Values {
         Self(Arc::new(Data {
             values,
             contains_reference: OnceLock::new(),
+            environments: OnceLock::new(),
         }))
     }
 }
@@ -72,6 +104,7 @@ impl DerefMut for Values {
     fn deref_mut(&mut self) -> &mut Self::Target {
         let data = Arc::make_mut(&mut self.0);
         data.contains_reference.take();
+        data.environments.take();
         &mut data.values
     }
 }

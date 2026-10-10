@@ -124,3 +124,11 @@ fn repeated_binding_joins_keep_distinct_candidates_flat() {
     );
     assert!(joined[0]["candidate"] == Value::Joined(vec![container, Value::Arguments(2)].into()));
 }
+
+#[test]
+fn unchanged_binding_joins_keep_the_shared_scope_snapshot() {
+    let original = vec![scope(&[("stable", Value::Arguments(1))])];
+    let mut joined = original.clone();
+    join(&mut joined, &original, &original);
+    assert!(std::ptr::eq(&*joined[0], &*original[0]));
+}

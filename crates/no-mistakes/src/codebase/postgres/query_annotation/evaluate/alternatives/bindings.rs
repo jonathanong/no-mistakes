@@ -45,19 +45,26 @@ pub(super) fn binding_or_unproven<'a>(
 /// unproven and must not keep or synthesize a SQL prefix.
 pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) {
     for ((before, after), initial) in joined.iter_mut().zip(current).zip(original) {
-        for (name, value) in before {
+        // Inspect shared snapshots before taking a mutable view: unchanged
+        // branches must not clone every binding in the captured environment.
+        let changed = before
+            .iter()
+            .filter(|(name, value)| {
+                after.get(*name) != Some(*value) || !initial.contains_key(*name)
+            })
+            .map(|(name, _)| name.clone())
+            .collect::<Vec<_>>();
+        for name in changed {
+            let value = before.get_mut(&name).expect("existing binding");
             // Divergent arms add and drop names. Neither hole is a builder.
-            let Some(next) = after.get(name) else {
+            let Some(next) = after.get(&name) else {
                 *value = Value::Unknown;
                 continue;
             };
-            let Some(initial_value) = initial.get(name) else {
+            let Some(initial_value) = initial.get(&name) else {
                 *value = Value::Unknown;
                 continue;
             };
-            if *value == *next {
-                continue;
-            }
             if let Value::Prefix(_, _, Some(id)) = initial_value {
                 if annotated_builder(initial_value, *id)
                     && annotated_builder(value, *id)

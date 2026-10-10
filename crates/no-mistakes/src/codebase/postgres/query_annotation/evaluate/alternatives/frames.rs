@@ -1,3 +1,4 @@
+use super::super::value::Values;
 use super::super::{Environment, Value};
 use super::arena::ArenaMut;
 use super::{freshness, reachable};
@@ -17,6 +18,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
 }
 
 pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
+    if indices.iter().all(|(before, after)| before == after) {
+        return;
+    }
     match value {
         Value::Function(_, _, env) => {
             if let Some(index) = indices.get(env) {
@@ -24,13 +28,23 @@ pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environm
             }
         }
         Value::Promise(value) | Value::Evaluated(value, _) => remap(value, indices),
-        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values)
+            if changes_environment(values, indices) =>
+        {
             for value in values {
                 remap(value, indices);
             }
         }
         _ => {}
     }
+}
+
+fn changes_environment(values: &Values, indices: &FxHashMap<Environment, Environment>) -> bool {
+    values.contains_environment()
+        && values
+            .environment_indices()
+            .iter()
+            .any(|env| indices.get(env).is_some_and(|after| after != env))
 }
 
 /// Keep only frames and heap objects reachable from restored scopes or callback
@@ -173,3 +187,6 @@ fn compact_from_roots(
 
 mod state;
 pub(super) use state::{compact_modules, prune_state};
+
+#[cfg(test)]
+mod tests;

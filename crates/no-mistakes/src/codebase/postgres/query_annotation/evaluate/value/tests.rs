@@ -69,3 +69,61 @@ fn reference_memo_follows_detached_writes_without_changing_equality() {
     inner.push(Value::Arguments(9));
     assert!(outer.contains_reference());
 }
+
+#[test]
+fn environment_memo_follows_nested_functions_and_detached_writes() {
+    use crate::codebase::postgres::query_annotation::Function;
+    let function = Value::Function(
+        Arc::new(Function {
+            start: 0,
+            params: vec![],
+            body: vec![],
+            supported: true,
+            asynchronous: false,
+            arrow: false,
+            self_name: None,
+        }),
+        "helper.ts".into(),
+        7,
+    );
+    let mut values = Values::from(vec![Value::Arguments(8), prefix("plain")]);
+    let original = values.clone();
+    assert!(!values.contains_environment());
+    values.push(Value::Promise(Box::new(Value::Evaluated(
+        Box::new(Value::Joined(
+            vec![Value::Possible(
+                vec![Value::Aggregate(vec![function].into())].into(),
+            )]
+            .into(),
+        )),
+        false,
+    ))));
+    assert!(values.contains_environment());
+    assert_eq!(
+        values.environment_indices(),
+        &crate::fx::FxHashSet::from_iter([7])
+    );
+    assert!(!original.contains_environment());
+    values.pop();
+    assert!(!values.contains_environment());
+    assert!(values == original);
+}
+
+#[test]
+fn prepared_function_summaries_remain_shared_across_expression_snapshots() {
+    use crate::codebase::postgres::query_annotation::{Expr, Function};
+    let function = Arc::new(Function {
+        start: 0,
+        params: vec![],
+        body: vec![],
+        supported: true,
+        asynchronous: false,
+        arrow: false,
+        self_name: None,
+    });
+    let expression = Expr::Function(function.clone());
+    let Expr::Function(snapshot) = expression.clone() else {
+        panic!("function shape changed");
+    };
+    assert!(Arc::ptr_eq(&function, &snapshot));
+}

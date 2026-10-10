@@ -65,7 +65,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         Expression::FunctionExpression(value) => {
             let mut function = function_expression(value, source);
             if let (Some(id), Expr::Function(summary)) = (&value.id, &mut function) {
-                summary.self_name = Some(id.name.to_string());
+                std::sync::Arc::make_mut(summary).self_name = Some(id.name.to_string());
             }
             function
         }

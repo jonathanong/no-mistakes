@@ -93,7 +93,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Function(function) => {
                 // Request-owned scope IDs retain live bindings without recursive
                 // closure copies or reference cycles between sibling functions.
-                Value::Function(Arc::new(function.clone()), path.to_path_buf(), *env)
+                Value::Function(Arc::clone(function), path.to_path_buf(), *env)
             }
             Expr::Template(parts) => {
                 let mut prefix = Value::Prefix(String::new(), true, None);

@@ -27,7 +27,7 @@ pub(super) fn function(
     asynchronous: bool,
     arrow: bool,
     start: u32,
-) -> Function {
+) -> std::sync::Arc<Function> {
     let names = params
         .items
         .iter()
@@ -51,7 +51,7 @@ pub(super) fn function(
     if let Some(rest) = &params.rest {
         names.extend(super::super::trust::bound_names(&rest.rest.argument));
     }
-    Function {
+    std::sync::Arc::new(Function {
         start,
         params: names,
         body,
@@ -59,5 +59,5 @@ pub(super) fn function(
         asynchronous,
         arrow,
         self_name: None,
-    }
+    })
 }

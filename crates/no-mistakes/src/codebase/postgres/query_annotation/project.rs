@@ -7,8 +7,6 @@ use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-mod reachability;
-
 /// Resolve owned syntax against the request's canonical module facts and
 /// resolver. No source reads or parsing occur in this projection.
 pub(crate) fn project(
@@ -75,10 +73,8 @@ pub(crate) fn project(
                 ))
             })
             .collect::<FxHashMap<_, _>>();
-        let relevant_roots = reachability::roots_reaching_executors(&collected, &resolve);
         let mut per_file = collected
             .par_iter()
-            .filter(|(path, _)| relevant_roots.contains(*path))
             .map(|(path, _)| {
                 let mut evaluator = Evaluator {
                     files: &collected,

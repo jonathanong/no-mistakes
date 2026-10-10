@@ -11,13 +11,12 @@ the importing file's project; an explicit `--tsconfig` deliberately overrides th
 ownership for every importer.
 
 Helper evaluation shares immutable function summaries, binding snapshots, and
-nested value containers. Builder lookup indexes and reference-free container
+nested value containers. Builder lookup indexes and reference-free or environment-free container
 checks are memoized and invalidated on writes; speculative entrypoints retain
-isolated effects. Containers with references retain their ordered traversal.
-These in-memory
-structures belong to the current request and are never persisted.
-Roots that cannot reach configured executor calls skip helper evaluation. A caller
-without its own executor stays eligible when an imported helper executes SQL.
+isolated effects. Unchanged branch joins keep shared scopes, and reachability
+visits each shared container once. Containers with references retain their ordered
+traversal when order affects the result.
+These in-memory structures belong to the current request and are never persisted.
 Conditional binding updates retain distinct alternatives without repeatedly
 duplicating earlier possibilities; conflicting outcomes remain unproven.
 
