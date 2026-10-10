@@ -14,6 +14,7 @@ pub(super) struct Classified {
     pub occurrences: Vec<PostgresSqlProceduralOccurrence>,
     pub legacy_stop: bool,
     pub walker_only: bool,
+    pub empty_headers: Vec<PostgresSqlSpan>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -35,6 +36,7 @@ pub(super) struct Ctx<'a> {
     label_invalid: bool,
     pending_label: cursor::OpenLabel,
     pub(super) span: &'a dyn Fn(usize, usize) -> PostgresSqlSpan,
+    pub(super) empty_headers: Vec<(usize, usize)>,
 }
 
 pub(super) fn classify(
@@ -60,6 +62,7 @@ pub(super) fn classify_at(
         label_invalid: false,
         pending_label: cursor::OpenLabel::Absent,
         span,
+        empty_headers: Vec::new(),
     };
     let open = cursor::skip_label(&mut ctx);
     // A decoded command is SQL, not a labeled block. Keep that prefix attached
@@ -80,10 +83,16 @@ pub(super) fn classify_at(
     if ctx.label_invalid && !ctx.legacy_stop {
         occurrences.push(unrecognized_label(&ctx));
     }
+    let empty_headers = ctx
+        .empty_headers
+        .iter()
+        .map(|(start, end)| (ctx.span)(*start, *end))
+        .collect();
     Classified {
         occurrences,
         legacy_stop: ctx.legacy_stop,
         walker_only: ctx.walker_only,
+        empty_headers,
     }
 }
 

@@ -145,7 +145,8 @@ incomplete.
 Quoted strings, quoted identifiers, and comments are not keywords, so
 `RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
 occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
-condition keeps the block incomplete. A block classified only by this walker is complete
+condition keeps the block incomplete. That empty header reports that the procedural
+condition is missing, at the header. A block classified only by this walker is complete
 only when every occurrence is recognized `utility` or `controlFlow`. An opening
 label is one identifier. A closing label that does not match keeps the block
 incomplete. A label prefix on a wholly literal command stays `unknown`. A block the SQL

@@ -741,7 +741,8 @@ walker's 64-level budget and fail closed when it is exhausted. A wholly literal
 `FOR ... IN EXECUTE` operand is classified as `dml` or `utility`, including a
 parsed `SELECT`. A qualified name such as `public.execute(...)` stays
 `dynamicExecute` rather than static DML parsed from the argument. An IF, ELSIF,
-or conditional-loop header with no condition keeps the block incomplete. An opening
+or conditional-loop header with no condition keeps the block incomplete. That
+empty header reports that the procedural condition is missing, at the header. An opening
 label is one identifier. A closing label that does not match keeps the block
 incomplete. A label prefix on a wholly literal command stays `unknown`.
 

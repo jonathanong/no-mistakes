@@ -13,6 +13,7 @@ pub(super) enum PreparedBlock<'a> {
         prepared: PreparedPostgresTokens,
         body: Body<'a>,
         retain_walker: bool,
+        empty_headers: Vec<PostgresSqlSpan>,
     },
 }
 
@@ -84,10 +85,12 @@ pub(super) fn prepare_block<'a>(
             "Procedural control flow is unsupported; no nested DDL execution or occurrence is inferred",
             &body_span,
         ));
+        push_empty_conditions(&mut block, &walked.empty_headers);
         return Ok(PreparedBlock::Done(block));
     }
     if walked.walker_only && !occurrences_include_sql(&block.occurrences) {
         super::procedural_walk::finish_unparsed(&mut block, &body_span);
+        push_empty_conditions(&mut block, &walked.empty_headers);
         return Ok(PreparedBlock::Done(block));
     }
     let significant = prepared
@@ -109,6 +112,7 @@ pub(super) fn prepare_block<'a>(
             "Procedural control flow is unsupported; no nested DDL execution or occurrence is inferred",
             &body_span,
         ));
+        push_empty_conditions(&mut block, &walked.empty_headers);
         return Ok(PreparedBlock::Done(block));
     }
     let first = significant[0];
@@ -129,6 +133,7 @@ pub(super) fn prepare_block<'a>(
         prepared,
         body,
         retain_walker: walked.walker_only,
+        empty_headers: walked.empty_headers,
     })
 }
 
@@ -154,6 +159,18 @@ fn occurrences_include_sql(occurrences: &[PostgresSqlProceduralOccurrence]) -> b
     occurrences
         .iter()
         .any(|occurrence| sql_occurrence(occurrence.kind))
+}
+
+pub(super) fn push_empty_conditions(
+    block: &mut PostgresSqlProceduralBlock,
+    spans: &[PostgresSqlSpan],
+) {
+    for span in spans {
+        block.diagnostics.push(diagnostic(
+            super::procedural_walk::EMPTY_CONDITION_MESSAGE,
+            span,
+        ));
+    }
 }
 
 fn diagnostic(message: &str, span: &PostgresSqlSpan) -> PostgresSqlDiagnostic {

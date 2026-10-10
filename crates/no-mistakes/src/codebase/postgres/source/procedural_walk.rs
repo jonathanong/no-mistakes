@@ -8,11 +8,14 @@ pub(super) struct Walk {
     pub occurrences: Vec<PostgresSqlProceduralOccurrence>,
     pub legacy_stop: bool,
     pub walker_only: bool,
+    pub empty_headers: Vec<PostgresSqlSpan>,
 }
 
 pub(super) const DYNAMIC_MESSAGE: &str = "Dynamic EXECUTE is unknown; no SQL statement is inferred";
 pub(super) const UNKNOWN_MESSAGE: &str =
     "Unsupported procedural occurrence; no execution is inferred";
+pub(super) const EMPTY_CONDITION_MESSAGE: &str =
+    "Procedural condition is missing; add a condition before THEN or LOOP";
 pub(super) const DML_MESSAGE: &str = "Static DML is a source occurrence, not an executed statement";
 
 pub(super) fn walk(tokens: &[TokenWithSpan], body: &Body<'_>, locations: &Locations<'_>) -> Walk {
@@ -26,6 +29,7 @@ pub(super) fn walk(tokens: &[TokenWithSpan], body: &Body<'_>, locations: &Locati
         occurrences: classified.occurrences,
         legacy_stop: classified.legacy_stop,
         walker_only: classified.walker_only,
+        empty_headers: classified.empty_headers,
     }
 }
 
