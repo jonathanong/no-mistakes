@@ -1,17 +1,18 @@
 use super::super::super::Value;
 use super::{binding_or_unproven, join};
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::fx_map;
 
 fn prefix(text: &str, id: Option<u64>) -> Value {
     Value::Prefix(text.to_string(), true, id)
 }
 
-fn scope(entries: &[(&str, Value)]) -> crate::fx::FxHashMap<String, Value> {
+fn scope(entries: &[(&str, Value)]) -> Scope {
     let mut values = fx_map();
     for (name, value) in entries {
         values.insert((*name).to_string(), value.clone());
     }
-    values
+    values.into()
 }
 
 #[test]
@@ -61,9 +62,11 @@ fn missing_alternative_bindings_stay_unproven() {
     assert!(!joined[0].contains_key("afterOnly"));
     assert!(joined[0]["stable"] == stable);
     assert!(joined[0]["kept"] == original);
-    assert!(joined[0]["mismatched"] == Value::Aggregate(vec![annotated, other]));
+    assert!(joined[0]["mismatched"] == Value::Joined(vec![annotated, other].into()));
     assert!(joined[0]["scalar"] == Value::Unknown);
-    assert!(joined[0]["diverged"] == Value::Aggregate(vec![Value::Primitive, Value::Unsupported]));
+    assert!(
+        joined[0]["diverged"] == Value::Joined(vec![Value::Primitive, Value::Unsupported].into())
+    );
 
     let present = scope(&[("present", Value::Primitive)]);
     assert!(binding_or_unproven(&present, "present") == &Value::Primitive);
@@ -87,4 +90,45 @@ fn missing_alternative_bindings_stay_unproven() {
         changed.is_empty(),
         "a dropped binding is a rebind, not a mutated builder"
     );
+}
+
+#[test]
+fn repeated_binding_joins_keep_distinct_candidates_flat() {
+    let original = vec![scope(&[("candidate", Value::Arguments(1))])];
+    let mut joined = original.clone();
+    for id in (2..=3).cycle().take(64) {
+        let current = vec![scope(&[("candidate", Value::Arguments(id))])];
+        join(&mut joined, &current, &original);
+    }
+    assert!(
+        joined[0]["candidate"]
+            == Value::Joined(
+                vec![
+                    Value::Arguments(1),
+                    Value::Arguments(2),
+                    Value::Arguments(3),
+                ]
+                .into()
+            )
+    );
+
+    // Real Aggregate values remain a single candidate with their container
+    // shape intact; only prior binding unions are flattened.
+    let container = Value::Aggregate(vec![Value::Arguments(1), Value::Primitive].into());
+    let original = vec![scope(&[("candidate", container.clone())])];
+    let mut joined = original.clone();
+    join(
+        &mut joined,
+        &[scope(&[("candidate", Value::Arguments(2))])],
+        &original,
+    );
+    assert!(joined[0]["candidate"] == Value::Joined(vec![container, Value::Arguments(2)].into()));
+}
+
+#[test]
+fn unchanged_binding_joins_keep_the_shared_scope_snapshot() {
+    let original = vec![scope(&[("stable", Value::Arguments(1))])];
+    let mut joined = original.clone();
+    join(&mut joined, &original, &original);
+    assert!(std::ptr::eq(&*joined[0], &*original[0]));
 }

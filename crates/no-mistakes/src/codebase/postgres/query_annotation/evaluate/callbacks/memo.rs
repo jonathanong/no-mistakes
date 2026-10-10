@@ -1,5 +1,6 @@
 use super::super::{Environment, Evaluator, Function, Value};
 use super::state::Snapshot;
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::codebase::postgres::query_annotation::{Expr, Step};
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
@@ -24,7 +25,7 @@ impl Memo {
 
 struct Inputs<'a> {
     captured: &'a FxHashMap<Environment, FxHashMap<String, Environment>>,
-    scopes: &'a [FxHashMap<String, Value>],
+    scopes: &'a [Scope],
     fresh: &'a FxHashMap<Environment, crate::fx::FxHashSet<String>>,
 }
 impl Inputs<'_> {

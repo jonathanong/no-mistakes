@@ -98,7 +98,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         Some(if possibilities.is_empty() {
             Value::Unknown
         } else {
-            Value::Possible(possibilities)
+            Value::Possible(possibilities.into())
         })
     }
 }

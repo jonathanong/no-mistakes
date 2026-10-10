@@ -1,4 +1,5 @@
 use super::super::{Environment, Evaluator, Value};
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
 use std::path::Path;
@@ -17,7 +18,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let executions = self.active_callback_executions.clone();
         let mut joined_seen = seen.clone();
         let captured = self.captured_bindings.clone();
-        let mut joined_scopes: Option<Vec<crate::fx::FxHashMap<String, Value>>> = None;
+        let mut joined_scopes: Option<Vec<Scope>> = None;
         let mut modules = self.modules.clone();
         self.begin_alternative_module_snapshot(scopes.len());
         let mut module_states = super::modules::States::default();
@@ -187,6 +188,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.prune_alternative_state(&returned);
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
-        Value::Aggregate(returned)
+        Value::Aggregate(returned.into())
     }
 }

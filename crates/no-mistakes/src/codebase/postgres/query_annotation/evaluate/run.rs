@@ -6,11 +6,11 @@ use std::path::{Path, PathBuf};
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
         let file = &self.files[path];
-        let globals = file.facts.globals.clone();
+        let globals = &file.facts.globals;
         self.module_environment(path);
         self.prune_snapshot_state();
         let env = self.modules[path];
-        let unmodeled = file.facts.unmodeled_calls.clone();
+        let unmodeled = &file.facts.unmodeled_calls;
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();
         let invalidated = self.invalidated_builders.clone();
@@ -28,7 +28,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mapped_argument_owners = self.mapped_argument_owners.clone();
         let mapped_parameter_indices = self.mapped_parameter_indices.clone();
         for call in unmodeled {
-            if matches!(&call, Expr::Call { start, .. } if !file.executors.contains(start)) {
+            if matches!(call, Expr::Call { start, .. } if !file.executors.contains(start)) {
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
@@ -49,7 +49,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .clone_from(&mapped_argument_owners);
                 self.mapped_parameter_indices
                     .clone_from(&mapped_parameter_indices);
-                self.expr(&call, path, &env, 16, false);
+                self.expr(call, path, &env, 16, false);
             }
         }
         // Function declarations describe possible entrypoints; contextual

@@ -59,6 +59,57 @@ fn helper_review_regressions_preserve_call_identity_exports_and_live_captures() 
 }
 
 #[test]
+fn executor_free_root_still_reports_imported_executor_through_cyclic_reexports() {
+    let root = fixture("helper-tracing-reachability");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let config = config_with_options(
+        "importSpecifier: '@app/db'\ninclude: ['src/helper.mts']\nunanalyzableSql: ignore",
+    );
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "src/helper.mts");
+    assert_eq!(findings[0].line, 3);
+}
+
+#[test]
+fn repeated_conditional_builder_updates_preserve_unproven_sql() {
+    let root = fixture("helper-tracing-joined-binding");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    for (policy, expected) in [("report", 1), ("ignore", 0)] {
+        let config = config_with_options(&format!(
+            "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
+        ));
+        let findings = check_with_files(&root, &config, &files).unwrap();
+        assert_eq!(findings.len(), expected, "{policy}: {findings:#?}");
+        if let Some(finding) = findings.first() {
+            assert_eq!(finding.file, "src/query.mts");
+            assert_eq!(finding.line, 15);
+        }
+    }
+}
+
+#[test]
+fn shared_container_snapshots_preserve_both_indexed_findings() {
+    let root = fixture("helper-tracing-values-cow");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let config = config_with_options(
+        "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: report",
+    );
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == "src/query.mts"));
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 9]
+    );
+}
+
+#[test]
 fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
     for scenario in [
         "helper-tracing-post-merge",
@@ -85,6 +136,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-callback-revisit",
         "helper-tracing-imported-callback-revisit",
         "helper-tracing-unary-argument-index",
+        "helper-tracing-shared-snapshots",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);

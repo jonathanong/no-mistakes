@@ -11,20 +11,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         // Publish before initialization: cycles and TDZ references share the
         // reserved module bindings instead of recursively initializing again.
         self.modules.insert(path.to_path_buf(), env);
-        let facts = &self.files[path].facts;
-        let roots = facts.roots.clone();
-        let globals = facts.globals.clone();
-        self.steps(&roots, path, &mut env, 16, true);
+        let files = self.files;
+        let facts = &files[path].facts;
+        self.steps(&facts.roots, path, &mut env, 16, true);
         // Unmodeled top-level statements must not discard independently
         // supported function bodies. Their captured values remain conservative.
-        for (name, expr) in globals {
+        for (name, expr) in &facts.globals {
             match expr {
                 Expr::Function(function) => {
-                    self.scopes[env]
-                        .insert(name, Value::Function(function, path.to_path_buf(), env));
+                    self.scopes[env].insert(
+                        name.clone(),
+                        Value::Function(std::sync::Arc::clone(function), path.to_path_buf(), env),
+                    );
                 }
                 Expr::Unknown => {
-                    self.scopes[env].insert(name, Value::Unknown);
+                    self.scopes[env].insert(name.clone(), Value::Unknown);
                 }
                 _ => {}
             }

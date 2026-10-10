@@ -85,7 +85,9 @@ other finding. See the
 
 `postgres-require-query-annotation` traces straight-line SQL helpers and callback
 forwarding through the same prepared project facts used by `check()` and
-`analyzeProject()`. Its `unanalyzableSql` option defaults to `"report"`; choose
+`analyzeProject()`. Both APIs share the requested TS/JS parse and keep resolution
+and helper-evaluation memoization in memory for the duration of the request.
+Its `unanalyzableSql` option defaults to `"report"`; choose
 `"ignore"` explicitly to skip opaque leading SQL. Named configuration types
 `PostgresRequireQueryAnnotationOptions` and `PostgresUnanalyzableSql` are exported
 from the package. Findings retain the executor's source location. See the
@@ -783,6 +785,11 @@ addon avoids UTF-16 string copies at the N-API boundary.
 `parsePostgresSql()` also returns typed `PostgresSqlQuery` scope facts for SELECT
 statements, including relation and CTE visibility, join participants, conservative
 predicate contexts and EXISTS correlation. See [SELECT scope facts](postgres-source-api.md#select-scope-facts).
+Read-only CTE and nested query scope spans include closing function syntax;
+slice the original SQL with their half-open UTF-8 byte offsets.
+An INSERT-source SELECT in a data-modifying CTE also includes closing function
+syntax before the INSERT's conflict or RETURNING clause in both its source and
+query scope spans.
 
 `check()` applies `nextjs-redirect-destinations` to recovered static tuple maps
 and template destinations, and reports incomplete extraction for partially dynamic returns.

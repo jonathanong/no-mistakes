@@ -158,8 +158,9 @@ with the walker-only block it names, including when whitespace-separated
 PostgreSQL comments occur before the block. Multiple sibling labels share one
 coverage merge for the body, while an unlabeled body skips the occurrence-overlap
 index. PostgreSQL comments can appear directly after the label's closing operator.
-The tokenizer preserves those comments as gaps, including nested block comments,
-without shifting source spans. See the [PostgreSQL lexical rules](https://www.postgresql.org/docs/current/sql-syntax-lexical.html).
+The tokenizer preserves those comments as gaps, including nested block comments
+and line comments ending in LF, CR, or CRLF, without shifting source spans. See
+the [PostgreSQL lexical rules](https://www.postgresql.org/docs/current/sql-syntax-lexical.html).
 A block the SQL parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
 DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body
 that does not start with `BEGIN`, other procedural languages, and escape-string DO bodies
@@ -252,6 +253,12 @@ underlying table names. Joined-group aliases hide the individual participants.
 Derived tables expose their child scope, lateral status, and declared column
 aliases. This is syntactic ownership, not catalog-backed column lineage.
 
+`scope.span` slices the complete source text owned by a read-only CTE or nested
+query, including trailing function parentheses. A root query with a parenthesized
+body includes its wrapper and query-level suffix. Offsets are half-open UTF-8
+byte positions in the original SQL, even across earlier statements or multibyte
+text.
+
 Qualified columns resolve against visible relation aliases in the current
 scope, then permitted outer scopes. Non-lateral derived tables and CTE bodies
 cannot see the containing query's FROM aliases. Unqualified, unknown and
@@ -316,6 +323,9 @@ line/column positions, including quoted identifiers and nested queries.
 identifies `values` (typed expression rows), `select` (the same scope facts used
 for SELECT), `defaultValues`, or `unsupported`. Statement spans and nested
 expression spans refer to the original input, including comments and literals.
+An INSERT-source SELECT span includes trailing function-call syntax such as
+`SELECT now()` before the owning INSERT's `ON CONFLICT` or `RETURNING` clause.
+The source span and its query scope span use the same half-open UTF-8 offsets.
 
 `onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
 `constraint`, and `expressions`. Expression arbiters retain their ordered typed

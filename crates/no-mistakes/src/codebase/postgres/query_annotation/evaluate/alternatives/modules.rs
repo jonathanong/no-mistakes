@@ -1,36 +1,26 @@
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 mod initials;
-use super::{
-    super::{Environment, Value},
-    bindings,
-};
+use super::{super::Environment, bindings};
 use crate::fx::FxHashMap;
 pub(in crate::codebase::postgres::query_annotation) use initials::Initials;
 use std::path::PathBuf;
 
 #[derive(Default)]
-pub(super) struct States(FxHashMap<PathBuf, FxHashMap<String, Value>>);
+pub(super) struct States(FxHashMap<PathBuf, Scope>);
 impl States {
-    pub fn restore(
-        &self,
-        scopes: &mut [FxHashMap<String, Value>],
-        modules: &FxHashMap<PathBuf, Environment>,
-    ) {
+    pub fn restore(&self, scopes: &mut [Scope], modules: &FxHashMap<PathBuf, Environment>) {
         for (path, values) in &self.0 {
             scopes[modules[path]].clone_from(values);
         }
     }
-    pub fn remapped(
-        &mut self,
-        scopes: &[FxHashMap<String, Value>],
-        modules: &FxHashMap<PathBuf, Environment>,
-    ) {
+    pub fn remapped(&mut self, scopes: &[Scope], modules: &FxHashMap<PathBuf, Environment>) {
         for (path, values) in &mut self.0 {
             values.clone_from(&scopes[modules[path]]);
         }
     }
     pub fn join(
         &mut self,
-        scopes: &[FxHashMap<String, Value>],
+        scopes: &[Scope],
         modules: &FxHashMap<PathBuf, Environment>,
         original: usize,
     ) {

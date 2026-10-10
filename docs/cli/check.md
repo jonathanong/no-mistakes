@@ -2,6 +2,10 @@
 
 Run configured repository checks from `.no-mistakes.yml`.
 
+Enabled TS/JS checks share one source inventory and one parse per file for their
+combined fact demand. Resolution results, including unresolved imports, are
+memoized within the request. Analysis data is discarded when the request ends.
+
 The `postgres-require-query-annotation` rule traces straight-line SQL helpers and
 callback forwarding. Unknown leading SQL reports by default; use the rule option
 `unanalyzableSql: ignore` explicitly to skip opaque executor arguments. Findings

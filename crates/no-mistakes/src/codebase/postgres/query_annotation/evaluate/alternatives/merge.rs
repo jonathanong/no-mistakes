@@ -6,7 +6,7 @@ fn alternatives(value: Value, values: &mut Vec<Value>) {
         // Flatten both wrappers so a nested branch join stays a flat candidate
         // list. Possible carries the implicit unknown that prefix projection
         // already treats as an unsafe-or-unproven outcome.
-        Value::Aggregate(children) | Value::Possible(children) => {
+        Value::Aggregate(children) | Value::Joined(children) | Value::Possible(children) => {
             for child in children {
                 alternatives(child, values);
             }
@@ -40,7 +40,7 @@ pub(super) fn objects(
                         // Differing dense slots are candidates, not an opaque
                         // aggregate. prefix() inspects Possible, so an
                         // unannotated arm stays a violation under ignore mode.
-                        *before = Value::Possible(values);
+                        *before = Value::Possible(values.into());
                     }
                 }
             }
@@ -82,7 +82,7 @@ pub(super) fn value(before: Value, after: Value) -> Value {
     alternatives(before, &mut values);
     alternatives(after, &mut values);
     // Sparse slots use the same candidate join as dense argument vectors.
-    Value::Possible(values)
+    Value::Possible(values.into())
 }
 
 pub(super) fn shared_ids(

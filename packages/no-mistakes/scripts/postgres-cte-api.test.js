@@ -7,6 +7,96 @@ const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
 
 test(
+  "compiled async CJS/ESM INSERT-source SELECT spans retain trailing calls",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-insert-source-call-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const source = Buffer.from(sql);
+    const slice = (span) => source.subarray(span.start.offset, span.end.offset).toString();
+    const cases = [
+      {
+        sourceSql: "SELECT now()",
+        insertSql: 'INSERT INTO "té" SELECT now() RETURNING id',
+        rootSql: 'WITH c AS (INSERT INTO "té" SELECT now() RETURNING id) SELECT * FROM c',
+      },
+      {
+        sourceSql: "SELECT lower('é')",
+        insertSql: "INSERT INTO t SELECT lower('é') ON CONFLICT DO NOTHING RETURNING id",
+        rootSql:
+          "WITH c AS (INSERT INTO t SELECT lower('é') ON CONFLICT DO NOTHING RETURNING id) SELECT * FROM c",
+      },
+      {
+        sourceSql: "SELECT t.returning, t.on, t.conflict, now()",
+        insertSql:
+          "INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning",
+        rootSql:
+          "WITH c AS (INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning) SELECT * FROM c",
+      },
+    ];
+    assert.equal(facts.statements.length, cases.length);
+    for (const [index, expected] of cases.entries()) {
+      const query = facts.statements[index].query;
+      assert.equal(query.complete, true);
+      assert.deepEqual(query.unsupported, []);
+      const child = query.nestedStatements[0];
+      assert.equal(child.kind, "insert");
+      assert.equal(child.complete, true);
+      assert.equal(child.sql, expected.insertSql);
+      assert.equal(slice(child.span), expected.insertSql);
+      assert.equal(slice(query.scopes[child.queryScopeId].span), expected.insertSql);
+      assert.equal(child.insert.source.kind, "select");
+      assert.equal(slice(child.insert.source.span), expected.sourceSql);
+      assert.equal(slice(query.scopes[child.insert.source.queryScopeId].span), expected.sourceSql);
+      assert.equal(slice(query.scopes[0].span), expected.rootSql);
+    }
+  },
+);
+
+test(
+  "compiled async CJS/ESM read-only CTE scopes keep exact UTF-8 source slices",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-readonly-cte-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const source = Buffer.from(sql);
+    const scopes = facts.statements.map((statement) => {
+      assert.equal(statement.query.complete, true);
+      assert.deepEqual(statement.query.unsupported, []);
+      return statement.query.scopes.map((scope) => {
+        assert.ok(scope.span);
+        return source.subarray(scope.span.start.offset, scope.span.end.offset).toString();
+      });
+    });
+    assert.equal(scopes.length, 5);
+    for (const expected of ["SELECT now()", "WITH s AS (SELECT now()) SELECT count(*) FROM s"]) {
+      assert.ok(scopes[0].includes(expected), `${expected}: ${scopes[0]}`);
+    }
+    for (const expected of [
+      "SELECT 'é' AS word",
+      "SELECT lower('é')",
+      "WITH nested AS (SELECT lower('é')) SELECT * FROM nested",
+      "WITH first AS (SELECT 'é' AS word), second AS (WITH nested AS (SELECT lower('é')) SELECT * FROM nested) SELECT count(*) FROM first, second",
+    ]) {
+      assert.ok(scopes[1].includes(expected), `${expected}: ${scopes[1]}`);
+    }
+    assert.ok(scopes[2].includes("SELECT now()"));
+    assert.ok(scopes[3].includes("SELECT now()"));
+    assert.ok(scopes[3].includes("SELECT (SELECT now()) AS value"));
+    assert.ok(scopes[4].includes("(SELECT now()) ORDER BY 1"));
+    assert.ok(scopes[4].includes("SELECT now()"));
+  },
+);
+
+test(
   "compiled async CJS/ESM modifying CTE facts preserve source and scoped provenance",
   { skip: !compiled },
   async () => {

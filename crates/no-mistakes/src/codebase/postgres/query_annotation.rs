@@ -43,7 +43,7 @@ pub(super) enum Expr {
         args: Vec<Expr>,
         start: u32,
     },
-    Function(Function),
+    Function(std::sync::Arc<Function>),
     Children(Vec<Expr>),
     Sequence(Vec<Expr>),
     Discard(Box<Expr>),

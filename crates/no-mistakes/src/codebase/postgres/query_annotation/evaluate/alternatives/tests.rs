@@ -411,21 +411,17 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
     };
     let root = evaluator.module_environment(&path);
     for (name, references) in [("scalar", false), ("callback", true)] {
-        let original = vec![FxHashMap::from_iter([(
-            "value".into(),
-            evaluator.scopes[root][name].clone(),
-        )])];
+        let original =
+            vec![
+                FxHashMap::from_iter([("value".into(), evaluator.scopes[root][name].clone())])
+                    .into(),
+            ];
         let mut joined = original.clone();
-        let current = vec![FxHashMap::from_iter([(
-            "value".into(),
-            super::super::Value::Unknown,
-        )])];
+        let current =
+            vec![FxHashMap::from_iter([("value".into(), super::super::Value::Unknown)]).into()];
         super::bindings::join(&mut joined, &current, &original);
         if references {
-            assert!(matches!(
-                joined[0]["value"],
-                super::super::Value::Aggregate(_)
-            ));
+            assert!(matches!(joined[0]["value"], super::super::Value::Joined(_)));
         } else {
             assert!(matches!(joined[0]["value"], super::super::Value::Unknown));
         }
