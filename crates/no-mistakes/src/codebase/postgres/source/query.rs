@@ -4,6 +4,7 @@ use super::{
     types::*,
 };
 use sqlparser::ast::{Query, Spanned};
+use sqlparser::tokenizer::TokenWithSpan;
 use std::collections::{BTreeMap, BTreeSet};
 mod bodies;
 mod clauses;
@@ -21,6 +22,8 @@ struct ScopeState {
 }
 struct Collector<'a, 's> {
     locations: &'a Locations<'s>,
+    /// Prepared tokens for the statement that owns this query. Never reparsed.
+    tokens: &'a [TokenWithSpan],
     facts: PostgresSqlQuery,
     states: Vec<ScopeState>,
     depth: usize,
@@ -30,9 +33,14 @@ struct Collector<'a, 's> {
     insert_source: bool,
 }
 
-pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQuery {
+pub(super) fn project(
+    query: &Query,
+    locations: &Locations<'_>,
+    tokens: &[TokenWithSpan],
+) -> PostgresSqlQuery {
     let mut collector = Collector {
         locations,
+        tokens,
         facts: PostgresSqlQuery {
             complete: true,
             ..Default::default()
@@ -62,6 +70,15 @@ pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQu
 }
 
 impl Collector<'_, '_> {
+    /// Prepared tokens that overlap one nested statement, in parser order.
+    fn statement_tokens(&self, span: sqlparser::tokenizer::Span) -> &[TokenWithSpan] {
+        let start = self
+            .tokens
+            .partition_point(|token| token.span.end <= span.start);
+        let end = start + self.tokens[start..].partition_point(|token| token.span.start < span.end);
+        &self.tokens[start..end]
+    }
+
     fn scope(
         &mut self,
         parent: Option<usize>,

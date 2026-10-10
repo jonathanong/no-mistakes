@@ -13,7 +13,10 @@ pub(super) fn project_parsed(
 ) -> PostgresSqlStatementKind {
     let tokens = if matches!(
         statement,
-        Statement::CreateTable(_) | Statement::AlterTable(_) | Statement::Insert(_)
+        Statement::CreateTable(_)
+            | Statement::AlterTable(_)
+            | Statement::Insert(_)
+            | Statement::Query(_)
     ) {
         token_range
             .clone()
@@ -51,7 +54,7 @@ pub(super) fn project(
             insert: Box::new(super::insert::project(value, None, locations, tokens)),
         },
         Statement::Query(query) => PostgresSqlStatementKind::Select {
-            query: super::query::project(query, locations),
+            query: super::query::project(query, locations, tokens),
         },
         Statement::CreateTable(value) => {
             let definition_ranges = super::constraint_spans::table_ranges(tokens);

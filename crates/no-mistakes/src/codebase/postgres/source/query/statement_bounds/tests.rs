@@ -10,7 +10,7 @@ fn project_sql(sql: &str) -> PostgresSqlQuery {
     let Statement::Query(query) = &ast[0] else {
         panic!("query");
     };
-    super::super::project(query, &Locations::new(sql))
+    super::super::project(query, &Locations::new(sql), &[])
 }
 
 fn rparen_at(locations: &Locations<'_>, offset: usize) -> AttachedToken {

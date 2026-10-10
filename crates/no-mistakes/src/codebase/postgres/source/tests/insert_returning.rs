@@ -477,3 +477,49 @@ fn incompletely_projected_returning_expression_marks_insert_incomplete() {
         vec![("id".into(), vec!["1".into()])]
     );
 }
+
+#[test]
+fn returning_cte_column_sources_keep_the_same_call_trivia_as_a_direct_insert() {
+    let sql = fixture("insert-returning-cte-spans.sql");
+    let result = facts("insert-returning-cte-spans.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 3);
+    let direct = insert(&result.statements[0].facts);
+    assert!(direct.complete, "{:?}", direct.diagnostics);
+    assert_eq!(call_trivia(&direct.column_sources, &sql), "now /*keep*/ ()");
+
+    let PostgresSqlStatementKind::Select { query } = &result.statements[1].facts else {
+        panic!("RETURNING CTE expected");
+    };
+    assert!(query.complete, "{:?}", query.unsupported);
+    let child = &query.nested_statements[0];
+    assert!(child.complete, "{:?}", child.unsupported);
+    let nested = nested_insert(child);
+    let sources = nested.column_sources.as_ref().expect("RETURNING lineage");
+    assert_eq!(call_trivia(sources, &sql), "now /*keep*/ ()");
+    assert_eq!(lineage(sources), lineage(&direct.column_sources));
+
+    let PostgresSqlStatementKind::Select { query } = &result.statements[2].facts else {
+        panic!("non-RETURNING CTE expected");
+    };
+    assert!(nested_insert(&query.nested_statements[0])
+        .column_sources
+        .is_none());
+}
+
+fn call_trivia(sources: &PostgresSqlInsertColumnSources, sql: &str) -> String {
+    let PostgresSqlInsertColumnSources::Mapped {
+        columns,
+        complete: true,
+    } = sources
+    else {
+        panic!("complete mapped lineage expected, got {sources:?}");
+    };
+    let PostgresSqlInsertSourceExpression::Select { expression, .. } = &columns[0].sources[0]
+    else {
+        panic!("SELECT source expected");
+    };
+    assert_eq!(expression.sql, "now()");
+    let span = expression.span.as_ref().expect("source span");
+    sql[span.start.offset..span.end.offset].to_string()
+}

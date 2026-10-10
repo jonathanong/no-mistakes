@@ -49,11 +49,13 @@ pub(super) fn diagnostics(
 }
 
 /// Column lineage for a RETURNING CTE insert. SELECT facts read the AST body;
-/// the placeholder query only carries the source span.
+/// the placeholder query only carries the source span. `tokens` are that
+/// INSERT's prepared tokens; delimiters are never taken from a reparse.
 pub(in crate::codebase::postgres::source) fn cte_column_sources(
     columns: &[sqlparser::ast::ObjectName],
     query: Option<&Query>,
     source: &PostgresSqlCteInsertSource,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
     locations: &Locations<'_>,
 ) -> PostgresSqlInsertColumnSources {
     let facts = match source {
@@ -72,7 +74,8 @@ pub(in crate::codebase::postgres::source) fn cte_column_sources(
             }
         }
     };
-    super::column_sources::project(columns, query, &facts, &[], locations)
+    let delimiters = super::spans::locate_delimiters(&super::spans::delimiters(tokens), locations);
+    super::column_sources::project(columns, query, &facts, &delimiters, locations)
 }
 
 fn project_item(

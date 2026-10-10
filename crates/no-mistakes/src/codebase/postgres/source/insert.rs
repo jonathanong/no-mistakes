@@ -75,7 +75,7 @@ fn project_inner(
                 }
             }
             SetExpr::Select(_) | SetExpr::Query(_) | SetExpr::SetOperation { .. } => {
-                let facts = super::query::project(query, locations);
+                let facts = super::query::project(query, locations, tokens);
                 complete &= facts.complete;
                 PostgresSqlInsertSource::Select {
                     query: facts,

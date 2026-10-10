@@ -55,7 +55,7 @@ fn parser_extensions_keep_projection_limits_and_unsupported_facts_explicit() {
         .iter()
         .filter_map(|s| {
             if let sqlparser::ast::Statement::Query(query) = s {
-                Some(super::super::super::query::project(query, &locations))
+                Some(super::super::super::query::project(query, &locations, &[]))
             } else {
                 None
             }
@@ -77,7 +77,7 @@ fn non_postgres_ordering_ast_is_explicitly_unsupported() {
     let sqlparser::ast::Statement::Query(query) = &ast[0] else {
         panic!("query fixture");
     };
-    let facts = super::super::super::query::project(query, &locations);
+    let facts = super::super::super::query::project(query, &locations, &[]);
     assert!(!facts.complete);
     assert_eq!(facts.unsupported[0].reason, "ordering form");
 }
