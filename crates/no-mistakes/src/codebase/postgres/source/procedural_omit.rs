@@ -16,7 +16,7 @@ pub(super) fn omit_non_sql(
     let len = body.end.saturating_sub(body.start);
     let mut marks = non_sql_marks(body.start, len, occurrences);
     // The walker skips `<<label>>` before the span. Extend the omitted interval only.
-    for (start, end) in label::opening_labels(body, occurrences) {
+    for (start, end) in label::opening_labels(body, occurrences, tokens, &local) {
         marks.cover(start, end);
     }
     let count = tokens.len();

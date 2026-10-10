@@ -1,5 +1,6 @@
 use super::super::body::decode;
-use super::super::procedural_omit::label::opening_labels;
+use super::super::locations::Locations;
+use super::super::procedural_omit::label::opening_labels as opening_labels_with_tokens;
 use super::super::procedural_omit::non_sql_marks;
 use super::super::{
     PostgresSqlPosition, PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind,
@@ -7,7 +8,8 @@ use super::super::{
 };
 use super::procedural_occurrences::{block, kinds};
 use sqlparser::ast::DollarQuotedString;
-use sqlparser::tokenizer::Token;
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::tokenizer::{Token, Tokenizer};
 
 use PostgresSqlProceduralOccurrenceKind::{ControlFlow, Utility};
 
@@ -55,6 +57,40 @@ fn dollar(source: &str) -> super::super::body::Body<'_> {
         source,
     )
     .unwrap()
+}
+
+fn opening_labels(
+    body: &super::super::body::Body<'_>,
+    occurrences: &[PostgresSqlProceduralOccurrence],
+) -> Vec<(usize, usize)> {
+    let tokens = Tokenizer::new(&PostgreSqlDialect {}, body.sql.as_ref())
+        .tokenize_with_location()
+        .unwrap_or_default();
+    let locations = Locations::new(body.sql.as_ref());
+    opening_labels_with_tokens(body, occurrences, &tokens, &locations)
+}
+
+#[test]
+fn comments_between_opening_labels_and_loops_are_omitted() {
+    // PostgreSQL treats nested block and line comments as gaps before FOR.
+    let sql = super::fixture("procedural-opening-label-comments.sql");
+    let (_, parsed) = block(&sql);
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.statements.len(), 2, "{:?}", parsed.statements);
+    assert!(parsed.statements[0]
+        .sql
+        .contains("CREATE TABLE before_label"));
+    assert!(parsed.statements[1]
+        .sql
+        .contains("CREATE TABLE after_label"));
+    assert!(parsed
+        .statements
+        .iter()
+        .all(|statement| !statement.sql.contains("<<")));
+    assert_eq!(
+        labels_at("$$/*gap*/<<l>> FOR$$", "FOR", ControlFlow),
+        vec![label_range("$$/*gap*/<<l>> FOR$$", "<<l>>")]
+    );
 }
 
 fn labels_at(
