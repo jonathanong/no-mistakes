@@ -72,10 +72,16 @@ fn removes_every_synthetic_separator_and_restores_following_token_columns() {
 
 #[test]
 fn preserves_comment_like_text_in_opaque_source_regions() {
-    for sql in fixtures()[4..8].iter().copied() {
+    for sql in fixtures()[4..9].iter().copied() {
         let prepared = Prepared::new(sql);
         assert_eq!(prepared.sql(), sql, "{sql}");
+        assert!(tokenize_with_location(&PostgreSqlDialect {}, sql).is_ok());
     }
+    let unicode_tag = fixtures()[8];
+    let tokens = tokenize_with_location(&PostgreSqlDialect {}, unicode_tag).unwrap();
+    assert!(tokens
+        .iter()
+        .any(|token| matches!(token.token, Token::DollarQuotedString(_))));
 }
 
 #[test]
@@ -117,14 +123,14 @@ fn keeps_nested_comment_and_unicode_locations_aligned() {
 
 #[test]
 fn leaves_operators_with_slashes_untouched_when_no_comment_starts() {
-    let sql = fixtures()[8];
+    let sql = fixtures()[9];
     let prepared = Prepared::new(sql);
     assert_eq!(prepared.sql(), sql);
 }
 
 #[test]
 fn unterminated_escape_literal_stops_at_eof() {
-    let sql = fixtures()[9];
+    let sql = fixtures()[10];
     let prepared = Prepared::new(sql);
     assert_eq!(prepared.sql(), sql);
     assert!(tokenize_with_location(&PostgreSqlDialect {}, sql).is_err());
