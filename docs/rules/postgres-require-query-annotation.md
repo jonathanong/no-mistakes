@@ -230,6 +230,9 @@ Writes through a still-mapped formal also expose a newly installed callback when
 its argument object previously escaped. A known unannotated scalar slot value
 remains a violation alongside an unknown mapping possibility, even in ignore mode;
 an annotated possibility does not prove that every possible value is safe.
+Differing dense or sparse values of one argument slot across branches stay
+possible candidates, so an unannotated arm remains a violation when
+`unanalyzableSql` is `ignore`.
 Deletion preserves known slot possibilities before disconnecting a formal. A
 dynamic deletion may disconnect a formal, so later slot writes retain both its
 previous value and the assigned value as possibilities.
