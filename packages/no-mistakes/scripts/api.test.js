@@ -1106,6 +1106,10 @@ test("SELECT scope facts expose named public contracts", () => {
   for (const name of ["Clause", "RelationKind", "JoinKind", "ColumnResolution"])
     assert.match(query, new RegExp(`export type PostgresSqlQuery${name} =`));
   assert.match(query, /unsupported: PostgresSqlQueryUnsupported\[\];/);
+  assert.match(
+    query,
+    /export interface PostgresSqlQueryScope \{[^}]*span: PostgresSqlSpan \| null;/,
+  );
   assert.match(query, /correlations: PostgresSqlQueryColumn\[\];/);
   assert.match(query, /notDepth: number;/);
   assert.match(query, /effectiveNegated: boolean \| null;/);

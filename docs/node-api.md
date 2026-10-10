@@ -783,6 +783,8 @@ addon avoids UTF-16 string copies at the N-API boundary.
 `parsePostgresSql()` also returns typed `PostgresSqlQuery` scope facts for SELECT
 statements, including relation and CTE visibility, join participants, conservative
 predicate contexts and EXISTS correlation. See [SELECT scope facts](postgres-source-api.md#select-scope-facts).
+Read-only CTE and nested query scope spans include closing function syntax;
+slice the original SQL with their half-open UTF-8 byte offsets.
 
 `check()` applies `nextjs-redirect-destinations` to recovered static tuple maps
 and template destinations, and reports incomplete extraction for partially dynamic returns.
