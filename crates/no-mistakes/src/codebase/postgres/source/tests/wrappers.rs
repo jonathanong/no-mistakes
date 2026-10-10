@@ -128,8 +128,8 @@ fn atomic_function_recovery_preserves_authoritative_end_and_neighbors() {
                     function.wrapper.execution,
                     PostgresSqlExecution::NonExecuting
                 );
-                if function.name.sql == "empty_body" {
-                    assert!(function.wrapper.complete);
+                if function.name.sql == "empty_body" || function.name.sql == "incomplete_child" {
+                    assert!(function.wrapper.complete, "{}", function.name.sql);
                 } else {
                     assert!(!function.wrapper.complete);
                     assert!(!function.wrapper.diagnostics.is_empty());

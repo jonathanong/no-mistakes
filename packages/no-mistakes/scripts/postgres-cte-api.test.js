@@ -227,3 +227,48 @@ test(
     assert.equal(facts.statements[3].query.complete, true);
   },
 );
+
+test(
+  "compiled CJS/ESM RETURNING CTE inserts keep direct column lineage",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-returning.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    const direct = facts.statements[0].insert;
+    const same = facts.statements[10].query.nestedStatements[0];
+    assert.equal(same.complete, true);
+    assert.equal(same.insert.source.kind, "values");
+    assert.equal(same.returning[0].kind, "expression");
+    assert.deepEqual(
+      same.insert.columnSources.columns.map((column) => [
+        column.column.parts[0].identity,
+        column.sources.map((source) => source.expression.sql),
+      ]),
+      direct.columnSources.columns.map((column) => [
+        column.column.parts[0].identity,
+        column.sources.map((source) => source.expression.sql),
+      ]),
+    );
+    const selected = facts.statements[11].query.nestedStatements[0].insert;
+    assert.equal(selected.source.kind, "select");
+    assert.equal(selected.columnSources.kind, "mapped");
+    assert.equal(
+      selected.columnSources.columns[0].sources[0].expression.sql,
+      facts.statements[2].insert.columnSources.columns[0].sources[0].expression.sql,
+    );
+    const plain = facts.statements[12].query.nestedStatements[0].insert;
+    assert.equal(plain.columnSources, undefined);
+    const reparsed = await cjs.parsePostgresSql({ sql: same.sql });
+    assert.equal(reparsed.statements[0].insert.complete, true);
+    assert.equal(reparsed.statements[0].insert.columnSources.kind, "mapped");
+    const executeSql = fixture("insert-returning-execute.sql");
+    const executed = await cjs.parsePostgresSql({ sql: executeSql });
+    const nested =
+      executed.statements[0].block.statements[1].execute.statements[0].query.nestedStatements[0];
+    assert.equal(nested.insert.columnSources.columns[0].sources[0].expression.sql, "2");
+    assert.ok(nested.sql.includes("RETURNING id"));
+  },
+);

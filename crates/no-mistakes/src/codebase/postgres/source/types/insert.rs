@@ -10,6 +10,7 @@ pub struct PostgresSqlInsert {
     pub column_sources: PostgresSqlInsertColumnSources,
     pub source: PostgresSqlInsertSource,
     pub on_conflict: Option<PostgresSqlConflict>,
+    pub returning: Vec<PostgresSqlReturningItem>,
     pub span: Option<PostgresSqlSpan>,
     pub complete: bool,
     pub diagnostics: Vec<PostgresSqlDiagnostic>,

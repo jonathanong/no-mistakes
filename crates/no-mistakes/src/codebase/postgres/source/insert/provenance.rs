@@ -1,7 +1,7 @@
 use super::super::{expressions::identifier, types::*};
 use sqlparser::ast::{Expr, Insert, UnaryOperator, Value};
 
-pub(super) fn supported_modifiers(value: &Insert, cte_core: bool) -> bool {
+pub(super) fn supported_modifiers(value: &Insert) -> bool {
     value.or.is_none()
         && !value.ignore
         && !value.overwrite
@@ -9,7 +9,6 @@ pub(super) fn supported_modifiers(value: &Insert, cte_core: bool) -> bool {
         && value.assignments.is_empty()
         && value.partitioned.is_none()
         && value.after_columns.is_empty()
-        && (value.returning.is_none() || cte_core)
         && value.output.is_none()
         && !value.replace_into
         && value.priority.is_none()

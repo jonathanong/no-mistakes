@@ -52,5 +52,9 @@ fn legacy_normalization_keeps_non_command_identifier_aliases() {
     let PostgresSqlStatementKind::Insert { insert } = &result.statements[17].facts else {
         panic!("INSERT expected")
     };
-    assert!(!insert.complete); // Existing INSERT facts explicitly omit RETURNING.
+    assert!(insert.complete, "{:?}", insert.diagnostics);
+    assert!(matches!(
+        &insert.returning[0],
+        PostgresSqlReturningItem::Expression { alias: Some(alias), .. } if alias.identity == "analyse"
+    ));
 }

@@ -5,7 +5,7 @@ import type {
   PostgresSqlName,
   PostgresSqlSpan,
 } from "./postgres-source-types";
-import type { PostgresSqlConflict } from "./postgres-insert-types";
+import type { PostgresSqlConflict, PostgresSqlInsertColumnSources } from "./postgres-insert-types";
 import type { PostgresSqlQueryUnsupported } from "./postgres-query-types";
 
 /** Syntactic modifying bodies in source order, not PostgreSQL execution order.
@@ -37,6 +37,8 @@ export interface PostgresSqlCteInsert {
   alias: PostgresSqlIdentifier | null;
   columns: PostgresSqlName[];
   columnsOmitted: boolean;
+  /** Omitted for non-RETURNING CTE inserts. RETURNING keeps direct column lineage. */
+  columnSources?: PostgresSqlInsertColumnSources;
   source: PostgresSqlCteInsertSource;
   onConflict: PostgresSqlConflict | null;
   diagnostics: PostgresSqlDiagnostic[];

@@ -717,7 +717,9 @@ Selected TS/JS module binding and import facts are available through the async
 
 PostgreSQL pure-source Rust and async Node APIs project INSERT/UPDATE/DELETE/MERGE
 CTE bodies through `query.nestedStatements`, including source provenance, typed
-RETURNING/actions and explicit incomplete children. CJS and ESM use the same
+RETURNING/actions and explicit incomplete children. Top-level INSERT facts
+include `returning`. A RETURNING data-modifying CTE insert includes the same
+`columnSources` lineage as the direct statement. CJS and ESM use the same
 native projection. This surface reports syntax without executing SQL.
 
 PostgreSQL source wrapper facts have Rust and asynchronous Node ESM/CJS parity:

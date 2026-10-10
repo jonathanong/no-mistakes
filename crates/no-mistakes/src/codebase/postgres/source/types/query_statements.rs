@@ -38,6 +38,9 @@ pub struct PostgresSqlCteInsert {
     pub alias: Option<PostgresSqlIdentifier>,
     pub columns: Vec<PostgresSqlName>,
     pub columns_omitted: bool,
+    /// Present only when RETURNING is projected. Non-RETURNING CTE inserts omit lineage.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub column_sources: Option<PostgresSqlInsertColumnSources>,
     pub source: PostgresSqlCteInsertSource,
     pub on_conflict: Option<PostgresSqlConflict>,
     pub diagnostics: Vec<PostgresSqlDiagnostic>,

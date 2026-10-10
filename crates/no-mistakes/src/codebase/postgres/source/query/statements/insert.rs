@@ -69,6 +69,14 @@ impl Collector<'_, '_> {
                 }
             }
         };
+        let column_sources = value.returning.as_ref().map(|_| {
+            crate::codebase::postgres::source::insert::cte_column_sources(
+                &value.columns,
+                value.source.as_deref(),
+                &source,
+                self.locations,
+            )
+        });
         // Target aliases are visible to conflict/RETURNING, not to the INSERT source.
         if let Some(table) = &core.table {
             self.register(PostgresSqlQueryRelation {
@@ -102,6 +110,7 @@ impl Collector<'_, '_> {
                 alias: core.alias,
                 columns: core.columns,
                 columns_omitted: core.columns_omitted,
+                column_sources,
                 source,
                 on_conflict: core.on_conflict,
                 diagnostics: core.diagnostics,

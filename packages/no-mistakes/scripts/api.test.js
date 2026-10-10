@@ -1134,6 +1134,7 @@ test("INSERT facts expose named exported declaration contracts", () => {
   assert.match(insert, /indirection\?: PostgresSqlAssignmentStep\[\]/);
   assert.match(insert, /operatorClasses\?: \(PostgresSqlArbiterOperatorClass \| null\)\[\]/);
   assert.match(insert, /columnsOmitted: boolean/);
+  assert.match(insert, /returning: PostgresSqlReturningItem\[\]/);
   assert.match(insert, /\| "derived"/);
   const expressions = readFileSync(join(__dirname, "../postgres-expression-types.d.ts"), "utf8");
   assert.match(
@@ -1222,6 +1223,7 @@ test("data-modifying CTE facts expose named exported declaration contracts", () 
   ])
     assert.match(child, new RegExp(`\\b${field}:`));
   assert.match(child, /onConflict: PostgresSqlConflict \| null;/);
+  assert.match(child, /columnSources\?: PostgresSqlInsertColumnSources/);
   assert.match(child, /\{ kind: "select"; queryScopeId: number; span: PostgresSqlSpan \| null \}/);
 });
 
