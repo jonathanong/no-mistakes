@@ -48,14 +48,14 @@ fn project_inner(
         .table_alias
         .as_ref()
         .map(|alias| identifier(&alias.alias));
-    let returning_clause = value.returning.as_deref();
-    let returning = returning::project(if cte_core { None } else { returning_clause }, locations);
+    let delimiters = spans::locate_delimiters(&spans::delimiters(tokens), locations);
+    let items = (!cte_core).then_some(value.returning.as_deref()).flatten();
+    let returning = returning::project(items, &delimiters, locations);
     let mut complete = table.is_some()
         && supported_modifiers(value)
         && (cte_core || returning.complete)
         && !facts.is_some_and(|facts| facts.unsupported_with);
     let source_span = facts.and_then(|facts| facts.source_span);
-    let delimiters = spans::locate_delimiters(&spans::delimiters(tokens), locations);
     let source = match value.source.as_ref().filter(|_| !cte_core) {
         None => PostgresSqlInsertSource::DefaultValues,
         Some(query) => match query.body.as_ref() {

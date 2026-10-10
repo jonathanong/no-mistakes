@@ -268,6 +268,26 @@ fn returning_inserts_keep_complete_source_facts_and_lineage() {
 }
 
 #[test]
+fn returning_function_span_keeps_comment_and_parentheses() {
+    let sql = fixture("insert-returning-delimiters.sql");
+    let result = facts("insert-returning-delimiters.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    let value = insert(&result.statements[0].facts);
+    assert!(value.complete, "{:?}", value.diagnostics);
+    assert!(value.diagnostics.is_empty());
+    let PostgresSqlReturningItem::Expression {
+        expression,
+        alias: None,
+    } = &value.returning[0]
+    else {
+        panic!("expression expected, got {:?}", value.returning);
+    };
+    assert_eq!(expression.sql, "now()");
+    let span = expression.span.as_ref().expect("returning span");
+    assert_eq!(&sql[span.start.offset..span.end.offset], "now /*keep*/ ()");
+}
+
+#[test]
 fn malformed_returning_stays_diagnostic_and_unsupported_shapes_stay_incomplete() {
     let rejected = super::super::parse_postgres_source(&PostgresSqlSource {
         sql: "INSERT INTO accounts VALUES (1) ON CONFLICT DO NOTHING RETURNING;".into(),

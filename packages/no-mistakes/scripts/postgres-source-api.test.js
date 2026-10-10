@@ -1456,5 +1456,22 @@ test(
       between.diagnostics[0].message,
       /INSERT facts contain unsupported or incompletely represented syntax/,
     );
+    const delimiterSql = fixture("insert-returning-delimiters.sql");
+    const delimited = await cjs.parsePostgresSql({ sql: delimiterSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: delimiterSql }), delimited);
+    assert.deepEqual(delimited.diagnostics, []);
+    const returned = delimited.statements[0].insert;
+    assert.equal(returned.complete, true);
+    assert.equal(returned.returning[0].kind, "expression");
+    assert.equal(returned.returning[0].expression.sql, "now()");
+    assert.equal(
+      Buffer.from(delimiterSql)
+        .subarray(
+          returned.returning[0].expression.span.start.offset,
+          returned.returning[0].expression.span.end.offset,
+        )
+        .toString(),
+      "now /*keep*/ ()",
+    );
   },
 );

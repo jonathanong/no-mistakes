@@ -1,6 +1,6 @@
 //! RETURNING items use the same classes as data-modifying query statements.
 use super::super::{
-    expressions::{expression, identifier, name},
+    expressions::{identifier, name},
     locations::Locations,
     types::*,
 };
@@ -11,7 +11,11 @@ pub(super) struct ReturningFacts {
     pub complete: bool,
 }
 
-pub(super) fn project(items: Option<&[SelectItem]>, locations: &Locations<'_>) -> ReturningFacts {
+pub(super) fn project(
+    items: Option<&[SelectItem]>,
+    delimiters: &[PostgresSqlSpan],
+    locations: &Locations<'_>,
+) -> ReturningFacts {
     let Some(items) = items else {
         return ReturningFacts {
             items: Vec::new(),
@@ -21,7 +25,7 @@ pub(super) fn project(items: Option<&[SelectItem]>, locations: &Locations<'_>) -
     let mut complete = true;
     let projected = items
         .iter()
-        .map(|item| project_item(item, locations, &mut complete))
+        .map(|item| project_item(item, delimiters, locations, &mut complete))
         .collect();
     ReturningFacts {
         items: projected,
@@ -73,6 +77,7 @@ pub(in crate::codebase::postgres::source) fn cte_column_sources(
 
 fn project_item(
     item: &SelectItem,
+    delimiters: &[PostgresSqlSpan],
     locations: &Locations<'_>,
     complete: &mut bool,
 ) -> PostgresSqlReturningItem {
@@ -83,7 +88,7 @@ fn project_item(
             } else {
                 None
             };
-            let expression = expression(expr, locations);
+            let expression = super::spans::source_expression(expr, delimiters, locations);
             if !expression.children_complete {
                 *complete = false;
             }
