@@ -20,6 +20,7 @@ mod metadata_unicode;
 mod parsing;
 mod procedural;
 mod procedural_empty_statements;
+mod procedural_exception;
 mod procedural_execute_into;
 mod procedural_execute_select;
 mod procedural_occurrences;

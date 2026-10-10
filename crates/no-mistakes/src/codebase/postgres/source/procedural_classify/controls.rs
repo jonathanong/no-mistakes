@@ -103,14 +103,23 @@ pub(super) fn exception(ctx: &mut Ctx<'_>, start: usize) -> PostgresSqlProcedura
 
 fn exception_handler(ctx: &mut Ctx<'_>, start: usize) -> PostgresSqlProceduralOccurrence {
     let mut nested = Vec::new();
+    let mut saw_when = false;
     while eat_word(ctx, "WHEN") {
+        saw_when = true;
         nested.extend(scan::scan_header(ctx, &["THEN"]));
         if !eat_word(ctx, "THEN") {
             return done(ctx, Kind::Unknown, start, nested);
         }
         nested.extend(walk_statements(ctx, Stop::Handler));
     }
-    done(ctx, Kind::ControlFlow, start, nested)
+    // A bare EXCEPTION has no handler. A WHEN arm that lacks THEN already
+    // returned Unknown above, so only a consumed arm is control flow.
+    let kind = if saw_when {
+        Kind::ControlFlow
+    } else {
+        Kind::Unknown
+    };
+    done(ctx, kind, start, nested)
 }
 
 pub(super) fn raise_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
