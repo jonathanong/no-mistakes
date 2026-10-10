@@ -259,9 +259,10 @@ their last value. Pure unary numeric indices such as `+0` and `-0` address slot 
 Non-coercive `void`, `typeof`, and `!` expressions discard
 callback values while evaluating operand effects. An ordinary property read
 inside one of those wrappers can still run a getter, so captured builders do
-not stay proven. Reads of a proven argument object, including an alias and
-`length`, stay data reads. A further property on one of those slots can still
-run a getter. Numeric `+`, `-`, and `~`
+not stay proven. Reads of a proven argument object's numeric slots and
+`length`, including an alias, stay data reads. A named property of that object,
+such as `arguments.trigger`, can be an accessor. A further property on one of
+those slots can still run a getter. Numeric `+`, `-`, and `~`
 coercion remains conservative because conversion hooks can mutate operands. A non-arrow function called through a member or index receives that base as
 `this`. An arrow keeps its lexical `this` and ignores the call receiver. A bare
 call does not reuse a captured `this`. Named function self-bindings are shadowed by
