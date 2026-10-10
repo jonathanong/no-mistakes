@@ -4,7 +4,7 @@ use super::*;
 fn read_only_cte_scopes_cover_their_complete_source() {
     let source = fixture("query-readonly-cte-spans.sql");
     let queries = queries("query-readonly-cte-spans.sql");
-    assert_eq!(queries.len(), 6);
+    assert_eq!(queries.len(), 5);
     for query in &queries {
         assert!(query.complete, "{:?}", query.unsupported);
         assert!(query.unsupported.is_empty());
@@ -47,28 +47,10 @@ fn read_only_cte_scopes_cover_their_complete_source() {
         "{projected:?}"
     );
 
-    let set = slices(&queries[4]);
+    let wrapped = slices(&queries[4]);
     assert!(
-        set.contains(&"SELECT now() UNION ALL SELECT now()".to_owned()),
-        "{set:?}"
+        wrapped.contains(&"(SELECT now()) ORDER BY 1".to_owned()),
+        "{wrapped:?}"
     );
-    assert_eq!(
-        set.iter().filter(|slice| *slice == "SELECT now()").count(),
-        2,
-        "{set:?}"
-    );
-
-    let ordered = slices(&queries[5]);
-    assert!(
-        ordered.contains(&"SELECT now() UNION ALL SELECT now() ORDER BY 1".to_owned()),
-        "{ordered:?}"
-    );
-    assert_eq!(
-        ordered
-            .iter()
-            .filter(|slice| *slice == "SELECT now()")
-            .count(),
-        2,
-        "{ordered:?}"
-    );
+    assert!(wrapped.contains(&"SELECT now()".to_owned()), "{wrapped:?}");
 }

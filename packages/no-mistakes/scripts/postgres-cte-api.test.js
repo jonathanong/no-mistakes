@@ -25,7 +25,7 @@ test(
         return source.subarray(scope.span.start.offset, scope.span.end.offset).toString();
       });
     });
-    assert.equal(scopes.length, 6);
+    assert.equal(scopes.length, 5);
     for (const expected of ["SELECT now()", "WITH s AS (SELECT now()) SELECT count(*) FROM s"]) {
       assert.ok(scopes[0].includes(expected), `${expected}: ${scopes[0]}`);
     }
@@ -40,10 +40,8 @@ test(
     assert.ok(scopes[2].includes("SELECT now()"));
     assert.ok(scopes[3].includes("SELECT now()"));
     assert.ok(scopes[3].includes("SELECT (SELECT now()) AS value"));
-    assert.ok(scopes[4].includes("SELECT now() UNION ALL SELECT now()"));
-    assert.equal(scopes[4].filter((slice) => slice === "SELECT now()").length, 2);
-    assert.ok(scopes[5].includes("SELECT now() UNION ALL SELECT now() ORDER BY 1"));
-    assert.equal(scopes[5].filter((slice) => slice === "SELECT now()").length, 2);
+    assert.ok(scopes[4].includes("(SELECT now()) ORDER BY 1"));
+    assert.ok(scopes[4].includes("SELECT now()"));
   },
 );
 

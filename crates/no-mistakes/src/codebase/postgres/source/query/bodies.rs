@@ -22,19 +22,13 @@ impl Collector<'_, '_> {
             } => {
                 self.facts.scopes[scope].set_operation = Some(op.to_string());
                 self.facts.scopes[scope].set_quantifier = Some(set_quantifier.to_string());
-                let (left_span, right_span) = self.span_bounds.set_branches(
-                    left,
-                    right,
-                    self.facts.scopes[scope].span.as_ref(),
-                    self.locations,
-                );
-                for (branch, span) in [(left, left_span), (right, right_span)] {
+                for branch in [left, right] {
                     let child = self.scope(
                         Some(scope),
                         self.states[scope].visible_parent,
                         PostgresSqlQueryClause::SetBranch,
                         self.facts.scopes[scope].cte_definition_id,
-                        span.or_else(|| self.locations.span(branch.span())),
+                        self.locations.span(branch.span()),
                     );
                     self.body(branch, child, env);
                 }

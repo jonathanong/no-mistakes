@@ -252,11 +252,11 @@ underlying table names. Joined-group aliases hide the individual participants.
 Derived tables expose their child scope, lateral status, and declared column
 aliases. This is syntactic ownership, not catalog-backed column lineage.
 
-`scope.span` slices the complete source text owned by a read-only CTE, nested
-query, or set-operation branch, including trailing function parentheses. Branch
-spans stop before a query-level `ORDER BY`; the enclosing query scope includes
-it. Offsets are half-open UTF-8 byte positions in the original SQL, even across
-earlier statements or multibyte text.
+`scope.span` slices the complete source text owned by a read-only CTE or nested
+query, including trailing function parentheses. A root query with a parenthesized
+body includes its wrapper and query-level suffix. Offsets are half-open UTF-8
+byte positions in the original SQL, even across earlier statements or multibyte
+text.
 
 Qualified columns resolve against visible relation aliases in the current
 scope, then permitted outer scopes. Non-lateral derived tables and CTE bodies

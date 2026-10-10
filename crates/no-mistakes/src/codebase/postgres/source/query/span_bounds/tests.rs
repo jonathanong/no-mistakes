@@ -5,7 +5,7 @@ use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Location, Span, Tokenizer};
 
 #[test]
-fn incomplete_token_boundaries_do_not_escape_their_query_scope() {
+fn incomplete_prepared_tokens_do_not_claim_a_query_boundary() {
     let sql = crate::codebase::postgres::source::tests::fixture("query-readonly-cte-spans.sql");
     let locations = Locations::new(&sql);
     let mut tokens = Vec::new();
@@ -13,59 +13,42 @@ fn incomplete_token_boundaries_do_not_escape_their_query_scope() {
         .tokenize_with_location_into_buf(&mut tokens)
         .unwrap();
     let ast = Parser::parse_sql(&PostgresSourceDialect, &sql).unwrap();
-    let Statement::Query(query) = &ast[4] else {
-        panic!("set-operation query");
+    let Statement::Query(root) = &ast[0] else {
+        panic!("read-only CTE query");
     };
-    let SetExpr::SetOperation { left, right, .. } = query.body.as_ref() else {
-        panic!("set operation");
-    };
+    let cte = &root.with.as_ref().unwrap().cte_tables[0].query;
+    let first_end = tokens
+        .iter()
+        .position(|token| token.token == Token::SemiColon)
+        .unwrap();
+    let mut first = tokens[..first_end].to_vec();
+    // Invalid prepared locations are ignored, not turned into invented spans.
     let invalid = Location::new(0, 0);
-    tokens.push(TokenWithSpan::new(
+    first.push(TokenWithSpan::new(
         Token::LParen,
         Span::new(invalid, invalid),
     ));
-    let bounds = QuerySpanBounds::new(&tokens, &locations);
-    // A root query passed as a child has no enclosing `(` to claim.
-    assert!(bounds.query(query, false, &locations).is_none());
-    assert_eq!(
-        bounds.set_branches(left, right, None, &locations),
-        (None, None)
-    );
+    let bounds = QuerySpanBounds::new(&first, &locations);
+    assert!(bounds.query(root, false, &locations).is_none());
+    let span = bounds.query(cte, false, &locations).unwrap();
+    assert_eq!(locations.slice(&span), "SELECT now()");
 
-    let left_start = locations.position(left.span().start).unwrap().offset;
-    let right_start = locations.position(right.span().start).unwrap().offset;
-    let close = tokens
+    // A missing CTE close cannot be inferred from the function call's close.
+    let cte_close = first
         .iter()
-        .position(|token| {
-            token.token == Token::RParen
-                && locations
-                    .position(token.span.start)
-                    .is_some_and(|position| {
-                        position.offset > left_start && position.offset < right_start
-                    })
-        })
-        .unwrap();
-    tokens.remove(close);
-    let incomplete = QuerySpanBounds::new(&tokens, &locations);
-    let parent = locations.span(query.span()).unwrap();
-    // Simulate a damaged prepared token range: the unmatched opener must not
-    // make the branch search consume an unrelated sibling.
-    assert!(incomplete
-        .set_branches(left, right, Some(&parent), &locations)
-        .0
-        .is_some());
+        .enumerate()
+        .filter(|(_, token)| token.token == Token::RParen)
+        .nth(1)
+        .unwrap()
+        .0;
+    let incomplete = QuerySpanBounds::new(&first[..cte_close], &locations);
+    assert!(incomplete.query(cte, false, &locations).is_none());
 
-    let right_open = tokens
-        .iter()
-        .find(|token| {
-            token.token == Token::LParen
-                && locations
-                    .position(token.span.start)
-                    .is_some_and(|position| position.offset > right_start)
-        })
-        .unwrap();
-    let end = locations.position(right_open.span.end).unwrap().offset;
-    let short_parent = locations.range(left_start, end);
-    let (_, right_span) = bounds.set_branches(left, right, Some(&short_parent), &locations);
-    assert!(right_span.unwrap().end.offset <= short_parent.end.offset);
+    let Statement::Query(other) = &ast[2] else {
+        panic!("later read-only query");
+    };
+    // A preceding statement is not an opening delimiter for this child query.
+    assert!(QuerySpanBounds::new(&tokens, &locations)
+        .query(other, false, &locations)
+        .is_none());
 }
