@@ -742,11 +742,12 @@ walker's 64-level budget and fail closed when it is exhausted. A wholly literal
 parsed `SELECT`. A qualified name such as `public.execute(...)` stays
 `dynamicExecute` rather than static DML parsed from the argument. An IF, ELSIF,
 or conditional-loop header with no condition keeps the block incomplete. That
-empty header reports that the procedural condition is missing, at the header. An opening
-label is one identifier. A closing label that does not match keeps the block
-incomplete and reports `unknown` at the mismatched label, in source order. A label
-prefix on a wholly literal command stays `unknown`. An opening label is omitted
-with the walker-only block it names.
+empty header reports that the procedural condition is missing, at the header. An
+opening label is one identifier; PL/pgSQL reserved words such as unquoted
+`BEGIN` are not labels, while unquoted `SELECT` is allowed. A closing label
+that does not match keeps the block incomplete and reports `unknown` at the
+mismatched label, in source order. A label prefix on a wholly literal command
+stays `unknown`. An opening label is omitted with the walker-only block it names.
 
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;

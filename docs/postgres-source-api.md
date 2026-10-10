@@ -148,11 +148,13 @@ occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
 condition keeps the block incomplete. That empty header reports that the procedural
 condition is missing, at the header. A block classified only by this walker is complete
 only when every occurrence is recognized `utility` or `controlFlow`. An opening
-label is one identifier. A closing label that does not match keeps the block
-incomplete. A label prefix on a wholly literal command stays `unknown`. An
-opening label is omitted with the walker-only block it names, including when
-whitespace-separated PostgreSQL comments occur before the block. An adjacent
-`>>/*` sequence is still a tokenizer gap ([#1724](https://github.com/jonathanong/no-mistakes/issues/1724)). A block the SQL
+label is one identifier; an unquoted PL/pgSQL reserved word such as `BEGIN` is
+not a label, while `"BEGIN"` and unquoted `SELECT` are. A closing label that does
+not match keeps the block incomplete. A label prefix on a wholly literal
+command stays `unknown`. An opening label is omitted with the walker-only block
+it names, including when whitespace-separated PostgreSQL comments occur before
+the block. An adjacent `>>/*` sequence is still a tokenizer gap
+([#1724](https://github.com/jonathanong/no-mistakes/issues/1724)). A block the SQL
 parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
 DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body
 that does not start with `BEGIN`, other procedural languages, and escape-string DO bodies

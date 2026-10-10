@@ -1,0 +1,1 @@
+DO $$ <<SELECT>> BEGIN RAISE NOTICE 'x'; END SELECT; $$;

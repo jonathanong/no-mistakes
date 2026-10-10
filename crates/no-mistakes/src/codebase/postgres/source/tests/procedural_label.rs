@@ -91,6 +91,30 @@ fn matching_block_label_stays_complete_control_flow() {
 }
 
 #[test]
+fn reserved_word_is_not_an_unquoted_label() {
+    for fixture in [
+        "procedural-label-reserved.sql",
+        "procedural-label-execute-reserved.sql",
+    ] {
+        let (_, reserved) = block(&super::fixture(fixture));
+        assert!(!reserved.complete, "{fixture}: {:?}", reserved.diagnostics);
+    }
+
+    let (_, quoted) = block(&super::fixture("procedural-label-quoted-reserved.sql"));
+    assert!(quoted.complete, "{:?}", quoted.diagnostics);
+    assert_eq!(kinds(&quoted.occurrences), ["ControlFlow"]);
+
+    for fixture in [
+        "procedural-label-unquoted-select.sql",
+        "procedural-label-unquoted-retry.sql",
+    ] {
+        let (_, ordinary) = block(&super::fixture(fixture));
+        assert!(ordinary.complete, "{fixture}: {:?}", ordinary.diagnostics);
+        assert_eq!(kinds(&ordinary.occurrences), ["ControlFlow"]);
+    }
+}
+
+#[test]
 fn omitted_closing_label_stays_complete() {
     let (_, parsed) = block("DO $$ <<foo>> BEGIN RAISE NOTICE 'x'; END; $$;");
     assert!(parsed.complete, "{:?}", parsed.diagnostics);
