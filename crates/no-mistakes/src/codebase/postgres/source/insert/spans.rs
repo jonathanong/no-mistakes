@@ -48,11 +48,12 @@ pub(super) fn source_expression(
             super::super::expression_children::exact_ast_span(expr, locations, delimiters);
     }
     projected.span = locations.span_covering(projected.span, &projected.sql);
-    // A partial parser span is not provenance. Keep it only when it is `sql`.
+    // A partial parser span is not provenance. Comments and whitespace are still
+    // the expression's source bytes; a different token spelling is not.
     if projected
         .span
         .as_ref()
-        .is_some_and(|span| locations.slice(span) != projected.sql)
+        .is_some_and(|span| !source_matches_rendered(locations.slice(span), &projected.sql))
     {
         projected.span = None;
     }
@@ -132,5 +133,72 @@ fn arguments(
             arguments(expression, delimiters, locations)
         }
         _ => {}
+    }
+}
+
+/// `now /*keep*/ ()` matches rendered `now()`. `integer` does not match `INTEGER`.
+fn source_matches_rendered(source: &str, rendered: &str) -> bool {
+    let mut source = source.chars().peekable();
+    let mut rendered = rendered.chars().peekable();
+    loop {
+        while rendered.peek().is_some_and(|c| c.is_whitespace()) {
+            rendered.next();
+        }
+        while source.peek().is_some_and(|c| c.is_whitespace()) {
+            source.next();
+        }
+        if starts_with(&source, &['/', '*']) {
+            source.next();
+            source.next();
+            let mut depth = 1;
+            while depth > 0 {
+                match source.next() {
+                    Some('/') if source.peek() == Some(&'*') => {
+                        source.next();
+                        depth += 1;
+                    }
+                    Some('*') if source.peek() == Some(&'/') => {
+                        source.next();
+                        depth -= 1;
+                    }
+                    Some(_) => {}
+                    None => return false,
+                }
+            }
+            continue;
+        }
+        if starts_with(&source, &['-', '-']) {
+            source.next();
+            source.next();
+            while source.peek().is_some_and(|c| *c != '\n') {
+                source.next();
+            }
+            continue;
+        }
+        match (source.next(), rendered.next()) {
+            (None, None) => return true,
+            (Some(left), Some(right)) if left == right => {}
+            _ => return false,
+        }
+    }
+}
+
+fn starts_with(chars: &std::iter::Peekable<std::str::Chars<'_>>, prefix: &[char]) -> bool {
+    chars.clone().take(prefix.len()).eq(prefix.iter().copied())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn keeps_trivia_and_rejects_a_different_token() {
+        let matches = super::source_matches_rendered;
+        assert!(matches("now /*keep*/ ()", "now()"));
+        assert!(matches("now -- keep\n()", "now()"));
+        assert!(matches("now /* outer /* inner */ */ ()", "now()"));
+        assert!(matches("a /*c*/ / b", "a / b"));
+        assert!(matches("now()", "now()"));
+        assert!(!matches("integer", "INTEGER"));
+        assert!(!matches("now", "now()"));
+        assert!(!matches("now /*", "now()"));
     }
 }
