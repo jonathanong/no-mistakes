@@ -850,12 +850,14 @@ Kinds are `utility`, `controlFlow`, `dml`, `dynamicExecute`, and `unknown`.
 `CREATE TYPE` is `utility`. `IF`/`RAISE` with no DML is `controlFlow`. A loop
 containing `INSERT`, `UPDATE`, `DELETE`, or `MERGE` nests a `dml` occurrence
 and does not claim that statement executes. Dynamic `EXECUTE` stays
-`dynamicExecute` and keeps the block incomplete. A wholly literal
-`FOR ... IN EXECUTE` operand is `dml` or `utility`, including a parsed `SELECT`.
-A qualified name such as `public.execute(...)` stays `dynamicExecute` rather than
-static DML parsed from the argument. A literal command followed by
-unquoted `INTO` is classified from that command, and the `INTO` target still
-keeps the block incomplete. See [PostgreSQL source facts](postgres-source-api.md).
+`dynamicExecute` and keeps the block incomplete. Nested literal `EXECUTE`
+commands share the walker's 64-level budget and fail closed when it is exhausted.
+A wholly literal `FOR ... IN EXECUTE` operand is `dml` or `utility`, including a
+parsed `SELECT`. A qualified name such as `public.execute(...)` stays
+`dynamicExecute` rather than static DML parsed from the argument. A literal
+command followed by unquoted `INTO` is classified from that command, and the
+`INTO` target still keeps the block incomplete. See
+[PostgreSQL source facts](postgres-source-api.md).
 
 `parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as
 `query.nestedStatements`, with named exported statement, DML assignment, MERGE

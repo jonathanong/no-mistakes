@@ -133,6 +133,8 @@ has `kind`, an original-source `span`, and nested `occurrences`:
 
 Wholly literal `EXECUTE` keeps the existing `literalExecute` statement facts and is
 classified from the decoded command (`dml` or `utility`) instead of `dynamicExecute`.
+Nested literal `EXECUTE` commands share the walker's 64-level budget. Exhausting
+that budget fails closed instead of recursing without a limit.
 A `FOR ... IN EXECUTE` header uses that classification for the operand, including a
 wholly parsed literal `SELECT`, which is `utility`. A qualified call such as
 `public.execute(...)` is not that slot: the header still fail-closes it as

@@ -1,4 +1,3 @@
-use super::classify;
 use super::scan::{eq, word_of};
 use crate::codebase::postgres::source::types::{
     PostgresSqlPosition, PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind,
@@ -12,19 +11,21 @@ use sqlparser::{
 pub(super) fn command_kind(
     tokens: &[TokenWithSpan],
     command: &[usize],
+    depth: u8,
 ) -> PostgresSqlProceduralOccurrenceKind {
     match literal_sql(tokens, command) {
-        Some(sql) => script_kind(&sql),
+        Some(sql) => script_kind(&sql, depth),
         None => PostgresSqlProceduralOccurrenceKind::DynamicExecute,
     }
 }
 
-fn script_kind(sql: &str) -> PostgresSqlProceduralOccurrenceKind {
+fn script_kind(sql: &str, depth: u8) -> PostgresSqlProceduralOccurrenceKind {
     let Ok(tokens) = Tokenizer::new(&PostgreSqlDialect {}, sql).tokenize_with_location() else {
         return PostgresSqlProceduralOccurrenceKind::Unknown;
     };
     // Offsets are token indexes for this inner walk. They are not source spans.
-    let classified = classify(&tokens, &index_span, false);
+    // Continue the outer depth. A fresh `classify` would restart the 64-level budget.
+    let classified = super::classify_at(&tokens, &index_span, false, depth);
     // A LOOP does not parse its body. Promote SELECT only when the whole
     // command is SQL: every top-level statement parses, and no label is skipped.
     fold(
