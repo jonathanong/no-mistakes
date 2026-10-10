@@ -3,7 +3,7 @@ use super::super::{
     PostgresSqlSource, PostgresSqlSpan, PostgresSqlStatementKind,
 };
 
-fn block(sql: &str) -> (String, PostgresSqlProceduralBlock) {
+pub(super) fn block(sql: &str) -> (String, PostgresSqlProceduralBlock) {
     let facts = parse_postgres_source(&PostgresSqlSource {
         sql: sql.into(),
         file_name: Some("procedural-occurrences.sql".into()),
@@ -19,7 +19,7 @@ fn slice<'a>(sql: &'a str, span: &PostgresSqlSpan) -> &'a str {
     &sql[span.start.offset..span.end.offset]
 }
 
-fn kinds(occurrences: &[PostgresSqlProceduralOccurrence]) -> Vec<String> {
+pub(super) fn kinds(occurrences: &[PostgresSqlProceduralOccurrence]) -> Vec<String> {
     occurrences
         .iter()
         .map(|occurrence| {
