@@ -49,6 +49,32 @@ fn fragment_bindings_and_aliases_are_dynamic() {
 }
 
 #[test]
+fn long_alias_chains_and_seeded_cycles_fail_closed() {
+    assert_eq!(
+        kinds("nested-sql-fragment-long-alias.ts"),
+        [EmbeddedSqlKind::Dynamic; 2]
+    );
+}
+
+#[test]
+fn helpers_and_default_parameters_fail_closed_without_promoting_scalar_helpers() {
+    assert_eq!(
+        kinds("nested-sql-fragment-helpers-and-defaults.ts"),
+        [
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Dynamic,
+            EmbeddedSqlKind::Inline,
+        ]
+    );
+}
+
+#[test]
 fn tag_helper_calls_logical_arrays_and_appended_fragments_are_dynamic() {
     assert_eq!(
         kinds("nested-sql-fragment-tag-helpers.ts"),

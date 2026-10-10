@@ -28,8 +28,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .map(|effect| self.expr(effect, path, env, depth, generic))
             .collect::<Vec<_>>();
         let mut prefix = Value::Prefix(String::new(), true, None);
-        for part in parts {
-            prefix = concat(prefix, self.expr(part, path, env, depth, generic));
+        for (index, part) in parts.iter().enumerate() {
+            // A trusted tag's odd parts are generated binds. A nested builder
+            // instead splices SQL, whose leading text must stay unknown here.
+            let fragment = tag != "String.raw"
+                && index % 2 == 1
+                && (values.get(index.div_ceil(2)).is_some_and(has_builder)
+                    || effects
+                        .get(index.div_ceil(2))
+                        .is_some_and(|effect| self.tag_helper(effect, path, *env)));
+            let value = if fragment {
+                Value::Unknown
+            } else {
+                self.expr(part, path, env, depth, generic)
+            };
+            prefix = concat(prefix, value);
         }
         let trusted = self.tag_trusted(tag, path, *env);
         let name = if tag == "String.raw" { "String" } else { tag };
@@ -60,5 +73,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         } else {
             Value::Unknown
         }
+    }
+
+    fn tag_helper(&self, expression: &Expr, path: &Path, env: Environment) -> bool {
+        let Expr::Call { callee, .. } = expression else {
+            return false;
+        };
+        let tag = match callee.as_ref() {
+            Expr::Name(name) => Some(name.as_str()),
+            Expr::Member(base, _) => match base.as_ref() {
+                Expr::Name(name) => Some(name.as_str()),
+                _ => None,
+            },
+            _ => None,
+        };
+        tag.is_some_and(|tag| self.tag_trusted(tag, path, env))
+    }
+}
+
+fn has_builder(value: &Value) -> bool {
+    match value {
+        Value::Prefix(_, _, Some(_)) => true,
+        Value::Evaluated(inner, _) => has_builder(inner),
+        Value::Aggregate(values) | Value::Possible(values) => values.iter().any(has_builder),
+        _ => false,
     }
 }

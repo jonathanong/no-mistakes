@@ -239,6 +239,11 @@ Each `EmbeddedSqlCall` records `kind`:
   the complete runtime statement; consumers must use it only for conservative
   statement classification.
 
+Fragment detection follows file-wide aliases to convergence, including cycles,
+default parameter values and helpers that can return trusted fragments. This
+projection deliberately ignores lexical scope collisions so it fails closed.
+Plain string-returning helpers remain bind values.
+
 ## Statement facts
 
 `extract_sql_statement_facts(sql)` parses PostgreSQL SQL (leniently) and

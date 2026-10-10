@@ -4,7 +4,7 @@ use oxc_ast::ast::{Expression, TaggedTemplateExpression};
 
 pub(super) fn tagged(
     value: &TaggedTemplateExpression<'_>,
-    expr: &Expression<'_>,
+    _expr: &Expression<'_>,
     source: &str,
 ) -> Expr {
     let tag = match unwrap_ts_wrappers(&value.tag) {
@@ -27,9 +27,17 @@ pub(super) fn tagged(
         }
         parts
     } else {
-        vec![Expr::Text(
-            super::super::super::sql_text(expr).unwrap_or_default(),
-        )]
+        let mut parts = Vec::new();
+        for (index, quasi) in value.quasi.quasis.iter().enumerate() {
+            if index > 0 {
+                parts.push(Expr::Text(format!("sql_placeholder_{index}")));
+            }
+            parts.push(Expr::Text(quasi.value.cooked.as_ref().map_or_else(
+                || quasi.value.raw.to_string(),
+                |value| value.to_string(),
+            )));
+        }
+        parts
     };
     let mut effects = vec![expression(&value.tag, source)];
     if tag != "String.raw" {

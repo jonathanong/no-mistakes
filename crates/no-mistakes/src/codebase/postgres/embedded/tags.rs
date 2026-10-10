@@ -16,6 +16,7 @@ pub(crate) struct SqlTagNames {
     /// `trustedSqlTags` imports, under the file's local names.
     imported: HashSet<String>,
     fragments: HashSet<String>,
+    fragment_functions: HashSet<String>,
 }
 
 impl SqlTagNames {
@@ -25,7 +26,8 @@ impl SqlTagNames {
 
     /// Records fragment bindings once every trusted import is known.
     pub(crate) fn collect_fragments(&mut self, program: &oxc_ast::ast::Program<'_>) {
-        self.fragments = fragments::collect_fragment_bindings(program, self);
+        (self.fragments, self.fragment_functions) =
+            fragments::collect_fragment_bindings(program, self);
     }
 
     fn contains(&self, name: &str) -> bool {
