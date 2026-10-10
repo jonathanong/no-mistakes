@@ -171,7 +171,22 @@ fn many_tokens_against_many_spans_do_not_nest_loops() {
         occurrences.len(),
         "one pass over the slice, not its nested children or each token"
     );
-    assert_eq!(marks.body_passes(), LEN, "one pass over the body");
+    let non_sql = occurrences
+        .iter()
+        .filter(|occurrence| {
+            !matches!(
+                occurrence.kind,
+                PostgresSqlProceduralOccurrenceKind::Utility
+                    | PostgresSqlProceduralOccurrenceKind::Dml
+            )
+        })
+        .count();
+    assert_eq!(
+        marks.body_passes(),
+        non_sql,
+        "one pass over non-SQL spans, not every body byte"
+    );
+    assert!(marks.body_passes() < LEN);
     assert!(!marks.overlaps(ORIGIN, ORIGIN + 2), "utility bytes stay");
     assert!(
         marks.overlaps(ORIGIN + 2, ORIGIN + 4),
@@ -213,4 +228,22 @@ fn many_tokens_against_many_spans_do_not_nest_loops() {
         marks.span_passes() + marks.body_passes() + marks.token_checks()
             < occurrences.len() * tokens.len()
     );
+}
+
+#[test]
+fn a_long_body_keeps_a_handful_of_intervals() {
+    use PostgresSqlProceduralOccurrenceKind::{ControlFlow, Unknown, Utility};
+    const LEN: usize = 1_000_000;
+    let occurrences = vec![
+        occurrence(ControlFlow, 10, 20, Vec::new()),
+        occurrence(Unknown, LEN - 30, LEN - 10, Vec::new()),
+        occurrence(Utility, 100, 10_000, Vec::new()),
+    ];
+    let marks = non_sql_marks(0, LEN, &occurrences);
+    assert_eq!(marks.span_passes(), occurrences.len());
+    assert_eq!(marks.body_passes(), 2, "a utility span is not marked");
+    assert!(marks.overlaps(15, 16));
+    assert!(!marks.overlaps(100, 200));
+    assert!(marks.overlaps(LEN - 20, LEN - 12));
+    assert!(!marks.overlaps(LEN, LEN + 5));
 }

@@ -1,4 +1,4 @@
-//! One pass marks non-SQL body offsets, then each token is tested in constant time.
+//! Non-SQL spans are merged intervals. A long literal does not allocate per byte.
 use super::body::Body;
 use super::locations::Locations;
 use super::types::{PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind};
@@ -20,7 +20,7 @@ pub(super) fn omit_non_sql(
         !marks.overlaps(start, end)
     });
     debug_assert_eq!(marks.span_passes(), occurrences.len());
-    debug_assert_eq!(marks.body_passes(), len);
+    debug_assert!(marks.body_passes() <= occurrences.len());
     debug_assert_eq!(marks.token_checks(), count);
 }
 
@@ -31,11 +31,16 @@ pub(super) fn sql_occurrence(kind: PostgresSqlProceduralOccurrenceKind) -> bool 
     )
 }
 
+struct Interval {
+    start: usize,
+    end: usize,
+}
+
 pub(super) struct NonSqlMarks {
     origin: usize,
     len: usize,
-    /// Exclusive prefix of body offsets covered by a non-SQL span.
-    prefix: Vec<usize>,
+    /// Disjoint half-open intervals inside the body window, ordered by start.
+    intervals: Vec<Interval>,
     span_passes: usize,
     body_passes: usize,
     token_checks: Cell<usize>,
@@ -45,9 +50,13 @@ impl NonSqlMarks {
     /// Half-open overlap with the marked union: `start < span_end && span_start < end`.
     pub(super) fn overlaps(&self, start: usize, end: usize) -> bool {
         self.token_checks.set(self.token_checks.get() + 1);
-        let from = self.index(start);
-        let to = self.index(end);
-        from < to && self.prefix[to] > self.prefix[from]
+        let Some((start, end)) = clip(self.origin, self.len, start, end) else {
+            return false;
+        };
+        let index = self
+            .intervals
+            .partition_point(|interval| interval.start < end);
+        index > 0 && start < self.intervals[index - 1].end
     }
 
     pub(super) fn span_passes(&self) -> usize {
@@ -61,54 +70,60 @@ impl NonSqlMarks {
     pub(super) fn token_checks(&self) -> usize {
         self.token_checks.get()
     }
-
-    fn index(&self, offset: usize) -> usize {
-        offset.saturating_sub(self.origin).min(self.len)
-    }
 }
 
 /// Marks the union of non-SQL spans in `[origin, origin + len)`.
 ///
 /// Only this slice is visited. Nested children stay inside their parent span.
+/// Memory follows the non-SQL spans, not the body byte length.
 pub(super) fn non_sql_marks(
     origin: usize,
     len: usize,
     occurrences: &[PostgresSqlProceduralOccurrence],
 ) -> NonSqlMarks {
-    // A difference sweep paints the union once. Filling each span in place would
-    // rescan overlapping bytes and stop being linear in spans plus body length.
-    let mut diff = vec![0isize; len + 1];
+    let mut intervals = Vec::new();
     let mut span_passes = 0;
+    let mut body_passes = 0;
     for occurrence in occurrences {
         span_passes += 1;
         if sql_occurrence(occurrence.kind) {
             continue;
         }
-        let from = occurrence.span.start.offset.saturating_sub(origin).min(len);
-        let to = occurrence.span.end.offset.saturating_sub(origin).min(len);
-        if from < to {
-            diff[from] += 1;
-            diff[to] -= 1;
+        body_passes += 1;
+        if let Some((start, end)) = clip(
+            origin,
+            len,
+            occurrence.span.start.offset,
+            occurrence.span.end.offset,
+        ) {
+            intervals.push(Interval { start, end });
         }
     }
-    let mut marked = vec![false; len];
-    let mut prefix = vec![0usize; len + 1];
-    let mut open = 0isize;
-    let mut body_passes = 0;
-    for (index, cell) in marked.iter_mut().enumerate() {
-        body_passes += 1;
-        open += diff[index];
-        *cell = open > 0;
-        prefix[index + 1] = prefix[index] + usize::from(*cell);
+    intervals.sort_by_key(|interval| (interval.start, interval.end));
+    let mut merged: Vec<Interval> = Vec::new();
+    for interval in intervals {
+        if let Some(last) = merged.last_mut() {
+            if interval.start <= last.end {
+                last.end = last.end.max(interval.end);
+                continue;
+            }
+        }
+        merged.push(interval);
     }
     NonSqlMarks {
         origin,
         len,
-        prefix,
+        intervals: merged,
         span_passes,
         body_passes,
         token_checks: Cell::new(0),
     }
+}
+
+fn clip(origin: usize, len: usize, start: usize, end: usize) -> Option<(usize, usize)> {
+    let start = start.max(origin);
+    let end = end.min(origin.saturating_add(len));
+    (start < end).then_some((start, end))
 }
 
 fn body_offset(local: &Locations<'_>, body: &Body<'_>, location: Location) -> usize {
