@@ -381,7 +381,11 @@ and is empty when the statement has no RETURNING clause. A representable RETURNI
 list, including VALUES and SELECT sources, `ON CONFLICT`, quoted identifiers, and
 source spans, keeps the INSERT complete at top level and inside a data-modifying
 CTE. Unsupported RETURNING shapes and other incompletely represented syntax set
-completeness false and produce syntax diagnostics. A malformed RETURNING clause
+completeness false and produce syntax diagnostics. A data-modifying CTE records
+that same incompleteness on the nested statement's `unsupported` list and clears
+both that child's `complete` flag and the enclosing query's `complete` flag.
+Representable CTE RETURNING expressions such as `id` and `id + 1` stay complete.
+A malformed RETURNING clause
 the parser rejects stays a source diagnostic and never becomes a complete INSERT.
 Completeness is independent of provenance:
 `COALESCE(t.v, EXCLUDED.v)` and `GREATEST(t.v, EXCLUDED.v)` have complete syntax

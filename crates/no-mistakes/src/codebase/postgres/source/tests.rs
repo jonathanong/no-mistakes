@@ -45,6 +45,7 @@ mod query;
 mod insert;
 mod insert_recursive;
 mod insert_returning;
+mod insert_returning_cte;
 mod insert_review;
 
 mod wrappers;

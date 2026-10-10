@@ -131,8 +131,18 @@ impl Collector<'_, '_> {
                     } else {
                         None
                     };
+                    let projected = expression(expr, self.locations);
+                    // CTE-core skips `returning::project`; incompleteness is recorded here.
+                    if !projected.children_complete {
+                        self.unsupported(
+                            scope,
+                            PostgresSqlQueryClause::Projection,
+                            "unsupported or incompletely represented syntax",
+                            expr.span(),
+                        );
+                    }
                     PostgresSqlReturningItem::Expression {
-                        expression: Box::new(expression(expr, self.locations)),
+                        expression: Box::new(projected),
                         alias,
                     }
                 }
