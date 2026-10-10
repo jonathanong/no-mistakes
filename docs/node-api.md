@@ -845,6 +845,13 @@ nested conditional `DO` bodies, including original global spans, typed foreign
 key references and `NOT VALID`. Incomplete procedural coverage retains localized
 diagnostics alongside recovered facts. See [nested constraint source facts](postgres-source-api.md#constraints-inside-conditional-do-bodies).
 
+`parsePostgresSql()` also returns `block.occurrences` for PL/pgSQL `DO` bodies.
+Kinds are `utility`, `controlFlow`, `dml`, `dynamicExecute`, and `unknown`.
+`CREATE TYPE` is `utility`. `IF`/`RAISE` with no DML is `controlFlow`. A loop
+containing `INSERT`, `UPDATE`, `DELETE`, or `MERGE` nests a `dml` occurrence
+and does not claim that statement executes. Dynamic `EXECUTE` stays
+`dynamicExecute` and keeps the block incomplete. See [PostgreSQL source facts](postgres-source-api.md).
+
 `parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as
 `query.nestedStatements`, with named exported statement, DML assignment, MERGE
 and RETURNING types. Child IDs reference the same query report; source order,
