@@ -164,3 +164,19 @@ fn loop_and_nested_block_labels_use_their_own_closers() {
     assert_eq!(kinds(&nested.occurrences), ["ControlFlow[\"ControlFlow\"]"]);
     fails_closed("DO $$ BEGIN <<foo>> BEGIN RAISE NOTICE 'x'; END bar; END $$;");
 }
+
+#[test]
+fn label_prefix_on_literal_execute_is_not_dml() {
+    // Skipping `<<>>` or `<<mark>>` must not classify the command that follows.
+    let (_, insert) = block("DO $$ BEGIN EXECUTE '<<>> INSERT INTO t VALUES (1)'; END $$;");
+    assert_eq!(kinds(&insert.occurrences), ["Unknown"]);
+    assert!(!insert.complete, "{:?}", insert.diagnostics);
+
+    let (_, create) = block("DO $$ BEGIN EXECUTE '<<>> CREATE TABLE a(id int)'; END $$;");
+    assert_eq!(kinds(&create.occurrences), ["Unknown"]);
+    assert!(!create.complete, "{:?}", create.diagnostics);
+
+    let (_, marked) = block("DO $$ BEGIN EXECUTE '<<mark>> INSERT INTO t VALUES (1)'; END $$;");
+    assert_eq!(kinds(&marked.occurrences), ["Unknown"]);
+    assert!(!marked.complete, "{:?}", marked.diagnostics);
+}

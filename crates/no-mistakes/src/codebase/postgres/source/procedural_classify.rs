@@ -62,6 +62,11 @@ pub(super) fn classify_at(
         span,
     };
     let open = cursor::skip_label(&mut ctx);
+    // A decoded command is SQL, not a labeled block. Keep that prefix attached
+    // to the failure so the folded kind cannot become the statement after it.
+    if !rooted && !matches!(open, cursor::OpenLabel::Absent) {
+        ctx.label_invalid = true;
+    }
     let mut occurrences = if !rooted {
         walk_statements(&mut ctx, Stop::None)
     } else if !cursor::eat_word(&mut ctx, "BEGIN") {
@@ -71,7 +76,8 @@ pub(super) fn classify_at(
         walk_block(&mut ctx, open)
     };
     // A label failure is an unknown occurrence. `legacy_stop` is a different diagnostic.
-    if rooted && ctx.label_invalid && !ctx.legacy_stop {
+    // Literal commands use the same signal so a skipped prefix cannot fold as DML.
+    if ctx.label_invalid && !ctx.legacy_stop {
         occurrences.push(unrecognized_label(&ctx));
     }
     Classified {
