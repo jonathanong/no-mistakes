@@ -112,8 +112,14 @@ export interface PostgresSqlQueryExists {
    * are transparent) plus one when `negated` is true.
    */
   notDepth: number;
-  /** `notDepth % 2 === 1`. Distinct from `negated` and from `context.underNot`. */
-  effectiveNegated: boolean;
+  /**
+   * `notDepth % 2 === 1` when this EXISTS is not under a boolean test, CASE,
+   * or other wrapper. `null` when `context.underBooleanTest`,
+   * `context.underCase`, or `context.underOther` is set: those wrappers can
+   * invert or hide polarity, and this field does not guess. Always present.
+   * Distinct from `negated` and from `context.underNot`.
+   */
+  effectiveNegated: boolean | null;
   context: PostgresSqlPredicateContext;
   correlated: boolean;
   correlations: PostgresSqlQueryColumn[];

@@ -239,12 +239,21 @@ without a catalog. `negated` and `context.underNot` do not recover polarity
 through nested `NOT`: both are true for `NOT EXISTS` and for `NOT (NOT EXISTS)`.
 `notDepth` counts the NOT operators that apply to that EXISTS, including each
 wrapping `NOT` (parentheses are transparent) and one extra when `negated` is
-true. `effectiveNegated` is `notDepth % 2 == 1`.
+true. `effectiveNegated` is `notDepth % 2 == 1` when `context.underBooleanTest`,
+`context.underCase`, and `context.underOther` are all false. It is `null` when
+any of those flags is set, because a boolean test, CASE, or other wrapper can
+invert or hide that parity. The field is always present and does not guess a
+polarity those flags say is hidden. `notDepth`, `negated`, and the context
+flags stay unchanged.
 
 `INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1)` reports `notDepth: 1`
 and `effectiveNegated: true`. `INSERT INTO t(id) SELECT 1 WHERE NOT (NOT EXISTS (SELECT 1))`
-reports `notDepth: 2` and `effectiveNegated: false`. `IS NOT TRUE` and the other
-boolean tests set `context.underBooleanTest`; they are not additional NOT operators.
+reports `notDepth: 2` and `effectiveNegated: false`. These report `effectiveNegated: null`:
+`SELECT 1 WHERE EXISTS (SELECT 1) IS FALSE`,
+`SELECT 1 WHERE NOT (EXISTS (SELECT 1) = false)`, and
+`SELECT 1 WHERE NOT CASE WHEN EXISTS (SELECT 1) THEN true ELSE false END`.
+`IS NOT TRUE` and the other boolean tests set `context.underBooleanTest`; they
+are not additional NOT operators.
 
 Unsupported relation, expression or query forms appear in `unsupported` with
 a reason, hosting scope/clause and available source span, and set

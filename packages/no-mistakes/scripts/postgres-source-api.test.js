@@ -1331,6 +1331,44 @@ test(
     assert.equal(negative.effectiveNegated, true);
     assert.equal(positive.notDepth, 2);
     assert.equal(positive.effectiveNegated, false);
+    const bySql = (fragment) => {
+      const statement = facts.statements.find((statement) => statement.sql.includes(fragment));
+      assert.ok(statement, fragment);
+      assert.equal(statement.kind, "select");
+      assert.equal(statement.query.complete, true);
+      return statement.query.exists;
+    };
+    const isFalse = bySql("EXISTS (SELECT 1) IS FALSE");
+    assert.equal(isFalse.length, 6);
+    for (const fact of isFalse) {
+      assert.equal(Object.hasOwn(fact, "effectiveNegated"), true);
+      assert.equal(fact.effectiveNegated, null);
+      assert.equal(fact.notDepth, 0);
+      assert.equal(fact.negated, false);
+      assert.equal(fact.context.underBooleanTest, true);
+      assert.equal(fact.context.underCase, false);
+      assert.equal(fact.context.underOther, false);
+    }
+    const compared = bySql("EXISTS (SELECT 1) = false");
+    assert.equal(compared.length, 1);
+    assert.equal(Object.hasOwn(compared[0], "effectiveNegated"), true);
+    assert.equal(compared[0].effectiveNegated, null);
+    assert.equal(compared[0].notDepth, 1);
+    assert.equal(compared[0].negated, false);
+    assert.equal(compared[0].context.underNot, true);
+    assert.equal(compared[0].context.underOther, true);
+    assert.equal(compared[0].context.underBooleanTest, false);
+    assert.equal(compared[0].context.underCase, false);
+    const caseNot = bySql("NOT CASE WHEN EXISTS (SELECT 1)");
+    assert.equal(caseNot.length, 1);
+    assert.equal(Object.hasOwn(caseNot[0], "effectiveNegated"), true);
+    assert.equal(caseNot[0].effectiveNegated, null);
+    assert.equal(caseNot[0].notDepth, 1);
+    assert.equal(caseNot[0].negated, false);
+    assert.equal(caseNot[0].context.underNot, true);
+    assert.equal(caseNot[0].context.underCase, true);
+    assert.equal(caseNot[0].context.underBooleanTest, false);
+    assert.equal(caseNot[0].context.underOther, false);
   },
 );
 

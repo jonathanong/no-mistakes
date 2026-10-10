@@ -151,8 +151,10 @@ pub struct PostgresSqlQueryExists {
     /// NOT operators that apply to this EXISTS: each wrapping `NOT`, through
     /// parentheses, plus one when `negated` is true.
     pub not_depth: u32,
-    /// `not_depth % 2 == 1`. Distinct from `negated` and from `context.under_not`.
-    pub effective_negated: bool,
+    /// `Some(not_depth % 2 == 1)` unless `context.under_boolean_test`,
+    /// `under_case`, or `under_other` is set. Those wrappers leave this `None`
+    /// (JSON `null`, always present). Distinct from `negated` and `under_not`.
+    pub effective_negated: Option<bool>,
     pub context: PostgresSqlPredicateContext,
     pub correlated: bool,
     pub correlations: Vec<PostgresSqlQueryColumn>,
