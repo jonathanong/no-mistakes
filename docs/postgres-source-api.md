@@ -133,6 +133,10 @@ has `kind`, an original-source `span`, and nested `occurrences`:
 
 Wholly literal `EXECUTE` keeps the existing `literalExecute` statement facts and is
 classified from the decoded command (`dml` or `utility`) instead of `dynamicExecute`.
+A `FOR ... IN EXECUTE` header uses that classification for the operand, including a
+wholly parsed literal `SELECT`, which is `utility`. A qualified call such as
+`public.execute(...)` is not that slot: the header still fail-closes it as
+`dynamicExecute`, and the argument is not parsed as static DML.
 Unquoted `INTO` ends that command the same way `USING` does, so the occurrence
 follows the literal while the unsupported `INTO` target keeps the enclosing block
 incomplete.

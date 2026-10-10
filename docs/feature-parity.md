@@ -736,7 +736,10 @@ provenance. Dynamic expressions remain explicitly unsupported; see the
 Procedural `DO` occurrence kinds (`utility`, `controlFlow`, `dml`,
 `dynamicExecute`, `unknown`) have the same Rust/native and asynchronous Node
 ESM/CJS projection. Nested `dml` is source text, not execution. Dynamic
-`EXECUTE` stays fail-closed.
+`EXECUTE` stays fail-closed. A wholly literal `FOR ... IN EXECUTE` operand is
+classified as `dml` or `utility`, including a parsed `SELECT`. A qualified
+name such as `public.execute(...)` stays `dynamicExecute` rather than static
+DML parsed from the argument.
 
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;

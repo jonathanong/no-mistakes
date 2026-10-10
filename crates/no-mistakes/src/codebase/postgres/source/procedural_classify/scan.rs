@@ -15,6 +15,12 @@ pub(super) fn scan_header(
     let mut paren = 0i32;
     let mut cases = 0i32;
     while let Some(index) = peek_index(ctx) {
+        // `take_command` would swallow a header stop such as LOOP.
+        if let Some(occurrence) = super::header_execute::occurrence(ctx, index, paren, cases, stops)
+        {
+            extra.push(occurrence);
+            continue;
+        }
         let token = &ctx.tokens[index].token;
         if let Some(word) = word_of(token) {
             if paren == 0 && cases == 0 && stops.iter().any(|stop| eq(word, stop)) {
