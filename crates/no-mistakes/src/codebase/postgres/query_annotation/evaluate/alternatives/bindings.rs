@@ -13,8 +13,20 @@ fn annotated_builder(value: &Value, id: u64) -> bool {
     matches!(value, Value::Prefix(text, true, Some(current)) if *current == id && text.trim_start().starts_with("/*"))
 }
 
-/// Joins preserve existing builder-prefix proof, but never infer a SQL prefix
-/// from conditional immutable binding assignments.
+const UNPROVEN: Value = Value::Unknown;
+
+/// A binding absent from one arm is not SQL proof. Callers compare this instead
+/// of indexing a divergent scope.
+pub(super) fn binding_or_unproven<'a>(
+    scope: &'a FxHashMap<String, Value>,
+    name: &str,
+) -> &'a Value {
+    scope.get(name).unwrap_or(&UNPROVEN)
+}
+
+/// Joins preserve an annotated builder prefix only when the original scope and
+/// both arms still have that builder. A missing arm or original binding is
+/// unproven and must not keep or synthesize a SQL prefix.
 pub(super) fn join(
     joined: &mut [FxHashMap<String, Value>],
     current: &[FxHashMap<String, Value>],
@@ -22,16 +34,24 @@ pub(super) fn join(
 ) {
     for ((before, after), initial) in joined.iter_mut().zip(current).zip(original) {
         for (name, value) in before {
-            let next = &after[name];
+            // Divergent arms add and drop names. Neither hole is a builder.
+            let Some(next) = after.get(name) else {
+                *value = Value::Unknown;
+                continue;
+            };
+            let Some(initial_value) = initial.get(name) else {
+                *value = Value::Unknown;
+                continue;
+            };
             if *value == *next {
                 continue;
             }
-            if let Value::Prefix(_, _, Some(id)) = &initial[name] {
-                if annotated_builder(&initial[name], *id)
+            if let Value::Prefix(_, _, Some(id)) = initial_value {
+                if annotated_builder(initial_value, *id)
                     && annotated_builder(value, *id)
                     && annotated_builder(next, *id)
                 {
-                    *value = initial[name].clone();
+                    *value = initial_value.clone();
                     continue;
                 }
             }
@@ -43,3 +63,6 @@ pub(super) fn join(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

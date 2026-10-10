@@ -142,3 +142,37 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         }
     }
 }
+
+#[test]
+fn missing_alternative_binding_stays_unproven() {
+    let root = fixture("helper-tracing-missing-alternative-binding");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+    for (policy, markers) in [
+        ("report", &["// finding:", "// unanalyzable:"][..]),
+        ("ignore", &["// finding:"][..]),
+    ] {
+        let config = config_with_options(&format!(
+            "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
+        ));
+        let findings = check_with_files(&root, &config, &files).unwrap();
+        let expected = source
+            .lines()
+            .enumerate()
+            .filter_map(|(index, line)| {
+                markers
+                    .iter()
+                    .any(|marker| line.contains(marker))
+                    .then_some(index + 1)
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| finding.line)
+                .collect::<Vec<_>>(),
+            expected,
+            "{policy}: {findings:#?}"
+        );
+    }
+}

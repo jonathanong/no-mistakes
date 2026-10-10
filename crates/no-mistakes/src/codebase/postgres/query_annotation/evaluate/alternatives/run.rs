@@ -79,10 +79,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
-                    // Evaluation replaces bindings but never removes original keys.
+                    // An arm can drop a name the other branch still has.
                     super::values::changes(
                         value,
-                        &after[name],
+                        super::bindings::binding_or_unproven(after, name),
                         super::arena::Arena {
                             objects: &objects,
                             extras: &extra_slots,
