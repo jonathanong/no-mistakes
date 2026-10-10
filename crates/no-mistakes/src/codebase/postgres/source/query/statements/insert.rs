@@ -103,8 +103,7 @@ impl Collector<'_, '_> {
                 self.insert_source = true;
                 let query_scope_id = self.query_with_span(
                     query,
-                    Some(scope),
-                    None,
+                    (Some(scope), None),
                     PostgresSqlQueryClause::Other,
                     env,
                     self.facts.scopes[scope].cte_definition_id,

@@ -119,8 +119,7 @@ impl Collector<'_, '_> {
     ) -> usize {
         self.query_with_span(
             query,
-            parent,
-            visible_parent,
+            (parent, visible_parent),
             clause,
             outer,
             definition,
@@ -130,8 +129,7 @@ impl Collector<'_, '_> {
     fn query_with_span(
         &mut self,
         query: &Query,
-        parent: Option<usize>,
-        visible_parent: Option<usize>,
+        (parent, visible_parent): (Option<usize>, Option<usize>),
         clause: PostgresSqlQueryClause,
         outer: &CteEnvironment,
         definition: Option<usize>,
