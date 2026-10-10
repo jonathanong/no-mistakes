@@ -311,8 +311,11 @@ include `rowIndex`. Omitted target columns, DEFAULT VALUES, wildcard/BY NAME
 projections, duplicate targets, unsupported source forms, and arity mismatches
 return a typed `unsupported` result instead of a partial map. Mapping
 `complete` describes recursive expression representation, not SQL validity or
-replay safety. INSERTs delegated to a modifying CTE report
-`reason: "cteSourceDelegated"` because the query projection owns that source.
+replay safety. A non-RETURNING INSERT inside a data-modifying CTE omits
+`columnSources`; the query projection owns that source, and
+`cteSourceDelegated` remains the internal reason for the omission. A RETURNING
+INSERT keeps the same column-source lineage as a direct INSERT with the same
+source syntax, not a delegated placeholder.
 
 Subscripted and field-only composite assignment targets additionally expose `target.base`, ordered
 `target.subscripts`, and `target.span`; nested index expressions retain exact
@@ -343,10 +346,15 @@ console.log(insert.onConflict.action.assignments[0].provenance); // excludedColu
 ```
 
 Consumers must check `insert.complete`, `insert.diagnostics`, assignment
-`complete`, and SELECT source completeness before relying on facts. Unsupported
-INSERT extensions (including RETURNING, whose output facts are outside this
-contract) and incompletely represented expression shapes set completeness false
-and produce syntax diagnostics. Completeness is independent of provenance:
+`complete`, RETURNING item kinds, and SELECT source completeness before relying on facts.
+`insert.returning` lists output items (`expression`, `wildcard`, or `unsupported`)
+and is empty when the statement has no RETURNING clause. A representable RETURNING
+list, including VALUES and SELECT sources, `ON CONFLICT`, quoted identifiers, and
+source spans, keeps the INSERT complete at top level and inside a data-modifying
+CTE. Unsupported RETURNING shapes and other incompletely represented syntax set
+completeness false and produce syntax diagnostics. A malformed RETURNING clause
+the parser rejects stays a source diagnostic and never becomes a complete INSERT.
+Completeness is independent of provenance:
 `COALESCE(t.v, EXCLUDED.v)` and `GREATEST(t.v, EXCLUDED.v)` have complete syntax
 and `derived` provenance. Nested calls, literal/placeholder arguments, and
 parenthesized/cast roots retain this distinction. Unknown qualifiers and an
@@ -454,7 +462,10 @@ inputs reference typed entries in `query.relations`. Unsupported modifiers or
 actions retain their typed child and make both the child and query incomplete.
 A nested `INSERT ... SELECT ... ON CONFLICT DO NOTHING` or `DO UPDATE`, including
 `RETURNING`, stays one complete modifying CTE. The same `ON CONFLICT` clause is
-typed on a top-level INSERT.
+typed on a top-level INSERT. RETURNING inserts in both forms expose the same
+column-source lineage. The nested insert's `columnSources` is omitted only when
+the CTE insert has no RETURNING clause. Top-level `insert.returning` carries the
+same item classes as `nestedStatements[].returning`.
 A conflict-target `WHERE` predicate inside a CTE still produces a parser
 diagnostic and leaves neighboring statements available. INSERT children also
 retain existing conflict diagnostics. Source locking clauses

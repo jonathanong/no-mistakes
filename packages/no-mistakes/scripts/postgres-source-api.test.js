@@ -624,8 +624,10 @@ test(
     );
     assert.deepEqual(
       review.statements.slice(8).map((item) => item.block.complete),
-      [false, false, true],
+      [true, true, true],
     );
+    assert.equal(review.statements[8].block.statements[0].insert.complete, true);
+    assert.equal(review.statements[8].block.statements[0].insert.returning[0].kind, "expression");
   },
 );
 
@@ -1329,5 +1331,54 @@ test(
     assert.equal(negative.effectiveNegated, true);
     assert.equal(positive.notDepth, 2);
     assert.equal(positive.effectiveNegated, false);
+  },
+);
+
+test(
+  "compiled CJS and ESM keep complete INSERT RETURNING source facts",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-returning.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const direct = facts.statements[0].insert;
+    assert.equal(direct.complete, true);
+    assert.equal(direct.returning[0].kind, "expression");
+    assert.equal(direct.columnSources.kind, "mapped");
+    assert.equal(direct.source.kind, "values");
+    assert.equal(
+      Buffer.from(sql)
+        .subarray(direct.source.span.start.offset, direct.source.span.end.offset)
+        .toString(),
+      "(1)",
+    );
+    const ordered = facts.statements[6].insert;
+    assert.equal(ordered.complete, false);
+    assert.ok(ordered.diagnostics.length);
+    assert.equal(ordered.returning.length, 1);
+    const star = facts.statements[9].insert;
+    assert.equal(star.complete, true);
+    assert.equal(star.returning[0].kind, "wildcard");
+    assert.equal(star.returning[0].qualifier.parts[0].identity, "target");
+    const executeSql = fixture("insert-returning-execute.sql");
+    const executed = await cjs.parsePostgresSql({ sql: executeSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: executeSql }), executed);
+    const block = executed.statements[0].block;
+    assert.equal(block.complete, true);
+    const directExecute = block.statements[0].execute;
+    assert.equal(directExecute.statements[0].insert.complete, true);
+    assert.equal(directExecute.statements[0].insert.returning[0].expression.sql, "id");
+    const nested = block.statements[1].execute.statements[0].query.nestedStatements[0];
+    assert.equal(nested.complete, true);
+    assert.equal(nested.insert.columnSources.kind, "mapped");
+    assert.equal(nested.insert.columnSources.columns[0].sources[0].expression.sql, "2");
+    const rejected = await cjs.parsePostgresSql({
+      sql: "INSERT INTO accounts VALUES (1) ON CONFLICT DO NOTHING RETURNING;",
+    });
+    assert.equal(rejected.statements.length, 0);
+    assert.ok(rejected.diagnostics.length);
   },
 );

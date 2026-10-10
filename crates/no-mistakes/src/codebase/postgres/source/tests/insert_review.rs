@@ -64,7 +64,7 @@ fn joins_ctes_signed_literals_and_procedural_completeness_are_preserved() {
             PostgresSqlInsertProvenance::Unresolved,
         ]
     );
-    for (statement, expected) in result.statements[8..].iter().zip([false, false, true]) {
+    for (statement, expected) in result.statements[8..].iter().zip([true, true, true]) {
         let PostgresSqlStatementKind::DoBlock { block } = &statement.facts else {
             panic!("DO expected")
         };

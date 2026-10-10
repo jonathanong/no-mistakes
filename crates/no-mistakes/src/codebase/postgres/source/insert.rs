@@ -11,7 +11,9 @@ use sqlparser::tokenizer::TokenWithSpan;
 mod column_sources;
 pub(super) mod parsing;
 mod provenance;
+mod returning;
 pub(super) mod source_projection;
+pub(in crate::codebase::postgres::source) use returning::cte_column_sources;
 mod spans;
 mod targets;
 mod values;
@@ -26,7 +28,7 @@ pub(super) fn project(
     project_inner(value, facts, locations, false, tokens)
 }
 
-/// The query collector owns CTE sources and RETURNING; borrow only the INSERT core.
+/// The query collector owns CTE sources and the public RETURNING list.
 pub(super) fn project_cte_core(value: &Insert, locations: &Locations<'_>) -> PostgresSqlInsert {
     project_inner(value, None, locations, true, &[])
 }
@@ -46,8 +48,10 @@ fn project_inner(
         .table_alias
         .as_ref()
         .map(|alias| identifier(&alias.alias));
+    let returning = returning::project(value.returning.as_deref(), locations);
     let mut complete = table.is_some()
-        && supported_modifiers(value, cte_core)
+        && supported_modifiers(value)
+        && (cte_core || returning.complete)
         && !facts.is_some_and(|facts| facts.unsupported_with);
     let source_span = facts.and_then(|facts| facts.source_span);
     let delimiters = spans::locate_delimiters(&spans::delimiters(tokens), locations);
@@ -178,14 +182,7 @@ fn project_inner(
             None
         }
     };
-    let diagnostics = if complete {
-        Vec::new()
-    } else {
-        vec![PostgresSqlDiagnostic {
-            message: "INSERT facts contain unsupported or incompletely represented syntax".into(),
-            span: locations.span(value.span()),
-        }]
-    };
+    let diagnostics = returning::diagnostics(complete, value, locations);
     PostgresSqlInsert {
         table,
         alias,
@@ -194,6 +191,7 @@ fn project_inner(
         column_sources,
         source,
         on_conflict,
+        returning: returning.items,
         span: locations.span(value.span()),
         complete,
         diagnostics,

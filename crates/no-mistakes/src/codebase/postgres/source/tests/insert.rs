@@ -104,7 +104,8 @@ fn insert_sources_and_conflicts_retain_original_boundaries() {
         .unwrap()
         .predicate
         .is_some());
-    assert!(!inserts[11].complete);
+    assert!(inserts[11].complete);
+    assert_eq!(inserts[11].returning.len(), 1);
     assert!(inserts[12].complete); // Alias collision has known syntax, unresolved lineage.
     assert!(!inserts[9].complete); // Tuple RHS operands are not projected as typed children.
 }

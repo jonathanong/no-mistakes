@@ -6,6 +6,7 @@ import type {
   PostgresSqlSpan,
 } from "./postgres-source-types";
 import type { PostgresSqlQuery } from "./postgres-query-types";
+import type { PostgresSqlReturningItem } from "./postgres-query-statement-types";
 /** Syntactic facts only: complete does not establish replay safety. */
 export interface PostgresSqlInsert {
   table: PostgresSqlName | null;
@@ -15,6 +16,8 @@ export interface PostgresSqlInsert {
   columnSources: PostgresSqlInsertColumnSources;
   source: PostgresSqlInsertSource;
   onConflict: PostgresSqlConflict | null;
+  /** Empty when the statement has no RETURNING clause. */
+  returning: PostgresSqlReturningItem[];
   span: PostgresSqlSpan | null;
   /** Syntax completeness is independent of provenance and does not imply replay safety. */
   complete: boolean;

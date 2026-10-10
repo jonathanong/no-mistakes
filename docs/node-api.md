@@ -152,7 +152,11 @@ Expression `children` expose ordered typed operands and descendants, with
 `childrenComplete` independent of INSERT source lineage. INSERT `columnSources`
 maps explicit target columns positionally across VALUES rows and SELECT/set
 branches; unsupported or ambiguous forms return a typed reason instead of a
-partial mapping. Child/source spans are nullable when prepared tokens cannot
+partial mapping. Top-level INSERT facts include `returning`, an array of
+`expression`, `wildcard`, or `unsupported` items, empty when the statement has
+no RETURNING clause. A data-modifying CTE insert includes `columnSources` only
+when that insert has RETURNING, and that lineage matches the direct INSERT of
+the same source syntax. Child/source spans are nullable when prepared tokens cannot
 prove complete wrapper boundaries. Inspect nullable spans separately from
 `childrenComplete`, which describes the full represented syntax.
 CREATE INDEX facts retain PostgreSQL's `ON ONLY relation` modifier as

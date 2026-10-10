@@ -38,6 +38,10 @@ fn data_modifying_ctes_are_typed_ordered_and_share_query_provenance() {
     assert!(
         matches!(insert.source, PostgresSqlCteInsertSource::Values { ref rows, .. } if rows.len() == 2)
     );
+    assert!(matches!(
+        insert.column_sources,
+        Some(PostgresSqlInsertColumnSources::Mapped { .. })
+    ));
     let PostgresSqlQueryStatementKind::Update { update } = &q.nested_statements[1].facts else {
         panic!()
     };
@@ -129,6 +133,7 @@ fn unreferenced_and_nested_modifying_ctes_keep_existing_reachability_semantics()
         insert.source,
         PostgresSqlCteInsertSource::DefaultValues
     ));
+    assert!(insert.column_sources.is_none());
     let nested = &q[2];
     assert!(nested.complete, "{:?}", nested.unsupported);
     assert_eq!(nested.nested_statements.len(), 3);
@@ -233,6 +238,14 @@ fn broader_dialect_modifiers_keep_typed_children_explicitly_incomplete() {
         panic!()
     };
     assert!(!insert.diagnostics.is_empty());
+    assert!(insert.column_sources.is_none());
+    let PostgresSqlQueryStatementKind::Insert { insert } = &q[2].nested_statements[0].facts else {
+        panic!()
+    };
+    assert!(matches!(
+        insert.column_sources,
+        Some(PostgresSqlInsertColumnSources::Mapped { .. })
+    ));
 }
 
 #[test]
