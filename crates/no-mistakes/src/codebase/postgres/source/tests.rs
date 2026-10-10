@@ -22,6 +22,7 @@ mod procedural;
 mod procedural_empty_statements;
 mod procedural_execute_into;
 mod procedural_occurrences;
+mod procedural_quoted_label;
 mod schema;
 mod schema_virtual;
 mod structured_replay;
