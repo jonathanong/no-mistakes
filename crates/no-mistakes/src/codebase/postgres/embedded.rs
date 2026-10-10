@@ -196,21 +196,9 @@ fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
         if index > 0 {
             out.push_str(&placeholders::internal_placeholder(index));
         }
-        out.push_str(quasi_text(quasi, use_raw));
+        out.push_str(tags::quasi_text(quasi, use_raw));
     }
     out
-}
-
-fn quasi_text<'a>(quasi: &'a oxc_ast::ast::TemplateElement<'a>, use_raw: bool) -> &'a str {
-    if use_raw {
-        return quasi.value.raw.as_str();
-    }
-    quasi
-        .value
-        .cooked
-        .as_ref()
-        .map(|cooked| cooked.as_str())
-        .unwrap_or(quasi.value.raw.as_str())
 }
 
 #[cfg(test)]
