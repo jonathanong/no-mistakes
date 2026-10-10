@@ -59,6 +59,19 @@ fn helper_review_regressions_preserve_call_identity_exports_and_live_captures() 
 }
 
 #[test]
+fn executor_free_root_still_reports_imported_executor_through_cyclic_reexports() {
+    let root = fixture("helper-tracing-reachability");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let config = config_with_options(
+        "importSpecifier: '@app/db'\ninclude: ['src/helper.mts']\nunanalyzableSql: ignore",
+    );
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "src/helper.mts");
+    assert_eq!(findings[0].line, 3);
+}
+
+#[test]
 fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
     for scenario in [
         "helper-tracing-post-merge",
