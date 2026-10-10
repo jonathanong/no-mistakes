@@ -3,7 +3,7 @@ mod callbacks;
 mod calls;
 mod concat;
 mod member;
-use concat::concat;
+use {concat::concat, scope::Scope};
 mod delete;
 mod effects;
 mod index;
@@ -13,7 +13,6 @@ mod opaque;
 mod result;
 mod run;
 mod scope;
-use scope::Scope;
 mod slot_write;
 mod slots;
 mod statements;
@@ -21,8 +20,8 @@ mod tagged;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{FxHashMap, FxHashSet};
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::{collections::BTreeMap, sync::Arc};
 
 #[derive(Clone, Eq, PartialEq)]
 pub(super) enum Value {
@@ -35,7 +34,7 @@ pub(super) enum Value {
     // Candidate runtime values with an implicit unknown alternative.
     Possible(Vec<Value>),
     Arguments(u64),
-    Function(std::sync::Arc<Function>, PathBuf, Environment),
+    Function(Arc<Function>, PathBuf, Environment),
     Unknown,
     Primitive,
     Unsupported,
@@ -118,11 +117,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Function(function) => {
                 // Request-owned scope IDs retain live bindings without recursive
                 // closure copies or reference cycles between sibling functions.
-                Value::Function(
-                    std::sync::Arc::new(function.clone()),
-                    path.to_path_buf(),
-                    *env,
-                )
+                Value::Function(Arc::new(function.clone()), path.to_path_buf(), *env)
             }
             Expr::Template(parts) => {
                 let mut prefix = Value::Prefix(String::new(), true, None);
@@ -156,7 +151,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::OpaqueCallback(expr) => {
                 match self.expr(expr, path, env, depth, generic).exposed() {
                     Value::Function(mut function, path, captured) => {
-                        std::sync::Arc::make_mut(&mut function).supported = false;
+                        Arc::make_mut(&mut function).supported = false;
                         Value::Function(function, path, captured)
                     }
                     _ => Value::Unknown,

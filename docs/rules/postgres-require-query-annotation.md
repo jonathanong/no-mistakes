@@ -14,6 +14,10 @@ Helper evaluation shares immutable function summaries and binding snapshots.
 Builder lookup indexes are memoized within each snapshot and invalidated on
 writes; speculative entrypoints retain isolated effects. These in-memory
 structures belong to the current request and are never persisted.
+Roots that cannot reach configured executor calls skip helper evaluation. A caller
+without its own executor stays eligible when an imported helper executes SQL.
+Conditional binding updates retain distinct alternatives without repeatedly
+duplicating earlier possibilities; conflicting outcomes remain unproven.
 
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside

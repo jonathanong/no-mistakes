@@ -39,7 +39,7 @@ impl Scope {
                         ids.insert(*id);
                     }
                     Value::Promise(value) | Value::Evaluated(value, _) => collect(value, ids),
-                    Value::Aggregate(values) | Value::Possible(values) => {
+                    Value::Aggregate(values) | Value::Possible(values) | Value::Joined(values) => {
                         for value in values {
                             collect(value, ids);
                         }
