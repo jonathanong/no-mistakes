@@ -9,9 +9,12 @@ fn builder_index_reuses_snapshots_and_follows_every_write() {
         (
             "nested".into(),
             Value::Promise(Box::new(Value::Evaluated(
-                Box::new(Value::Aggregate(vec![Value::Possible(vec![
-                    Value::Joined(vec![prefix(8)]),
-                ])])),
+                Box::new(Value::Aggregate(
+                    vec![Value::Possible(
+                        vec![Value::Joined(vec![prefix(8)].into())].into(),
+                    )]
+                    .into(),
+                )),
                 true,
             ))),
         ),

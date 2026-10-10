@@ -73,7 +73,7 @@ pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) 
                 let mut values = Vec::new();
                 candidates(std::mem::replace(value, Value::Unknown), &mut values);
                 candidates(next.clone(), &mut values);
-                Value::Joined(values)
+                Value::Joined(values.into())
             };
         }
     }

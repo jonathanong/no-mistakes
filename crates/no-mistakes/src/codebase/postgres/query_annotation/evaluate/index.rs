@@ -13,7 +13,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         .cloned()
                         .unwrap_or(Value::Unknown);
                     return if self.invalidated_builders.contains(&id) {
-                        Value::Possible(vec![slot])
+                        Value::Possible(vec![slot].into())
                     } else {
                         slot
                     };
@@ -29,12 +29,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     || self.deleted_argument_slots.contains(&(id, Some(index)))
                     || self.deleted_argument_slots.contains(&(id, None))
                 {
-                    Value::Possible(vec![slot])
+                    Value::Possible(vec![slot].into())
                 } else {
                     slot
                 }
             }
-            value => Value::Aggregate(vec![value]),
+            value => Value::Aggregate(vec![value].into()),
         }
     }
 }

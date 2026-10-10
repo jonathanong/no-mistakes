@@ -89,6 +89,27 @@ fn repeated_conditional_builder_updates_preserve_unproven_sql() {
 }
 
 #[test]
+fn shared_container_snapshots_preserve_both_indexed_findings() {
+    let root = fixture("helper-tracing-values-cow");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let config = config_with_options(
+        "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: report",
+    );
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == "src/query.mts"));
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 9]
+    );
+}
+
+#[test]
 fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
     for scenario in [
         "helper-tracing-post-merge",

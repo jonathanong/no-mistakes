@@ -40,7 +40,7 @@ pub(super) fn objects(
                         // Differing dense slots are candidates, not an opaque
                         // aggregate. prefix() inspects Possible, so an
                         // unannotated arm stays a violation under ignore mode.
-                        *before = Value::Possible(values);
+                        *before = Value::Possible(values.into());
                     }
                 }
             }
@@ -82,7 +82,7 @@ pub(super) fn value(before: Value, after: Value) -> Value {
     alternatives(before, &mut values);
     alternatives(after, &mut values);
     // Sparse slots use the same candidate join as dense argument vectors.
-    Value::Possible(values)
+    Value::Possible(values.into())
 }
 
 pub(super) fn shared_ids(

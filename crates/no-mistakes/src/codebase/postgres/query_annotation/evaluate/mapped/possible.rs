@@ -17,7 +17,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // Keep the actual property precise; only the uncertain formal joins.
             self.scopes[frame].insert(
                 name.clone(),
-                Value::Possible(vec![previous, stored.clone()]),
+                Value::Possible(vec![previous, stored.clone()].into()),
             );
         }
     }

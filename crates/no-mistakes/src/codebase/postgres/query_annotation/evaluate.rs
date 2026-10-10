@@ -17,38 +17,14 @@ mod slot_write;
 mod slots;
 mod statements;
 mod tagged;
+mod value;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{FxHashMap, FxHashSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::{collections::BTreeMap, sync::Arc};
+pub(super) use value::Value;
 
-#[derive(Clone, Eq, PartialEq)]
-pub(super) enum Value {
-    Prefix(String, bool, Option<u64>),
-    Promise(Box<Value>),
-    Evaluated(Box<Value>, bool),
-    Aggregate(Vec<Value>),
-    // Alternative binding values; unlike Aggregate, this is not a container.
-    Joined(Vec<Value>),
-    // Candidate runtime values with an implicit unknown alternative.
-    Possible(Vec<Value>),
-    Arguments(u64),
-    Function(Arc<Function>, PathBuf, Environment),
-    Unknown,
-    Primitive,
-    Unsupported,
-    SlotDeletion,
-}
-impl Value {
-    pub(super) fn exposed(self) -> Self {
-        let mut value = self;
-        while let Self::Evaluated(inner, _) = value {
-            value = *inner;
-        }
-        value
-    }
-}
 pub(super) type Environment = usize;
 pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
@@ -146,7 +122,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Discard(expr) => self.discard(expr, path, env, (depth, generic)),
             Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
             Expr::Spread(expr) => {
-                Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)])
+                Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)].into())
             }
             Expr::OpaqueCallback(expr) => {
                 match self.expr(expr, path, env, depth, generic).exposed() {
@@ -193,7 +169,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 children
                     .iter()
                     .map(|child| self.expr(child, path, env, depth, generic))
-                    .collect(),
+                    .collect::<Vec<_>>()
+                    .into(),
             ),
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))

@@ -115,7 +115,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
                 id,
                 vec![
                     Value::Evaluated(Box::new(Value::Promise(Box::new(callback.clone()))), true),
-                    Value::Aggregate(vec![callback.clone()]),
+                    Value::Aggregate(vec![callback.clone()].into()),
                 ],
             );
             // Distinct invocation objects retain their own canonical positions;

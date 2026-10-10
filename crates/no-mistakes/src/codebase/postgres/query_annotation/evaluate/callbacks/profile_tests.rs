@@ -145,7 +145,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
     let builder = evaluator.scopes[root]["builder"].clone();
     evaluator.scopes[captured].insert(
         "parameter".into(),
-        Value::Possible(vec![Value::Evaluated(Box::new(builder), true)]),
+        Value::Possible(vec![Value::Evaluated(Box::new(builder), true)].into()),
     );
     let wrappers = evaluator.callback_snapshot(captured, &function);
     evaluator.builder_updates.remove(&builder_id);

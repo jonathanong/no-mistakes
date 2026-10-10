@@ -188,6 +188,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.prune_alternative_state(&returned);
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
-        Value::Aggregate(returned)
+        Value::Aggregate(returned.into())
     }
 }
