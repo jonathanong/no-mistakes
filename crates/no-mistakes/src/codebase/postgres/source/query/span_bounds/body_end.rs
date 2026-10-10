@@ -103,7 +103,12 @@ impl QuerySpanBounds {
             .map(|token| token.end)
     }
 
-    pub(super) fn clause_before(&self, indexes: &[usize], anchor: usize, lower: usize) -> Option<usize> {
+    pub(super) fn clause_before(
+        &self,
+        indexes: &[usize],
+        anchor: usize,
+        lower: usize,
+    ) -> Option<usize> {
         let before = indexes.partition_point(|&index| self.tokens[index].start <= anchor);
         let start = self.tokens[*indexes.get(before.checked_sub(1)?)?].start;
         (start >= lower).then_some(start)
