@@ -48,7 +48,8 @@ fn project_inner(
         .table_alias
         .as_ref()
         .map(|alias| identifier(&alias.alias));
-    let returning = returning::project(value.returning.as_deref(), locations);
+    let returning_clause = value.returning.as_deref();
+    let returning = returning::project(if cte_core { None } else { returning_clause }, locations);
     let mut complete = table.is_some()
         && supported_modifiers(value)
         && (cte_core || returning.complete)
