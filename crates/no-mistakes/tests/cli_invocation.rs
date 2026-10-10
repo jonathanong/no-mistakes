@@ -59,7 +59,13 @@ fn lockfile_git_discovery_timeout_does_not_render_partial_output() {
         "timed-out discovery must not render a partial result: {}",
         stdout(&output)
     );
-    assert!(stderr(&output).contains("timed out"));
+    // The watcher reports "timed out". The child-wait path reports "deadline
+    // elapsed" and can win the race. Either diagnostic is the timeout.
+    let error = stderr(&output);
+    assert!(
+        error.contains("timed out") || error.contains("deadline elapsed"),
+        "timeout must name itself on stderr: {error}"
+    );
 }
 
 #[test]
