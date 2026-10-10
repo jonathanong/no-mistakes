@@ -376,6 +376,22 @@ fn nested_not_keeps_node_negation_and_exposes_effective_polarity() {
         vec![(1, None, false, false, true, false, false, false, true, false)],
         "NOT (EXISTS = false) hides polarity"
     );
+    // BETWEEN, IN, and arrays hide parity the same way a comparison does.
+    let wrapped = (
+        1, None, false, false, true, false, false, false, true, false,
+    );
+    assert_eq!(
+        report[27],
+        vec![wrapped],
+        "NOT (EXISTS BETWEEN) hides polarity"
+    );
+    assert_eq!(report[28], vec![wrapped], "NOT (IN list) hides polarity");
+    assert_eq!(report[29], vec![wrapped], "NOT (array) hides polarity");
+    assert_eq!(
+        report[30],
+        vec![wrapped],
+        "NOT (value IN (subquery)) hides polarity"
+    );
 
     let facts = facts("query-exists-polarity.sql");
     let exists = &exists_in(&facts.statements[0])[0];

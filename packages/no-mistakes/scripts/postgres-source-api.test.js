@@ -1369,6 +1369,20 @@ test(
     assert.equal(caseNot[0].context.underCase, true);
     assert.equal(caseNot[0].context.underBooleanTest, false);
     assert.equal(caseNot[0].context.underOther, false);
+    for (const fragment of [
+      "EXISTS (SELECT 1) BETWEEN false AND true",
+      "false IN (EXISTS (SELECT 1))",
+      "ARRAY[EXISTS (SELECT 1)]",
+      "(EXISTS (SELECT 1)) IN (SELECT false)",
+    ]) {
+      const wrapped = bySql(fragment);
+      assert.equal(wrapped.length, 1, fragment);
+      const [fact] = wrapped;
+      assert.equal(fact.effectiveNegated, null);
+      assert.equal(fact.notDepth, 1);
+      assert.equal(fact.context.underOther, true);
+      assert.equal(fact.context.underNot, true);
+    }
   },
 );
 
