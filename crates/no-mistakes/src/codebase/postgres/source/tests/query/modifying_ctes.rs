@@ -481,3 +481,38 @@ fn select_source_on_conflict_inside_a_modifying_cte_stays_one_complete_query() {
         Some(PostgresSqlConflictAction::DoNothing)
     ));
 }
+
+#[test]
+fn with_wrapped_values_ctes_map_the_values_row() {
+    let result = facts("insert-with-values-column-sources.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    let PostgresSqlStatementKind::Insert { insert } = &result.statements[0].facts else {
+        panic!("direct INSERT expected")
+    };
+    assert!(matches!(
+        insert.column_sources,
+        PostgresSqlInsertColumnSources::Mapped { .. }
+    ));
+    let PostgresSqlStatementKind::Select { query } = &result.statements[1].facts else {
+        panic!("RETURNING CTE expected")
+    };
+    let PostgresSqlQueryStatementKind::Insert { insert } = &query.nested_statements[0].facts else {
+        panic!("nested INSERT expected")
+    };
+    assert!(matches!(
+        insert.source,
+        PostgresSqlCteInsertSource::Values { .. }
+    ));
+    assert!(matches!(
+        insert.column_sources,
+        Some(PostgresSqlInsertColumnSources::Mapped { .. })
+    ));
+    assert!(query.ctes.iter().any(|cte| cte.name.identity == "seed"));
+    let PostgresSqlStatementKind::Select { query } = &result.statements[2].facts else {
+        panic!("non-RETURNING CTE expected")
+    };
+    let PostgresSqlQueryStatementKind::Insert { insert } = &query.nested_statements[0].facts else {
+        panic!("plain INSERT expected")
+    };
+    assert!(insert.column_sources.is_none());
+}

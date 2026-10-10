@@ -21,7 +21,7 @@ impl Collector<'_, '_> {
         }
         let source = match value.source.as_deref() {
             None => PostgresSqlCteInsertSource::DefaultValues,
-            Some(query) if matches!(&*query.body, SetExpr::Values(_)) && query.with.is_none() => {
+            Some(query) if matches!(&*query.body, SetExpr::Values(_)) => {
                 let SetExpr::Values(values) = &*query.body else {
                     unreachable!()
                 };
@@ -33,14 +33,38 @@ impl Collector<'_, '_> {
                         query.span(),
                     );
                 }
-                self.query_clauses(query, scope, env);
+                // Source-level WITH is outside the VALUES rows. Record it on a source
+                // scope the way SELECT does, without reclassifying this source.
+                let record_with = query.with.is_some();
+                if record_with {
+                    let outer_insert_source = self.insert_source;
+                    self.insert_source = true;
+                    self.query(
+                        query,
+                        Some(scope),
+                        None,
+                        PostgresSqlQueryClause::Other,
+                        env,
+                        self.facts.scopes[scope].cte_definition_id,
+                    );
+                    self.insert_source = outer_insert_source;
+                } else {
+                    self.query_clauses(query, scope, env);
+                }
                 let rows = values
                     .rows
                     .iter()
                     .map(|row| {
                         row.iter()
                             .map(|expr| {
-                                self.nonpredicate(expr, scope, PostgresSqlQueryClause::Other, env);
+                                if !record_with {
+                                    self.nonpredicate(
+                                        expr,
+                                        scope,
+                                        PostgresSqlQueryClause::Other,
+                                        env,
+                                    );
+                                }
                                 expression(expr, self.locations)
                             })
                             .collect()
