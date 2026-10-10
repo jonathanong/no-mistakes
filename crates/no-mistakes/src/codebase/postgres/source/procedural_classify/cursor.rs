@@ -18,7 +18,11 @@ pub(super) fn at_plain_end(ctx: &Ctx<'_>) -> bool {
 }
 
 fn end_modifier(ctx: &Ctx<'_>) -> bool {
-    word_after(ctx, "END").is_some_and(|word| matches!(word, "IF" | "LOOP" | "CASE"))
+    let index = peek_index(ctx).expect("END");
+    ((index + 1)..ctx.tokens.len())
+        .find(|index| !matches!(ctx.tokens[*index].token, Token::Whitespace(_)))
+        .and_then(|index| word_of(&ctx.tokens[index].token))
+        .is_some_and(|word| matches!(word, "IF" | "LOOP" | "CASE"))
 }
 
 pub(super) fn at_dml(ctx: &Ctx<'_>) -> bool {
@@ -104,25 +108,10 @@ pub(super) fn peek_word<'a>(ctx: &Ctx<'a>) -> Option<&'a str> {
     peek_index(ctx).and_then(|index| word_of(&ctx.tokens[index].token))
 }
 
-fn word_after<'a>(ctx: &Ctx<'a>, value: &str) -> Option<&'a str> {
-    let index = peek_index(ctx)?;
-    if !word_of(&ctx.tokens[index].token).is_some_and(|word| eq(word, value)) {
-        return None;
-    }
-    ((index + 1)..ctx.tokens.len())
-        .find(|index| !matches!(ctx.tokens[*index].token, Token::Whitespace(_)))
-        .and_then(|index| word_of(&ctx.tokens[index].token))
-}
-
 pub(super) fn last_index(ctx: &Ctx<'_>, start: usize) -> usize {
-    let mut index = ctx.index.saturating_sub(1).max(start);
-    while index > start
-        && matches!(
-            ctx.tokens.get(index).map(|token| &token.token),
-            Some(Token::Whitespace(_))
-        )
-    {
-        index -= 1;
-    }
-    index.min(ctx.tokens.len().saturating_sub(1)).max(start)
+    ctx.index
+        .saturating_sub(1)
+        .max(start)
+        .min(ctx.tokens.len().saturating_sub(1))
+        .max(start)
 }

@@ -310,3 +310,132 @@ fn exception_handlers_nested_do_and_cte_dml_keep_occurrence_kinds() {
     assert!(format!("{:?}", parsed.occurrences).contains("Dml"));
     assert!(format!("{:?}", parsed.occurrences).contains("Unknown"));
 }
+
+#[test]
+fn partial_forms_keep_distinct_occurrence_kinds() {
+    let (_, parsed) = block("DO $$ BEGIN CREATE TABLE t(id integer); ; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Utility"]);
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+
+    let (_, parsed) = block("DO $$ BEGIN LOOP SELECT 1; END LOOP; END $$;");
+    assert!(!parsed.complete);
+    assert!(parsed.statements.is_empty());
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(parsed.diagnostics.iter().any(|diagnostic| diagnostic
+        .message
+        .contains("Unsupported procedural occurrence")));
+
+    let (_, parsed) = block("DO $$ BEGIN IF true RAISE NOTICE 'a'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown", "Unknown"]);
+    let (_, parsed) = block("DO $$ BEGIN IF true THEN RAISE NOTICE 'a'; END $$;");
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["Unknown[\"ControlFlow\"]", "Unknown"]
+    );
+    let (_, parsed) = block("DO $$ BEGIN CASE WHEN true RAISE NOTICE 'a'; END CASE; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown", "Unknown"]);
+    let (_, parsed) = block("DO $$ BEGIN CASE WHEN true THEN RAISE NOTICE 'a'; END $$;");
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["Unknown[\"ControlFlow\"]", "Unknown"]
+    );
+    let (_, parsed) = block("DO $$ BEGIN FOR i IN 1..2 INSERT INTO t(id) VALUES (i); END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown[\"Dml\"]", "Unknown"]);
+
+    let (_, parsed) = block(
+        "DO $$ BEGIN BEGIN INSERT INTO t(id) VALUES (1); EXCEPTION WHEN unique_violation THEN DELETE FROM t; END; END $$;",
+    );
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["ControlFlow[\"Dml\", \"ControlFlow[\\\"Dml\\\"]\"]"]
+    );
+    assert!(parsed.statements.is_empty());
+    let (_, parsed) = block("DO $$ BEGIN BEGIN INSERT INTO t(id) VALUES (1); END IF; END $$;");
+    assert!(kinds(&parsed.occurrences)[0].contains("Unknown"));
+    let (_, parsed) = block(
+        "DO $$ BEGIN INSERT INTO t(id) VALUES (1); EXCEPTION WHEN unique_violation DELETE FROM t; END $$;",
+    );
+    assert!(kinds(&parsed.occurrences)
+        .iter()
+        .any(|kind| kind.contains("Unknown")));
+
+    let (_, parsed) = block("DO $$ BEGIN IF INSERT THEN RAISE NOTICE 'a'; END IF; END $$;");
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["ControlFlow[\"Dml\", \"ControlFlow\"]"]
+    );
+    let (_, parsed) = block("DO $$ BEGIN IF EXECUTE THEN RAISE NOTICE 'a'; END IF; END $$;");
+    assert!(kinds(&parsed.occurrences)[0].contains("DynamicExecute"));
+    assert!(!parsed.complete);
+    let (_, parsed) = block(
+        "DO $$ BEGIN IF CASE WHEN true THEN 1 ELSE 0 END > 0 THEN RAISE NOTICE 'ok'; END IF; END $$;",
+    );
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"ControlFlow\"]"]);
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+
+    let (_, parsed) =
+        block("DO $$ BEGIN WITH c AS (SELECT 1) INSERT INTO t(id) VALUES (1); END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Dml"]);
+    let (_, parsed) = block("DO $$ BEGIN WITH c AS (SELECT 1) EXECUTE command; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["DynamicExecute"]);
+    assert!(!parsed.complete);
+    let (_, parsed) = block("DO $$ BEGIN RAISE NOTICE INSERT; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Dml\"]"]);
+    let (_, parsed) = block("DO $$ BEGIN RAISE NOTICE EXECUTE; END $$;");
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["ControlFlow[\"DynamicExecute\"]"]
+    );
+    let (_, parsed) = block("DO $$ BEGIN CREATE TYPE x AS ENUM ('a'); EXECUTE $$;");
+    assert!(kinds(&parsed.occurrences)
+        .iter()
+        .any(|kind| kind.contains("DynamicExecute")));
+    let (_, parsed) =
+        block("DO $$ BEGIN CREATE TABLE t(id integer); END IF; EXECUTE command; END $$;");
+    assert!(kinds(&parsed.occurrences)
+        .iter()
+        .any(|kind| kind.contains("Unknown") && kind.contains("DynamicExecute")));
+
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE ''; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE 'SELECT 1'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    assert!(parsed
+        .statements
+        .iter()
+        .all(|statement| !matches!(statement.facts, PostgresSqlStatementKind::Insert { .. })));
+    let (_, parsed) =
+        block("DO $$ BEGIN EXECUTE 'IF true THEN CREATE TABLE kept(id integer); END IF;'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow"]);
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE 'EXECUTE command'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["DynamicExecute"]);
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE ('INSERT INTO t(id) VALUES (1)' extra); END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["DynamicExecute"]);
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE $q$U&'bad\\zzzz'$q$; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+
+    let facts = parse_postgres_source(&PostgresSqlSource {
+        sql: "DO $$ BEGIN U&'bad\\zzzz'; END $$;".into(),
+        file_name: Some("procedural-occurrences.sql".into()),
+    });
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    let PostgresSqlStatementKind::DoBlock { block: parsed } = &facts.statements[0].facts else {
+        panic!("{facts:?}");
+    };
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+
+    let facts = parse_postgres_source(&PostgresSqlSource {
+        sql: "DO $$ <<mark>> BEGIN CREATE TYPE x AS ENUM ('a'); END $$;".into(),
+        file_name: Some("procedural-occurrences.sql".into()),
+    });
+    let PostgresSqlStatementKind::DoBlock { block: parsed } = &facts.statements[0].facts else {
+        panic!("{facts:?}");
+    };
+    assert!(!parsed.complete);
+    assert!(parsed.statements.is_empty());
+    assert_eq!(kinds(&parsed.occurrences), ["Utility"]);
+    assert!(parsed
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.message.contains("unsupported")));
+}

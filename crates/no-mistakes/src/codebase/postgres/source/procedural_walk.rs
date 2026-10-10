@@ -33,7 +33,7 @@ pub(super) fn walk(
     let local = Locations::new(body.sql.as_ref());
     let classified = super::procedural_classify::classify(
         &tokens,
-        &|start, end| map_span(&tokens, start, end, body, &local, locations, body_span),
+        &|start, end| map_span(&tokens, start, end, body, &local, locations),
         true,
     );
     Walk {
@@ -44,9 +44,6 @@ pub(super) fn walk(
 }
 
 pub(super) fn finish_unparsed(block: &mut PostgresSqlProceduralBlock, span: &PostgresSqlSpan) {
-    if block.occurrences.is_empty() {
-        block.occurrences.push(unknown(span.clone()));
-    }
     push_walk_diagnostics(block, span);
     block.complete = recognized(&block.occurrences);
 }
@@ -148,28 +145,17 @@ fn map_span(
     body: &Body<'_>,
     local: &Locations<'_>,
     original: &Locations<'_>,
-    fallback: &PostgresSqlSpan,
 ) -> PostgresSqlSpan {
-    let Some(start_token) = tokens.get(start.min(end)) else {
-        return fallback.clone();
-    };
-    let Some(end_token) = tokens.get(end.max(start)) else {
-        return fallback.clone();
-    };
-    let Some(start) = local
+    // Indexes come from tokens the walker just consumed in this body.
+    let start_token = &tokens[start.min(end)];
+    let end_token = &tokens[end.max(start)];
+    let start = local
         .position(start_token.span.start)
         .and_then(|position| body.offset(position.offset))
-    else {
-        return fallback.clone();
-    };
-    let Some(end) = local
+        .expect("procedural occurrence start");
+    let end = local
         .position(end_token.span.end)
         .and_then(|position| body.offset(position.offset))
-    else {
-        return fallback.clone();
-    };
-    if start > end {
-        return fallback.clone();
-    }
+        .expect("procedural occurrence end");
     original.range(start, end)
 }

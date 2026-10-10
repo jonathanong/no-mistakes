@@ -96,11 +96,7 @@ pub(super) fn walk_statements(
         if cursor::peek_index(ctx).is_none() || cursor::stopped(ctx, stop) {
             break;
         }
-        let before = ctx.index;
         occurrences.push(statements::statement(ctx));
-        if ctx.index <= before {
-            cursor::bump(ctx);
-        }
     }
     occurrences
 }
