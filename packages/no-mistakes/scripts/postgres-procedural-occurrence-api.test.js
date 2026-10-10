@@ -39,6 +39,14 @@ const CASES = [
     diagnostic: /Unsupported procedural occurrence/,
   },
   {
+    name: "create beside dynamic loop",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); LOOP EXECUTE format('SELECT 1'); END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(dynamicExecute)"],
+    statements: 1,
+    diagnostic: /Dynamic EXECUTE is unknown/,
+  },
+  {
     name: "create beside loop dml",
     sql: "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",
     complete: false,
