@@ -107,6 +107,44 @@ test(
 );
 
 test(
+  "compiled CJS/ESM SELECT-source ON CONFLICT inside a CTE stays one complete query",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-cte-select-conflict.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 4);
+    const query = facts.statements[0].query;
+    assert.equal(query.complete, true);
+    assert.equal(query.nestedStatements.length, 1);
+    const child = query.nestedStatements[0];
+    assert.equal(child.kind, "insert");
+    assert.equal(child.complete, true);
+    assert.equal(
+      Buffer.from(sql).subarray(child.span.start.offset, child.span.end.offset).toString(),
+      child.sql,
+    );
+    assert.equal(child.insert.source.kind, "select");
+    assert.equal(child.insert.onConflict.action.kind, "doNothing");
+    assert.ok(child.returning.length > 0);
+    const topLevel = facts.statements[1].insert;
+    assert.equal(facts.statements[1].kind, "insert");
+    assert.equal(topLevel.complete, true);
+    assert.equal(topLevel.onConflict.action.kind, "doNothing");
+    const ordinary = facts.statements[2].query;
+    assert.equal(ordinary.complete, true);
+    assert.deepEqual(ordinary.nestedStatements, []);
+    const values = facts.statements[3].query.nestedStatements[0];
+    assert.equal(values.complete, true);
+    assert.equal(values.insert.source.kind, "values");
+    assert.equal(values.insert.onConflict.action.kind, "doNothing");
+  },
+);
+
+test(
   "compiled CJS/ESM conflict actions retain canonical query expressions",
   { skip: !compiled },
   async () => {

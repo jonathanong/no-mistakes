@@ -1,0 +1,12 @@
+-- SELECT-source ON CONFLICT is valid PostgreSQL inside a data-modifying CTE.
+WITH s AS (
+ INSERT INTO t(id, v) SELECT 1, now() ON CONFLICT DO NOTHING RETURNING id
+)
+SELECT id FROM s;
+
+INSERT INTO t(id, v) SELECT 1, now() ON CONFLICT DO NOTHING;
+
+WITH s AS (SELECT 1 AS id WHERE true) SELECT id FROM s;
+
+WITH s AS (INSERT INTO t(id) VALUES (5) ON CONFLICT (id) DO NOTHING RETURNING id)
+SELECT id FROM s;

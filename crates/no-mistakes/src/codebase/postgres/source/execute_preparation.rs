@@ -1,7 +1,6 @@
 //! Normalize procedural EXECUTE grammar for conditional AST ownership.
 use super::{locations::Locations, types::*};
 use sqlparser::{
-    dialect::PostgreSqlDialect,
     keywords::Keyword,
     parser::Parser,
     tokenizer::{Location, Token, TokenWithSpan, Word},
@@ -49,7 +48,8 @@ pub(super) fn prepare(
                 .find(|value| !matches!(value.token, Token::Whitespace(_)))
                 .unwrap()
                 .span;
-            let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(owned);
+            let mut parser = Parser::new(&super::dialect::PostgresSourceDialect)
+                .with_tokens_with_locations(owned);
             occurrences.insert(
                 token.span.start,
                 super::execute::collect(&mut parser, source, locations, depth),

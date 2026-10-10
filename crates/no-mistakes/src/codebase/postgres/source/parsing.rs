@@ -1,6 +1,6 @@
 use super::{ddl, locations::Locations, types::*};
 use crate::codebase::postgres::parse::PreparedPostgresTokens;
-use sqlparser::{ast::Statement, dialect::PostgreSqlDialect, parser::Parser, tokenizer::Token};
+use sqlparser::{ast::Statement, parser::Parser, tokenizer::Token};
 
 pub(super) fn collect_program(
     source: &PostgresSqlSource,
@@ -36,7 +36,8 @@ pub(super) fn collect_program(
         depth,
         procedural,
     );
-    let parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(prepared.tokens);
+    let parser = Parser::new(&super::dialect::PostgresSourceDialect)
+        .with_tokens_with_locations(prepared.tokens);
     let (mut parser, comments) = super::metadata_preparation::prepare(parser, locations);
     let wrapper_context = super::wrappers::Context::new(
         source,

@@ -434,7 +434,12 @@ An INSERT source query references its scope in that same report; it does not
 create a separate query inventory. UPDATE/DELETE/MERGE targets and FROM/USING
 inputs reference typed entries in `query.relations`. Unsupported modifiers or
 actions retain their typed child and make both the child and query incomplete.
-INSERT children also retain existing conflict diagnostics. Source locking clauses
+A nested `INSERT ... SELECT ... ON CONFLICT DO NOTHING` or `DO UPDATE`, including
+`RETURNING`, stays one complete modifying CTE. The same `ON CONFLICT` clause is
+typed on a top-level INSERT.
+A conflict-target `WHERE` predicate inside a CTE still produces a parser
+diagnostic and leaves neighboring statements available. INSERT children also
+retain existing conflict diagnostics. Source locking clauses
 (such as `FOR UPDATE`, including inside nested source queries) have no typed
 projection and explicitly make the INSERT child and query incomplete.
 
