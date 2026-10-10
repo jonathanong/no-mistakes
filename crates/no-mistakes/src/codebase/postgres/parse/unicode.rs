@@ -46,7 +46,8 @@ pub(super) fn tokenize_with_location(sql: &str, raw_unicode: bool) -> Vec<TokenW
     let Some((masked, literals)) = mask_literals(sql) else {
         return Vec::new();
     };
-    let Ok(mut tokens) = Tokenizer::new(&PostgreSqlDialect {}, &masked).tokenize_with_location()
+    let Ok(mut tokens) =
+        super::operator_boundary::tokenize_with_location(&PostgreSqlDialect {}, &masked)
     else {
         return Vec::new();
     };

@@ -5,7 +5,7 @@ use crate::codebase::postgres::source::types::{
 };
 use sqlparser::{
     dialect::PostgreSqlDialect,
-    tokenizer::{Token, TokenWithSpan, Tokenizer},
+    tokenizer::{Token, TokenWithSpan},
 };
 
 pub(super) fn command_kind(
@@ -20,7 +20,10 @@ pub(super) fn command_kind(
 }
 
 fn script_kind(sql: &str, depth: u8) -> PostgresSqlProceduralOccurrenceKind {
-    let Ok(tokens) = Tokenizer::new(&PostgreSqlDialect {}, sql).tokenize_with_location() else {
+    let Ok(tokens) = crate::codebase::postgres::parse::operator_boundary::tokenize_with_location(
+        &PostgreSqlDialect {},
+        sql,
+    ) else {
         return PostgresSqlProceduralOccurrenceKind::Unknown;
     };
     // Offsets are token indexes for this inner walk. They are not source spans.

@@ -80,12 +80,15 @@ fn skip_quoted(sql: &str, mut index: usize, quote: u8, backslash_escapes: bool) 
 }
 
 fn skip_dollar(sql: &str, start: usize) -> Option<usize> {
-    let bytes = sql.as_bytes();
     let mut index = start + 1;
-    while index < bytes.len() && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_') {
-        index += 1;
+    while let Some(character) = sql[index..].chars().next() {
+        if character.is_alphanumeric() || character == '_' {
+            index += character.len_utf8();
+        } else {
+            break;
+        }
     }
-    if bytes.get(index) != Some(&b'$') {
+    if sql.as_bytes().get(index) != Some(&b'$') {
         return None;
     }
     let tag = &sql[start..=index];

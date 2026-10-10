@@ -2,7 +2,7 @@ use super::{normalize_copy_data, normalize_table_queries, PostgresParseError};
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
-use sqlparser::tokenizer::{TokenWithSpan, Tokenizer};
+use sqlparser::tokenizer::TokenWithSpan;
 use std::borrow::Cow;
 use std::cell::{Cell, OnceCell, Ref, RefCell};
 
@@ -82,8 +82,7 @@ impl<'a> PreparedSql<'a> {
                 let separated = super::distinct_group::separate_distinct_grouping(&self.normalized);
                 self.source_positions_preserved
                     .set(matches!(separated, Cow::Borrowed(_)));
-                Tokenizer::new(&PostgreSqlDialect {}, &separated)
-                    .tokenize_with_location()
+                super::operator_boundary::tokenize_with_location(&PostgreSqlDialect {}, &separated)
                     .map_err(|error| PostgresParseError {
                         message: error.to_string(),
                     })

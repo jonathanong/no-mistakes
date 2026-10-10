@@ -1,12 +1,13 @@
 //! Stable predicate comparison preserves literal and quoted identifier contents.
 use sqlparser::dialect::PostgreSqlDialect;
-use sqlparser::tokenizer::{Token, Tokenizer};
+use sqlparser::tokenizer::Token;
 
 pub(crate) fn normalize(text: &str) -> String {
-    let Ok(tokens) = Tokenizer::new(&PostgreSqlDialect {}, text)
-        .with_unescape(false)
-        .tokenize()
-    else {
+    let Ok(tokens) = crate::codebase::postgres::parse::operator_boundary::tokenize_with_unescape(
+        &PostgreSqlDialect {},
+        text,
+        false,
+    ) else {
         return text.to_string();
     };
     tokens
