@@ -135,6 +135,6 @@ pub(super) fn execute_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence
     eat_word(ctx, "EXECUTE");
     let command = scan::take_command(ctx);
     consume_statement(ctx, false);
-    let kind = command_kind(ctx.tokens, &command);
+    let kind = command_kind(ctx.tokens, &command, ctx.depth);
     done(ctx, kind, start, Vec::new())
 }

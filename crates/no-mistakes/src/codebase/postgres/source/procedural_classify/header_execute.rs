@@ -42,7 +42,7 @@ fn classified(ctx: &mut Ctx<'_>, start: usize, stops: &[&str]) -> PostgresSqlPro
     let command = command_tokens(ctx, stops);
     let end = command.last().copied().unwrap_or(start);
     PostgresSqlProceduralOccurrence {
-        kind: command_kind(ctx.tokens, &command),
+        kind: command_kind(ctx.tokens, &command, ctx.depth),
         span: (ctx.span)(start, end),
         occurrences: Vec::new(),
     }

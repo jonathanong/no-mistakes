@@ -40,10 +40,19 @@ pub(super) fn classify(
     span: &dyn Fn(usize, usize) -> PostgresSqlSpan,
     rooted: bool,
 ) -> Classified {
+    classify_at(tokens, span, rooted, 0)
+}
+
+pub(super) fn classify_at(
+    tokens: &[TokenWithSpan],
+    span: &dyn Fn(usize, usize) -> PostgresSqlSpan,
+    rooted: bool,
+    depth: u8,
+) -> Classified {
     let mut ctx = Ctx {
         tokens,
         index: 0,
-        depth: 0,
+        depth,
         legacy_stop: false,
         walker_only: false,
         span,
