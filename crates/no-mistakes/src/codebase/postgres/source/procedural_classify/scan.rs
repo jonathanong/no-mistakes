@@ -123,7 +123,7 @@ pub(super) fn take_command(ctx: &mut Ctx<'_>) -> Vec<usize> {
         let token = &ctx.tokens[index].token;
         if paren == 0
             && (matches!(token, Token::SemiColon)
-                || word_of(token).is_some_and(|word| eq(word, "USING")))
+                || word_of(token).is_some_and(|word| eq(word, "USING") || eq(word, "INTO")))
         {
             break;
         }

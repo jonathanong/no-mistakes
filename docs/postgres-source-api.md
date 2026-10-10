@@ -133,6 +133,9 @@ has `kind`, an original-source `span`, and nested `occurrences`:
 
 Wholly literal `EXECUTE` keeps the existing `literalExecute` statement facts and is
 classified from the decoded command (`dml` or `utility`) instead of `dynamicExecute`.
+Unquoted `INTO` ends that command the same way `USING` does, so the occurrence
+follows the literal while the unsupported `INTO` target keeps the enclosing block
+incomplete.
 Quoted strings, quoted identifiers, and comments are not keywords, so
 `RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
 occurrence is `dynamicExecute`. A block classified only by this walker is complete
@@ -700,7 +703,9 @@ ordered `using: PostgresSqlExpression[]`, with enclosing source coordinates.
 The decoded command still contains typed `$1` placeholders: parameter expressions
 are preserved as syntax and never substituted or interpreted at runtime.
 Variables, unknown concatenation operands, format calls, and unsupported modifiers
-remain incomplete occurrences; source facts imply no execution or replay policy.
+remain incomplete occurrences. An unquoted `INTO` target ends the command expression
+the same way `USING` does: the occurrence is classified from the literal, and the
+block stays incomplete. Source facts imply no execution or replay policy.
 Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
 projection. SQL CASE expressions and quoted EXECUTE identifiers retain their
 ordinary SQL meaning.

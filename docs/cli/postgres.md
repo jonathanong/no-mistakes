@@ -204,7 +204,7 @@ pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the ful
 command expression. `using` retains ordered parameter expressions and their
 original source spans, without resolving runtime values; `$1` and other command
 placeholders remain typed parameters. Dynamic operands, `format` calls, and
-unsupported EXECUTE modifiers remain incomplete `other` occurrences. This adds no SQL execution or
+unsupported EXECUTE modifiers remain incomplete `other` occurrences. An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
 Expression roots distinguish `nullTest` (`negated` for IS NOT NULL),

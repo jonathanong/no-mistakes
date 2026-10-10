@@ -780,6 +780,7 @@ call paths and configured effect sinks, including transaction markers and batch
 exemptions. Other languages do not yet expose equivalent call-policy facts.
 
 Structured PostgreSQL source facts expose trigger event kinds and quoted UPDATE
-OF identifiers, cast type components, literal EXECUTE concatenations and USING
-expressions, and structural expression completeness through the Rust/native and
-asynchronous Node CJS/ESM single/batch APIs. Dynamic commands remain incomplete.
+OF identifiers, cast type components, literal EXECUTE concatenations, USING
+expressions, unquoted INTO command terminators, and structural expression
+completeness through the Rust/native and asynchronous Node CJS/ESM single/batch
+APIs. Dynamic commands remain incomplete.
