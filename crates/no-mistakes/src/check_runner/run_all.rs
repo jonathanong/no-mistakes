@@ -1,14 +1,13 @@
 use super::{
-    complete_domain_checks, empty_results, enabled, fact_collection, finite_set_plan, graph_plan,
-    prepared, results, CheckResults,
+    complete_domain_checks, empty_results, fact_collection, finite_set_plan, prepared, results,
+    CheckResults,
 };
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
-use crate::check_tasks;
 use anyhow::Result;
-use enabled::{fact_plan, integration_configured};
 use std::path::PathBuf;
 
 mod playwright;
+mod setup;
 
 pub(crate) fn run_all_with_suppressed(
     root: PathBuf,
@@ -16,6 +15,8 @@ pub(crate) fn run_all_with_suppressed(
     tsconfig_path: Option<PathBuf>,
     include_suppressed: bool,
 ) -> Result<CheckResults> {
+    no_mistakes::invocation::set_timeout_phase("check.prepare");
+    no_mistakes::invocation::check_timeout()?;
     let root = root.canonicalize().unwrap_or(root);
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
         no_mistakes::diagnostics::current(),
@@ -29,76 +30,19 @@ pub(crate) fn run_all_with_suppressed(
     let prepared = prepared?;
     let config_path = prepared.config_path.clone();
     let config = &prepared.config;
-    let queues_enabled = check_tasks::queues_configured(config);
-    let unique_exports_enabled = check_tasks::unique_exports_configured(config);
-    let enabled = enabled::ConfiguredChecks::from_config(config);
-    let filesystem_rules_enabled = check_tasks::filesystem_rules_configured(config);
-    let canonical_graph_plan = no_mistakes::codebase::rules::try_canonical_graph_plan(config)?;
-    let graph_requires_full_file_universe =
-        no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
-    let mut playwright_fact_plan = playwright::fact_plan(
-        &root,
-        config_path.as_deref(),
-        config,
-        canonical_graph_plan,
-        prepared.playwright.as_ref(),
-    )?;
-    let integration_enabled = integration_configured(config);
-    let react_enabled = prepared.react.enabled();
-    let mut plan = fact_plan(enabled::EnabledChecks {
-        react: react_enabled,
-        queue: queues_enabled,
-        queue_factory_names: config.queues.factories.clone(),
-        dynamic_import_rules: enabled.dynamic_import_rules,
-        boundary_rules: enabled.boundary_rules,
-        nextjs_api_routes: enabled.nextjs_api_routes,
-        nextjs_caching: enabled.nextjs_caching,
-        storybook_stories: enabled.storybook_stories,
-        integration: integration_enabled,
-        unique_exports: unique_exports_enabled,
-        embedded_sql: enabled.embedded_sql,
-    });
-    plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
-    no_mistakes::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
-    plan.embedded_sql_options =
-        no_mistakes::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;
-    plan.postgres_schema_catalog_paths =
-        no_mistakes::codebase::postgres::configured_schema_catalog_paths(
-            config,
-            no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
-        )?;
-    if integration_enabled {
-        plan.integration_runner_configs = Some(std::sync::Arc::new(
-            no_mistakes::integration_tests::prepare_runner_configs_with_catalog(
-                &root,
-                config,
-                prepared.visible_paths.paths_for(&root).as_ref(),
-                std::sync::Arc::clone(&prepared.tsconfig_catalog),
-                prepared.visible_paths.source_store_for(&root),
-            ),
-        ));
-    }
-    let prepared_graph = graph_plan::prepare(
-        &root,
-        config,
-        graph_plan::PreparedInputs {
-            codebase_config: &prepared.codebase_config,
-            tsconfig: &prepared.tsconfig,
-            visible_paths: prepared.visible_paths.as_ref(),
-            workflow_documents: prepared.workflow_documents.as_ref(),
-        },
-        canonical_graph_plan,
-        &mut playwright_fact_plan,
-        &mut plan,
-    );
-    let prepared_graph = prepared_graph?;
-    let fact_demand = finite_set_plan::prepare(
-        &root,
-        config,
-        &mut plan,
-        canonical_graph_plan.is_some(),
-        playwright_fact_plan.is_some(),
-    )?;
+    let setup::CheckPlan {
+        queues_enabled,
+        unique_exports_enabled,
+        filesystem_rules_enabled,
+        dynamic_import_rules,
+        graph_requires_full_file_universe,
+        playwright_fact_plan,
+        integration_enabled,
+        react_enabled,
+        plan,
+        prepared_graph,
+        fact_demand,
+    } = setup::build(&root, &prepared)?;
     let needs_shared_facts = fact_demand.needs_shared_facts();
     if finite_set_plan::no_analysis_requested(
         needs_shared_facts,
@@ -110,6 +54,8 @@ pub(crate) fn run_all_with_suppressed(
         results.include_suppressed = include_suppressed;
         return Ok(results);
     }
+    no_mistakes::invocation::set_timeout_phase("check.discovery");
+    no_mistakes::invocation::check_timeout()?;
     let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
         "discovery",
         no_mistakes::diagnostics::TimingKind::Serial,
@@ -128,9 +74,13 @@ pub(crate) fn run_all_with_suppressed(
         needs_shared_facts,
         graph_requires_full_file_universe,
         playwright_fact_plan.is_some(),
-        enabled.dynamic_import_rules,
+        dynamic_import_rules,
     );
     let sources = prepared.visible_paths.source_store_for(&root);
+    // Parse and analysis are the CPU-bound check phases. The deadline names
+    // whichever of them is active; it does not drop files from the result.
+    no_mistakes::invocation::set_timeout_phase("check.parse");
+    no_mistakes::invocation::check_timeout()?;
     let ((fs_files, facts), facts_duration) =
         fact_collection::collect(fact_collection::CollectInput {
             session: &session,
@@ -144,6 +94,7 @@ pub(crate) fn run_all_with_suppressed(
             playwright_fact_plan,
             sources: std::sync::Arc::clone(&sources),
         });
+    no_mistakes::invocation::set_timeout_phase("check.analysis");
     no_mistakes::invocation::check_timeout()?;
     let (react, queues, rules, integration, codebase, filesystem_rules) =
         run_domain_checks(DomainCheckInputs {

@@ -123,6 +123,16 @@ impl ProcessTree {
     }
 }
 
+/// Stop every child process group owned by this invocation.
+pub(crate) fn terminate_registered_groups() {
+    #[cfg(unix)]
+    {
+        for group in signals::registered_groups() {
+            signals::forward_signal(group, nix::libc::SIGKILL);
+        }
+    }
+}
+
 /// Maps a `killpg` outcome to the `terminate()` contract: success and "the
 /// process group is already gone" (`ESRCH`, the overwhelmingly common case —
 /// the child already exited) both count as a successful termination; any

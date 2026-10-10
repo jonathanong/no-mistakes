@@ -1,6 +1,7 @@
 use super::{clock, InvocationError, InvocationErrorKind};
 use anyhow::{Context, Result};
-use std::sync::{OnceLock, RwLock};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, OnceLock, RwLock};
 use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone, Copy)]
@@ -18,6 +19,7 @@ pub(super) fn active_deadline() -> &'static RwLock<Option<Deadline>> {
 
 pub(super) struct DeadlineGuard {
     previous: Option<Deadline>,
+    cancel_watch: Option<Arc<AtomicBool>>,
 }
 
 impl DeadlineGuard {
@@ -42,16 +44,97 @@ impl DeadlineGuard {
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let previous = std::mem::replace(&mut *active, deadline);
-        Ok(Self { previous })
+        Ok(Self {
+            previous,
+            cancel_watch: None,
+        })
+    }
+
+    /// CLI invocations enforce the deadline even when native analysis is inside
+    /// a CPU-bound rayon section that has not reached the next `check_timeout`.
+    pub(super) fn install_for_cli(timeout: Option<Duration>) -> Result<Self> {
+        let mut guard = Self::install_for_invocation(timeout, None)?;
+        let Some(timeout) = timeout else {
+            return Ok(guard);
+        };
+        let expires_at = active_deadline()
+            .read()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .as_ref()
+            .context("cli timeout installs a deadline")?
+            .expires_at;
+        let cancel = Arc::new(AtomicBool::new(false));
+        let watcher = Arc::clone(&cancel);
+        std::thread::Builder::new()
+            .name("no-mistakes-timeout".to_string())
+            .spawn(move || watch_deadline(watcher, expires_at, timeout))
+            .context("starting command timeout watchdog")?;
+        guard.cancel_watch = Some(cancel);
+        Ok(guard)
     }
 }
 
 impl Drop for DeadlineGuard {
     fn drop(&mut self) {
+        if let Some(cancel) = &self.cancel_watch {
+            cancel.store(true, Ordering::Release);
+        }
         *active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = self.previous;
     }
+}
+
+fn phase_slot() -> &'static RwLock<&'static str> {
+    static PHASE: OnceLock<RwLock<&'static str>> = OnceLock::new();
+    PHASE.get_or_init(|| RwLock::new("command"))
+}
+
+/// Record the command phase included in a timeout diagnostic.
+pub fn set_timeout_phase(phase: &'static str) {
+    *phase_slot()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = phase;
+}
+
+fn current_phase() -> &'static str {
+    *phase_slot()
+        .read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+pub(super) fn timeout_diagnostic(seconds: u64, phase: &str) -> String {
+    format!("command timed out after {seconds} seconds during {phase}")
+}
+
+fn watch_deadline(cancel: Arc<AtomicBool>, expires_at: Instant, timeout: Duration) {
+    loop {
+        if cancel.load(Ordering::Acquire) {
+            return;
+        }
+        let now = clock::now();
+        if now >= expires_at {
+            if cancel.load(Ordering::Acquire) || !deadline_still_active(expires_at) {
+                return;
+            }
+            let message = timeout_diagnostic(timeout.as_secs(), current_phase());
+            eprintln!("error: {message}");
+            super::child::process_tree::terminate_registered_groups();
+            std::process::exit(124);
+        }
+        std::thread::sleep(
+            expires_at
+                .saturating_duration_since(now)
+                .min(Duration::from_millis(200)),
+        );
+    }
+}
+
+fn deadline_still_active(expires_at: Instant) -> bool {
+    active_deadline()
+        .read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .is_some_and(|deadline| !deadline.committed && deadline.expires_at == expires_at)
 }
 
 /// Return an error once the active invocation deadline has elapsed.
@@ -76,10 +159,7 @@ pub fn check_timeout() -> Result<()> {
     }
     Err(InvocationError::new(
         InvocationErrorKind::CommandTimeout,
-        format!(
-            "command timed out after {} seconds",
-            deadline.timeout.as_secs()
-        ),
+        timeout_diagnostic(deadline.timeout.as_secs(), current_phase()),
     )
     .into())
 }
@@ -102,10 +182,7 @@ pub fn commit_timeout() -> Result<()> {
     if clock::now() >= deadline.expires_at {
         return Err(InvocationError::new(
             InvocationErrorKind::CommandTimeout,
-            format!(
-                "command timed out after {} seconds",
-                deadline.timeout.as_secs()
-            ),
+            timeout_diagnostic(deadline.timeout.as_secs(), current_phase()),
         )
         .into());
     }

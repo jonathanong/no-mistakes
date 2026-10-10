@@ -8,7 +8,7 @@ mod napi_options;
 
 pub use child::command_output;
 pub(crate) use child::stream::stream_command_lines;
-pub use deadline::{check_timeout, commit_timeout};
+pub use deadline::{check_timeout, commit_timeout, set_timeout_phase};
 pub use napi_options::{extract_napi_options, extract_napi_options_value, InvocationOptions};
 
 use anyhow::Result;
@@ -169,7 +169,11 @@ impl InvocationGuard {
         forward_parent_signals: bool,
     ) -> Result<Self> {
         let lock = acquire_lock(path, options.lock_timeout, options.fail_on_lock)?;
-        let deadline = DeadlineGuard::install_for_invocation(options.timeout, None)?;
+        let deadline = if forward_parent_signals {
+            DeadlineGuard::install_for_cli(options.timeout)?
+        } else {
+            DeadlineGuard::install_for_invocation(options.timeout, None)?
+        };
         let parent_signals = child::ParentSignalForwardingGuard::install(
             forward_parent_signals && options.timeout.is_some(),
         );

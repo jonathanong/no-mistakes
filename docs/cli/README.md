@@ -23,7 +23,11 @@ root-global options are inherited by every nested command and may appear before
 or after the command name:
 
 - `--timeout <SECONDS>` limits command execution after the lock is acquired.
-  The default is `30`; `0` disables the command timeout.
+  The default is `30`; `0` disables the command timeout. The deadline covers
+  the whole command, including CPU-bound repository checks. Expiry exits `124`
+  and writes `command timed out after <seconds> seconds during <phase>` to
+  stderr. `check` reports `check.prepare`, `check.discovery`, `check.parse`,
+  or `check.analysis`. Lock timeout stays a separate wait.
 - `--lock-timeout <SECONDS>` limits how long acquisition may wait. The default
   is `30`; `0` waits indefinitely.
 - `--fail-on-lock` fails immediately when another invocation holds the lock,

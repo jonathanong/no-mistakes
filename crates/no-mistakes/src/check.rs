@@ -46,6 +46,7 @@ pub(crate) struct CheckArgs {
 }
 
 pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
+    no_mistakes::invocation::set_timeout_phase("check");
     let _diagnostics = no_mistakes::diagnostics::LegacyDiagnosticsGuard::new(
         args.timings || args.verbose_timings,
         args.verbose_timings,
