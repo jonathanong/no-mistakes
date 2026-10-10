@@ -12,8 +12,8 @@ Each rule reports only dynamic calls that could matter to it:
 | Rule | Reported dynamic calls |
 | ---- | ---------------------- |
 | [`postgres-lock-ordering`](../rules/postgres-lock-ordering.md) | No SQL text was recovered. Recovered text with `FOR UPDATE` keeps the ordinary checks; recovered text without an exclusive lock clause is treated as non-locking. |
-| [`postgres-no-offset`](../rules/postgres-no-offset.md) | No SQL text was recovered, or the recovered text is a `SELECT` (or an unknown or incomplete statement) without its own `OFFSET`. |
-| [`postgres-no-generated-column-writes`](../rules/postgres-no-generated-column-writes.md) | The catalog has generated or trigger-maintained columns, and no SQL text was recovered, or the recovered text is an `INSERT`, `UPDATE`, or `MERGE` (or an unknown or incomplete statement) that may target a tracked table. |
+| [`postgres-no-offset`](../rules/postgres-no-offset.md) | No SQL text was recovered, or the recovered text contains a query (including query-bearing DML and CTEs), or is unknown or incomplete, without its own `OFFSET`. |
+| [`postgres-no-generated-column-writes`](../rules/postgres-no-generated-column-writes.md) | The catalog applicable to the call has generated or trigger-maintained columns, and no SQL text was recovered, or the recovered text contains `INSERT`, `UPDATE`, or `MERGE` (including data-modifying CTEs), or is unknown or incomplete. Literal untracked targets do not exempt opaque SQL tails. |
 
 To migrate, review each new `unanalyzable` finding:
 
