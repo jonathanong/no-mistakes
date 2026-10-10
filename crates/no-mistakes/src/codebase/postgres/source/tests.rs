@@ -21,6 +21,7 @@ mod parsing;
 mod procedural;
 mod procedural_empty_statements;
 mod procedural_execute_into;
+mod procedural_execute_select;
 mod procedural_occurrences;
 mod schema;
 mod schema_virtual;
