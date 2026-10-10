@@ -91,7 +91,9 @@ pub(super) fn walk_statements(
 ) -> Vec<PostgresSqlProceduralOccurrence> {
     let mut occurrences = Vec::new();
     while cursor::peek_index(ctx).is_some() && !cursor::stopped(ctx, stop) {
-        cursor::eat_semi(ctx);
+        // Skip every leading semicolon. One leftover `;` would be an unknown
+        // statement whose scan consumes the following statement.
+        while cursor::eat_semi(ctx) {}
         cursor::skip_label(ctx);
         if cursor::peek_index(ctx).is_none() || cursor::stopped(ctx, stop) {
             break;

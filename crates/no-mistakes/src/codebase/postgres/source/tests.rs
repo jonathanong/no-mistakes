@@ -19,6 +19,7 @@ mod metadata_statement_positions;
 mod metadata_unicode;
 mod parsing;
 mod procedural;
+mod procedural_empty_statements;
 mod procedural_execute_into;
 mod procedural_occurrences;
 mod schema;
