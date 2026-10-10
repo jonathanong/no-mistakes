@@ -171,5 +171,5 @@ fn query_spans_use_source_utf8_bytes() {
 mod edges;
 
 mod exists_polarity;
-
+mod modifying_cte_bounds;
 mod modifying_ctes;

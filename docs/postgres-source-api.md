@@ -453,9 +453,15 @@ constraint executes, is installed, or is validated.
 ### Data-modifying CTEs
 
 `query.nestedStatements` exposes INSERT, UPDATE, DELETE and MERGE bodies in
-original source order. Each child includes an exact `sql` slice, byte `span`,
+original source order. Each child includes `sql`, byte `span`,
 `cteId`, `queryScopeId`, `parentScopeId`, typed fields, RETURNING items,
-`complete` and `unsupported`. All IDs refer to the containing query report.
+`complete` and `unsupported`. For a complete child, `sql` is the exact source
+slice of `span`, including comments, quoted identifiers, and nested parentheses.
+Spans are UTF-8 byte offsets, so
+<!-- cspell:ignore subarray -->
+`Buffer.from(source).subarray(span.start.offset, span.end.offset).toString() === sql`. A child whose
+exact slice cannot be recovered is incomplete and does not keep truncated SQL.
+All IDs refer to the containing query report.
 An INSERT source query references its scope in that same report; it does not
 create a separate query inventory. UPDATE/DELETE/MERGE targets and FROM/USING
 inputs reference typed entries in `query.relations`. Unsupported modifiers or

@@ -11,6 +11,7 @@ mod ctes;
 mod predicates;
 mod relations;
 mod resolution;
+mod statement_bounds;
 mod statements;
 
 type CteEnvironment = BTreeMap<String, usize>;
