@@ -34,18 +34,20 @@ fn children(
     let mut projected = Vec::with_capacity(specs.len());
     for spec in specs {
         let (nested, nested_complete) = children(spec.expr, locations, delimiters, depth + 1);
+        let sql = spec.expr.to_string();
         let span = if nested_complete && nested.iter().all(|child| child.span.is_some()) {
             exact_ast_span(spec.expr, locations, delimiters)
         } else {
             None
         };
+        let span = locations.span_covering(span, &sql);
         // Structural coverage is independent of nullable source provenance.
         complete &= nested_complete;
         projected.push(PostgresSqlExpressionChild {
             role: spec.role,
             index: spec.index,
             argument_name: spec.argument_name,
-            sql: spec.expr.to_string(),
+            sql,
             span,
             root: roots::root(spec.expr, locations),
             children: nested,
@@ -81,7 +83,7 @@ pub(super) fn exact_ast_span(
             {
                 span.end = delimiter.end.clone();
             } else {
-                return None;
+                return locations.span_covering(Some(span), &expr.to_string());
             }
         }
     }
@@ -92,7 +94,7 @@ pub(super) fn exact_ast_span(
             break;
         }
     }
-    Some(span)
+    locations.span_covering(Some(span), &expr.to_string())
 }
 
 fn specs(expr: &Expr) -> (Vec<Spec<'_>>, bool) {

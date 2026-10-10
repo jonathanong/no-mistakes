@@ -41,6 +41,32 @@ impl<'a> Locations<'a> {
         &self.sql[span.start.offset..span.end.offset]
     }
 
+    /// Extend a parser span when rendered SQL continues verbatim in the source.
+    ///
+    /// Function spans from sqlparser often stop before `()`. When `display`
+    /// begins with the current slice and the remainder is the following source
+    /// bytes, the returned span covers `display`. A renderer that changes
+    /// whitespace leaves the original span in place.
+    pub(super) fn span_covering(
+        &self,
+        span: Option<PostgresSqlSpan>,
+        display: &str,
+    ) -> Option<PostgresSqlSpan> {
+        let span = span?;
+        let current = self.slice(&span);
+        if current == display {
+            return Some(span);
+        }
+        let Some(rest) = display.strip_prefix(current) else {
+            return Some(span);
+        };
+        let end = span.end.offset;
+        if self.sql.get(end..end + rest.len()) == Some(rest) {
+            return Some(self.range(span.start.offset, end + rest.len()));
+        }
+        Some(span)
+    }
+
     pub(super) fn range(&self, start: usize, end: usize) -> PostgresSqlSpan {
         let start = self.boundary(start);
         let end = self.boundary(end).max(start);

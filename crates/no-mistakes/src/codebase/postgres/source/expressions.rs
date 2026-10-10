@@ -53,10 +53,11 @@ pub(super) fn expression_with_delimiters(
     refs.columns.dedup();
     let (children, children_complete) =
         super::expression_children::project_with_delimiters(expr, locations, delimiters);
+    let sql = expr.to_string();
     PostgresSqlExpression {
-        sql: expr.to_string(),
+        sql: sql.clone(),
         identity: identity(expr),
-        span: locations.span(expr.span()),
+        span: locations.span_covering(locations.span(expr.span()), &sql),
         columns: refs.columns,
         functions: refs.functions,
         root: super::expression_roots::root(expr, locations),

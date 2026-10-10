@@ -57,8 +57,10 @@ export interface PostgresSqlFunctionReference {
   span: PostgresSqlSpan | null;
 }
 export interface PostgresSqlExpression {
+  /** Rendered SQL. A present `span` covers these exact source bytes when they occur verbatim. */
   sql: string;
   identity: string;
+  /** End-exclusive span in this fact's source coordinates. */
   span: PostgresSqlSpan | null;
   columns: PostgresSqlName[];
   functions: PostgresSqlFunctionReference[];

@@ -39,7 +39,8 @@ export interface PostgresSqlLiteralExecute {
   literalSpan: PostgresSqlSpan;
   bodyEncoding: PostgresSqlExecuteEncoding;
   decodedSql: string;
-  /** Ordered source expressions, with enclosing source spans and no runtime evaluation. */
+  /** Ordered source expressions, with enclosing source spans and no runtime evaluation.
+   * A present span's source bytes equal `sql`, including call parentheses. */
   using: PostgresSqlExpression[];
   statements: PostgresSqlStatement[];
   diagnostics: PostgresSqlDiagnostic[];
