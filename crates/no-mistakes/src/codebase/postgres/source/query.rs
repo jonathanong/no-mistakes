@@ -12,8 +12,11 @@ mod ctes;
 mod predicates;
 mod relations;
 mod resolution;
+mod span_bounds;
 mod statement_bounds;
 mod statements;
+
+use span_bounds::QuerySpanBounds;
 
 type CteEnvironment = BTreeMap<String, usize>;
 struct ScopeState {
@@ -31,6 +34,7 @@ struct Collector<'a, 's> {
     /// Reset at each query boundary; not part of the serialized facts.
     not_depth: u32,
     insert_source: bool,
+    span_bounds: QuerySpanBounds,
 }
 
 pub(super) fn project(
@@ -49,6 +53,7 @@ pub(super) fn project(
         depth: 0,
         not_depth: 0,
         insert_source: false,
+        span_bounds: QuerySpanBounds::new(tokens, locations),
     };
     collector.query(
         query,
@@ -112,13 +117,11 @@ impl Collector<'_, '_> {
         outer: &CteEnvironment,
         definition: Option<usize>,
     ) -> usize {
-        let scope = self.scope(
-            parent,
-            visible_parent,
-            clause,
-            definition,
-            self.locations.span(query.span()),
-        );
+        let span = self
+            .span_bounds
+            .query(query, parent.is_none(), self.locations)
+            .or_else(|| self.locations.span(query.span()));
+        let scope = self.scope(parent, visible_parent, clause, definition, span);
         // Outer NOT does not apply inside a nested query. Restore even when nesting stops.
         let outer_not_depth = std::mem::take(&mut self.not_depth);
         // Bound projection independently of parser configuration for library AST callers.

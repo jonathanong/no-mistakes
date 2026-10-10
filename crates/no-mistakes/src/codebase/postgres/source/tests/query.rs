@@ -173,3 +173,4 @@ mod edges;
 mod exists_polarity;
 mod modifying_cte_bounds;
 mod modifying_ctes;
+mod read_only_cte_spans;

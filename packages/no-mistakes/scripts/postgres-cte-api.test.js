@@ -7,6 +7,47 @@ const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
 
 test(
+  "compiled async CJS/ESM read-only CTE scopes keep exact UTF-8 source slices",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-readonly-cte-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const source = Buffer.from(sql);
+    const scopes = facts.statements.map((statement) => {
+      assert.equal(statement.query.complete, true);
+      assert.deepEqual(statement.query.unsupported, []);
+      return statement.query.scopes.map((scope) => {
+        assert.ok(scope.span);
+        return source.subarray(scope.span.start.offset, scope.span.end.offset).toString();
+      });
+    });
+    assert.equal(scopes.length, 6);
+    for (const expected of ["SELECT now()", "WITH s AS (SELECT now()) SELECT count(*) FROM s"]) {
+      assert.ok(scopes[0].includes(expected), `${expected}: ${scopes[0]}`);
+    }
+    for (const expected of [
+      "SELECT 'é' AS word",
+      "SELECT lower('é')",
+      "WITH nested AS (SELECT lower('é')) SELECT * FROM nested",
+      "WITH first AS (SELECT 'é' AS word), second AS (WITH nested AS (SELECT lower('é')) SELECT * FROM nested) SELECT count(*) FROM first, second",
+    ]) {
+      assert.ok(scopes[1].includes(expected), `${expected}: ${scopes[1]}`);
+    }
+    assert.ok(scopes[2].includes("SELECT now()"));
+    assert.ok(scopes[3].includes("SELECT now()"));
+    assert.ok(scopes[3].includes("SELECT (SELECT now()) AS value"));
+    assert.ok(scopes[4].includes("SELECT now() UNION ALL SELECT now()"));
+    assert.equal(scopes[4].filter((slice) => slice === "SELECT now()").length, 2);
+    assert.ok(scopes[5].includes("SELECT now() UNION ALL SELECT now() ORDER BY 1"));
+    assert.equal(scopes[5].filter((slice) => slice === "SELECT now()").length, 2);
+  },
+);
+
+test(
   "compiled async CJS/ESM modifying CTE facts preserve source and scoped provenance",
   { skip: !compiled },
   async () => {
