@@ -158,8 +158,9 @@ with the walker-only block it names, including when whitespace-separated
 PostgreSQL comments occur before the block. Multiple sibling labels share one
 coverage merge for the body, while an unlabeled body skips the occurrence-overlap
 index. PostgreSQL comments can appear directly after the label's closing operator.
-The tokenizer preserves those comments as gaps, including nested block comments,
-without shifting source spans. See the [PostgreSQL lexical rules](https://www.postgresql.org/docs/current/sql-syntax-lexical.html).
+The tokenizer preserves those comments as gaps, including nested block comments
+and line comments ending in LF, CR, or CRLF, without shifting source spans. See
+the [PostgreSQL lexical rules](https://www.postgresql.org/docs/current/sql-syntax-lexical.html).
 A block the SQL parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
 DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body
 that does not start with `BEGIN`, other procedural languages, and escape-string DO bodies

@@ -22,10 +22,10 @@ pub(super) fn skip_opaque(sql: &str, index: usize) -> Option<usize> {
 }
 
 fn skip_line_comment(sql: &str, index: usize) -> usize {
-    sql[index..]
-        .find('\n')
-        .map(|offset| index + offset)
-        .unwrap_or(sql.len())
+    sql.as_bytes()[index..]
+        .iter()
+        .position(|byte| *byte == b'\r' || *byte == b'\n')
+        .map_or(sql.len(), |offset| index + offset)
 }
 
 /// PostgreSQL block comments nest.

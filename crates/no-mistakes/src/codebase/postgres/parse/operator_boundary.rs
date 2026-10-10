@@ -1,4 +1,4 @@
-//! Keep PostgreSQL block comments out of adjacent custom operator tokens.
+//! Keep PostgreSQL comments out of adjacent custom operator tokens.
 use super::distinct_group::{
     skip_comment_source as skip_comment, skip_opaque_source as skip_opaque,
 };
@@ -98,8 +98,8 @@ fn separator_locations(sql: &str) -> Vec<Insertion> {
     let mut at = 0;
     let mut previous_character = None;
     while at < sql.len() {
-        if sql[at..].starts_with("/*") {
-            let end = skip_comment(sql, at).expect("block comment opener");
+        if sql[at..].starts_with("/*") || sql[at..].starts_with("--") {
+            let end = skip_comment(sql, at).expect("comment opener");
             if previous_character
                 .is_some_and(|character| PostgreSqlDialect {}.is_custom_operator_part(character))
             {
