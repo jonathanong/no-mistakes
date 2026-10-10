@@ -14,13 +14,13 @@ fn classified_utilities_do_not_make_procedural_blocks_incomplete() {
             _ => None,
         })
         .collect::<Vec<_>>();
-    assert_eq!(blocks.len(), 19);
+    assert_eq!(blocks.len(), 21);
     for (index, block) in blocks.iter().enumerate() {
         // Parsed DML retains the existing source-fact completeness semantics; execution
         // safety is represented separately by its DML occurrence kind.
-        assert_eq!(block.complete, index < 6, "block {index}: {block:?}");
+        assert_eq!(block.complete, index < 7, "block {index}: {block:?}");
     }
-    assert!(blocks[..6].iter().all(|block| block.diagnostics.is_empty()));
+    assert!(blocks[..7].iter().all(|block| block.diagnostics.is_empty()));
     assert!(
         blocks[0].occurrences[0].kind
             == super::super::PostgresSqlProceduralOccurrenceKind::ControlFlow
@@ -42,19 +42,23 @@ fn classified_utilities_do_not_make_procedural_blocks_incomplete() {
         blocks[3].occurrences[0].kind,
         super::super::PostgresSqlProceduralOccurrenceKind::Utility
     );
-    assert!(blocks[4].occurrences[0]
+    assert_eq!(
+        blocks[4].occurrences[0].kind,
+        super::super::PostgresSqlProceduralOccurrenceKind::Utility
+    );
+    assert!(blocks[5].occurrences[0]
         .occurrences
         .iter()
         .any(|occurrence| {
             occurrence.kind == super::super::PostgresSqlProceduralOccurrenceKind::Utility
         }));
-    assert!(blocks[5].occurrences[0].occurrences.iter().any(
+    assert!(blocks[6].occurrences[0].occurrences.iter().any(
         |occurrence| occurrence.kind == super::super::PostgresSqlProceduralOccurrenceKind::Dml
     ));
-    assert!(blocks[6].occurrences.iter().any(|occurrence| {
+    assert!(blocks[7].occurrences.iter().any(|occurrence| {
         occurrence.kind == super::super::PostgresSqlProceduralOccurrenceKind::DynamicExecute
     }));
-    for block in &blocks[7..] {
+    for block in &blocks[8..] {
         assert!(block.occurrences.iter().any(|occurrence| {
             occurrence.kind == super::super::PostgresSqlProceduralOccurrenceKind::Unknown
         }));

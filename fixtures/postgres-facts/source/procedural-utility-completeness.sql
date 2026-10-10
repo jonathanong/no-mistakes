@@ -12,6 +12,10 @@ END $$;
 DO $$ BEGIN
   LOCK TABLE "IN" IN SHARE MODE;
 END $$;
+-- Dotted attr_name accepts PostgreSQL ColLabel keywords.
+DO $$ BEGIN
+  LOCK TABLE public.select IN SHARE MODE;
+END $$;
 DO $$ BEGIN
   IF true THEN LOCK TABLE t IN SHARE ROW EXCLUSIVE MODE; END IF;
 END $$;
@@ -58,4 +62,8 @@ DO $$ BEGIN
 END $$;
 DO $$ BEGIN
   LOCK TABLE IS IN SHARE MODE;
+END $$;
+-- PostgreSQL rejects an empty quoted identifier.
+DO $$ BEGIN
+  LOCK TABLE "" IN SHARE MODE;
 END $$;

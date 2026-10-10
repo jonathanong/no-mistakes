@@ -104,7 +104,7 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
             *index += 1;
             if tokens
                 .get(*index)
-                .and_then(|token| relation_word(token))
+                .and_then(|token| attr_name_word(token))
                 .is_none()
             {
                 return false;
@@ -126,7 +126,8 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
 fn relation_word(token: &Token) -> Option<&str> {
     match token {
         Token::Word(word)
-            if word.quote_style.is_some() || !postgres_non_col_id_keyword(&word.value) =>
+            if !word.value.is_empty()
+                && (word.quote_style.is_some() || !postgres_non_col_id_keyword(&word.value)) =>
         {
             Some(word.value.as_str())
         }
@@ -134,9 +135,17 @@ fn relation_word(token: &Token) -> Option<&str> {
     }
 }
 
+// Dotted attr_name components use PostgreSQL's broader ColLabel grammar.
+fn attr_name_word(token: &Token) -> Option<&str> {
+    match token {
+        Token::Word(word) if !word.value.is_empty() => Some(word.value.as_str()),
+        _ => None,
+    }
+}
+
 // PostgreSQL's RESERVED_KEYWORD and TYPE_FUNC_NAME_KEYWORD entries from
 // src/include/parser/kwlist.h (REL_18_STABLE). Neither category can be a ColId,
-// the identifier grammar used for each component of a relation name.
+// the identifier grammar used for the first component of a relation name.
 fn postgres_non_col_id_keyword(value: &str) -> bool {
     const NON_COL_ID: &str = "all analyse analyze and any array as asc asymmetric authorization binary both case cast check collate collation column concurrently constraint create cross current_catalog current_date current_role current_schema current_time current_timestamp current_user default deferrable desc distinct do else end except false fetch for foreign freeze from full grant group having ilike in initially inner intersect into is isnull join lateral leading left limit like localtime localtimestamp natural not notnull null offset on only or order outer overlaps placing primary references returning right select session_user similar some symmetric system_user table tablesample then to trailing true union unique user using variadic verbose when where window with";
     NON_COL_ID

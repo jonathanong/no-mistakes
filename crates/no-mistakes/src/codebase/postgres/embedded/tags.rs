@@ -154,3 +154,18 @@ fn trusted_named_tag(source: &str, imported: &str, tag: &TrustedSqlTag) -> bool 
         && tag.name == imported
         && from_configured_module(source, &tag.module)
 }
+
+pub(super) fn quasi_text<'a>(
+    quasi: &'a oxc_ast::ast::TemplateElement<'a>,
+    use_raw: bool,
+) -> &'a str {
+    if use_raw {
+        return quasi.value.raw.as_str();
+    }
+    quasi
+        .value
+        .cooked
+        .as_ref()
+        .map(|cooked| cooked.as_str())
+        .unwrap_or(quasi.value.raw.as_str())
+}
