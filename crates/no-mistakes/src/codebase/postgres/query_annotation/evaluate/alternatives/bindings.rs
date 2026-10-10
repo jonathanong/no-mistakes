@@ -5,13 +5,28 @@ use crate::fx::FxHashMap;
 fn scalar(value: &Value) -> bool {
     match value {
         Value::Unknown | Value::Prefix(_, _, None) => true,
-        Value::Aggregate(values) => values.iter().all(scalar),
+        Value::Aggregate(values) | Value::Joined(values) => values.iter().all(scalar),
         _ => false,
     }
 }
 
 fn annotated_builder(value: &Value, id: u64) -> bool {
     matches!(value, Value::Prefix(text, true, Some(current)) if *current == id && text.trim_start().starts_with("/*"))
+}
+
+fn candidates(value: Value, joined: &mut Vec<Value>) {
+    match value {
+        Value::Joined(values) => {
+            for value in values {
+                candidates(value, joined);
+            }
+        }
+        value => {
+            if !joined.contains(&value) {
+                joined.push(value);
+            }
+        }
+    }
 }
 
 const UNPROVEN: Value = Value::Unknown;
@@ -55,7 +70,10 @@ pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) 
             *value = if scalar(value) && scalar(next) {
                 Value::Unknown
             } else {
-                Value::Aggregate(vec![value.clone(), next.clone()])
+                let mut values = Vec::new();
+                candidates(std::mem::replace(value, Value::Unknown), &mut values);
+                candidates(next.clone(), &mut values);
+                Value::Joined(values)
             };
         }
     }

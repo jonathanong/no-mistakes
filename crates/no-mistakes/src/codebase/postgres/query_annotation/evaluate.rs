@@ -30,6 +30,8 @@ pub(super) enum Value {
     Promise(Box<Value>),
     Evaluated(Box<Value>, bool),
     Aggregate(Vec<Value>),
+    // Alternative binding values; unlike Aggregate, this is not a container.
+    Joined(Vec<Value>),
     // Candidate runtime values with an implicit unknown alternative.
     Possible(Vec<Value>),
     Arguments(u64),

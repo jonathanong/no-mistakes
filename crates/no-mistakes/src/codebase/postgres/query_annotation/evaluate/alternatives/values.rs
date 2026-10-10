@@ -17,7 +17,7 @@ fn prefixes<'a>(
         Value::Promise(value) | Value::Evaluated(value, _) => {
             prefixes(value, arena, visited, found, definite)
         }
-        Value::Aggregate(values) | Value::Possible(values) => {
+        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
             for value in values {
                 prefixes(value, arena, visited, found, definite);
             }

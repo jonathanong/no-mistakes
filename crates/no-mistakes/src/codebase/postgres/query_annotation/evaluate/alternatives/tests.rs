@@ -421,10 +421,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
             vec![FxHashMap::from_iter([("value".into(), super::super::Value::Unknown)]).into()];
         super::bindings::join(&mut joined, &current, &original);
         if references {
-            assert!(matches!(
-                joined[0]["value"],
-                super::super::Value::Aggregate(_)
-            ));
+            assert!(matches!(joined[0]["value"], super::super::Value::Joined(_)));
         } else {
             assert!(matches!(joined[0]["value"], super::super::Value::Unknown));
         }

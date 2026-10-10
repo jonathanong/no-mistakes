@@ -72,6 +72,23 @@ fn executor_free_root_still_reports_imported_executor_through_cyclic_reexports()
 }
 
 #[test]
+fn repeated_conditional_builder_updates_preserve_unproven_sql() {
+    let root = fixture("helper-tracing-joined-binding");
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    for (policy, expected) in [("report", 1), ("ignore", 0)] {
+        let config = config_with_options(&format!(
+            "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
+        ));
+        let findings = check_with_files(&root, &config, &files).unwrap();
+        assert_eq!(findings.len(), expected, "{policy}: {findings:#?}");
+        if let Some(finding) = findings.first() {
+            assert_eq!(finding.file, "src/query.mts");
+            assert_eq!(finding.line, 15);
+        }
+    }
+}
+
+#[test]
 fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
     for scenario in [
         "helper-tracing-post-merge",

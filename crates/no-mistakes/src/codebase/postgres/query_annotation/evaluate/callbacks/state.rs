@@ -126,7 +126,9 @@ impl View<'_> {
                             found.invalidated.insert(*id);
                         }
                     }
-                    Value::Aggregate(values_) | Value::Possible(values_) => values.extend(values_),
+                    Value::Aggregate(values_)
+                    | Value::Joined(values_)
+                    | Value::Possible(values_) => values.extend(values_),
                     Value::Promise(value) | Value::Evaluated(value, _) => values.push(value),
                     _ => {}
                 }

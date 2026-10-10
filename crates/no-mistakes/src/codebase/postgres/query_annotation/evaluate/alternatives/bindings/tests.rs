@@ -62,9 +62,9 @@ fn missing_alternative_bindings_stay_unproven() {
     assert!(!joined[0].contains_key("afterOnly"));
     assert!(joined[0]["stable"] == stable);
     assert!(joined[0]["kept"] == original);
-    assert!(joined[0]["mismatched"] == Value::Aggregate(vec![annotated, other]));
+    assert!(joined[0]["mismatched"] == Value::Joined(vec![annotated, other]));
     assert!(joined[0]["scalar"] == Value::Unknown);
-    assert!(joined[0]["diverged"] == Value::Aggregate(vec![Value::Primitive, Value::Unsupported]));
+    assert!(joined[0]["diverged"] == Value::Joined(vec![Value::Primitive, Value::Unsupported]));
 
     let present = scope(&[("present", Value::Primitive)]);
     assert!(binding_or_unproven(&present, "present") == &Value::Primitive);
@@ -88,4 +88,34 @@ fn missing_alternative_bindings_stay_unproven() {
         changed.is_empty(),
         "a dropped binding is a rebind, not a mutated builder"
     );
+}
+
+#[test]
+fn repeated_binding_joins_keep_distinct_candidates_flat() {
+    let original = vec![scope(&[("candidate", Value::Arguments(1))])];
+    let mut joined = original.clone();
+    for id in (2..=3).cycle().take(64) {
+        let current = vec![scope(&[("candidate", Value::Arguments(id))])];
+        join(&mut joined, &current, &original);
+    }
+    assert!(
+        joined[0]["candidate"]
+            == Value::Joined(vec![
+                Value::Arguments(1),
+                Value::Arguments(2),
+                Value::Arguments(3),
+            ])
+    );
+
+    // Real Aggregate values remain a single candidate with their container
+    // shape intact; only prior binding unions are flattened.
+    let container = Value::Aggregate(vec![Value::Arguments(1), Value::Primitive]);
+    let original = vec![scope(&[("candidate", container.clone())])];
+    let mut joined = original.clone();
+    join(
+        &mut joined,
+        &[scope(&[("candidate", Value::Arguments(2))])],
+        &original,
+    );
+    assert!(joined[0]["candidate"] == Value::Joined(vec![container, Value::Arguments(2)]));
 }
