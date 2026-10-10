@@ -2,10 +2,7 @@
 use super::body::Body;
 use super::locations::Locations;
 use super::types::*;
-use sqlparser::{
-    dialect::PostgreSqlDialect,
-    tokenizer::{TokenWithSpan, Tokenizer},
-};
+use sqlparser::tokenizer::TokenWithSpan;
 
 pub(super) struct Walk {
     pub occurrences: Vec<PostgresSqlProceduralOccurrence>,
@@ -18,22 +15,11 @@ pub(super) const UNKNOWN_MESSAGE: &str =
     "Unsupported procedural occurrence; no execution is inferred";
 pub(super) const DML_MESSAGE: &str = "Static DML is a source occurrence, not an executed statement";
 
-pub(super) fn walk(
-    body: &Body<'_>,
-    locations: &Locations<'_>,
-    body_span: &PostgresSqlSpan,
-) -> Walk {
-    let Ok(tokens) = tokenize(body.sql.as_ref()) else {
-        return Walk {
-            occurrences: vec![unknown(body_span.clone())],
-            legacy_stop: false,
-            walker_only: false,
-        };
-    };
+pub(super) fn walk(tokens: &[TokenWithSpan], body: &Body<'_>, locations: &Locations<'_>) -> Walk {
     let local = Locations::new(body.sql.as_ref());
     let classified = super::procedural_classify::classify(
-        &tokens,
-        &|start, end| map_span(&tokens, start, end, body, &local, locations),
+        tokens,
+        &|start, end| map_span(tokens, start, end, body, &local, locations),
         true,
     );
     Walk {
@@ -131,14 +117,6 @@ fn omitted_has(
     })
 }
 
-pub(super) fn unknown(span: PostgresSqlSpan) -> PostgresSqlProceduralOccurrence {
-    PostgresSqlProceduralOccurrence {
-        kind: PostgresSqlProceduralOccurrenceKind::Unknown,
-        span,
-        occurrences: Vec::new(),
-    }
-}
-
 fn push_walk_diagnostics(block: &mut PostgresSqlProceduralBlock, span: &PostgresSqlSpan) {
     if has_kind(
         &block.occurrences,
@@ -185,12 +163,6 @@ fn diagnostic(message: &str, span: &PostgresSqlSpan) -> PostgresSqlDiagnostic {
     }
 }
 
-fn tokenize(sql: &str) -> Result<Vec<TokenWithSpan>, ()> {
-    Tokenizer::new(&PostgreSqlDialect {}, sql)
-        .tokenize_with_location()
-        .map_err(|_| ())
-}
-
 fn map_span(
     tokens: &[TokenWithSpan],
     start: usize,
@@ -199,7 +171,7 @@ fn map_span(
     local: &Locations<'_>,
     original: &Locations<'_>,
 ) -> PostgresSqlSpan {
-    // Indexes come from tokens the walker just consumed in this body.
+    // Indexes address the prepared body tokens, not a second lexer inventory.
     let start_token = &tokens[start.min(end)];
     let end_token = &tokens[end.max(start)];
     let start = local
