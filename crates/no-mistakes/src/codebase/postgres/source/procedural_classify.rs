@@ -86,14 +86,19 @@ pub(super) fn classify_at(
         if ctx.label_mismatches.is_empty() {
             occurrences.push(unrecognized_label(&ctx));
         } else {
-            for index in &ctx.label_mismatches {
-                let mismatch = scan::token_occurrence(
-                    &ctx,
-                    PostgresSqlProceduralOccurrenceKind::Unknown,
-                    *index,
-                );
-                insert_mismatch(&mut occurrences, mismatch);
-            }
+            // Closing labels are recorded in source order during the walk.
+            let mut mismatches = ctx
+                .label_mismatches
+                .iter()
+                .map(|index| {
+                    scan::token_occurrence(
+                        &ctx,
+                        PostgresSqlProceduralOccurrenceKind::Unknown,
+                        *index,
+                    )
+                })
+                .peekable();
+            insert_mismatches(&mut occurrences, &mut mismatches, usize::MAX);
         }
     }
     let empty_headers = ctx
@@ -109,19 +114,35 @@ pub(super) fn classify_at(
     }
 }
 
-fn insert_mismatch(
+/// Merge ordered mismatches into their enclosing occurrence without rescanning siblings.
+fn insert_mismatches(
     occurrences: &mut Vec<PostgresSqlProceduralOccurrence>,
-    mismatch: PostgresSqlProceduralOccurrence,
+    mismatches: &mut std::iter::Peekable<impl Iterator<Item = PostgresSqlProceduralOccurrence>>,
+    end: usize,
 ) {
-    let offset = mismatch.span.start.offset;
-    if let Some(parent) = occurrences.iter_mut().find(|occurrence| {
-        occurrence.span.start.offset <= offset && offset < occurrence.span.end.offset
-    }) {
-        insert_mismatch(&mut parent.occurrences, mismatch);
-    } else {
-        occurrences.push(mismatch);
-        occurrences.sort_by_key(|occurrence| occurrence.span.start.offset);
+    let mut merged = Vec::with_capacity(occurrences.len());
+    for mut occurrence in std::mem::take(occurrences) {
+        // A closing label follows its block's children. Earlier sibling labels
+        // were consumed by their owning occurrence, so no prefix insertion is needed.
+        if mismatches
+            .peek()
+            .is_some_and(|mismatch| mismatch.span.start.offset < occurrence.span.end.offset)
+        {
+            insert_mismatches(
+                &mut occurrence.occurrences,
+                mismatches,
+                occurrence.span.end.offset,
+            );
+        }
+        merged.push(occurrence);
     }
+    while mismatches
+        .peek()
+        .is_some_and(|mismatch| mismatch.span.start.offset < end)
+    {
+        merged.push(mismatches.next().unwrap());
+    }
+    *occurrences = merged;
 }
 
 fn unrecognized_label(ctx: &Ctx<'_>) -> PostgresSqlProceduralOccurrence {

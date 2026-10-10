@@ -64,6 +64,52 @@ fn mismatched_label_inside_if_stays_inside_its_loop_before_later_sql() {
 }
 
 #[test]
+fn many_sibling_mismatches_keep_their_owners_and_source_order() {
+    for (count, fixture) in [
+        (32, "procedural-label-mismatches-32.sql"),
+        (256, "procedural-label-mismatches-256.sql"),
+    ] {
+        let sql = super::fixture(fixture);
+        let (_, parsed) = block(&sql);
+        assert!(!parsed.complete);
+        assert_eq!(parsed.occurrences.len(), count * 2 + 3);
+        for pair in parsed.occurrences[..count * 2].chunks_exact(2) {
+            let mismatch = pair[0].occurrences.last().unwrap();
+            assert_eq!(
+                mismatch.kind,
+                super::super::PostgresSqlProceduralOccurrenceKind::Unknown
+            );
+            assert_eq!(
+                &sql[mismatch.span.start.offset..mismatch.span.end.offset],
+                "b"
+            );
+            assert!(mismatch.span.end.offset < pair[1].span.start.offset);
+        }
+        let branch = &parsed.occurrences[count * 2];
+        let outer_loop = &branch.occurrences[0];
+        let inner_mismatch = outer_loop.occurrences[0].occurrences.last().unwrap();
+        assert_eq!(
+            &sql[inner_mismatch.span.start.offset..inner_mismatch.span.end.offset],
+            "d"
+        );
+        let outer_mismatch = outer_loop.occurrences.last().unwrap();
+        assert_eq!(
+            &sql[outer_mismatch.span.start.offset..outer_mismatch.span.end.offset],
+            "b"
+        );
+        assert!(outer_mismatch.span.end.offset < branch.occurrences[1].span.start.offset);
+        let root_mismatch = parsed.occurrences.last().unwrap();
+        assert_eq!(
+            &sql[root_mismatch.span.start.offset..root_mismatch.span.end.offset],
+            "other"
+        );
+        assert!(
+            parsed.occurrences[count * 2 + 1].span.end.offset < root_mismatch.span.start.offset
+        );
+    }
+}
+
+#[test]
 fn empty_label_before_raise_inside_loop_is_not_complete() {
     fails_closed("DO $$ BEGIN LOOP <<>> RAISE NOTICE 'x'; END LOOP; END $$;");
 }

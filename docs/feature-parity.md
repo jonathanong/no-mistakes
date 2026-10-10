@@ -746,8 +746,10 @@ empty header reports that the procedural condition is missing, at the header. An
 opening label is one identifier; PL/pgSQL reserved words such as unquoted
 `BEGIN` are not labels, while unquoted `SELECT` is allowed. A closing label
 that does not match keeps the block incomplete and reports `unknown` at the
-mismatched label, in source order. A label prefix on a wholly literal command
-stays `unknown`. An opening label is omitted with the walker-only block it names.
+mismatched label, in source order. Multiple
+mismatches retain their enclosing blocks through one ordered merge without
+repeated sibling scans. A label prefix on a wholly literal command stays `unknown`.
+An opening label is omitted with the walker-only block it names.
 
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;
