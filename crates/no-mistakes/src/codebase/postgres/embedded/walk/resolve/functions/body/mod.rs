@@ -1,11 +1,12 @@
 mod fragment;
 
 use super::{shadows_param, Resolvable};
+use crate::codebase::postgres::embedded::tags::SqlTagNames;
 use fragment::{apply_append_statement, resolve_fragment};
 use oxc_ast::ast::{
     BindingPattern, Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Straight-line same-file helper bodies: `const`/`let` SQL inits, `.append`
 /// mutations, and a final `return`. Control flow, assignment, and parameter
@@ -15,7 +16,7 @@ pub(super) fn resolve(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
     let mut locals = HashMap::new();
     let mut statements = resolvable.body.statements.iter().peekable();
@@ -70,7 +71,7 @@ fn bind_declaration(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
     locals: &mut HashMap<String, String>,
 ) -> Option<()> {
     if !matches!(
@@ -99,7 +100,7 @@ fn bind_declarator(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
     locals: &mut HashMap<String, String>,
 ) -> Option<()> {
     let BindingPattern::BindingIdentifier(ident) = &declarator.id else {

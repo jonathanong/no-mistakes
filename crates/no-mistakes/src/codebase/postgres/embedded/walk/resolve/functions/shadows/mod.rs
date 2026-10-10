@@ -1,6 +1,7 @@
 mod import;
 
 use super::super::super::super::options::TrustedSqlTag;
+use super::super::super::super::tags::SqlTagNames;
 use super::super::for_each_bound_name;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
@@ -30,7 +31,7 @@ use std::collections::HashSet;
 #[derive(Default)]
 pub(super) struct TagShadows {
     names: HashSet<String>,
-    imported: HashSet<String>,
+    imported: SqlTagNames,
 }
 
 impl TagShadows {
@@ -45,6 +46,7 @@ impl TagShadows {
                 &mut shadows,
             );
         }
+        shadows.imported.collect_fragments(program);
         shadows
     }
 
@@ -52,7 +54,7 @@ impl TagShadows {
         self.names.contains(name)
     }
 
-    pub(super) fn imported_tags(&self) -> &HashSet<String> {
+    pub(super) fn imported_tags(&self) -> &SqlTagNames {
         &self.imported
     }
 }

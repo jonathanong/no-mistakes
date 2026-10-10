@@ -49,11 +49,11 @@ fn record_specifier(
             let local = named.local.name.as_str();
             let imported = named.imported.name();
             if matches_trusted_sql_import(source, imported.as_str(), trusted_sql_tags) {
-                shadows.imported.insert(local.to_string());
+                shadows.imported.insert_imported(local.to_string());
                 return;
             }
             if trusted && imported.as_str() == "default" {
-                shadows.imported.insert(local.to_string());
+                shadows.imported.insert_imported(local.to_string());
                 return;
             }
             if trusted && imported.as_str() == "sql" && local.eq_ignore_ascii_case("sql") {
@@ -64,7 +64,7 @@ fn record_specifier(
         ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => {
             let local = default.local.name.as_str();
             if trusted {
-                shadows.imported.insert(local.to_string());
+                shadows.imported.insert_imported(local.to_string());
                 return;
             }
             shadow_sql_local(local, shadows);

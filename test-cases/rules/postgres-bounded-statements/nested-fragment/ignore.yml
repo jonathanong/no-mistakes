@@ -1,0 +1,12 @@
+# Explicitly ignoring unanalyzable SQL skips the composed statement.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      executorNames: [query]
+      unanalyzableSql: ignore
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
