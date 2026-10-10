@@ -43,6 +43,11 @@ fn quoted_comment_markers_stay_literal() {
         "$tag$/*x*/$tag$",
         "$tag$/*x*/$tag$"
     ));
+    // Unicode tags are delimiters. `--` inside stays literal; a later `--` does not.
+    assert!(source_matches_rendered("$é$--$é$", "$é$--$é$"));
+    assert!(source_matches_rendered("$é$--$é$--tail", "$é$--$é$"));
+    assert!(source_matches_rendered("$tag$--$tag$", "$tag$--$tag$"));
+    assert!(source_matches_rendered("$a_b$--$a_b$", "$a_b$--$a_b$"));
     assert!(source_matches_rendered("$$--", "$$--"));
     assert!(source_matches_rendered("$1", "$1"));
     assert!(source_matches_rendered("a$$b", "a$$b"));

@@ -15,7 +15,7 @@ fn returning_quoted_comment_markers_keep_expression_spans() {
     assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
     let quoted = insert(&result.statements[1].facts);
     assert!(quoted.complete, "{:?}", quoted.diagnostics);
-    let expected = ["'--'", "'/*x*/'", "\"a--b\""];
+    let expected = ["'--'", "'/*x*/'", "\"a--b\"", "$é$--$é$", "$tag$--$tag$"];
     assert_eq!(quoted.returning.len(), expected.len());
     for (item, text) in quoted.returning.iter().zip(expected) {
         let PostgresSqlReturningItem::Expression {

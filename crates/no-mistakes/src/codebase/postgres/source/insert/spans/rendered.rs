@@ -40,7 +40,7 @@ fn without_comments(source: &str) -> Option<String> {
             continue;
         }
         if bytes[index] == b'$' && word_boundary(source, index) {
-            match dollar_end(bytes, index) {
+            match dollar_end(source, index) {
                 DollarEnd::Closed(end) => {
                     out.push_str(&source[index..end]);
                     index = end;
@@ -123,27 +123,33 @@ enum DollarEnd {
     Unclosed,
 }
 
-fn dollar_end(bytes: &[u8], start: usize) -> DollarEnd {
+fn dollar_end(source: &str, start: usize) -> DollarEnd {
+    let bytes = source.as_bytes();
     let mut index = start + 1;
-    while index < bytes.len() && is_tag_byte(bytes[index]) {
-        index += 1;
+    // sqlparser 0.63 tags are Unicode alphanumeric or `_`. `$` closes the tag.
+    for character in source[index..].chars() {
+        if !is_dollar_tag_char(character) {
+            break;
+        }
+        index += character.len_utf8();
     }
     if bytes.get(index) != Some(&b'$') {
         return DollarEnd::NotOpen;
     }
-    let tag_len = index - start + 1;
+    let delimiter = &bytes[start..=index];
     let body = index + 1;
     match bytes[body..]
-        .windows(tag_len)
-        .position(|window| window == &bytes[start..start + tag_len])
+        .windows(delimiter.len())
+        .position(|window| window == delimiter)
     {
-        Some(found) => DollarEnd::Closed(body + found + tag_len),
+        Some(found) => DollarEnd::Closed(body + found + delimiter.len()),
         None => DollarEnd::Unclosed,
     }
 }
 
-fn is_tag_byte(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || byte == b'_'
+/// Dollar-tag character. `$`, punctuation, quotes, and `-` are not tags.
+fn is_dollar_tag_char(character: char) -> bool {
+    character.is_alphanumeric() || character == '_'
 }
 
 fn block_comment_end(bytes: &[u8], start: usize) -> Option<usize> {
