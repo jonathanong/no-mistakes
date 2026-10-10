@@ -80,7 +80,8 @@ fn opaque_write_targets_exclude_receivers_defaults_and_keep_ts_wrapped_bindings(
             vec!["input"],
             vec!["input"],
             vec!["input"],
-            vec!["input"],
+            // `this.#field = input` reads both the receiver and the value.
+            vec!["this", "input"],
         ]
     );
 }
