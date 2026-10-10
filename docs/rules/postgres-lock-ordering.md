@@ -19,9 +19,12 @@ rules:
       executorNames: [query, read, write]
       safeDirective: deadlock-safe
       schemaCatalogPath: db/schema.json
+      unanalyzableSql: fail
 ```
 
 `importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured. `safeDirective` defaults to `deadlock-safe`.
+`unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
+configuration error).
 `schemaCatalogPath` is optional; when present it must be a repository-relative
 catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md).
 
@@ -128,6 +131,39 @@ so the original check applies.
 query(`SELECT id FROM orders WHERE id = $1 AND status IN ('open', 'held') FOR UPDATE`);
 ```
 
+### Unanalyzable SQL
+
+**Behavior change:** this rule previously skipped executor calls whose SQL text
+could not be recovered. With the default `unanalyzableSql: fail`, a dynamic
+executor call with no recovered SQL text (an opaque `query(sql)` argument, a
+`query(cond ? a : b)` choice, an unresolved builder) is reported with target
+`unanalyzable`, because that SQL could take a `FOR UPDATE` lock whose row order
+cannot be checked. See the
+[migration note](../migrations/postgres-unanalyzable-sql.md).
+
+To stay conservative without flagging every dynamic read, dynamic SQL whose
+recovered text exists is handled as before: when it contains `FOR UPDATE` or
+`FOR NO KEY UPDATE` it gets the ordinary lock-ordering checks (interpolations
+are binds or interpolated relation names), and when it contains no exclusive
+lock clause it is treated as non-locking. A lock clause appended only through an
+opaque tail is therefore not detected; keep lock clauses in the recovered SQL.
+Calls with recovered SQL never produce `unanalyzable` findings here.
+
+```ts
+import { query } from "@example/db";
+
+// Counterexample: reported as unanalyzable by default.
+export function lockAny(sql: string, ids: string[]) {
+  return query(sql, [ids]);
+}
+```
+
+Fix: pass a SQL literal or a configured trusted tagged template so the lock can
+be checked, add the configured safe directive (`/* deadlock-safe: ... */`) within
+200 characters before the call when callers are known to be safe, suppress the
+line with `no-mistakes-disable-next-line postgres-lock-ordering`, or set
+`unanalyzableSql: ignore` to restore the earlier skip.
+
 ### Derived relations and interpolated relation names
 
 `FOR UPDATE OF alias` that names one base table is checked against that table
@@ -146,7 +182,9 @@ unions into their members.
 ## Options and defaults
 
 `include` and `exclude` select source files. `importSpecifier` has no default, `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured, and
-`safeDirective` defaults to `deadlock-safe`. `schemaCatalogPath` defaults to
+`safeDirective` defaults to `deadlock-safe`. `unanalyzableSql` defaults to
+`fail`; `ignore` skips dynamic calls without recovered SQL text instead of
+reporting them. `schemaCatalogPath` defaults to
 unset; set it to a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md) to enable the catalog
 exact-prefix requirement.
 
@@ -201,12 +239,14 @@ query(`SELECT * FROM jobs WHERE id = ANY($1) FOR UPDATE`);
 
 Add deterministic `ORDER BY`, use `SKIP LOCKED` for a work queue, or document
 why a unique-key lookup is effectively single-row with the configured safe
-directive.
+directive. For an `unanalyzable` finding, make the executed SQL statically
+recoverable, add the safe directive, or set `unanalyzableSql: ignore`.
 
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-lock-ordering` or
-`no-mistakes-disable-line`; reserve the file directive for a file whose locking
+`no-mistakes-disable-line` (including for `unanalyzable` findings, which point
+at the executor call); reserve the file directive for a file whose locking
 contract is enforced elsewhere.
 
 ## Related rules

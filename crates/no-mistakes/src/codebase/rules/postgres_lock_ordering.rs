@@ -1,6 +1,6 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
-use crate::codebase::postgres::EmbeddedSqlOptions;
+use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -29,6 +29,7 @@ pub(crate) struct Options {
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     pub(crate) safe_directive: String,
     pub(crate) schema_catalog_path: String,
+    pub(crate) unanalyzable_sql: String,
 }
 
 struct CompiledOptions {
@@ -37,6 +38,7 @@ struct CompiledOptions {
     embedded: EmbeddedSqlOptions,
     safe_directive: String,
     schema_catalog_path: Option<String>,
+    fail_unanalyzable: bool,
 }
 
 impl CompiledOptions {
@@ -125,6 +127,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         },
         schema_catalog_path: (!opts.schema_catalog_path.is_empty())
             .then(|| opts.schema_catalog_path.clone()),
+        fail_unanalyzable: fail_unanalyzable_sql(RULE_ID, &opts.unanalyzable_sql)?,
     })
 }
 

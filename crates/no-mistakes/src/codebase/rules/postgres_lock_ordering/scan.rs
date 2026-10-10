@@ -2,7 +2,8 @@ use super::catalog_check::{locks_interpolated_relation, locks_single_row, orders
 use super::directive::{contains_for_update, has_safe_directive};
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::postgres::{
-    extract_locking_select_metadata_with_placeholders, LockingSelectMetadata, SchemaCatalog,
+    extract_locking_select_metadata_with_placeholders, EmbeddedSqlKind, LockingSelectMetadata,
+    SchemaCatalog,
 };
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -12,6 +13,7 @@ use std::path::{Path, PathBuf};
 pub(super) const UNPARSEABLE_TARGET: &str = "unparseable";
 pub(super) const UNRESOLVED_RELATION_TARGET: &str = "unresolved-relation";
 pub(super) const LOCK_ORDERING_TARGET: &str = "lock-ordering";
+pub(super) const UNANALYZABLE_TARGET: &str = "unanalyzable";
 
 pub(super) fn scan_with_sources(
     root: &Path,
@@ -66,6 +68,19 @@ fn findings_for_call_with_catalog(
     catalog: Option<&SchemaCatalog>,
 ) -> Vec<RuleFinding> {
     let Some(sql) = call.sql_text.as_deref() else {
+        // Opaque executor text could take a FOR UPDATE lock. A recovered prefix
+        // without a lock clause is treated as non-locking to keep reads quiet.
+        if opts.fail_unanalyzable
+            && call.kind == EmbeddedSqlKind::Dynamic
+            && !has_safe_directive(source, call.line, "", &opts.safe_directive)
+        {
+            return vec![finding(
+                file,
+                call.line,
+                unanalyzable_message(file, call.line, &opts.safe_directive),
+                UNANALYZABLE_TARGET,
+            )];
+        }
         return Vec::new();
     };
     if !contains_for_update(sql) {
@@ -178,5 +193,11 @@ fn lock_ordering_message(file: &str, line: u32, directive: &str) -> String {
 fn unparseable_message(file: &str, line: u32, directive: &str) -> String {
     format!(
         "{file}:{line}: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `{directive}` comment"
+    )
+}
+
+fn unanalyzable_message(file: &str, line: u32, directive: &str) -> String {
+    format!(
+        "{file}:{line}: executed SQL is not statically recoverable, so a FOR UPDATE lock and its row order cannot be checked for ABBA deadlocks; pass a SQL literal or trusted tagged template, add a `{directive}` comment, or set unanalyzableSql: ignore"
     )
 }

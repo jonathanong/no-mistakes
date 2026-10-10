@@ -175,9 +175,23 @@ fn missing_source_file_errors() {
 #[test]
 fn dynamic_and_unparseable_embedded_calls_are_ignored() {
     let root = fixture("review-followups");
-    let findings =
-        check_with_files(&root, &default_config(), &[root.join("src/invalid.ts")]).unwrap();
+    let files = [root.join("src/invalid.ts")];
+    let findings = check_with_files(
+        &root,
+        &config_with_options("unanalyzableSql: ignore"),
+        &files,
+    )
+    .unwrap();
     assert!(findings.is_empty(), "{findings:?}");
+    // By default only the opaque `query(text)` call fails closed; unparseable static SQL stays quiet.
+    let findings = check_with_files(&root, &default_config(), &files).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.target.as_deref()))
+            .collect::<Vec<_>>(),
+        [(2, Some("unanalyzable"))]
+    );
 }
 
 #[test]

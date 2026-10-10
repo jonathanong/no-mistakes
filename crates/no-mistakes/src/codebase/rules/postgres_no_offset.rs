@@ -1,6 +1,6 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
-use crate::codebase::postgres::EmbeddedSqlOptions;
+use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -25,6 +25,7 @@ pub(crate) struct Options {
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    pub(crate) unanalyzable_sql: String,
 }
 
 pub(crate) struct CompiledOptions {
@@ -32,6 +33,7 @@ pub(crate) struct CompiledOptions {
     exclude: GlobMatcher,
     pub(crate) schema: crate::codebase::postgres::PostgresSchemaOptions,
     pub(crate) embedded: EmbeddedSqlOptions,
+    pub(crate) fail_unanalyzable: bool,
 }
 
 impl CompiledOptions {
@@ -126,6 +128,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
+        fail_unanalyzable: fail_unanalyzable_sql(RULE_ID, &opts.unanalyzable_sql)?,
     })
 }
 
@@ -138,3 +141,5 @@ mod tests;
 mod followup_tests;
 #[cfg(test)]
 mod review_tests;
+#[cfg(test)]
+mod unanalyzable_tests;

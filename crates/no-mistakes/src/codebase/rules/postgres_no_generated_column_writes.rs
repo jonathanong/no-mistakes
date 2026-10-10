@@ -1,6 +1,6 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
-use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
+use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
@@ -27,6 +27,7 @@ pub(crate) struct Options {
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     pub(crate) extra_generated_columns: Vec<ExtraGeneratedColumn>,
     pub(crate) trigger_maintained_columns: Vec<String>,
+    pub(crate) unanalyzable_sql: String,
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -42,6 +43,7 @@ struct CompiledOptions {
     embedded: EmbeddedSqlOptions,
     extra_generated_columns: Vec<ExtraGeneratedColumn>,
     trigger_maintained_columns: Vec<String>,
+    fail_unanalyzable: bool,
 }
 
 impl CompiledOptions {
@@ -129,6 +131,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         embedded: embedded_options(opts),
         extra_generated_columns: opts.extra_generated_columns.clone(),
         trigger_maintained_columns: trigger_columns(&opts.trigger_maintained_columns)?,
+        fail_unanalyzable: fail_unanalyzable_sql(RULE_ID, &opts.unanalyzable_sql)?,
     })
 }
 
@@ -190,6 +193,19 @@ it is listed in triggerMaintainedColumns, so the database sets it — remove it 
         ),
         import: Some(format!("{table}.{column}")),
         target: Some(column.to_string()),
+    }
+}
+
+fn unanalyzable_finding(file: &str, line: usize) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line,
+        message: format!(
+            "{file}:{line}: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore"
+        ),
+        import: None,
+        target: Some("unanalyzable".to_string()),
     }
 }
 

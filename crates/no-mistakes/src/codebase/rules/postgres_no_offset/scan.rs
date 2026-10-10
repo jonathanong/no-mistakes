@@ -1,6 +1,8 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::postgres::{OffsetUse, SqlOffsetFact};
+use crate::codebase::postgres::{
+    recovered_sql_may_select, EmbeddedSqlCall, EmbeddedSqlKind, OffsetUse, SqlOffsetFact,
+};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
@@ -27,14 +29,27 @@ pub(super) fn scan(
         let embedded = profile
             .map(|profile| facts.embedded_sql(path, profile))
             .transpose()?;
-        let mut calls = embedded
-            .into_iter()
-            .flat_map(|file| file.calls.iter())
-            .filter(|call| call.sql_text.is_some());
+        let all_calls = embedded.into_iter().flat_map(|file| file.calls.iter());
+        if opts.fail_unanalyzable {
+            // Calls without recovered text have no statement facts to pair below.
+            findings.extend(
+                all_calls
+                    .clone()
+                    .filter(|call| call.kind == EmbeddedSqlKind::Dynamic && call.sql_text.is_none())
+                    .map(|call| unanalyzable(&rel, call)),
+            );
+        }
+        let mut calls = all_calls.filter(|call| call.sql_text.is_some());
         let source = profile.map(|_| sources.read_path(path)).transpose()?;
         let mut ordinal = 0;
         for statement in statements {
-            let disabled_call = calls.next().filter(|call| {
+            let call = calls.next();
+            // Only a verified prefix was recovered; an opaque tail could add OFFSET.
+            let opaque_tail = opts.fail_unanalyzable && statement.offset_uses.is_empty();
+            if let Some(call) = call.filter(|call| opaque_tail && dynamic_select_prefix(call)) {
+                findings.push(unanalyzable(&rel, call));
+            }
+            let disabled_call = call.filter(|call| {
                 // Calls exist only for embedded profiles, whose source was read above.
                 let source = source.as_deref().unwrap();
                 crate::codebase::ts_source::matching_disable_directive(
@@ -57,6 +72,24 @@ pub(super) fn scan(
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn dynamic_select_prefix(call: &&EmbeddedSqlCall) -> bool {
+    call.kind == EmbeddedSqlKind::Dynamic && recovered_sql_may_select(call.sql_text.as_deref())
+}
+
+fn unanalyzable(file: &str, call: &EmbeddedSqlCall) -> RuleFinding {
+    let line = call.line.max(1) as usize;
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line,
+        message: format!(
+            "{file}:{line}: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore"
+        ),
+        import: None,
+        target: Some("unanalyzable".to_string()),
+    }
 }
 
 fn finding(file: &str, offset: &SqlOffsetFact, ordinal: usize) -> RuleFinding {

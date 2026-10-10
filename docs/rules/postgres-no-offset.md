@@ -19,9 +19,12 @@ rules:
       sqlInclude: ["db/views/**/*.sql", "db/migrations/**/*.sql"]
       importSpecifier: "@example/db"
       executorNames: [query, read, write]
+      unanalyzableSql: fail
 ```
 
 `importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
+`unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
+configuration error).
 
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
 offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET sql_placeholder_1`.
@@ -38,7 +41,7 @@ Fix: page with a cursor, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`
 instead of `OFFSET`.
 
 ```ts
-query(`SELECT id FROM posts ORDER BY id DESC LIMIT ${limit + 1}`);
+query(`SELECT id FROM posts ORDER BY id DESC LIMIT $1`, [limit + 1]);
 ```
 
 String literals that mention the word "offset" are not findings.
@@ -63,11 +66,50 @@ offsets are checked after placeholder normalization; prose and unparseable
 SQL are ignored. `OFFSET 0` asks for a `MATERIALIZED` CTE. Any other offset
 asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
+### Unanalyzable SQL
+
+**Behavior change:** this rule previously dropped dynamic executor SQL unless
+its recovered text already proved an `OFFSET`. With the default
+`unanalyzableSql: fail`, a dynamic executor call is reported with target
+`unanalyzable` at the executor call when OFFSET pagination cannot be ruled out:
+
+- no SQL text was recovered (an opaque `query(sql)` argument or a
+  `query(cond ? a : b)` choice), or
+- the recovered text is a top-level `SELECT` (after a complete `WITH` list),
+  or its leading statement is unknown or incomplete, and it has no OFFSET of
+  its own. An interpolation or opaque appended tail could add `OFFSET`.
+
+Dynamic `INSERT`, `UPDATE`, `DELETE`, and `MERGE` text is not reported, and a
+dynamic call whose recovered text already contains `OFFSET` keeps only its
+ordinary `offset` finding. See the
+[migration note](../migrations/postgres-unanalyzable-sql.md).
+
+```ts
+import { query } from "@example/db";
+
+// Counterexample: both calls are reported as unanalyzable by default.
+export function run(sql: string) {
+  return query(sql);
+}
+
+export function sorted(column: string) {
+  return query(`SELECT id FROM posts ORDER BY ${column}`);
+}
+```
+
+Fix: pass a SQL literal or a configured trusted tagged template, pass values
+such as page sizes as `$n` binds instead of untagged `${...}` interpolations,
+keep pagination clauses in the recovered SQL, suppress the executor line with
+`no-mistakes-disable-next-line postgres-no-offset`, or set
+`unanalyzableSql: ignore` to restore the earlier skip.
+
 ## Options and defaults
 
 `include` and `exclude` select source files. `sqlInclude` defaults to `[]`,
 so `.sql` files are not scanned unless a glob selects them. `importSpecifier`
 has no module default, and `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
+`unanalyzableSql` defaults to `fail`; `ignore` skips dynamic executor SQL that
+cannot be checked instead of reporting it.
 
 `OFFSET 0` is reported as an optimizer fence: use a `MATERIALIZED` CTE
 (`WITH x AS MATERIALIZED (...)`). Any other offset keeps the pagination
@@ -117,7 +159,7 @@ SELECT o.id FROM o JOIN accounts a ON a.id = o.account_id;
 ```
 
 ```ts
-query(`SELECT id FROM posts ORDER BY id DESC LIMIT ${limit + 1}`);
+query(`SELECT id FROM posts ORDER BY id DESC LIMIT $1`, [limit + 1]);
 ```
 
 ## Counterexample
@@ -137,11 +179,14 @@ query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);
 Replace `OFFSET 0` with `WITH x AS MATERIALIZED (...)`. For any other offset,
 use a cursor predicate with a deterministic order, or use `LIMIT + 1`,
 `COUNT`, `EXISTS`, or `ROW_NUMBER()` when that is the actual query need.
+For an `unanalyzable` finding, make the executed SQL statically recoverable or
+set `unanalyzableSql: ignore`.
 
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-no-offset` or
-`no-mistakes-disable-line`; use the file directive only for an intentionally
+`no-mistakes-disable-line` (including for `unanalyzable` findings, which point
+at the executor call); use the file directive only for an intentionally
 offset-based reporting query.
 
 ## Related rules
