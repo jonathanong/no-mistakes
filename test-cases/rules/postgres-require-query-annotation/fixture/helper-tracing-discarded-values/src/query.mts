@@ -69,3 +69,32 @@ write(typeofStatement); // known:typeof-does-not-run-coercion-hooks
 const logicalNotStatement = sql`/* logical not is noncoercive */ SELECT 1`;
 unknownConsumer(!logicalNotStatement);
 write(logicalNotStatement); // known:logical-not-does-not-run-coercion-hooks
+
+const getterStatement = sql`/* getter before consumer */ SELECT 1`;
+unknownConsumer(void proxy.trigger);
+write(getterStatement); // unanalyzable:void-member-can-run-getter
+
+function discardedArgumentSlot(statement) {
+  unknownConsumer(void arguments[0]);
+  return statement;
+}
+write(discardedArgumentSlot(sql`/* discarded argument slot */ SELECT 1`)); // known:argument-slot-read-is-data
+
+function discardedArgumentLength(statement) {
+  unknownConsumer(void arguments.length);
+  return statement;
+}
+write(discardedArgumentLength(sql`/* discarded argument length */ SELECT 1`)); // known:argument-length-read-is-data
+
+function discardedArgumentAlias(statement) {
+  const slots = arguments;
+  unknownConsumer(void slots[0]);
+  return statement;
+}
+write(discardedArgumentAlias(sql`/* discarded argument alias */ SELECT 1`)); // known:argument-alias-read-is-data
+
+function discardedArgumentProperty(statement) {
+  unknownConsumer(void arguments[0].trigger);
+  return statement;
+}
+write(discardedArgumentProperty(sql`/* argument property getter */ SELECT 1`)); // unanalyzable:void-argument-property-can-run-getter
