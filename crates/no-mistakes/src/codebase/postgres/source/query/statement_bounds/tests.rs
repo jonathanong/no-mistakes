@@ -342,6 +342,87 @@ fn a_parenthesized_body_repairs_from_the_cte_scope_and_rejects_a_bad_tail() {
 }
 
 #[test]
+fn needs_matches_only_the_cte_that_owns_a_nested_statement() {
+    let select_only = "WITH a AS (SELECT 1), b AS (SELECT 2) SELECT * FROM a, b";
+    let empty = project_sql(select_only);
+    assert!(empty.nested_statements.is_empty());
+    assert!(!needs(&empty, empty.ctes[0].query_scope_id));
+    assert!(!needs(&empty, empty.ctes[1].query_scope_id));
+    assert!(!needs(&empty, empty.scopes.len()));
+
+    let sql = "WITH a AS (INSERT INTO t(id) VALUES (1)), b AS (SELECT 2) SELECT * FROM a, b";
+    let facts = project_sql(sql);
+    let owned = facts.ctes[0].query_scope_id;
+    let other = facts.ctes[1].query_scope_id;
+    assert_eq!(
+        facts.nested_statements[0].cte_id,
+        facts.scopes[owned].cte_definition_id
+    );
+    assert_ne!(
+        facts.nested_statements[0].cte_id,
+        facts.scopes[other].cte_definition_id
+    );
+    assert!(needs(&facts, owned));
+    assert!(!needs(&facts, other));
+    assert!(!needs(&facts, facts.scopes.len()));
+}
+
+#[test]
+fn repair_returns_before_the_scope_walk_when_the_cte_owns_nothing() {
+    let sql = "WITH a AS (INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING) SELECT 1;";
+    let locations = Locations::new(sql);
+    let before = project_sql(sql);
+    let scope = before.ctes[0].query_scope_id;
+    let mut facts = before.clone();
+    facts.nested_statements[0].cte_id = Some(usize::MAX);
+    repair(&mut facts, &locations, scope, &rparen_at(&locations, 0));
+    assert_eq!(
+        facts.nested_statements[0].sql,
+        before.nested_statements[0].sql
+    );
+    assert!(facts.nested_statements[0].complete);
+    assert!(facts.unsupported.is_empty());
+
+    let outside = before.scopes.len();
+    let mut facts = before;
+    facts.nested_statements[0].query_scope_id = outside;
+    repair(&mut facts, &locations, outside, &rparen_at(&locations, 0));
+    assert_eq!(
+        facts.nested_statements[0].sql,
+        "INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"
+    );
+    assert!(facts.complete);
+    assert!(facts.unsupported.is_empty());
+    assert!(!needs(&facts, outside));
+}
+
+#[test]
+fn select_only_ctes_keep_exact_spans_and_add_no_diagnostic() {
+    let sql = "WITH a AS (SELECT 1), b AS (SELECT 2) SELECT * FROM a, b";
+    let facts = project_sql(sql);
+    assert!(facts.complete, "{:?}", facts.unsupported);
+    assert!(facts.unsupported.is_empty());
+    assert!(facts.nested_statements.is_empty());
+    assert_eq!(
+        facts
+            .ctes
+            .iter()
+            .map(|cte| span_sql(sql, cte.span.as_ref().unwrap()))
+            .collect::<Vec<_>>(),
+        ["a AS (SELECT 1)", "b AS (SELECT 2)"]
+    );
+    let bodies = facts
+        .scopes
+        .iter()
+        .filter(|scope| {
+            scope.clause == crate::codebase::postgres::source::types::PostgresSqlQueryClause::Cte
+        })
+        .map(|scope| span_sql(sql, scope.span.as_ref().unwrap()))
+        .collect::<Vec<_>>();
+    assert_eq!(bodies, ["SELECT 1", "SELECT 2"]);
+}
+
+#[test]
 fn boundary_end_rejects_tokens_that_do_not_cover_the_tail() {
     assert!(boundary_end("ab", &[]).is_err());
     assert!(boundary_end("ab", &[token_ending(Token::RParen, 1)]).is_err());
