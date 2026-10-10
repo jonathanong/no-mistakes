@@ -44,6 +44,13 @@ impl Collector<'_, '_> {
                 &env,
                 Some(id),
             );
+            let locations = self.locations;
+            super::statement_bounds::repair(
+                &mut self.facts,
+                locations,
+                child,
+                &cte.closing_paren_token,
+            );
             self.facts.ctes[id].query_scope_id = child;
             env.insert(identifier(&cte.alias.name).identity, id);
         }

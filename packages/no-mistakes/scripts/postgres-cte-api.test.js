@@ -228,6 +228,14 @@ test(
   },
 );
 
+function nestedChildren(statement) {
+  if (statement.kind === "select") return statement.query.nestedStatements;
+  if (statement.kind === "doBlock") {
+    return statement.block.statements.flatMap(nestedChildren);
+  }
+  return [];
+}
+
 test(
   "compiled CJS/ESM RETURNING CTE inserts keep direct column lineage",
   { skip: !compiled },
@@ -270,5 +278,58 @@ test(
       executed.statements[0].block.statements[1].execute.statements[0].query.nestedStatements[0];
     assert.equal(nested.insert.columnSources.columns[0].sources[0].expression.sql, "2");
     assert.ok(nested.sql.includes("RETURNING id"));
+  },
+);
+
+test(
+  "compiled nested data-modifying CTE sql matches its span and reparses",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const cases = [
+      {
+        sql: "WITH a AS (INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING) SELECT 1;",
+        expected: ["INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"],
+      },
+      {
+        sql: "WITH a AS (INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1)) SELECT 1;",
+        expected: ["INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1)"],
+      },
+      {
+        sql: "WITH a AS (INSERT INTO t(id) VALUES (1) /* kept */ ON CONFLICT (id) DO NOTHING RETURNING id /* tail */) SELECT 1;",
+        expected: [
+          "INSERT INTO t(id) VALUES (1) /* kept */ ON CONFLICT (id) DO NOTHING RETURNING id",
+        ],
+      },
+      {
+        sql: "DO $$ BEGIN WITH a AS (INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING) SELECT 1; END $$;",
+        expected: ["INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"],
+      },
+    ];
+    for (const { sql, expected } of cases) {
+      const facts = await cjs.parsePostgresSql({ sql });
+      assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+      assert.deepEqual(facts.diagnostics, []);
+      const children = facts.statements.flatMap(nestedChildren);
+      assert.deepEqual(
+        children.map((child) => child.sql),
+        expected,
+      );
+      let previous = 0;
+      for (const child of children) {
+        assert.equal(child.complete, true);
+        assert.equal(
+          Buffer.from(sql).subarray(child.span.start.offset, child.span.end.offset).toString(),
+          child.sql,
+        );
+        assert.ok(child.span.start.offset >= previous);
+        assert.ok(child.span.end.offset > child.span.start.offset);
+        previous = child.span.end.offset;
+        const again = await cjs.parsePostgresSql({ sql: child.sql });
+        assert.deepEqual(again.diagnostics, []);
+        assert.equal(again.statements[0].sql, child.sql);
+      }
+    }
   },
 );
