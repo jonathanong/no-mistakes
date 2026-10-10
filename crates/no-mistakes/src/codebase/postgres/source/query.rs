@@ -132,7 +132,12 @@ impl Collector<'_, '_> {
         }
         self.depth += 1;
         let env = self.ctes(query, scope, outer);
-        self.body(&query.body, scope, &env);
+        let body_end = self.span_bounds.body_end(
+            query,
+            self.facts.scopes[scope].span.as_ref(),
+            self.locations,
+        );
+        self.body(&query.body, scope, &env, body_end);
         self.query_clauses(query, scope, &env);
         self.depth -= 1;
         self.not_depth = outer_not_depth;
