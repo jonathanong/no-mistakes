@@ -1,4 +1,4 @@
-use super::cursor::{self, at_plain_end, at_word, eat_word, peek_index};
+use super::cursor::{self, at_plain_end, at_word, eat_word, peek_index, OpenLabel};
 use super::literal::command_kind;
 use super::scan::{self, consume_statement};
 use super::{done, walk_statements, Ctx, Stop};
@@ -67,7 +67,7 @@ pub(super) fn case_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     }
 }
 
-pub(super) fn loop_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
+pub(super) fn loop_stmt(ctx: &mut Ctx<'_>, label: OpenLabel) -> PostgresSqlProceduralOccurrence {
     let start = peek_index(ctx).unwrap_or(ctx.index);
     let bare = at_word(ctx, "LOOP");
     cursor::bump(ctx);
@@ -81,12 +81,13 @@ pub(super) fn loop_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
             return done(ctx, Kind::Unknown, start, nested);
         }
         if empty {
-            return finish_unknown_loop(ctx, start, nested);
+            return finish_unknown_loop(ctx, start, nested, &label);
         }
     }
     nested.extend(walk_statements(ctx, Stop::Loop));
     if eat_word(ctx, "END") && eat_word(ctx, "LOOP") {
-        cursor::eat_label(ctx);
+        let close = cursor::eat_label(ctx);
+        cursor::note_label(ctx, &label, close.as_ref());
         cursor::eat_semi(ctx);
         done(ctx, Kind::ControlFlow, start, nested)
     } else {
@@ -104,16 +105,18 @@ fn finish_unknown_loop(
     ctx: &mut Ctx<'_>,
     start: usize,
     mut nested: Vec<PostgresSqlProceduralOccurrence>,
+    label: &OpenLabel,
 ) -> PostgresSqlProceduralOccurrence {
     nested.extend(walk_statements(ctx, Stop::Loop));
     if eat_word(ctx, "END") && eat_word(ctx, "LOOP") {
-        cursor::eat_label(ctx);
+        let close = cursor::eat_label(ctx);
+        cursor::note_label(ctx, label, close.as_ref());
         cursor::eat_semi(ctx);
     }
     done(ctx, Kind::Unknown, start, nested)
 }
 
-pub(super) fn begin_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
+pub(super) fn begin_stmt(ctx: &mut Ctx<'_>, label: OpenLabel) -> PostgresSqlProceduralOccurrence {
     let start = peek_index(ctx).unwrap_or(ctx.index);
     eat_word(ctx, "BEGIN");
     let mut nested = walk_statements(ctx, Stop::Outer);
@@ -125,7 +128,8 @@ pub(super) fn begin_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     }
     if at_plain_end(ctx) {
         eat_word(ctx, "END");
-        cursor::eat_label(ctx);
+        let close = cursor::eat_label(ctx);
+        cursor::note_label(ctx, &label, close.as_ref());
         cursor::eat_semi(ctx);
         done(ctx, Kind::ControlFlow, start, nested)
     } else {
