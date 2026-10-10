@@ -160,12 +160,26 @@ fn same_label(open: &LabelId, close: &LabelId) -> bool {
 
 fn label_id(token: &Token) -> Option<LabelId> {
     match token {
-        Token::Word(word) => Some(LabelId {
+        Token::Word(word) if plpgsql_label_word(word) => Some(LabelId {
             quoted: word.quote_style.is_some(),
             value: word.value.clone(),
         }),
         _ => None,
     }
+}
+
+fn plpgsql_label_word(word: &sqlparser::tokenizer::Word) -> bool {
+    // PL/pgSQL reserves a smaller, different vocabulary than SQL column names.
+    // PostgreSQL src/pl/plpgsql/src/pl_reserved_kwlist.h is the source of truth.
+    const RESERVED: &[&str] = &[
+        "all", "begin", "by", "case", "declare", "else", "end", "execute", "for", "foreach",
+        "from", "if", "in", "into", "loop", "not", "null", "or", "strict", "then", "to", "using",
+        "when", "while",
+    ];
+    word.quote_style.is_some()
+        || !RESERVED
+            .iter()
+            .any(|reserved| word.value.eq_ignore_ascii_case(reserved))
 }
 
 pub(super) fn bump(ctx: &mut Ctx<'_>) {
