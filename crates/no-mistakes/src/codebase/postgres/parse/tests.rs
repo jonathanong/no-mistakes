@@ -24,6 +24,21 @@ fn parse_postgres_sql_accepts_create_table() {
 }
 
 #[test]
+fn strict_and_lenient_parsers_keep_comments_after_operators_as_whitespace() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/operator-comment-boundaries.sql"
+    ))
+    .lines()
+    .last()
+    .expect("strict and lenient query fixture");
+    let strict = parse_postgres_sql(sql).expect("comment after shift operator");
+    assert_eq!(strict.len(), 1);
+    let lenient = parse_postgres_sql_lenient(sql);
+    assert_eq!(lenient.len(), 1);
+}
+
+#[test]
 fn table_only_normalization_leaves_create_table_name_intact() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

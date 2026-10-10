@@ -6,7 +6,7 @@ use super::super::procedural_omit::label::{
 use super::super::procedural_omit::non_sql_marks;
 use super::super::{
     PostgresSqlPosition, PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind,
-    PostgresSqlSpan,
+    PostgresSqlSpan, PostgresSqlStatementKind,
 };
 use super::procedural_occurrences::{block, kinds};
 use sqlparser::ast::DollarQuotedString;
@@ -135,6 +135,40 @@ fn comments_between_opening_labels_and_loops_are_omitted() {
         labels_at("$$/*gap*/<<l>> FOR$$", "FOR", ControlFlow),
         vec![label_range("$$/*gap*/<<l>> FOR$$", "<<l>>")]
     );
+}
+
+#[test]
+fn block_comment_after_label_operator_keeps_public_source_positions() {
+    let sql = super::fixture("procedural-opening-label-adjacent-operator-comment.sql");
+    let result = crate::codebase::postgres::parse_postgres_source(
+        &crate::codebase::postgres::source::PostgresSqlSource {
+            sql: sql.clone(),
+            file_name: Some("procedural-opening-label-adjacent-operator-comment.sql".into()),
+        },
+    );
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[0].facts else {
+        panic!("expected a DO block: {result:?}");
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    assert_eq!(block.statements.len(), 2, "{:?}", block.statements);
+    assert!(block.statements[0].sql.contains("before_label"));
+    assert!(block.statements[1].sql.contains("after_label"));
+    for statement in &block.statements {
+        assert!(!statement.sql.contains("<<l>>"));
+        assert_eq!(
+            statement.sql,
+            sql[statement.span.start.offset..statement.span.end.offset]
+        );
+    }
+    let control_flow = block
+        .occurrences
+        .iter()
+        .find(|occurrence| occurrence.kind == ControlFlow)
+        .expect("the labeled loop occurrence");
+    let loop_sql = &sql[control_flow.span.start.offset..control_flow.span.end.offset];
+    assert!(loop_sql.contains("FOR i"), "{loop_sql}");
+    assert!(!loop_sql.contains("<<l>>"), "{loop_sql}");
 }
 
 fn labels_at(

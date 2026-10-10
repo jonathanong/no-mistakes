@@ -98,8 +98,10 @@ fn prefix_positions(positions: &[(u32, u32)], prefix: &str) -> Vec<(u32, u32)> {
 fn starts_with_clause(text: &str) -> bool {
     use sqlparser::dialect::PostgreSqlDialect;
     use sqlparser::keywords::Keyword;
-    use sqlparser::tokenizer::{Token, Tokenizer};
-    let Ok(tokens) = Tokenizer::new(&PostgreSqlDialect {}, text).tokenize() else {
+    use sqlparser::tokenizer::Token;
+    let Ok(tokens) =
+        crate::codebase::postgres::parse::operator_boundary::tokenize(&PostgreSqlDialect {}, text)
+    else {
         return false;
     };
     let mut tokens = tokens

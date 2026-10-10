@@ -4,11 +4,19 @@
 
 use std::borrow::Cow;
 
-mod opaque;
+pub(super) mod opaque;
 #[cfg(test)]
 mod tests;
 
 use opaque::{skip_comment, skip_opaque};
+
+pub(super) fn skip_comment_source(sql: &str, index: usize) -> Option<usize> {
+    skip_comment(sql, index)
+}
+
+pub(super) fn skip_opaque_source(sql: &str, index: usize) -> Option<usize> {
+    skip_opaque(sql, index)
+}
 
 pub(super) fn separate_distinct_grouping(sql: &str) -> Cow<'_, str> {
     let edits = distinct_grouping_edits(sql);

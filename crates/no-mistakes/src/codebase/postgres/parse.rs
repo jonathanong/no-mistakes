@@ -11,6 +11,7 @@ pub(crate) use function_sources::partition as partition_function_sources;
 mod lenient;
 mod lock_of_list;
 mod lock_strength;
+pub(super) mod operator_boundary;
 mod prepared;
 pub(crate) use lenient::parse_postgres_sql_with_function_sources;
 pub(crate) use lenient::LocatedStatement;
@@ -92,11 +93,16 @@ fn prepare_postgres_tokens_inner(
     let normalized = normalize_copy_data(sql);
     let separated = distinct_group::separate_distinct_grouping(&normalized);
     let escaped = source_escape::prepare(&separated);
+    let boundary = operator_boundary::Prepared::new(&escaped.sql);
     let mut tokens = Vec::new();
-    let lexical_error =
-        sqlparser::tokenizer::Tokenizer::new(&source_unicode::SourceDialect, &escaped.sql)
+    let mut lexical_error =
+        sqlparser::tokenizer::Tokenizer::new(&source_unicode::SourceDialect, boundary.sql())
             .tokenize_with_location_into_buf(&mut tokens)
             .err();
+    boundary.restore(&mut tokens);
+    if let Some(error) = &mut lexical_error {
+        boundary.restore_error(error);
+    }
     escaped.restore(&mut tokens);
     source_unicode::prepare(&mut tokens);
     let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
