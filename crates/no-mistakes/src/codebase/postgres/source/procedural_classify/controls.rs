@@ -69,6 +69,7 @@ pub(super) fn loop_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     }
     nested.extend(walk_statements(ctx, Stop::Loop));
     if eat_word(ctx, "END") && eat_word(ctx, "LOOP") {
+        cursor::eat_label(ctx);
         cursor::eat_semi(ctx);
         done(ctx, Kind::ControlFlow, start, nested)
     } else {

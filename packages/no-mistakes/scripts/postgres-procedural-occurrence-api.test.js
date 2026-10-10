@@ -68,6 +68,14 @@ const CASES = [
     complete: false,
     shape: ["dynamicExecute"],
   },
+  {
+    name: "labeled loop",
+    sql: "DO $$ BEGIN <<retry>> LOOP NULL; END LOOP retry; END $$;",
+    complete: false,
+    shape: ["controlFlow(unknown)"],
+    statements: 0,
+    diagnostic: /Unsupported procedural occurrence/,
+  },
 ];
 
 test(
