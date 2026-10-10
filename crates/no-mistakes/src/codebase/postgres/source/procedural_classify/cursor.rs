@@ -129,6 +129,9 @@ pub(super) fn skip_label(ctx: &mut Ctx<'_>) -> OpenLabel {
 pub(super) fn note_label(ctx: &mut Ctx<'_>, open: &OpenLabel, close: Option<&LabelId>) {
     if label_disagrees(open, close) {
         ctx.label_invalid = true;
+        if matches!(open, OpenLabel::Valid(_)) && close.is_some() {
+            ctx.label_mismatches.push(ctx.index - 1);
+        }
     }
 }
 

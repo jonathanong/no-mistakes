@@ -34,6 +34,20 @@ fn mismatched_block_label_is_not_complete() {
 }
 
 #[test]
+fn nested_mismatched_label_precedes_later_sql_at_its_own_span() {
+    let sql = super::fixture("procedural-label-mismatch-location.sql");
+    let (_, parsed) = block(&sql);
+    assert!(!parsed.complete);
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["ControlFlow[\"ControlFlow\"]", "Unknown", "Utility"]
+    );
+    let mismatch = &parsed.occurrences[1].span;
+    assert_eq!(&sql[mismatch.start.offset..mismatch.end.offset], "y");
+    assert!(mismatch.end.offset < parsed.occurrences[2].span.start.offset);
+}
+
+#[test]
 fn empty_label_before_raise_inside_loop_is_not_complete() {
     fails_closed("DO $$ BEGIN LOOP <<>> RAISE NOTICE 'x'; END LOOP; END $$;");
 }
