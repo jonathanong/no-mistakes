@@ -1,4 +1,6 @@
 //! Non-SQL spans are merged intervals. A long literal does not allocate per byte.
+pub(super) mod label;
+
 use super::body::Body;
 use super::locations::Locations;
 use super::types::{PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind};
@@ -12,7 +14,11 @@ pub(super) fn omit_non_sql(
 ) {
     let local = Locations::new(body.sql.as_ref());
     let len = body.end.saturating_sub(body.start);
-    let marks = non_sql_marks(body.start, len, occurrences);
+    let mut marks = non_sql_marks(body.start, len, occurrences);
+    // The walker skips `<<label>>` before the span. Extend the omitted interval only.
+    for (start, end) in label::opening_labels(body, occurrences) {
+        marks.cover(start, end);
+    }
     let count = tokens.len();
     tokens.retain(|token| {
         let start = body_offset(&local, body, token.span.start);
@@ -70,6 +76,16 @@ impl NonSqlMarks {
     pub(super) fn token_checks(&self) -> usize {
         self.token_checks.get()
     }
+
+    /// Merge one more omitted range. Does not count as another occurrence.
+    pub(super) fn cover(&mut self, start: usize, end: usize) {
+        let window_end = self.origin.saturating_add(self.len);
+        if start >= end || start < self.origin || end > window_end {
+            return;
+        }
+        self.intervals.push(Interval { start, end });
+        self.intervals = merge_intervals(std::mem::take(&mut self.intervals));
+    }
 }
 
 /// Marks the union of non-SQL spans in `[origin, origin + len)`.
@@ -99,6 +115,17 @@ pub(super) fn non_sql_marks(
             intervals.push(Interval { start, end });
         }
     }
+    NonSqlMarks {
+        origin,
+        len,
+        intervals: merge_intervals(intervals),
+        span_passes,
+        body_passes,
+        token_checks: Cell::new(0),
+    }
+}
+
+fn merge_intervals(mut intervals: Vec<Interval>) -> Vec<Interval> {
     intervals.sort_by_key(|interval| (interval.start, interval.end));
     let mut merged: Vec<Interval> = Vec::new();
     for interval in intervals {
@@ -110,14 +137,7 @@ pub(super) fn non_sql_marks(
         }
         merged.push(interval);
     }
-    NonSqlMarks {
-        origin,
-        len,
-        intervals: merged,
-        span_passes,
-        body_passes,
-        token_checks: Cell::new(0),
-    }
+    merged
 }
 
 fn clip(origin: usize, len: usize, start: usize, end: usize) -> Option<(usize, usize)> {

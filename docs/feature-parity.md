@@ -744,7 +744,7 @@ parsed `SELECT`. A qualified name such as `public.execute(...)` stays
 or conditional-loop header with no condition keeps the block incomplete. That
 empty header reports that the procedural condition is missing, at the header. An opening
 label is one identifier. A closing label that does not match keeps the block
-incomplete. A label prefix on a wholly literal command stays `unknown`.
+incomplete. A label prefix on a wholly literal command stays `unknown`. An opening label is omitted with the walker-only block it names.
 
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;
