@@ -30,14 +30,10 @@ test(
           .toString(),
         statement.sql,
       );
-      assert.equal(statement.block.complete, false);
+      assert.equal(statement.block.complete, true);
       assert.equal(statement.block.statements.length, 1);
-      assert.equal(statement.block.diagnostics.length, 2);
-      assert.match(
-        statement.block.diagnostics[0].message,
-        /Unsupported nested procedural statement/,
-      );
-      assert.ok(statement.block.diagnostics[0].span);
+      assert.deepEqual(statement.block.diagnostics, []);
+      assert.ok(statement.block.occurrences.some((occurrence) => occurrence.kind === "utility"));
       assert.deepEqual(
         facts.statements.map((statement) => statement.kind),
         name.endsWith("-mixed.sql") ? ["createIndex", "doBlock", "createIndex"] : ["doBlock"],

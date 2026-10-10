@@ -520,9 +520,10 @@ or schema-qualified names, and neighboring top-level statements retain their
 source boundaries. No PostgreSQL AST or execution policy is returned.
 
 Safely attributed facts can coexist with incomplete procedural coverage.
-For example, unsupported `LOCK` statements retain explicit `other` source
+Malformed or unsupported `LOCK` forms retain explicit `other` source
 occurrences and localized diagnostics instead of hiding a following typed
-constraint. Unsupported ALTER operations, incomplete SELECT or INSERT facts,
+constraint. Recognized static `LOCK TABLE` forms are utility occurrences.
+Unsupported ALTER operations, incomplete SELECT or INSERT facts,
 `dynamicExecute`, and unrecognized procedural forms keep the enclosing block
 incomplete. A loop that contains `INSERT` lists that `dml` occurrence and does
 not describe it as executed. Inspect `occurrences`, diagnostics, and nested
