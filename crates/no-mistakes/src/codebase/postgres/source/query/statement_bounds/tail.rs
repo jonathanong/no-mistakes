@@ -65,8 +65,14 @@ fn covered_tokens(text: &str) -> Result<Vec<TokenWithSpan>, ()> {
         .last()
         .and_then(|token| local.position(token.span.end))
         .map(|position| position.offset);
-    if consumed != Some(text.len()) {
-        return Err(());
-    }
+    accept_consumed(consumed, text.len())?;
     Ok(tokens)
+}
+
+pub(super) fn accept_consumed(consumed: Option<usize>, len: usize) -> Result<(), ()> {
+    if consumed == Some(len) {
+        Ok(())
+    } else {
+        Err(())
+    }
 }

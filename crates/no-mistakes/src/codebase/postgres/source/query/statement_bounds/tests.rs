@@ -229,6 +229,10 @@ fn bounded_end_keeps_statement_parens_and_drops_wrappers() {
         Some(" ON CONFLICT DO NOTHING".len())
     );
     assert_eq!(bounded_end("))", 0).unwrap(), None);
+    assert_eq!(bounded_end("(1))", 0).unwrap(), Some("(1)".len()));
+    assert!(tail::accept_consumed(Some(2), 2).is_ok());
+    assert!(tail::accept_consumed(None, 2).is_err());
+    assert!(tail::accept_consumed(Some(1), 2).is_err());
     assert!(bounded_end("/*", 0).is_err());
     assert!(bounded_end("'abc", 0).is_err());
 }
@@ -255,6 +259,39 @@ fn statement_scopes_skip_set_operations_and_ids_outside_the_vec() {
     let mut outside = facts.clone();
     outside.scopes[child_pos].id = 10_000;
     assert_eq!(statement_scopes(&outside, cte), vec![cte]);
+
+    let mut other = facts.clone();
+    other.scopes[child_pos].clause =
+        crate::codebase::postgres::source::types::PostgresSqlQueryClause::Other;
+    let scopes = statement_scopes(&other, cte);
+    assert!(scopes.contains(&cte));
+    assert!(!scopes.contains(&child_scope));
+}
+
+#[test]
+fn an_extra_closer_or_an_empty_tail_does_not_invent_a_boundary() {
+    let sql = "WITH a AS (INSERT INTO t(id) VALUES (1)) SELECT 1;";
+    let locations = Locations::new(sql);
+    let mut facts = project_sql(sql);
+    let scope = facts.nested_statements[0].query_scope_id;
+    let closer = sql.rfind(')').unwrap();
+    facts.nested_statements[0].span = Some(locations.range(closer, closer + 1));
+    repair(
+        &mut facts,
+        &locations,
+        scope,
+        &rparen_at(&locations, sql.len().saturating_sub(1)),
+    );
+    assert!(facts.nested_statements[0].sql.is_empty());
+    assert!(!facts.complete);
+
+    let mut facts = project_sql(sql);
+    let scope = facts.nested_statements[0].query_scope_id;
+    let end = facts.nested_statements[0].span.as_ref().unwrap().end.offset;
+    let before = facts.nested_statements[0].sql.clone();
+    repair(&mut facts, &locations, scope, &rparen_at(&locations, end));
+    assert_eq!(facts.nested_statements[0].sql, before);
+    assert!(facts.nested_statements[0].complete);
 }
 
 #[test]
