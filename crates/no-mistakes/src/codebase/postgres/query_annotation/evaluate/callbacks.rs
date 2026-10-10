@@ -161,6 +161,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                             for name in &function.params {
                                 locals.insert(name.clone(), Value::Unknown);
                             }
+                            // Opaque consumers do not supply a reference receiver.
+                            scopes::bind_this(&mut locals, function, None);
                             let mut scope = self.environment(locals);
                             self.register_mappings(scope, *captured, function, None);
                             self.register_captured_bindings(scope, *captured, function);

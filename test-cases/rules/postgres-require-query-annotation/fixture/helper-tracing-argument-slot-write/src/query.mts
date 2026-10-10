@@ -203,3 +203,25 @@ write(shadowedDelete({}, sql`/* shadowed delete receiver */ SELECT 1`)); // unan
 write(deleteAsSlotValue(sql`/* delete used as slot value */ SELECT 1`, "unused")); // known:delete-slot-value
 write(await awaitedStrictDelete(sql`/* awaited strict delete */ SELECT 1`)); // known:awaited-strict-delete
 writeRecreatedDeletedProperty(sql`/* original property */ SELECT 1`);
+
+function indexedCallReceiver(annotated) {
+  function callback() {
+    this[1] = "SELECT 1";
+  }
+  arguments[0] = callback;
+  arguments[1] = annotated;
+  arguments[0]();
+  write(arguments[1]); // finding:indexed-call-binds-arguments-as-this
+}
+indexedCallReceiver(sql`/* indexed call receiver */ SELECT 1`);
+
+function indexedArrowIgnoresReceiver(annotated) {
+  const callback = () => {
+    this[1] = "SELECT 1";
+  };
+  arguments[0] = callback;
+  arguments[1] = annotated;
+  arguments[0]();
+  write(arguments[1]); // known:arrow-ignores-indexed-receiver
+}
+indexedArrowIgnoresReceiver(sql`/* indexed arrow receiver */ SELECT 1`);

@@ -256,7 +256,9 @@ effects still run, including inside a `void` wrapper. Comma expressions expose o
 their last value. Pure unary numeric indices such as `+0` and `-0` address slot zero.
 Non-coercive `void`, `typeof`, and `!` expressions discard
 callback values while evaluating operand effects. Numeric `+`, `-`, and `~`
-coercion remains conservative because conversion hooks can mutate operands. Named function self-bindings are shadowed by
+coercion remains conservative because conversion hooks can mutate operands. A non-arrow function called through a member or index receives that base as
+`this`. An arrow keeps its lexical `this` and ignores the call receiver. A bare
+call does not reuse a captured `this`. Named function self-bindings are shadowed by
 invocation parameters and the ordinary `arguments` binding.
 Untrusted local tags can mutate captured
 builders even when their own bodies use supported straight-line syntax. They can
