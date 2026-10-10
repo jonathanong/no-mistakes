@@ -1,5 +1,5 @@
 use super::cursor::{at_any, at_dml, at_utility, at_word, bump, peek_index};
-use super::scan::{collect_keywords_rest, consume_statement};
+use super::scan::{collect_keywords_rest, consume_statement, is_static_lock_table};
 use super::{controls, done, Ctx};
 use crate::codebase::postgres::source::types::{
     PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind as Kind,
@@ -40,6 +40,8 @@ fn plain_statement(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
         simple(ctx, Kind::ControlFlow)
     } else if at_dml(ctx) {
         simple(ctx, Kind::Dml)
+    } else if is_static_lock_table(ctx) {
+        simple(ctx, Kind::Utility)
     } else if at_word(ctx, "WITH") {
         with_stmt(ctx)
     } else if at_utility(ctx) {

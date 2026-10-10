@@ -255,6 +255,7 @@ jobs:
           packages/no-mistakes/scripts/real-napi-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           packages/no-mistakes/scripts/postgres-source-api.test.js
+          packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js
           packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js
           --coverage=false
 

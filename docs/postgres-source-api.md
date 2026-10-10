@@ -114,6 +114,13 @@ including an incomplete nested program. Inspect its `diagnostics` before using
 its occurrence list. If a conditional statement's parser span cannot identify
 a nonempty source range, the block returns a diagnostic and remains incomplete;
 valid top-level statements before and after it are preserved.
+When structural classification recognizes a nested static utility such as
+`CREATE TYPE ... AS ENUM` or `LOCK TABLE ... IN ... MODE`, the enclosing block
+can remain complete even when the general SQL parser has no typed statement
+variant for that utility. Static DML, dynamic `EXECUTE`, and unknown procedural
+syntax retain their existing source facts and diagnostics; static DML remains a
+source occurrence rather than an execution claim. Utility classification does
+not evaluate conditions or imply that a command executes.
 Typed `IF`, `ELSIF`, and `ELSE` blocks expose a `conditional`
 fact with ordered `PostgresSqlConditionalBranch` entries. A branch retains its
 condition expression (null for ELSE), source span, and nested statement facts.
