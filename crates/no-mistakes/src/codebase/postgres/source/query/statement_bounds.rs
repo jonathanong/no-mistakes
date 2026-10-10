@@ -13,14 +13,14 @@ use tail::{bounded_end, open_depth};
 
 const BOUNDARY: &str = "nested data-modifying statement boundary";
 
-/// `true` when `scope` owns a nested statement. An index outside `facts.scopes`
-/// is not a boundary, and a CTE with no matching `cte_id` does not need one.
-pub(super) fn needs(facts: &PostgresSqlQuery, scope: usize) -> bool {
+/// `true` when `nested_statements[from..]` has a statement owned by `scope`.
+/// An index outside `facts.scopes` is not a boundary. `from == 0` still treats
+/// a `None` definition as equal to a statement whose `cte_id` is `None`.
+pub(super) fn needs(facts: &PostgresSqlQuery, scope: usize, from: usize) -> bool {
     let Some(definition) = facts.scopes.get(scope).map(|root| root.cte_definition_id) else {
         return false;
     };
-    facts
-        .nested_statements
+    facts.nested_statements[from..]
         .iter()
         .any(|statement| statement.cte_id == definition)
 }
@@ -30,17 +30,18 @@ pub(super) fn repair(
     locations: &Locations<'_>,
     scope: usize,
     closing: &AttachedToken,
+    from: usize,
 ) {
-    if !needs(facts, scope) {
+    // Ownership looks at the suffix only. Skip the scope rebuild when it misses.
+    if !needs(facts, scope, from) {
         return;
     }
     let scopes = statement_scopes(facts, scope);
-    let indexes = facts
-        .nested_statements
+    let indexes = facts.nested_statements[from..]
         .iter()
         .enumerate()
         .filter(|(_, statement)| scopes.contains(&statement.query_scope_id))
-        .map(|(index, _)| index)
+        .map(|(index, _)| from + index)
         .collect::<Vec<_>>();
     for index in indexes {
         repair_statement(facts, locations, closing, index);
