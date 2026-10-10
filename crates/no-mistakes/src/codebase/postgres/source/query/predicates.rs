@@ -95,6 +95,7 @@ impl Collector<'_, '_> {
             }
             Expr::Exists { subquery, negated } => {
                 // Wrapping NOT is already in `not_depth`. The node's own flag is separate.
+                // Boolean tests, CASE, and other wrappers hide that parity.
                 let not_depth = self.not_depth + u32::from(*negated);
                 let start = self.facts.columns.len();
                 let first_scope = self.facts.scopes.len();
@@ -116,12 +117,15 @@ impl Collector<'_, '_> {
                     context.mandatory = false;
                     context.under_not = true;
                 }
+                let effective_negated =
+                    (!context.under_boolean_test && !context.under_case && !context.under_other)
+                        .then_some(not_depth % 2 == 1);
                 self.facts.exists.push(PostgresSqlQueryExists {
                     scope_id: scope,
                     subquery_scope_id: child,
                     negated: *negated,
                     not_depth,
-                    effective_negated: not_depth % 2 == 1,
+                    effective_negated,
                     context,
                     correlated: !correlations.is_empty(),
                     correlations,
