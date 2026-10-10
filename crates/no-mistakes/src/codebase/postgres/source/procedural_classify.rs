@@ -34,6 +34,7 @@ pub(super) struct Ctx<'a> {
     pub(super) legacy_stop: bool,
     pub(super) walker_only: bool,
     label_invalid: bool,
+    label_mismatches: Vec<usize>,
     pending_label: cursor::OpenLabel,
     pub(super) span: &'a dyn Fn(usize, usize) -> PostgresSqlSpan,
     pub(super) empty_headers: Vec<(usize, usize)>,
@@ -60,6 +61,7 @@ pub(super) fn classify_at(
         legacy_stop: false,
         walker_only: false,
         label_invalid: false,
+        label_mismatches: Vec::new(),
         pending_label: cursor::OpenLabel::Absent,
         span,
         empty_headers: Vec::new(),
@@ -81,7 +83,18 @@ pub(super) fn classify_at(
     // A label failure is an unknown occurrence. `legacy_stop` is a different diagnostic.
     // Literal commands use the same signal so a skipped prefix cannot fold as DML.
     if ctx.label_invalid && !ctx.legacy_stop {
-        occurrences.push(unrecognized_label(&ctx));
+        if ctx.label_mismatches.is_empty() {
+            occurrences.push(unrecognized_label(&ctx));
+        } else {
+            for index in &ctx.label_mismatches {
+                let mismatch = scan::token_occurrence(
+                    &ctx,
+                    PostgresSqlProceduralOccurrenceKind::Unknown,
+                    *index,
+                );
+                insert_mismatch(&mut occurrences, mismatch);
+            }
+        }
     }
     let empty_headers = ctx
         .empty_headers
@@ -93,6 +106,21 @@ pub(super) fn classify_at(
         legacy_stop: ctx.legacy_stop,
         walker_only: ctx.walker_only,
         empty_headers,
+    }
+}
+
+fn insert_mismatch(
+    occurrences: &mut Vec<PostgresSqlProceduralOccurrence>,
+    mismatch: PostgresSqlProceduralOccurrence,
+) {
+    let offset = mismatch.span.start.offset;
+    if let Some(parent) = occurrences.iter_mut().find(|occurrence| {
+        occurrence.span.start.offset <= offset && offset < occurrence.span.end.offset
+    }) {
+        insert_mismatch(&mut parent.occurrences, mismatch);
+    } else {
+        occurrences.push(mismatch);
+        occurrences.sort_by_key(|occurrence| occurrence.span.start.offset);
     }
 }
 
