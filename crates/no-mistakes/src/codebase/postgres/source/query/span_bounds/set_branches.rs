@@ -42,8 +42,8 @@ impl QuerySpanBounds {
         else {
             return (None, None);
         };
-        let left_start = self.branch_start(left_start, parent.start.offset, left_end);
-        let right_start = self.branch_start(right_start, separator.1.end, body_end);
+        let left_start = self.branch_start(left, left_start, parent.start.offset, left_end);
+        let right_start = self.branch_start(right, right_start, separator.1.end, body_end);
         if left_end < left_start || body_end < right_start {
             return (None, None);
         }
@@ -53,8 +53,24 @@ impl QuerySpanBounds {
         )
     }
 
-    fn branch_start(&self, start: usize, lower_bound: usize, end: usize) -> usize {
-        let mut start = start;
+    fn branch_start(
+        &self,
+        branch: &SetExpr,
+        start: usize,
+        lower_bound: usize,
+        end: usize,
+    ) -> usize {
+        let mut start = if matches!(branch, SetExpr::Values(_)) {
+            let before = self.tokens.partition_point(|token| token.start < start);
+            before
+                .checked_sub(1)
+                .and_then(|index| self.tokens.get(index))
+                .filter(|token| token.keyword == Keyword::VALUES && token.start < end)
+                .map(|token| token.start)
+                .unwrap_or(start)
+        } else {
+            start
+        };
         loop {
             let index = self.tokens.partition_point(|token| token.start < start);
             let opening = index

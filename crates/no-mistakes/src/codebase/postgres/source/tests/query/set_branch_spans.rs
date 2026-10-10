@@ -4,7 +4,7 @@ use super::*;
 fn set_branches_keep_exact_source_without_confusing_aliases_or_suffixes() {
     let source = fixture("query-set-branch-spans.sql");
     let queries = queries("query-set-branch-spans.sql");
-    assert_eq!(queries.len(), 13);
+    assert_eq!(queries.len(), 17);
     let slices = |query: &PostgresSqlQuery| {
         assert!(query.complete, "{:?}", query.unsupported);
         assert!(query.unsupported.is_empty());
@@ -60,6 +60,10 @@ fn set_branches_keep_exact_source_without_confusing_aliases_or_suffixes() {
         double_right.contains(&"((SELECT now()))".to_owned()),
         "{double_right:?}"
     );
+    assert_eq!(slices(&queries[13]), ["SELECT now()", "SELECT now()"]);
+    assert_eq!(slices(&queries[14]), ["SELECT now()", "SELECT now()"]);
+    assert_eq!(slices(&queries[15]), ["VALUES (1)", "VALUES (2)"]);
+    assert_eq!(slices(&queries[16]), ["SELECT now()", "SELECT now()"]);
 }
 
 #[test]

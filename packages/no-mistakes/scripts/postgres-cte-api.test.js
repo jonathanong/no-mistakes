@@ -113,7 +113,7 @@ test(
         .filter((scope) => scope.clause === "setBranch")
         .map((scope) => source.subarray(scope.span.start.offset, scope.span.end.offset).toString());
     });
-    assert.equal(branches.length, 13);
+    assert.equal(branches.length, 17);
     assert.deepEqual(branches[0], ["SELECT 'é'", "SELECT now()"]);
     assert.deepEqual(branches[1], ["(SELECT now())", "SELECT now()", "SELECT now()"]);
     assert.deepEqual(branches[2], ["SELECT now()", "(SELECT now())", "SELECT now()"]);
@@ -132,6 +132,10 @@ test(
     assert.deepEqual(branches[10], ["SELECT 1", "SELECT t.fetch FROM metrics AS t"]);
     assert.ok(branches[11].includes("((SELECT now()))"));
     assert.ok(branches[12].includes("((SELECT now()))"));
+    assert.deepEqual(branches[13], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[14], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[15], ["VALUES (1)", "VALUES (2)"]);
+    assert.deepEqual(branches[16], ["SELECT now()", "SELECT now()"]);
 
     const chainSql = fixture("query-set-branch-chain.sql");
     const chain = await cjs.parsePostgresSql({ sql: chainSql });
