@@ -36,6 +36,10 @@ impl Collector<'_, '_> {
         }
         for (index, cte) in with.cte_tables.iter().enumerate() {
             let id = first + index;
+            // Snapshot before the body walk. Earlier CTEs own the prefix.
+            // A nested WITH repairs during that walk and leaves its rows in
+            // this suffix; the scope filter must not apply this paren to them.
+            let from = self.facts.nested_statements.len();
             let child = self.query(
                 &cte.query,
                 Some(scope),
@@ -50,6 +54,7 @@ impl Collector<'_, '_> {
                 locations,
                 child,
                 &cte.closing_paren_token,
+                from,
             );
             self.facts.ctes[id].query_scope_id = child;
             env.insert(identifier(&cte.alias.name).identity, id);

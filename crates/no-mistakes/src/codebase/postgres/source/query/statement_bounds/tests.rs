@@ -69,7 +69,7 @@ fn repair_extends_partial_statement_tokens_through_the_closing_paren() {
             .clone()
     };
     let locations = Locations::new(sql);
-    repair(&mut facts, &locations, scope, &closing);
+    repair(&mut facts, &locations, scope, &closing, 0);
     assert_eq!(facts.nested_statements[0].sql, span_sql(sql, &span));
     assert_eq!(facts.nested_statements[0].span, Some(span));
 }
@@ -91,6 +91,7 @@ fn an_unmapped_or_misplaced_closing_paren_drops_truncated_sql() {
         &locations,
         scope,
         &rparen_at(&locations, quote + 2),
+        0,
     );
     let child = &facts.nested_statements[0];
     assert!(!facts.complete);
@@ -106,6 +107,7 @@ fn an_unmapped_or_misplaced_closing_paren_drops_truncated_sql() {
         &locations,
         scope,
         &AttachedToken(TokenWithSpan::wrap(Token::RParen)),
+        0,
     );
     assert!(facts.nested_statements[0].sql.is_empty());
     assert_eq!(
@@ -118,7 +120,7 @@ fn an_unmapped_or_misplaced_closing_paren_drops_truncated_sql() {
     );
 
     let before = facts.unsupported.len();
-    repair(&mut facts, &locations, scope, &rparen_at(&locations, 0));
+    repair(&mut facts, &locations, scope, &rparen_at(&locations, 0), 0);
     assert_eq!(facts.unsupported.len(), before);
 }
 
@@ -139,6 +141,7 @@ fn a_non_paren_closing_token_is_not_a_statement_boundary() {
             Token::LParen,
             Span::new(location, location),
         )),
+        0,
     );
     assert!(facts.nested_statements[0].sql.is_empty());
     assert!(!facts.nested_statements[0].complete);
@@ -281,6 +284,7 @@ fn an_extra_closer_or_an_empty_tail_does_not_invent_a_boundary() {
         &locations,
         scope,
         &rparen_at(&locations, sql.len().saturating_sub(1)),
+        0,
     );
     assert!(facts.nested_statements[0].sql.is_empty());
     assert!(!facts.complete);
@@ -289,7 +293,13 @@ fn an_extra_closer_or_an_empty_tail_does_not_invent_a_boundary() {
     let scope = facts.nested_statements[0].query_scope_id;
     let end = facts.nested_statements[0].span.as_ref().unwrap().end.offset;
     let before = facts.nested_statements[0].sql.clone();
-    repair(&mut facts, &locations, scope, &rparen_at(&locations, end));
+    repair(
+        &mut facts,
+        &locations,
+        scope,
+        &rparen_at(&locations, end),
+        0,
+    );
     assert_eq!(facts.nested_statements[0].sql, before);
     assert!(facts.nested_statements[0].complete);
 }
@@ -307,6 +317,7 @@ fn an_unclosed_tail_comment_rejects_the_partial_statement() {
         &locations,
         scope,
         &rparen_at(&locations, comment + 2),
+        0,
     );
     assert!(facts.nested_statements[0].sql.is_empty());
     assert!(!facts.nested_statements[0].complete);
@@ -332,6 +343,7 @@ fn a_parenthesized_body_repairs_from_the_cte_scope_and_rejects_a_bad_tail() {
         &locations,
         cte_scope,
         &rparen_at(&locations, quote + 2),
+        0,
     );
     let child = &facts.nested_statements[0];
     assert!(!facts.complete);
@@ -346,9 +358,9 @@ fn needs_matches_only_the_cte_that_owns_a_nested_statement() {
     let select_only = "WITH a AS (SELECT 1), b AS (SELECT 2) SELECT * FROM a, b";
     let empty = project_sql(select_only);
     assert!(empty.nested_statements.is_empty());
-    assert!(!needs(&empty, empty.ctes[0].query_scope_id));
-    assert!(!needs(&empty, empty.ctes[1].query_scope_id));
-    assert!(!needs(&empty, empty.scopes.len()));
+    assert!(!needs(&empty, empty.ctes[0].query_scope_id, 0));
+    assert!(!needs(&empty, empty.ctes[1].query_scope_id, 0));
+    assert!(!needs(&empty, empty.scopes.len(), 0));
 
     let sql = "WITH a AS (INSERT INTO t(id) VALUES (1)), b AS (SELECT 2) SELECT * FROM a, b";
     let facts = project_sql(sql);
@@ -362,9 +374,15 @@ fn needs_matches_only_the_cte_that_owns_a_nested_statement() {
         facts.nested_statements[0].cte_id,
         facts.scopes[other].cte_definition_id
     );
-    assert!(needs(&facts, owned));
-    assert!(!needs(&facts, other));
-    assert!(!needs(&facts, facts.scopes.len()));
+    assert!(needs(&facts, owned, 0));
+    assert!(!needs(&facts, other, 0));
+    assert!(!needs(&facts, facts.scopes.len(), 0));
+
+    let mut none_ids = facts.clone();
+    none_ids.scopes[owned].cte_definition_id = None;
+    none_ids.nested_statements[0].cte_id = None;
+    assert!(needs(&none_ids, owned, 0));
+    assert!(!needs(&none_ids, owned, 1));
 }
 
 #[test]
@@ -375,7 +393,7 @@ fn repair_returns_before_the_scope_walk_when_the_cte_owns_nothing() {
     let scope = before.ctes[0].query_scope_id;
     let mut facts = before.clone();
     facts.nested_statements[0].cte_id = Some(usize::MAX);
-    repair(&mut facts, &locations, scope, &rparen_at(&locations, 0));
+    repair(&mut facts, &locations, scope, &rparen_at(&locations, 0), 0);
     assert_eq!(
         facts.nested_statements[0].sql,
         before.nested_statements[0].sql
@@ -386,14 +404,20 @@ fn repair_returns_before_the_scope_walk_when_the_cte_owns_nothing() {
     let outside = before.scopes.len();
     let mut facts = before;
     facts.nested_statements[0].query_scope_id = outside;
-    repair(&mut facts, &locations, outside, &rparen_at(&locations, 0));
+    repair(
+        &mut facts,
+        &locations,
+        outside,
+        &rparen_at(&locations, 0),
+        0,
+    );
     assert_eq!(
         facts.nested_statements[0].sql,
         "INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"
     );
     assert!(facts.complete);
     assert!(facts.unsupported.is_empty());
-    assert!(!needs(&facts, outside));
+    assert!(!needs(&facts, outside, 0));
 }
 
 #[test]
@@ -460,6 +484,7 @@ fn a_span_outside_the_closing_paren_is_not_a_complete_slice() {
         &locations,
         scope,
         &rparen_at(&locations, start - 1),
+        0,
     );
     assert!(facts.nested_statements[0].sql.is_empty());
     assert!(!facts.nested_statements[0].complete);
@@ -467,7 +492,47 @@ fn a_span_outside_the_closing_paren_is_not_a_complete_slice() {
     let mut facts = project_sql(sql);
     let scope = facts.nested_statements[0].query_scope_id;
     facts.nested_statements[0].span = Some(locations.range(0, sql.len()));
-    repair(&mut facts, &locations, scope, &rparen_at(&locations, 4));
+    repair(&mut facts, &locations, scope, &rparen_at(&locations, 4), 0);
     assert!(facts.nested_statements[0].sql.is_empty());
     assert!(!facts.complete);
+}
+
+/// `from` is the row count captured before each CTE body. Do not fold it back
+/// to 0: a prefix row retagged with this CTE's id is then rejected by the
+/// zero-offset paren. `b` owns no suffix row, so that call returns before
+/// `statement_scopes`. The nested INSERT stays in `c`'s suffix and is not `c`'s.
+#[test]
+fn later_ctes_repair_only_their_statement_suffix() {
+    let sql = "WITH a AS (INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING), b AS (SELECT 1), c AS ((WITH inner AS (INSERT INTO u VALUES (2) ON CONFLICT DO NOTHING) INSERT INTO v VALUES ('abc') ON CONFLICT DO NOTHING)) SELECT 1;";
+    let mut facts = project_sql(sql);
+    assert!(facts.complete, "{:?}", facts.unsupported);
+    assert_eq!(facts.ctes[1].name.value, "b");
+    let expected = [
+        "INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING",
+        "INSERT INTO u VALUES (2) ON CONFLICT DO NOTHING",
+        "INSERT INTO v VALUES ('abc') ON CONFLICT DO NOTHING",
+    ];
+    assert_eq!(facts.nested_statements[0].sql, expected[0]);
+    assert_eq!(facts.nested_statements[1].sql, expected[1]);
+    assert_eq!(facts.nested_statements[2].sql, expected[2]);
+    assert_ne!(
+        facts.nested_statements[2].query_scope_id,
+        facts.nested_statements[2].parent_scope_id.unwrap()
+    );
+    let locations = Locations::new(sql);
+    let b = facts.ctes[1].query_scope_id;
+    let cte = facts.ctes[2].query_scope_id;
+    let from = 1; // `a` owns the prefix
+    facts.nested_statements[0].cte_id = facts.scopes[b].cte_definition_id;
+    facts.nested_statements[0].query_scope_id = b;
+    repair(&mut facts, &locations, b, &rparen_at(&locations, 0), from);
+    assert_eq!(facts.nested_statements[0].sql, expected[0]);
+    assert_eq!(facts.nested_statements[1].sql, expected[1]);
+    assert_eq!(facts.nested_statements[2].sql, expected[2]);
+    facts.nested_statements[0].cte_id = facts.nested_statements[2].cte_id;
+    facts.nested_statements[0].query_scope_id = facts.nested_statements[2].query_scope_id;
+    repair(&mut facts, &locations, cte, &rparen_at(&locations, 0), from);
+    assert_eq!(facts.nested_statements[0].sql, expected[0]);
+    assert_eq!(facts.nested_statements[1].sql, expected[1]);
+    assert!(facts.nested_statements[2].sql.is_empty());
 }
