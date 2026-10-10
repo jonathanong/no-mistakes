@@ -13,12 +13,27 @@ use tail::{bounded_end, open_depth};
 
 const BOUNDARY: &str = "nested data-modifying statement boundary";
 
+/// `true` when `scope` owns a nested statement. An index outside `facts.scopes`
+/// is not a boundary, and a CTE with no matching `cte_id` does not need one.
+pub(super) fn needs(facts: &PostgresSqlQuery, scope: usize) -> bool {
+    let Some(definition) = facts.scopes.get(scope).map(|root| root.cte_definition_id) else {
+        return false;
+    };
+    facts
+        .nested_statements
+        .iter()
+        .any(|statement| statement.cte_id == definition)
+}
+
 pub(super) fn repair(
     facts: &mut PostgresSqlQuery,
     locations: &Locations<'_>,
     scope: usize,
     closing: &AttachedToken,
 ) {
+    if !needs(facts, scope) {
+        return;
+    }
     let scopes = statement_scopes(facts, scope);
     let indexes = facts
         .nested_statements
