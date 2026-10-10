@@ -60,4 +60,12 @@ fn literal_execute_select_is_utility_and_dynamic_select_stays_closed() {
 
     let (_, parsed) = block("DO $$ BEGIN LOOP EXECUTE 'SELECT 1'; END LOOP; END $$;");
     assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Utility\"]"]);
+
+    // An interior semicolon is not a terminator. Stripping it would parse as SELECT (1).
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE 'SELECT (1;);'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+    let (_, parsed) = block("DO $$ BEGIN LOOP EXECUTE 'SELECT (1;);'; END LOOP; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
 }
