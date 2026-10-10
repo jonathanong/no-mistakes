@@ -29,13 +29,14 @@ pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<Check
     let canonical_graph_plan = no_mistakes::codebase::rules::try_canonical_graph_plan(config)?;
     let graph_requires_full_file_universe =
         no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
-    let mut playwright_fact_plan = super::playwright::fact_plan(
+    let playwright_built = super::playwright::fact_plan(
         root,
         prepared.config_path.as_deref(),
         config,
         canonical_graph_plan,
         prepared.playwright.as_ref(),
-    )?;
+    );
+    let mut playwright_fact_plan = playwright_built?;
     let integration_enabled = integration_configured(config);
     let react_enabled = prepared.react.enabled();
     let dynamic_import_rules = enabled.dynamic_import_rules;
@@ -56,11 +57,11 @@ pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<Check
     no_mistakes::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
     plan.embedded_sql_options =
         no_mistakes::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;
-    plan.postgres_schema_catalog_paths =
-        no_mistakes::codebase::postgres::configured_schema_catalog_paths(
-            config,
-            no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
-        )?;
+    let schema_catalog_paths = no_mistakes::codebase::postgres::configured_schema_catalog_paths(
+        config,
+        no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
+    );
+    plan.postgres_schema_catalog_paths = schema_catalog_paths?;
     if integration_enabled {
         plan.integration_runner_configs = Some(std::sync::Arc::new(
             no_mistakes::integration_tests::prepare_runner_configs_with_catalog(
@@ -72,7 +73,7 @@ pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<Check
             ),
         ));
     }
-    let prepared_graph = graph_plan::prepare(
+    let prepared_graph_result = graph_plan::prepare(
         root,
         config,
         graph_plan::PreparedInputs {
@@ -84,14 +85,16 @@ pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<Check
         canonical_graph_plan,
         &mut playwright_fact_plan,
         &mut plan,
-    )?;
-    let fact_demand = finite_set_plan::prepare(
+    );
+    let prepared_graph = prepared_graph_result?;
+    let fact_demand_result = finite_set_plan::prepare(
         root,
         config,
         &mut plan,
         canonical_graph_plan.is_some(),
         playwright_fact_plan.is_some(),
-    )?;
+    );
+    let fact_demand = fact_demand_result?;
     Ok(CheckPlan {
         queues_enabled,
         unique_exports_enabled,

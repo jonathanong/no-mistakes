@@ -45,3 +45,29 @@ fn expired_deadline_cannot_be_committed() {
 
     *active_deadline().write().unwrap() = previous;
 }
+
+#[test]
+fn disabled_cli_timeout_does_not_start_a_watchdog() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let guard = DeadlineGuard::install_for_cli(None).unwrap();
+    assert!(guard.cancel_watch.is_none());
+}
+
+#[test]
+fn replaced_deadline_lets_the_watchdog_return() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let expires_at = Instant::now()
+        .checked_sub(Duration::from_secs(1))
+        .expect("past instant");
+    // The expired instant is not the active deadline, so the watcher must return
+    // instead of exiting the process.
+    super::watch_deadline(
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        expires_at,
+        Duration::from_secs(1),
+    );
+}
