@@ -10,6 +10,9 @@ DO $$ BEGIN
   LOCK TABLE ONLY public.t, q IN SHARE UPDATE EXCLUSIVE MODE NOWAIT;
 END $$;
 DO $$ BEGIN
+  LOCK TABLE "IN" IN SHARE MODE;
+END $$;
+DO $$ BEGIN
   IF true THEN LOCK TABLE t IN SHARE ROW EXCLUSIVE MODE; END IF;
 END $$;
 DO $$ BEGIN
@@ -41,4 +44,8 @@ DO $$ BEGIN
 END $$;
 DO $$ BEGIN
   "LOCK" TABLE t IN SHARE MODE;
+END $$;
+-- IN is a reserved keyword here, not a valid unquoted relation name.
+DO $$ BEGIN
+  LOCK TABLE IN IN SHARE MODE;
 END $$;

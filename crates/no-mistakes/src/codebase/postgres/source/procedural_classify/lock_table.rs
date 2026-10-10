@@ -87,7 +87,7 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
     loop {
         if tokens
             .get(*index)
-            .and_then(|token| identifier_word(token))
+            .and_then(|token| relation_word(token))
             .is_none()
         {
             return false;
@@ -100,7 +100,7 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
             *index += 1;
             if tokens
                 .get(*index)
-                .and_then(|token| identifier_word(token))
+                .and_then(|token| relation_word(token))
                 .is_none()
             {
                 return false;
@@ -118,11 +118,25 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
     }
 }
 
-fn identifier_word(token: &Token) -> Option<&str> {
+fn relation_word(token: &Token) -> Option<&str> {
     match token {
-        Token::Word(word) => Some(word.value.as_str()),
+        Token::Word(word)
+            if word.quote_style.is_some() || !postgres_reserved_keyword(&word.value) =>
+        {
+            Some(word.value.as_str())
+        }
         _ => None,
     }
+}
+
+// PostgreSQL's RESERVED_KEYWORD entries from src/include/parser/kwlist.h (REL_18_STABLE).
+// sqlparser's PostgreSqlDialect identifier helper uses a narrower set and treats `IN` as
+// an identifier, though PostgreSQL does not permit reserved words as relation names.
+fn postgres_reserved_keyword(value: &str) -> bool {
+    const RESERVED: &str = "all analyse analyze and any array as asc asymmetric both case cast check collate column constraint create current_catalog current_date current_role current_time current_timestamp current_user default deferrable desc distinct do else end except false fetch for foreign from grant group having in initially intersect into lateral leading limit localtime localtimestamp not null offset on only or order placing primary references returning select session_user some symmetric system_user table then to trailing true union unique user using variadic when where window with";
+    RESERVED
+        .split_ascii_whitespace()
+        .any(|keyword| value.eq_ignore_ascii_case(keyword))
 }
 
 fn keyword_word(token: &Token) -> Option<&str> {
