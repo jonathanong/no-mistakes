@@ -76,6 +76,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     fn tag_helper(&self, expression: &Expr, path: &Path, env: Environment) -> bool {
+        if let Expr::OpaqueWrite { children, .. } = expression {
+            return children
+                .last()
+                .is_some_and(|value| self.tag_helper(value, path, env));
+        }
+        if let Expr::Tagged(tag, _, _) = expression {
+            return self.tag_trusted(tag, path, env);
+        }
         let Expr::Call { callee, .. } = expression else {
             return false;
         };
