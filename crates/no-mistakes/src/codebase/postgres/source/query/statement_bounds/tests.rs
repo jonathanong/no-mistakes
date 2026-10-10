@@ -2,8 +2,9 @@ use super::*;
 use crate::codebase::postgres::source::dialect::PostgresSourceDialect;
 use crate::codebase::postgres::source::locations::Locations;
 use sqlparser::ast::{SetExpr, Spanned, Statement};
+use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
-use sqlparser::tokenizer::{Span, Token, TokenWithSpan};
+use sqlparser::tokenizer::{Span, Token, TokenWithSpan, Tokenizer};
 
 fn project_sql(sql: &str) -> PostgresSqlQuery {
     let ast = Parser::parse_sql(&PostgresSourceDialect, sql).unwrap();
@@ -143,6 +144,43 @@ fn a_non_paren_closing_token_is_not_a_statement_boundary() {
     assert!(!facts.nested_statements[0].complete);
 }
 
+/// Byte offset of the last non-trivia token in `tail`, relative to `tail`.
+/// `Ok(None)` means the tail is empty or only whitespace and comments.
+fn significant_end(tail: &str) -> Result<Option<usize>, ()> {
+    if tail.is_empty() {
+        return Ok(None);
+    }
+    let mut tokens = Vec::new();
+    if Tokenizer::new(&PostgreSqlDialect {}, tail)
+        .tokenize_with_location_into_buf(&mut tokens)
+        .is_err()
+    {
+        return Err(());
+    }
+    boundary_end(tail, &tokens)
+}
+
+/// `Err` when `tokens` do not consume `tail` or a significant token has no
+/// source position. Callers then drop the truncated slice instead of guessing.
+fn boundary_end(tail: &str, tokens: &[TokenWithSpan]) -> Result<Option<usize>, ()> {
+    let local = Locations::new(tail);
+    let last = tokens.last().ok_or(())?;
+    let consumed = local
+        .position(last.span.end)
+        .map(|position| position.offset);
+    if consumed != Some(tail.len()) {
+        return Err(());
+    }
+    let mut end = None;
+    for token in tokens {
+        if matches!(token.token, Token::Whitespace(_) | Token::EOF) {
+            continue;
+        }
+        end = Some(local.position(token.span.end).ok_or(())?.offset);
+    }
+    Ok(end)
+}
+
 #[test]
 fn significant_end_keeps_internal_trivia_and_rejects_an_open_token() {
     assert_eq!(significant_end("").unwrap(), None);
@@ -163,6 +201,144 @@ fn token_ending(token: Token, column: u64) -> TokenWithSpan {
     let start = sqlparser::tokenizer::Location::new(1, 1);
     let end = sqlparser::tokenizer::Location::new(1, column);
     TokenWithSpan::new(token, Span::new(start, end))
+}
+
+#[test]
+fn bounded_end_keeps_statement_parens_and_drops_wrappers() {
+    assert_eq!(open_depth("").unwrap(), 0);
+    assert_eq!(
+        open_depth("INSERT INTO t(id) VALUES (1) ON CONFLICT (id").unwrap(),
+        1
+    );
+    assert!(open_depth(")").is_err());
+    assert_eq!(
+        bounded_end(") DO NOTHING", 1).unwrap(),
+        Some(") DO NOTHING".len())
+    );
+    assert_eq!(
+        bounded_end(") DO NOTHING)", 1).unwrap(),
+        Some(") DO NOTHING".len())
+    );
+    assert_eq!(bounded_end("", 0).unwrap(), None);
+    assert_eq!(bounded_end(")", 0).unwrap(), None);
+    assert_eq!(bounded_end(" /* tail */)", 0).unwrap(), None);
+    assert_eq!(bounded_end(" \n/* c */", 0).unwrap(), None);
+    let conflict = " ON CONFLICT DO NOTHING)";
+    assert_eq!(
+        bounded_end(conflict, 0).unwrap(),
+        Some(" ON CONFLICT DO NOTHING".len())
+    );
+    assert_eq!(bounded_end("))", 0).unwrap(), None);
+    assert_eq!(bounded_end("(1))", 0).unwrap(), Some("(1)".len()));
+    assert!(tail::accept_consumed(Some(2), 2).is_ok());
+    assert!(tail::accept_consumed(None, 2).is_err());
+    assert!(tail::accept_consumed(Some(1), 2).is_err());
+    assert!(bounded_end("/*", 0).is_err());
+    assert!(bounded_end("'abc", 0).is_err());
+}
+
+#[test]
+fn statement_scopes_skip_set_operations_and_ids_outside_the_vec() {
+    let sql = "WITH a AS ((INSERT INTO t VALUES (1))) SELECT 1;";
+    let facts = project_sql(sql);
+    let child_scope = facts.nested_statements[0].query_scope_id;
+    let cte = facts.nested_statements[0].parent_scope_id.unwrap();
+    assert_eq!(statement_scopes(&facts, 50), vec![50]);
+
+    let mut blocked = facts.clone();
+    blocked.scopes[cte].set_operation = Some("union".into());
+    let scopes = statement_scopes(&blocked, cte);
+    assert!(scopes.contains(&cte));
+    assert!(!scopes.contains(&child_scope));
+
+    let child_pos = facts
+        .scopes
+        .iter()
+        .position(|scope| scope.id == child_scope)
+        .unwrap();
+    let mut outside = facts.clone();
+    outside.scopes[child_pos].id = 10_000;
+    assert_eq!(statement_scopes(&outside, cte), vec![cte]);
+
+    let mut other = facts.clone();
+    other.scopes[child_pos].clause =
+        crate::codebase::postgres::source::types::PostgresSqlQueryClause::Other;
+    let scopes = statement_scopes(&other, cte);
+    assert!(scopes.contains(&cte));
+    assert!(!scopes.contains(&child_scope));
+}
+
+#[test]
+fn an_extra_closer_or_an_empty_tail_does_not_invent_a_boundary() {
+    let sql = "WITH a AS (INSERT INTO t(id) VALUES (1)) SELECT 1;";
+    let locations = Locations::new(sql);
+    let mut facts = project_sql(sql);
+    let scope = facts.nested_statements[0].query_scope_id;
+    let closer = sql.rfind(')').unwrap();
+    facts.nested_statements[0].span = Some(locations.range(closer, closer + 1));
+    repair(
+        &mut facts,
+        &locations,
+        scope,
+        &rparen_at(&locations, sql.len().saturating_sub(1)),
+    );
+    assert!(facts.nested_statements[0].sql.is_empty());
+    assert!(!facts.complete);
+
+    let mut facts = project_sql(sql);
+    let scope = facts.nested_statements[0].query_scope_id;
+    let end = facts.nested_statements[0].span.as_ref().unwrap().end.offset;
+    let before = facts.nested_statements[0].sql.clone();
+    repair(&mut facts, &locations, scope, &rparen_at(&locations, end));
+    assert_eq!(facts.nested_statements[0].sql, before);
+    assert!(facts.nested_statements[0].complete);
+}
+
+#[test]
+fn an_unclosed_tail_comment_rejects_the_partial_statement() {
+    let sql = "WITH a AS (INSERT INTO t(id) VALUES (1) /* keep */) SELECT 1;";
+    let locations = Locations::new(sql);
+    let mut facts = project_sql(sql);
+    let scope = facts.nested_statements[0].query_scope_id;
+    let comment = sql.find("/*").unwrap();
+    facts.nested_statements[0].span.as_mut().unwrap().end = locations.range(comment, comment).start;
+    repair(
+        &mut facts,
+        &locations,
+        scope,
+        &rparen_at(&locations, comment + 2),
+    );
+    assert!(facts.nested_statements[0].sql.is_empty());
+    assert!(!facts.nested_statements[0].complete);
+    assert_eq!(facts.nested_statements[0].unsupported[0].reason, BOUNDARY);
+}
+
+#[test]
+fn a_parenthesized_body_repairs_from_the_cte_scope_and_rejects_a_bad_tail() {
+    let sql = "WITH a AS ((INSERT INTO t VALUES ('abc') ON CONFLICT DO NOTHING)) SELECT 1;";
+    let locations = Locations::new(sql);
+    let mut facts = project_sql(sql);
+    let child = &facts.nested_statements[0];
+    assert_ne!(child.query_scope_id, child.parent_scope_id.unwrap());
+    assert_eq!(
+        child.sql,
+        "INSERT INTO t VALUES ('abc') ON CONFLICT DO NOTHING"
+    );
+    let cte_scope = child.parent_scope_id.unwrap();
+    let quote = sql.find('\'').unwrap();
+    facts.nested_statements[0].span.as_mut().unwrap().end = locations.range(quote, quote).start;
+    repair(
+        &mut facts,
+        &locations,
+        cte_scope,
+        &rparen_at(&locations, quote + 2),
+    );
+    let child = &facts.nested_statements[0];
+    assert!(!facts.complete);
+    assert!(!child.complete);
+    assert!(child.sql.is_empty());
+    assert!(child.span.is_none());
+    assert_eq!(child.unsupported[0].reason, BOUNDARY);
 }
 
 #[test]

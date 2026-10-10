@@ -356,6 +356,20 @@ test(
         sql: "DO $$ BEGIN WITH a AS (INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING) SELECT 1; END $$;",
         expected: ["INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"],
       },
+      {
+        sql: "WITH a AS ((INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING)) SELECT 1;",
+        expected: ["INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING"],
+      },
+      {
+        sql: "WITH a AS ((INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1))) SELECT 1;",
+        expected: ["INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1)"],
+      },
+      {
+        sql: "WITH a AS ((INSERT INTO t(id) VALUES (1) /* kept */ ON CONFLICT (id) DO NOTHING RETURNING id /* tail */)) SELECT 1;",
+        expected: [
+          "INSERT INTO t(id) VALUES (1) /* kept */ ON CONFLICT (id) DO NOTHING RETURNING id",
+        ],
+      },
     ];
     for (const { sql, expected } of cases) {
       const facts = await cjs.parsePostgresSql({ sql });
