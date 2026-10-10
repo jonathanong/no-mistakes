@@ -270,8 +270,12 @@ flags stay unchanged.
 and `effectiveNegated: true`. `INSERT INTO t(id) SELECT 1 WHERE NOT (NOT EXISTS (SELECT 1))`
 reports `notDepth: 2` and `effectiveNegated: false`. These report `effectiveNegated: null`:
 `SELECT 1 WHERE EXISTS (SELECT 1) IS FALSE`,
-`SELECT 1 WHERE NOT (EXISTS (SELECT 1) = false)`, and
-`SELECT 1 WHERE NOT CASE WHEN EXISTS (SELECT 1) THEN true ELSE false END`.
+`SELECT 1 WHERE NOT (EXISTS (SELECT 1) = false)`,
+`SELECT 1 WHERE NOT CASE WHEN EXISTS (SELECT 1) THEN true ELSE false END`,
+`SELECT 1 WHERE NOT (EXISTS (SELECT 1) BETWEEN false AND true)`,
+`SELECT 1 WHERE NOT (false IN (EXISTS (SELECT 1)))`,
+`SELECT 1 WHERE NOT (ARRAY[EXISTS (SELECT 1)])`, and
+`SELECT 1 WHERE NOT ((EXISTS (SELECT 1)) IN (SELECT false))`.
 `IS NOT TRUE` and the other boolean tests set `context.underBooleanTest`; they
 are not additional NOT operators.
 

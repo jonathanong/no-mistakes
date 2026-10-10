@@ -143,7 +143,10 @@ impl Collector<'_, '_> {
                 );
             }
             Expr::InSubquery { expr, subquery, .. } => {
-                self.nonpredicate(expr, scope, clause, env);
+                let mut child = context;
+                child.mandatory = false;
+                child.under_other = true;
+                self.expr(expr, scope, clause, None, child, env);
                 self.query(
                     subquery,
                     Some(scope),
@@ -157,21 +160,30 @@ impl Collector<'_, '_> {
                 self.function_expressions(function, scope, clause, join, context, env)
             }
             Expr::Tuple(exprs) | Expr::Array(sqlparser::ast::Array { elem: exprs, .. }) => {
+                let mut child = context;
+                child.mandatory = false;
+                child.under_other = true;
                 for expr in exprs {
-                    self.nonpredicate(expr, scope, clause, env);
+                    self.expr(expr, scope, clause, None, child.clone(), env);
                 }
             }
             Expr::InList { expr, list, .. } => {
-                self.nonpredicate(expr, scope, clause, env);
+                let mut child = context;
+                child.mandatory = false;
+                child.under_other = true;
+                self.expr(expr, scope, clause, None, child.clone(), env);
                 for expr in list {
-                    self.nonpredicate(expr, scope, clause, env);
+                    self.expr(expr, scope, clause, None, child.clone(), env);
                 }
             }
             Expr::Between {
                 expr, low, high, ..
             } => {
+                let mut child = context;
+                child.mandatory = false;
+                child.under_other = true;
                 for expr in [expr, low, high] {
-                    self.nonpredicate(expr, scope, clause, env);
+                    self.expr(expr, scope, clause, None, child.clone(), env);
                 }
             }
             _ => self.unsupported(scope, clause, "expression form", expr.span()),
