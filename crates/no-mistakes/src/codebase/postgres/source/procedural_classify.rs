@@ -1,6 +1,7 @@
 //! Structural PL/pgSQL walk. Source occurrences are not executed statements.
 mod controls;
 mod cursor;
+mod header_execute;
 mod literal;
 mod scan;
 mod select_gate;

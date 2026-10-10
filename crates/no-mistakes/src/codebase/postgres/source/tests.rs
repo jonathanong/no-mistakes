@@ -23,6 +23,7 @@ mod procedural_empty_statements;
 mod procedural_exception;
 mod procedural_execute_into;
 mod procedural_execute_select;
+mod procedural_for_execute;
 mod procedural_occurrences;
 mod procedural_quoted_label;
 mod schema;
