@@ -188,17 +188,4 @@ fn starts_with(chars: &std::iter::Peekable<std::str::Chars<'_>>, prefix: &[char]
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn keeps_trivia_and_rejects_a_different_token() {
-        let matches = super::source_matches_rendered;
-        assert!(matches("now /*keep*/ ()", "now()"));
-        assert!(matches("now -- keep\n()", "now()"));
-        assert!(matches("now /* outer /* inner */ */ ()", "now()"));
-        assert!(matches("a /*c*/ / b", "a / b"));
-        assert!(matches("now()", "now()"));
-        assert!(!matches("integer", "INTEGER"));
-        assert!(!matches("now", "now()"));
-        assert!(!matches("now /*", "now()"));
-    }
-}
+mod tests;
