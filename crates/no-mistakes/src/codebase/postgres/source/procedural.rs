@@ -61,8 +61,10 @@ fn parse_nested(
     }
     prepared.recursive_views = recursive_views;
     let nested = super::parsing::collect_program(source, prepared, locations, depth + 1, true);
+    let header_diagnostics = std::mem::take(&mut block.diagnostics);
     block.statements = nested.statements;
     block.diagnostics = nested.diagnostics;
+    block.diagnostics.extend(header_diagnostics);
     super::procedural_walk::finish_parsed(&mut block, retain_walker);
     Ok(PostgresSqlStatementKind::DoBlock { block })
 }

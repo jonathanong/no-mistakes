@@ -11,15 +11,19 @@ pub(super) fn if_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     eat_word(ctx, "IF");
     let mut nested = Vec::new();
     let mut empty = false;
+    let mut header_at = start;
     loop {
         // Peek before `scan_header` consumes the condition. ELSE has no header.
-        empty |= empty_header(ctx, "THEN");
+        empty |= note_empty_header(ctx, header_at, "THEN");
         nested.extend(scan::scan_header(ctx, &["THEN"]));
         if !eat_word(ctx, "THEN") {
             return done(ctx, Kind::Unknown, start, nested);
         }
         nested.extend(walk_statements(ctx, Stop::IfBranch));
-        if eat_word(ctx, "ELSIF") || eat_word(ctx, "ELSEIF") {
+        if at_word(ctx, "ELSIF") || at_word(ctx, "ELSEIF") {
+            // The next iteration's span starts at this keyword, not the outer IF.
+            header_at = peek_index(ctx).unwrap_or(header_at);
+            cursor::bump(ctx);
             continue;
         }
         if eat_word(ctx, "ELSE") {
@@ -75,7 +79,8 @@ pub(super) fn loop_stmt(ctx: &mut Ctx<'_>, label: OpenLabel) -> PostgresSqlProce
     let mut nested = Vec::new();
     if !bare {
         // Same peek as IF. Closing-label checks stay on the non-empty path below.
-        let empty = empty_header(ctx, "LOOP");
+        // `start` is the WHILE/FOR/FOREACH keyword captured before `bump`.
+        let empty = note_empty_header(ctx, start, "LOOP");
         nested.extend(scan::scan_header(ctx, &["LOOP"]));
         if !eat_word(ctx, "LOOP") {
             return done(ctx, Kind::Unknown, start, nested);
@@ -98,6 +103,15 @@ pub(super) fn loop_stmt(ctx: &mut Ctx<'_>, label: OpenLabel) -> PostgresSqlProce
 /// A conditional header with no token before its stop word. Whitespace is skipped.
 fn empty_header(ctx: &Ctx<'_>, stop: &str) -> bool {
     at_word(ctx, stop)
+}
+
+fn note_empty_header(ctx: &mut Ctx<'_>, keyword: usize, stop: &str) -> bool {
+    if !empty_header(ctx, stop) {
+        return false;
+    }
+    let stop_at = peek_index(ctx).expect("empty header is positioned on its stop word");
+    ctx.empty_headers.push((keyword, stop_at));
+    true
 }
 
 /// Walk the body and the closing `END LOOP` so later statements stay aligned.
