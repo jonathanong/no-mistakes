@@ -48,12 +48,15 @@ impl Collector<'_, '_> {
             Expr::UnaryOp { op, expr } => {
                 let mut child = context;
                 child.mandatory = false;
-                if *op == UnaryOperator::Not {
+                let not = *op == UnaryOperator::Not;
+                if not {
                     child.under_not = true;
+                    self.not_depth += 1;
                 } else {
                     child.under_other = true;
                 }
                 self.expr(expr, scope, clause, join, child, env);
+                self.not_depth -= u32::from(not);
             }
             Expr::Case {
                 operand,
@@ -91,6 +94,8 @@ impl Collector<'_, '_> {
                 self.expr(inner, scope, clause, join, child, env);
             }
             Expr::Exists { subquery, negated } => {
+                // Wrapping NOT is already in `not_depth`. The node's own flag is separate.
+                let not_depth = self.not_depth + u32::from(*negated);
                 let start = self.facts.columns.len();
                 let first_scope = self.facts.scopes.len();
                 let child = self.query(
@@ -115,6 +120,8 @@ impl Collector<'_, '_> {
                     scope_id: scope,
                     subquery_scope_id: child,
                     negated: *negated,
+                    not_depth,
+                    effective_negated: not_depth % 2 == 1,
                     context,
                     correlated: !correlations.is_empty(),
                     correlations,

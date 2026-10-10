@@ -232,9 +232,19 @@ never promoted to mandatory predicates. Consumers must interpret these facts
 for their own policies; the parser does not prove authorization or tenant
 isolation.
 
-EXISTS facts expose negation, context, child scope and resolved references to
-outer relations. `correlated` describes those known qualified references;
-unqualified references cannot establish correlation without a catalog.
+EXISTS facts expose the node's own `negated` flag, predicate context, child
+scope, and resolved references to outer relations. `correlated` describes those
+known qualified references; unqualified references cannot establish correlation
+without a catalog. `negated` and `context.underNot` do not recover polarity
+through nested `NOT`: both are true for `NOT EXISTS` and for `NOT (NOT EXISTS)`.
+`notDepth` counts the NOT operators that apply to that EXISTS, including each
+wrapping `NOT` (parentheses are transparent) and one extra when `negated` is
+true. `effectiveNegated` is `notDepth % 2 == 1`.
+
+`INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1)` reports `notDepth: 1`
+and `effectiveNegated: true`. `INSERT INTO t(id) SELECT 1 WHERE NOT (NOT EXISTS (SELECT 1))`
+reports `notDepth: 2` and `effectiveNegated: false`. `IS NOT TRUE` and the other
+boolean tests set `context.underBooleanTest`; they are not additional NOT operators.
 
 Unsupported relation, expression or query forms appear in `unsupported` with
 a reason, hosting scope/clause and available source span, and set

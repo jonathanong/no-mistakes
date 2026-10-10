@@ -146,7 +146,13 @@ pub struct PostgresSqlQueryEquality {
 pub struct PostgresSqlQueryExists {
     pub scope_id: usize,
     pub subquery_scope_id: usize,
+    /// The EXISTS node's own flag. Wrapping `NOT` is not folded into this value.
     pub negated: bool,
+    /// NOT operators that apply to this EXISTS: each wrapping `NOT`, through
+    /// parentheses, plus one when `negated` is true.
+    pub not_depth: u32,
+    /// `not_depth % 2 == 1`. Distinct from `negated` and from `context.under_not`.
+    pub effective_negated: bool,
     pub context: PostgresSqlPredicateContext,
     pub correlated: bool,
     pub correlations: Vec<PostgresSqlQueryColumn>,

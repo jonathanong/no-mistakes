@@ -1293,3 +1293,41 @@ test(
     }
   },
 );
+
+test(
+  "compiled source API distinguishes NOT EXISTS from NOT (NOT EXISTS)",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-exists-polarity.sql");
+    const facts = await api.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const context = {
+      mandatory: false,
+      underOr: false,
+      underNot: true,
+      underCase: false,
+      underBooleanTest: false,
+      underOther: false,
+    };
+    const [negative, positive] = facts.statements.slice(0, 2).map((statement) => {
+      assert.equal(statement.kind, "insert");
+      assert.equal(statement.insert.source.kind, "select");
+      assert.equal(statement.insert.source.query.complete, true);
+      assert.equal(statement.insert.source.query.exists.length, 1);
+      return statement.insert.source.query.exists[0];
+    });
+    assert.equal(negative.scopeId, 0);
+    assert.equal(positive.scopeId, 0);
+    assert.equal(negative.negated, true);
+    assert.equal(positive.negated, true);
+    assert.deepEqual(negative.context, context);
+    assert.deepEqual(positive.context, context);
+    assert.equal(negative.notDepth, 1);
+    assert.equal(negative.effectiveNegated, true);
+    assert.equal(positive.notDepth, 2);
+    assert.equal(positive.effectiveNegated, false);
+  },
+);

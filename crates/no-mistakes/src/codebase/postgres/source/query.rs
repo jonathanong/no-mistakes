@@ -23,6 +23,9 @@ struct Collector<'a, 's> {
     facts: PostgresSqlQuery,
     states: Vec<ScopeState>,
     depth: usize,
+    /// NOT operators wrapping the expression currently being walked.
+    /// Reset at each query boundary; not part of the serialized facts.
+    not_depth: u32,
     insert_source: bool,
 }
 
@@ -35,6 +38,7 @@ pub(super) fn project(query: &Query, locations: &Locations<'_>) -> PostgresSqlQu
         },
         states: Vec::new(),
         depth: 0,
+        not_depth: 0,
         insert_source: false,
     };
     collector.query(
@@ -97,8 +101,11 @@ impl Collector<'_, '_> {
             definition,
             self.locations.span(query.span()),
         );
+        // Outer NOT does not apply inside a nested query. Restore even when nesting stops.
+        let outer_not_depth = std::mem::take(&mut self.not_depth);
         // Bound projection independently of parser configuration for library AST callers.
         if self.depth == 64 {
+            self.not_depth = outer_not_depth;
             self.unsupported(scope, clause, "query nesting limit", query.span());
             return scope;
         }
@@ -107,6 +114,7 @@ impl Collector<'_, '_> {
         self.body(&query.body, scope, &env);
         self.query_clauses(query, scope, &env);
         self.depth -= 1;
+        self.not_depth = outer_not_depth;
         scope
     }
     fn unsupported(
