@@ -72,7 +72,7 @@ pub(super) fn starts_keyword(sql: &str, start: usize, keyword: &str) -> bool {
         && !sql.as_bytes().get(end).copied().is_some_and(is_ident_byte)
 }
 
-fn skip_delimited(sql: &str, start: usize) -> Option<usize> {
+pub(super) fn skip_delimited(sql: &str, start: usize) -> Option<usize> {
     let bytes = sql.as_bytes();
     match bytes.get(start).copied()? {
         b'\'' => Some(quoted_end(bytes, start, b'\'')),

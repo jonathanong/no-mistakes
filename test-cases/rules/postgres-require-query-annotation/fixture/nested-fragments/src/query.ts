@@ -8,3 +8,9 @@ const inner = sql`/* users/list */ SELECT 1`;
 query(sql`${inner}`); // unknown
 function fragment() { return sql`/* users/list */ SELECT 1`; }
 query(sql`${fragment()}`); // unknown
+
+query(sql`${sql`/* users/list */ SELECT 1`} ${42}`); // first effect is a fragment
+query(sql`${cond ? inner : sql`SELECT 1`}`); // possible builders
+query(sql`${[inner, sql`SELECT 1`]}`); // aggregate builders stay opaque
+query(sql`${(holder.sql).raw(runtime)}`); // nested member stays opaque
+query(sql`${inner = sql`SELECT 1`}`); // evaluated assignment

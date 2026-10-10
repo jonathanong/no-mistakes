@@ -30,21 +30,39 @@ pub(crate) fn recovered_sql_needs_insert_check(sql: Option<&str>) -> bool {
     }
 }
 
-/// True when recovered SQL is missing, incomplete, or a top-level SELECT.
+/// True when recovered SQL is missing, incomplete, or contains a query,
+/// including query-bearing DML and CTEs.
 pub(crate) fn recovered_sql_may_select(sql: Option<&str>) -> bool {
-    recovered_sql_kind_matches(sql, |kind| kind == TopLevelDml::Select)
+    recovered_contains(sql, &["select"])
 }
 
-/// True when recovered SQL is missing, incomplete, or a top-level
-/// INSERT/UPDATE/MERGE that can assign columns.
+/// True when recovered SQL is missing, incomplete, or contains a column write,
+/// including data-modifying CTEs under SELECT/DELETE.
 pub(crate) fn recovered_sql_may_write_columns(sql: Option<&str>) -> bool {
-    recovered_sql_kind_matches(sql, |kind| {
-        kind != TopLevelDml::Select && kind != TopLevelDml::Delete
-    })
+    recovered_contains(sql, &["insert", "update", "merge"])
 }
 
-fn recovered_sql_kind_matches(sql: Option<&str>, matches: impl Fn(TopLevelDml) -> bool) -> bool {
-    sql.is_none_or(|sql| top_level_dml_kind(sql).is_none_or(matches))
+fn recovered_contains(sql: Option<&str>, keywords: &[&str]) -> bool {
+    sql.is_none_or(|sql| {
+        if top_level_dml_kind(sql).is_none() {
+            return true;
+        }
+        let mut index = 0;
+        while index < sql.len() {
+            if let Some(end) = lex::skip_delimited(sql, index) {
+                index = end;
+                continue;
+            }
+            if keywords
+                .iter()
+                .any(|keyword| starts_keyword(sql, index, keyword))
+            {
+                return true;
+            }
+            index += 1;
+        }
+        false
+    })
 }
 
 pub(crate) fn top_level_dml_kind(sql: &str) -> Option<TopLevelDml> {

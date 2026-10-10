@@ -5,7 +5,7 @@ use super::*;
 fn nested_fragments_do_not_become_annotation_bind_placeholders() {
     let root = fixture("nested-fragments");
     let file = ts_file(&root);
-    for (mode, count) in [("report", 5), ("ignore", 1)] {
+    for (mode, count) in [("report", 10), ("ignore", 2)] {
         let config = config_with_options(&format!(
             "importSpecifier: '@example/db'\ntrustedSqlTags: [{{module: '@example/db', name: sql}}]\nunanalyzableSql: {mode}"
         ));
@@ -16,7 +16,7 @@ fn nested_fragments_do_not_become_annotation_bind_placeholders() {
                 .iter()
                 .filter(|finding| finding.message.contains("leading SQL is unanalyzable"))
                 .count(),
-            count - 1
+            if mode == "report" { 8 } else { 0 }
         );
         assert!(findings
             .iter()

@@ -15,7 +15,7 @@ export function insertInto(table: string) {
   return write(`INSERT INTO ${table} (note) VALUES ($1)`, ['x'])
 }
 
-// A recovered write that only targets a literal table without tracked columns stays quiet.
+// An opaque tail can append a second write to a tracked table; fail closed.
 export function touchLog(column: string) {
   return write(`UPDATE logs SET ${column} = now()`)
 }
@@ -33,4 +33,11 @@ export function remove(table: string) {
 export function suppressed(sql: string) {
   // no-mistakes-disable-next-line postgres-no-generated-column-writes
   return write(sql)
+}
+
+export function cteWrite(column: string) {
+  return write(`WITH changed AS (UPDATE items SET ${column} = now() RETURNING *) SELECT * FROM changed`)
+}
+export function cteDelete(column: string) {
+  return write(`WITH changed AS (UPDATE items SET ${column} = now() RETURNING *) DELETE FROM logs`)
 }

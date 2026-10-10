@@ -133,13 +133,12 @@ trigger-maintained column:
 
 - no SQL text was recovered (an opaque `write(sql)` argument or a
   `write(cond ? a : b)` choice), or
-- the recovered text is a top-level `INSERT`, `UPDATE`, or `MERGE` (after a
-  complete `WITH` list), or its leading statement is unknown or incomplete.
+- the recovered text contains `INSERT`, `UPDATE`, or `MERGE`, including a
+  data-modifying CTE, or its leading statement is unknown or incomplete.
 
-Dynamic `SELECT` and `DELETE` text is not reported. A recovered write whose
-target tables are all written literally and have no generated or
-trigger-maintained column is not reported either; an interpolated table name
-(`INSERT INTO ${table} ...`) could be any table, so it is. Nothing is reported
+Dynamic `SELECT` and `DELETE` text without a recovered column write is not
+reported. Literal untracked targets do not exempt an opaque write: its tail
+could introduce another statement targeting a protected column. Nothing is reported
 when the schema catalog has no generated or trigger-maintained columns. Columns
 that recovered text already proves are still reported with their ordinary
 findings. See the [migration note](../migrations/postgres-unanalyzable-sql.md).

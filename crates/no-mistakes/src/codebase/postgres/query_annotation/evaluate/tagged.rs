@@ -33,9 +33,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // instead splices SQL, whose leading text must stay unknown here.
             let fragment = tag != "String.raw"
                 && index % 2 == 1
-                && (values.get(index.div_ceil(2)).is_some_and(has_builder)
+                && (values.get(1 + index / 2).is_some_and(has_builder)
                     || effects
-                        .get(index.div_ceil(2))
+                        .get(1 + index / 2)
                         .is_some_and(|effect| self.tag_helper(effect, path, *env)));
             let value = if fragment {
                 Value::Unknown

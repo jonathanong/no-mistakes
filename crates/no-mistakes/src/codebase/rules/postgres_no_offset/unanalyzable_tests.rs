@@ -28,7 +28,13 @@ fn dynamic_select_or_opaque_sql_fails_closed_by_default() {
     // Dynamic INSERT (line 15), static SQL (line 25) and the suppressed call stay quiet.
     assert_eq!(
         lines_and_targets(&findings),
-        [(5, "unanalyzable"), (10, "unanalyzable"), (20, "offset")],
+        [
+            (5, "unanalyzable"),
+            (10, "unanalyzable"),
+            (20, "offset"),
+            (35, "unanalyzable"),
+            (38, "unanalyzable")
+        ],
         "{findings:#?}"
     );
     assert!(
