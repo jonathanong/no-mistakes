@@ -6,6 +6,11 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
+const hasOccurrenceKind = (occurrences, kind) =>
+  occurrences.some(
+    (occurrence) =>
+      occurrence.kind === kind || hasOccurrenceKind(occurrence.occurrences || [], kind),
+  );
 
 test(
   "compiled CJS and ESM source APIs retain safely attributed conditional occurrences",
@@ -33,7 +38,8 @@ test(
       assert.equal(statement.block.complete, true);
       assert.equal(statement.block.statements.length, 1);
       assert.deepEqual(statement.block.diagnostics, []);
-      assert.ok(statement.block.occurrences.some((occurrence) => occurrence.kind === "utility"));
+      // Conditional locks are nested beneath their control-flow occurrence.
+      assert.ok(hasOccurrenceKind(statement.block.occurrences, "utility"), name);
       assert.deepEqual(
         facts.statements.map((statement) => statement.kind),
         name.endsWith("-mixed.sql") ? ["createIndex", "doBlock", "createIndex"] : ["doBlock"],
