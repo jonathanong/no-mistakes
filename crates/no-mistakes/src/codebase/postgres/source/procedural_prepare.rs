@@ -68,7 +68,7 @@ pub(super) fn prepare_block<'a>(
         return Ok(PreparedBlock::Done(block));
     }
     let sql = body.sql.as_ref();
-    let mut prepared = crate::codebase::postgres::parse::prepare_postgres_tokens(sql);
+    let mut prepared = crate::codebase::postgres::parse::prepare_postgres_tokens_for_walk(sql);
     if let Some(error) = &prepared.lexical_error {
         // A lexical failure prevents proving the surrounding procedural grammar.
         block

@@ -67,9 +67,9 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 
 pub(super) struct PreparedPostgresTokens {
     pub tokens: Vec<sqlparser::tokenizer::TokenWithSpan>,
-    /// Lexical tokens before parser-compatibility rewrites. Occurrence
-    /// classification uses this inventory so `FOR UPDATE OF a, b` is not
-    /// expanded into duplicate DML facts.
+    /// Pre-rewrite lexical tokens for procedural occurrence classification.
+    /// Ordinary preparation leaves this empty. A procedural walk retains the
+    /// inventory so `FOR UPDATE OF a, b` is not expanded into duplicate DML facts.
     pub occurrence_tokens: Vec<sqlparser::tokenizer::TokenWithSpan>,
     pub recursive_views: RecursiveViews,
     pub lexical_error: Option<sqlparser::tokenizer::TokenizerError>,
@@ -77,6 +77,18 @@ pub(super) struct PreparedPostgresTokens {
 
 /// Prepare one source-fact token inventory while retaining a valid lexical prefix.
 pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
+    prepare_postgres_tokens_inner(sql, false)
+}
+
+/// Prepare tokens and retain the pre-rewrite inventory for a procedural walk.
+pub(crate) fn prepare_postgres_tokens_for_walk(sql: &str) -> PreparedPostgresTokens {
+    prepare_postgres_tokens_inner(sql, true)
+}
+
+fn prepare_postgres_tokens_inner(
+    sql: &str,
+    retain_occurrence_tokens: bool,
+) -> PreparedPostgresTokens {
     let normalized = normalize_copy_data(sql);
     let separated = distinct_group::separate_distinct_grouping(&normalized);
     let escaped = source_escape::prepare(&separated);
@@ -88,7 +100,11 @@ pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
     escaped.restore(&mut tokens);
     source_unicode::prepare(&mut tokens);
     let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
-    let occurrence_tokens = tokens.clone();
+    let occurrence_tokens = if retain_occurrence_tokens {
+        tokens.clone()
+    } else {
+        Vec::new()
+    };
     normalize_table_queries(&mut tokens);
     let recursive_views = recursive_view::prepare(&mut tokens);
     PreparedPostgresTokens {

@@ -1,4 +1,13 @@
 use super::procedural_occurrences::{block, kinds};
+use crate::codebase::postgres::parse::prepare_postgres_tokens;
+
+#[test]
+fn ordinary_sql_leaves_occurrence_tokens_empty() {
+    // Ordinary SQL must not keep a second token inventory.
+    let prepared = prepare_postgres_tokens("SELECT 1");
+    assert!(!prepared.tokens.is_empty());
+    assert!(prepared.occurrence_tokens.is_empty());
+}
 
 #[test]
 fn multi_relation_row_lock_stays_one_dml_occurrence() {
