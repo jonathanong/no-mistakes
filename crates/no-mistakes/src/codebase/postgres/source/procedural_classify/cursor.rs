@@ -1,0 +1,128 @@
+use super::scan::{eq, is_dml, is_utility, word_of};
+use super::{Ctx, Stop};
+use sqlparser::tokenizer::Token;
+
+pub(super) fn stopped(ctx: &Ctx<'_>, stop: Stop) -> bool {
+    match stop {
+        Stop::Outer => at_any(ctx, &["END", "EXCEPTION"]),
+        Stop::IfBranch => at_any(ctx, &["ELSE", "ELSIF", "ELSEIF", "END"]),
+        Stop::Loop => at_word(ctx, "END"),
+        Stop::Handler => at_any(ctx, &["END", "WHEN"]),
+        Stop::CaseBranch => at_any(ctx, &["WHEN", "ELSE", "END"]),
+        Stop::None => false,
+    }
+}
+
+pub(super) fn at_plain_end(ctx: &Ctx<'_>) -> bool {
+    at_word(ctx, "END") && !end_modifier(ctx)
+}
+
+fn end_modifier(ctx: &Ctx<'_>) -> bool {
+    word_after(ctx, "END").is_some_and(|word| matches!(word, "IF" | "LOOP" | "CASE"))
+}
+
+pub(super) fn at_dml(ctx: &Ctx<'_>) -> bool {
+    peek_word(ctx).is_some_and(is_dml)
+}
+
+pub(super) fn at_utility(ctx: &Ctx<'_>) -> bool {
+    peek_word(ctx).is_some_and(is_utility)
+}
+
+pub(super) fn at_any(ctx: &Ctx<'_>, words: &[&str]) -> bool {
+    peek_word(ctx).is_some_and(|word| words.iter().any(|value| eq(word, value)))
+}
+
+pub(super) fn at_word(ctx: &Ctx<'_>, value: &str) -> bool {
+    peek_word(ctx).is_some_and(|word| eq(word, value))
+}
+
+pub(super) fn eat_word(ctx: &mut Ctx<'_>, value: &str) -> bool {
+    if at_word(ctx, value) {
+        bump(ctx);
+        true
+    } else {
+        false
+    }
+}
+
+pub(super) fn eat_semi(ctx: &mut Ctx<'_>) -> bool {
+    let Some(index) = peek_index(ctx) else {
+        return false;
+    };
+    if matches!(ctx.tokens[index].token, Token::SemiColon) {
+        ctx.index = index + 1;
+        true
+    } else {
+        false
+    }
+}
+
+pub(super) fn eat_label(ctx: &mut Ctx<'_>) {
+    let Some(index) = peek_index(ctx) else {
+        return;
+    };
+    if word_of(&ctx.tokens[index].token).is_none() {
+        return;
+    }
+    let semicolon = ((index + 1)..ctx.tokens.len())
+        .find(|index| !matches!(ctx.tokens[*index].token, Token::Whitespace(_)))
+        .is_some_and(|index| matches!(ctx.tokens[index].token, Token::SemiColon));
+    if semicolon {
+        bump(ctx);
+    }
+}
+
+pub(super) fn skip_label(ctx: &mut Ctx<'_>) {
+    let Some(index) = peek_index(ctx) else {
+        return;
+    };
+    if !matches!(ctx.tokens[index].token, Token::ShiftLeft) {
+        return;
+    }
+    ctx.index = index + 1;
+    while let Some(index) = peek_index(ctx) {
+        ctx.index = index + 1;
+        if matches!(ctx.tokens[index].token, Token::ShiftRight) {
+            break;
+        }
+    }
+}
+
+pub(super) fn bump(ctx: &mut Ctx<'_>) {
+    if let Some(index) = peek_index(ctx) {
+        ctx.index = index + 1;
+    }
+}
+
+pub(super) fn peek_index(ctx: &Ctx<'_>) -> Option<usize> {
+    (ctx.index..ctx.tokens.len())
+        .find(|index| !matches!(ctx.tokens[*index].token, Token::Whitespace(_)))
+}
+
+pub(super) fn peek_word<'a>(ctx: &Ctx<'a>) -> Option<&'a str> {
+    peek_index(ctx).and_then(|index| word_of(&ctx.tokens[index].token))
+}
+
+fn word_after<'a>(ctx: &Ctx<'a>, value: &str) -> Option<&'a str> {
+    let index = peek_index(ctx)?;
+    if !word_of(&ctx.tokens[index].token).is_some_and(|word| eq(word, value)) {
+        return None;
+    }
+    ((index + 1)..ctx.tokens.len())
+        .find(|index| !matches!(ctx.tokens[*index].token, Token::Whitespace(_)))
+        .and_then(|index| word_of(&ctx.tokens[index].token))
+}
+
+pub(super) fn last_index(ctx: &Ctx<'_>, start: usize) -> usize {
+    let mut index = ctx.index.saturating_sub(1).max(start);
+    while index > start
+        && matches!(
+            ctx.tokens.get(index).map(|token| &token.token),
+            Some(Token::Whitespace(_))
+        )
+    {
+        index -= 1;
+    }
+    index.min(ctx.tokens.len().saturating_sub(1)).max(start)
+}

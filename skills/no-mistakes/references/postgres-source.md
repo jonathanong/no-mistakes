@@ -13,10 +13,14 @@ root, database, catalog, invocation lock, or raw AST traversal.
 Inspect `diagnostics` and each view's `dependenciesComplete` before treating
 the facts as a complete dependency inventory. Dollar-quoted and standard single-quoted DO blocks
 expose nested source occurrences and original body spans; inspect each block's
-`complete`, `bodyEncoding`, and `diagnostics`, and never treat its statements as guaranteed
-execution. IF/ELSIF/ELSE branches expose typed conditions and nested statements;
+`complete`, `bodyEncoding`, `occurrences`, and `diagnostics`, and never treat its statements as guaranteed
+execution. `occurrences` distinguish `utility` (`CREATE TYPE`), `controlFlow`
+(`IF`/`RAISE` with no DML), nested `dml` (`INSERT`/`UPDATE`/`DELETE`/`MERGE`
+inside `IF` or `LOOP`), `dynamicExecute`, and `unknown`. A `dml` entry is
+visible source text, not an executed statement. Dynamic `EXECUTE` fails closed.
+IF/ELSIF/ELSE branches expose typed conditions and nested statements;
 inspect every branch without assuming its condition is true. PostgreSQL 18 virtual generated columns retain their declared or
-default storage. Unsupported procedural control flow remains explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
+default storage. Unrecognized procedural forms remain explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
 with exclusive span ends. See [the source API](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-source-api.md)
 for exported types, structural index identity, and grammar boundaries.
 Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose

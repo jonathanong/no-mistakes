@@ -904,6 +904,12 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(declarations, /kind: "conditional";\s+branches: PostgresSqlConditionalBranch\[\]/);
   assert.match(procedural, /statements: PostgresSqlStatement\[\];/);
   assert.match(procedural, /complete: boolean;/);
+  assert.match(procedural, /occurrences: PostgresSqlProceduralOccurrence\[\];/);
+  assert.match(procedural, /export interface PostgresSqlProceduralOccurrence/);
+  assert.match(
+    procedural,
+    /export type PostgresSqlProceduralOccurrenceKind =\n {2}\| "utility"\n {2}\| "controlFlow"\n {2}\| "dml"\n {2}\| "dynamicExecute"\n {2}\| "unknown";/,
+  );
 });
 
 test("PostgreSQL metadata facts export routine signatures and typed index operations", () => {

@@ -733,6 +733,11 @@ Node ESM/CJS parity, including decoded child spans and original wrapper
 provenance. Dynamic expressions remain explicitly unsupported; see the
 [PostgreSQL source API](postgres-source-api.md).
 
+Procedural `DO` occurrence kinds (`utility`, `controlFlow`, `dml`,
+`dynamicExecute`, `unknown`) have the same Rust/native and asynchronous Node
+ESM/CJS projection. Nested `dml` is source text, not execution. Dynamic
+`EXECUTE` stays fail-closed.
+
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;
 unary roots expose typed operands, and syntax completeness is independent of

@@ -118,9 +118,29 @@ Typed `IF`, `ELSIF`, and `ELSE` blocks expose a `conditional`
 fact with ordered `PostgresSqlConditionalBranch` entries. A branch retains its
 condition expression (null for ELSE), source span, and nested statement facts.
 All branches describe possible source occurrences; the API does not evaluate
-conditions or claim that their DDL executes. Declarations, loops, exception
-handlers, other procedural languages and escape-string DO bodies remain
-explicitly unsupported; no DDL is guessed behind unsupported control flow. Ordinary syntax errors preserve
+conditions or claim that their DDL executes. `occurrences` adds a second,
+structural classification in source order. Each `PostgresSqlProceduralOccurrence`
+has `kind`, an original-source `span`, and nested `occurrences`:
+
+- `utility` is a non-DML command such as `CREATE TYPE ... AS ENUM`.
+- `controlFlow` is `IF`, `LOOP`, `CASE`, `RAISE`, or a nested `BEGIN`/`DO`.
+- `dml` means `INSERT`, `UPDATE`, `DELETE`, or `MERGE` text is visible, including
+  inside `IF` or `LOOP`. It is not an executed statement and it is not safe utility.
+- `dynamicExecute` is `EXECUTE` of a non-literal command (`format`, an identifier,
+  or concatenation that is not wholly literal). The command text is not guessed
+  into a SQL statement.
+- `unknown` fails closed.
+
+Wholly literal `EXECUTE` keeps the existing `literalExecute` statement facts and is
+classified from the decoded command (`dml` or `utility`) instead of `dynamicExecute`.
+Quoted strings, quoted identifiers, and comments are not keywords, so
+`RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
+occurrence is `dynamicExecute`. A block classified only by this walker is complete
+only when every occurrence is recognized `utility` or `controlFlow`. A block the SQL
+parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
+DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body
+that does not start with `BEGIN`, other procedural languages, and escape-string DO bodies
+stay diagnostic. Ordinary syntax errors preserve
 parseable neighboring body statements. String function bodies remain opaque; SQL-language BEGIN ATOMIC declaration wrappers expose child source occurrences without implying execution.
 
 A parser compatibility normalization with a source boundary that cannot be
@@ -455,9 +475,11 @@ Safely attributed facts can coexist with incomplete procedural coverage.
 For example, unsupported `LOCK` statements retain explicit `other` source
 occurrences and localized diagnostics instead of hiding a following typed
 constraint. Unsupported ALTER operations, incomplete SELECT or INSERT facts,
-and unsupported control flow keep the enclosing block incomplete. Inspect its
-diagnostics and nested typed facts; these are occurrences, not proof that the
-constraint executes, is installed, or is validated.
+`dynamicExecute`, and unrecognized procedural forms keep the enclosing block
+incomplete. A loop that contains `INSERT` lists that `dml` occurrence and does
+not describe it as executed. Inspect `occurrences`, diagnostics, and nested
+typed facts; these are source occurrences, not proof that the constraint
+executes, is installed, or is validated.
 
 ### Data-modifying CTEs
 

@@ -6,6 +6,7 @@ mod expressions;
 mod indexes;
 mod insert;
 mod metadata;
+mod procedural;
 mod query;
 mod query_statements;
 mod wrappers;
@@ -15,6 +16,7 @@ pub use expressions::*;
 pub use indexes::*;
 pub use insert::*;
 pub use metadata::*;
+pub use procedural::*;
 pub use query::*;
 pub use query_statements::*;
 pub use wrappers::*;
@@ -168,57 +170,4 @@ pub enum PostgresSqlStatementKind {
         branches: Vec<PostgresSqlConditionalBranch>,
     },
     Other,
-}
-
-/// Literal provenance uses original source coordinates; children use decoded SQL coordinates.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PostgresSqlLiteralExecute {
-    pub literal_span: PostgresSqlSpan,
-    pub body_encoding: PostgresSqlExecuteEncoding,
-    pub decoded_sql: String,
-    /// Expressions remain syntax in enclosing-source coordinates, never evaluated values.
-    pub using: Vec<PostgresSqlExpression>,
-    pub statements: Vec<PostgresSqlStatement>,
-    pub diagnostics: Vec<PostgresSqlDiagnostic>,
-    pub complete: bool,
-}
-
-/// Nested statements are procedural source occurrences, not guaranteed execution.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PostgresSqlProceduralBlock {
-    pub language: String,
-    pub body_encoding: PostgresSqlBodyEncoding,
-    pub body_span: PostgresSqlSpan,
-    pub statements: Vec<PostgresSqlStatement>,
-    pub diagnostics: Vec<PostgresSqlDiagnostic>,
-    pub complete: bool,
-}
-
-/// Branch statements are source occurrences, not guaranteed execution.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PostgresSqlConditionalBranch {
-    pub condition: Option<PostgresSqlExpression>,
-    pub span: PostgresSqlSpan,
-    pub statements: Vec<PostgresSqlStatement>,
-}
-
-/// The source slice retains the enclosing literal's encoding.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum PostgresSqlBodyEncoding {
-    EscapedString,
-    DollarQuoted,
-    SingleQuoted,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum PostgresSqlExecuteEncoding {
-    EscapedString,
-    DollarQuoted,
-    SingleQuoted,
-    Concatenated,
 }
