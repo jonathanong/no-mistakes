@@ -93,10 +93,14 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
             return false;
         }
         *index += 1;
+        let mut components = 1;
         while tokens
             .get(*index)
             .is_some_and(|token| matches!(token, Token::Period))
         {
+            if components == 3 {
+                return false;
+            }
             *index += 1;
             if tokens
                 .get(*index)
@@ -106,6 +110,7 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
                 return false;
             }
             *index += 1;
+            components += 1;
         }
         if tokens
             .get(*index)
@@ -121,7 +126,7 @@ fn consume_relations(tokens: &[&Token], index: &mut usize) -> bool {
 fn relation_word(token: &Token) -> Option<&str> {
     match token {
         Token::Word(word)
-            if word.quote_style.is_some() || !postgres_reserved_keyword(&word.value) =>
+            if word.quote_style.is_some() || !postgres_non_col_id_keyword(&word.value) =>
         {
             Some(word.value.as_str())
         }
@@ -129,12 +134,12 @@ fn relation_word(token: &Token) -> Option<&str> {
     }
 }
 
-// PostgreSQL's RESERVED_KEYWORD entries from src/include/parser/kwlist.h (REL_18_STABLE).
-// sqlparser's PostgreSqlDialect identifier helper uses a narrower set and treats `IN` as
-// an identifier, though PostgreSQL does not permit reserved words as relation names.
-fn postgres_reserved_keyword(value: &str) -> bool {
-    const RESERVED: &str = "all analyse analyze and any array as asc asymmetric both case cast check collate column constraint create current_catalog current_date current_role current_time current_timestamp current_user default deferrable desc distinct do else end except false fetch for foreign from grant group having in initially intersect into lateral leading limit localtime localtimestamp not null offset on only or order placing primary references returning select session_user some symmetric system_user table then to trailing true union unique user using variadic when where window with";
-    RESERVED
+// PostgreSQL's RESERVED_KEYWORD and TYPE_FUNC_NAME_KEYWORD entries from
+// src/include/parser/kwlist.h (REL_18_STABLE). Neither category can be a ColId,
+// the identifier grammar used for each component of a relation name.
+fn postgres_non_col_id_keyword(value: &str) -> bool {
+    const NON_COL_ID: &str = "all analyse analyze and any array as asc asymmetric authorization binary both case cast check collate collation column concurrently constraint create cross current_catalog current_date current_role current_schema current_time current_timestamp current_user default deferrable desc distinct do else end except false fetch for foreign freeze from full grant group having ilike in initially inner intersect into is isnull join lateral leading left limit like localtime localtimestamp natural not notnull null offset on only or order outer overlaps placing primary references returning right select session_user similar some symmetric system_user table tablesample then to trailing true union unique user using variadic verbose when where window with";
+    NON_COL_ID
         .split_ascii_whitespace()
         .any(|keyword| value.eq_ignore_ascii_case(keyword))
 }

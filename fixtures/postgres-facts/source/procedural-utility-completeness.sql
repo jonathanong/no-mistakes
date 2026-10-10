@@ -7,7 +7,7 @@ DO $$ BEGIN
   LOCK TABLE t IN SHARE ROW EXCLUSIVE MODE;
 END $$;
 DO $$ BEGIN
-  LOCK TABLE ONLY public.t, q IN SHARE UPDATE EXCLUSIVE MODE NOWAIT;
+  LOCK TABLE ONLY db.public.t, q IN SHARE UPDATE EXCLUSIVE MODE NOWAIT;
 END $$;
 DO $$ BEGIN
   LOCK TABLE "IN" IN SHARE MODE;
@@ -48,4 +48,11 @@ END $$;
 -- IN is a reserved keyword here, not a valid unquoted relation name.
 DO $$ BEGIN
   LOCK TABLE IN IN SHARE MODE;
+END $$;
+-- PostgreSQL relation names have at most schema.table qualification depth.
+DO $$ BEGIN
+  LOCK TABLE a.b.c.d IN SHARE MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE JOIN IN SHARE MODE;
 END $$;
