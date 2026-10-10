@@ -859,7 +859,7 @@ command followed by unquoted `INTO` is classified from that command, and the
 `INTO` target still keeps the block incomplete. An IF, ELSIF, or
 conditional-loop header with no condition keeps the block incomplete. An opening label is one
 identifier. A closing label that does not match keeps the block incomplete. A
-label prefix on a wholly literal command stays `unknown`. See
+label prefix on a wholly literal command stays `unknown`. An opening label is omitted with the walker-only block it names. See
 [PostgreSQL source facts](postgres-source-api.md).
 
 `parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as
