@@ -1,1 +1,2 @@
 fixtures/rules/markdown-structure-budget/exact-crlf.md -text -whitespace
+fixtures/postgres-facts/source/operator-line-comment-boundaries.sql -text -whitespace

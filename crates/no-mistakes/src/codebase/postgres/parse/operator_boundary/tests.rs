@@ -14,6 +14,100 @@ fn fixtures() -> Vec<&'static str> {
 }
 
 #[test]
+fn line_comments_after_operators_keep_original_locations_across_newlines() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/operator-line-comment-boundaries.sql"
+    ));
+    let tokens = tokenize_with_location(&PostgreSqlDialect {}, sql).expect("line comments parse");
+    let comments = tokens
+        .iter()
+        .filter_map(|token| match &token.token {
+            Token::Whitespace(Whitespace::SingleLineComment { .. }) => Some(token.span.start),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(comments.len(), 4);
+    assert_eq!(
+        comments[0],
+        Location {
+            line: 1,
+            column: 12
+        }
+    );
+    assert_eq!(
+        comments[1],
+        Location {
+            line: 3,
+            column: 12
+        }
+    );
+    assert_eq!(
+        comments[2],
+        Location {
+            line: 4,
+            column: 12
+        }
+    );
+    assert_eq!(comments[3], Location { line: 6, column: 1 });
+    let ones = tokens
+        .iter()
+        .filter(|token| matches!(&token.token, Token::Number(value, _) if value == "1"))
+        .map(|token| token.span.start)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        ones,
+        [
+            Location { line: 2, column: 1 },
+            Location {
+                line: 3,
+                column: 17
+            },
+            Location { line: 5, column: 1 },
+            Location {
+                line: 6,
+                column: 28
+            }
+        ]
+    );
+    assert!(tokens
+        .iter()
+        .any(|token| matches!(token.token, Token::ShiftRight)));
+    assert!(tokens.iter().any(|token| matches!(
+        &token.token,
+        Token::Whitespace(Whitespace::MultiLineComment(comment)) if comment == "gap"
+    )));
+}
+
+#[test]
+fn line_comment_like_content_in_literals_does_not_insert_separators() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/operator-line-comment-opaque.sql"
+    ));
+    let prepared = Prepared::new(sql);
+    assert_eq!(prepared.sql(), sql);
+    assert!(tokenize_with_location(&PostgreSqlDialect {}, sql).is_ok());
+}
+
+#[test]
+fn lexical_error_after_adjacent_comment_uses_original_column() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/operator-line-comment-error.sql"
+    ));
+    let error = tokenize_with_location(&PostgreSqlDialect {}, sql).unwrap_err();
+    assert_eq!(error.location.line, 1);
+    assert_eq!(
+        error.location.column,
+        sql[..sql.find('\'').expect("unterminated quote")]
+            .chars()
+            .count() as u64
+            + 1
+    );
+}
+
+#[test]
 fn separates_an_adjacent_block_comment_from_a_custom_operator() {
     let sql = fixtures()[0];
     let prepared = Prepared::new(sql);

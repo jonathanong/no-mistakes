@@ -171,6 +171,40 @@ fn block_comment_after_label_operator_keeps_public_source_positions() {
     assert!(!loop_sql.contains("<<l>>"), "{loop_sql}");
 }
 
+#[test]
+fn line_comment_after_label_operator_keeps_public_source_positions() {
+    // The label and line comment precede FOR; neither belongs in its public span.
+    let sql = super::fixture("procedural-opening-label-adjacent-line-comment.sql");
+    let result = crate::codebase::postgres::parse_postgres_source(
+        &crate::codebase::postgres::source::PostgresSqlSource {
+            sql: sql.clone(),
+            file_name: Some("procedural-opening-label-adjacent-line-comment.sql".into()),
+        },
+    );
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    let PostgresSqlStatementKind::DoBlock { block } = &result.statements[0].facts else {
+        panic!("expected a DO block: {result:?}");
+    };
+    assert!(block.complete, "{:?}", block.diagnostics);
+    assert_eq!(block.statements.len(), 2, "{:?}", block.statements);
+    assert!(block.statements[0].sql.contains("before_label"));
+    assert!(block.statements[1].sql.contains("after_label"));
+    for statement in &block.statements {
+        assert!(!statement.sql.contains("<<l>>"));
+        assert_eq!(
+            statement.sql,
+            sql[statement.span.start.offset..statement.span.end.offset]
+        );
+    }
+    let control_flow = block
+        .occurrences
+        .iter()
+        .find(|occurrence| occurrence.kind == ControlFlow)
+        .expect("the labeled loop occurrence");
+    let loop_sql = &sql[control_flow.span.start.offset..control_flow.span.end.offset];
+    assert!(loop_sql.starts_with("FOR i"), "{loop_sql}");
+}
+
 fn labels_at(
     source: &str,
     keyword: &str,

@@ -39,6 +39,19 @@ fn strict_and_lenient_parsers_keep_comments_after_operators_as_whitespace() {
 }
 
 #[test]
+fn strict_and_lenient_parsers_resume_after_adjacent_line_comments() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/operator-line-comment-boundaries.sql"
+    ));
+    assert_eq!(
+        parse_postgres_sql(sql).expect("strict line comments").len(),
+        4
+    );
+    assert_eq!(parse_postgres_sql_lenient(sql).len(), 4);
+}
+
+#[test]
 fn table_only_normalization_leaves_create_table_name_intact() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
