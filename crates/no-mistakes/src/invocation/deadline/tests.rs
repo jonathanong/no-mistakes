@@ -38,6 +38,10 @@ fn expired_deadline_cannot_be_committed() {
     });
 
     assert!(commit_timeout().is_err());
+    assert_eq!(
+        super::timeout_diagnostic(1, "check.parse"),
+        "command timed out after 1 seconds during check.parse"
+    );
 
     *active_deadline().write().unwrap() = previous;
 }

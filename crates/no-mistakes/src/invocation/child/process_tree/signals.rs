@@ -91,6 +91,16 @@ impl ParentSignalForwardingGuard {
     }
 }
 
+pub(crate) fn registered_groups() -> Vec<i32> {
+    active_registry()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .as_ref()
+        .and_then(Weak::upgrade)
+        .map(|registry| registry.snapshot())
+        .unwrap_or_default()
+}
+
 pub(crate) fn register_process_group(process_group: i32) -> Option<GroupRegistration> {
     active_registry()
         .lock()
