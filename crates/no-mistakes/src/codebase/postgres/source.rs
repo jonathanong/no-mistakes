@@ -14,6 +14,7 @@ mod conditional_source;
 mod constraint_spans;
 mod ddl;
 mod diagnostics;
+mod dialect;
 mod drop_facts;
 mod execute;
 mod execute_preparation;

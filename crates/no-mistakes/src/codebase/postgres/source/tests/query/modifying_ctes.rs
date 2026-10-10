@@ -401,3 +401,70 @@ fn insert_source_locks_are_explicitly_incomplete_without_changing_ordinary_selec
     assert!(q[3].complete);
     assert!(q[3].nested_statements[0].complete);
 }
+
+#[test]
+fn select_source_on_conflict_inside_a_modifying_cte_stays_one_complete_query() {
+    let sql = fixture("query-cte-select-conflict.sql");
+    let facts = facts("query-cte-select-conflict.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 4);
+
+    let PostgresSqlStatementKind::Select { query } = &facts.statements[0].facts else {
+        panic!("expected the CTE reproduction to remain one query");
+    };
+    assert!(query.complete, "{:?}", query.unsupported);
+    assert_eq!(query.nested_statements.len(), 1);
+    let child = &query.nested_statements[0];
+    assert!(child.complete, "{:?}", child.unsupported);
+    let span = child.span.as_ref().expect("nested INSERT span");
+    assert_eq!(&sql[span.start.offset..span.end.offset], child.sql);
+    assert!(!child.returning.is_empty());
+    let PostgresSqlQueryStatementKind::Insert { insert } = &child.facts else {
+        panic!("nested INSERT must stay typed");
+    };
+    assert!(matches!(
+        insert.source,
+        PostgresSqlCteInsertSource::Select { .. }
+    ));
+    assert!(matches!(
+        insert.on_conflict.as_ref().map(|conflict| &conflict.action),
+        Some(PostgresSqlConflictAction::DoNothing)
+    ));
+
+    let PostgresSqlStatementKind::Insert { insert } = &facts.statements[1].facts else {
+        panic!("top-level INSERT with the same conflict clause must stay typed");
+    };
+    assert!(insert.complete, "{:?}", insert.diagnostics);
+    assert!(matches!(
+        insert.source,
+        PostgresSqlInsertSource::Select { .. }
+    ));
+    assert!(matches!(
+        insert.on_conflict.as_ref().map(|conflict| &conflict.action),
+        Some(PostgresSqlConflictAction::DoNothing)
+    ));
+
+    let PostgresSqlStatementKind::Select { query } = &facts.statements[2].facts else {
+        panic!("ordinary SELECT CTE must stay a query");
+    };
+    assert!(query.complete, "{:?}", query.unsupported);
+    assert!(query.nested_statements.is_empty());
+
+    let PostgresSqlStatementKind::Select { query } = &facts.statements[3].facts else {
+        panic!("VALUES conflict CTE must stay a query");
+    };
+    assert!(query.complete, "{:?}", query.unsupported);
+    let child = &query.nested_statements[0];
+    assert!(child.complete, "{:?}", child.unsupported);
+    let PostgresSqlQueryStatementKind::Insert { insert } = &child.facts else {
+        panic!("VALUES nested INSERT must stay typed");
+    };
+    assert!(matches!(
+        insert.source,
+        PostgresSqlCteInsertSource::Values { .. }
+    ));
+    assert!(matches!(
+        insert.on_conflict.as_ref().map(|conflict| &conflict.action),
+        Some(PostgresSqlConflictAction::DoNothing)
+    ));
+}

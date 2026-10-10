@@ -1219,6 +1219,8 @@ test("data-modifying CTE facts expose named exported declaration contracts", () 
     "unsupported",
   ])
     assert.match(child, new RegExp(`\\b${field}:`));
+  assert.match(child, /onConflict: PostgresSqlConflict \| null;/);
+  assert.match(child, /\{ kind: "select"; queryScopeId: number; span: PostgresSqlSpan \| null \}/);
 });
 
 test("SQL wrappers expose named execution and child-source contracts", () => {

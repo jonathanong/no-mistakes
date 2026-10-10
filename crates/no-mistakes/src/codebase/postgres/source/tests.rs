@@ -3,6 +3,7 @@ mod conditional_insert_compatibility;
 mod conditional_ranges;
 mod constraint_spans;
 mod ddl;
+mod dialect;
 mod do_constraints;
 mod expression_predicates;
 mod expression_roots;
