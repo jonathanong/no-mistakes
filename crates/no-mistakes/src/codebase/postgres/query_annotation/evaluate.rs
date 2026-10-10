@@ -3,7 +3,7 @@ mod callbacks;
 mod calls;
 mod concat;
 mod member;
-use concat::concat;
+use {concat::concat, scope::Scope};
 mod delete;
 mod effects;
 mod index;
@@ -12,40 +12,19 @@ mod modules;
 mod opaque;
 mod result;
 mod run;
+mod scope;
 mod slot_write;
 mod slots;
 mod statements;
 mod tagged;
+mod value;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{FxHashMap, FxHashSet};
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::{collections::BTreeMap, sync::Arc};
+pub(super) use value::Value;
 
-#[derive(Clone, Eq, PartialEq)]
-pub(super) enum Value {
-    Prefix(String, bool, Option<u64>),
-    Promise(Box<Value>),
-    Evaluated(Box<Value>, bool),
-    Aggregate(Vec<Value>),
-    // Candidate runtime values with an implicit unknown alternative.
-    Possible(Vec<Value>),
-    Arguments(u64),
-    Function(Function, PathBuf, Environment),
-    Unknown,
-    Primitive,
-    Unsupported,
-    SlotDeletion,
-}
-impl Value {
-    pub(super) fn exposed(self) -> Self {
-        let mut value = self;
-        while let Self::Evaluated(inner, _) = value {
-            value = *inner;
-        }
-        value
-    }
-}
 pub(super) type Environment = usize;
 pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
@@ -58,7 +37,7 @@ pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
-    pub scopes: Vec<FxHashMap<String, Value>>,
+    pub scopes: Vec<Scope>,
     pub modules: FxHashMap<PathBuf, Environment>,
     pub active_module_initials: Vec<alternatives::modules::Initials>,
     pub active_callback_functions: Option<FxHashSet<callbacks::CallbackIdentity>>,
@@ -87,7 +66,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         values: FxHashMap<String, Value>,
     ) -> Environment {
         let id = self.scopes.len();
-        self.scopes.push(values);
+        self.scopes.push(values.into());
         id
     }
     pub(super) fn expr(
@@ -114,7 +93,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Function(function) => {
                 // Request-owned scope IDs retain live bindings without recursive
                 // closure copies or reference cycles between sibling functions.
-                Value::Function(function.clone(), path.to_path_buf(), *env)
+                Value::Function(Arc::clone(function), path.to_path_buf(), *env)
             }
             Expr::Template(parts) => {
                 let mut prefix = Value::Prefix(String::new(), true, None);
@@ -143,12 +122,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Discard(expr) => self.discard(expr, path, env, (depth, generic)),
             Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
             Expr::Spread(expr) => {
-                Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)])
+                Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)].into())
             }
             Expr::OpaqueCallback(expr) => {
                 match self.expr(expr, path, env, depth, generic).exposed() {
                     Value::Function(mut function, path, captured) => {
-                        function.supported = false;
+                        Arc::make_mut(&mut function).supported = false;
                         Value::Function(function, path, captured)
                     }
                     _ => Value::Unknown,
@@ -190,7 +169,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 children
                     .iter()
                     .map(|child| self.expr(child, path, env, depth, generic))
-                    .collect(),
+                    .collect::<Vec<_>>()
+                    .into(),
             ),
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))

@@ -14,7 +14,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
             // Preserve conservative member effects for other object shapes.
-            value => Value::Aggregate(vec![value]),
+            value => Value::Aggregate(vec![value].into()),
         }
     }
 }

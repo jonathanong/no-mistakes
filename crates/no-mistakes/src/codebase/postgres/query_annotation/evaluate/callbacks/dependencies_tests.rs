@@ -17,7 +17,7 @@ fn saved_expression_profiles_keep_reads_distinct_from_write_only_identities() {
     let query_annotation::Expr::Function(function) = &facts.globals["profile"] else {
         panic!("saved profile summary");
     };
-    let mut function = function.clone();
+    let mut function = function.as_ref().clone();
     assert!(
         !facts.unmodeled_calls.is_empty(),
         "saved omitted-call projection"

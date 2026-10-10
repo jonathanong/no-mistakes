@@ -1,6 +1,8 @@
+use super::super::value::Values;
 use super::super::{Environment, Value};
 use super::arena::ArenaMut;
 use super::{freshness, reachable};
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 struct Roots<'a> {
@@ -16,6 +18,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
 }
 
 pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
+    if indices.iter().all(|(before, after)| before == after) {
+        return;
+    }
     match value {
         Value::Function(_, _, env) => {
             if let Some(index) = indices.get(env) {
@@ -23,13 +28,23 @@ pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environm
             }
         }
         Value::Promise(value) | Value::Evaluated(value, _) => remap(value, indices),
-        Value::Aggregate(values) | Value::Possible(values) => {
+        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values)
+            if changes_environment(values, indices) =>
+        {
             for value in values {
                 remap(value, indices);
             }
         }
         _ => {}
     }
+}
+
+fn changes_environment(values: &Values, indices: &FxHashMap<Environment, Environment>) -> bool {
+    values.contains_environment()
+        && values
+            .environment_indices()
+            .iter()
+            .any(|env| indices.get(env).is_some_and(|after| after != env))
 }
 
 /// Keep only frames and heap objects reachable from restored scopes or callback
@@ -41,7 +56,7 @@ pub(super) struct ModuleRoots<'a> {
 }
 
 pub(super) fn compact(
-    scopes: &mut Vec<FxHashMap<String, Value>>,
+    scopes: &mut Vec<Scope>,
     cache: ModuleRoots<'_>,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -83,7 +98,7 @@ pub(super) fn compact(
 }
 
 fn compact_from_roots(
-    scopes: &mut Vec<FxHashMap<String, Value>>,
+    scopes: &mut Vec<Scope>,
     roots: Roots<'_>,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -172,3 +187,6 @@ fn compact_from_roots(
 
 mod state;
 pub(super) use state::{compact_modules, prune_state};
+
+#[cfg(test)]
+mod tests;

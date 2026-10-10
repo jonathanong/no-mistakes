@@ -11,7 +11,7 @@ fn evaluator<'a>(
         files,
         resolve: |_name, _path| None,
         events: Default::default(),
-        scopes: vec![scope],
+        scopes: vec![scope.into()],
         modules: Default::default(),
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
@@ -81,4 +81,28 @@ fn argument_property_reads_stay_pure_and_nested_members_do_not() {
         path,
         0,
     ));
+}
+
+#[test]
+fn invalidation_without_builder_ids_preserves_shared_binding_snapshots() {
+    let files = FxHashMap::default();
+    let scope = FxHashMap::from_iter([
+        ("unrelated".into(), Value::Unknown),
+        (
+            "builder".into(),
+            Value::Prefix("SELECT 1".into(), false, Some(7)),
+        ),
+    ]);
+    let mut evaluator = evaluator(&files, scope);
+    let snapshot = evaluator.scopes[0].clone();
+    evaluator.invalidate_builders(&[Value::Unknown]);
+    // A no-op must not copy binding maps for every retained invocation frame.
+    assert!(std::ptr::eq(&*snapshot, &*evaluator.scopes[0]));
+    assert!(evaluator.invalidated_builders.is_empty());
+
+    let builder = evaluator.scopes[0]["builder"].clone();
+    evaluator.invalidate_builders(&[builder]);
+    assert!(evaluator.scopes[0]["builder"] == Value::Unknown);
+    assert!(matches!(snapshot["builder"], Value::Prefix(_, _, Some(7))));
+    assert!(evaluator.invalidated_builders.contains(&7));
 }

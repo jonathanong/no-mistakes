@@ -1,5 +1,6 @@
 use super::super::Value;
 use super::arena::Arena;
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 fn prefixes<'a>(
@@ -16,7 +17,11 @@ fn prefixes<'a>(
         Value::Promise(value) | Value::Evaluated(value, _) => {
             prefixes(value, arena, visited, found, definite)
         }
-        Value::Aggregate(values) | Value::Possible(values) => {
+        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+            // A reference-free shared subtree cannot affect either map or visited set.
+            if !values.contains_reference() {
+                return;
+            }
             for value in values {
                 prefixes(value, arena, visited, found, definite);
             }
@@ -77,8 +82,14 @@ pub(super) fn changes(
     }
 }
 
-pub(super) fn apply_taint(scopes: &mut [FxHashMap<String, Value>], changed: &FxHashSet<u64>) {
+pub(super) fn apply_taint(scopes: &mut [Scope], changed: &FxHashSet<u64>) {
+    if changed.is_empty() {
+        return;
+    }
     for scope in scopes {
+        if !scope.contains_builders(changed) {
+            continue;
+        }
         for value in scope.values_mut() {
             if let Value::Prefix(_, _, Some(id)) = value {
                 if changed.contains(id) {

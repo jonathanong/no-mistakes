@@ -85,7 +85,9 @@ other finding. See the
 
 `postgres-require-query-annotation` traces straight-line SQL helpers and callback
 forwarding through the same prepared project facts used by `check()` and
-`analyzeProject()`. Its `unanalyzableSql` option defaults to `"report"`; choose
+`analyzeProject()`. Both APIs share the requested TS/JS parse and keep resolution
+and helper-evaluation memoization in memory for the duration of the request.
+Its `unanalyzableSql` option defaults to `"report"`; choose
 `"ignore"` explicitly to skip opaque leading SQL. Named configuration types
 `PostgresRequireQueryAnnotationOptions` and `PostgresUnanalyzableSql` are exported
 from the package. Findings retain the executor's source location. See the
