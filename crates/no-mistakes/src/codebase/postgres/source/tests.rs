@@ -7,6 +7,7 @@ mod dialect;
 mod do_constraints;
 mod expression_predicates;
 mod expression_roots;
+mod expression_spans;
 mod indexes;
 mod locations;
 mod metadata;

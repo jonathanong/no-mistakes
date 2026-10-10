@@ -57,6 +57,47 @@ fn absent_and_reversed_locations_have_no_span() {
 }
 
 #[test]
+fn span_covering_grows_only_for_one_adjacent_rendered_alignment() {
+    let sql = "-(1) + now()";
+    let locations = Locations::new(sql);
+    assert!(locations.span_covering(None, "-(1)").is_none());
+    let full = locations.range(0, sql.len());
+    assert_eq!(
+        locations.span_covering(Some(full.clone()), sql).as_ref(),
+        Some(&full)
+    );
+    let signed = locations
+        .span_covering(Some(locations.range(2, 3)), "-(1)")
+        .unwrap();
+    assert_eq!(&sql[signed.start.offset..signed.end.offset], "-(1)");
+    let call = locations
+        .span_covering(Some(locations.range(7, 10)), "now()")
+        .unwrap();
+    assert_eq!(&sql[call.start.offset..call.end.offset], "now()");
+    let spaced = Locations::new("now ()");
+    assert_eq!(
+        spaced.slice(
+            &spaced
+                .span_covering(Some(spaced.range(0, 3)), "now()")
+                .unwrap()
+        ),
+        "now"
+    );
+    let empty = locations.range(2, 2);
+    assert_eq!(
+        locations.span_covering(Some(empty.clone()), "1").as_ref(),
+        Some(&empty)
+    );
+    // `aaa` fits the middle byte of `aaaa` in two places, so the span stays put.
+    let repeated = Locations::new("aaaa");
+    let middle = repeated.range(1, 2);
+    assert_eq!(
+        repeated.span_covering(Some(middle.clone()), "aaa").as_ref(),
+        Some(&middle)
+    );
+}
+
+#[test]
 fn empty_and_crlf_sources_have_valid_end_positions() {
     for name in ["empty.sql", "unicode-locations-crlf.sql"] {
         let sql =

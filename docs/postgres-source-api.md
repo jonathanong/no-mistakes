@@ -172,7 +172,15 @@ A `functionCall` retains its exact name, ordered `PostgresSqlCallArgument`
 records, `argumentsComplete`, `syntax`, and call `modifiers`. Argument roots
 distinguish `f(id)`, `f(id + 1)`, `f(g(id))`, and `f('id')`; repeated arguments
 remain repeated. Named arguments retain the name. Argument `sql` is rendered
-SQL, while spans refer to the original UTF-8 source. Wildcards, subquery
+SQL, while spans refer to the original UTF-8 source. When that rendered SQL
+occurs verbatim around the parser span, the span grows in either direction so
+`source.slice(span.start.offset, span.end.offset)` equals `sql`. That covers
+the parentheses of `now()` and `coalesce(now(), now())` and the leading minus
+in `-(1) + 2`. Comments and whitespace stay inside that span: `now /*keep*/ ()`
+is the source text of rendered `now()`. An INSERT column-source span is omitted
+when the tokens differ, such as source `integer` rendered as `INTEGER`. The same
+byte coordinates apply to `EXECUTE ... USING` expressions in a dollar-quoted
+`DO` body and to INSERT source expressions. Wildcards, subquery
 argument lists, and expression-named arguments set `argumentsComplete: false`;
 consumers requiring a fully supported direct-argument shape must fail closed.
 Call modifiers retain DISTINCT, ordering, FILTER, OVER, null treatment, and

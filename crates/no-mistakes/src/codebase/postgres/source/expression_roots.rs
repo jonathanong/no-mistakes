@@ -91,10 +91,12 @@ fn function_root(function: &Function, locations: &Locations<'_>) -> PostgresSqlE
                         (argument_name, arg)
                     }
                 };
+                let sql = value.to_string();
                 let (argument_root, span) = match value {
-                    FunctionArgExpr::Expr(expr) => {
-                        (root(expr, locations), locations.span(expr.span()))
-                    }
+                    FunctionArgExpr::Expr(expr) => (
+                        root(expr, locations),
+                        locations.span_covering(locations.span(expr.span()), &sql),
+                    ),
                     _ => {
                         complete = false;
                         (PostgresSqlExpressionRoot::Other, None)
@@ -102,7 +104,7 @@ fn function_root(function: &Function, locations: &Locations<'_>) -> PostgresSqlE
                 };
                 arguments.push(PostgresSqlCallArgument {
                     name: argument_name,
-                    sql: value.to_string(),
+                    sql,
                     span,
                     root: argument_root,
                 });
