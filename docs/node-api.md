@@ -850,7 +850,9 @@ Kinds are `utility`, `controlFlow`, `dml`, `dynamicExecute`, and `unknown`.
 `CREATE TYPE` is `utility`. `IF`/`RAISE` with no DML is `controlFlow`. A loop
 containing `INSERT`, `UPDATE`, `DELETE`, or `MERGE` nests a `dml` occurrence
 and does not claim that statement executes. Dynamic `EXECUTE` stays
-`dynamicExecute` and keeps the block incomplete. See [PostgreSQL source facts](postgres-source-api.md).
+`dynamicExecute` and keeps the block incomplete. A literal command followed by
+unquoted `INTO` is classified from that command, and the `INTO` target still
+keeps the block incomplete. See [PostgreSQL source facts](postgres-source-api.md).
 
 `parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as
 `query.nestedStatements`, with named exported statement, DML assignment, MERGE
@@ -875,7 +877,7 @@ pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the ful
 command expression. `using` retains ordered parameter expressions and their
 original source spans, without resolving runtime values; `$1` and other command
 placeholders remain typed parameters. Dynamic operands, `format` calls, and
-unsupported EXECUTE modifiers remain incomplete `other` occurrences. This adds no SQL execution or
+unsupported EXECUTE modifiers remain incomplete `other` occurrences. An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
 `parsePostgresSql()` exposes `PostgresSqlConstraint.span` for CREATE TABLE inline
