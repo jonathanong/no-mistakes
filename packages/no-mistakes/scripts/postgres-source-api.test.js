@@ -1475,3 +1475,35 @@ test(
     );
   },
 );
+
+test(
+  "compiled CTE RETURNING incompleteness follows expression representation",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-cte-returning-incomplete.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const [represented, between] = facts.statements;
+    assert.equal(represented.kind, "select");
+    assert.equal(represented.query.complete, true);
+    const representedChild = represented.query.nestedStatements[0];
+    assert.equal(representedChild.complete, true);
+    assert.deepEqual(representedChild.unsupported, []);
+    assert.equal(representedChild.returning[0].expression.childrenComplete, true);
+    assert.equal(representedChild.returning[0].expression.sql, "id + 1");
+    assert.equal(between.query.complete, false);
+    const child = between.query.nestedStatements[0];
+    assert.equal(child.complete, false);
+    assert.equal(child.returning[0].expression.childrenComplete, false);
+    assert.match(child.returning[0].expression.sql, /BETWEEN/);
+    assert.ok(
+      child.unsupported.some(
+        (item) => item.reason === "unsupported or incompletely represented syntax",
+      ),
+    );
+    assert.deepEqual(child.insert.diagnostics, []);
+  },
+);
