@@ -6,6 +6,7 @@ use crate::codebase::postgres::source::types::{
 };
 use sqlparser::{
     dialect::PostgreSqlDialect,
+    parser::Parser,
     tokenizer::{Token, TokenWithSpan, Tokenizer},
 };
 
@@ -25,23 +26,30 @@ fn script_kind(sql: &str) -> PostgresSqlProceduralOccurrenceKind {
     };
     // Offsets are token indexes for this inner walk. They are not source spans.
     let classified = classify(&tokens, &index_span, false);
-    fold(&tokens, &classified.occurrences)
+    // Nested procedural children stay on the fail-closed path. Only this call
+    // may promote a top-level SELECT, and only when that statement parses.
+    fold(&tokens, &classified.occurrences, true)
 }
 
 fn fold(
     tokens: &[TokenWithSpan],
     occurrences: &[PostgresSqlProceduralOccurrence],
+    promote_select: bool,
 ) -> PostgresSqlProceduralOccurrenceKind {
     if occurrences.is_empty() {
         return PostgresSqlProceduralOccurrenceKind::Unknown;
     }
     let mut kind = PostgresSqlProceduralOccurrenceKind::Utility;
     for occurrence in occurrences {
-        let own = select_utility(tokens, occurrence);
+        let own = if promote_select {
+            select_utility(tokens, occurrence)
+        } else {
+            occurrence.kind
+        };
         let nested = if occurrence.occurrences.is_empty() {
             own
         } else {
-            prefer(own, fold(tokens, &occurrence.occurrences))
+            prefer(own, fold(tokens, &occurrence.occurrences, false))
         };
         kind = prefer(kind, nested);
     }
@@ -49,17 +57,35 @@ fn fold(
 }
 
 // Literal SELECT is utility here only. Bare SELECT in the outer walker stays unknown.
+// A LOOP body is walker-only, so an unparsed SELECT would be reported complete.
 fn select_utility(
     tokens: &[TokenWithSpan],
     occurrence: &PostgresSqlProceduralOccurrence,
 ) -> PostgresSqlProceduralOccurrenceKind {
     if occurrence.kind == PostgresSqlProceduralOccurrenceKind::Unknown
+        && occurrence.occurrences.is_empty()
         && starts_with_select(tokens, occurrence)
+        && select_parses(tokens, occurrence)
     {
         PostgresSqlProceduralOccurrenceKind::Utility
     } else {
         occurrence.kind
     }
+}
+
+fn select_parses(tokens: &[TokenWithSpan], occurrence: &PostgresSqlProceduralOccurrence) -> bool {
+    let start = occurrence.span.start.offset;
+    let end = occurrence.span.end.offset;
+    if start > end || end >= tokens.len() {
+        return false;
+    }
+    let statement = tokens[start..=end]
+        .iter()
+        .filter(|token| !matches!(token.token, Token::Whitespace(_) | Token::SemiColon))
+        .cloned()
+        .collect::<Vec<_>>();
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(statement);
+    parser.parse_statement().is_ok() && parser.peek_token().token == Token::EOF
 }
 
 fn starts_with_select(

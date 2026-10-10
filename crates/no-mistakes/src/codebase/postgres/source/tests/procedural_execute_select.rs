@@ -40,4 +40,24 @@ fn literal_execute_select_is_utility_and_dynamic_select_stays_closed() {
     let (_, parsed) = block("DO $$ BEGIN LOOP SELECT 1; END LOOP; END $$;");
     assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
     assert!(!parsed.complete);
+
+    // A procedural child that starts with SELECT is not a SQL statement.
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE 'IF true THEN SELECT 1; END IF'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+    let (_, parsed) =
+        block("DO $$ BEGIN LOOP EXECUTE 'IF true THEN SELECT 1; END IF'; END LOOP; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+
+    // The first token is not proof of a statement. LOOP would otherwise complete.
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE 'SELECT * FROM'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+    let (_, parsed) = block("DO $$ BEGIN LOOP EXECUTE 'SELECT * FROM'; END LOOP; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+
+    let (_, parsed) = block("DO $$ BEGIN LOOP EXECUTE 'SELECT 1'; END LOOP; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Utility\"]"]);
 }
