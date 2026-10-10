@@ -98,3 +98,9 @@ function discardedArgumentProperty(statement) {
   return statement;
 }
 write(discardedArgumentProperty(sql`/* argument property getter */ SELECT 1`)); // unanalyzable:void-argument-property-can-run-getter
+
+function discardedNamedArgument(statement) {
+  unknownConsumer(void arguments.trigger);
+  return statement;
+}
+write(discardedNamedArgument(sql`/* named argument accessor */ SELECT 1`)); // unanalyzable:named-argument-property-can-run-getter

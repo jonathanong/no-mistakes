@@ -70,4 +70,15 @@ fn argument_property_reads_stay_pure_and_nested_members_do_not() {
         path,
         0,
     ));
+    // A named property of the arguments object itself can be an accessor.
+    assert!(evaluator.effect_can_mutate(
+        &Expr::Member(Box::new(Expr::Name("arguments".into())), "trigger".into()),
+        path,
+        0,
+    ));
+    assert!(evaluator.effect_can_mutate(
+        &Expr::Member(Box::new(Expr::Name("wrapped".into())), "trigger".into()),
+        path,
+        0,
+    ));
 }
