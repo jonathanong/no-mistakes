@@ -91,7 +91,7 @@ fn label_before(sql: &str, at: usize, comments: &[(usize, usize)]) -> Option<(us
 }
 
 fn token_boundary(sql: &str, start: usize, end: usize, comments: &[(usize, usize)]) -> bool {
-    !operator_before(sql, start, comments) && !operator_at(sql, end, comments)
+    !operator_before(sql, start, comments) && !operator_at(sql, end)
 }
 
 fn operator_before(sql: &str, index: usize, comments: &[(usize, usize)]) -> bool {
@@ -102,11 +102,7 @@ fn operator_before(sql: &str, index: usize, comments: &[(usize, usize)]) -> bool
     sql[..index].chars().next_back().is_some_and(is_operator)
 }
 
-fn operator_at(sql: &str, index: usize, comments: &[(usize, usize)]) -> bool {
-    let at = comments.partition_point(|(start, _)| *start < index);
-    if comments.get(at).is_some_and(|(start, _)| *start == index) {
-        return false;
-    }
+fn operator_at(sql: &str, index: usize) -> bool {
     sql[index..].chars().next().is_some_and(is_operator)
 }
 
