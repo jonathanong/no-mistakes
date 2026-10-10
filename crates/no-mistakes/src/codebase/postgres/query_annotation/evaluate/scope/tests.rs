@@ -42,3 +42,26 @@ fn builder_index_reuses_snapshots_and_follows_every_write() {
     assert!(scope.contains_builders(&FxHashSet::from_iter([9])));
     assert!(!Scope::default().contains_builders(&ids));
 }
+
+#[test]
+fn builder_index_handles_shared_container_dag_and_detached_mutation() {
+    let leaf = Value::Possible(vec![Value::Prefix("SELECT 1".into(), true, Some(17))].into());
+    let branch = Value::Aggregate(vec![leaf; 16].into());
+    let mut scope = Scope::from(FxHashMap::from_iter([(
+        "shared".into(),
+        Value::Joined(vec![branch; 16].into()),
+    )]));
+    let original = scope.clone();
+    let old = FxHashSet::from_iter([17]);
+    assert!(scope.contains_builders(&old));
+    assert!(original.contains_builders(&old));
+
+    scope.insert(
+        "new".into(),
+        Value::Prefix("SELECT 2".into(), true, Some(18)),
+    );
+    let new = FxHashSet::from_iter([18]);
+    assert!(scope.contains_builders(&new));
+    assert!(!original.contains_builders(&new));
+    assert!(original.contains_builders(&old));
+}

@@ -33,23 +33,32 @@ pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 impl Scope {
     pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
         let builders = self.0.builders.get_or_init(|| {
-            fn collect(value: &Value, ids: &mut FxHashSet<u64>) {
+            fn collect(
+                value: &Value,
+                ids: &mut FxHashSet<u64>,
+                visited: &mut FxHashSet<*const ()>,
+            ) {
                 match value {
                     Value::Prefix(_, _, Some(id)) => {
                         ids.insert(*id);
                     }
-                    Value::Promise(value) | Value::Evaluated(value, _) => collect(value, ids),
-                    Value::Aggregate(values) | Value::Possible(values) | Value::Joined(values) => {
+                    Value::Promise(value) | Value::Evaluated(value, _) => {
+                        collect(value, ids, visited)
+                    }
+                    Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values)
+                        if values.contains_reference() && visited.insert(values.identity()) =>
+                    {
                         for value in values {
-                            collect(value, ids);
+                            collect(value, ids, visited);
                         }
                     }
                     _ => {}
                 }
             }
             let mut builders = FxHashSet::default();
+            let mut visited = FxHashSet::default();
             for value in self.values() {
-                collect(value, &mut builders);
+                collect(value, &mut builders, &mut visited);
             }
             builders
         });

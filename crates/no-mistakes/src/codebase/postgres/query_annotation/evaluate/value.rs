@@ -3,28 +3,76 @@ use crate::codebase::postgres::query_annotation::Function;
 use std::{
     ops::{Deref, DerefMut},
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, OnceLock},
 };
 
 /// Immutable snapshots share nested values until a container is written.
-#[derive(Clone, Eq, PartialEq)]
-pub(in crate::codebase::postgres::query_annotation) struct Values(Arc<Vec<Value>>);
+struct Data {
+    values: Vec<Value>,
+    contains_reference: OnceLock<bool>,
+}
+impl Clone for Data {
+    fn clone(&self) -> Self {
+        Self {
+            values: self.values.clone(),
+            contains_reference: OnceLock::new(),
+        }
+    }
+}
+
+/// Equality depends on semantic values, never on whether the memo has run.
+#[derive(Clone)]
+pub(in crate::codebase::postgres::query_annotation) struct Values(Arc<Data>);
+
+impl PartialEq for Values {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0) || self.0.values == other.0.values
+    }
+}
+impl Eq for Values {}
+
+impl Values {
+    pub(super) fn identity(&self) -> *const () {
+        Arc::as_ptr(&self.0).cast()
+    }
+
+    pub(super) fn contains_reference(&self) -> bool {
+        *self.0.contains_reference.get_or_init(|| {
+            fn references(value: &Value) -> bool {
+                match value {
+                    Value::Prefix(_, _, Some(_)) | Value::Arguments(_) => true,
+                    Value::Promise(value) | Value::Evaluated(value, _) => references(value),
+                    Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+                        values.contains_reference()
+                    }
+                    _ => false,
+                }
+            }
+            self.0.values.iter().any(references)
+        })
+    }
+}
 
 impl From<Vec<Value>> for Values {
     fn from(values: Vec<Value>) -> Self {
-        Self(Arc::new(values))
+        Self(Arc::new(Data {
+            values,
+            contains_reference: OnceLock::new(),
+        }))
     }
 }
 impl Deref for Values {
     type Target = Vec<Value>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.0.values
     }
 }
 impl DerefMut for Values {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        Arc::make_mut(&mut self.0)
+        let data = Arc::make_mut(&mut self.0);
+        data.contains_reference.take();
+        &mut data.values
     }
 }
 impl IntoIterator for Values {
@@ -33,7 +81,8 @@ impl IntoIterator for Values {
 
     fn into_iter(self) -> Self::IntoIter {
         Arc::try_unwrap(self.0)
-            .unwrap_or_else(|shared| (*shared).clone())
+            .map(|data| data.values)
+            .unwrap_or_else(|shared| shared.values.clone())
             .into_iter()
     }
 }

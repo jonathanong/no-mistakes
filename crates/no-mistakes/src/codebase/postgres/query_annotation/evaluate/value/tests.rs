@@ -39,3 +39,33 @@ fn shared_owned_and_borrowed_iteration_preserves_container_order() {
             == vec![prefix("first changed"), prefix("second changed")]
     );
 }
+
+#[test]
+fn reference_memo_follows_detached_writes_without_changing_equality() {
+    let mut values = Values::from(vec![prefix("plain")]);
+    let original = values.clone();
+    assert!(!values.contains_reference());
+    assert!(values == original);
+    values.push(Value::Arguments(4));
+    assert!(values.contains_reference());
+    assert!(!original.contains_reference());
+    assert!(values != original);
+    values.pop();
+    assert!(!values.contains_reference());
+    assert!(values == original);
+
+    let nested = Values::from(vec![Value::Promise(Box::new(Value::Joined(
+        vec![Value::Prefix("/* name */ SELECT 1".into(), true, Some(7))].into(),
+    )))]);
+    assert!(nested.contains_reference());
+    let cleared = Values::from(vec![Value::Possible(vec![Value::Unknown].into())]);
+    assert!(!cleared.contains_reference());
+
+    let mut outer = Values::from(vec![Value::Aggregate(vec![Value::Primitive].into())]);
+    assert!(!outer.contains_reference());
+    let Value::Aggregate(inner) = &mut outer[0] else {
+        panic!("nested container shape changed");
+    };
+    inner.push(Value::Arguments(9));
+    assert!(outer.contains_reference());
+}

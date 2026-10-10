@@ -18,6 +18,10 @@ fn prefixes<'a>(
             prefixes(value, arena, visited, found, definite)
         }
         Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+            // A reference-free shared subtree cannot affect either map or visited set.
+            if !values.contains_reference() {
+                return;
+            }
             for value in values {
                 prefixes(value, arena, visited, found, definite);
             }
