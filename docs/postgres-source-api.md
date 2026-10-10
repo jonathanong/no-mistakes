@@ -323,6 +323,9 @@ line/column positions, including quoted identifiers and nested queries.
 identifies `values` (typed expression rows), `select` (the same scope facts used
 for SELECT), `defaultValues`, or `unsupported`. Statement spans and nested
 expression spans refer to the original input, including comments and literals.
+An INSERT-source SELECT span includes trailing function-call syntax such as
+`SELECT now()` before the owning INSERT's `ON CONFLICT` or `RETURNING` clause.
+The source span and its query scope span use the same half-open UTF-8 offsets.
 
 `onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
 `constraint`, and `expressions`. Expression arbiters retain their ordered typed

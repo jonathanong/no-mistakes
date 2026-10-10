@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::postgres::source::dialect::PostgresSourceDialect;
-use sqlparser::ast::Statement;
+use sqlparser::ast::{SetExpr, Statement};
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Location, Span, Tokenizer};
 
@@ -50,5 +50,36 @@ fn incomplete_prepared_tokens_do_not_claim_a_query_boundary() {
     // A preceding statement is not an opening delimiter for this child query.
     assert!(QuerySpanBounds::new(&tokens, &locations)
         .query(other, false, &locations)
+        .is_none());
+}
+
+#[test]
+fn insert_source_does_not_invent_a_span_from_missing_prepared_tokens() {
+    let sql =
+        crate::codebase::postgres::source::tests::fixture("query-insert-source-call-spans.sql");
+    let locations = Locations::new(&sql);
+    let ast = Parser::parse_sql(&PostgresSourceDialect, &sql).unwrap();
+    let Statement::Query(root) = &ast[0] else {
+        panic!("outer query");
+    };
+    let SetExpr::Insert(Statement::Insert(insert)) =
+        &*root.with.as_ref().unwrap().cte_tables[0].query.body
+    else {
+        panic!("INSERT CTE");
+    };
+    let source = insert.source.as_deref().expect("INSERT SELECT source");
+    let mut tokens = Vec::new();
+    Tokenizer::new(&PostgresSourceDialect, &sql)
+        .tokenize_with_location_into_buf(&mut tokens)
+        .unwrap();
+    let bounds = QuerySpanBounds::new(&tokens, &locations);
+    // The helper may receive a failed source location or an incomplete token
+    // projection; neither permits a guessed source span.
+    let unrelated_locations = Locations::new("");
+    assert!(bounds
+        .insert_source(source, sql.len(), None, None, &unrelated_locations)
+        .is_none());
+    assert!(QuerySpanBounds::new(&[], &locations)
+        .insert_source(source, sql.len(), None, None, &locations)
         .is_none());
 }

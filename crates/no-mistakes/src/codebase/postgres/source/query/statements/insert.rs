@@ -76,6 +76,29 @@ impl Collector<'_, '_> {
                 }
             }
             Some(query) => {
+                let source_span = self
+                    .span_bounds
+                    .query(query, false, self.locations)
+                    .or_else(|| {
+                        self.facts.scopes[scope].span.as_ref().and_then(|owner| {
+                            let returning_item_start = value
+                                .returning
+                                .as_ref()
+                                .and_then(|items| items.first())
+                                .and_then(|item| self.locations.position(item.span().start))
+                                .map(|position| position.offset);
+                            self.span_bounds.insert_source(
+                                query,
+                                owner.end.offset,
+                                value
+                                    .on
+                                    .as_ref()
+                                    .map(|_| returning_item_start.unwrap_or(owner.end.offset)),
+                                returning_item_start,
+                                self.locations,
+                            )
+                        })
+                    });
                 let outer_insert_source = self.insert_source;
                 self.insert_source = true;
                 let query_scope_id = self.query(
@@ -87,9 +110,12 @@ impl Collector<'_, '_> {
                     self.facts.scopes[scope].cte_definition_id,
                 );
                 self.insert_source = outer_insert_source;
+                if let Some(span) = source_span.as_ref() {
+                    self.facts.scopes[query_scope_id].span = Some(span.clone());
+                }
                 PostgresSqlCteInsertSource::Select {
                     query_scope_id,
-                    span: self.locations.span(query.span()),
+                    span: source_span.or_else(|| self.locations.span(query.span())),
                 }
             }
         };
