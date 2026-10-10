@@ -527,3 +527,17 @@ fn partial_forms_keep_distinct_occurrence_kinds() {
         .iter()
         .any(|diagnostic| diagnostic.message.contains("unsupported")));
 }
+
+#[test]
+fn labeled_loop_closing_label_stays_one_control_flow_occurrence() {
+    let (sql, parsed) = block("DO $$ BEGIN <<retry>> LOOP NULL; END LOOP retry; END $$;");
+    assert_eq!(parsed.occurrences.len(), 1);
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(slice(&sql, &parsed.occurrences[0].span).contains("END LOOP retry"));
+    assert!(!parsed.complete);
+    assert!(parsed.statements.is_empty());
+
+    let (_, unlabeled) = block("DO $$ BEGIN LOOP NULL; END LOOP; END $$;");
+    assert_eq!(unlabeled.occurrences.len(), 1);
+    assert_eq!(kinds(&unlabeled.occurrences), ["ControlFlow[\"Unknown\"]"]);
+}
