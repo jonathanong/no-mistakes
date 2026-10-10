@@ -9,15 +9,26 @@ pub(super) fn statement(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     if ctx.depth >= 64 {
         return rest_unknown(ctx);
     }
+    let label = std::mem::replace(&mut ctx.pending_label, super::cursor::OpenLabel::Absent);
     ctx.depth += 1;
-    let occurrence = if at_word(ctx, "IF") {
+    let occurrence = if at_any(ctx, &["LOOP", "WHILE", "FOR", "FOREACH"]) {
+        controls::loop_stmt(ctx, label)
+    } else if at_word(ctx, "BEGIN") {
+        controls::begin_stmt(ctx, label)
+    } else {
+        // A label before RAISE or other non-block statements has no closer.
+        super::cursor::record_invalid_label(ctx, &label);
+        plain_statement(ctx)
+    };
+    ctx.depth -= 1;
+    occurrence
+}
+
+fn plain_statement(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
+    if at_word(ctx, "IF") {
         controls::if_stmt(ctx)
     } else if at_word(ctx, "CASE") {
         controls::case_stmt(ctx)
-    } else if at_any(ctx, &["LOOP", "WHILE", "FOR", "FOREACH"]) {
-        controls::loop_stmt(ctx)
-    } else if at_word(ctx, "BEGIN") {
-        controls::begin_stmt(ctx)
     } else if at_word(ctx, "RAISE") {
         controls::raise_stmt(ctx)
     } else if at_word(ctx, "EXECUTE") {
@@ -35,9 +46,7 @@ pub(super) fn statement(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
         simple(ctx, Kind::Utility)
     } else {
         simple(ctx, Kind::Unknown)
-    };
-    ctx.depth -= 1;
-    occurrence
+    }
 }
 
 fn with_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {

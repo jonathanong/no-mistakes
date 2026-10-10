@@ -146,7 +146,9 @@ Quoted strings, quoted identifiers, and comments are not keywords, so
 `RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
 occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
 condition keeps the block incomplete. A block classified only by this walker is complete
-only when every occurrence is recognized `utility` or `controlFlow`. A block the SQL
+only when every occurrence is recognized `utility` or `controlFlow`. An opening
+label is one identifier. A closing label that does not match keeps the block
+incomplete. A block the SQL
 parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
 DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body
 that does not start with `BEGIN`, other procedural languages, and escape-string DO bodies

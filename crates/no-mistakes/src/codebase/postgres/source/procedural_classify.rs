@@ -32,6 +32,8 @@ pub(super) struct Ctx<'a> {
     pub(super) depth: u8,
     pub(super) legacy_stop: bool,
     pub(super) walker_only: bool,
+    label_invalid: bool,
+    pending_label: cursor::OpenLabel,
     pub(super) span: &'a dyn Fn(usize, usize) -> PostgresSqlSpan,
 }
 
@@ -55,17 +57,23 @@ pub(super) fn classify_at(
         depth,
         legacy_stop: false,
         walker_only: false,
+        label_invalid: false,
+        pending_label: cursor::OpenLabel::Absent,
         span,
     };
-    cursor::skip_label(&mut ctx);
-    let occurrences = if !rooted {
+    let open = cursor::skip_label(&mut ctx);
+    let mut occurrences = if !rooted {
         walk_statements(&mut ctx, Stop::None)
     } else if !cursor::eat_word(&mut ctx, "BEGIN") {
         ctx.legacy_stop = true;
         walk_statements(&mut ctx, Stop::None)
     } else {
-        walk_block(&mut ctx)
+        walk_block(&mut ctx, open)
     };
+    // A label failure is an unknown occurrence. `legacy_stop` is a different diagnostic.
+    if rooted && ctx.label_invalid && !ctx.legacy_stop {
+        occurrences.push(unrecognized_label(&ctx));
+    }
     Classified {
         occurrences,
         legacy_stop: ctx.legacy_stop,
@@ -73,7 +81,20 @@ pub(super) fn classify_at(
     }
 }
 
-fn walk_block(ctx: &mut Ctx<'_>) -> Vec<PostgresSqlProceduralOccurrence> {
+fn unrecognized_label(ctx: &Ctx<'_>) -> PostgresSqlProceduralOccurrence {
+    let start = ctx
+        .index
+        .saturating_sub(1)
+        .min(ctx.tokens.len().saturating_sub(1));
+    done(
+        ctx,
+        PostgresSqlProceduralOccurrenceKind::Unknown,
+        start,
+        Vec::new(),
+    )
+}
+
+fn walk_block(ctx: &mut Ctx<'_>, open: cursor::OpenLabel) -> Vec<PostgresSqlProceduralOccurrence> {
     let mut occurrences = walk_statements(ctx, Stop::Outer);
     if cursor::at_word(ctx, "EXCEPTION") {
         let start = cursor::peek_index(ctx).unwrap();
@@ -83,7 +104,8 @@ fn walk_block(ctx: &mut Ctx<'_>) -> Vec<PostgresSqlProceduralOccurrence> {
     }
     if cursor::at_plain_end(ctx) {
         cursor::eat_word(ctx, "END");
-        cursor::eat_label(ctx);
+        let close = cursor::eat_label(ctx);
+        cursor::note_label(ctx, &open, close.as_ref());
         cursor::eat_semi(ctx);
         if cursor::peek_index(ctx).is_some() {
             ctx.legacy_stop = true;
@@ -105,10 +127,13 @@ pub(super) fn walk_statements(
         // Skip every leading semicolon. One leftover `;` would be an unknown
         // statement whose scan consumes the following statement.
         while cursor::eat_semi(ctx) {}
-        cursor::skip_label(ctx);
+        // Only a label immediately before BEGIN or LOOP belongs to that block.
+        let open = cursor::skip_label(ctx);
         if cursor::peek_index(ctx).is_none() || cursor::stopped(ctx, stop) {
+            cursor::record_invalid_label(ctx, &open);
             break;
         }
+        ctx.pending_label = open;
         occurrences.push(statements::statement(ctx));
     }
     occurrences

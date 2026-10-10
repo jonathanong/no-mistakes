@@ -2,6 +2,18 @@ use super::scan::{eq, is_dml, is_utility, word_of};
 use super::{Ctx, Stop};
 use sqlparser::tokenizer::Token;
 
+#[derive(Clone)]
+pub(super) struct LabelId {
+    quoted: bool,
+    value: String,
+}
+
+pub(super) enum OpenLabel {
+    Absent,
+    Valid(LabelId),
+    Invalid,
+}
+
 pub(super) fn stopped(ctx: &Ctx<'_>, stop: Stop) -> bool {
     match stop {
         Stop::Outer => at_any(ctx, &["END", "EXCEPTION"]),
@@ -62,35 +74,94 @@ pub(super) fn eat_semi(ctx: &mut Ctx<'_>) -> bool {
     }
 }
 
-pub(super) fn eat_label(ctx: &mut Ctx<'_>) {
-    let Some(index) = peek_index(ctx) else {
-        return;
-    };
+pub(super) fn eat_label(ctx: &mut Ctx<'_>) -> Option<LabelId> {
+    let index = peek_index(ctx)?;
     // Closing labels are any identifier. Quoted words stay out of `word_of`.
-    if !matches!(&ctx.tokens[index].token, Token::Word(_)) {
-        return;
-    }
+    let label = label_id(&ctx.tokens[index].token)?;
     let semicolon = ((index + 1)..ctx.tokens.len())
         .find(|index| !matches!(ctx.tokens[*index].token, Token::Whitespace(_)))
         .is_some_and(|index| matches!(ctx.tokens[index].token, Token::SemiColon));
     if semicolon {
         bump(ctx);
+        Some(label)
+    } else {
+        None
     }
 }
 
-pub(super) fn skip_label(ctx: &mut Ctx<'_>) {
+pub(super) fn skip_label(ctx: &mut Ctx<'_>) -> OpenLabel {
     let Some(index) = peek_index(ctx) else {
-        return;
+        return OpenLabel::Absent;
     };
+    // `<<>>` is one custom operator in the PostgreSQL dialect, not two shift tokens.
+    if matches!(&ctx.tokens[index].token, Token::CustomBinaryOperator(operator) if operator == "<<>>")
+    {
+        ctx.index = index + 1;
+        return OpenLabel::Invalid;
+    }
     if !matches!(ctx.tokens[index].token, Token::ShiftLeft) {
-        return;
+        return OpenLabel::Absent;
     }
     ctx.index = index + 1;
+    let mut found = None;
+    let mut invalid = false;
+    let mut closed = false;
     while let Some(index) = peek_index(ctx) {
-        ctx.index = index + 1;
         if matches!(ctx.tokens[index].token, Token::ShiftRight) {
+            ctx.index = index + 1;
+            closed = true;
             break;
         }
+        let label = label_id(&ctx.tokens[index].token);
+        ctx.index = index + 1;
+        match label {
+            Some(label) if found.is_none() && !invalid => found = Some(label),
+            _ => invalid = true,
+        }
+    }
+    if closed && !invalid {
+        found.map(OpenLabel::Valid).unwrap_or(OpenLabel::Invalid)
+    } else {
+        OpenLabel::Invalid
+    }
+}
+
+pub(super) fn note_label(ctx: &mut Ctx<'_>, open: &OpenLabel, close: Option<&LabelId>) {
+    if label_disagrees(open, close) {
+        ctx.label_invalid = true;
+    }
+}
+
+pub(super) fn record_invalid_label(ctx: &mut Ctx<'_>, open: &OpenLabel) {
+    if matches!(open, OpenLabel::Invalid) {
+        ctx.label_invalid = true;
+    }
+}
+
+fn label_disagrees(open: &OpenLabel, close: Option<&LabelId>) -> bool {
+    match open {
+        OpenLabel::Invalid => true,
+        OpenLabel::Valid(open) => close.is_some_and(|close| !same_label(open, close)),
+        OpenLabel::Absent => false,
+    }
+}
+
+fn same_label(open: &LabelId, close: &LabelId) -> bool {
+    // Quoted identifiers match only when both sides are quoted and the values are equal.
+    if open.quoted || close.quoted {
+        open.quoted && close.quoted && open.value == close.value
+    } else {
+        eq(&open.value, &close.value)
+    }
+}
+
+fn label_id(token: &Token) -> Option<LabelId> {
+    match token {
+        Token::Word(word) => Some(LabelId {
+            quoted: word.quote_style.is_some(),
+            value: word.value.clone(),
+        }),
+        _ => None,
     }
 }
 
