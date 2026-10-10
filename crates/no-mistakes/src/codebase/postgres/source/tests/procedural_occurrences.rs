@@ -101,6 +101,17 @@ fn raise_between_create_tables_keeps_both_statements() {
 }
 
 #[test]
+fn create_beside_an_unknown_loop_stays_incomplete() {
+    let (_, parsed) = block("DO $$ BEGIN CREATE TABLE a(id int); LOOP SELECT 1; END LOOP; END $$;");
+    assert!(!parsed.complete);
+    assert_eq!(parsed.statements.len(), 1);
+    assert!(parsed.statements[0].sql.contains("CREATE TABLE a"));
+    assert!(parsed.diagnostics.iter().any(|diagnostic| diagnostic
+        .message
+        .contains("Unsupported procedural occurrence")));
+}
+
+#[test]
 fn create_beside_a_loop_keeps_the_statement_and_the_dml_diagnostic() {
     let (_, parsed) = block(
         "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",

@@ -31,6 +31,14 @@ const CASES = [
     statements: 0,
   },
   {
+    name: "create beside unknown loop",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); LOOP SELECT 1; END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(unknown)"],
+    statements: 1,
+    diagnostic: /Unsupported procedural occurrence/,
+  },
+  {
     name: "create beside loop dml",
     sql: "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",
     complete: false,

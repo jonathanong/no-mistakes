@@ -76,21 +76,58 @@ pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock, retain_walke
             block.complete = false;
         }
     }
-    // Nested DML is not an executed statement. A parsed sibling must not hide it.
-    if retain_walker && nested_dml(&block.occurrences) {
-        block
-            .diagnostics
-            .push(diagnostic(DML_MESSAGE, &block.body_span));
-        block.complete = false;
+    // Omitted walker syntax is not executed. A parsed sibling must not hide it.
+    if retain_walker {
+        note_omitted(block);
     }
 }
 
-fn nested_dml(occurrences: &[PostgresSqlProceduralOccurrence]) -> bool {
+fn note_omitted(block: &mut PostgresSqlProceduralBlock) {
+    let omitted = block
+        .occurrences
+        .iter()
+        .any(|occurrence| !sql_kind(occurrence.kind) && !recognized_one(occurrence));
+    if !omitted {
+        return;
+    }
+    if omitted_has(
+        &block.occurrences,
+        PostgresSqlProceduralOccurrenceKind::DynamicExecute,
+    ) {
+        block
+            .diagnostics
+            .push(diagnostic(DYNAMIC_MESSAGE, &block.body_span));
+    }
+    if omitted_has(
+        &block.occurrences,
+        PostgresSqlProceduralOccurrenceKind::Unknown,
+    ) {
+        block
+            .diagnostics
+            .push(diagnostic(UNKNOWN_MESSAGE, &block.body_span));
+    }
+    if omitted_has(&block.occurrences, PostgresSqlProceduralOccurrenceKind::Dml) {
+        block
+            .diagnostics
+            .push(diagnostic(DML_MESSAGE, &block.body_span));
+    }
+    block.complete = false;
+}
+
+fn sql_kind(kind: PostgresSqlProceduralOccurrenceKind) -> bool {
+    matches!(
+        kind,
+        PostgresSqlProceduralOccurrenceKind::Utility | PostgresSqlProceduralOccurrenceKind::Dml
+    )
+}
+
+fn omitted_has(
+    occurrences: &[PostgresSqlProceduralOccurrence],
+    kind: PostgresSqlProceduralOccurrenceKind,
+) -> bool {
     occurrences.iter().any(|occurrence| {
-        has_kind(
-            &occurrence.occurrences,
-            PostgresSqlProceduralOccurrenceKind::Dml,
-        )
+        !sql_kind(occurrence.kind)
+            && (occurrence.kind == kind || has_kind(&occurrence.occurrences, kind))
     })
 }
 
