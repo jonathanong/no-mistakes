@@ -1,6 +1,8 @@
 use super::super::body::decode;
 use super::super::locations::Locations;
-use super::super::procedural_omit::label::opening_labels as opening_labels_with_tokens;
+use super::super::procedural_omit::label::{
+    opening_labels as opening_labels_with_tokens, opening_labels_with_occupied,
+};
 use super::super::procedural_omit::non_sql_marks;
 use super::super::{
     PostgresSqlPosition, PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind,
@@ -10,6 +12,7 @@ use super::procedural_occurrences::{block, kinds};
 use sqlparser::ast::DollarQuotedString;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
+use std::cell::Cell;
 
 use PostgresSqlProceduralOccurrenceKind::{ControlFlow, Utility};
 
@@ -68,6 +71,47 @@ fn opening_labels(
         .unwrap_or_default();
     let locations = Locations::new(body.sql.as_ref());
     opening_labels_with_tokens(body, occurrences, &tokens, &locations)
+}
+
+#[test]
+fn nested_unlabeled_body_skips_the_occupied_index() {
+    let sql = super::fixture("procedural-opening-label-unlabeled.sql");
+    let (_, parsed) = block(&sql);
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.statements.len(), 2, "{:?}", parsed.statements);
+    assert!(parsed.statements[0]
+        .sql
+        .contains("CREATE TABLE before_unlabeled"));
+    assert!(parsed.statements[1]
+        .sql
+        .contains("CREATE TABLE after_unlabeled"));
+
+    let first = sql.find("$$").unwrap();
+    let last = sql.rfind("$$").unwrap() + 2;
+    let body = dollar(&sql[first..last]);
+    let if_start = body.sql.find("IF TRUE").unwrap();
+    let for_start = body.sql.find("FOR i").unwrap();
+    let mut nested = occurrence(
+        ControlFlow,
+        body.offset(if_start).unwrap(),
+        body.offset(if_start + 2).unwrap(),
+    );
+    nested.occurrences.push(occurrence(
+        ControlFlow,
+        body.offset(for_start).unwrap(),
+        body.offset(for_start + 3).unwrap(),
+    ));
+    let tokens = Tokenizer::new(&PostgreSqlDialect {}, body.sql.as_ref())
+        .tokenize_with_location()
+        .unwrap();
+    let locations = Locations::new(body.sql.as_ref());
+    let builds = Cell::new(0);
+    let labels = opening_labels_with_occupied(&body, &[nested], &tokens, &locations, |_| {
+        builds.set(builds.get() + 1);
+        Vec::new()
+    });
+    assert!(labels.is_empty());
+    assert_eq!(builds.get(), 0);
 }
 
 #[test]

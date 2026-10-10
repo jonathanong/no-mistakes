@@ -13,6 +13,16 @@ pub(in super::super) fn opening_labels(
     tokens: &[TokenWithSpan],
     locations: &Locations<'_>,
 ) -> Vec<(usize, usize)> {
+    opening_labels_with_occupied(body, occurrences, tokens, locations, occupied_spans)
+}
+
+pub(in super::super) fn opening_labels_with_occupied(
+    body: &Body<'_>,
+    occurrences: &[PostgresSqlProceduralOccurrence],
+    tokens: &[TokenWithSpan],
+    locations: &Locations<'_>,
+    build_occupied: impl FnOnce(&[PostgresSqlProceduralOccurrence]) -> Vec<(usize, usize)>,
+) -> Vec<(usize, usize)> {
     let comments = tokens
         .iter()
         .filter(|token| {
@@ -26,19 +36,6 @@ pub(in super::super) fn opening_labels(
         .filter_map(|token| locations.span(token.span))
         .map(|span| (span.start.offset, span.end.offset))
         .collect::<Vec<_>>();
-    let mut occupied = Vec::new();
-    collect_spans(occurrences, &mut occupied);
-    occupied.sort_unstable();
-    let mut merged: Vec<(usize, usize)> = Vec::new();
-    for (start, end) in occupied {
-        if let Some(last) = merged.last_mut() {
-            if start <= last.1 {
-                last.1 = last.1.max(end);
-                continue;
-            }
-        }
-        merged.push((start, end));
-    }
     let mut labels = Vec::new();
     for occurrence in occurrences {
         if sql_occurrence(occurrence.kind) {
@@ -52,13 +49,33 @@ pub(in super::super) fn opening_labels(
         };
         let start = body.offset(start).expect("label start");
         let end = body.offset(end).expect("label end");
-        // A label already covered by another occurrence is not a second mark.
-        if overlaps_any(start, end, &merged) {
-            continue;
-        }
         labels.push((start, end));
     }
+    if labels.is_empty() {
+        return labels;
+    }
+
+    let occupied = build_occupied(occurrences);
+    // A label already covered by another occurrence is not a second mark.
+    labels.retain(|(start, end)| !overlaps_any(*start, *end, &occupied));
     labels
+}
+
+fn occupied_spans(occurrences: &[PostgresSqlProceduralOccurrence]) -> Vec<(usize, usize)> {
+    let mut occupied = Vec::new();
+    collect_spans(occurrences, &mut occupied);
+    occupied.sort_unstable();
+    let mut merged: Vec<(usize, usize)> = Vec::new();
+    for (start, end) in occupied {
+        if let Some(last) = merged.last_mut() {
+            if start <= last.1 {
+                last.1 = last.1.max(end);
+                continue;
+            }
+        }
+        merged.push((start, end));
+    }
+    merged
 }
 
 fn decoded_index(body: &Body<'_>, original: usize) -> Option<usize> {
