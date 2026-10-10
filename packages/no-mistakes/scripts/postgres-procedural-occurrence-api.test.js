@@ -31,6 +31,14 @@ const CASES = [
     statements: 0,
   },
   {
+    name: "create beside loop dml",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(dml)"],
+    statements: 1,
+    diagnostic: /not an executed statement/,
+  },
+  {
     name: "loop dml",
     sql: "DO $$ BEGIN FOR i IN 1..2 LOOP INSERT INTO t(id) VALUES (i); END LOOP; END $$;",
     complete: false,

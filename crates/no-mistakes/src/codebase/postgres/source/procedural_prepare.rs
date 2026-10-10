@@ -15,6 +15,7 @@ pub(super) enum PreparedBlock<'a> {
         block: PostgresSqlProceduralBlock,
         prepared: PreparedPostgresTokens,
         body: Body<'a>,
+        retain_walker: bool,
     },
 }
 
@@ -129,6 +130,7 @@ pub(super) fn prepare_block<'a>(
         block,
         prepared,
         body,
+        retain_walker: walked.walker_only,
     })
 }
 

@@ -48,7 +48,7 @@ pub(super) fn finish_unparsed(block: &mut PostgresSqlProceduralBlock, span: &Pos
     block.complete = recognized(&block.occurrences);
 }
 
-pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock) {
+pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock, retain_walker: bool) {
     let safe = recognized(&block.occurrences)
         && block.diagnostics.is_empty()
         && block.statements.iter().all(|statement| {
@@ -57,25 +57,41 @@ pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock) {
         });
     if safe {
         block.complete = true;
-        return;
+    } else {
+        block
+            .diagnostics
+            .extend(super::procedural_occurrences::unsupported(
+                &block.statements,
+            ));
+        block.complete = block.diagnostics.is_empty()
+            && block
+                .statements
+                .iter()
+                .all(|statement| super::completeness::statement(&statement.facts));
+        // Dynamic commands stay fail-closed even when neighboring SQL facts parse.
+        if has_kind(
+            &block.occurrences,
+            PostgresSqlProceduralOccurrenceKind::DynamicExecute,
+        ) {
+            block.complete = false;
+        }
     }
-    block
-        .diagnostics
-        .extend(super::procedural_occurrences::unsupported(
-            &block.statements,
-        ));
-    block.complete = block.diagnostics.is_empty()
-        && block
-            .statements
-            .iter()
-            .all(|statement| super::completeness::statement(&statement.facts));
-    // Dynamic commands stay fail-closed even when neighboring SQL facts parse.
-    if has_kind(
-        &block.occurrences,
-        PostgresSqlProceduralOccurrenceKind::DynamicExecute,
-    ) {
+    // Nested DML is not an executed statement. A parsed sibling must not hide it.
+    if retain_walker && nested_dml(&block.occurrences) {
+        block
+            .diagnostics
+            .push(diagnostic(DML_MESSAGE, &block.body_span));
         block.complete = false;
     }
+}
+
+fn nested_dml(occurrences: &[PostgresSqlProceduralOccurrence]) -> bool {
+    occurrences.iter().any(|occurrence| {
+        has_kind(
+            &occurrence.occurrences,
+            PostgresSqlProceduralOccurrenceKind::Dml,
+        )
+    })
 }
 
 pub(super) fn unknown(span: PostgresSqlSpan) -> PostgresSqlProceduralOccurrence {

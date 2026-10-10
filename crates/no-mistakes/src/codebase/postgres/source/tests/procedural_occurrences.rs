@@ -101,6 +101,28 @@ fn raise_between_create_tables_keeps_both_statements() {
 }
 
 #[test]
+fn create_beside_a_loop_keeps_the_statement_and_the_dml_diagnostic() {
+    let (_, parsed) = block(
+        "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",
+    );
+    assert!(!parsed.complete);
+    assert_eq!(parsed.statements.len(), 1);
+    assert!(parsed.statements[0].sql.contains("CREATE TABLE a"));
+    assert!(parsed
+        .statements
+        .iter()
+        .all(|statement| !statement.sql.contains("INSERT")));
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["Utility", "ControlFlow[\"Dml\"]"]
+    );
+    assert!(parsed
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.message.contains("not an executed statement")));
+}
+
+#[test]
 fn loop_insert_is_visible_dml_and_dynamic_execute_stays_fail_closed() {
     let (sql, parsed) =
         block("DO $$ BEGIN FOR i IN 1..2 LOOP INSERT INTO t(id) VALUES (i); END LOOP; END $$;");
@@ -291,8 +313,11 @@ fn exception_handlers_nested_do_and_cte_dml_keep_occurrence_kinds() {
     let (_, parsed) = block(
         "DO $$ BEGIN INSERT INTO t(id) VALUES (1); EXCEPTION WHEN unique_violation THEN DELETE FROM t; END $$;",
     );
-    assert!(parsed.complete, "{:?}", parsed.diagnostics);
-    assert!(parsed.diagnostics.is_empty());
+    assert!(!parsed.complete);
+    assert!(parsed
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.message.contains("not an executed statement")));
     assert_eq!(parsed.statements.len(), 1);
     assert!(parsed.statements[0]
         .sql
