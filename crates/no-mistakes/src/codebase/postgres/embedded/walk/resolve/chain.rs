@@ -1,9 +1,8 @@
 use super::super::super::placeholders::{count_placeholders, renumber_placeholders};
-use super::super::super::tags::interpolating_untrusted_tag;
+use super::super::super::tags::{interpolating_untrusted_tag, SqlTagNames};
 use super::super::super::unpublished_sql_text;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
-use std::collections::HashSet;
 
 /// Resolves a fluent `.append()` chain (or `+` composition, or a call into
 /// a same-file statically-composed function) into its SQL text.
@@ -22,7 +21,7 @@ pub(super) fn resolve_expr(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
     let depth = depth.checked_sub(1)?;
     match unwrap_ts_wrappers(expr) {
@@ -57,7 +56,7 @@ pub(super) fn resolve_dynamic_prefix(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
     let depth = depth.checked_sub(1)?;
     let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
@@ -93,7 +92,7 @@ fn resolve_call(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
     match unwrap_ts_wrappers(&call.callee) {
         Expression::StaticMemberExpression(member) if member.property.name == "append" => {

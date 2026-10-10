@@ -2,17 +2,25 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 
 fn fixture() -> PathBuf {
+    fixture_dir("fixture")
+}
+
+fn fixture_dir(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/postgres-bounded-statements/fixture"),
+            .join("../../test-cases/rules/postgres-bounded-statements")
+            .join(name),
     )
 }
 
 fn check(config: &str) -> Output {
-    let root = fixture();
+    check_in(&fixture(), config)
+}
+
+fn check_in(root: &std::path::Path, config: &str) -> Output {
     Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--format", "json", "--root"])
-        .arg(&root)
+        .arg(root)
         .arg("--config")
         .arg(root.join(config))
         .output()
@@ -21,7 +29,10 @@ fn check(config: &str) -> Output {
 
 /// (file, line, target) for every finding of the rule.
 fn findings(config: &str) -> Vec<(String, u64, String)> {
-    let output = check(config);
+    findings_of(check(config))
+}
+
+fn findings_of(output: Output) -> Vec<(String, u64, String)> {
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     report["rules"]
         .as_array()
@@ -190,6 +201,16 @@ fn template_interpolations_are_binds_and_key_joins_propagate_bounds() {
         "src/templates.mts",
         &[(17, "table:invoices"), (20, "table:orders")],
     );
+}
+
+#[test]
+fn nested_sql_fragment_fails_closed_instead_of_reading_a_bind() {
+    let root = fixture_dir("nested-fragment");
+    assert_eq!(
+        findings_of(check_in(&root, "fail.yml")),
+        [("src/nested.ts".to_string(), 7, "unanalyzable".to_string())]
+    );
+    assert_eq!(findings_of(check_in(&root, "ignore.yml")), []);
 }
 
 #[test]

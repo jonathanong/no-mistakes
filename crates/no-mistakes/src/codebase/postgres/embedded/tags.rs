@@ -5,6 +5,34 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
 use std::collections::HashSet;
 
+mod fragments;
+use fragments::interpolates_sql_fragment;
+
+/// Local names that the tag check trusts, plus file-wide bindings that hold
+/// a SQL fragment (see [`fragments::collect_fragment_bindings`]).
+#[derive(Default)]
+pub(crate) struct SqlTagNames {
+    /// Default imports from `sql-template-strings`, or configured named
+    /// `trustedSqlTags` imports, under the file's local names.
+    imported: HashSet<String>,
+    fragments: HashSet<String>,
+}
+
+impl SqlTagNames {
+    pub(crate) fn insert_imported(&mut self, name: String) {
+        self.imported.insert(name);
+    }
+
+    /// Records fragment bindings once every trusted import is known.
+    pub(crate) fn collect_fragments(&mut self, program: &oxc_ast::ast::Program<'_>) {
+        self.fragments = fragments::collect_fragment_bindings(program, self);
+    }
+
+    fn contains(&self, name: &str) -> bool {
+        self.imported.contains(name)
+    }
+}
+
 /// `is_shadowed` reports whether a name is currently bound to something
 /// other than the global trusted SQL tag (e.g. a same-file helper's own
 /// parameter named `sql`) — matching the tag purely by spelling, as
@@ -20,6 +48,12 @@ use std::collections::HashSet;
 /// though the call has arguments. Nothing else — `String.raw` included —
 /// offers that guarantee, so any other tag with interpolations is untrusted.
 ///
+/// The trusted tag is also untrusted when an interpolation splices another
+/// SQL fragment (a nested trusted template, a call on the tag such as
+/// `sql.raw(...)`, a fragment binding, or a conditional choosing one): the
+/// quasi text would read that fragment as a bind value, so the composed
+/// statement is not recoverable and must classify as dynamic.
+///
 /// A tagged template with zero interpolated values carries no runtime data
 /// at all, so the only question left is whether the tag returns its quasi
 /// text unchanged. The unshadowed `sql` tag and the built-in `String.raw`
@@ -30,7 +64,7 @@ use std::collections::HashSet;
 pub(super) fn interpolating_untrusted_tag(
     expr: &Expression<'_>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
 ) -> bool {
     let Expression::TaggedTemplateExpression(tagged) = unwrap_ts_wrappers(expr) else {
         return false;
@@ -40,6 +74,7 @@ pub(super) fn interpolating_untrusted_tag(
             && !is_string_raw_tag(&tagged.tag, is_shadowed);
     }
     !is_sql_tag(&tagged.tag, is_shadowed, imported_sql_tags)
+        || interpolates_sql_fragment(&tagged.quasi, is_shadowed, imported_sql_tags)
 }
 
 /// The built-in `String.raw` tag: a fixed, well-known JS semantic (return
@@ -90,7 +125,7 @@ pub(super) fn kind_for_const(sql: String, is_const: bool) -> (Option<String>, Em
 fn is_sql_tag(
     tag: &Expression<'_>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
 ) -> bool {
     let Expression::Identifier(ident) = unwrap_ts_wrappers(tag) else {
         return false;

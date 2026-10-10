@@ -1,0 +1,11 @@
+# A trusted tag that interpolates another SQL fragment fails closed by default.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      executorNames: [query]
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
