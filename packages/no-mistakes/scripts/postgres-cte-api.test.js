@@ -383,3 +383,29 @@ test(
     }
   },
 );
+
+test(
+  "compiled CJS/ESM RETURNING CTE column sources keep direct call trivia",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("insert-returning-cte-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const slice = (span) =>
+      Buffer.from(sql).subarray(span.start.offset, span.end.offset).toString();
+    const direct = facts.statements[0].insert.columnSources;
+    const nested = facts.statements[1].query.nestedStatements[0].insert.columnSources;
+    const plain = facts.statements[2].query.nestedStatements[0].insert;
+    for (const sources of [direct, nested]) {
+      assert.equal(sources.kind, "mapped");
+      assert.equal(sources.complete, true);
+      const expression = sources.columns[0].sources[0].expression;
+      assert.equal(expression.sql, "now()");
+      assert.equal(slice(expression.span), "now /*keep*/ ()");
+    }
+    assert.equal(plain.columnSources, undefined);
+  },
+);

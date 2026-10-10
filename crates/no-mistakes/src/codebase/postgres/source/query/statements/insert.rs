@@ -98,6 +98,7 @@ impl Collector<'_, '_> {
                 &value.columns,
                 value.source.as_deref(),
                 &source,
+                self.statement_tokens(value.span()),
                 self.locations,
             )
         });

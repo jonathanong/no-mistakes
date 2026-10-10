@@ -212,7 +212,7 @@ fn broader_dialect_modifiers_keep_typed_children_explicitly_incomplete() {
             let sqlparser::ast::Statement::Query(query) = s else {
                 panic!()
             };
-            super::super::super::query::project(query, &locations)
+            super::super::super::query::project(query, &locations, &[])
         })
         .collect();
     assert_eq!(q.len(), 6);
@@ -261,7 +261,7 @@ fn deeply_nested_query_projection_is_bounded_even_with_a_relaxed_parser_limit() 
     let sqlparser::ast::Statement::Query(query) = &ast[0] else {
         panic!()
     };
-    let q = super::super::super::query::project(query, &locations);
+    let q = super::super::super::query::project(query, &locations, &[]);
     assert!(!q.complete);
     assert!(q
         .unsupported
@@ -282,7 +282,7 @@ fn unexpected_cte_body_and_missing_source_span_are_explicit_incomplete_children(
     *query.with.as_mut().unwrap().cte_tables[0].query.body =
         sqlparser::ast::SetExpr::Insert(unsupported);
     let locations = super::super::super::locations::Locations::new(&sql);
-    let q = super::super::super::query::project(query, &locations);
+    let q = super::super::super::query::project(query, &locations, &[]);
     assert!(!q.complete);
     let child = &q.nested_statements[0];
     assert!(!child.complete);

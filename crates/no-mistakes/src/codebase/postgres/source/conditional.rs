@@ -94,7 +94,7 @@ pub(super) fn project(
                 );
                 let owned_tokens = if matches!(
                     statement,
-                    Statement::CreateTable(_) | Statement::AlterTable(_)
+                    Statement::CreateTable(_) | Statement::AlterTable(_) | Statement::Query(_)
                 ) {
                     owned
                         .iter()
