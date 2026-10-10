@@ -92,3 +92,9 @@ function discardedArgumentAlias(statement) {
   return statement;
 }
 write(discardedArgumentAlias(sql`/* discarded argument alias */ SELECT 1`)); // known:argument-alias-read-is-data
+
+function discardedArgumentProperty(statement) {
+  unknownConsumer(void arguments[0].trigger);
+  return statement;
+}
+write(discardedArgumentProperty(sql`/* argument property getter */ SELECT 1`)); // unanalyzable:void-argument-property-can-run-getter

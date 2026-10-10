@@ -170,3 +170,6 @@ fn is_arguments_value(value: &Value) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod effect_tests;
