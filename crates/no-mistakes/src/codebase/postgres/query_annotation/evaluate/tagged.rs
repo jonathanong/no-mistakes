@@ -95,7 +95,9 @@ fn has_builder(value: &Value) -> bool {
     match value {
         Value::Prefix(_, _, Some(_)) => true,
         Value::Evaluated(inner, _) => has_builder(inner),
-        Value::Aggregate(values) | Value::Possible(values) => values.iter().any(has_builder),
+        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+            values.iter().any(has_builder)
+        }
         _ => false,
     }
 }
