@@ -458,6 +458,7 @@ original source order. Each child includes `sql`, byte `span`,
 `complete` and `unsupported`. For a complete child, `sql` is the exact source
 slice of `span`, including comments, quoted identifiers, and nested parentheses.
 Spans are UTF-8 byte offsets, so
+<!-- cspell:ignore subarray -->
 `Buffer.from(source).subarray(span.start.offset, span.end.offset).toString() === sql`. A child whose
 exact slice cannot be recovered is incomplete and does not keep truncated SQL.
 All IDs refer to the containing query report.
