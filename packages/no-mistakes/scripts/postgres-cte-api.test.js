@@ -37,6 +37,13 @@ test(
         rootSql:
           "WITH c AS (INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning) SELECT * FROM c",
       },
+      {
+        sourceSql: "SELECT now() UNION ALL SELECT now()",
+        insertSql: "INSERT INTO t SELECT now() UNION ALL SELECT now() RETURNING id",
+        rootSql:
+          "WITH c AS (INSERT INTO t SELECT now() UNION ALL SELECT now() RETURNING id) SELECT * FROM c",
+        branches: ["SELECT now()", "SELECT now()"],
+      },
     ];
     assert.equal(facts.statements.length, cases.length);
     for (const [index, expected] of cases.entries()) {
@@ -53,6 +60,14 @@ test(
       assert.equal(slice(child.insert.source.span), expected.sourceSql);
       assert.equal(slice(query.scopes[child.insert.source.queryScopeId].span), expected.sourceSql);
       assert.equal(slice(query.scopes[0].span), expected.rootSql);
+      if (expected.branches) {
+        assert.deepEqual(
+          query.scopes
+            .filter((scope) => scope.clause === "setBranch")
+            .map((scope) => slice(scope.span)),
+          expected.branches,
+        );
+      }
     }
   },
 );
