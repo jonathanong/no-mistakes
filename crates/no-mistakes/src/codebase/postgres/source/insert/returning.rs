@@ -83,8 +83,12 @@ fn project_item(
             } else {
                 None
             };
+            let expression = expression(expr, locations);
+            if !expression.children_complete {
+                *complete = false;
+            }
             PostgresSqlReturningItem::Expression {
-                expression: Box::new(expression(expr, locations)),
+                expression: Box::new(expression),
                 alias,
             }
         }

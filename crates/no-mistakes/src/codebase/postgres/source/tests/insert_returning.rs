@@ -418,3 +418,42 @@ fn assert_source_seed(query: &PostgresSqlQuery, insert_scope: usize) {
         Some(insert_scope)
     );
 }
+
+#[test]
+fn incompletely_projected_returning_expression_marks_insert_incomplete() {
+    let result = facts("insert-returning-incomplete.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 2);
+
+    let represented = insert(&result.statements[0].facts);
+    assert!(represented.complete, "{:?}", represented.diagnostics);
+    assert!(represented.diagnostics.is_empty());
+    assert!(matches!(
+        &represented.returning[0],
+        PostgresSqlReturningItem::Expression {
+            alias: None,
+            expression,
+        } if expression.children_complete && expression.sql == "id + 1"
+    ));
+    assert_eq!(
+        lineage(&represented.column_sources),
+        vec![("id".into(), vec!["1".into()])]
+    );
+
+    let between = insert(&result.statements[1].facts);
+    assert!(!between.complete);
+    assert!(matches!(
+        &between.returning[0],
+        PostgresSqlReturningItem::Expression {
+            alias: None,
+            expression,
+        } if !expression.children_complete && expression.sql.contains("BETWEEN")
+    ));
+    assert!(between.diagnostics.iter().any(|diagnostic| {
+        diagnostic.message == "INSERT facts contain unsupported or incompletely represented syntax"
+    }));
+    assert_eq!(
+        lineage(&between.column_sources),
+        vec![("id".into(), vec!["1".into()])]
+    );
+}

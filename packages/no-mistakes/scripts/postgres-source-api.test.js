@@ -1440,5 +1440,21 @@ test(
       undefined,
     );
     assert.ok(withValues.statements[1].query.ctes.some((cte) => cte.name.identity === "seed"));
+    const incompleteSql = fixture("insert-returning-incomplete.sql");
+    const incomplete = await cjs.parsePostgresSql({ sql: incompleteSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: incompleteSql }), incomplete);
+    assert.deepEqual(incomplete.diagnostics, []);
+    const represented = incomplete.statements[0].insert;
+    assert.equal(represented.complete, true);
+    assert.equal(represented.returning[0].kind, "expression");
+    assert.equal(represented.returning[0].expression.childrenComplete, true);
+    const between = incomplete.statements[1].insert;
+    assert.equal(between.complete, false);
+    assert.equal(between.returning[0].kind, "expression");
+    assert.equal(between.returning[0].expression.childrenComplete, false);
+    assert.match(
+      between.diagnostics[0].message,
+      /INSERT facts contain unsupported or incompletely represented syntax/,
+    );
   },
 );
