@@ -10,9 +10,11 @@ project catalog and source session. Package-local TypeScript aliases resolve fro
 the importing file's project; an explicit `--tsconfig` deliberately overrides that
 ownership for every importer.
 
-Helper evaluation shares immutable function summaries and binding snapshots.
-Builder lookup indexes are memoized within each snapshot and invalidated on
-writes; speculative entrypoints retain isolated effects. These in-memory
+Helper evaluation shares immutable function summaries, binding snapshots, and
+nested value containers. Builder lookup indexes and reference-free container
+checks are memoized and invalidated on writes; speculative entrypoints retain
+isolated effects. Containers with references retain their ordered traversal.
+These in-memory
 structures belong to the current request and are never persisted.
 Roots that cannot reach configured executor calls skip helper evaluation. A caller
 without its own executor stays eligible when an imported helper executes SQL.

@@ -21,8 +21,8 @@ mod value;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{FxHashMap, FxHashSet};
-use std::{collections::BTreeMap, sync::Arc};
 use std::path::{Path, PathBuf};
+use std::{collections::BTreeMap, sync::Arc};
 pub(super) use value::Value;
 
 pub(super) type Environment = usize;
