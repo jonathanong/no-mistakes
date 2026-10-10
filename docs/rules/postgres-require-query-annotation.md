@@ -10,6 +10,11 @@ project catalog and source session. Package-local TypeScript aliases resolve fro
 the importing file's project; an explicit `--tsconfig` deliberately overrides that
 ownership for every importer.
 
+Helper evaluation shares immutable function summaries and binding snapshots.
+Builder lookup indexes are memoized within each snapshot and invalidated on
+writes; speculative entrypoints retain isolated effects. These in-memory
+structures belong to the current request and are never persisted.
+
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
 their lexical block, and nested functions own their bindings. Reassigned or

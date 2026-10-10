@@ -1,6 +1,7 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_state(
-    scopes: &[FxHashMap<String, Value>],
+    scopes: &[Scope],
     returned: &[Value],
     state: MutationState<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -38,7 +39,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
 /// Compact request state from explicit module roots, then remap cached module
 /// identities so later lookups continue to address their initialized frames.
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn compact_modules(
-    scopes: &mut Vec<FxHashMap<String, Value>>,
+    scopes: &mut Vec<Scope>,
     modules: &mut FxHashMap<std::path::PathBuf, Environment>,
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,

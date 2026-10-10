@@ -85,6 +85,7 @@ fn helper_value_contexts_preserve_captures_parameters_and_implicit_arguments() {
         "helper-tracing-callback-revisit",
         "helper-tracing-imported-callback-revisit",
         "helper-tracing-unary-argument-index",
+        "helper-tracing-shared-snapshots",
     ] {
         let root = fixture(scenario);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);

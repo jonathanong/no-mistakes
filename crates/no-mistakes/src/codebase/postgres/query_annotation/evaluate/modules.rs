@@ -20,8 +20,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for (name, expr) in globals {
             match expr {
                 Expr::Function(function) => {
-                    self.scopes[env]
-                        .insert(name, Value::Function(function, path.to_path_buf(), env));
+                    self.scopes[env].insert(
+                        name,
+                        Value::Function(std::sync::Arc::new(function), path.to_path_buf(), env),
+                    );
                 }
                 Expr::Unknown => {
                     self.scopes[env].insert(name, Value::Unknown);

@@ -1,17 +1,18 @@
 use super::super::super::Value;
 use super::{binding_or_unproven, join};
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::fx_map;
 
 fn prefix(text: &str, id: Option<u64>) -> Value {
     Value::Prefix(text.to_string(), true, id)
 }
 
-fn scope(entries: &[(&str, Value)]) -> crate::fx::FxHashMap<String, Value> {
+fn scope(entries: &[(&str, Value)]) -> Scope {
     let mut values = fx_map();
     for (name, value) in entries {
         values.insert((*name).to_string(), value.clone());
     }
-    values
+    values.into()
 }
 
 #[test]

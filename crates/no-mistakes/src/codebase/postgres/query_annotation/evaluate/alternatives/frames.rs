@@ -1,6 +1,7 @@
 use super::super::{Environment, Value};
 use super::arena::ArenaMut;
 use super::{freshness, reachable};
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 struct Roots<'a> {
@@ -41,7 +42,7 @@ pub(super) struct ModuleRoots<'a> {
 }
 
 pub(super) fn compact(
-    scopes: &mut Vec<FxHashMap<String, Value>>,
+    scopes: &mut Vec<Scope>,
     cache: ModuleRoots<'_>,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -83,7 +84,7 @@ pub(super) fn compact(
 }
 
 fn compact_from_roots(
-    scopes: &mut Vec<FxHashMap<String, Value>>,
+    scopes: &mut Vec<Scope>,
     roots: Roots<'_>,
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,

@@ -57,7 +57,7 @@ fn outputs() -> FxHashMap<String, Value> {
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
-    evaluator.scopes[root].clone()
+    (*evaluator.scopes[root]).clone()
 }
 
 fn is_prefix(values: &FxHashMap<String, Value>, name: &str, expected: &str) -> bool {

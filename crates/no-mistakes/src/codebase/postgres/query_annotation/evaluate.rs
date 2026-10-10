@@ -12,6 +12,8 @@ mod modules;
 mod opaque;
 mod result;
 mod run;
+mod scope;
+use scope::Scope;
 mod slot_write;
 mod slots;
 mod statements;
@@ -31,7 +33,7 @@ pub(super) enum Value {
     // Candidate runtime values with an implicit unknown alternative.
     Possible(Vec<Value>),
     Arguments(u64),
-    Function(Function, PathBuf, Environment),
+    Function(std::sync::Arc<Function>, PathBuf, Environment),
     Unknown,
     Primitive,
     Unsupported,
@@ -58,7 +60,7 @@ pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
     pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
-    pub scopes: Vec<FxHashMap<String, Value>>,
+    pub scopes: Vec<Scope>,
     pub modules: FxHashMap<PathBuf, Environment>,
     pub active_module_initials: Vec<alternatives::modules::Initials>,
     pub active_callback_functions: Option<FxHashSet<callbacks::CallbackIdentity>>,
@@ -87,7 +89,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         values: FxHashMap<String, Value>,
     ) -> Environment {
         let id = self.scopes.len();
-        self.scopes.push(values);
+        self.scopes.push(values.into());
         id
     }
     pub(super) fn expr(
@@ -114,7 +116,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Function(function) => {
                 // Request-owned scope IDs retain live bindings without recursive
                 // closure copies or reference cycles between sibling functions.
-                Value::Function(function.clone(), path.to_path_buf(), *env)
+                Value::Function(
+                    std::sync::Arc::new(function.clone()),
+                    path.to_path_buf(),
+                    *env,
+                )
             }
             Expr::Template(parts) => {
                 let mut prefix = Value::Prefix(String::new(), true, None);
@@ -148,7 +154,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::OpaqueCallback(expr) => {
                 match self.expr(expr, path, env, depth, generic).exposed() {
                     Value::Function(mut function, path, captured) => {
-                        function.supported = false;
+                        std::sync::Arc::make_mut(&mut function).supported = false;
                         Value::Function(function, path, captured)
                     }
                     _ => Value::Unknown,

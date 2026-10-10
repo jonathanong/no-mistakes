@@ -1,5 +1,6 @@
 use super::super::Value;
 use super::arena::Arena;
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 fn prefixes<'a>(
@@ -77,7 +78,7 @@ pub(super) fn changes(
     }
 }
 
-pub(super) fn apply_taint(scopes: &mut [FxHashMap<String, Value>], changed: &FxHashSet<u64>) {
+pub(super) fn apply_taint(scopes: &mut [Scope], changed: &FxHashSet<u64>) {
     for scope in scopes {
         for value in scope.values_mut() {
             if let Value::Prefix(_, _, Some(id)) = value {

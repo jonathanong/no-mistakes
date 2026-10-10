@@ -1,5 +1,6 @@
 use super::super::{Environment, Value};
 use super::arena::Arena;
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 #[derive(Default)]
@@ -33,7 +34,7 @@ impl Reachable {
 /// Scope and argument identities are separate visited sets, so mutually captured
 /// callbacks and self-referential arguments remain finite.
 pub(super) fn collect(
-    scopes: &[FxHashMap<String, Value>],
+    scopes: &[Scope],
     originals: usize,
     returned: &[Value],
     arena: Arena<'_>,
@@ -45,7 +46,7 @@ pub(super) fn collect(
 }
 
 pub(super) fn collect_from_roots(
-    scopes: &[FxHashMap<String, Value>],
+    scopes: &[Scope],
     roots: &[Environment],
     returned: &[Value],
     arena: Arena<'_>,

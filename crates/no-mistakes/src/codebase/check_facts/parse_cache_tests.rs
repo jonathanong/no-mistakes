@@ -32,3 +32,36 @@ fn check_fact_collection_parses_each_path_once() {
     assert_eq!(counts.get(&helper), Some(&1), "{counts:#?}");
     assert_eq!(counts.get(&widget), Some(&1), "{counts:#?}");
 }
+
+#[test]
+fn embedded_and_helper_projection_share_the_single_ts_parse() {
+    let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("helper-tracing-shared-snapshots");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = normalize_path(fixture.path());
+    let paths = ["src/query.mts", "src/db.mts"].map(|name| normalize_path(&root.join(name)));
+    crate::ast::begin_parse_count(&root);
+    let facts = collect_check_facts(
+        &root,
+        paths.to_vec(),
+        CheckFactPlan {
+            imports: true,
+            symbols: true,
+            embedded_sql: true,
+            query_annotation: true,
+            embedded_sql_options: vec![crate::codebase::postgres::EmbeddedSqlOptions::configured(
+                "@app/db",
+                &[],
+            )],
+            ..Default::default()
+        },
+    );
+    let counts = crate::ast::finish_parse_count(&root);
+    for path in paths {
+        assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
+        let file = facts.ts.get(&path).unwrap();
+        assert!(file.symbols.is_some());
+        assert_eq!(file.embedded_sql.len(), 1);
+        assert_eq!(file.query_annotation.len(), 1);
+    }
+}

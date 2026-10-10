@@ -111,7 +111,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: vec![scope],
+        scopes: vec![scope.into()],
         modules: Default::default(),
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),

@@ -8,9 +8,17 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for value in values {
             self.builder_ids(value, &mut ids);
         }
+        // Most opaque calls carry no SQL builders. Do not scan every frame
+        // (or detach shared snapshots) when there is nothing to invalidate.
+        if ids.is_empty() {
+            return;
+        }
         self.invalidate_mapped_freshness(&ids);
         self.invalidated_builders.extend(ids.iter().copied());
         for scope in &mut self.scopes {
+            if !scope.contains_builders(&ids) {
+                continue;
+            }
             for value in scope.values_mut() {
                 if matches!(value, Value::Prefix(_, _, Some(id)) if ids.contains(id)) {
                     *value = Value::Unknown;
@@ -95,7 +103,11 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
+        let ids = FxHashSet::from_iter([*id]);
         for scope in &mut self.scopes {
+            if !scope.contains_builders(&ids) {
+                continue;
+            }
             for value in scope.values_mut() {
                 replace(value, *id, replacement);
             }

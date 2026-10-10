@@ -1,4 +1,5 @@
 use super::super::Value;
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::FxHashMap;
 
 fn scalar(value: &Value) -> bool {
@@ -27,11 +28,7 @@ pub(super) fn binding_or_unproven<'a>(
 /// Joins preserve an annotated builder prefix only when the original scope and
 /// both arms still have that builder. A missing arm or original binding is
 /// unproven and must not keep or synthesize a SQL prefix.
-pub(super) fn join(
-    joined: &mut [FxHashMap<String, Value>],
-    current: &[FxHashMap<String, Value>],
-    original: &[FxHashMap<String, Value>],
-) {
+pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) {
     for ((before, after), initial) in joined.iter_mut().zip(current).zip(original) {
         for (name, value) in before {
             // Divergent arms add and drop names. Neither hole is a builder.

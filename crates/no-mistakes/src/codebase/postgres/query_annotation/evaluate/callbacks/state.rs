@@ -1,4 +1,5 @@
 use super::super::{Environment, Evaluator, Function, Value};
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -18,7 +19,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
 }
 
 pub(super) struct View<'a> {
-    scopes: &'a [FxHashMap<String, Value>],
+    scopes: &'a [Scope],
     objects: &'a FxHashMap<u64, Vec<Value>>,
     extras: &'a FxHashMap<u64, BTreeMap<usize, Value>>,
     updates: &'a FxHashMap<u64, Value>,

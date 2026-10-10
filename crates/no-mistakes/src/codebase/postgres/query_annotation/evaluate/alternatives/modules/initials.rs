@@ -1,3 +1,4 @@
+use crate::codebase::postgres::query_annotation::evaluate::Scope;
 mod remap;
 use super::super::super::{Environment, Evaluator, Value};
 use super::super::{arena::Arena, reachable};
@@ -11,7 +12,7 @@ use std::{
 pub(in crate::codebase::postgres::query_annotation) struct Initials {
     pub base: usize,
     pub known: FxHashSet<PathBuf>,
-    frames: FxHashMap<Environment, FxHashMap<String, Value>>,
+    frames: FxHashMap<Environment, Scope>,
     objects: FxHashMap<u64, Vec<Value>>,
     extras: FxHashMap<u64, BTreeMap<usize, Value>>,
     mapped: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,

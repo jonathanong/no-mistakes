@@ -53,7 +53,7 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
     };
     let root = evaluator.module_environment(&path);
     (
-        evaluator.scopes[root].clone(),
+        (*evaluator.scopes[root]).clone(),
         evaluator.argument_objects.len(),
         evaluator.argument_objects.values().map(Vec::len).sum(),
     )
