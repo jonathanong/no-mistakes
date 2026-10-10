@@ -113,7 +113,7 @@ impl Collector<'_, '_> {
                 self.insert_source = outer_insert_source;
                 PostgresSqlCteInsertSource::Select {
                     query_scope_id,
-                    span: source_span.or_else(|| self.locations.span(query.span())),
+                    span: source_span.or(self.locations.span(query.span())),
                 }
             }
         };
