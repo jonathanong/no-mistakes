@@ -106,6 +106,58 @@ fn quoted_identifiers_comments_and_returning_keep_exact_slices() {
 }
 
 #[test]
+fn parenthesized_cte_bodies_repair_descendant_statements() {
+    let values = nested("WITH a AS ((INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING)) SELECT 1;");
+    assert_ne!(values[0].query_scope_id, values[0].parent_scope_id.unwrap());
+    assert_eq!(
+        values[0].sql,
+        "INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING"
+    );
+    let wrapped =
+        nested("WITH a AS (((INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING))) SELECT 1;");
+    assert_eq!(
+        wrapped[0].sql,
+        "INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING"
+    );
+    let exists =
+        nested("WITH a AS ((INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1))) SELECT 1;");
+    assert_eq!(
+        exists[0].sql,
+        "INSERT INTO t(id) SELECT 1 WHERE NOT EXISTS (SELECT 1)"
+    );
+    let conflict =
+        nested("WITH a AS ((INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING)) SELECT 1;");
+    assert_eq!(
+        conflict[0].sql,
+        "INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"
+    );
+    let returning = nested(
+        "WITH a AS ((INSERT INTO t(id) VALUES (1) /* kept */ ON CONFLICT (id) DO NOTHING RETURNING id /* tail */)) SELECT 1;",
+    );
+    assert_eq!(
+        returning[0].sql,
+        "INSERT INTO t(id) VALUES (1) /* kept */ ON CONFLICT (id) DO NOTHING RETURNING id"
+    );
+    assert!(!returning[0].sql.contains("tail"));
+    let quoted = nested(
+        "WITH a AS ((INSERT INTO \"t)\"(id) VALUES (1) ON CONFLICT (\"i)d\") DO NOTHING)) SELECT 1;",
+    );
+    assert_eq!(
+        quoted[0].sql,
+        "INSERT INTO \"t)\"(id) VALUES (1) ON CONFLICT (\"i)d\") DO NOTHING"
+    );
+    let plain = nested("WITH a AS ((INSERT INTO t VALUES (1))) SELECT 1;");
+    assert_eq!(plain[0].sql, "INSERT INTO t VALUES (1)");
+    let nested_with = nested(
+        "WITH a AS ((WITH b AS (INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING) SELECT 1)) SELECT 1;",
+    );
+    assert_eq!(
+        nested_with[0].sql,
+        "INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING"
+    );
+}
+
+#[test]
 fn sibling_cte_statements_are_ordered_exact_and_non_overlapping() {
     let children = nested(
         "WITH a(x) AS NOT MATERIALIZED (INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING),\n\

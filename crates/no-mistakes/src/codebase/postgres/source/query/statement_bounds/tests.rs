@@ -166,6 +166,63 @@ fn token_ending(token: Token, column: u64) -> TokenWithSpan {
 }
 
 #[test]
+fn bounded_end_keeps_statement_parens_and_drops_wrappers() {
+    assert_eq!(open_depth("").unwrap(), 0);
+    assert_eq!(
+        open_depth("INSERT INTO t(id) VALUES (1) ON CONFLICT (id").unwrap(),
+        1
+    );
+    assert!(open_depth(")").is_err());
+    assert_eq!(
+        bounded_end(") DO NOTHING", 1).unwrap(),
+        Some(") DO NOTHING".len())
+    );
+    assert_eq!(
+        bounded_end(") DO NOTHING)", 1).unwrap(),
+        Some(") DO NOTHING".len())
+    );
+    assert_eq!(bounded_end(")", 0).unwrap(), None);
+    assert_eq!(bounded_end(" /* tail */)", 0).unwrap(), None);
+    assert_eq!(bounded_end(" \n/* c */", 0).unwrap(), None);
+    let conflict = " ON CONFLICT DO NOTHING)";
+    assert_eq!(
+        bounded_end(conflict, 0).unwrap(),
+        Some(" ON CONFLICT DO NOTHING".len())
+    );
+    assert_eq!(bounded_end("))", 0).unwrap(), None);
+    assert!(bounded_end("/*", 0).is_err());
+    assert!(bounded_end("'abc", 0).is_err());
+}
+
+#[test]
+fn a_parenthesized_body_repairs_from_the_cte_scope_and_rejects_a_bad_tail() {
+    let sql = "WITH a AS ((INSERT INTO t VALUES ('abc') ON CONFLICT DO NOTHING)) SELECT 1;";
+    let locations = Locations::new(sql);
+    let mut facts = project_sql(sql);
+    let child = &facts.nested_statements[0];
+    assert_ne!(child.query_scope_id, child.parent_scope_id.unwrap());
+    assert_eq!(
+        child.sql,
+        "INSERT INTO t VALUES ('abc') ON CONFLICT DO NOTHING"
+    );
+    let cte_scope = child.parent_scope_id.unwrap();
+    let quote = sql.find('\'').unwrap();
+    facts.nested_statements[0].span.as_mut().unwrap().end = locations.range(quote, quote).start;
+    repair(
+        &mut facts,
+        &locations,
+        cte_scope,
+        &rparen_at(&locations, quote + 2),
+    );
+    let child = &facts.nested_statements[0];
+    assert!(!facts.complete);
+    assert!(!child.complete);
+    assert!(child.sql.is_empty());
+    assert!(child.span.is_none());
+    assert_eq!(child.unsupported[0].reason, BOUNDARY);
+}
+
+#[test]
 fn boundary_end_rejects_tokens_that_do_not_cover_the_tail() {
     assert!(boundary_end("ab", &[]).is_err());
     assert!(boundary_end("ab", &[token_ending(Token::RParen, 1)]).is_err());
