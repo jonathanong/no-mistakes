@@ -1418,5 +1418,27 @@ test(
     });
     assert.equal(rejected.statements.length, 0);
     assert.ok(rejected.diagnostics.length);
+
+    const withValuesSql = fixture("insert-with-values-column-sources.sql");
+    const withValues = await cjs.parsePostgresSql({ sql: withValuesSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: withValuesSql }), withValues);
+    assert.deepEqual(withValues.diagnostics, []);
+    const directWith = withValues.statements[0].insert;
+    const changedInsert = withValues.statements[1].query.nestedStatements[0];
+    assert.equal(directWith.source.kind, "values");
+    assert.equal(directWith.columnSources.kind, "mapped");
+    assert.equal(directWith.complete, false);
+    assert.equal(changedInsert.insert.source.kind, "values");
+    assert.equal(changedInsert.insert.columnSources.kind, "mapped");
+    assert.equal(
+      changedInsert.insert.columnSources.columns[0].sources[0].expression.sql,
+      directWith.columnSources.columns[0].sources[0].expression.sql,
+    );
+    assert.equal(changedInsert.insert.columnSources.columns[0].sources[0].expression.sql, "1");
+    assert.equal(
+      withValues.statements[2].query.nestedStatements[0].insert.columnSources,
+      undefined,
+    );
+    assert.ok(withValues.statements[1].query.ctes.some((cte) => cte.name.identity === "seed"));
   },
 );

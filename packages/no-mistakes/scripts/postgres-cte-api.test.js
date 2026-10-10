@@ -278,6 +278,56 @@ test(
       executed.statements[0].block.statements[1].execute.statements[0].query.nestedStatements[0];
     assert.equal(nested.insert.columnSources.columns[0].sources[0].expression.sql, "2");
     assert.ok(nested.sql.includes("RETURNING id"));
+
+    const withValuesSql = fixture("insert-with-values-column-sources.sql");
+    const withValues = await cjs.parsePostgresSql({ sql: withValuesSql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql: withValuesSql }), withValues);
+    assert.deepEqual(withValues.diagnostics, []);
+    const directWith = withValues.statements[0].insert;
+    const changed = withValues.statements[1].query;
+    const changedInsert = changed.nestedStatements[0];
+    assert.equal(directWith.complete, false);
+    assert.equal(directWith.source.kind, "values");
+    assert.equal(directWith.columnSources.kind, "mapped");
+    assert.equal(changedInsert.insert.source.kind, "values");
+    assert.equal(changedInsert.insert.columnSources.kind, "mapped");
+    assert.deepEqual(
+      changedInsert.unsupported.map((item) => item.reason),
+      ["INSERT VALUES query modifiers"],
+    );
+    assert.deepEqual(
+      changedInsert.insert.columnSources.columns.map((column) => [
+        column.column.parts[0].identity,
+        column.sources.map((source) => [source.kind, source.rowIndex, source.expression.sql]),
+      ]),
+      directWith.columnSources.columns.map((column) => [
+        column.column.parts[0].identity,
+        column.sources.map((source) => [source.kind, source.rowIndex, source.expression.sql]),
+      ]),
+    );
+    assert.equal(changedInsert.insert.columnSources.columns[0].sources[0].expression.sql, "1");
+    const changedSeed = changed.ctes.find((cte) => cte.name.identity === "seed");
+    assert.equal(
+      changed.scopes[changedSeed.ownerScopeId].parentScopeId,
+      changedInsert.queryScopeId,
+    );
+    const plainWith = withValues.statements[2].query;
+    assert.equal(plainWith.nestedStatements[0].insert.columnSources, undefined);
+    assert.equal(plainWith.nestedStatements[0].insert.source.kind, "values");
+    assert.equal(
+      plainWith.scopes[plainWith.ctes.find((cte) => cte.name.identity === "seed").ownerScopeId]
+        .parentScopeId,
+      plainWith.nestedStatements[0].queryScopeId,
+    );
+    const selectedWith = withValues.statements[3].query;
+    assert.equal(selectedWith.nestedStatements[0].complete, true);
+    assert.equal(selectedWith.nestedStatements[0].insert.source.kind, "select");
+    assert.equal(
+      selectedWith.scopes[
+        selectedWith.ctes.find((cte) => cte.name.identity === "seed").ownerScopeId
+      ].parentScopeId,
+      selectedWith.nestedStatements[0].queryScopeId,
+    );
   },
 );
 

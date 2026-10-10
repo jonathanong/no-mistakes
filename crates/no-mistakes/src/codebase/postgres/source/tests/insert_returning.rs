@@ -348,3 +348,73 @@ fn literal_execute_keeps_direct_and_nested_returning_lineage() {
         lineage(nested_insert(child).column_sources.as_ref().unwrap())
     );
 }
+
+#[test]
+fn with_wrapped_values_keep_mapped_lineage_for_direct_and_cte_inserts() {
+    let result = facts("insert-with-values-column-sources.sql");
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.statements.len(), 4);
+    let mapped = vec![("id".into(), vec!["1".into()])];
+
+    let direct = insert(&result.statements[0].facts);
+    assert!(!direct.complete, "{:?}", direct.diagnostics);
+    assert!(matches!(
+        direct.source,
+        PostgresSqlInsertSource::Values { .. }
+    ));
+    assert_eq!(lineage(&direct.column_sources), mapped);
+
+    let PostgresSqlStatementKind::Select { query } = &result.statements[1].facts else {
+        panic!("RETURNING CTE expected")
+    };
+    let child = &query.nested_statements[0];
+    let nested = nested_insert(child);
+    assert!(matches!(
+        nested.source,
+        PostgresSqlCteInsertSource::Values { .. }
+    ));
+    assert_eq!(lineage(nested.column_sources.as_ref().unwrap()), mapped);
+    assert!(child
+        .unsupported
+        .iter()
+        .any(|item| item.reason == "INSERT VALUES query modifiers"));
+    assert_source_seed(query, child.query_scope_id);
+
+    let PostgresSqlStatementKind::Select { query } = &result.statements[2].facts else {
+        panic!("non-RETURNING CTE expected")
+    };
+    let plain_child = &query.nested_statements[0];
+    let plain = nested_insert(plain_child);
+    assert!(plain.column_sources.is_none());
+    assert!(matches!(
+        plain.source,
+        PostgresSqlCteInsertSource::Values { .. }
+    ));
+    assert_source_seed(query, plain_child.query_scope_id);
+
+    let PostgresSqlStatementKind::Select { query } = &result.statements[3].facts else {
+        panic!("SELECT source CTE expected")
+    };
+    let selected_child = &query.nested_statements[0];
+    assert!(selected_child.complete, "{:?}", selected_child.unsupported);
+    let selected = nested_insert(selected_child);
+    assert!(matches!(
+        selected.source,
+        PostgresSqlCteInsertSource::Select { .. }
+    ));
+    assert_eq!(lineage(selected.column_sources.as_ref().unwrap()), mapped);
+    assert_source_seed(query, selected_child.query_scope_id);
+}
+
+fn assert_source_seed(query: &PostgresSqlQuery, insert_scope: usize) {
+    let seeds: Vec<_> = query
+        .ctes
+        .iter()
+        .filter(|cte| cte.name.identity == "seed")
+        .collect();
+    assert_eq!(seeds.len(), 1);
+    assert_eq!(
+        query.scopes[seeds[0].owner_scope_id].parent_scope_id,
+        Some(insert_scope)
+    );
+}
