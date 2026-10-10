@@ -7,6 +7,57 @@ const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
 
 test(
+  "compiled async CJS/ESM INSERT-source SELECT spans retain trailing calls",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-insert-source-call-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const source = Buffer.from(sql);
+    const slice = (span) => source.subarray(span.start.offset, span.end.offset).toString();
+    const cases = [
+      {
+        sourceSql: "SELECT now()",
+        insertSql: 'INSERT INTO "té" SELECT now() RETURNING id',
+        rootSql: 'WITH c AS (INSERT INTO "té" SELECT now() RETURNING id) SELECT * FROM c',
+      },
+      {
+        sourceSql: "SELECT lower('é')",
+        insertSql: "INSERT INTO t SELECT lower('é') ON CONFLICT DO NOTHING RETURNING id",
+        rootSql:
+          "WITH c AS (INSERT INTO t SELECT lower('é') ON CONFLICT DO NOTHING RETURNING id) SELECT * FROM c",
+      },
+      {
+        sourceSql: "SELECT t.returning, t.on, t.conflict, now()",
+        insertSql:
+          "INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning",
+        rootSql:
+          "WITH c AS (INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning) SELECT * FROM c",
+      },
+    ];
+    assert.equal(facts.statements.length, cases.length);
+    for (const [index, expected] of cases.entries()) {
+      const query = facts.statements[index].query;
+      assert.equal(query.complete, true);
+      assert.deepEqual(query.unsupported, []);
+      const child = query.nestedStatements[0];
+      assert.equal(child.kind, "insert");
+      assert.equal(child.complete, true);
+      assert.equal(child.sql, expected.insertSql);
+      assert.equal(slice(child.span), expected.insertSql);
+      assert.equal(slice(query.scopes[child.queryScopeId].span), expected.insertSql);
+      assert.equal(child.insert.source.kind, "select");
+      assert.equal(slice(child.insert.source.span), expected.sourceSql);
+      assert.equal(slice(query.scopes[child.insert.source.queryScopeId].span), expected.sourceSql);
+      assert.equal(slice(query.scopes[0].span), expected.rootSql);
+    }
+  },
+);
+
+test(
   "compiled async CJS/ESM read-only CTE scopes keep exact UTF-8 source slices",
   { skip: !compiled },
   async () => {

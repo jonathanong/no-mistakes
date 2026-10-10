@@ -787,6 +787,9 @@ statements, including relation and CTE visibility, join participants, conservati
 predicate contexts and EXISTS correlation. See [SELECT scope facts](postgres-source-api.md#select-scope-facts).
 Read-only CTE and nested query scope spans include closing function syntax;
 slice the original SQL with their half-open UTF-8 byte offsets.
+An INSERT-source SELECT in a data-modifying CTE also includes closing function
+syntax before the INSERT's conflict or RETURNING clause in both its source and
+query scope spans.
 
 `check()` applies `nextjs-redirect-destinations` to recovered static tuple maps
 and template destinations, and reports incomplete extraction for partially dynamic returns.
