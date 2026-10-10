@@ -31,6 +31,8 @@ test(
         true,
         true,
         true,
+        true,
+        false,
         false,
         false,
         false,
@@ -47,15 +49,16 @@ test(
       ],
     );
     assert.deepEqual(
-      blocks.slice(0, 6).map((block) => block.diagnostics),
-      [[], [], [], [], [], []],
+      blocks.slice(0, 7).map((block) => block.diagnostics),
+      [[], [], [], [], [], [], []],
     );
     assert.equal(blocks[0].occurrences[0].kind, "controlFlow");
     assert.equal(blocks[0].occurrences[0].occurrences[0].kind, "utility");
     assert.equal(blocks[1].occurrences[0].kind, "utility");
     assert.equal(blocks[2].occurrences[0].kind, "utility");
     assert.equal(blocks[3].occurrences[0].kind, "utility");
-    assert.equal(blocks[4].occurrences[0].occurrences[0].kind, "utility");
+    assert.equal(blocks[4].occurrences[0].kind, "utility");
+    assert.equal(blocks[5].occurrences[0].occurrences[0].kind, "utility");
     const bytes = Buffer.from(fixture);
     const originalSlice = (span) => bytes.subarray(span.start.offset, span.end.offset).toString();
     assert.equal(
@@ -70,8 +73,8 @@ test(
       originalSlice(blocks[2].occurrences[0].span),
       "LOCK TABLE ONLY db.public.t, q IN SHARE UPDATE EXCLUSIVE MODE NOWAIT;",
     );
-    assert.equal(blocks[5].occurrences[0].occurrences[0].kind, "dml");
-    assert.equal(blocks[6].occurrences[0].kind, "dynamicExecute");
-    assert.ok(blocks.slice(7).every((block) => block.occurrences[0].kind === "unknown"));
+    assert.equal(blocks[6].occurrences[0].occurrences[0].kind, "dml");
+    assert.equal(blocks[7].occurrences[0].kind, "dynamicExecute");
+    assert.ok(blocks.slice(8).every((block) => block.occurrences[0].kind === "unknown"));
   },
 );
