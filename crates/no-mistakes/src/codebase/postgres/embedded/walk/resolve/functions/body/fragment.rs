@@ -1,9 +1,10 @@
 use super::super::super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::chain;
 use super::super::{shadows_param, Resolvable};
+use crate::codebase::postgres::embedded::tags::SqlTagNames;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression, ExpressionStatement};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub(super) fn apply_append_statement(
     statement: &ExpressionStatement<'_>,
@@ -11,7 +12,7 @@ pub(super) fn apply_append_statement(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
     locals: &mut HashMap<String, String>,
 ) -> Option<()> {
     let Expression::CallExpression(call) = unwrap_ts_wrappers(&statement.expression) else {
@@ -38,7 +39,7 @@ fn local_append_parts(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
     locals: &HashMap<String, String>,
 ) -> Option<(String, String)> {
     let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
@@ -73,7 +74,7 @@ pub(super) fn resolve_fragment(
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &HashSet<String>,
+    imported_sql_tags: &SqlTagNames,
     locals: &HashMap<String, String>,
 ) -> Option<String> {
     match unwrap_ts_wrappers(expr) {

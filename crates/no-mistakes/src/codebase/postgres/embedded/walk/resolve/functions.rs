@@ -5,11 +5,12 @@ mod shadows;
 pub(crate) use shadows::looks_like_tag_implementation;
 
 use super::super::super::options::TrustedSqlTag;
+use super::super::super::tags::SqlTagNames;
 use collect::collect_named_functions;
 use oxc_ast::ast::{FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
 use shadows::TagShadows;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 
@@ -79,7 +80,7 @@ impl LocalFunctions {
 
     /// Local names of a default import from `sql-template-strings`, or of a
     /// configured named `trustedSqlTags` import.
-    pub(crate) fn imported_sql_tags(&self) -> &HashSet<String> {
+    pub(crate) fn imported_sql_tags(&self) -> &SqlTagNames {
         self.tag_shadows.imported_tags()
     }
 }
