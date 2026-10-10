@@ -6,7 +6,6 @@ use crate::codebase::postgres::source::types::{
 };
 use sqlparser::{
     dialect::PostgreSqlDialect,
-    parser::Parser,
     tokenizer::{Token, TokenWithSpan, Tokenizer},
 };
 
@@ -26,9 +25,13 @@ fn script_kind(sql: &str) -> PostgresSqlProceduralOccurrenceKind {
     };
     // Offsets are token indexes for this inner walk. They are not source spans.
     let classified = classify(&tokens, &index_span, false);
-    // Nested procedural children stay on the fail-closed path. Only this call
-    // may promote a top-level SELECT, and only when that statement parses.
-    fold(&tokens, &classified.occurrences, true)
+    // A LOOP does not parse its body. Promote SELECT only when the whole
+    // command is SQL: every top-level statement parses, and no label is skipped.
+    fold(
+        &tokens,
+        &classified.occurrences,
+        super::select_gate::statements_are_sql(&tokens, &classified.occurrences),
+    )
 }
 
 fn fold(
@@ -65,35 +68,11 @@ fn select_utility(
     if occurrence.kind == PostgresSqlProceduralOccurrenceKind::Unknown
         && occurrence.occurrences.is_empty()
         && starts_with_select(tokens, occurrence)
-        && select_parses(tokens, occurrence)
     {
         PostgresSqlProceduralOccurrenceKind::Utility
     } else {
         occurrence.kind
     }
-}
-
-fn select_parses(tokens: &[TokenWithSpan], occurrence: &PostgresSqlProceduralOccurrence) -> bool {
-    let start = occurrence.span.start.offset;
-    let end = occurrence.span.end.offset;
-    if start > end || end >= tokens.len() {
-        return false;
-    }
-    let mut statement = tokens[start..=end]
-        .iter()
-        .filter(|token| !matches!(token.token, Token::Whitespace(_)))
-        .cloned()
-        .collect::<Vec<_>>();
-    // The span includes the statement terminator. A semicolon inside the
-    // statement is still syntax, so only the final one is dropped.
-    if matches!(
-        statement.last().map(|token| &token.token),
-        Some(Token::SemiColon)
-    ) {
-        statement.pop();
-    }
-    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(statement);
-    parser.parse_statement().is_ok() && parser.peek_token().token == Token::EOF
 }
 
 fn starts_with_select(

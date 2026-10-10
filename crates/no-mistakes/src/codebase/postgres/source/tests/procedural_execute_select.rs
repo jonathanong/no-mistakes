@@ -68,4 +68,21 @@ fn literal_execute_select_is_utility_and_dynamic_select_stays_closed() {
     let (_, parsed) = block("DO $$ BEGIN LOOP EXECUTE 'SELECT (1;);'; END LOOP; END $$;");
     assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
     assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+
+    // skip_label drops <<mark>> before the span, so the slice is only SELECT 1.
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE '<<mark>> SELECT 1'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+    let (_, parsed) = block("DO $$ BEGIN LOOP EXECUTE '<<mark>> SELECT 1'; END LOOP; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+
+    // A procedural sibling must not fold into recognized control flow.
+    let (_, parsed) = block("DO $$ BEGIN EXECUTE 'SELECT 1; RAISE NOTICE ''x'';'; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["Unknown"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
+    let (_, parsed) =
+        block("DO $$ BEGIN LOOP EXECUTE 'SELECT 1; RAISE NOTICE ''x'';'; END LOOP; END $$;");
+    assert_eq!(kinds(&parsed.occurrences), ["ControlFlow[\"Unknown\"]"]);
+    assert!(!parsed.complete, "{:?}", parsed.diagnostics);
 }
