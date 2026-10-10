@@ -72,6 +72,37 @@ fn for_header_execute_stops_before_using_into_and_the_loop_keyword() {
 }
 
 #[test]
+fn literal_for_header_execute_select_is_utility() {
+    // The header uses the same literal SELECT promotion as statement position.
+    let (_, parsed) =
+        block("DO $$ BEGIN FOR r IN EXECUTE 'SELECT * FROM t' LOOP NULL; END LOOP; END $$;");
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["ControlFlow[\"Utility\", \"Unknown\"]"]
+    );
+
+    let (_, parsed) =
+        block("DO $$ BEGIN FOR r IN EXECUTE 'SELECT * FROM' LOOP NULL; END LOOP; END $$;");
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["ControlFlow[\"Unknown\", \"Unknown\"]"]
+    );
+    assert!(!format!("{:?}", parsed.occurrences).contains("DynamicExecute"));
+}
+
+#[test]
+fn qualified_execute_in_a_for_query_is_not_a_command() {
+    // `public.execute(...)` is a function call. It stays the fail-closed header
+    // mark instead of a static DML command parsed from the argument.
+    let (_, parsed) = block(
+        "DO $$ BEGIN FOR r IN SELECT * FROM public.execute('DELETE FROM t') LOOP NULL; END LOOP; END $$;",
+    );
+    let rendered = format!("{:?}", parsed.occurrences);
+    assert!(rendered.contains("DynamicExecute"), "{rendered}");
+    assert!(!rendered.contains("Dml"), "{rendered}");
+}
+
+#[test]
 fn statement_position_execute_is_unchanged() {
     let (_, parsed) = block("DO $$ BEGIN EXECUTE 'DELETE FROM t RETURNING id'; END $$;");
     assert_eq!(kinds(&parsed.occurrences), ["Dml"]);

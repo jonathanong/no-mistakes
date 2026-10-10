@@ -15,11 +15,26 @@ pub(super) fn occurrence(
     if paren != 0 || cases != 0 {
         return None;
     }
+    // Only `FOR ... IN EXECUTE`. A qualified call such as `public.execute(...)`
+    // is an identifier in the query, not this command slot.
     let execute = word_of(&ctx.tokens[index].token).is_some_and(|word| eq(word, "EXECUTE"));
-    if !execute {
+    if !execute || !preceded_by_in(ctx, index) {
         return None;
     }
     Some(classified(ctx, index, stops))
+}
+
+fn preceded_by_in(ctx: &Ctx<'_>, index: usize) -> bool {
+    let mut cursor = index;
+    while cursor > 0 {
+        cursor -= 1;
+        let token = &ctx.tokens[cursor].token;
+        if matches!(token, Token::Whitespace(_)) {
+            continue;
+        }
+        return word_of(token).is_some_and(|word| eq(word, "IN"));
+    }
+    false
 }
 
 fn classified(ctx: &mut Ctx<'_>, start: usize, stops: &[&str]) -> PostgresSqlProceduralOccurrence {
