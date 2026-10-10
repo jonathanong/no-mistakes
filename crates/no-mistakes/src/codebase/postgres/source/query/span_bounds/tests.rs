@@ -54,6 +54,59 @@ fn incomplete_prepared_tokens_do_not_claim_a_query_boundary() {
 }
 
 #[test]
+fn incomplete_double_root_wrappers_do_not_claim_a_query_boundary() {
+    let sql = crate::codebase::postgres::source::tests::fixture("query-set-branch-spans.sql");
+    let locations = Locations::new(&sql);
+    let ast = Parser::parse_sql(&PostgresSourceDialect, &sql).unwrap();
+    let Statement::Query(root) = &ast[11] else {
+        panic!("doubly wrapped set query");
+    };
+    let mut tokens = Vec::new();
+    Tokenizer::new(&PostgresSourceDialect, &sql)
+        .tokenize_with_location_into_buf(&mut tokens)
+        .unwrap();
+    let semicolons = tokens
+        .iter()
+        .enumerate()
+        .filter_map(|(index, token)| (token.token == Token::SemiColon).then_some(index))
+        .collect::<Vec<_>>();
+    let statement = &tokens[semicolons[10] + 1..semicolons[11]];
+    assert!(QuerySpanBounds::new(statement, &locations)
+        .query(root, true, &locations)
+        .is_some());
+    let union = statement
+        .iter()
+        .position(|token| matches!(&token.token, Token::Word(word) if word.value == "UNION"))
+        .unwrap();
+    let wrapper_closes = statement[..union]
+        .iter()
+        .enumerate()
+        .rev()
+        .filter_map(|(index, token)| (token.token == Token::RParen).then_some(index))
+        .take(2);
+    for missing in wrapper_closes {
+        let incomplete = statement
+            .iter()
+            .enumerate()
+            .filter_map(|(index, token)| (index != missing).then_some(token.clone()))
+            .collect::<Vec<_>>();
+        let bounds = QuerySpanBounds::new(&incomplete, &locations);
+        assert!(
+            bounds.query(root, true, &locations).is_none(),
+            "missing={missing}, ast_start={:?}, first={:?}, prefix={:?}",
+            locations.position(root.span().start),
+            bounds.tokens.first().map(|token| token.start),
+            bounds
+                .tokens
+                .iter()
+                .take(5)
+                .map(|token| (token.start, token.closing))
+                .collect::<Vec<_>>()
+        );
+    }
+}
+
+#[test]
 fn insert_source_does_not_invent_a_span_from_missing_prepared_tokens() {
     let sql =
         crate::codebase::postgres::source::tests::fixture("query-insert-source-call-spans.sql");

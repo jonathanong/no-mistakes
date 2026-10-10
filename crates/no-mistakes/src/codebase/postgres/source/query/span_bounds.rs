@@ -113,13 +113,19 @@ impl QuerySpanBounds {
         let index = self.tokens.partition_point(|token| token.start < start);
         // A root's leading parentheses can wrap only its body; ORDER BY may
         // follow them. Keep all wrappers when sqlparser starts at the body.
-        let (span_start, end) = if root
-            && (first.start == start
-                || (index > 0
-                    && self.tokens[..index]
-                        .iter()
-                        .all(|token| token.kind == Kind::Open)))
+        let root_wrappers = root
+            && index > 0
+            && self.tokens[..index]
+                .iter()
+                .all(|token| token.kind == Kind::Open);
+        if root_wrappers
+            && self.tokens[..index]
+                .iter()
+                .any(|token| token.closing.is_none())
         {
+            return None;
+        }
+        let (span_start, end) = if root && (first.start == start || root_wrappers) {
             (first.start, self.tokens[self.tokens.len() - 1].end)
         } else {
             let opening = self.tokens.get(index.checked_sub(1)?)?;
