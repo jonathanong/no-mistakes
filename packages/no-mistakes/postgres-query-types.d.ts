@@ -105,7 +105,15 @@ export interface PostgresSqlQueryEquality {
 export interface PostgresSqlQueryExists {
   scopeId: number;
   subqueryScopeId: number;
+  /** The EXISTS node's own flag. Wrapping `NOT` is not folded into this value. */
   negated: boolean;
+  /**
+   * NOT operators that apply to this EXISTS: each wrapping `NOT` (parentheses
+   * are transparent) plus one when `negated` is true.
+   */
+  notDepth: number;
+  /** `notDepth % 2 === 1`. Distinct from `negated` and from `context.underNot`. */
+  effectiveNegated: boolean;
   context: PostgresSqlPredicateContext;
   correlated: boolean;
   correlations: PostgresSqlQueryColumn[];
