@@ -51,6 +51,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
         fresh_mapped_parameters: Default::default(),
         fresh_mapped_argument_bindings: Default::default(),
@@ -127,6 +128,12 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
     evaluator.definite_deleted_argument_slots.insert((id, 0));
     evaluator.disconnected_argument_slots.insert((id, 0));
     assert!(masks != evaluator.callback_snapshot(captured, &function));
+    let recreated_mask = evaluator.callback_snapshot(captured, &function);
+    evaluator.recreated_argument_slots.insert((id, 0));
+    assert!(
+        recreated_mask != evaluator.callback_snapshot(captured, &function),
+        "recreating a deleted slot changes the callback memo key"
+    );
     let Value::Prefix(_, _, Some(builder_id)) = evaluator.scopes[root]["builder"] else {
         panic!("saved builder");
     };

@@ -49,6 +49,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);

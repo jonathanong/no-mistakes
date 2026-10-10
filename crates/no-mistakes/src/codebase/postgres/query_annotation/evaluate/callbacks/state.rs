@@ -12,6 +12,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
     possible: FxHashSet<(u64, Option<usize>)>,
     definite: FxHashSet<(u64, usize)>,
     disconnected: FxHashSet<(u64, usize)>,
+    recreated: FxHashSet<(u64, usize)>,
     invalidated: FxHashSet<u64>,
     fresh: FxHashMap<Environment, FxHashSet<String>>,
 }
@@ -24,6 +25,7 @@ pub(super) struct View<'a> {
     possible: &'a FxHashSet<(u64, Option<usize>)>,
     definite: &'a FxHashSet<(u64, usize)>,
     disconnected: &'a FxHashSet<(u64, usize)>,
+    recreated: &'a FxHashSet<(u64, usize)>,
     invalidated: &'a FxHashSet<u64>,
     fresh: &'a FxHashMap<Environment, FxHashSet<String>>,
     mapped: &'a FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -39,6 +41,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             possible: &self.deleted_argument_slots,
             definite: &self.definite_deleted_argument_slots,
             disconnected: &self.disconnected_argument_slots,
+            recreated: &self.recreated_argument_slots,
             invalidated: &self.invalidated_builders,
             fresh: &self.fresh_mapped_parameters,
             mapped: &self.mapped_arguments,
@@ -159,6 +162,9 @@ impl View<'_> {
             }
             if self.disconnected.contains(&(id, index)) {
                 found.disconnected.insert((id, index));
+            }
+            if self.recreated.contains(&(id, index)) {
+                found.recreated.insert((id, index));
             }
             values.push(value);
         }

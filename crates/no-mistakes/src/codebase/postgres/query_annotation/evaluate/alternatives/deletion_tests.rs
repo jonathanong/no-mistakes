@@ -63,6 +63,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             argument_objects: Default::default(),
             argument_extra_slots: Default::default(),
             definite_deleted_argument_slots: Default::default(),
+            recreated_argument_slots: Default::default(),
             disconnected_argument_slots: Default::default(),
         };
         let env = evaluator.module_environment(&path);

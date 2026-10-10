@@ -54,6 +54,7 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
         argument_objects: Default::default(),
         argument_extra_slots: Default::default(),
         definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
