@@ -45,6 +45,7 @@ rules:
         - table: votes
           column: created_at
       triggerMaintainedColumns: [updated_at]
+      unanalyzableSql: fail
 ```
 
 Counterexample: DML assigns a generated column.
@@ -118,6 +119,48 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   database. An empty name or a case-insensitive duplicate is a config error.
   An entry that matches no column is a stale finding. `[]` leaves today's
   generated-column findings unchanged.
+- `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
+  configuration error). `ignore` skips dynamic executor SQL that cannot be
+  checked instead of reporting it.
+
+### Unanalyzable SQL
+
+**Behavior change:** this rule previously dropped dynamic executor SQL unless
+its recovered text already proved a write. With the default
+`unanalyzableSql: fail`, a dynamic TypeScript executor call is reported with
+target `unanalyzable` at the executor call when it could assign a generated or
+trigger-maintained column:
+
+- no SQL text was recovered (an opaque `write(sql)` argument or a
+  `write(cond ? a : b)` choice), or
+- the recovered text is a top-level `INSERT`, `UPDATE`, or `MERGE` (after a
+  complete `WITH` list), or its leading statement is unknown or incomplete.
+
+Dynamic `SELECT` and `DELETE` text is not reported. A recovered write whose
+target tables are all written literally and have no generated or
+trigger-maintained column is not reported either; an interpolated table name
+(`INSERT INTO ${table} ...`) could be any table, so it is. Nothing is reported
+when the schema catalog has no generated or trigger-maintained columns. Columns
+that recovered text already proves are still reported with their ordinary
+findings. See the [migration note](../migrations/postgres-unanalyzable-sql.md).
+
+```ts
+import { write } from "@example/db";
+
+// Counterexample: both calls are reported as unanalyzable by default.
+export function run(sql: string) {
+  return write(sql);
+}
+
+export function touch(column: string) {
+  return write(`UPDATE items SET ${column} = now()`);
+}
+```
+
+Fix: pass a SQL literal or a configured trusted tagged template so the written
+columns can be checked, suppress the executor line with
+`no-mistakes-disable-next-line postgres-no-generated-column-writes`, or set
+`unanalyzableSql: ignore` to restore the earlier skip.
 
 ### Executor configuration
 
@@ -191,12 +234,13 @@ UPDATE orders SET status = 'paid' WHERE id = $1;
 ```
 
 Remove the generated column from the write and provide only source columns
-from which PostgreSQL computes it.
+from which PostgreSQL computes it. For an `unanalyzable` finding, make the
+executed SQL statically recoverable or set `unanalyzableSql: ignore`.
 
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
-known external table exception, or the file directive for a migration utility
+known external table exception or an `unanalyzable` executor call, or the file directive for a migration utility
 whose writes are validated elsewhere.
 
 ## Related rules

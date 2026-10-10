@@ -1,8 +1,11 @@
-use super::{finding, trigger_finding, CompiledOptions};
+use super::{finding, trigger_finding, unanalyzable_finding, CompiledOptions};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::postgres::dml::writes::positional_insert_hits;
-use crate::codebase::postgres::{SqlStatementFileFacts, SqlWriteColumns};
+use crate::codebase::postgres::{
+    recovered_sql_may_write_columns, EmbeddedSqlFileFacts, EmbeddedSqlKind, SqlStatementFileFacts,
+    SqlWriteColumns,
+};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use history::{events_before, snapshots, Catalogs};
@@ -61,16 +64,51 @@ pub(super) fn scan(
                 Some(file) => snapshots.get(&events_before(file, line)).unwrap_or(&finals),
                 None => &finals,
             };
-            extend_writes(
-                &mut findings,
-                &relative_slash_path(root, path),
-                statements,
-                &lookup,
-            );
+            let rel = relative_slash_path(root, path);
+            extend_writes(&mut findings, &rel, statements, &lookup);
+            if let Some(embedded) = profile
+                .filter(|_| opts.fail_unanalyzable)
+                .and_then(|profile| facts.embedded_sql(path, profile).ok())
+            {
+                extend_unanalyzable(&mut findings, &rel, embedded, statements, &lookup);
+            }
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
+}
+
+/// Dynamic INSERT/UPDATE/MERGE (or unknown) executor SQL can assign columns the
+/// recovered prefix does not show. A recovered write whose every target table
+/// is literal and has no tracked column cannot reach one, so it stays quiet.
+fn extend_unanalyzable<'a>(
+    findings: &mut Vec<RuleFinding>,
+    file: &str,
+    embedded: &EmbeddedSqlFileFacts,
+    statements: &[SqlStatementFileFacts],
+    lookup: &dyn Fn(usize) -> &'a Catalogs,
+) {
+    // Statement facts exist only for calls with recovered text, in call order.
+    let mut recovered = statements.iter();
+    for call in &embedded.calls {
+        let statement = call.sql_text.as_ref().and_then(|_| recovered.next());
+        if call.kind != EmbeddedSqlKind::Dynamic
+            || !recovered_sql_may_write_columns(call.sql_text.as_deref())
+        {
+            continue;
+        }
+        let untracked = statement.is_some_and(|statement| {
+            !statement.writes.is_empty()
+                && statement.writes.iter().all(|write| {
+                    // An interpolated table name could be any tracked table.
+                    !write.table.contains("sql_placeholder_")
+                        && lookup(write.line).combined.get(&write.table).is_none()
+                })
+        });
+        if !untracked {
+            findings.push(unanalyzable_finding(file, call.line.max(1) as usize));
+        }
+    }
 }
 
 fn extend_writes<'a>(

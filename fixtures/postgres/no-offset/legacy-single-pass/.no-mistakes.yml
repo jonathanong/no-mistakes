@@ -3,3 +3,6 @@ rules:
     scope: repository
     options:
       importSpecifier: "@example/db"
+      # The interpolated LIMIT keeps the dynamic-call path under parse accounting;
+      # ignore keeps this a clean run now that dynamic SELECTs fail closed by default.
+      unanalyzableSql: ignore

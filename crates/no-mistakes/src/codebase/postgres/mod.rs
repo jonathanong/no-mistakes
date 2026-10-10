@@ -60,7 +60,6 @@ pub use dml::{
     extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,
     GeneratedTableColumns,
 };
-pub(crate) use embedded::recovered_sql_needs_insert_check;
 pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
@@ -69,6 +68,9 @@ pub use embedded::{
 };
 pub(crate) use embedded::{
     package_name, package_root_for_specifier, project_relative_scoped_facts,
+};
+pub(crate) use embedded::{
+    recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
 };
 pub use locking::{
     extract_locking_select_metadata, extract_locking_select_metadata_with_placeholders,

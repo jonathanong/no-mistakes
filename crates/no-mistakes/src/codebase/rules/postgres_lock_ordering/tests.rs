@@ -2,12 +2,14 @@ mod false_positives;
 mod join_pinning;
 mod multi_target;
 mod pinned_prefix;
+mod unanalyzable;
 use super::directive::{
     call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,
     has_safe_directive, line_start_offset, DEFAULT_SAFE_DIRECTIVE,
 };
 use super::scan::{
-    findings_for_call, LOCK_ORDERING_TARGET, UNPARSEABLE_TARGET, UNRESOLVED_RELATION_TARGET,
+    findings_for_call, LOCK_ORDERING_TARGET, UNANALYZABLE_TARGET, UNPARSEABLE_TARGET,
+    UNRESOLVED_RELATION_TARGET,
 };
 use super::*;
 use crate::config::v2::{

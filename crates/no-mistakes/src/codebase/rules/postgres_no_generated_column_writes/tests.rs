@@ -4,6 +4,7 @@ mod no_op;
 mod prepared;
 mod review_followups;
 mod trigger;
+mod unanalyzable;
 
 use super::*;
 use crate::config::v2::{

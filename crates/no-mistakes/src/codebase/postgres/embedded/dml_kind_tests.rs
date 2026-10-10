@@ -1,4 +1,7 @@
-use super::dml_kind::{recovered_sql_needs_insert_check, top_level_dml_kind, TopLevelDml};
+use super::dml_kind::{
+    recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
+    top_level_dml_kind, TopLevelDml,
+};
 
 #[test]
 fn classifies_plain_dml_keywords() {
@@ -119,4 +122,35 @@ fn skip_cte_column_lists_materialized_and_malformed_prefixes() {
     assert!(recovered_sql_needs_insert_check(Some(
         "WITH cte AS (SELECT 1) MERGE INTO items USING src ON true WHEN MATCHED THEN DELETE"
     )));
+}
+
+#[test]
+fn select_and_column_write_predicates_fail_closed_on_missing_or_unknown_text() {
+    for predicate in [recovered_sql_may_select, recovered_sql_may_write_columns] {
+        assert!(predicate(None));
+        assert!(predicate(Some("WITH cte AS (SELECT 1")));
+        assert!(predicate(Some("VALUES (1)")));
+    }
+    assert!(recovered_sql_may_select(Some("SELECT id FROM topics")));
+    assert!(recovered_sql_may_select(Some(
+        "WITH recent AS (SELECT 1) SELECT * FROM recent"
+    )));
+    for sql in [
+        "INSERT INTO t VALUES (1)",
+        "UPDATE t SET a = 1",
+        "DELETE FROM t",
+        "MERGE INTO t USING s ON true WHEN MATCHED THEN DELETE",
+    ] {
+        assert!(!recovered_sql_may_select(Some(sql)), "{sql}");
+    }
+    for sql in [
+        "INSERT INTO t VALUES (1)",
+        "UPDATE t SET a = 1",
+        "MERGE INTO t USING s ON true WHEN MATCHED THEN DELETE",
+    ] {
+        assert!(recovered_sql_may_write_columns(Some(sql)), "{sql}");
+    }
+    for sql in ["SELECT 1", "DELETE FROM t"] {
+        assert!(!recovered_sql_may_write_columns(Some(sql)), "{sql}");
+    }
 }

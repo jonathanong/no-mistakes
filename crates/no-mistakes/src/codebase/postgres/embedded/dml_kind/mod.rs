@@ -30,6 +30,23 @@ pub(crate) fn recovered_sql_needs_insert_check(sql: Option<&str>) -> bool {
     }
 }
 
+/// True when recovered SQL is missing, incomplete, or a top-level SELECT.
+pub(crate) fn recovered_sql_may_select(sql: Option<&str>) -> bool {
+    recovered_sql_kind_matches(sql, |kind| kind == TopLevelDml::Select)
+}
+
+/// True when recovered SQL is missing, incomplete, or a top-level
+/// INSERT/UPDATE/MERGE that can assign columns.
+pub(crate) fn recovered_sql_may_write_columns(sql: Option<&str>) -> bool {
+    recovered_sql_kind_matches(sql, |kind| {
+        kind != TopLevelDml::Select && kind != TopLevelDml::Delete
+    })
+}
+
+fn recovered_sql_kind_matches(sql: Option<&str>, matches: impl Fn(TopLevelDml) -> bool) -> bool {
+    sql.is_none_or(|sql| top_level_dml_kind(sql).is_none_or(matches))
+}
+
 pub(crate) fn top_level_dml_kind(sql: &str) -> Option<TopLevelDml> {
     let mut index = skip_trivia(sql, 0);
     if starts_keyword(sql, index, "with") {
