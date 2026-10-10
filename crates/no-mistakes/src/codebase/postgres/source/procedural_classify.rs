@@ -3,6 +3,7 @@ mod controls;
 mod cursor;
 mod literal;
 mod scan;
+mod select_gate;
 mod statements;
 
 use super::types::*;

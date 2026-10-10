@@ -1,4 +1,5 @@
 use super::classify;
+use super::scan::{eq, word_of};
 use crate::codebase::postgres::source::types::{
     PostgresSqlPosition, PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind,
     PostgresSqlSpan,
@@ -22,25 +23,81 @@ fn script_kind(sql: &str) -> PostgresSqlProceduralOccurrenceKind {
     let Ok(tokens) = Tokenizer::new(&PostgreSqlDialect {}, sql).tokenize_with_location() else {
         return PostgresSqlProceduralOccurrenceKind::Unknown;
     };
-    let span = empty_span();
-    let classified = classify(&tokens, &|_, _| span.clone(), false);
-    fold(&classified.occurrences)
+    // Offsets are token indexes for this inner walk. They are not source spans.
+    let classified = classify(&tokens, &index_span, false);
+    // A LOOP does not parse its body. Promote SELECT only when the whole
+    // command is SQL: every top-level statement parses, and no label is skipped.
+    fold(
+        &tokens,
+        &classified.occurrences,
+        super::select_gate::statements_are_sql(&tokens, &classified.occurrences),
+    )
 }
 
-fn fold(occurrences: &[PostgresSqlProceduralOccurrence]) -> PostgresSqlProceduralOccurrenceKind {
+fn fold(
+    tokens: &[TokenWithSpan],
+    occurrences: &[PostgresSqlProceduralOccurrence],
+    promote_select: bool,
+) -> PostgresSqlProceduralOccurrenceKind {
     if occurrences.is_empty() {
         return PostgresSqlProceduralOccurrenceKind::Unknown;
     }
     let mut kind = PostgresSqlProceduralOccurrenceKind::Utility;
     for occurrence in occurrences {
-        let nested = if occurrence.occurrences.is_empty() {
-            occurrence.kind
+        let own = if promote_select {
+            select_utility(tokens, occurrence)
         } else {
-            prefer(occurrence.kind, fold(&occurrence.occurrences))
+            occurrence.kind
+        };
+        let nested = if occurrence.occurrences.is_empty() {
+            own
+        } else {
+            prefer(own, fold(tokens, &occurrence.occurrences, false))
         };
         kind = prefer(kind, nested);
     }
     kind
+}
+
+// Literal SELECT is utility here only. Bare SELECT in the outer walker stays unknown.
+// A LOOP body is walker-only, so an unparsed SELECT would be reported complete.
+fn select_utility(
+    tokens: &[TokenWithSpan],
+    occurrence: &PostgresSqlProceduralOccurrence,
+) -> PostgresSqlProceduralOccurrenceKind {
+    if occurrence.kind == PostgresSqlProceduralOccurrenceKind::Unknown
+        && occurrence.occurrences.is_empty()
+        && starts_with_select(tokens, occurrence)
+    {
+        PostgresSqlProceduralOccurrenceKind::Utility
+    } else {
+        occurrence.kind
+    }
+}
+
+fn starts_with_select(
+    tokens: &[TokenWithSpan],
+    occurrence: &PostgresSqlProceduralOccurrence,
+) -> bool {
+    tokens
+        .get(occurrence.span.start.offset)
+        .and_then(|token| word_of(&token.token))
+        .is_some_and(|word| eq(word, "SELECT"))
+}
+
+fn index_span(start: usize, end: usize) -> PostgresSqlSpan {
+    PostgresSqlSpan {
+        start: index_position(start),
+        end: index_position(end),
+    }
+}
+
+fn index_position(index: usize) -> PostgresSqlPosition {
+    PostgresSqlPosition {
+        offset: index,
+        line: 1,
+        column: 1,
+    }
 }
 
 fn prefer(
@@ -111,17 +168,5 @@ fn string_value(token: &Token) -> Option<String> {
         | Token::UnicodeStringLiteral(value) => Some(value.clone()),
         Token::DollarQuotedString(value) => Some(value.value.clone()),
         _ => None,
-    }
-}
-
-fn empty_span() -> PostgresSqlSpan {
-    let position = PostgresSqlPosition {
-        offset: 0,
-        line: 1,
-        column: 1,
-    };
-    PostgresSqlSpan {
-        start: position.clone(),
-        end: position,
     }
 }
