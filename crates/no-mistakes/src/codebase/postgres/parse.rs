@@ -67,6 +67,10 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 
 pub(super) struct PreparedPostgresTokens {
     pub tokens: Vec<sqlparser::tokenizer::TokenWithSpan>,
+    /// Lexical tokens before parser-compatibility rewrites. Occurrence
+    /// classification uses this inventory so `FOR UPDATE OF a, b` is not
+    /// expanded into duplicate DML facts.
+    pub occurrence_tokens: Vec<sqlparser::tokenizer::TokenWithSpan>,
     pub recursive_views: RecursiveViews,
     pub lexical_error: Option<sqlparser::tokenizer::TokenizerError>,
 }
@@ -84,10 +88,12 @@ pub(super) fn prepare_postgres_tokens(sql: &str) -> PreparedPostgresTokens {
     escaped.restore(&mut tokens);
     source_unicode::prepare(&mut tokens);
     let mut tokens = radix_numbers::repair(&tokens).unwrap_or(tokens);
+    let occurrence_tokens = tokens.clone();
     normalize_table_queries(&mut tokens);
     let recursive_views = recursive_view::prepare(&mut tokens);
     PreparedPostgresTokens {
         tokens,
+        occurrence_tokens,
         recursive_views,
         lexical_error,
     }

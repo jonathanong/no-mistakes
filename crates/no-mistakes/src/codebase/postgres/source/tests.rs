@@ -28,6 +28,7 @@ mod procedural_execute_select;
 mod procedural_for_execute;
 mod procedural_occurrences;
 mod procedural_omit;
+mod procedural_prepared_tokens;
 mod procedural_quoted_label;
 mod schema;
 mod schema_virtual;

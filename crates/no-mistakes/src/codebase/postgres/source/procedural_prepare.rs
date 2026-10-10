@@ -76,7 +76,8 @@ pub(super) fn prepare_block<'a>(
             .push(diagnostic(&error.to_string(), &body_span));
         return Ok(PreparedBlock::Done(block));
     }
-    let walked = super::procedural_walk::walk(&body, locations, &body_span);
+    // `prepared.tokens` includes parser rewrites. Classify the pre-rewrite inventory.
+    let walked = super::procedural_walk::walk(&prepared.occurrence_tokens, &body, locations);
     block.occurrences = walked.occurrences;
     if walked.legacy_stop {
         block.diagnostics.push(diagnostic(
