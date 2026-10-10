@@ -255,6 +255,7 @@ jobs:
           packages/no-mistakes/scripts/real-napi-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           packages/no-mistakes/scripts/postgres-source-api.test.js
+          packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js
           --coverage=false
 
       # Codecov is reporting only; an outage must not block merges.
@@ -398,7 +399,7 @@ jobs:
         run: |
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
-          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js --coverage=false
 
       - name: Report native job timing
         if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
