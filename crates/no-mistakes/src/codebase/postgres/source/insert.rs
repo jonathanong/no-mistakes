@@ -49,7 +49,7 @@ fn project_inner(
         .as_ref()
         .map(|alias| identifier(&alias.alias));
     let delimiters = spans::locate_delimiters(&spans::delimiters(tokens), locations);
-    let items = (!cte_core).then(|| value.returning.as_deref()).flatten();
+    let items = (!cte_core).then_some(value.returning.as_deref()).flatten();
     let returning = returning::project(items, &delimiters, locations);
     let mut complete = table.is_some()
         && supported_modifiers(value)
