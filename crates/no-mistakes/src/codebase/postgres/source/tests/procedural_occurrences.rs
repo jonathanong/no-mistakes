@@ -75,6 +75,32 @@ fn create_type_enum_is_utility_and_raise_only_control_flow_is_not_dml() {
 }
 
 #[test]
+fn raise_between_create_tables_keeps_both_statements() {
+    let (sql, parsed) = block(
+        "DO $$ BEGIN CREATE TABLE a(id int); RAISE NOTICE 'x'; CREATE TABLE b(id int); END $$;",
+    );
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+    assert!(parsed.diagnostics.is_empty());
+    assert_eq!(
+        kinds(&parsed.occurrences),
+        ["Utility", "ControlFlow", "Utility"]
+    );
+    assert_span(&sql, &parsed.occurrences[1].span, "RAISE NOTICE 'x'");
+    assert!(!slice(&sql, &parsed.occurrences[1].span).contains("CREATE"));
+    assert_eq!(parsed.statements.len(), 2);
+    assert!(parsed.statements[0].sql.contains("CREATE TABLE a"));
+    assert!(parsed.statements[1].sql.contains("CREATE TABLE b"));
+    assert!(matches!(
+        parsed.statements[0].facts,
+        PostgresSqlStatementKind::CreateTable { .. }
+    ));
+    assert!(matches!(
+        &parsed.statements[1].facts,
+        PostgresSqlStatementKind::CreateTable { .. }
+    ));
+}
+
+#[test]
 fn loop_insert_is_visible_dml_and_dynamic_execute_stays_fail_closed() {
     let (sql, parsed) =
         block("DO $$ BEGIN FOR i IN 1..2 LOOP INSERT INTO t(id) VALUES (i); END LOOP; END $$;");
@@ -265,8 +291,16 @@ fn exception_handlers_nested_do_and_cte_dml_keep_occurrence_kinds() {
     let (_, parsed) = block(
         "DO $$ BEGIN INSERT INTO t(id) VALUES (1); EXCEPTION WHEN unique_violation THEN DELETE FROM t; END $$;",
     );
-    assert!(!parsed.complete);
-    assert!(parsed.statements.is_empty());
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+    assert!(parsed.diagnostics.is_empty());
+    assert_eq!(parsed.statements.len(), 1);
+    assert!(parsed.statements[0]
+        .sql
+        .contains("INSERT INTO t(id) VALUES (1)"));
+    assert!(parsed
+        .statements
+        .iter()
+        .all(|statement| !statement.sql.contains("DELETE")));
     assert_eq!(kinds(&parsed.occurrences), ["Dml", "ControlFlow[\"Dml\"]"]);
 
     let facts = parse_postgres_source(&PostgresSqlSource {

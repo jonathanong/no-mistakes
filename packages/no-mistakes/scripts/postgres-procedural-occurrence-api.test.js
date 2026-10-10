@@ -17,6 +17,13 @@ const CASES = [
     shape: ["utility"],
   },
   {
+    name: "raise between creates",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); RAISE NOTICE 'x'; CREATE TABLE b(id int); END $$;",
+    complete: true,
+    shape: ["utility", "controlFlow", "utility"],
+    statements: 2,
+  },
+  {
     name: "control flow",
     sql: "DO $$ BEGIN IF (SELECT COUNT(*) FROM t) > 0 THEN RAISE EXCEPTION 'bad'; END IF; END $$;",
     complete: true,
