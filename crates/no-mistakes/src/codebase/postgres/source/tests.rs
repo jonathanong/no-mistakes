@@ -24,6 +24,7 @@ mod procedural_exception;
 mod procedural_execute_into;
 mod procedural_execute_select;
 mod procedural_occurrences;
+mod procedural_quoted_label;
 mod schema;
 mod schema_virtual;
 mod structured_replay;

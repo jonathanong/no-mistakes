@@ -66,7 +66,8 @@ pub(super) fn eat_label(ctx: &mut Ctx<'_>) {
     let Some(index) = peek_index(ctx) else {
         return;
     };
-    if word_of(&ctx.tokens[index].token).is_none() {
+    // Closing labels are any identifier. Quoted words stay out of `word_of`.
+    if !matches!(&ctx.tokens[index].token, Token::Word(_)) {
         return;
     }
     let semicolon = ((index + 1)..ctx.tokens.len())
