@@ -16,9 +16,7 @@ pub(super) fn omit_non_sql(
     let len = body.end.saturating_sub(body.start);
     let mut marks = non_sql_marks(body.start, len, occurrences);
     // The walker skips `<<label>>` before the span. Extend the omitted interval only.
-    for (start, end) in label::opening_labels(body, occurrences, tokens, &local) {
-        marks.cover(start, end);
-    }
+    marks.cover_many(label::opening_labels(body, occurrences, tokens, &local));
     let count = tokens.len();
     tokens.retain(|token| {
         let start = body_offset(&local, body, token.span.start);
@@ -28,6 +26,7 @@ pub(super) fn omit_non_sql(
     debug_assert_eq!(marks.span_passes(), occurrences.len());
     debug_assert!(marks.body_passes() <= occurrences.len());
     debug_assert_eq!(marks.token_checks(), count);
+    debug_assert!(marks.merge_passes() <= 2);
 }
 
 pub(super) fn sql_occurrence(kind: PostgresSqlProceduralOccurrenceKind) -> bool {
@@ -50,6 +49,7 @@ pub(super) struct NonSqlMarks {
     span_passes: usize,
     body_passes: usize,
     token_checks: Cell<usize>,
+    merge_passes: usize,
 }
 
 impl NonSqlMarks {
@@ -77,14 +77,25 @@ impl NonSqlMarks {
         self.token_checks.get()
     }
 
-    /// Merge one more omitted range. Does not count as another occurrence.
-    pub(super) fn cover(&mut self, start: usize, end: usize) {
+    pub(super) fn merge_passes(&self) -> usize {
+        self.merge_passes
+    }
+
+    /// Add all opening-label ranges with one sort and merge.
+    pub(super) fn cover_many(&mut self, ranges: impl IntoIterator<Item = (usize, usize)>) {
         let window_end = self.origin.saturating_add(self.len);
-        if start >= end || start < self.origin || end > window_end {
-            return;
+        let mut added = false;
+        for (start, end) in ranges {
+            if start >= end || start < self.origin || end > window_end {
+                continue;
+            }
+            self.intervals.push(Interval { start, end });
+            added = true;
         }
-        self.intervals.push(Interval { start, end });
-        self.intervals = merge_intervals(std::mem::take(&mut self.intervals));
+        if added {
+            self.intervals = merge_intervals(std::mem::take(&mut self.intervals));
+            self.merge_passes += 1;
+        }
     }
 }
 
@@ -122,6 +133,7 @@ pub(super) fn non_sql_marks(
         span_passes,
         body_passes,
         token_checks: Cell::new(0),
+        merge_passes: 1,
     }
 }
 
