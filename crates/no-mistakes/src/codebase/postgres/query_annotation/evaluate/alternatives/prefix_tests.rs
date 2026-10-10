@@ -5,6 +5,25 @@ use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
 #[test]
+fn taint_preserves_shared_scopes_without_affected_builders() {
+    use super::super::{Scope, Value};
+    use crate::fx::FxHashSet;
+    let scope = Scope::from(FxHashMap::from_iter([(
+        "sql".into(),
+        Value::Prefix("SELECT 1".into(), true, Some(7)),
+    )]));
+    let snapshot = scope.clone();
+    let mut scopes = vec![scope];
+    super::values::apply_taint(&mut scopes, &FxHashSet::default());
+    assert!(std::ptr::eq(&*scopes[0], &*snapshot));
+    super::values::apply_taint(&mut scopes, &FxHashSet::from_iter([8]));
+    assert!(std::ptr::eq(&*scopes[0], &*snapshot));
+    super::values::apply_taint(&mut scopes, &FxHashSet::from_iter([7]));
+    assert!(matches!(scopes[0]["sql"], Value::Unknown));
+    assert!(matches!(snapshot["sql"], Value::Prefix(_, _, Some(7))));
+}
+
+#[test]
 fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-live-binding/src/prefix-transitions.cjs",

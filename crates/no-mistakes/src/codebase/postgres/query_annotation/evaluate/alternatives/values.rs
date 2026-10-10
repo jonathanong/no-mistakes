@@ -79,7 +79,13 @@ pub(super) fn changes(
 }
 
 pub(super) fn apply_taint(scopes: &mut [Scope], changed: &FxHashSet<u64>) {
+    if changed.is_empty() {
+        return;
+    }
     for scope in scopes {
+        if !scope.contains_builders(changed) {
+            continue;
+        }
         for value in scope.values_mut() {
             if let Value::Prefix(_, _, Some(id)) = value {
                 if changed.contains(id) {
