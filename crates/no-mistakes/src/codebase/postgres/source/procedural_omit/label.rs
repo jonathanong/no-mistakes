@@ -26,6 +26,19 @@ pub(in super::super) fn opening_labels(
         .filter_map(|token| locations.span(token.span))
         .map(|span| (span.start.offset, span.end.offset))
         .collect::<Vec<_>>();
+    let mut occupied = Vec::new();
+    collect_spans(occurrences, &mut occupied);
+    occupied.sort_unstable();
+    let mut merged: Vec<(usize, usize)> = Vec::new();
+    for (start, end) in occupied {
+        if let Some(last) = merged.last_mut() {
+            if start <= last.1 {
+                last.1 = last.1.max(end);
+                continue;
+            }
+        }
+        merged.push((start, end));
+    }
     let mut labels = Vec::new();
     for occurrence in occurrences {
         if sql_occurrence(occurrence.kind) {
@@ -40,7 +53,7 @@ pub(in super::super) fn opening_labels(
         let start = body.offset(start).expect("label start");
         let end = body.offset(end).expect("label end");
         // A label already covered by another occurrence is not a second mark.
-        if overlaps_any(start, end, occurrences) {
+        if overlaps_any(start, end, &merged) {
             continue;
         }
         labels.push((start, end));
@@ -62,11 +75,16 @@ fn decoded_index(body: &Body<'_>, original: usize) -> Option<usize> {
     (body.offset(lo).expect("decoded index") == original).then_some(lo)
 }
 
-fn overlaps_any(start: usize, end: usize, occurrences: &[PostgresSqlProceduralOccurrence]) -> bool {
-    occurrences.iter().any(|occurrence| {
-        (start < occurrence.span.end.offset && occurrence.span.start.offset < end)
-            || overlaps_any(start, end, &occurrence.occurrences)
-    })
+fn collect_spans(occurrences: &[PostgresSqlProceduralOccurrence], spans: &mut Vec<(usize, usize)>) {
+    for occurrence in occurrences {
+        spans.push((occurrence.span.start.offset, occurrence.span.end.offset));
+        collect_spans(&occurrence.occurrences, spans);
+    }
+}
+
+fn overlaps_any(start: usize, end: usize, occupied: &[(usize, usize)]) -> bool {
+    let at = occupied.partition_point(|(_, until)| *until <= start);
+    occupied.get(at).is_some_and(|(from, _)| *from < end)
 }
 
 /// `<<identifier>>` or the custom operator `<<>>`, with whitespace/comments before `at`.

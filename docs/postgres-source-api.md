@@ -153,7 +153,8 @@ not a label, while `"BEGIN"` and unquoted `SELECT` are. A closing label that doe
 not match keeps the block incomplete. A label prefix on a wholly literal
 command stays `unknown`. An opening label is omitted with the walker-only block
 it names, including when whitespace-separated PostgreSQL comments occur before
-the block. An adjacent `>>/*` sequence is still a tokenizer gap
+the block. Multiple sibling labels share one coverage merge for the body. An
+adjacent `>>/*` sequence remains a tokenizer gap
 ([#1724](https://github.com/jonathanong/no-mistakes/issues/1724)). A block the SQL
 parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
 DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body

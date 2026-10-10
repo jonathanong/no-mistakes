@@ -326,16 +326,42 @@ fn cover_adds_a_label_interval_without_an_extra_pass() {
     let mut marks = non_sql_marks(4, 10, &[occurrence(ControlFlow, 8, 12)]);
     assert_eq!(marks.span_passes(), 1);
     assert_eq!(marks.body_passes(), 1);
-    marks.cover(8, 8);
-    marks.cover(0, 3);
-    marks.cover(13, 15);
+    marks.cover_many([(8, 8)]);
+    marks.cover_many([(0, 3)]);
+    marks.cover_many([(13, 15)]);
     assert!(marks.overlaps(8, 9));
     assert!(!marks.overlaps(4, 6));
-    marks.cover(6, 9);
+    marks.cover_many([(6, 9)]);
     assert!(marks.overlaps(6, 7));
-    marks.cover(12, 14);
+    marks.cover_many([(12, 14)]);
     assert!(marks.overlaps(13, 14));
     assert!(!marks.overlaps(4, 6));
     assert_eq!(marks.span_passes(), 1);
     assert_eq!(marks.body_passes(), 1);
+}
+
+#[test]
+fn sibling_labels_use_one_interval_merge_and_keep_neighboring_sql() {
+    let sql = super::fixture("procedural-opening-label-batch.sql");
+    let (_, parsed) = block(&sql);
+    assert!(parsed.complete, "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.statements.len(), 2, "{:?}", parsed.statements);
+    assert!(parsed.statements[0]
+        .sql
+        .contains("CREATE TABLE before_batch"));
+    assert!(parsed.statements[1]
+        .sql
+        .contains("CREATE TABLE after_batch"));
+    assert!(parsed
+        .statements
+        .iter()
+        .all(|statement| !statement.sql.contains("<<")));
+
+    // Multiple disjoint labels must add only one merge after occurrence coverage.
+    let mut marks = non_sql_marks(0, 24, &[occurrence(ControlFlow, 10, 12)]);
+    marks.cover_many([(1, 3), (5, 7), (13, 15), (18, 20), (22, 24)]);
+    assert_eq!(marks.merge_passes(), 2);
+    for at in [1, 5, 10, 13, 18, 22] {
+        assert!(marks.overlaps(at, at + 1));
+    }
 }
