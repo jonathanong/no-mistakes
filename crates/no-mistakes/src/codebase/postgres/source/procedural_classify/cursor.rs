@@ -150,12 +150,22 @@ fn label_disagrees(open: &OpenLabel, close: Option<&LabelId>) -> bool {
 }
 
 fn same_label(open: &LabelId, close: &LabelId) -> bool {
-    // Quoted identifiers match only when both sides are quoted and the values are equal.
-    if open.quoted || close.quoted {
-        open.quoted && close.quoted && open.value == close.value
+    stored_label(open) == stored_label(close)
+}
+
+fn stored_label(label: &LabelId) -> String {
+    // PostgreSQL folds unquoted names, then truncates either form to 63 UTF-8 bytes.
+    let mut value = if label.quoted {
+        label.value.clone()
     } else {
-        eq(&open.value, &close.value)
+        label.value.to_ascii_lowercase()
+    };
+    let mut end = value.len().min(63);
+    while !value.is_char_boundary(end) {
+        end -= 1;
     }
+    value.truncate(end);
+    value
 }
 
 fn label_id(token: &Token) -> Option<LabelId> {

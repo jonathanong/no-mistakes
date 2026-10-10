@@ -178,14 +178,43 @@ fn unquoted_labels_match_ascii_case_insensitively() {
 }
 
 #[test]
-fn quoted_labels_match_only_the_same_quoted_word() {
+fn quoted_labels_preserve_case() {
     let (_, matched) = block(r#"DO $$ <<"Retry">> BEGIN RAISE NOTICE 'x'; END "Retry"; $$;"#);
     assert!(matched.complete, "{:?}", matched.diagnostics);
     assert_eq!(kinds(&matched.occurrences), ["ControlFlow"]);
 
     fails_closed(r#"DO $$ <<"Retry">> BEGIN RAISE NOTICE 'x'; END retry; $$;"#);
     fails_closed(r#"DO $$ <<"Retry">> BEGIN RAISE NOTICE 'x'; END "retry"; $$;"#);
-    fails_closed(r#"DO $$ <<foo>> BEGIN RAISE NOTICE 'x'; END "foo"; $$;"#);
+}
+
+#[test]
+fn mixed_quote_labels_compare_normalized_identifiers() {
+    for fixture in [
+        "procedural-label-mixed-quoted-opening.sql",
+        "procedural-label-mixed-unquoted-opening.sql",
+    ] {
+        let (_, parsed) = block(&super::fixture(fixture));
+        assert!(parsed.complete, "{fixture}: {:?}", parsed.diagnostics);
+        assert_eq!(kinds(&parsed.occurrences), ["ControlFlow"]);
+    }
+    fails_closed(&super::fixture("procedural-label-mixed-case.sql"));
+}
+
+#[test]
+fn labels_compare_the_stored_63_byte_identifier() {
+    // The distinct suffixes are discarded by PostgreSQL before label comparison.
+    for fixture in [
+        "procedural-label-truncated-match.sql",
+        "procedural-label-truncated-utf8.sql",
+        "procedural-label-truncated-utf8-boundary.sql",
+        "procedural-label-truncated-mixed.sql",
+    ] {
+        let (_, parsed) = block(&super::fixture(fixture));
+        assert!(parsed.complete, "{fixture}: {:?}", parsed.diagnostics);
+        assert_eq!(kinds(&parsed.occurrences), ["ControlFlow"]);
+    }
+
+    fails_closed(&super::fixture("procedural-label-truncated-difference.sql"));
 }
 
 #[test]

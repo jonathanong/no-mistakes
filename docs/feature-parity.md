@@ -744,12 +744,14 @@ parsed `SELECT`. A qualified name such as `public.execute(...)` stays
 or conditional-loop header with no condition keeps the block incomplete. That
 empty header reports that the procedural condition is missing, at the header. An
 opening label is one identifier; PL/pgSQL reserved words such as unquoted
-`BEGIN` are not labels, while unquoted `SELECT` is allowed. A closing label
-that does not match keeps the block incomplete and reports `unknown` at the
-mismatched label, in source order. Multiple
-mismatches retain their enclosing blocks through one ordered merge without
-repeated sibling scans. A label prefix on a wholly literal command stays `unknown`.
-An opening label is omitted with the walker-only block it names.
+`BEGIN` are not labels, while unquoted `SELECT` is allowed. Labels compare
+after unquoted case folding and PostgreSQL's 63-byte UTF-8 identifier
+truncation; quoted and unquoted forms can match when their stored names agree.
+A closing label that does not match keeps the block incomplete and reports
+`unknown` at the mismatched label, in source order. Multiple mismatches retain
+their enclosing blocks through one ordered merge without repeated sibling
+scans. A label prefix on a wholly literal command stays `unknown`. An opening
+label is omitted with the walker-only block it names.
 
 PostgreSQL INSERT source facts have Rust and asynchronous Node ESM/CJS parity
 for composite assignment syntax. Function expressions expose `derived` provenance;

@@ -860,10 +860,13 @@ command followed by unquoted `INTO` is classified from that command, and the
 conditional-loop header with no condition keeps the block incomplete. That empty
 header reports that the procedural condition is missing, at the header. An
 opening label is one identifier; PL/pgSQL reserved words such as unquoted
-`BEGIN` are not labels, while unquoted `SELECT` is allowed. A closing label
-that does not match keeps the block incomplete and reports `unknown` at that
-label, in source order. A label prefix on a wholly literal command stays
-`unknown`. An opening label is omitted with the walker-only block it names. See
+`BEGIN` are not labels, while unquoted `SELECT` is allowed. Labels compare
+after unquoted case folding and PostgreSQL's 63-byte UTF-8 identifier
+truncation; quoted and unquoted forms can match when their stored names agree.
+A closing label that does not match keeps the block incomplete and reports
+`unknown` at that label, in source order. A label prefix on a wholly literal
+command stays `unknown`. An opening label is omitted with the walker-only
+block it names. See
 [PostgreSQL source facts](postgres-source-api.md).
 
 `parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as
