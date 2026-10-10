@@ -10,7 +10,10 @@ pub(super) fn if_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     let start = peek_index(ctx).unwrap_or(ctx.index);
     eat_word(ctx, "IF");
     let mut nested = Vec::new();
+    let mut empty = false;
     loop {
+        // Peek before `scan_header` consumes the condition. ELSE has no header.
+        empty |= empty_header(ctx, "THEN");
         nested.extend(scan::scan_header(ctx, &["THEN"]));
         if !eat_word(ctx, "THEN") {
             return done(ctx, Kind::Unknown, start, nested);
@@ -26,7 +29,16 @@ pub(super) fn if_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     }
     if eat_word(ctx, "END") && eat_word(ctx, "IF") {
         cursor::eat_semi(ctx);
-        done(ctx, Kind::ControlFlow, start, nested)
+        done(
+            ctx,
+            if empty {
+                Kind::Unknown
+            } else {
+                Kind::ControlFlow
+            },
+            start,
+            nested,
+        )
     } else {
         done(ctx, Kind::Unknown, start, nested)
     }
@@ -62,9 +74,14 @@ pub(super) fn loop_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     ctx.walker_only = true;
     let mut nested = Vec::new();
     if !bare {
+        // Same peek as IF. Closing-label checks stay on the non-empty path below.
+        let empty = empty_header(ctx, "LOOP");
         nested.extend(scan::scan_header(ctx, &["LOOP"]));
         if !eat_word(ctx, "LOOP") {
             return done(ctx, Kind::Unknown, start, nested);
+        }
+        if empty {
+            return finish_unknown_loop(ctx, start, nested);
         }
     }
     nested.extend(walk_statements(ctx, Stop::Loop));
@@ -75,6 +92,25 @@ pub(super) fn loop_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
     } else {
         done(ctx, Kind::Unknown, start, nested)
     }
+}
+
+/// A conditional header with no token before its stop word. Whitespace is skipped.
+fn empty_header(ctx: &Ctx<'_>, stop: &str) -> bool {
+    at_word(ctx, stop)
+}
+
+/// Walk the body and the closing `END LOOP` so later statements stay aligned.
+fn finish_unknown_loop(
+    ctx: &mut Ctx<'_>,
+    start: usize,
+    mut nested: Vec<PostgresSqlProceduralOccurrence>,
+) -> PostgresSqlProceduralOccurrence {
+    nested.extend(walk_statements(ctx, Stop::Loop));
+    if eat_word(ctx, "END") && eat_word(ctx, "LOOP") {
+        cursor::eat_label(ctx);
+        cursor::eat_semi(ctx);
+    }
+    done(ctx, Kind::Unknown, start, nested)
 }
 
 pub(super) fn begin_stmt(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {

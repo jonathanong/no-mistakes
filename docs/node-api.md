@@ -856,7 +856,8 @@ A wholly literal `FOR ... IN EXECUTE` operand is `dml` or `utility`, including a
 parsed `SELECT`. A qualified name such as `public.execute(...)` stays
 `dynamicExecute` rather than static DML parsed from the argument. A literal
 command followed by unquoted `INTO` is classified from that command, and the
-`INTO` target still keeps the block incomplete. See
+`INTO` target still keeps the block incomplete. An IF, ELSIF, or
+conditional-loop header with no condition keeps the block incomplete. See
 [PostgreSQL source facts](postgres-source-api.md).
 
 `parsePostgresSql()` and its batch overload expose data-modifying CTE bodies as

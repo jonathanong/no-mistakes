@@ -144,7 +144,8 @@ follows the literal while the unsupported `INTO` target keeps the enclosing bloc
 incomplete.
 Quoted strings, quoted identifiers, and comments are not keywords, so
 `RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
-occurrence is `dynamicExecute`. A block classified only by this walker is complete
+occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
+condition keeps the block incomplete. A block classified only by this walker is complete
 only when every occurrence is recognized `utility` or `controlFlow`. A block the SQL
 parser already accepts keeps that statement completeness, including plain `BEGIN`/`END`
 DDL, and still lists static `dml` when it is present. Statement-level `DECLARE`, a body
