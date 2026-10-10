@@ -14,7 +14,7 @@ fn classified_utilities_do_not_make_procedural_blocks_incomplete() {
             _ => None,
         })
         .collect::<Vec<_>>();
-    assert_eq!(blocks.len(), 13);
+    assert_eq!(blocks.len(), 14);
     for (index, block) in blocks.iter().enumerate() {
         // Parsed DML retains the existing source-fact completeness semantics; execution
         // safety is represented separately by its DML occurrence kind.

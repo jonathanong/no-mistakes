@@ -11,7 +11,7 @@ pub(super) fn is_static_lock_table(ctx: &Ctx<'_>) -> bool {
         .take_while(|token| !matches!(token, Token::SemiColon))
         .filter(|token| !matches!(token, Token::Whitespace(_)))
         .collect::<Vec<_>>();
-    let Some(lock) = tokens.first().and_then(|token| identifier_word(token)) else {
+    let Some(lock) = tokens.first().and_then(|token| keyword_word(token)) else {
         return false;
     };
     if !eq(lock, "LOCK")

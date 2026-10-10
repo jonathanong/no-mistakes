@@ -39,3 +39,6 @@ END $$;
 DO $$ BEGIN
   LOCK TABLE public., q IN SHARE MODE;
 END $$;
+DO $$ BEGIN
+  "LOCK" TABLE t IN SHARE MODE;
+END $$;
