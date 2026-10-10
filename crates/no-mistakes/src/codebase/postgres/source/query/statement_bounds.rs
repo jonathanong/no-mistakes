@@ -6,11 +6,7 @@
 use super::super::locations::Locations;
 use super::super::types::{PostgresSqlQuery, PostgresSqlQueryClause, PostgresSqlQueryUnsupported};
 use sqlparser::ast::helpers::attached_token::AttachedToken;
-#[cfg(test)]
-use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::Token;
-#[cfg(test)]
-use sqlparser::tokenizer::{TokenWithSpan, Tokenizer};
 
 mod tail;
 use tail::{bounded_end, open_depth};
@@ -146,45 +142,6 @@ fn reject(facts: &mut PostgresSqlQuery, index: usize, scope: usize) {
     statement.unsupported.push(item.clone());
     facts.unsupported.push(item);
     facts.complete = false;
-}
-
-/// Byte offset of the last non-trivia token in `tail`, relative to `tail`.
-/// `Ok(None)` means the tail is empty or only whitespace and comments.
-#[cfg(test)]
-fn significant_end(tail: &str) -> Result<Option<usize>, ()> {
-    if tail.is_empty() {
-        return Ok(None);
-    }
-    let mut tokens = Vec::new();
-    if Tokenizer::new(&PostgreSqlDialect {}, tail)
-        .tokenize_with_location_into_buf(&mut tokens)
-        .is_err()
-    {
-        return Err(());
-    }
-    boundary_end(tail, &tokens)
-}
-
-/// `Err` when `tokens` do not consume `tail` or a significant token has no
-/// source position. Callers then drop the truncated slice instead of guessing.
-#[cfg(test)]
-fn boundary_end(tail: &str, tokens: &[TokenWithSpan]) -> Result<Option<usize>, ()> {
-    let local = Locations::new(tail);
-    let last = tokens.last().ok_or(())?;
-    let consumed = local
-        .position(last.span.end)
-        .map(|position| position.offset);
-    if consumed != Some(tail.len()) {
-        return Err(());
-    }
-    let mut end = None;
-    for token in tokens {
-        if matches!(token.token, Token::Whitespace(_) | Token::EOF) {
-            continue;
-        }
-        end = Some(local.position(token.span.end).ok_or(())?.offset);
-    }
-    Ok(end)
 }
 
 #[cfg(test)]

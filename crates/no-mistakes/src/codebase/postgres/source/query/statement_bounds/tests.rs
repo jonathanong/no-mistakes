@@ -2,8 +2,9 @@ use super::*;
 use crate::codebase::postgres::source::dialect::PostgresSourceDialect;
 use crate::codebase::postgres::source::locations::Locations;
 use sqlparser::ast::{SetExpr, Spanned, Statement};
+use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
-use sqlparser::tokenizer::{Span, Token, TokenWithSpan};
+use sqlparser::tokenizer::{Span, Token, TokenWithSpan, Tokenizer};
 
 fn project_sql(sql: &str) -> PostgresSqlQuery {
     let ast = Parser::parse_sql(&PostgresSourceDialect, sql).unwrap();
@@ -141,6 +142,43 @@ fn a_non_paren_closing_token_is_not_a_statement_boundary() {
     );
     assert!(facts.nested_statements[0].sql.is_empty());
     assert!(!facts.nested_statements[0].complete);
+}
+
+/// Byte offset of the last non-trivia token in `tail`, relative to `tail`.
+/// `Ok(None)` means the tail is empty or only whitespace and comments.
+fn significant_end(tail: &str) -> Result<Option<usize>, ()> {
+    if tail.is_empty() {
+        return Ok(None);
+    }
+    let mut tokens = Vec::new();
+    if Tokenizer::new(&PostgreSqlDialect {}, tail)
+        .tokenize_with_location_into_buf(&mut tokens)
+        .is_err()
+    {
+        return Err(());
+    }
+    boundary_end(tail, &tokens)
+}
+
+/// `Err` when `tokens` do not consume `tail` or a significant token has no
+/// source position. Callers then drop the truncated slice instead of guessing.
+fn boundary_end(tail: &str, tokens: &[TokenWithSpan]) -> Result<Option<usize>, ()> {
+    let local = Locations::new(tail);
+    let last = tokens.last().ok_or(())?;
+    let consumed = local
+        .position(last.span.end)
+        .map(|position| position.offset);
+    if consumed != Some(tail.len()) {
+        return Err(());
+    }
+    let mut end = None;
+    for token in tokens {
+        if matches!(token.token, Token::Whitespace(_) | Token::EOF) {
+            continue;
+        }
+        end = Some(local.position(token.span.end).ok_or(())?.offset);
+    }
+    Ok(end)
 }
 
 #[test]
