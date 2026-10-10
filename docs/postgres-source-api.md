@@ -173,9 +173,11 @@ records, `argumentsComplete`, `syntax`, and call `modifiers`. Argument roots
 distinguish `f(id)`, `f(id + 1)`, `f(g(id))`, and `f('id')`; repeated arguments
 remain repeated. Named arguments retain the name. Argument `sql` is rendered
 SQL, while spans refer to the original UTF-8 source. When that rendered SQL
-occurs verbatim at the parser span, the span is widened so
-`source.slice(span.start.offset, span.end.offset)` equals `sql`, including the
-parentheses of `now()` and `coalesce(now(), now())`. The same byte coordinates
+occurs verbatim around the parser span, the span grows in either direction so
+`source.slice(span.start.offset, span.end.offset)` equals `sql`. That covers
+the parentheses of `now()` and `coalesce(now(), now())` and the leading minus
+in `-(1) + 2`. An INSERT column-source span is omitted when the rendered
+text is not those source bytes. The same byte coordinates
 apply to `EXECUTE ... USING` expressions in a dollar-quoted `DO` body and to
 INSERT source expressions. Wildcards, subquery
 argument lists, and expression-named arguments set `argumentsComplete: false`;

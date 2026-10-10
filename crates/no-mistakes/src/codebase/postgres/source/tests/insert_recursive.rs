@@ -158,6 +158,11 @@ fn insert_column_sources_keep_rows_branches_and_proven_bytes() {
             assert_eq!(slice(&sql, &expression["span"]), expected);
         }
     }
+    // The parser span starts at the operand. The leading minus and parenthesis
+    // are still part of the rendered source bytes.
+    let signed =
+        &statements[6]["insert"]["columnSources"]["columns"][1]["sources"][0]["expression"];
+    assert_eq!(slice(&sql, &signed["span"]), "-(1) + 2");
 }
 
 #[test]

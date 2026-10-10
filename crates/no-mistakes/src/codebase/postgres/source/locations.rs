@@ -41,12 +41,14 @@ impl<'a> Locations<'a> {
         &self.sql[span.start.offset..span.end.offset]
     }
 
-    /// Extend a parser span when rendered SQL continues verbatim in the source.
+    /// Extend a parser span when rendered SQL is the adjacent source bytes.
     ///
-    /// Function spans from sqlparser often stop before `()`. When `display`
-    /// begins with the current slice and the remainder is the following source
-    /// bytes, the returned span covers `display`. A renderer that changes
-    /// whitespace leaves the original span in place.
+    /// Function spans from sqlparser often stop before `()`. Unary and nested
+    /// spans often start after the operator or opening parenthesis. When
+    /// `display` contains the current slice exactly once in a position whose
+    /// extra prefix and suffix are the adjacent source bytes, the returned
+    /// span covers `display`. Two matching alignments, or a renderer that
+    /// changes whitespace, leave the original span in place.
     pub(super) fn span_covering(
         &self,
         span: Option<PostgresSqlSpan>,
@@ -54,17 +56,49 @@ impl<'a> Locations<'a> {
     ) -> Option<PostgresSqlSpan> {
         let span = span?;
         let current = self.slice(&span);
-        if current == display {
+        if current.is_empty() || current == display {
             return Some(span);
         }
-        let Some(rest) = display.strip_prefix(current) else {
-            return Some(span);
-        };
-        let end = span.end.offset;
-        if self.sql.get(end..end + rest.len()) == Some(rest) {
-            return Some(self.range(span.start.offset, end + rest.len()));
+        let mut matched = None;
+        for (index, _) in display.match_indices(current) {
+            let prefix = &display[..index];
+            let suffix = &display[index + current.len()..];
+            let Some(range) =
+                self.adjacent_display(span.start.offset, span.end.offset, prefix, suffix)
+            else {
+                continue;
+            };
+            if matched.is_some() {
+                return Some(span);
+            }
+            matched = Some(range);
         }
-        Some(span)
+        matched
+            .map(|(start, end)| self.range(start, end))
+            .or(Some(span))
+    }
+
+    fn adjacent_display(
+        &self,
+        start: usize,
+        end: usize,
+        prefix: &str,
+        suffix: &str,
+    ) -> Option<(usize, usize)> {
+        if (prefix.is_empty() && suffix.is_empty()) || prefix.len() > start {
+            return None;
+        }
+        let new_start = start - prefix.len();
+        let new_end = end.checked_add(suffix.len())?;
+        if new_end > self.sql.len()
+            || !self.sql.is_char_boundary(new_start)
+            || !self.sql.is_char_boundary(new_end)
+            || self.sql.get(new_start..start) != Some(prefix)
+            || self.sql.get(end..new_end) != Some(suffix)
+        {
+            return None;
+        }
+        Some((new_start, new_end))
     }
 
     pub(super) fn range(&self, start: usize, end: usize) -> PostgresSqlSpan {

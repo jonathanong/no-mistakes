@@ -48,6 +48,14 @@ pub(super) fn source_expression(
             super::super::expression_children::exact_ast_span(expr, locations, delimiters);
     }
     projected.span = locations.span_covering(projected.span, &projected.sql);
+    // A partial parser span is not provenance. Keep it only when it is `sql`.
+    if projected
+        .span
+        .as_ref()
+        .is_some_and(|span| locations.slice(span) != projected.sql)
+    {
+        projected.span = None;
+    }
     projected
 }
 
