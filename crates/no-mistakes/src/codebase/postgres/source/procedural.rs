@@ -23,24 +23,19 @@ pub(super) fn collect(
     match prepare_block(parser, source, locations, depth)? {
         PreparedBlock::Done(block) => Ok(PostgresSqlStatementKind::DoBlock { block }),
         PreparedBlock::Parse {
-            mut block,
+            block,
             prepared,
             body,
             retain_walker,
-            empty_headers,
-        } => {
-            // `parse_nested` replaces `block.diagnostics` with the nested parse.
-            super::procedural_prepare::push_empty_conditions(&mut block, &empty_headers);
-            parse_nested(
-                block,
-                prepared,
-                &body,
-                source,
-                locations,
-                depth,
-                retain_walker,
-            )
-        }
+        } => parse_nested(
+            block,
+            prepared,
+            &body,
+            source,
+            locations,
+            depth,
+            retain_walker,
+        ),
     }
 }
 

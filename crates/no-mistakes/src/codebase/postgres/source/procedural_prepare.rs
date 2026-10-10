@@ -13,7 +13,6 @@ pub(super) enum PreparedBlock<'a> {
         prepared: PreparedPostgresTokens,
         body: Body<'a>,
         retain_walker: bool,
-        empty_headers: Vec<PostgresSqlSpan>,
     },
 }
 
@@ -128,12 +127,13 @@ pub(super) fn prepare_block<'a>(
         super::procedural_omit::omit_non_sql(&mut prepared.tokens, &body, &block.occurrences);
     }
     super::conditional::prepare(&mut prepared.tokens);
+    // Nested parsing replaces diagnostics, then restores these header notes.
+    push_empty_conditions(&mut block, &walked.empty_headers);
     Ok(PreparedBlock::Parse {
         block,
         prepared,
         body,
         retain_walker: walked.walker_only,
-        empty_headers: walked.empty_headers,
     })
 }
 
