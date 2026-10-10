@@ -26,7 +26,16 @@ pub(super) fn collect(
             block,
             prepared,
             body,
-        } => parse_nested(block, prepared, &body, source, locations, depth),
+            retain_walker,
+        } => parse_nested(
+            block,
+            prepared,
+            &body,
+            source,
+            locations,
+            depth,
+            retain_walker,
+        ),
     }
 }
 
@@ -38,6 +47,7 @@ fn parse_nested(
     source: &PostgresSqlSource,
     locations: &Locations<'_>,
     depth: usize,
+    retain_walker: bool,
 ) -> Result<PostgresSqlStatementKind, String> {
     let sql = body.sql.as_ref();
     let local = Locations::new(sql);
@@ -53,7 +63,7 @@ fn parse_nested(
     let nested = super::parsing::collect_program(source, prepared, locations, depth + 1, true);
     block.statements = nested.statements;
     block.diagnostics = nested.diagnostics;
-    super::procedural_walk::finish_parsed(&mut block);
+    super::procedural_walk::finish_parsed(&mut block, retain_walker);
     Ok(PostgresSqlStatementKind::DoBlock { block })
 }
 

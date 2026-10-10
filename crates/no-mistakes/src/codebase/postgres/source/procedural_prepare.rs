@@ -3,7 +3,11 @@ use super::body::Body;
 use super::locations::Locations;
 use super::types::*;
 use crate::codebase::postgres::parse::PreparedPostgresTokens;
-use sqlparser::{keywords::Keyword, parser::Parser, tokenizer::Token};
+use sqlparser::{
+    keywords::Keyword,
+    parser::Parser,
+    tokenizer::{Location, Token, TokenWithSpan},
+};
 
 pub(super) enum PreparedBlock<'a> {
     Done(PostgresSqlProceduralBlock),
@@ -11,6 +15,7 @@ pub(super) enum PreparedBlock<'a> {
         block: PostgresSqlProceduralBlock,
         prepared: PreparedPostgresTokens,
         body: Body<'a>,
+        retain_walker: bool,
     },
 }
 
@@ -83,7 +88,7 @@ pub(super) fn prepare_block<'a>(
         ));
         return Ok(PreparedBlock::Done(block));
     }
-    if walked.walker_only {
+    if walked.walker_only && !occurrences_include_sql(&block.occurrences) {
         super::procedural_walk::finish_unparsed(&mut block, &body_span);
         return Ok(PreparedBlock::Done(block));
     }
@@ -116,11 +121,16 @@ pub(super) fn prepare_block<'a>(
         .enumerate()
         .filter_map(|(index, token)| (index > first && index < last).then_some(token))
         .collect();
+    if walked.walker_only {
+        // Occurrence spans are original-source offsets. These tokens are still body-local.
+        omit_non_sql(&mut prepared.tokens, &body, &block.occurrences);
+    }
     super::conditional::prepare(&mut prepared.tokens);
     Ok(PreparedBlock::Parse {
         block,
         prepared,
         body,
+        retain_walker: walked.walker_only,
     })
 }
 
@@ -140,6 +150,48 @@ fn language_name(parser: &mut Parser<'_>) -> Result<String, String> {
 
 fn keyword(token: &Token, value: Keyword) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == value)
+}
+
+fn occurrences_include_sql(occurrences: &[PostgresSqlProceduralOccurrence]) -> bool {
+    occurrences
+        .iter()
+        .any(|occurrence| sql_occurrence(occurrence.kind))
+}
+
+fn sql_occurrence(kind: PostgresSqlProceduralOccurrenceKind) -> bool {
+    matches!(
+        kind,
+        PostgresSqlProceduralOccurrenceKind::Utility | PostgresSqlProceduralOccurrenceKind::Dml
+    )
+}
+
+fn omit_non_sql(
+    tokens: &mut Vec<TokenWithSpan>,
+    body: &Body<'_>,
+    occurrences: &[PostgresSqlProceduralOccurrence],
+) {
+    let local = Locations::new(body.sql.as_ref());
+    tokens.retain(|token| !overlaps_non_sql(&local, body, token, occurrences));
+}
+
+fn overlaps_non_sql(
+    local: &Locations<'_>,
+    body: &Body<'_>,
+    token: &TokenWithSpan,
+    occurrences: &[PostgresSqlProceduralOccurrence],
+) -> bool {
+    let start = body_offset(local, body, token.span.start);
+    let end = body_offset(local, body, token.span.end);
+    occurrences.iter().any(|occurrence| {
+        !sql_occurrence(occurrence.kind)
+            && start < occurrence.span.end.offset
+            && occurrence.span.start.offset < end
+    })
+}
+
+fn body_offset(local: &Locations<'_>, body: &Body<'_>, location: Location) -> usize {
+    let position = local.position(location).expect("procedural token");
+    body.offset(position.offset).expect("procedural token")
 }
 
 fn diagnostic(message: &str, span: &PostgresSqlSpan) -> PostgresSqlDiagnostic {
