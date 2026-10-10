@@ -32,6 +32,7 @@ mod parsing;
 mod procedural;
 mod procedural_classify;
 mod procedural_occurrences;
+mod procedural_omit;
 mod procedural_prepare;
 mod procedural_walk;
 mod projection;
