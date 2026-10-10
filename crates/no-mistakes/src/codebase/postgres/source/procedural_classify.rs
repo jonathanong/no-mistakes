@@ -86,10 +86,14 @@ pub(super) fn classify_at(
         if ctx.label_mismatches.is_empty() {
             occurrences.push(unrecognized_label(&ctx));
         } else {
-            occurrences.extend(ctx.label_mismatches.iter().map(|index| {
-                scan::token_occurrence(&ctx, PostgresSqlProceduralOccurrenceKind::Unknown, *index)
-            }));
-            occurrences.sort_by_key(|occurrence| occurrence.span.start.offset);
+            for index in &ctx.label_mismatches {
+                let mismatch = scan::token_occurrence(
+                    &ctx,
+                    PostgresSqlProceduralOccurrenceKind::Unknown,
+                    *index,
+                );
+                insert_mismatch(&mut occurrences, mismatch);
+            }
         }
     }
     let empty_headers = ctx
@@ -102,6 +106,21 @@ pub(super) fn classify_at(
         legacy_stop: ctx.legacy_stop,
         walker_only: ctx.walker_only,
         empty_headers,
+    }
+}
+
+fn insert_mismatch(
+    occurrences: &mut Vec<PostgresSqlProceduralOccurrence>,
+    mismatch: PostgresSqlProceduralOccurrence,
+) {
+    let offset = mismatch.span.start.offset;
+    if let Some(parent) = occurrences.iter_mut().find(|occurrence| {
+        occurrence.span.start.offset <= offset && offset < occurrence.span.end.offset
+    }) {
+        insert_mismatch(&mut parent.occurrences, mismatch);
+    } else {
+        occurrences.push(mismatch);
+        occurrences.sort_by_key(|occurrence| occurrence.span.start.offset);
     }
 }
 
