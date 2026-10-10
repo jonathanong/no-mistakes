@@ -219,6 +219,7 @@ fn bounded_end_keeps_statement_parens_and_drops_wrappers() {
         bounded_end(") DO NOTHING)", 1).unwrap(),
         Some(") DO NOTHING".len())
     );
+    assert_eq!(bounded_end("", 0).unwrap(), None);
     assert_eq!(bounded_end(")", 0).unwrap(), None);
     assert_eq!(bounded_end(" /* tail */)", 0).unwrap(), None);
     assert_eq!(bounded_end(" \n/* c */", 0).unwrap(), None);
@@ -230,6 +231,49 @@ fn bounded_end_keeps_statement_parens_and_drops_wrappers() {
     assert_eq!(bounded_end("))", 0).unwrap(), None);
     assert!(bounded_end("/*", 0).is_err());
     assert!(bounded_end("'abc", 0).is_err());
+}
+
+#[test]
+fn statement_scopes_skip_set_operations_and_ids_outside_the_vec() {
+    let sql = "WITH a AS ((INSERT INTO t VALUES (1))) SELECT 1;";
+    let facts = project_sql(sql);
+    let child_scope = facts.nested_statements[0].query_scope_id;
+    let cte = facts.nested_statements[0].parent_scope_id.unwrap();
+    assert_eq!(statement_scopes(&facts, 50), vec![50]);
+
+    let mut blocked = facts.clone();
+    blocked.scopes[cte].set_operation = Some("union".into());
+    let scopes = statement_scopes(&blocked, cte);
+    assert!(scopes.contains(&cte));
+    assert!(!scopes.contains(&child_scope));
+
+    let child_pos = facts
+        .scopes
+        .iter()
+        .position(|scope| scope.id == child_scope)
+        .unwrap();
+    let mut outside = facts.clone();
+    outside.scopes[child_pos].id = 10_000;
+    assert_eq!(statement_scopes(&outside, cte), vec![cte]);
+}
+
+#[test]
+fn an_unclosed_tail_comment_rejects_the_partial_statement() {
+    let sql = "WITH a AS (INSERT INTO t(id) VALUES (1) /* keep */) SELECT 1;";
+    let locations = Locations::new(sql);
+    let mut facts = project_sql(sql);
+    let scope = facts.nested_statements[0].query_scope_id;
+    let comment = sql.find("/*").unwrap();
+    facts.nested_statements[0].span.as_mut().unwrap().end = locations.range(comment, comment).start;
+    repair(
+        &mut facts,
+        &locations,
+        scope,
+        &rparen_at(&locations, comment + 2),
+    );
+    assert!(facts.nested_statements[0].sql.is_empty());
+    assert!(!facts.nested_statements[0].complete);
+    assert_eq!(facts.nested_statements[0].unsupported[0].reason, BOUNDARY);
 }
 
 #[test]

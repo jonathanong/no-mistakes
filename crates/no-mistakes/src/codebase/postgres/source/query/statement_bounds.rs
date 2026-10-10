@@ -57,12 +57,11 @@ fn statement_scopes(facts: &PostgresSqlQuery, scope: usize) -> Vec<usize> {
             continue;
         }
         for child in children[parent].iter().copied() {
-            if seen.get(child).copied().unwrap_or(true) {
+            // Scope ids are vec indexes. An id outside the vec is not a child.
+            if child >= seen.len() || seen[child] {
                 continue;
             }
-            let Some(child_scope) = facts.scopes.get(child) else {
-                continue;
-            };
+            let child_scope = &facts.scopes[child];
             if child_scope.clause != PostgresSqlQueryClause::SetBranch
                 || child_scope.cte_definition_id != definition
             {
