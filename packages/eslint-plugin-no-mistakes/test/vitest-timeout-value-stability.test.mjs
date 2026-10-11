@@ -170,6 +170,33 @@ describe("vitest-timeout-cap value stability", () => {
       [15],
     );
   });
+  it("retains known array prefix descriptors before opaque trailing spreads", () => {
+    const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
+    const linter = new Linter({ configType: "flat" });
+    assert.deepEqual(
+      linter.verify(fixture("vitest-timeout-cap/array-prefix-descriptors.js"), {
+        plugins: {
+          proof: {
+            rules: {
+              descriptor: {
+                create(context) {
+                  const ownData = createOwnDataProperty(context);
+                  return {
+                    AssignmentExpression(node) {
+                      if (ownData(node.left) !== node.right.value)
+                        context.report({ node, message: "Unexpected own data descriptor proof" });
+                    },
+                  };
+                },
+              },
+            },
+          },
+        },
+        rules: { "proof/descriptor": "error" },
+      }),
+      [],
+    );
+  });
   it("rejects own, inherited, computed and aliased setters on shallow copies", () => {
     const actual = findings("shallow-copy-accessor-writes", { unknownValues: "finding" });
     assert.deepEqual(
