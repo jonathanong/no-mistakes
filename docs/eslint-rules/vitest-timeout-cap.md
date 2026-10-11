@@ -78,6 +78,11 @@ timeout still becomes unknown. Nested references remain shared, so a write such
 as `copy.test.testTimeout = 30_001` also makes the source uncertain. Unknown copy
 escapes and uncertain alias identities remain conservative.
 
+The primitive member-read shortcut applies only to identifier declarations.
+Destructured bindings do not use their container initializer as the bound value;
+member reads that escape to an unknown consumer retain unresolved timeout values.
+Use a direct `const` object binding when its timeout needs static resolution.
+
 Public Vitest 5 fixture tuples carry `auto`, `injected`, and `scope` options, not a
 fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
 registrar identity, so actual test and hook overrides on their returned APIs are
