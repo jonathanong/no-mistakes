@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: policy.config.mts
+    projects:
+      unit:
+        include: [policy/*.case.mts]
+        exclude: [policy/excluded.case.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [unit]

@@ -60,7 +60,6 @@ pub(in super::super) fn explicit_project_setup_data(
         data.push(ConfigSetupData {
             workspace: false,
             filter,
-            policy_filter: None,
             setup_files,
             explicit_project: true,
             runner: super::discovery::Runner::Vitest,

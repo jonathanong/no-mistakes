@@ -65,7 +65,9 @@ pub(super) fn prepare_inner(
         targets.excludes.clone(),
     )?;
     let adds_candidates = |data: &&ConfigSetupData| {
-        data.workspace || data.runner == super::discovery::Runner::Playwright
+        data.workspace
+            || data.explicit_project
+            || data.runner == super::discovery::Runner::Playwright
     };
     if !targeted && setup_data.iter().any(|data| adds_candidates(&data)) {
         let mut filters = vec![test_filter];

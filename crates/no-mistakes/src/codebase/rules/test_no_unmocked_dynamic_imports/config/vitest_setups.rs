@@ -44,30 +44,22 @@ pub(super) fn from_facts(
                 || (project.policy_name.is_none() && !selected.is_empty())
         })
         .map(|project| {
-            // A recovered config cannot widen an explicitly declared policy's
-            // setup scope, including its excluded test files.
-            let policy_filter = project
+            // Match test discovery: an explicit named policy owns its universe,
+            // while the recovered runner still supplies that project's setups.
+            let (include, exclude) = project
                 .policy_name
                 .as_ref()
                 .and_then(|name| config.tests.vitest.projects.get(name))
                 .filter(|policy| !policy.include.is_empty())
-                .map(|policy| {
-                    Ok::<_, anyhow::Error>(TestFilter {
-                        alternatives: Vec::new(),
-                        include: build_globset(&policy.include)?,
-                        include_regex: Vec::new(),
-                        exclude: build_globset(&policy.exclude)?,
-                    })
-                })
-                .transpose()?;
+                .map(|policy| (&policy.include, &policy.exclude))
+                .unwrap_or((&project.include, &project.exclude));
             Ok(ConfigSetupData {
                 workspace: project.workspace,
-                policy_filter,
                 filter: TestFilter {
                     alternatives: Vec::new(),
-                    include: build_globset(&project.include)?,
+                    include: build_globset(include)?,
                     include_regex: Vec::new(),
-                    exclude: build_globset(&project.exclude)?,
+                    exclude: build_globset(exclude)?,
                 },
                 // The runner parser has already applied extends, independent config
                 // files, explicit empty overrides, and project-relative resolution.

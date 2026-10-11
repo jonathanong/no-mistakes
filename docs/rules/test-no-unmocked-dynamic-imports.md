@@ -86,6 +86,9 @@ Implicit `vitest.workspace.*` and `vitest.projects.*` catalogs supply project
 matchers and setups, taking precedence over `vitest.config.*` during discovery.
 Recovered named projects remain separate executions even when only some of
 them have explicit project policies.
+An explicit named policy replaces the recovered project's include/exclude
+matcher while retaining its runner setups. Broad checks include explicit
+project matchers even when their test filenames use custom conventions.
 Explicit runner configs use their directory's TypeScript aliases, including
 when that directory is outside a declared workspace.
 Explicit setup declarations also create canonical `VitestSetup` dependencies,

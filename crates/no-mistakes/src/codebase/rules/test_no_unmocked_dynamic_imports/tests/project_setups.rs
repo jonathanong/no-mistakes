@@ -123,6 +123,18 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         (".no-mistakes-partial-selected.yml", vec![]),
         (".no-mistakes-chained-cuts.yml", vec![]),
         (
+            ".no-mistakes-policy-widened.yml",
+            vec!["policy/genuine.case.mts"],
+        ),
+        (
+            ".no-mistakes-policy-broad.yml",
+            vec!["policy/covered.case.mts", "policy/genuine.case.mts"],
+        ),
+        (
+            ".no-mistakes-policy-default.yml",
+            vec!["policy/genuine.case.mts"],
+        ),
+        (
             ".no-mistakes-lazy-requires.yml",
             vec!["lazy/ordinary.case.cjs", "lazy/setup.case.cjs"],
         ),

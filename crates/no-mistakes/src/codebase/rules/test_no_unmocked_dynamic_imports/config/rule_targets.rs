@@ -22,7 +22,6 @@ impl PreparedTargets {
             .map(|project| {
                 Ok(super::ConfigSetupData {
                     workspace: false,
-                    policy_filter: None,
                     filter: super::TestFilter {
                         alternatives: Vec::new(),
                         include: build_globset(&project.include)?,

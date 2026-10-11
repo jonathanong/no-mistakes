@@ -27,7 +27,6 @@ pub(crate) use runner_demand::{needs_playwright_configs, needs_vitest_configs};
 pub struct ConfigSetupData {
     workspace: bool,
     filter: TestFilter,
-    policy_filter: Option<TestFilter>,
     pub setup_files: Vec<PathBuf>,
     explicit_project: bool,
     runner: discovery::Runner,
@@ -37,10 +36,6 @@ pub struct ConfigSetupData {
 impl ConfigSetupData {
     pub fn filter_matches(&self, rel_path: &str) -> bool {
         self.filter.is_match(rel_path)
-            && self
-                .policy_filter
-                .as_ref()
-                .is_none_or(|filter| filter.is_match(rel_path))
     }
 }
 
@@ -118,7 +113,6 @@ fn precompute_setup_data_from_config_files_inner(
         result.push(ConfigSetupData {
             workspace: false,
             filter,
-            policy_filter: None,
             setup_files,
             explicit_project: false,
             runner: config_file.runner,
