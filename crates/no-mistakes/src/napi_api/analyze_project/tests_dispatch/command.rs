@@ -31,6 +31,7 @@ fn analyze_project_dispatches_all_domain_report_types() {
         "fetches",
         "dataPw",
         "registryExtension",
+        "testsAudit",
         "testsPlan",
         "testsImpact",
         "testsTargets",

@@ -71,3 +71,5 @@ json_binding!(
     server_contracts_json_impl
 );
 json_binding!(flow_json, "flowJson", flow_json_impl);
+
+json_binding!(tests_audit_json, "testsAuditJson", tests_audit_json_impl);

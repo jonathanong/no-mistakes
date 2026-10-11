@@ -274,3 +274,17 @@ changed file; it runs before `dependencies` so a tight limit cannot drop a
 direct importer in favor of a longer markdown or resource path.
 Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/test-plan.md
 for the full schema.
+
+
+## `tests audit`
+
+Use `no-mistakes tests audit --plan audit-plan.json --observations audit-run.json`
+to compare a targeted plan with full-suite per-test-file execution observations.
+The plan needs a versioned envelope with explicit changed files/symbols and
+caller-recorded checkout/source/scope identities matching the observations.
+See [the artifact contract and producer recipe](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/tests-audit.md)
+before collecting traces. Whole-suite aggregate coverage is unsupported.
+`missed_observed_tests` is positive evidence of missed selection; complete traces
+without changed-code hits are investigation candidates. Missing or incomplete
+traces remain unknown. No observed misses, and passing test outcomes, never prove
+completeness. Async `testsAudit()` and `analyzeProject()` expose the same comparison.

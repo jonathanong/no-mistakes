@@ -7,6 +7,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 pub(crate) mod args;
+pub(crate) mod audit;
 pub(crate) mod changed_files;
 pub(crate) mod comment;
 pub(crate) mod config_invalidation;
@@ -238,6 +239,7 @@ pub fn run(args: TestsArgs) -> Result<ExitCode> {
         TestsCommand::Why(sub_args) => why::run(sub_args),
         TestsCommand::Comment(sub_args) => comment::run(sub_args),
         TestsCommand::Graph(sub_args) => graph::run(sub_args),
+        TestsCommand::Audit(sub_args) => audit::run(sub_args),
     }
 }
 

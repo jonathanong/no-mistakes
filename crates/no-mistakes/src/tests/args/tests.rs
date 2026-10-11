@@ -12,3 +12,29 @@ fn impact_formats_map_to_the_shared_renderer_without_explain() {
         assert_eq!(PlanFormat::from(impact), plan);
     }
 }
+
+#[test]
+fn audit_cli_requires_both_artifacts_and_accepts_each_format() {
+    use clap::Parser;
+    #[derive(Parser)]
+    struct Cli {
+        #[command(flatten)]
+        args: super::TestsArgs,
+    }
+    for format in ["json", "text"] {
+        let args = Cli::try_parse_from([
+            "tests",
+            "audit",
+            "--plan",
+            "plan.json",
+            "--observations",
+            "run.json",
+            "--format",
+            format,
+        ])
+        .unwrap();
+        assert!(matches!(args.args.command, super::TestsCommand::Audit(_)));
+    }
+    assert!(Cli::try_parse_from(["tests", "audit", "--plan", "plan.json"]).is_err());
+    assert!(Cli::try_parse_from(["tests", "audit", "--observations", "run.json"]).is_err());
+}
