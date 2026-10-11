@@ -1,5 +1,5 @@
 // A long export list exposes repeated source-prefix scans in suppression queries.
-export const value1000 = 0;
+export const value0 = 0;
 export const value1001 = 1;
 export const value1002 = 2;
 export const value1003 = 3;

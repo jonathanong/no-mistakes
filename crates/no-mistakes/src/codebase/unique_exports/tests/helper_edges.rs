@@ -120,7 +120,7 @@ fn deferred_reexports_keep_named_reexports_lexically_visible() {
                 // exports to carry their suppression provenance.
                 file.symbols = crate::codebase::ts_symbols::extract_symbols_at_path(
                     &file.path,
-                    &file.source,
+                    &std::fs::read_to_string(&file.path).unwrap(),
                     false,
                 )
                 .unwrap()

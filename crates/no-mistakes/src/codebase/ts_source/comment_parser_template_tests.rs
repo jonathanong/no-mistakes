@@ -31,8 +31,11 @@ fn suppression_index_scans_each_line_once_and_matches_existing_queries() {
         for case in cases.as_array().unwrap() {
             let source = case["source"].as_str().unwrap();
             let rule = case["rule"].as_str().unwrap_or("template-rule");
-            let before = super::SUPPRESSION_LINES_SCANNED.with(|count| count.get());
-            let index = super::disabled_statement_lines(source, rule);
+            let scans = std::cell::Cell::new(0);
+            let index = super::disabled_statement_lines_with_scan_observer(source, rule, || {
+                scans.set(scans.get() + 1);
+            });
+            assert_eq!(index, super::disabled_statement_lines(source, rule));
             let expected_scans = if source.contains("no-mistakes-disable-line ")
                 || source.contains("no-mistakes-disable-next-line ")
             {
@@ -41,10 +44,7 @@ fn suppression_index_scans_each_line_once_and_matches_existing_queries() {
                 0
             };
             let lines = source.trim_start_matches('\u{FEFF}').lines().count();
-            assert_eq!(
-                super::SUPPRESSION_LINES_SCANNED.with(|count| count.get()) - before,
-                expected_scans
-            );
+            assert_eq!(scans.get(), expected_scans);
             // Queries must consume the index without repeating lexical work.
             for _ in 0..3 {
                 for line in 0..=(lines + 2) as u32 {
@@ -56,10 +56,7 @@ fn suppression_index_scans_each_line_once_and_matches_existing_queries() {
                     );
                 }
             }
-            assert_eq!(
-                super::SUPPRESSION_LINES_SCANNED.with(|count| count.get()) - before,
-                expected_scans
-            );
+            assert_eq!(scans.get(), expected_scans);
         }
     }
 }

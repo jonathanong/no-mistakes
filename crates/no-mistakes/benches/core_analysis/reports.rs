@@ -109,7 +109,22 @@ pub(super) fn bench_unique_exports(c: &mut Criterion) {
         )
         .expect("prepared unique-exports analysis should succeed")
     };
-    assert!(run().is_empty());
+    assert_eq!(
+        config.project_roots_for_rule(&root, "unique-exports"),
+        vec![root.clone()]
+    );
+    assert_eq!(
+        facts
+            .ts
+            .iter()
+            .map(|(_, facts)| facts.symbols.as_ref().unwrap().exports.len())
+            .sum::<usize>(),
+        512
+    );
+    // The fixture includes one duplicate to prove analysis visits these facts.
+    let findings = run();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].export_name, "value0");
     let mut group = c.benchmark_group("unique_exports");
     group.throughput(Throughput::Elements(512));
     group.bench_function("construct_from_prepared_facts", |b| {
