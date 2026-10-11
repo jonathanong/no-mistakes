@@ -37,7 +37,7 @@ fn unknown_helper_guards_and_escapes_never_publish_stale_builder_versions() {
 }
 
 #[test]
-fn configured_scoped_and_relative_executor_calls_do_not_escape_their_sql_arguments() {
+fn confirmed_consumers_preserve_variants_while_pending_consumers_preserve_their_capture() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded/variants-executor-builder-arguments.ts");
     let source = std::fs::read_to_string(&path).unwrap();
@@ -46,7 +46,11 @@ fn configured_scoped_and_relative_executor_calls_do_not_escape_their_sql_argumen
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
     assert_eq!(facts.calls.len(), 7, "{facts:#?}");
     for (index, call) in facts.calls.iter().enumerate() {
-        if [1, 2, 4, 6].contains(&index) {
+        if [2, 4].contains(&index) {
+            // These reads follow an unconfirmed relative invocation. Its
+            // pending capture stays intact, but later finite reuse is opaque.
+            assert!(call.is_unanalyzable(), "{call:#?}");
+        } else if [1, 6].contains(&index) {
             assert_eq!(call.variants.len(), 2, "{call:#?}");
         } else {
             assert_eq!(call.kind, EmbeddedSqlKind::ImmutableLocal, "{call:#?}");

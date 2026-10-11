@@ -161,6 +161,19 @@ file is inside the package `importSpecifier` resolves to; a same-named import ou
 that package does not. If the package root cannot be determined, relative imports do
 not match. `executorNames` still requires the exact module.
 
+Relative factory/type candidates capture their own SQL before invocation, but
+their package owner is confirmed only in prepared resolver projection. A
+mutable builder passed to one loses finite alternatives for subsequent reuse,
+including aliases, even if the owner is later accepted. Subsequent branching
+calls therefore report `unanalyzable` under the default `unanalyzableSql: fail`,
+or are skipped with `ignore`; the analyzer does not invent an OFFSET clause.
+The original pending call still checks proven SQL from later argument appends,
+including OFFSET, if its owner is accepted; `ignore` does not skip this concrete
+SQL.
+Primitive SQL copies and already-confirmed direct executors retain their
+existing behavior. See the
+[finite SQL model](../postgres-facts.md#finite-sql-alternatives).
+
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes

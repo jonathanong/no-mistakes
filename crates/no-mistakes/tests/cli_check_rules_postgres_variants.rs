@@ -14,6 +14,8 @@ mod executor_argument_effects;
 mod guard_alias;
 #[path = "cli_check_rules_postgres_variants/helper_guards.rs"]
 mod helper_guards;
+#[path = "cli_check_rules_postgres_variants/relative_consumer_escape.rs"]
+mod relative_consumer_escape;
 #[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
 mod switch_labels;
 #[path = "cli_check_rules_postgres_variants/unaffected_switch.rs"]
