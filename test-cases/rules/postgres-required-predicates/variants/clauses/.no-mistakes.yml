@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+
+      relations: [{table: accounts, requireColumns: [active]}]

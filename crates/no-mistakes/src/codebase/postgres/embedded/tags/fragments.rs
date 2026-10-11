@@ -25,7 +25,7 @@ pub(super) fn interpolates_sql_fragment(
 /// `sql.raw(...)`, `sql.join(...)`), a member call on another fragment
 /// (`sql`…`.append(...)`), a binding known to hold one, or a conditional,
 /// logical, sequence, or array expression that can evaluate to one.
-fn is_sql_fragment(
+pub(in crate::codebase::postgres::embedded) fn is_sql_fragment(
     expr: &Expression<'_>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     tags: &SqlTagNames,

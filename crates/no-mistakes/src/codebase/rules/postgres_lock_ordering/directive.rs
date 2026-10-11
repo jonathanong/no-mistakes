@@ -7,7 +7,7 @@ pub(super) fn contains_for_update(sql: &str) -> bool {
 }
 
 /// Offset of the first exclusive-lock clause in already-lowercased text.
-fn lock_clause_offset(lowered: &str) -> Option<usize> {
+pub(super) fn lock_clause_offset(lowered: &str) -> Option<usize> {
     ["for update", "for no key update"]
         .iter()
         .filter_map(|clause| lowered.find(clause))
@@ -18,15 +18,32 @@ pub(crate) fn has_safe_directive(source: &str, line: u32, sql: &str, directive: 
     if directive.is_empty() {
         return false;
     }
-    comment_contains_directive(&lookback_window(source, line), directive)
+    let call_start = call_offset(source, line);
+    let start = floor_char_boundary(source, call_start.saturating_sub(DIRECTIVE_LOOKBACK));
+    let end = floor_char_boundary(source, call_start);
+    comment_contains_directive(&source[start..end], directive)
         || comment_contains_directive(sql, directive)
 }
 
-fn lookback_window(source: &str, line: u32) -> String {
-    let offset = call_offset(source, line);
-    let start = floor_char_boundary(source, offset.saturating_sub(DIRECTIVE_LOOKBACK));
-    let end = floor_char_boundary(source, offset);
-    source[start..end].to_string()
+pub(super) fn has_safe_variant_directive(
+    source: &str,
+    call_start: u32,
+    comment_spans: &[(u32, u32)],
+    sql: &str,
+    directive: &str,
+) -> bool {
+    if directive.is_empty() {
+        return false;
+    }
+    let start = call_start.saturating_sub(DIRECTIVE_LOOKBACK as u32);
+    comment_spans.iter().any(|&(comment_start, comment_end)| {
+        comment_start >= start
+            && comment_end <= call_start
+            && comment_contains_directive(
+                &source[comment_start as usize..comment_end as usize],
+                directive,
+            )
+    }) || comment_contains_directive(sql, directive)
 }
 
 pub(super) fn call_offset(source: &str, line: u32) -> usize {

@@ -1,0 +1,10 @@
+import { query, sql } from "@example/db";
+const q = sql`SELECT id FROM users`;
+if (flag) q.append(" LIMIT 1");
+query(q);
+let text = "SELECT id FROM users";
+if (flag) text += " LIMIT 2"; else text += " LIMIT 3";
+query(text);
+let optional = "SELECT id FROM users";
+flag && (optional += " LIMIT 4");
+query(optional);

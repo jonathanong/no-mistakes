@@ -93,3 +93,17 @@ pub(super) fn pins_one_row(insert: &SqlConflictInsertFact, catalog: &SchemaCatal
         .as_ref()
         .is_some_and(|pinned| catalog.columns_pin_one_row(&pinned.table, &pinned.columns))
 }
+
+pub(super) fn display_keys(keys: &[CanonicalOrderKey]) -> String {
+    keys.iter()
+        .map(|key| {
+            format!(
+                "{} {} NULLS {}",
+                key.expression,
+                if key.ascending { "ASC" } else { "DESC" },
+                if key.nulls_first { "FIRST" } else { "LAST" }
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}

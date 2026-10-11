@@ -1,0 +1,38 @@
+import sql, { type SQLStatement } from "sql-template-strings";
+import { query } from "@example/db";
+const gate = runtimeFlag;
+function withOffset(q: SQLStatement): SQLStatement {
+  return q.append(sql` OFFSET 7`);
+}
+const builder = sql`SELECT id FROM users`;
+const stored = withOffset(builder);
+builder.append(sql` LIMIT 9`);
+query(stored);
+query(gate ? stored : sql`SELECT 2`);
+let assigned;
+if (gate) assigned = stored; else assigned = sql`SELECT 3`;
+query(assigned);
+const chained = withOffset(builder).append(sql` FOR UPDATE`);
+builder.append(sql` OFFSET 11`);
+query(chained);
+query(gate ? chained : sql`SELECT 4`);
+let later = sql`SELECT 5`;
+if (gate) later = chained;
+query(later);
+const freshStored = withOffset(sql`SELECT id FROM users`);
+query(gate ? freshStored : sql`SELECT 6`);
+const conditionalStored = gate ? withOffset(builder) : sql`SELECT 7`;
+builder.append(sql` LIMIT 13`);
+query(conditionalStored);
+let branchStored;
+if (gate) branchStored = withOffset(builder); else branchStored = sql`SELECT 8`;
+builder.append(sql` OFFSET 15`);
+query(branchStored);
+const logicalStored = gate && withOffset(builder);
+builder.append(sql` LIMIT 17`);
+query(logicalStored);
+query(gate ? logicalStored : sql`SELECT 9`);
+const computedStored = withOffset(builder)["append"](sql` FOR SHARE`);
+builder.append(sql` OFFSET 19`);
+query(computedStored);
+query(gate ? computedStored : sql`SELECT 10`);

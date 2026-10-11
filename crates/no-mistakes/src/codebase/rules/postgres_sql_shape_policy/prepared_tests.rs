@@ -28,13 +28,17 @@ fn missing_prepared_projections_and_bad_sql_globs_report_errors() {
     );
     let files = [root.join("src/builders.ts")];
     let config = config_yaml("bannedShapes: [not-in-subquery]");
-    assert!(
-        check_with_files_sources_and_facts(&root, &config, &files, &CheckFactMap::default())
-            .unwrap_err()
-            .to_string()
-            .contains("failed to collect PostgreSQL facts")
-    );
     let sources = super::super::source_store_for_files(&files);
+    assert!(check_with_files_sources_and_facts(
+        &root,
+        &config,
+        &files,
+        &sources,
+        &CheckFactMap::default()
+    )
+    .unwrap_err()
+    .to_string()
+    .contains("failed to collect PostgreSQL facts"));
     let facts = collect_check_facts_with_graph_files_playwright_and_sources(
         &root,
         files.to_vec(),
@@ -48,18 +52,22 @@ fn missing_prepared_projections_and_bad_sql_globs_report_errors() {
         Arc::clone(&sources),
     );
     assert!(
-        check_with_files_sources_and_facts(&root, &config, &files, &facts)
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts)
             .unwrap_err()
             .to_string()
             .contains("prepared PostgreSQL facts are missing")
     );
     let bad = config_yaml("sqlInclude: ['[']");
-    assert!(
-        check_with_files_sources_and_facts(&root, &bad, &[], &CheckFactMap::default())
-            .unwrap_err()
-            .to_string()
-            .contains("sqlInclude")
-    );
+    assert!(check_with_files_sources_and_facts(
+        &root,
+        &bad,
+        &[],
+        &sources,
+        &CheckFactMap::default()
+    )
+    .unwrap_err()
+    .to_string()
+    .contains("sqlInclude"));
 }
 
 fn config_yaml(yaml: &str) -> crate::config::v2::NoMistakesConfig {

@@ -1,9 +1,13 @@
 use super::EmbeddedSqlSourcePosition;
+mod variants;
+pub use variants::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 
 /// One executor call site and its recovered SQL text. For `Dynamic` calls,
 /// `sql_text` can be only a verified leading statement rather than complete SQL.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EmbeddedSqlCall {
+    /// Concrete alternatives for a recoverable Dynamic call; empty for legacy calls.
+    pub variants: Vec<EmbeddedSqlVariant>,
     pub line: u32,
     pub callee: String,
     pub sql_text: Option<String>,

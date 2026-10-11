@@ -309,11 +309,15 @@ relations spelled with another schema (`audit.accounts` when the catalog is for 
 are not judged, and they bound nothing. A relation is found by the name PostgreSQL reads:
 an unquoted name folds to lower case and a quoted one (`"Order Items"`) is exact: an unknown relation can supply every
 value of a column pinned to it, so a catalog table joined to one is still reported unless
-something else bounds it. A statement whose SQL cannot be recovered statically (`SQL could
-not be analyzed`, or `executed SQL is not statically recoverable`) fails closed. That
-includes a trusted `sql` template that interpolates another SQL fragment, such as a
-conditional choosing between two nested `sql` templates: the fragment is spliced SQL, not a
-bind value (see [embedded-SQL facts](../postgres-facts.md#embedded-sql-facts)).
+something else bounds it. The rule checks every complete version of a branching
+executor call, including nested trusted SQL fragments and conditional appends.
+A bound on one version does not bound another: choosing between a key-pinned
+SELECT and an unbounded SELECT reports the unbounded path. Up to 16 versions
+are recovered; findings retain each branch fragment's physical source line.
+See [finite SQL alternatives](../postgres-facts.md#finite-sql-alternatives).
+A statement whose complete versions cannot be recovered statically (`SQL could
+not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.
+Nested fragments are spliced SQL, so an opaque fragment is never accepted as a bind.
 `unanalyzableSql: ignore` skips those statements instead, as it does for the sibling
 rules; every statement that can be analyzed is still judged.
 

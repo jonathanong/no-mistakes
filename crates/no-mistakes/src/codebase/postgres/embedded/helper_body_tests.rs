@@ -73,10 +73,11 @@ fn typed_parameter_builder_recovers_only_straight_line_static_appends() {
         facts.calls[12].sql_text.as_deref(),
         Some("/* timed */ SELECT id FROM items WHERE id = sql_placeholder_1")
     );
-    assert_eq!(
-        facts.calls[13].sql_text.as_deref(),
-        Some("/* timed */ SELECT OFFSET 1 id FROM items WHERE id = sql_placeholder_1")
-    );
+    // The first project(timed, ...) mutates timed; later recovery cannot
+    // reuse its original SELECT prefix as a complete builder snapshot.
+    assert_eq!(facts.calls[13].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(facts.calls[13].sql_text, None);
+    assert!(facts.calls[13].variants.is_empty());
     assert_eq!(facts.calls[14].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(facts.calls[15].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(facts.calls[16].kind, EmbeddedSqlKind::Dynamic);

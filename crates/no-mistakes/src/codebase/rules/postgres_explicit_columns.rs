@@ -92,10 +92,10 @@ fn check_applications(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
+    let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
+        .map(|rule| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
             let target_roots = super::target_roots(root, config, rule);
@@ -121,9 +121,8 @@ fn check_applications(
             scan::scan(root, &compiled, &files, sources, facts)
         })
         .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
+    Ok(findings.finish())
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {

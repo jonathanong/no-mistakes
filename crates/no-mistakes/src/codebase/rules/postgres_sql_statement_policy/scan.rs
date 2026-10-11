@@ -8,12 +8,13 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    _sources: &SourceStore,
+    sources: &SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let schema_facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for file in &schema_facts {
         let rel = sql_rel(root, &file.path);
         findings.extend(settings(&rel, &file.setting_uses, opts));
@@ -46,34 +47,58 @@ pub(super) fn scan(
         let rel = sql_rel(root, path);
         if opts.fail_unanalyzable {
             for call in &embedded.calls {
-                if call.kind == crate::codebase::postgres::EmbeddedSqlKind::Dynamic {
+                if call.is_unanalyzable() {
                     findings.push(unanalyzable(&rel, call.line.max(1) as usize));
                 }
             }
         }
+        let source = crate::codebase::rules::read_source(sources, path);
         for file in facts.postgres_statements(path, Some(&opts.embedded))? {
             if file.parse_failed && opts.fail_unanalyzable {
-                findings.push(unanalyzable(&rel, file.origin_line.max(1)));
+                dedup.push(
+                    &mut findings,
+                    file,
+                    crate::codebase::postgres::statements::SqlFactSite::Origin,
+                    source.as_deref(),
+                    unanalyzable(&rel, file.origin_line.max(1)),
+                );
             }
-            findings.extend(settings(&rel, &file.setting_uses, opts));
-            for statement in &file.statement_kinds {
+            for (index, setting) in file.setting_uses.iter().enumerate() {
+                for finding in settings(&rel, std::slice::from_ref(setting), opts) {
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        crate::codebase::postgres::statements::SqlFactSite::Setting(index),
+                        source.as_deref(),
+                        finding,
+                    );
+                }
+            }
+            for (index, statement) in file.statement_kinds.iter().enumerate() {
                 if opts.banned.contains(&statement.kind) {
-                    findings.push(RuleFinding {
-                        rule: RULE_ID.into(),
-                        file: rel.clone(),
-                        line: statement.line.max(1),
-                        message: format!(
-                            "{rel}:{}: executed SQL must not use {}",
-                            statement.line.max(1),
-                            statement.kind
-                        ),
-                        import: None,
-                        target: Some(statement.kind.clone()),
-                    });
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        crate::codebase::postgres::statements::SqlFactSite::StatementKind(index),
+                        source.as_deref(),
+                        RuleFinding {
+                            rule: RULE_ID.into(),
+                            file: rel.clone(),
+                            line: statement.line.max(1),
+                            message: format!(
+                                "{rel}:{}: executed SQL must not use {}",
+                                statement.line.max(1),
+                                statement.kind
+                            ),
+                            import: None,
+                            target: Some(statement.kind.clone()),
+                        },
+                    );
                 }
             }
         }
     }
+    findings.sort();
     Ok(findings)
 }
 

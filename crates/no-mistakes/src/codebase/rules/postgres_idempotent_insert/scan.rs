@@ -1,7 +1,7 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
-    collect_postgres_facts, judge_file, EmbeddedSqlKind, IdempotentCatalog,
+    collect_postgres_facts, judge_file_with_insert_indices, IdempotentCatalog,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
@@ -12,7 +12,7 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let facts = collect_postgres_facts(
         root,
         sources,
@@ -43,12 +43,13 @@ pub(super) fn scan(
         check_generated: opts.check_generated,
         trigger_writes: &opts.trigger_writes,
     };
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     if opts.scan_embedded {
         for file in &facts.embedded {
             let rel = relative_slash_path(root, &file.path);
             for call in &file.calls {
-                if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
+                if opts.fail_unanalyzable && call.is_unanalyzable() {
                     findings.push(finding(
                         &rel,
                         call.line.max(1) as usize,
@@ -66,15 +67,26 @@ pub(super) fn scan(
         let judged = if file.parse_failed && !opts.fail_unanalyzable {
             let mut recoverable = file.clone();
             recoverable.parse_failed = false;
-            judge_file(&recoverable, &catalog)
+            judge_file_with_insert_indices(&recoverable, &catalog)
         } else {
-            judge_file(file, &catalog)
+            judge_file_with_insert_indices(file, &catalog)
         };
-        for (line, message) in judged {
-            findings.push(finding(&rel, line, &message));
+        let source = crate::codebase::rules::read_source(sources, &file.path);
+        for (index, line, message) in judged {
+            let site = index.map_or(
+                crate::codebase::postgres::statements::SqlFactSite::Origin,
+                crate::codebase::postgres::statements::SqlFactSite::Insert,
+            );
+            dedup.push(
+                &mut findings,
+                file,
+                site,
+                source.as_deref(),
+                finding(&rel, line, &message),
+            );
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 

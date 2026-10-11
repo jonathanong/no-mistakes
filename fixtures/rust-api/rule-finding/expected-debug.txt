@@ -1,0 +1,1 @@
+RuleFinding { rule: "postgres-no-offset", file: "src/query.ts", line: 7, message: "use cursor pagination", import: None, target: Some("offset") }

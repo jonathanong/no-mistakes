@@ -29,7 +29,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn fragment(
     (line, positions)
 }
 
-pub(in crate::codebase::postgres::embedded::walk) fn renumber(
+pub(in crate::codebase::postgres::embedded) fn renumber(
     positions: &mut [EmbeddedSqlSourcePosition],
     sql: &str,
     offset: u32,
@@ -55,7 +55,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn renumber(
     }
 }
 
-pub(in crate::codebase::postgres::embedded::walk) fn append(
+pub(in crate::codebase::postgres::embedded) fn append(
     positions: &mut Vec<EmbeddedSqlSourcePosition>,
     prefix: &str,
     origin: u32,

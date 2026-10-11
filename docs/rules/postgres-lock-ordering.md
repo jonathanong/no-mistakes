@@ -8,6 +8,13 @@ The rule consumes request-prepared PostgreSQL embedded-SQL facts and
 `extract_locking_select_metadata`. It does not re-parse TypeScript in the rule
 engine.
 
+Every complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
+of a branching executor call is judged independently, up to 16 versions.
+If only one path omits the required `ORDER BY`, that path is still reported;
+an ordered sibling cannot make it safe. All safe versions pass without an
+unanalyzable finding. Findings preserve physical branch-fragment locations for
+suppressions. Opaque or over-cap calls retain the behavior below.
+
 ```yaml
 rules:
   - rule: postgres-lock-ordering
@@ -42,7 +49,7 @@ export function lockRows(ids: string[]) {
 Fix: add `ORDER BY` so every locker visits rows in the same order, add
 `SKIP LOCKED` when skipping already-locked rows is correct, or put
 `/* deadlock-safe: ... */` or `-- deadlock-safe` in a comment within 200
-characters before the call when a unique key makes the lock single-row.
+bytes before the call when a unique key makes the lock single-row.
 
 ```ts
 query(`SELECT * FROM t WHERE id = ANY($1) ORDER BY id FOR UPDATE`);
@@ -51,6 +58,12 @@ query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE SKIP LOCKED`);
 /* deadlock-safe: single row via unique key */
 query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE`);
 ```
+
+For complete SQL alternatives, a configured `safeDirective` inside branch SQL
+authorizes only versions containing that comment. A marker in a shared SQL
+prefix applies to every version that includes the prefix. An executor-level
+source comment within 200 bytes before the actual invocation covers the whole
+call.
 
 Use `no-mistakes-disable-next-line postgres-lock-ordering` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
@@ -135,8 +148,9 @@ query(`SELECT id FROM orders WHERE id = $1 AND status IN ('open', 'held') FOR UP
 
 **Behavior change:** this rule previously skipped executor calls whose SQL text
 could not be recovered. With the default `unanalyzableSql: fail`, a dynamic
-executor call with no recovered SQL text (an opaque `query(sql)` argument, a
-`query(cond ? a : b)` choice, an unresolved builder) is reported with target
+executor call without complete alternatives or recovered SQL text (an opaque
+`query(sql)` argument, a `query(cond ? a : b)` choice whose arms cannot all be
+recovered, an unresolved builder) is reported with target
 `unanalyzable`, because that SQL could take a `FOR UPDATE` lock whose row order
 cannot be checked. See the
 [migration note](../migrations/postgres-unanalyzable-sql.md).
@@ -160,7 +174,7 @@ export function lockAny(sql: string, ids: string[]) {
 
 Fix: pass a SQL literal or a configured trusted tagged template so the lock can
 be checked, add the configured safe directive (`/* deadlock-safe: ... */`) within
-200 characters before the call when callers are known to be safe, suppress the
+200 bytes before the call when callers are known to be safe, suppress the
 line with `no-mistakes-disable-next-line postgres-lock-ordering`, or set
 `unanalyzableSql: ignore` to restore the earlier skip.
 

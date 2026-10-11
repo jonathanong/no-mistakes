@@ -2,8 +2,8 @@ mod catalog;
 mod check;
 mod columns;
 
-use super::{CompiledOptions, RuleFinding};
-use crate::codebase::postgres::EmbeddedSqlKind;
+use super::CompiledOptions;
+use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
@@ -11,11 +11,11 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     if opts.relations.is_empty() && !opts.partition_keys {
-        return Ok(Vec::new());
+        return Ok(crate::codebase::rules::PostgresFindings::default());
     }
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
@@ -41,7 +41,8 @@ pub(super) fn scan(
                 .iter(),
         );
     }
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     if let Some(catalog) = &catalog {
         if opts.partition_keys {
             if let Some(path) = &opts.schema_catalog_path {
@@ -52,7 +53,7 @@ pub(super) fn scan(
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
-            if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
+            if opts.fail_unanalyzable && call.is_unanalyzable() {
                 findings.push(check::sql_finding(
                     &rel,
                     call.line.max(1) as usize,
@@ -65,18 +66,27 @@ pub(super) fn scan(
     }
     for file in statements {
         let rel = relative_slash_path(root, &file.path);
+        let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            findings.push(check::sql_finding(
-                &rel,
-                file.origin_line.max(1),
-                "SQL could not be analyzed for required predicates",
-                Some("unanalyzable"),
-                None,
-            ));
+            dedup.push(
+                &mut findings,
+                file,
+                SqlFactSite::Origin,
+                source.as_deref(),
+                check::sql_finding(
+                    &rel,
+                    file.origin_line.max(1),
+                    "SQL could not be analyzed for required predicates",
+                    Some("unanalyzable"),
+                    None,
+                ),
+            );
             continue;
         }
-        findings.extend(check::statement_findings(&rel, file, opts, catalog));
+        for (site, finding) in check::statement_findings(&rel, file, opts, catalog) {
+            dedup.push_merged(&mut findings, file, site, source.as_deref(), finding);
+        }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }

@@ -4,6 +4,9 @@ use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_span::GetSpan;
 
 mod compose;
+pub(in crate::codebase::postgres::embedded) mod origins;
+mod variants;
+pub(in crate::codebase::postgres::embedded) use variants::piece;
 mod escapes;
 #[cfg(test)]
 mod tests;

@@ -16,9 +16,27 @@ known SQL builder (a recovered SQL binding or a parameter typed
 Builder recovery honors the same trusted-tag and lexical-shadow rules as
 executed SQL. Unresolved raw appended identifiers become a synthetic qualified
 outer reference, so a builder that may append an outer column is conservatively
-treated as possibly correlated. Identical executed and builder SQL is reported
-once. Unparseable or dynamic SQL, including builder fragments, fails closed
+treated as possibly correlated. For complete alternatives, executed facts cover
+a matching fragment only when its contributing append occurrence and physical
+byte origins also match. Equal SQL produced at another source site remains
+checked; non-enumerated calls retain the existing SQL-text and bind matching.
+Every complete
+[SQL alternative](../postgres-facts.md#finite-sql-alternatives) of an executed
+branching call is checked, up to 16 versions. A banned shape in one version,
+such as `NOT IN (SELECT ...)`, is reported even when its sibling version uses
+an allowed shape. Branch-fragment lines retain their suppression locations.
+An executor-line suppression also covers findings from the append occurrences
+that contributed to that execution. Another append occurrence that reuses the
+same SQL constant or fragment remains checked, including when its findings
+point to the same physical SQL token. A directive on that shared SQL token's
+line suppresses the clause wherever it is reused.
+Unparseable SQL or dynamic SQL without complete alternatives, including builder fragments, fails closed
 unless `unanalyzableSql` is `ignore`.
+An unknown call receiving a mutable builder clears its finite alternatives;
+when evaluated in an `if` test, conditional test, or logical left operand, it
+also clears the affected SQL prefix. Ordinary calls preserve legacy SQL fields. See the
+[alternative model](../postgres-facts.md#finite-sql-alternatives) for alias and
+execution boundaries.
 
 ```yaml
 rules:

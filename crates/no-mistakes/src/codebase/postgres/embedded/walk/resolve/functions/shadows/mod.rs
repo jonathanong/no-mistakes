@@ -35,7 +35,11 @@ pub(super) struct TagShadows {
 }
 
 impl TagShadows {
-    pub(super) fn collect(program: &Program<'_>, trusted_sql_tags: &[TrustedSqlTag]) -> Self {
+    pub(super) fn collect(
+        program: &Program<'_>,
+        trusted_sql_tags: &[TrustedSqlTag],
+        sql_statement_types: &HashSet<String>,
+    ) -> Self {
         let mut shadows = Self::default();
         let top_level_functions = top_level_function_names(program);
         for statement in &program.body {
@@ -46,7 +50,9 @@ impl TagShadows {
                 &mut shadows,
             );
         }
-        shadows.imported.collect_fragments(program);
+        shadows
+            .imported
+            .collect_fragments(program, sql_statement_types);
         shadows
     }
 

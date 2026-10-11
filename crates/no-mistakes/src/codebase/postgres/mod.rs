@@ -64,7 +64,7 @@ pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
     EmbeddedSqlFileFacts, EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions,
-    EmbeddedSqlSourcePosition, TrustedSqlTag,
+    EmbeddedSqlSourcePosition, EmbeddedSqlVariant, TrustedSqlTag, MAX_EMBEDDED_SQL_VARIANTS,
 };
 pub(crate) use embedded::{
     package_name, package_root_for_specifier, project_relative_scoped_facts,
@@ -116,3 +116,5 @@ pub use types::{
 pub(crate) mod tests;
 
 pub(crate) use collect::collect_prepared_schema_facts;
+
+pub(crate) use on_conflict::judge_file_with_insert_indices;

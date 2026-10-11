@@ -8,6 +8,13 @@ pub fn configure_prepared_postgres_plan(
     plan.query_annotation |= !config
         .rule_applications("postgres-require-query-annotation")
         .is_empty();
+    plan.postgres_variants |= [
+        "postgres-lock-ordering",
+        "postgres-conflict-ordering",
+        "postgres-require-query-annotation",
+    ]
+    .iter()
+    .any(|id| !config.rule_applications(id).is_empty());
     let dml_rules = [
         "postgres-required-predicates",
         "postgres-no-offset",

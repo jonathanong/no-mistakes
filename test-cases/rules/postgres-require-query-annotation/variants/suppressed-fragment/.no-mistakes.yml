@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]

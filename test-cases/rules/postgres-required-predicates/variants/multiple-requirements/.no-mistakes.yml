@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      relations:
+        - table: accounts
+          require: ["active IS TRUE", "deleted_at IS NULL"]
+          requireColumns: [tenant_id, region_id]

@@ -3,10 +3,8 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::postgres::dml::writes::positional_insert_hits;
 use crate::codebase::postgres::{
-    recovered_sql_may_write_columns, EmbeddedSqlFileFacts, EmbeddedSqlKind, SqlStatementFileFacts,
-    SqlWriteColumns,
+    recovered_sql_may_write_columns, EmbeddedSqlFileFacts, SqlStatementFileFacts, SqlWriteColumns,
 };
-use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use history::{events_before, snapshots, Catalogs};
 use std::path::{Path, PathBuf};
@@ -15,8 +13,9 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let schema_files = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)
         .map_err(|error| {
             anyhow::anyhow!(
@@ -33,12 +32,16 @@ pub(super) fn scan(
         .collect();
     let tables = super::catalog::live_tables(&schema);
     let finals = Catalogs::build(&tables, opts);
-    let mut findings =
-        super::catalog::stale_extra_findings_from_tables(&tables, &opts.extra_generated_columns);
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    findings.extend(super::catalog::stale_extra_findings_from_tables(
+        &tables,
+        &opts.extra_generated_columns,
+    ));
     findings.extend(super::catalog::stale_trigger_findings(
         &tables,
         &opts.trigger_maintained_columns,
     ));
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     let has_history = schema.iter().any(|file| !file.table_events.is_empty());
     if !finals.combined.is_empty() || has_history {
         for path in files {
@@ -65,7 +68,15 @@ pub(super) fn scan(
                 None => &finals,
             };
             let rel = relative_slash_path(root, path);
-            extend_writes(&mut findings, &rel, statements, &lookup);
+            let source = crate::codebase::rules::read_source(sources, path);
+            extend_writes(
+                &mut findings,
+                &rel,
+                statements,
+                &mut dedup,
+                source.as_deref(),
+                &lookup,
+            );
             if let Some(embedded) = profile
                 .filter(|_| opts.fail_unanalyzable)
                 .and_then(|profile| facts.embedded_sql(path, profile).ok())
@@ -74,14 +85,14 @@ pub(super) fn scan(
             }
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
 /// An opaque tail may introduce another write even when recovered targets
 /// are literal and untracked. Only an empty applicable catalog is safe.
 fn extend_unanalyzable<'a>(
-    findings: &mut Vec<RuleFinding>,
+    findings: &mut crate::codebase::rules::PostgresFindings,
     file: &str,
     embedded: &EmbeddedSqlFileFacts,
     _statements: &[SqlStatementFileFacts],
@@ -89,7 +100,7 @@ fn extend_unanalyzable<'a>(
 ) {
     for call in &embedded.calls {
         let line = call.line.max(1) as usize;
-        if call.kind == EmbeddedSqlKind::Dynamic
+        if call.is_unanalyzable()
             && recovered_sql_may_write_columns(call.sql_text.as_deref())
             && !lookup(line).combined.is_empty()
         {
@@ -99,14 +110,16 @@ fn extend_unanalyzable<'a>(
 }
 
 fn extend_writes<'a>(
-    findings: &mut Vec<RuleFinding>,
+    findings: &mut crate::codebase::rules::PostgresFindings,
     file: &str,
     statements: &[SqlStatementFileFacts],
+    dedup: &mut crate::codebase::rules::VariantFindingDedup,
+    source: Option<&str>,
     lookup: &dyn Fn(usize) -> &'a Catalogs,
 ) {
     for statement in statements {
         let mut hits = Vec::new();
-        for write in &statement.writes {
+        for (write_index, write) in statement.writes.iter().enumerate() {
             let catalog = &lookup(write.line).combined;
             let Some(meta) = catalog.get(&write.table) else {
                 continue;
@@ -126,12 +139,12 @@ fn extend_writes<'a>(
                 SqlWriteColumns::All => meta.generated.iter().cloned().collect(),
             };
             for column in columns {
-                hits.push((write.line, meta.name.as_str(), column));
+                hits.push((write.line, meta.name.as_str(), column, write_index));
             }
         }
         hits.sort();
         hits.dedup();
-        for (line, table, column) in hits {
+        for (line, table, column, write_index) in hits {
             let generated = &lookup(line).catalog;
             let render = if generated
                 .get_exact(table)
@@ -142,7 +155,13 @@ fn extend_writes<'a>(
             } else {
                 trigger_finding
             };
-            findings.push(render(file, line, table, &column));
+            dedup.push(
+                findings,
+                statement,
+                write_site(statement, write_index, &column),
+                source,
+                render(file, line, table, &column),
+            );
         }
     }
 }
@@ -150,3 +169,21 @@ fn extend_writes<'a>(
 mod history;
 #[cfg(test)]
 mod tests;
+
+fn write_site(
+    statement: &SqlStatementFileFacts,
+    index: usize,
+    column: &str,
+) -> crate::codebase::postgres::statements::SqlFactSite {
+    use crate::codebase::postgres::statements::SqlFactSite;
+    let named = SqlFactSite::WriteColumn(index, column.to_string());
+    if statement
+        .variant_locations
+        .as_ref()
+        .is_some_and(|locations| locations.position(named.clone()).is_some())
+    {
+        named
+    } else {
+        SqlFactSite::Write(index)
+    }
+}

@@ -106,7 +106,7 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    let mut findings = super::PostgresFindings::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts)?;
@@ -124,8 +124,7 @@ pub(crate) fn check_with_files_and_sources(
             .collect();
         findings.extend(scan::scan(root, &compiled, &files, sources)?);
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    Ok(findings.finish())
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
