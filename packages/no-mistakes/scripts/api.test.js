@@ -1405,7 +1405,10 @@ test("audit declarations export named artifacts, evidence and async report contr
     "TestAuditPlanArtifact",
     "TestAuditObservation",
     "TestAuditObservationsArtifact",
-    "TestsAuditOptions",
+    "TestsAuditPlanFileInput",
+    "TestsAuditPlanInlineInput",
+    "TestsAuditObservationsFileInput",
+    "TestsAuditObservationsInlineInput",
     "TestAuditExecutionEvidence",
     "TestAuditSelectionEvidence",
     "TestAuditReport",
@@ -1417,6 +1420,10 @@ test("audit declarations export named artifacts, evidence and async report contr
   assert.match(declarations, /complete: true;/);
   assert.match(declarations, /changedSymbols: TestAuditSymbol\[\];/);
   assert.match(declarations, /selectedWithIncompleteTraces: string\[\];/);
+  assert.match(
+    declarations,
+    /export type TestsAuditOptions = TestsAuditPlanInput & TestsAuditObservationsInput;/,
+  );
   const api = readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");
   assert.match(
     api,

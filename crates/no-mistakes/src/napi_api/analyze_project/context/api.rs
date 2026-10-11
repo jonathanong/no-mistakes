@@ -9,7 +9,7 @@ impl AnalyzeProjectContext {
     }
 
     fn prepare_with_cache(options: &AnalyzeProjectOptions) -> Result<Self> {
-        if options.reports.is_empty() {
+        if options.reports.iter().all(|request| super::is_artifact_report(&request.report_type)) {
             return Ok(Self {
                 scopes: HashMap::new(),
                 scope_aliases: HashMap::new(),
@@ -33,7 +33,7 @@ impl AnalyzeProjectContext {
             EffectiveScopeKey,
             (EffectiveScope, Vec<AnalyzeReportRequest>),
         >::new();
-        for request in &options.reports {
+        for request in options.reports.iter().filter(|request| !super::is_artifact_report(&request.report_type)) {
             let raw = effective_scope(request, options)?;
             let visible_paths = visible_by_root
                 .entry(raw.root.clone())

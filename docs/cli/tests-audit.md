@@ -97,7 +97,8 @@ A runner adapter supplies `/tmp/full-suite-coverage.json`:
 The `tests` list must cover the runner's complete configured suite inventory,
 including files with zero execution hits. Each `coverageMap` is that test file's
 isolated Istanbul map, not a copy of the same aggregate map. Execution hits are
-statement counters greater than zero; listed-but-unexecuted files do not count.
+positive statement, function, or branch counters; listed-but-unexecuted files do
+not count.
 The following executable Node example produces camelCase artifacts, accepted by
 `testsAudit()`. CLI artifact JSON uses the equivalent snake_case names.
 
@@ -138,7 +139,8 @@ if (run.suite !== 'full' || run.complete !== true ||
 const tests = await Promise.all(run.tests.map(async row => {
   const coverage = JSON.parse(await readFile(row.coverageMap, 'utf8'));
   const executedFiles = Object.values(coverage)
-    .filter(file => Object.values(file.s).some(hits => hits > 0))
+    .filter(file => [...Object.values(file.s), ...Object.values(file.f),
+      ...Object.values(file.b).flat()].some(hits => hits > 0))
     .map(file => {
       const path = relative(root, resolve(root, file.path)).replaceAll('\\', '/');
       if (isAbsolute(path) || path === '..' || path.startsWith('../')) {
