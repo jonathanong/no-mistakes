@@ -205,9 +205,16 @@ conservative.
 Callback confinement also follows identity-preserving `defineConfig` and
 `defineProject` results through immutable aliases and nested config helpers.
 Exports, unknown consumers, direct invocation, and mutation of those results
-leave the returned config unresolved. A standalone helper call or a result
-consumed by `mergeConfig` preserves the proof because the latter builds a config
-object without retaining the callback identity.
+leave the returned config unresolved. A standalone helper call preserves the
+confinement proof.
+
+Vitest re-exports Vite's `mergeConfig`, which accepts object-form configs. Passing
+`defineConfig(make)` as a merge operand still passes a callback and throws. Invoke
+the callback first to supply an object, for example
+`mergeConfig({}, defineConfig(make)())`. This runtime-valid invocation does not
+establish stability of captured bindings: those remain unresolved under the
+existing conservative callback proof. Literal object-form merge operands retain
+normal timeout analysis; no general detachment of nested references is inferred.
 
 Erased TypeScript `typeof` type queries, including qualified property queries,
 do not participate in the runtime stability proof. A callback or config binding

@@ -50,7 +50,7 @@ function createValueStability(context, primitiveMemberRead) {
     const node = unwrapTransparentParent(call);
     const parent = node.parent;
     if (parent?.type === "ExpressionStatement") return true;
-    // mergeConfig creates an object rather than retaining the callback identity.
+    // mergeConfig rejects callback operands before exposing their identity.
     if (
       parent?.type === "CallExpression" &&
       configCall(parent, context) === "mergeConfig" &&

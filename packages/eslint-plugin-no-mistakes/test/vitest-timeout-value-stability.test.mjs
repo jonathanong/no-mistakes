@@ -8,6 +8,36 @@ const findings = (name, options = {}) =>
     "fixture.test.ts",
   );
 describe("vitest-timeout-cap value stability", () => {
+  it("uses runtime-valid object merges without admitting captured callback effects", async () => {
+    assert.deepEqual(
+      findings("merge-object-controls", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [5, "timeout"],
+        [6, "invalid"],
+        [11, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("merge-object-controls").map(({ line, messageId }) => [line, messageId]),
+      [
+        [5, "timeout"],
+        [6, "invalid"],
+      ],
+    );
+    await assert.doesNotReject(
+      import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/merge-object-controls.ts"),
+    );
+  });
+  it("keeps callback merge operands only as explicit runtime-rejection controls", async () => {
+    assert.deepEqual(findings("unsupported-merge-callbacks", { unknownValues: "finding" }), []);
+    await assert.rejects(
+      import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/unsupported-merge-callbacks.ts"),
+      /Cannot merge config in form of callback/,
+    );
+  });
   it("ignores erased type queries while retaining real callback consumers", () => {
     assert.deepEqual(
       findings("config-type-only-references", { unknownValues: "finding" }).map(
