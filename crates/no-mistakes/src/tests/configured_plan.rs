@@ -1,4 +1,4 @@
-use super::configured_plan_candidates::{group_candidates, merge_selected};
+use super::configured_plan_candidates::merge_selected;
 use super::diff_parser::DiffFile;
 use super::plan::relative_path;
 use super::{
@@ -8,16 +8,20 @@ use super::{
 use anyhow::Result;
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::codebase::workspaces::WorkspaceMap;
-use no_mistakes::config::v2::schema::{NoMistakesConfig, TestPlanGroupType};
-use std::collections::{BTreeMap, HashSet};
+use no_mistakes::config::v2::schema::NoMistakesConfig;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+mod coverage_support;
 mod dep_triggers;
 mod direct_test_owner;
 mod discovery;
 mod environment;
 mod fallback;
 mod finalize;
+mod graph;
+mod group_selection;
+mod group_selection_types;
 mod hints;
 mod hints_domains;
 mod lockfile_seeds;
@@ -35,24 +39,18 @@ pub(crate) use direct_test_owner::generate_direct_test_owner_plan_with_prepared;
 pub(crate) use discovery::discover_framework_tests_from_prepared;
 use environment::{
     configured_environment, configured_groups, effective_global_config_fallback, framework_name,
-    group_type_name, limit_count, override_limit,
+    limit_count, override_limit,
 };
 use fallback::{fallback_plan, FallbackRequest};
-use finalize::{
-    attach_targets, empty_group_result, select_limited_direct_candidates,
-    select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
-};
+use finalize::{attach_targets, sorted_selected_tests, sorted_warnings};
+use group_selection::select_configured_groups;
+use group_selection_types::GroupSelectionInputs;
 use hints::build_coverage_hints_from_prepared;
-use lockfile_seeds::{
-    apply_lockfile_seeds, lockfile_seed_candidates, merge_lockfile_seed_candidates,
-};
+use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
 use native_semantic_fallback::native_semantic_fallback_plan;
 use native_semantic_seeds::native_semantic_seed_candidates;
-use targeted_triggers::{
-    insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
-    TargetedOverlapRecovery,
-};
+use targeted_triggers::{insert_synthesized_dependency_group, targeted_dependency_candidates};
 use vitest_setup_groups::{VitestSetupFallback, VitestSetupFallbackInputs, VitestSetupSelection};
 
 #[allow(clippy::too_many_arguments)]
@@ -152,20 +150,10 @@ pub(crate) fn generate_configured_plan_with_prepared(
         return Ok(plan);
     }
 
-    let graph = if prepared.graph_is_initialized() {
-        prepared.graph()?
-    } else if let Some(timing) = timing {
-        timing.run_phase("graph", || prepared.graph())?
-    } else {
-        prepared.graph()?
-    };
+    let graph = graph::prepared_graph(prepared, timing)?;
     let test_filter = prepared.test_filter().clone();
     let coverage_hints =
         build_coverage_hints_from_prepared(prepared, config, framework, diff_files, &all_tests);
-    let mut selected_map: BTreeMap<PathBuf, SelectedTest> = BTreeMap::new();
-    let mut used = HashSet::new();
-    let mut group_results = Vec::new();
-    let mut remaining_global = global_limit;
     let mut warnings: Vec<Warning> = prepared.tsconfig_warnings();
     let mut warnings_seen: HashSet<WarningKey> = warnings.iter().map(warning_key).collect();
     for changed in changed_files {
@@ -197,7 +185,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
     };
     let native_semantic_seeds =
         native_semantic_seed_candidates(root, prepared, graph, &all_test_set, Some(framework));
-    let mut lockfile_seeds_injected = false;
     let targeted_candidates = targeted_dependency_candidates(
         root,
         &all_tests,
@@ -212,8 +199,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
         || !native_semantic_seeds.candidates.is_empty();
     let target_only_group_index =
         insert_synthesized_dependency_group(&mut groups, has_semantic_dependency_candidates);
-    let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
-    let mut fallback_reasons = Vec::new();
     let mut vitest_setup_fallback = VitestSetupFallback::new(VitestSetupFallbackInputs {
         framework,
         root,
@@ -224,152 +209,34 @@ pub(crate) fn generate_configured_plan_with_prepared(
         has_global_limit,
         all_test_count: all_tests.len(),
     });
-
-    for (group_index, group) in groups.iter().enumerate() {
-        let recover_targeted_overlaps = targeted_overlaps.should_recover(framework, group.type_);
-        let merge_zero_budget_targeted =
-            group.type_ == TestPlanGroupType::Dependencies && !targeted_candidates.is_empty();
-        if remaining_global == 0 && !recover_targeted_overlaps && !merge_zero_budget_targeted {
-            let result_index = group_results.len();
-            group_results.push(empty_group_result(
-                group_type_name(group.type_),
-                all_tests.len().saturating_sub(used.len()),
-                has_global_limit.then_some(0),
-            ));
-            if group.type_ == TestPlanGroupType::Dependencies {
-                vitest_setup_fallback.apply_dependency_group(
-                    VitestSetupSelection {
-                        used: &mut used,
-                        selected_map: &mut selected_map,
-                        group_results: &mut group_results,
-                        fallback_reasons: &mut fallback_reasons,
-                    },
-                    result_index,
-                    0,
-                    0,
-                );
-            }
-            continue;
-        }
-        if matches!(
-            framework,
-            TestFramework::Dotnet
-                | TestFramework::Vitest
-                | TestFramework::Jest
-                | TestFramework::Swift
-                | TestFramework::Python
-                | TestFramework::Go
-                | TestFramework::Cargo
-                | TestFramework::Rails
-                | TestFramework::Php
-                | TestFramework::Java
-                | TestFramework::Kotlin
-                | TestFramework::Elixir
-                | TestFramework::Dart
-        ) && group.type_ == TestPlanGroupType::Coverage
-        {
-            anyhow::bail!(
-                "{} test plans do not support the coverage group",
-                framework_name(framework)
-            );
-        }
-        let target_only_group = target_only_group_index == Some(group_index);
-        let candidate_used =
-            targeted_overlaps.candidate_used_override(&used, recover_targeted_overlaps);
-        let mut candidates = if target_only_group {
-            Vec::new()
-        } else {
-            group_candidates(
-                group.type_,
-                framework,
-                root,
-                changed_files,
-                graph,
-                &all_tests,
-                &all_test_set,
-                &test_filter,
-                candidate_used.as_ref().unwrap_or(&used),
-                &coverage_hints,
-                &mut warnings,
-                &mut warnings_seen,
-            )
-        };
-        if recover_targeted_overlaps {
-            targeted_overlaps.merge_existing(root, &mut candidates, &used, &mut selected_map);
-        }
-        if group.type_ == TestPlanGroupType::Dependencies {
-            merge_targeted_candidates(
-                root,
-                &mut candidates,
-                &targeted_candidates,
-                &used,
-                &mut selected_map,
-            );
-            if let Some(ref seed_result) = lockfile_seed_result {
-                lockfile_seeds_injected = true;
-                merge_lockfile_seed_candidates(
-                    root,
-                    &seed_result.candidates,
-                    &mut candidates,
-                    &used,
-                    &mut selected_map,
-                );
-            }
-            merge_lockfile_seed_candidates(
-                root,
-                &native_semantic_seeds.candidates,
-                &mut candidates,
-                &used,
-                &mut selected_map,
-            );
-        }
-        let group_limit = group
-            .limit
-            .as_ref()
-            .and_then(|limit| limit_count(Some(limit), all_tests.len()))
-            .unwrap_or(remaining_global)
-            .min(remaining_global);
-        let picked = if group.type_ == TestPlanGroupType::Direct {
-            select_limited_direct_candidates(candidates, group_limit, group.sample_when_limited)
-        } else {
-            select_limited_group_candidates(candidates, group_limit, group.sample_when_limited)
-        };
-        for test in &picked {
-            used.insert(test.test_file.clone());
-            selected_map
-                .entry(root.join(&test.test_file))
-                .and_modify(|entry| merge_selected(entry, test))
-                .or_insert_with(|| test.clone());
-        }
-        remaining_global = remaining_global.saturating_sub(picked.len());
-        let result_index = group_results.len();
-        group_results.push(TestPlanGroupResult {
-            r#type: group_type_name(group.type_).to_string(),
-            selected: picked.iter().map(|test| test.test_file.clone()).collect(),
-            remaining: all_tests.len().saturating_sub(used.len()),
-            limit: group
-                .limit
-                .is_some()
-                .then_some(group_limit)
-                .or_else(|| has_global_limit.then_some(group_limit)),
-        });
-        if group.type_ == TestPlanGroupType::Dependencies {
-            let picked = vitest_setup_fallback.apply_dependency_group(
-                VitestSetupSelection {
-                    used: &mut used,
-                    selected_map: &mut selected_map,
-                    group_results: &mut group_results,
-                    fallback_reasons: &mut fallback_reasons,
-                },
-                result_index,
-                group_limit.saturating_sub(picked.len()),
-                remaining_global,
-            );
-            remaining_global = remaining_global.saturating_sub(picked);
-        }
-        targeted_overlaps.finish_group(group.type_);
-    }
-
+    let selection = select_configured_groups(GroupSelectionInputs {
+        framework,
+        root,
+        changed_files,
+        graph,
+        all_tests: &all_tests,
+        all_test_set: &all_test_set,
+        test_filter: &test_filter,
+        coverage_hints: &coverage_hints,
+        groups: &groups,
+        target_only_group_index,
+        targeted_candidates: &targeted_candidates,
+        lockfile_seed_result: lockfile_seed_result.as_ref(),
+        native_semantic_candidates: &native_semantic_seeds.candidates,
+        has_global_limit,
+        remaining_global: global_limit,
+        warnings,
+        warnings_seen,
+        vitest_setup_fallback: &mut vitest_setup_fallback,
+    })?;
+    let mut selected_map = selection.selected_map;
+    let mut used = selection.used;
+    let mut group_results = selection.group_results;
+    let remaining_global = selection.remaining_global;
+    warnings = selection.warnings;
+    warnings_seen = selection.warnings_seen;
+    let mut fallback_reasons = selection.fallback_reasons;
+    let lockfile_seeds_injected = selection.lockfile_seeds_injected;
     native_semantic_seeds.extend_warnings(&mut warnings, &mut warnings_seen);
     if let Some(plan) = native_semantic_fallback_plan(
         root,
