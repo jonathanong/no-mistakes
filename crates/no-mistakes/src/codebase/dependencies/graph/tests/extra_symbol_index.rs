@@ -179,7 +179,7 @@ fn symbol_index_symbol_capacity_tracks_distinct_names_and_preserves_aliases() {
                 source.clone(),
                 format!("symbol-{}", row % SYMBOLS),
                 format!("alias-{row}"),
-                row % 3 == 0,
+                row.is_multiple_of(3),
             )
         })
         .collect();
@@ -200,7 +200,7 @@ fn symbol_index_symbol_capacity_tracks_distinct_names_and_preserves_aliases() {
             let row = symbol + offset * SYMBOLS;
             assert_eq!(path.as_ref(), importer.as_path());
             assert_eq!(local.as_ref(), format!("alias-{row}"));
-            assert_eq!(*reexport, row % 3 == 0);
+            assert_eq!(*reexport, row.is_multiple_of(3));
         }
     }
 }
