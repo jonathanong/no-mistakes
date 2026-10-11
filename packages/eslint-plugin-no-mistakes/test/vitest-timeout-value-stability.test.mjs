@@ -103,6 +103,8 @@ describe("vitest-timeout-cap value stability", () => {
         ({ line, messageId }) => [line, messageId],
       ),
       [
+        // The wrapped receiver does not yet establish a scalar initializer proof.
+        [10, "unknown"],
         [55, "timeout"],
         [64, "unknown"],
         [64, "unknown"],

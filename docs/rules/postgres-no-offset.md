@@ -118,6 +118,15 @@ also follow this boundary, including TypeScript wrappers and literal computed
 property names. Arguments are evaluated before the invoked body. Referencing
 `.call` without invoking it, using `.bind(...)`, or passing a callback keeps
 that callback body inert.
+Creating an unused generator iterator also leaves its body unexecuted, so body
+writes alone do not make the query unanalyzable, including literal `.call(...)`
+and `.apply(...)` invocations. Arguments and parameter defaults still execute.
+Advancing or consuming an iterator (for example, `.next()`,
+`for...of`, spread, tagged template interpolation, or `yield*`), storing it, or
+passing it to an unknown consumer retains conservative body checks, including
+parameter and destructuring defaults.
+Stored iterators may remain unanalyzable even when their body is never advanced;
+the heuristic does not trace iterator aliases.
 An earlier body may be skipped by direct entry or executed by fallthrough, so
 its SQL assignments cannot supply a later case's complete statement. Bindings
 it changes become opaque for later cases. The default `fail` reports those
@@ -129,6 +138,12 @@ let gate = false;
 switch (2) {
   case (gate = true, 1): break;
   case 2: query(gate ? "SELECT 1 OFFSET 1" : "SELECT 1"); // unanalyzable
+}
+
+let unchanged = false;
+switch (2) {
+  case (function* () { unchanged = true; })(): break;
+  case 2: query(unchanged ? "SELECT 1 OFFSET 1" : "SELECT 1"); // passes
 }
 ```
 

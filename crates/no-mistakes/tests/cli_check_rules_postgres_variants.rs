@@ -20,6 +20,8 @@ mod guard_alias;
 mod helper_guards;
 #[path = "cli_check_rules_postgres_variants/relative_consumer_escape.rs"]
 mod relative_consumer_escape;
+#[path = "cli_check_rules_postgres_variants/switch_generators.rs"]
+mod switch_generators;
 #[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
 mod switch_labels;
 #[path = "cli_check_rules_postgres_variants/switch_member_invocations.rs"]
