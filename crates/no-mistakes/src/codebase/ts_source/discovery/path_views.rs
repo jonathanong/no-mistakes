@@ -83,12 +83,13 @@ fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
         // pool size. This makes CLI `--jobs` the upper bound for this walk.
         .threads(fallback_walk_threads());
     builder.build_parallel().run(|| {
-        Box::new(FallbackWalkVisitor {
+        let mut visitor = FallbackWalkVisitor {
             walker_root: walker_root.clone(),
             request_root: root.to_path_buf(),
             output: paths.clone(),
             paths: Vec::new(),
-        })
+        };
+        Box::new(move |entry| ignore::ParallelVisitor::visit(&mut visitor, entry))
     });
     let mut paths = paths
         .lock()
@@ -121,9 +122,10 @@ impl ignore::ParallelVisitor for FallbackWalkVisitor {
         if entry.depth() == 0 {
             let _ = self.walker_root.set(entry.path().to_path_buf());
         }
-        if let Some(file_type) = entry.file_type()
-            && (file_type.is_file() || file_type.is_symlink())
-        {
+        let file_type = entry
+            .file_type()
+            .filter(|file_type| file_type.is_file() || file_type.is_symlink());
+        if let Some(file_type) = file_type {
             let walk_root = self
                 .walker_root
                 .get()
