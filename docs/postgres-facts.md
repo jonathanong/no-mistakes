@@ -312,6 +312,18 @@ and fallthrough can see different statements, including different DML kinds.
 Merely creating or passing a callback does not execute its body. Literal SQL
 arguments and unchanged legacy constants retain their existing checks, while
 branching calls use the rule's `unanalyzableSql` policy.
+Invoking a generator in a label creates an iterator without executing its body.
+Its evaluated arguments and parameter defaults still count as effects. A visibly
+unused iterator therefore does not discard finite SQL versions merely because
+the generator body contains a write. Iterator consumption through a member call
+(including `.next()`), `for...of`, array or argument spread, tagged template
+interpolations, or `yield*` retains the conservative body check, including
+iterators returned by invoked literal
+closures. Iterators stored in bindings, including parameter and destructuring
+defaults, and unknown consumers keep that conservative check without tracing
+aliases or iterator steps; even a stored unused iterator may remain opaque.
+Ordinary invoked functions and arrows retain their body checks.
+Plain template string coercion does not advance a fresh native iterator.
 `try`, `catch`, and `finally` phases are inspected once, but exception paths are
 not enumerated. Finite execution snapshots are discarded before handlers and
 after each phase because an earlier operation may have thrown before completing.

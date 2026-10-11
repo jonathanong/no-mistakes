@@ -46,6 +46,12 @@ This includes literal closures invoked through `.call(...)` or `.apply(...)`,
 with TypeScript wrappers or literal computed property names. Callee and argument
 writes are inspected before the body; merely referencing or binding a closure
 does not invoke it.
+Generator creation checks evaluated arguments and parameter defaults while
+leaving an unused iterator's body unexecuted, including creation through literal
+`.call(...)` and `.apply(...)` invocations. Consumed or stored iterators retain
+conservative body checks in both CLI and async Node checks, including iterator
+results returned through invoked literal closures. No Node source-fact JSON
+fields or TypeScript declarations change.
 The conservative traversal isolates each case's entry state. A preceding body
 cannot supply a later case's complete SQL; bindings it changes lose recovered
 prefixes and finite versions, including when the leading DML kind can change.
