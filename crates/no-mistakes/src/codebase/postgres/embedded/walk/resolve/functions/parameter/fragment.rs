@@ -53,11 +53,13 @@ pub(super) fn append(
     // rejects builder aliases and calls that could mutate the builder.
     let sql = chain::resolve_expr(
         arg,
+        source,
         super::super::MAX_RESOLVE_DEPTH,
         &mut |_, _, _| None,
         &mut |tag| names.contains(tag) || aliases.contains(tag) || shadows.contains(tag),
         shadows.imported_tags(),
-    )?;
+    )?
+    .sql;
     let line = byte_offset_to_line(source, call.span.start as usize);
     let positions = source_positions::for_expression(arg, source, call.span.start as usize, line);
     let origins = origins::collect(arg, source, &sql);

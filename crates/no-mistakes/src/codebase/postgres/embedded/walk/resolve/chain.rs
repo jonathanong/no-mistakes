@@ -1,6 +1,6 @@
-use super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::tags::{interpolating_untrusted_tag, SqlTagNames};
 use super::super::super::unpublished_sql_text;
+use super::functions::provenance::RecoveredSql;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
 
@@ -18,26 +18,48 @@ use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
 /// instead of overflowing the stack.
 pub(super) fn resolve_expr(
     expr: &Expression<'_>,
+    source: &str,
     depth: u8,
-    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
-) -> Option<String> {
+) -> Option<RecoveredSql> {
     let depth = depth.checked_sub(1)?;
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            unpublished_sql_text(expr)
-        }
-        Expression::TaggedTemplateExpression(_) => tagged_sql(expr, is_shadowed, imported_sql_tags),
+        Expression::StringLiteral(literal) => Some(RecoveredSql::literal(
+            expr,
+            source,
+            literal.value.to_string(),
+        )),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
+            RecoveredSql::literal(expr, source, unpublished_sql_text(expr)?),
+        ),
+        Expression::TaggedTemplateExpression(_) => Some(RecoveredSql::literal(
+            expr,
+            source,
+            tagged_sql(expr, is_shadowed, imported_sql_tags)?,
+        )),
         Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
-            let left = resolve_expr(&binary.left, depth, lookup, is_shadowed, imported_sql_tags)?;
-            let right = resolve_expr(&binary.right, depth, lookup, is_shadowed, imported_sql_tags)?;
-            let right = renumber_placeholders(&right, count_placeholders(&left));
-            Some(format!("{left}{right}"))
+            let mut left = resolve_expr(
+                &binary.left,
+                source,
+                depth,
+                lookup,
+                is_shadowed,
+                imported_sql_tags,
+            )?;
+            left.append(resolve_expr(
+                &binary.right,
+                source,
+                depth,
+                lookup,
+                is_shadowed,
+                imported_sql_tags,
+            )?);
+            Some(left)
         }
         Expression::CallExpression(call) => {
-            resolve_call(call, depth, lookup, is_shadowed, imported_sql_tags)
+            resolve_call(call, source, depth, lookup, is_shadowed, imported_sql_tags)
         }
         _ => None,
     }
@@ -61,11 +83,12 @@ pub(super) fn tagged_sql(
 /// dynamic rather than treating the returned prefix as complete SQL.
 pub(super) fn resolve_dynamic_prefix(
     expr: &Expression<'_>,
+    source: &str,
     depth: u8,
-    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
-) -> Option<String> {
+) -> Option<RecoveredSql> {
     let depth = depth.checked_sub(1)?;
     let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
         return None;
@@ -78,6 +101,7 @@ pub(super) fn resolve_dynamic_prefix(
     }
     let base = resolve_expr(
         &member.object,
+        source,
         depth,
         lookup,
         is_shadowed,
@@ -86,26 +110,29 @@ pub(super) fn resolve_dynamic_prefix(
     .or_else(|| {
         resolve_dynamic_prefix(
             &member.object,
+            source,
             depth,
             lookup,
             is_shadowed,
             imported_sql_tags,
         )
     })?;
-    super::super::scope::has_known_leading_statement(&base).then_some(base)
+    super::super::scope::has_known_leading_statement(&base.sql).then_some(base)
 }
 
 fn resolve_call(
     call: &CallExpression<'_>,
+    source: &str,
     depth: u8,
-    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
-) -> Option<String> {
+) -> Option<RecoveredSql> {
     match unwrap_ts_wrappers(&call.callee) {
         Expression::StaticMemberExpression(member) if member.property.name == "append" => {
-            let base = resolve_expr(
+            let mut base = resolve_expr(
                 &member.object,
+                source,
                 depth,
                 lookup,
                 is_shadowed,
@@ -113,13 +140,14 @@ fn resolve_call(
             )?;
             let appended = resolve_expr(
                 append_argument(call)?,
+                source,
                 depth,
                 lookup,
                 is_shadowed,
                 imported_sql_tags,
             )?;
-            let appended = renumber_placeholders(&appended, count_placeholders(&base));
-            Some(format!("{base}{appended}"))
+            base.append(appended);
+            Some(base)
         }
         Expression::Identifier(ident) => lookup(call, ident.name.as_str(), depth),
         _ => None,
