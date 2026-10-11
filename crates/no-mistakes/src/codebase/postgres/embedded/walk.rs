@@ -176,8 +176,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.invalidate_execution_variants();
     }
     fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) {
-        walk::walk_try_statement(self, statement);
-        self.invalidate_execution_variants();
+        flow::try_statement(self, statement);
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {

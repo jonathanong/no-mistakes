@@ -109,6 +109,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
             id.name.to_string(),
             BindingState {
                 builder_identity: None,
+                builder_effect_revision: 0,
                 condition_key: None,
                 variants: None,
                 sql: None,

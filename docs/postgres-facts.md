@@ -206,7 +206,10 @@ query(filtered
 
 Branch choices stay correlated across bindings assigned by the same branch;
 later truthy or falsy guards on those values reuse the same paths. Recovery
-does not invent combinations of mutually exclusive paths. Equivalent binary
+does not invent combinations of mutually exclusive paths. `const` aliases of
+known immutable bindings retain this correlation, including `!` and `!!`
+aliases. Copies from mutable or unknown sources have independent snapshots;
+they do not follow later source reassignments. Equivalent binary
 arms with the same recovered SQL and physical origins count once toward the
 version limit. Nested fragments contribute their own SQL text and generated
 placeholders are renumbered in composition order. Ordinary value interpolations
@@ -254,6 +257,14 @@ that mutate an existing SQL binding also stay `Dynamic` when recovery would
 otherwise consume its earlier snapshot later in the same expression.
 Switch discriminants or case labels that mutate an existing SQL binding also
 remain opaque because earlier labels can change the state of later cases.
+`try`, `catch`, and `finally` phases are inspected once, but exception paths are
+not enumerated. Finite execution snapshots are discarded before handlers and
+after each phase because an earlier operation may have thrown before completing.
+SQL bindings changed during a phase also become `Dynamic`, retaining only a
+verified prefix where available; later queries cannot treat their post-mutation
+text as complete SQL. Untouched legacy fields stay unchanged. Statements
+initialized or assigned afresh in a handler and literal executor arguments
+remain recoverable within that handler.
 
 Each `EmbeddedSqlVariant` records `sql_text`, `line`,
 `sql_source_positions`, and `recovered_placeholder_positions`. Its source map
@@ -281,6 +292,12 @@ The legacy `kind` and `sql_text` fields keep their earlier meaning. An
 enumerated call can still have `kind: Dynamic`; consumers must prefer its
 nonempty `variants` to the legacy partial text. Ordinary calls that already
 had fully static SQL keep an empty version list and their existing facts.
+
+Rust callers constructing `EmbeddedSqlCall` with a struct literal must add
+`variants: Vec::new()` for an ordinary call, or use
+`..EmbeddedSqlCall::default()` for unspecified fields. Derived equality and
+`Debug` now include the version list. The legacy `kind` and `sql_text` fields
+retain their contract; Node source-fact and check JSON shapes remain unchanged.
 
 ### Executor bindings
 

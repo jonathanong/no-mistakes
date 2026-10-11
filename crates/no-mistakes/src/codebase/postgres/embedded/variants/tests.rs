@@ -14,6 +14,10 @@ mod defensive;
 mod equivalent;
 #[path = "tests/escape_effects.rs"]
 mod escape_effects;
+#[path = "tests/exception_flow.rs"]
+mod exception_flow;
+#[path = "tests/guard_alias.rs"]
+mod guard_alias;
 #[path = "tests/helper_effects.rs"]
 mod helper_effects;
 #[path = "tests/helpers.rs"]

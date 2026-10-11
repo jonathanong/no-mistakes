@@ -34,6 +34,10 @@ locations for findings and suppressions. This is the
 change to `parsePostgresSql`: that source API still accepts concrete SQL text
 and returns the same versioned JSON contract. The Rust `EmbeddedSqlCall`
 version list is not exported as a Node source-fact shape.
+Existing Rust `EmbeddedSqlCall` struct literals must initialize the new field
+with `variants: Vec::new()` or use `..EmbeddedSqlCall::default()` for unspecified
+fields. Derived equality and `Debug` include versions; legacy `kind` and
+`sql_text` retain their contract. This Rust change does not alter Node JSON shapes.
 Its Rust statement projections can carry internal `variant_locations`
 provenance and prepared ordering metadata; these fields are not serialized by
 the Node check or source APIs. Finding deduplication keeps physical token

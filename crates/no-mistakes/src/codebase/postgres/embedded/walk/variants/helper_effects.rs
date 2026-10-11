@@ -131,6 +131,10 @@ impl ScopeVisitor<'_> {
                         && (variants_only || visible.get(bound_name) == Some(&index));
                 let preserved = preserved_scope == Some(index) && *bound_name == name;
                 if affected && !preserved {
+                    // Even an already-opaque snapshot can be mutated again
+                    // before throwing; exception boundaries track every effect.
+                    binding.builder_effect_revision =
+                        binding.builder_effect_revision.wrapping_add(1);
                     if variants_only {
                         binding.variants = None;
                     } else {

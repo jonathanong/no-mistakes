@@ -11,7 +11,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 #[derive(Clone)]
 pub(crate) struct BindingState {
     pub(super) builder_identity: Option<u32>,
-    pub(super) condition_key: Option<u64>,
+    pub(super) builder_effect_revision: u64,
+    pub(super) condition_key: Option<(u64, u32)>,
     pub(super) variants: Option<Vec<super::variants::Recovered>>,
     pub(crate) sql: Option<String>,
     pub(crate) kind: EmbeddedSqlKind,

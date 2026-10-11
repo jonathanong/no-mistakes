@@ -1,7 +1,8 @@
 use no_mistakes::codebase::postgres::{
     extract_embedded_sql_from_source, extract_sql_statement_facts,
-    extract_sql_statement_facts_for_embedded_call, EmbeddedSqlOptions, SqlCursorBound,
-    SqlValueForm,
+    extract_sql_statement_facts_for_embedded_call, EmbeddedSqlCall, EmbeddedSqlKind,
+    EmbeddedSqlOptions, EmbeddedSqlVariant, SqlCursorBound, SqlValueForm,
+    MAX_EMBEDDED_SQL_VARIANTS,
 };
 use std::path::PathBuf;
 
@@ -9,6 +10,54 @@ fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded")
         .join(name)
+}
+
+#[test]
+fn public_call_versions_are_readable_and_legacy_construction_is_explicit() {
+    let path = fixture("variants-conditional.ts");
+    let source = std::fs::read_to_string(&path).expect("embedded SQL fixture");
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let embedded = extract_embedded_sql_from_source(&path, &source, &options);
+    let call = &embedded.calls[0];
+    let versions: &[EmbeddedSqlVariant] = &call.variants;
+    assert_eq!(MAX_EMBEDDED_SQL_VARIANTS, 16);
+    assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        versions
+            .iter()
+            .map(|version| version.sql_text.as_str())
+            .collect::<Vec<_>>(),
+        ["SELECT 1", "SELECT 2"]
+    );
+    assert!(versions
+        .iter()
+        .all(|version| version.sql_source_offsets.len() == version.sql_text.len()));
+
+    // The version field is an intentional Rust contract addition; callers can
+    // construct legacy calls with an empty list or a default struct update.
+    let explicit = EmbeddedSqlCall {
+        variants: Vec::new(),
+        line: call.line,
+        callee: call.callee.clone(),
+        sql_text: call.sql_text.clone(),
+        kind: call.kind,
+        declaration_line: call.declaration_line,
+        sql_source_positions: call.sql_source_positions.clone(),
+        recovered_placeholder_positions: call.recovered_placeholder_positions.clone(),
+    };
+    let defaulted = EmbeddedSqlCall {
+        line: explicit.line,
+        callee: explicit.callee.clone(),
+        sql_text: explicit.sql_text.clone(),
+        kind: explicit.kind,
+        declaration_line: explicit.declaration_line,
+        sql_source_positions: explicit.sql_source_positions.clone(),
+        recovered_placeholder_positions: explicit.recovered_placeholder_positions.clone(),
+        ..EmbeddedSqlCall::default()
+    };
+    assert_eq!(explicit, defaulted);
+    assert_ne!(explicit, *call);
+    assert!(format!("{call:?}").contains("EmbeddedSqlVariant"));
 }
 
 #[test]

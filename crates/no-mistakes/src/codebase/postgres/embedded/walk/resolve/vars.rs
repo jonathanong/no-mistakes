@@ -20,6 +20,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
         for (name, position) in names {
             scope.entry(name).or_insert_with(|| BindingState {
                 builder_identity: None,
+                builder_effect_revision: 0,
                 condition_key: None,
                 variants: None,
                 sql: None,
@@ -116,6 +117,7 @@ pub(super) fn record_declarator(
         line,
     );
     let builder_identity = visitor.builder_identity_for_init(init);
+    let condition_key = is_const.then(|| visitor.declaration_choice_key(init, ident.span.start));
     let scope_index = if is_var {
         var_scope(visitor, ident.name.as_str())
     } else {
@@ -136,7 +138,8 @@ pub(super) fn record_declarator(
             ident.name.to_string(),
             BindingState {
                 builder_identity,
-                condition_key: is_const.then_some((1u64 << 32) | u64::from(ident.span.start)),
+                builder_effect_revision: 0,
+                condition_key,
                 variants: None,
                 sql_builder: sql.is_some()
                     && matches!(

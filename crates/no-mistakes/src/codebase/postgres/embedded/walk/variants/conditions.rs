@@ -58,6 +58,28 @@ pub(super) fn choice_id(
     expr: &Expression<'_>,
     fallback: u32,
 ) -> (u64, u32) {
+    let (key, arm) = binding_choice_key(visitor, expr);
+    (key.unwrap_or(u64::from(fallback)), arm)
+}
+
+impl super::super::ScopeVisitor<'_> {
+    pub(in crate::codebase::postgres::embedded::walk) fn declaration_choice_key(
+        &self,
+        init: &Expression<'_>,
+        declaration: u32,
+    ) -> (u64, u32) {
+        let (key, arm) = binding_choice_key(self, init);
+        // Only an immutable binding shares its truth with a copied guard.
+        // Copies of mutable or unknown values need their own snapshot key.
+        key.map(|key| (key, arm))
+            .unwrap_or(((1u64 << 32) | u64::from(declaration), 0))
+    }
+}
+
+fn binding_choice_key(
+    visitor: &super::super::ScopeVisitor<'_>,
+    expr: &Expression<'_>,
+) -> (Option<u64>, u32) {
     let mut expression = unwrap_ts_wrappers(expr);
     let mut arm = 0;
     while let Expression::UnaryExpression(unary) = expression {
@@ -68,14 +90,14 @@ pub(super) fn choice_id(
         expression = unwrap_ts_wrappers(&unary.argument);
     }
     if let Expression::Identifier(id) = expression {
-        if let Some(key) = visitor
+        if let Some((key, polarity)) = visitor
             .lookup(id.name.as_str())
             .and_then(|binding| binding.condition_key)
         {
-            return (key, arm);
+            return (Some(key), arm ^ polarity);
         }
     }
-    (u64::from(fallback), arm)
+    (None, arm)
 }
 
 pub(super) fn truth_at(
