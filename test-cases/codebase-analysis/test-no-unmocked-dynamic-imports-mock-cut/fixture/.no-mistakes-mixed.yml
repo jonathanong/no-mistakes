@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: vitest.mixed.config.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

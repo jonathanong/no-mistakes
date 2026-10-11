@@ -61,6 +61,8 @@ reachable only through that body are therefore not checked for that test. If
 the test also imports a descendant through an unmocked path, its dynamic
 imports remain reachable and must be mocked. Each test uses its own resolved
 mock set, including setup and manual mocks.
+Mocking a dynamic target in one test does not cover the same source import
+when another selected test reaches it without that mock.
 
 ## Options and defaults
 

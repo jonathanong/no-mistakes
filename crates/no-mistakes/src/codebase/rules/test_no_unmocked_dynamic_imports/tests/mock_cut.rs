@@ -14,6 +14,7 @@ fn standalone_reachability_prunes_mocked_intermediaries() {
         (".no-mistakes-unmocked.yml", Some("src/leaf.mts")),
         (".no-mistakes-alternate.yml", Some("src/leaf.mts")),
         (".no-mistakes-direct.yml", Some("src/direct-entry.mts")),
+        (".no-mistakes-mixed.yml", Some("src/leaf.mts")),
     ] {
         let config =
             crate::config::v2::load_v2_config(&root, Some(&root.join(config_name))).unwrap();

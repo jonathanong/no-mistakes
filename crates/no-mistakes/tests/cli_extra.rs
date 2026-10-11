@@ -405,6 +405,7 @@ fn dynamic_import_reachability_cuts_mocked_intermediaries_per_test() {
         (".no-mistakes-unmocked.yml", Some("src/leaf.mts")),
         (".no-mistakes-alternate.yml", Some("src/leaf.mts")),
         (".no-mistakes-direct.yml", Some("src/direct-entry.mts")),
+        (".no-mistakes-mixed.yml", Some("src/leaf.mts")),
     ] {
         let output = run(&[
             "check",

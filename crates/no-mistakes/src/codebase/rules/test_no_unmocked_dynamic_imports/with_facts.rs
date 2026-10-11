@@ -150,10 +150,6 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
                 .collect::<Result<Vec<_>>>()
         })?;
 
-    let mut covered_reachable_imports = HashSet::new();
-    for result in &per_test {
-        covered_reachable_imports.extend(result.covered_reachable_imports.iter().cloned());
-    }
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
     for result in per_test {
@@ -163,7 +159,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
             suppression_sources.push(None);
         }
         for entry in result.reachable_findings {
-            if covered_reachable_imports.contains(&entry.key) {
+            if result.covered_reachable_imports.contains(&entry.key) {
                 continue;
             }
             findings.push(entry.finding);
