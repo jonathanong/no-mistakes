@@ -80,6 +80,12 @@ unknown timeout values. Strict `unknownValues: "finding"` rejects these carriers
 a later explicit property can restore a known value. Immutable scalar constants
 and unmodified object aliases remain supported.
 
+Assignments and updates on shallow copies require a proven own data property.
+Own or inherited setters can mutate shared children through `this`, so accessor
+writes and missing or unresolved property descriptors retain unknown values.
+Object spread creates data properties from source accessors; deleting a copied
+property does not invoke a setter.
+
 Object and array spreads make shallow copies. Replacing, updating, or deleting a
 copy's own property does not make the source's timeout unknown; the copy's own
 timeout still becomes unknown. Nested references remain shared, so a write such

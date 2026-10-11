@@ -3,9 +3,11 @@ const { resolveVariable } = require("./async-target-bindings");
 const { unwrapTransparentParent } = require("./async-ast");
 const { configCall, overrideCall, invocationArguments } = require("./vitest-timeout-bindings");
 const { memberName, pathStartsWith, wrappedCopyPath } = require("./vitest-timeout-copy-paths");
+const { createOwnDataProperty } = require("./vitest-timeout-copy-properties");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
+  const ownDataProperty = createOwnDataProperty(context);
   // Values, copies, and callbacks need independent consumer proofs and cycle guards.
   const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
   const active = { value: new Set(), shallow: new Set(), callback: new Set() };
@@ -99,6 +101,7 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
         mode === "shallow" &&
         members.length === copyPath.length + 1 &&
         pathStartsWith(copyPath, members.slice(0, -1)) &&
+        (parent.type === "UnaryExpression" || ownDataProperty(node)) &&
         (parent.type === "UnaryExpression" ||
           (parent.type === "AssignmentExpression" &&
             ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
