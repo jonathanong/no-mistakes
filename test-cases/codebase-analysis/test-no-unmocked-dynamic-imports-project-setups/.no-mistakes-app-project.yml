@@ -1,0 +1,12 @@
+projects:
+  webapp:
+    root: web
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/**/*.test.mts]
+        setup_files: [test-helpers/web.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [webapp]

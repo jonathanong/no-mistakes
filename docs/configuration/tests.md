@@ -138,6 +138,8 @@ definitions live in imported modules. `test-no-unmocked-dynamic-imports`
 recognizes mock registrations in these modules and their statically imported
 helpers. It merges them with setup files recovered from readable runner
 configs, then applies each project's include and exclude matchers independently.
+The rule processes setup files in their declared order, so a mock in a later
+setup cannot suppress an earlier setup's imported helper.
 If a test belongs to multiple selected named projects, the rule checks its
 dynamic imports in each project context. A mock from one project's setup does
 not cover another project's execution; runner-config setup mocks shared by

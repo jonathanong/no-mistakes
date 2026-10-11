@@ -1,3 +1,4 @@
+use super::discovery::config_files;
 use super::*;
 
 fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<Vec<PathBuf>> {

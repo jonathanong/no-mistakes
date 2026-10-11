@@ -16,14 +16,63 @@ pub(in super::super) struct Request<'a> {
 }
 
 pub(in super::super) fn collect(request: Request<'_>) -> HashSet<PathBuf> {
+    let mut mocks = HashSet::new();
+    for file in helper_files(&request) {
+        if let Some(dynamic) = request
+            .shared
+            .ts
+            .get(&file)
+            .and_then(|facts| facts.dynamic_imports.as_ref())
+        {
+            mocks.extend(resolve_mock_specifiers(
+                &dynamic.mock_specifiers,
+                &file,
+                request.resolver,
+                Some(request.graph_files),
+            ));
+        }
+    }
+    mocks
+}
+
+pub(in super::super) fn collect_strict(request: Request<'_>) -> anyhow::Result<HashSet<PathBuf>> {
+    let mut mocks = HashSet::new();
+    for file in helper_files(&request) {
+        let Some(facts) = request.shared.ts.get(&file) else {
+            anyhow::bail!(
+                "missing shared facts for imported setup helper {}",
+                file.display()
+            );
+        };
+        if let Some(error) = &facts.parse_error {
+            anyhow::bail!(
+                "failed to parse imported setup helper {}: {error}",
+                file.display()
+            );
+        }
+        let Some(dynamic) = facts.dynamic_imports.as_ref() else {
+            anyhow::bail!(
+                "missing dynamic import facts for imported setup helper {}",
+                file.display()
+            );
+        };
+        mocks.extend(resolve_mock_specifiers(
+            &dynamic.mock_specifiers,
+            &file,
+            request.resolver,
+            Some(request.graph_files),
+        ));
+    }
+    Ok(mocks)
+}
+
+fn helper_files(request: &Request<'_>) -> Vec<PathBuf> {
     let Request {
         test_file,
         graph,
-        graph_files,
         visible_files,
-        resolver,
-        shared,
         excluded,
+        ..
     } = request;
     // Mock registrations execute only when their helper is loaded statically.
     // A typed mock specifier's import(...) is a type carrier, not a helper edge.
@@ -38,16 +87,6 @@ pub(in super::super) fn collect(request: Request<'_>) -> HashSet<PathBuf> {
         .into_iter()
         .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))
         .filter(|file| !excluded.contains(file))
-        .filter_map(|file| {
-            shared.ts.get(&file).and_then(|facts| {
-                facts
-                    .dynamic_imports
-                    .as_ref()
-                    .map(|dynamic| (file, dynamic))
-            })
-        })
-        .flat_map(|(file, facts)| {
-            resolve_mock_specifiers(&facts.mock_specifiers, &file, resolver, Some(graph_files))
-        })
+        .filter(|file| crate::codebase::dependencies::extract::is_indexable(file))
         .collect()
 }

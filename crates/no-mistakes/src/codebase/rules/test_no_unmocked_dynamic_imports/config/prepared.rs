@@ -39,7 +39,7 @@ pub(in super::super) fn prepare_from_visible(
     setup_data.extend(super::explicit_project_setup_data(
         root,
         config,
-        Some(&visible_files),
+        &visible_files,
     )?);
     Ok(PreparedConfig {
         test_filter: super::filter::test_filter_from_config_files_with_sources(

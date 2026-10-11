@@ -1,0 +1,8 @@
+filesystem:
+  skipDirectories: [ignored]
+tests:
+  vitest:
+    configs: [vitest-visible.config.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
