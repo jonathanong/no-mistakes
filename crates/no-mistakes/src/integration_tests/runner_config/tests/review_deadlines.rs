@@ -6,7 +6,10 @@ fn evidence(
     playwright: &[&str],
     files: &[&str],
 ) -> Vec<crate::integration_tests::types::RunnerConfigDeadlineEvidence> {
-    let root = fixture_root("declared-deadlines");
+    // Parse-count sessions are keyed by root; parallel tests need distinct saved-fixture roots.
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&fixture_root("declared-deadlines"));
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let paths: Vec<_> = files.iter().map(|file| root.join(file)).collect();
     let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
         crate::codebase::ts_source::FileInventory::from_paths(&paths),
