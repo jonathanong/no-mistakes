@@ -59,21 +59,45 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
 
     let mut expanded_values = vec![raw.to_string()];
     for axis in &referenced_axes {
-        let expression = Regex::new(&format!(
-            r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
-            regex::escape(axis)
-        ))
-        .expect("well-formed regex");
         let items = &axes[axis];
-        expanded_values = expanded_values
-            .into_iter()
-            .flat_map(|value| {
-                items
-                    .iter()
-                    .map(|item| expression.replace_all(&value, item.as_str()).into_owned())
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        if items.iter().any(|item| item.contains('$')) {
+            // `replace_all` interprets `$0`/`$1`/`$$` in its replacement
+            // string. Retain that behavior for axes whose values need it.
+            let expression = Regex::new(&format!(
+                r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
+                regex::escape(axis)
+            ))
+            .expect("well-formed regex");
+            expanded_values = expanded_values
+                .into_iter()
+                .flat_map(|value| {
+                    items
+                        .iter()
+                        .map(|item| expression.replace_all(&value, item.as_str()).into_owned())
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+        } else {
+            expanded_values = expanded_values
+                .into_iter()
+                .flat_map(|value| {
+                    items
+                        .iter()
+                        .map(|item| {
+                            MATRIX_REFERENCE_PATTERN
+                                .replace_all(&value, |captures: &regex::Captures<'_>| {
+                                    if &captures[1] == axis.as_str() {
+                                        item.clone()
+                                    } else {
+                                        captures[0].to_string()
+                                    }
+                                })
+                                .into_owned()
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+        }
     }
 
     let omitted_axis_multiplier: u32 = axes
