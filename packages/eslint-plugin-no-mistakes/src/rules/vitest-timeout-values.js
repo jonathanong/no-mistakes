@@ -3,6 +3,7 @@ const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { unwrapExpression } = require("./async-ast");
 const { createPrimitiveMemberRead } = require("./vitest-timeout-primitive-reads");
 const { createValueStability } = require("./vitest-timeout-value-stability");
+const { createScalarCopyWrite } = require("./vitest-timeout-copy-scalars");
 const { configCall, staticPropertyName } = require("./vitest-timeout-bindings");
 const UNKNOWN = { kind: "unknown" };
 function taint(value) {
@@ -45,7 +46,11 @@ function merge(left, right) {
 function createEvaluator(context, consumed) {
   const evaluating = new Set();
   const memo = new WeakMap();
-  const stableValue = createValueStability(context, createPrimitiveMemberRead(context, evaluate));
+  const stableValue = createValueStability(
+    context,
+    createPrimitiveMemberRead(context, evaluate),
+    createScalarCopyWrite(context, evaluate),
+  );
   function evaluate(node) {
     if (!node) return UNKNOWN;
     node = unwrapExpression(node);
@@ -164,11 +169,15 @@ function createEvaluator(context, consumed) {
         }),
       };
     if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression") {
-      if (node.body.type !== "BlockStatement") return evaluate(node.body);
-      const statements = node.body.body;
-      return statements.length === 1 && statements[0].type === "ReturnStatement"
-        ? evaluate(statements[0].argument)
-        : UNKNOWN;
+      const statements = node.body.type === "BlockStatement" ? node.body.body : null;
+      const value = statements
+        ? statements.length === 1 && statements[0].type === "ReturnStatement"
+          ? evaluate(statements[0].argument)
+          : UNKNOWN
+        : evaluate(node.body);
+      // Configuration callbacks retain their projected return value, but a
+      // property read must distinguish that projection from its runtime function.
+      return { ...value, runtimeFunction: true };
     }
     if (node.type === "CallExpression") {
       const name = configCall(node, context);
