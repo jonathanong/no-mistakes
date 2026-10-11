@@ -11,6 +11,51 @@ fn scoped_names_preserve_last_binding_and_distinguish_lexical_frames() {
     assert!(scoped_name(&names, 2, &borrowed).is_none());
     assert!(scoped_name(&names, 0, "missing").is_none());
     assert_eq!(names.values().map(|names| names.len()).sum::<usize>(), 2);
+    assert!(names
+        .values()
+        .all(|names| matches!(names, ScopedNames::One(_, _))));
+}
+
+#[test]
+fn scoped_names_promote_distinct_names_and_replace_duplicates_after_promotion() {
+    let names = index_scoped_names([
+        ((0, "run".to_string()), 1),
+        ((0, "stop".to_string()), 2),
+        ((0, "run".to_string()), 3),
+        ((1, "run".to_string()), 4),
+    ]);
+    assert!(matches!(names.get(&0), Some(ScopedNames::Many(_))));
+    assert!(matches!(names.get(&1), Some(ScopedNames::One(_, _))));
+    assert_eq!(scoped_name(&names, 0, "run"), Some(&3));
+    assert_eq!(scoped_name(&names, 0, "stop"), Some(&2));
+    assert_eq!(scoped_name(&names, 1, "run"), Some(&4));
+    assert!(scoped_name(&names, 0, "missing").is_none());
+    assert_eq!(names.get(&0).unwrap().len(), 2);
+    assert_eq!(names.get(&1).unwrap().len(), 1);
+    let mut values = names
+        .values()
+        .flat_map(|names| names.values())
+        .copied()
+        .collect::<Vec<_>>();
+    values.sort_unstable();
+    assert_eq!(values, vec![2, 3, 4]);
+}
+
+#[test]
+fn scoped_names_preserve_interleaved_promoted_scope_entries() {
+    let names = index_scoped_names([
+        ((0, "run".to_string()), 1),
+        ((0, "stop".to_string()), 2),
+        ((1, "run".to_string()), 3),
+        ((0, "run".to_string()), 4),
+        ((0, "reset".to_string()), 5),
+        ((1, "run".to_string()), 6),
+    ]);
+    assert_eq!(scoped_name(&names, 0, "run"), Some(&4));
+    assert_eq!(scoped_name(&names, 0, "stop"), Some(&2));
+    assert_eq!(scoped_name(&names, 0, "reset"), Some(&5));
+    assert_eq!(scoped_name(&names, 1, "run"), Some(&6));
+    assert_eq!(names.values().map(|names| names.len()).sum::<usize>(), 4);
 }
 
 #[test]
