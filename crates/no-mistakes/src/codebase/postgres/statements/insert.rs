@@ -1,6 +1,20 @@
 use super::SqlInsertFact;
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{Insert, OnConflictAction, OnInsert, Statement, TableObject};
+use sqlparser::tokenizer::Location;
+
+pub(super) fn apply_policy_arbiter(
+    insert: &Insert,
+    fact: &mut SqlInsertFact,
+    arbiters: &crate::fx::FxHashMap<Location, super::SqlConflictArbiter>,
+) {
+    if let (Some(conflict), Some(arbiter)) = (
+        fact.on_conflict.as_mut(),
+        arbiters.get(&insert.insert_token.0.span.start),
+    ) {
+        conflict.arbiter = arbiter.clone();
+    }
+}
 
 pub(super) fn from_statement_at(
     sources: &super::lines::InsertSources<'_>,

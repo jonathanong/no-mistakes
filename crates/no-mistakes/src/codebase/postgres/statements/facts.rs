@@ -68,7 +68,13 @@ fn extract_from_parsed_and_sources(
     let table_index = need_table_tokens.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
     let insert_sources = super::lines::InsertSources::new(sql);
+    let policy_arbiters: crate::fx::FxHashMap<_, _> = prepared_sql
+        .policy_arbiters()
+        .iter()
+        .map(|arbiter| (arbiter.insert_start, conflict::expression_arbiter(arbiter)))
+        .collect();
     let mut out = FactOut {
+        policy_arbiters: &policy_arbiters,
         insert_sources: &insert_sources,
         insert_n: &mut insert_n,
         trigger_n: &mut trigger_n,

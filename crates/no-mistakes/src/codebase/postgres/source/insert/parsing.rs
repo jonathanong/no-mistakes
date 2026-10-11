@@ -202,7 +202,9 @@ fn keyword(token: &Token, expected: Keyword) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
 }
 
-fn inner_insert(statement: &mut Statement) -> Option<&mut sqlparser::ast::Insert> {
+pub(in crate::codebase::postgres::source) fn inner_insert(
+    statement: &mut Statement,
+) -> Option<&mut sqlparser::ast::Insert> {
     match statement {
         Statement::Insert(insert) => Some(insert),
         Statement::Query(query) => match query.body.as_mut() {

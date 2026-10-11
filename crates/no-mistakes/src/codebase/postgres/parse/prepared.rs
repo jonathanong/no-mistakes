@@ -13,6 +13,7 @@ pub(crate) struct PreparedSql<'a> {
     source_positions_preserved: Cell<bool>,
     tokens: OnceCell<Result<Vec<TokenWithSpan>, PostgresParseError>>,
     functions: RefCell<Vec<super::super::SqlFunctionCallFact>>,
+    policy_arbiters: RefCell<Vec<super::super::source::PolicyArbiter>>,
 }
 
 impl<'a> PreparedSql<'a> {
@@ -21,6 +22,7 @@ impl<'a> PreparedSql<'a> {
             normalized: normalize_copy_data(sql),
             tokens: OnceCell::new(),
             functions: RefCell::new(Vec::new()),
+            policy_arbiters: RefCell::new(Vec::new()),
             source_positions_preserved: Cell::new(true),
         }
     }
@@ -49,18 +51,19 @@ impl<'a> PreparedSql<'a> {
 
     fn parse_with_policy(&self, policy: bool) -> Result<Vec<Statement>, PostgresParseError> {
         self.functions.borrow_mut().clear();
+        self.policy_arbiters.borrow_mut().clear();
         let located = self.located().map_err(Clone::clone)?;
         let mut tokens = super::radix_numbers::repair(located).unwrap_or_else(|| located.clone());
         normalize_table_queries(&mut tokens);
         let recursive_views = super::recursive_view::prepare(&mut tokens);
         let fetch = super::fetch_expression::prepare(&mut tokens);
-        let (mut statements, functions) = if policy {
+        let (mut statements, functions, arbiters) = if policy {
             super::super::source::parse_conflict_program(tokens)
         } else {
             Parser::new(&PostgreSqlDialect {})
                 .with_tokens_with_locations(tokens)
                 .parse_statements()
-                .map(|statements| (statements, Vec::new()))
+                .map(|statements| (statements, Vec::new(), Vec::new()))
         }
         .map_err(PostgresParseError::from)?;
         super::fetch_expression::restore(&mut statements, &fetch);
@@ -69,11 +72,16 @@ impl<'a> PreparedSql<'a> {
             recursive_views.restore(statement);
         }
         *self.functions.borrow_mut() = functions;
+        *self.policy_arbiters.borrow_mut() = arbiters;
         Ok(statements)
     }
 
     pub(crate) fn functions(&self) -> Ref<'_, Vec<super::super::SqlFunctionCallFact>> {
         self.functions.borrow()
+    }
+
+    pub(crate) fn policy_arbiters(&self) -> Ref<'_, Vec<super::super::source::PolicyArbiter>> {
+        self.policy_arbiters.borrow()
     }
 
     fn located(&self) -> Result<&Vec<TokenWithSpan>, &PostgresParseError> {

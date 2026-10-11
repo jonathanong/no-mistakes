@@ -2,11 +2,18 @@
 use super::insert::parsing;
 use crate::codebase::postgres::{function_calls, SqlFunctionCallFact, SqlFunctionClause};
 use sqlparser::{
-    ast::Statement,
+    ast::{Expr, Statement},
     dialect::PostgreSqlDialect,
     parser::{Parser, ParserError},
     tokenizer::{Location, Token, TokenWithSpan},
 };
+
+/// Expression targets retained by the policy projection of the canonical parse.
+pub(crate) struct PolicyArbiter {
+    pub insert_start: Location,
+    pub expressions: Vec<Expr>,
+    pub has_operator_class: bool,
+}
 
 pub(in crate::codebase::postgres) fn recover(
     tokens: &[TokenWithSpan],
@@ -18,17 +25,36 @@ pub(in crate::codebase::postgres) fn recover(
     }
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
-    let (statement, functions) = parse_statement(&mut parser, &markers).ok()?;
+    let (statement, functions, _) = parse_statement(&mut parser, &markers).ok()?;
     (parser.peek_token().token == Token::EOF).then_some((statement, functions))
 }
 
 pub(super) fn parse_statement(
     parser: &mut Parser<'_>,
     markers: &[Location],
-) -> Result<(Statement, Vec<SqlFunctionCallFact>), ParserError> {
-    let (statement, facts) = parsing::parse_policy(parser, markers)?;
+) -> Result<(Statement, Vec<SqlFunctionCallFact>, Option<PolicyArbiter>), ParserError> {
+    let (mut statement, facts) = parsing::parse_policy(parser, markers)?;
     let mut functions = Vec::new();
+    let mut policy_arbiter = None;
     if let Some(facts) = facts {
+        if !facts.expressions.is_empty() {
+            let insert_start = parsing::inner_insert(&mut statement)
+                .map(|insert| insert.insert_token.0.span.start);
+            if let Some(insert_start) = insert_start {
+                policy_arbiter = Some(PolicyArbiter {
+                    insert_start,
+                    has_operator_class: facts
+                        .expressions
+                        .iter()
+                        .any(|arbiter| arbiter.operator_class.is_some()),
+                    expressions: facts
+                        .expressions
+                        .iter()
+                        .map(|arbiter| arbiter.expression.expression.clone())
+                        .collect(),
+                });
+            }
+        }
         for arbiter in &facts.expressions {
             function_calls::collect_expression(
                 &arbiter.expression.expression,
@@ -44,7 +70,7 @@ pub(super) fn parse_statement(
             );
         }
     }
-    Ok((statement, functions))
+    Ok((statement, functions, policy_arbiter))
 }
 
 mod program;

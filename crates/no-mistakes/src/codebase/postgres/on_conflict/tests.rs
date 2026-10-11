@@ -33,6 +33,65 @@ fn messages(sql: &str) -> Vec<String> {
 }
 
 #[test]
+fn standalone_expression_arbiter_preserves_key_dependencies() {
+    let unsafe_sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters/sql/expression.sql"
+    ));
+    let safe_sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters-safe/sql/excluded.sql"
+    ));
+    let parsed = extract_sql_statement_facts(unsafe_sql);
+    assert!(!parsed.parse_failed);
+    assert!(matches!(
+        parsed.inserts[0].on_conflict.as_ref().unwrap().arbiter,
+        crate::codebase::postgres::statement_facts::SqlConflictArbiter::Expressions { .. }
+    ));
+    assert!(messages(unsafe_sql)
+        .iter()
+        .any(|message| message.contains("expression arbiter depends on email")));
+    assert!(messages(safe_sql).is_empty());
+}
+
+#[test]
+fn expression_dependency_proof_shapes_are_conservative() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/statements/expression-arbiter-proof-shapes.sql"
+    ));
+    let facts = extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.inserts.len(), 4);
+    let found = judge_file(&facts, &catalog(&[], &[], &[], &[]));
+    assert_eq!(found.len(), 4, "{found:?}");
+    assert!(
+        found[..3]
+            .iter()
+            .all(|(_, message)| message.contains("expression arbiter depends")),
+        "{found:?}"
+    );
+    assert!(found[3].1.contains("cannot prove"), "{found:?}");
+}
+
+#[test]
+fn wrapped_expression_arbiter_keeps_policy_fact() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/statements/expression-arbiter-wrapped.sql"
+    ));
+    let facts = extract_sql_statement_facts(sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.inserts.len(), 1);
+    let found = judge_file(&facts, &catalog(&[], &[], &[], &[]));
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(
+        found[0].1.contains("expression arbiter depends on email"),
+        "{found:?}"
+    );
+}
+
+#[test]
 fn insert_without_conflict_is_unsafe() {
     let found = messages("INSERT INTO items (id) VALUES (1);");
     assert_eq!(found.len(), 1);

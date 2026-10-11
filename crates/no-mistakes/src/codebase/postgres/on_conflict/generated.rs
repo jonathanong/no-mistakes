@@ -10,7 +10,9 @@ pub(super) fn judge(
     schema: &[SqlSchemaFileFacts],
 ) -> Option<String> {
     let arbiter_cols = match &conflict.arbiter {
-        SqlConflictArbiter::Columns(columns) => columns.clone(),
+        SqlConflictArbiter::Columns(columns) | SqlConflictArbiter::Expressions { columns, .. } => {
+            columns.clone()
+        }
         _ => return None,
     };
     if schema.iter().all(|file| file.tables.is_empty()) {
@@ -59,8 +61,11 @@ pub(super) fn arbiter_source_columns(
     conflict: &SqlOnConflictFact,
     schema: &[SqlSchemaFileFacts],
 ) -> Vec<String> {
-    let SqlConflictArbiter::Columns(arbiter) = &conflict.arbiter else {
-        return Vec::new();
+    let arbiter = match &conflict.arbiter {
+        SqlConflictArbiter::Columns(columns) | SqlConflictArbiter::Expressions { columns, .. } => {
+            columns
+        }
+        _ => return Vec::new(),
     };
     schema
         .iter()

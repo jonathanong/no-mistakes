@@ -85,6 +85,20 @@ omitted columns, `SELECT *`, SELECT column references, and sources without a
 column list still fail. Disjunctive `WHERE` and constant `SET` plus a matching
 `WHERE` still fail.
 
+Expression conflict targets also protect every column that the expression
+references. For example, `ON CONFLICT (lower(email)) DO UPDATE SET email = 'b'`
+is a finding; `email = email` and `email = EXCLUDED.email` are accepted. Mixed
+targets such as `(email, lower(name))` check both dependencies. The rule proves
+dependencies for identifiers (including qualified and quoted names), nested
+expressions, casts, unary and binary operations, and ordinary positional
+function arguments. Operator classes and other expression forms, including
+`CASE` and subqueries, cannot be proven complete. An assignment to a known
+dependency still passes when it uses its matching `EXCLUDED` value; self
+assignments also pass. Other non-self assignments report an explicit proof
+failure. This conservative result may include an unrelated assignment;
+simplify the expression or use a rule suppression when you have verified its
+safety.
+
 ## Options and defaults
 
 `include` / `exclude` select source files (empty include means all files).

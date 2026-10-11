@@ -115,6 +115,11 @@ pub enum SqlOnConflictAction {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlConflictArbiter {
     Columns(Vec<String>),
+    /// Source expression dependencies; `unknown` means membership cannot be proven.
+    Expressions {
+        columns: Vec<String>,
+        unknown: bool,
+    },
     Constraint(String),
     Unknown,
 }
