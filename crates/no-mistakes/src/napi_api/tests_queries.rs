@@ -164,7 +164,7 @@ fn query_impls_require_inputs() {
 fn reverse_collection_diagnostics_match_cli_and_napi() {
     use crate::codebase::queries::*;
     let root = PathBuf::from(fixture_root("queries-incomplete"));
-    let options = json!({ "file": "target.ts", "exportName": "unknown", "root": root });
+    let options = json!({ "file": "target.ts", "root": root });
     let cli = [
         importers::run_json(ImportersArgs { file: "target.ts".into(), tests: false, root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
         exports_of::run_json(ExportsOfArgs { file: "target.ts".into(), no_importers: false, root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
@@ -172,7 +172,11 @@ fn reverse_collection_diagnostics_match_cli_and_napi() {
         call_sites::run_json(CallSitesArgs { file: "target.ts".into(), export_name: "unknown".into(), root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
     ];
     let bindings = [importers_json_impl, exports_of_json_impl, dead_exports_json_impl, call_sites_json_impl];
-    for (cli, binding) in cli.into_iter().zip(bindings) {
+    for (index, (cli, binding)) in cli.into_iter().zip(bindings).enumerate() {
+        let mut options = options.clone();
+        if index == 3 {
+            options["exportName"] = json!("unknown");
+        }
         let cli: serde_json::Value = serde_json::from_str(&cli).unwrap();
         let napi: serde_json::Value = serde_json::from_str(&binding(crate::napi_api::options::test_json_arg(options.to_string())).unwrap()).unwrap();
         assert_eq!(napi, cli);
