@@ -1,5 +1,5 @@
 type SourceBucketEntry = (Arc<str>, ImporterRecord);
-type SourceBuckets = HashMap<Arc<Path>, Vec<SourceBucketEntry>>;
+type SourceBuckets = FxHashMap<Arc<Path>, Vec<SourceBucketEntry>>;
 
 const MAX_SOURCE_BUCKET_INITIAL_CAPACITY: usize = 8;
 
@@ -22,8 +22,8 @@ fn insert_source_bucket_entry(
 
 #[derive(Default)]
 struct SymbolIndexInterner {
-    paths: HashMap<Arc<Path>, ()>,
-    strings: HashMap<Arc<str>, ()>,
+    paths: FxHashMap<Arc<Path>, ()>,
+    strings: FxHashMap<Arc<str>, ()>,
 }
 
 impl SymbolIndexInterner {

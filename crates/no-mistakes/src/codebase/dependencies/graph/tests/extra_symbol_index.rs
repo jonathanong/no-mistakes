@@ -166,3 +166,52 @@ fn symbol_index_bucket_initial_capacity_is_bounded_for_wide_fanout() {
     assert_eq!(source_bucket_initial_capacity(8), 8);
     assert_eq!(source_bucket_initial_capacity(2_048), MAX_SOURCE_BUCKET_INITIAL_CAPACITY);
 }
+
+#[test]
+fn symbol_index_symbol_capacity_tracks_distinct_names_and_preserves_aliases() {
+    const ROWS: usize = 64;
+    const SYMBOLS: usize = 4;
+    let source = p("/src/source.mts");
+    let importer = p("/src/importer.mts");
+    let entries = (0..ROWS)
+        .map(|row| {
+            (
+                source.clone(),
+                format!("symbol-{}", row % SYMBOLS),
+                format!("alias-{row}"),
+                row.is_multiple_of(3),
+            )
+        })
+        .collect();
+    let index = SymbolIndex::build(&HashMap::from([(importer.clone(), entries)]));
+    let source_index = index.sources.get(source.as_path()).unwrap();
+
+    assert_eq!(source_index.by_symbol.len(), SYMBOLS);
+    // Equality alone would miss reserving 64 buckets for four symbol names.
+    // Avoid tying the guard to a particular hash-table growth factor.
+    assert!(source_index.by_symbol.capacity() < ROWS);
+    assert_eq!(index.file_importers(&source), vec![importer.clone()]);
+    for symbol in 0..SYMBOLS {
+        let records = index
+            .importers_of(&source, &format!("symbol-{symbol}"))
+            .unwrap();
+        assert_eq!(records.len(), ROWS / SYMBOLS);
+        for (offset, (path, local, reexport)) in records.iter().enumerate() {
+            let row = symbol + offset * SYMBOLS;
+            assert_eq!(path.as_ref(), importer.as_path());
+            assert_eq!(local.as_ref(), format!("alias-{row}"));
+            assert_eq!(*reexport, row.is_multiple_of(3));
+        }
+    }
+}
+
+#[test]
+fn symbol_index_internal_tables_use_fx_hash_for_interned_keys() {
+    let index = include_str!("../symbol_index.rs");
+    let interner = include_str!("../symbol_index_intern.rs");
+    assert!(index.contains("sources: FxHashMap<Arc<Path>, SourceIndex>"));
+    assert!(index.contains("by_symbol: FxHashMap<Arc<str>, Vec<ImporterRecord>>"));
+    assert!(interner.contains("type SourceBuckets = FxHashMap"));
+    assert!(interner.contains("paths: FxHashMap<Arc<Path>, ()>"));
+    assert!(interner.contains("strings: FxHashMap<Arc<str>, ()>"));
+}

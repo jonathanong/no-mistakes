@@ -9,7 +9,7 @@ impl SymbolIndex {
             .indexable()
             .par_iter()
             .fold(
-                || (SourceBuckets::new(), SymbolIndexInterner::default()),
+                || (SourceBuckets::default(), SymbolIndexInterner::default()),
                 |(mut buckets, mut intern), path| {
                     let Some(symbols) = facts
                         .get_ts_facts(path)
@@ -71,7 +71,7 @@ impl SymbolIndex {
                 },
             )
             .reduce(
-                || (SourceBuckets::new(), SymbolIndexInterner::default()),
+                || (SourceBuckets::default(), SymbolIndexInterner::default()),
                 |(left, _), (right, _)| {
                     (
                         merge_source_buckets(left, right),
