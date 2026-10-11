@@ -52,7 +52,8 @@ fn visit_for_in_statement_with_scope<'a>(
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-in");
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(collector, &statement.left);
-    collector.visit_for_statement_left(&statement.left);
+    // The binding target (including destructuring defaults) runs per iteration.
+    with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.visit_expression(&statement.right);
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
@@ -65,7 +66,7 @@ fn visit_for_of_statement_with_scope<'a>(
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-of");
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(collector, &statement.left);
-    collector.visit_for_statement_left(&statement.left);
+    with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.visit_expression(&statement.right);
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
@@ -101,5 +102,7 @@ fn visit_while_statement_per_item<'a>(collector: &mut ImportCollector, statement
 }
 fn visit_do_while_statement_per_item<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "do");
-    walk::walk_do_while_statement(collector, statement);
+    collector.visit_statement(&statement.body);
+    // `break`, `return`, or a thrown exception can skip even the first test.
+    with_conditional_execution(collector, true, |collector| collector.visit_expression(&statement.test));
 }

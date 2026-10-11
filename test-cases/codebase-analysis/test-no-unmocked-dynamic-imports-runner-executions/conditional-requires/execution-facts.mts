@@ -25,12 +25,15 @@ for (; true; require('node:os')) { require('node:net'); break; }
 for (;;) { require('node:tls'); break; }
 for (const key in require('node:http')) require('node:os');
 for (const value of require('node:https')) require('node:os');
+for (const [value = require('node:os')] of []) {}
+for (globalThis[require('node:os')] in {}) {}
 try { require('node:querystring'); } catch (error) { require('node:os'); }
 switch (require('node:punycode')) {
   case require('node:os'): require('node:os'); break;
   default: require('node:os');
 }
 do { require('node:process'); } while (false);
+do { break; } while (require('node:os'));
 function unused() { require('node:os'); }
 false && require('node:os');
 true || require('node:os');
