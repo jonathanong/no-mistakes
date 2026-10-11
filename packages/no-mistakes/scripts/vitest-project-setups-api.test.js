@@ -19,7 +19,11 @@ test(
         ".no-mistakes.yml",
         [
           "other/uncovered.test.mts",
+          "nested/nested.test.mts",
+          "nested/sibling.test.mts",
           "ordered/order.test.mts",
+          "ordinary/cut.test.mts",
+          "ordinary/sibling.test.mts",
           "overlap/helper-cut.test.mts",
           "overlap/shared.test.mts",
           "web/excluded.test.mts",
@@ -29,7 +33,11 @@ test(
       [
         ".no-mistakes-both.yml",
         [
+          "nested/nested.test.mts",
+          "nested/sibling.test.mts",
           "ordered/order.test.mts",
+          "ordinary/cut.test.mts",
+          "ordinary/sibling.test.mts",
           "overlap/helper-cut.test.mts",
           "web/excluded.test.mts",
           "web/genuine.test.mts",
@@ -41,6 +49,10 @@ test(
       [".no-mistakes-app-project.yml", ["web/genuine.test.mts"]],
       [".no-mistakes-ordered.yml", []],
       [".no-mistakes-reversed.yml", ["ordered/order.test.mts"]],
+      [".no-mistakes-nested-cut.yml", ["nested/nested.test.mts"]],
+      [".no-mistakes-nested-live.yml", []],
+      [".no-mistakes-nested-sibling.yml", ["nested/sibling.test.mts"]],
+      [".no-mistakes-ordinary.yml", ["ordinary/cut.test.mts", "ordinary/sibling.test.mts"]],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);

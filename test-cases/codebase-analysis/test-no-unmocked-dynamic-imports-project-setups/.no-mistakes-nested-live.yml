@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [nested/nested.test.mts]
+        setup_files: [test-helpers/nested-live.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [web]

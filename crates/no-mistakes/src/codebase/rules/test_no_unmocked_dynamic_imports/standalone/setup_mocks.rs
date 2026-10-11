@@ -51,7 +51,7 @@ pub(super) fn setup_mocks(request: SetupMockRequest<'_>) -> Result<HashSet<PathB
         if let Some(direct) = request.mock_map.get(setup) {
             mocks.extend(direct.iter().cloned());
         }
-        mocks.extend(imported_helpers::collect(
+        mocks.extend(imported_helpers::collect_setup(
             request.graph,
             setup,
             request.visible_files,
