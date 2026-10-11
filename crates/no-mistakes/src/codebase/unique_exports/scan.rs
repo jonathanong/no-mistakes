@@ -2,6 +2,7 @@ use super::{SourceFile, RULE_ID};
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path, TS_JS_EXTENSIONS};
 use anyhow::Result;
+use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -29,38 +30,43 @@ pub(super) fn collect_source_files_from_facts_with_sources(
     remix_roots: &[PathBuf],
 ) -> Result<Vec<SourceFile>> {
     let nextjs_projects = NextJsProjectLookup::with_sources(root, files, shared.files(), sources);
-    let mut source_files = Vec::new();
-    for path in files {
-        let Some(facts) = shared.ts.get(path) else {
-            anyhow::bail!("missing shared facts for {}", path.display());
-        };
-        let Some(source) = facts.source.clone() else {
-            anyhow::bail!("missing source facts for {}", path.display());
-        };
-        let disabled = has_disable_file_comment(&source, RULE_ID);
-        let symbols = if let Some(error) = &facts.parse_error {
-            if !disabled {
-                anyhow::bail!("failed to parse {}: {error}", path.display());
-            }
-            Default::default()
-        } else {
-            let Some(symbols) = facts.symbols.clone() else {
-                anyhow::bail!("missing symbol facts for {}", path.display());
+    let source_files: Vec<Result<SourceFile>> = files
+        .par_iter()
+        .map(|path| {
+            let Some(facts) = shared.ts.get(path) else {
+                anyhow::bail!("missing shared facts for {}", path.display());
             };
-            symbols
-        };
-        source_files.push(SourceFile {
-            path: normalize_path(path),
-            rel: relative_slash_path(root, path),
-            source,
-            disabled,
-            defer_suppression,
-            is_nextjs_project: nextjs_projects.contains_file(path),
-            is_remix_route_module: super::remix::is_route_module(path, remix_roots),
-            symbols,
-        });
-    }
-    Ok(source_files)
+            let Some(source) = facts.source.clone() else {
+                anyhow::bail!("missing source facts for {}", path.display());
+            };
+            let disabled = has_disable_file_comment(&source, RULE_ID);
+            let symbols = if let Some(error) = &facts.parse_error {
+                if !disabled {
+                    anyhow::bail!("failed to parse {}: {error}", path.display());
+                }
+                Default::default()
+            } else {
+                let Some(symbols) = facts.symbols.clone() else {
+                    anyhow::bail!("missing symbol facts for {}", path.display());
+                };
+                symbols
+            };
+            Ok(SourceFile {
+                path: normalize_path(path),
+                rel: relative_slash_path(root, path),
+                disabled_lines: crate::codebase::ts_source::disabled_statement_lines(
+                    &source, RULE_ID,
+                ),
+                disabled,
+                defer_suppression,
+                is_nextjs_project: nextjs_projects.contains_file(path),
+                is_remix_route_module: super::remix::is_route_module(path, remix_roots),
+                symbols,
+            })
+        })
+        .collect();
+    // Merge in input order so the first source error remains deterministic.
+    source_files.into_iter().collect()
 }
 
 pub(super) struct NextJsProjectLookup {

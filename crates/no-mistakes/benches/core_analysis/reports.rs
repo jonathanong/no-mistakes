@@ -80,3 +80,40 @@ pub(super) fn bench_workspace(c: &mut Criterion) {
     });
     group.finish();
 }
+
+/// Time construction/projection from prepared facts separately from source I/O
+/// and parsing. Each iteration owns a fresh invocation-scoped analysis.
+pub(super) fn bench_unique_exports(c: &mut Criterion) {
+    if !shard::should_run(shard::CHECK) {
+        return;
+    }
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/unique-exports")
+        .canonicalize()
+        .unwrap();
+    let files = vec![root.join("a.ts"), root.join("b.ts")];
+    let facts = no_mistakes::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        no_mistakes::codebase::check_facts::CheckFactPlan {
+            source: true,
+            symbols: true,
+            ..Default::default()
+        },
+    );
+    let config = no_mistakes::codebase::config::Config::default();
+    let tsconfig = no_mistakes::codebase::ts_resolver::TsConfig::default();
+    let run = || {
+        no_mistakes::codebase::unique_exports::analyze_project_with_prepared_facts(
+            &root, &config, &tsconfig, &facts,
+        )
+        .expect("prepared unique-exports analysis should succeed")
+    };
+    assert!(run().is_empty());
+    let mut group = c.benchmark_group("unique_exports");
+    group.throughput(Throughput::Elements(512));
+    group.bench_function("construct_from_prepared_facts", |b| {
+        b.iter(|| black_box(run()));
+    });
+    group.finish();
+}

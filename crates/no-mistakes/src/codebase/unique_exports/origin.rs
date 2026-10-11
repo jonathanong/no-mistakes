@@ -1,6 +1,5 @@
 use super::{ExportBucket, ExportOrigin, SourceFile};
 use crate::codebase::ts_resolver::ImportResolverFacade;
-use crate::codebase::ts_source::{has_disable_comment, has_disable_line_comment};
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
@@ -148,12 +147,9 @@ impl<R: ImportResolverFacade> OriginSearch<'_, R> {
         export: &Export,
         mut origin: ExportOrigin,
     ) -> ExportOrigin {
-        if file.disabled
-            || has_disable_comment(&file.source, export.line, super::RULE_ID)
-            || has_disable_line_comment(&file.source, export.line, super::RULE_ID)
-        {
+        if let Some(location) = super::collector::current_suppression_location(file, export) {
             origin.suppressed = true;
-            origin.suppression_location = Some((file.rel.clone(), export.line));
+            origin.suppression_location = Some(location);
         }
         origin
     }
@@ -164,18 +160,14 @@ pub(super) fn origin_for_export(
     export: &Export,
     bucket: ExportBucket,
 ) -> ExportOrigin {
+    let suppression_location = super::collector::current_suppression_location(file, export);
     ExportOrigin {
         file: file.rel.clone(),
         line: export.line,
         name: export.name.clone(),
         bucket,
-        suppressed: file.disabled
-            || has_disable_comment(&file.source, export.line, super::RULE_ID)
-            || has_disable_line_comment(&file.source, export.line, super::RULE_ID),
-        suppression_location: (file.disabled
-            || has_disable_comment(&file.source, export.line, super::RULE_ID)
-            || has_disable_line_comment(&file.source, export.line, super::RULE_ID))
-        .then(|| (file.rel.clone(), export.line)),
+        suppressed: suppression_location.is_some(),
+        suppression_location,
     }
 }
 

@@ -150,3 +150,41 @@ fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
 #[path = "disable_comments/directives.rs"]
 mod directives;
 pub use directives::{matching_disable_directive, DisableDirective};
+
+#[cfg(test)]
+thread_local! {
+    static SUPPRESSION_LINES_SCANNED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// Index line suppressions in one lexical pass. Next-line directives deliberately
+/// retain the leading-comment semantics of `has_disable_comment`.
+pub(crate) fn disabled_statement_lines(source: &str, rule_id: &str) -> Vec<u32> {
+    if !source.contains("no-mistakes-disable-line ")
+        && !source.contains("no-mistakes-disable-next-line ")
+    {
+        return Vec::new();
+    }
+    let mut state = LineCommentScanState::default();
+    let mut next_disabled = false;
+    let mut line_count = 0;
+    let mut disabled = Vec::new();
+    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
+        line_count = index + 1;
+        #[cfg(test)]
+        SUPPRESSION_LINES_SCANNED.with(|count| count.set(count.get() + 1));
+        let inline_disabled = line_comment_start(line, &mut state)
+            .and_then(|(start, len)| line[start + len..].trim().strip_prefix("no-mistakes-disable-line "))
+            .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
+        if next_disabled || inline_disabled {
+            disabled.push((index + 1) as u32);
+        }
+        next_disabled = leading_comment_text(line.trim())
+            .and_then(|rest| rest.strip_prefix("no-mistakes-disable-next-line "))
+            .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
+    }
+    // Preserve next-line queries for an otherwise empty final line as well.
+    if next_disabled {
+        disabled.push((line_count + 1) as u32);
+    }
+    disabled
+}

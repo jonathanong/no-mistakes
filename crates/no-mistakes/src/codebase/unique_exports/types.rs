@@ -31,7 +31,8 @@ pub struct PreparedUniqueExportFinding {
 pub(super) struct SourceFile {
     pub(super) path: PathBuf,
     pub(super) rel: String,
-    pub(super) source: std::sync::Arc<str>,
+    /// Sorted line index prepared once; export/origin traversal never rescans source text.
+    pub(super) disabled_lines: Vec<u32>,
     pub(super) symbols: std::sync::Arc<FileSymbols>,
     pub(super) disabled: bool,
     pub(super) defer_suppression: bool,
