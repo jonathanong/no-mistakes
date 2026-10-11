@@ -1,0 +1,14 @@
+projects:
+  app:
+    root: shared
+tests:
+  vitest:
+    projects:
+      b:
+        include: ['**/*.test.mts']
+        exclude: ['shared/all-excluded.test.mts']
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [app]
+    tests:
+      vitest: [b]

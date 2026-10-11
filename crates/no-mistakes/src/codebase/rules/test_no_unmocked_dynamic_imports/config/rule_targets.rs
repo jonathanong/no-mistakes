@@ -11,7 +11,14 @@ use path_patterns::{append_project_globs, append_rule_globs};
 pub(super) struct PreparedTargets {
     pub(super) includes: Vec<String>,
     pub(super) excludes: Vec<String>,
+    pub(super) executions: Vec<ExecutionGlobs>,
     playwright: Vec<ConfigProject>,
+}
+
+pub(super) struct ExecutionGlobs {
+    pub(super) include: Vec<String>,
+    pub(super) exclude: Vec<String>,
+    pub(super) scope: Vec<String>,
 }
 
 impl PreparedTargets {
@@ -27,6 +34,7 @@ impl PreparedTargets {
                         include: build_globset(&project.include)?,
                         include_regex: Vec::new(),
                         exclude: build_globset(&project.exclude)?,
+                        required: None,
                     },
                     setup_files: Vec::new(),
                     explicit_project: false,
@@ -41,9 +49,8 @@ impl PreparedTargets {
 pub(super) fn rule_test_project_globs(
     root: &Path,
     config: &NoMistakesConfig,
-) -> Result<(Vec<String>, Vec<String>)> {
-    let targets = prepare(root, config, None)?;
-    Ok((targets.includes, targets.excludes))
+) -> Result<PreparedTargets> {
+    prepare(root, config, None)
 }
 
 pub(super) fn prepare(
@@ -53,6 +60,7 @@ pub(super) fn prepare(
 ) -> Result<PreparedTargets> {
     let mut includes = Vec::new();
     let mut excludes = Vec::new();
+    let mut executions = Vec::new();
     let rules = config.rule_applications(super::super::RULE_ID);
     let vitest_project_names = rules
         .iter()
@@ -92,14 +100,31 @@ pub(super) fn prepare(
         };
     let playwright_projects = playwright_projects?;
     for rule in rules {
-        append_rule_globs(config, rule, &mut includes, &mut excludes);
+        let has_test_targets = !rule.tests.vitest.is_empty() || !rule.tests.playwright.is_empty();
+        let mut rule_includes = Vec::new();
+        append_rule_globs(config, rule, &mut rule_includes, &mut excludes);
+        let mut scope = Vec::new();
+        if has_test_targets {
+            if rule.projects.is_empty() {
+                scope.extend(rule.include.iter().cloned());
+            } else {
+                for project_name in &rule.projects {
+                    append_project_globs(config, rule, project_name, &mut scope, &mut excludes);
+                }
+                if scope.is_empty() {
+                    scope.extend(rule.include.iter().cloned());
+                }
+            }
+        } else {
+            includes.extend(rule_includes);
+        }
         for project_name in &rule.tests.vitest {
             append_test_project_globs(
                 Framework::Vitest,
                 project_name,
                 &vitest_projects,
-                &mut includes,
-                &mut excludes,
+                &scope,
+                &mut executions,
             )?;
         }
         for project_name in &rule.tests.playwright {
@@ -107,12 +132,14 @@ pub(super) fn prepare(
                 Framework::Playwright,
                 project_name,
                 &playwright_projects,
-                &mut includes,
-                &mut excludes,
+                &scope,
+                &mut executions,
             )?;
         }
-        for project_name in &rule.projects {
-            append_project_globs(config, rule, project_name, &mut includes, &mut excludes);
+        if !has_test_targets {
+            for project_name in &rule.projects {
+                append_project_globs(config, rule, project_name, &mut includes, &mut excludes);
+            }
         }
     }
     includes.sort();
@@ -122,6 +149,7 @@ pub(super) fn prepare(
     Ok(PreparedTargets {
         includes,
         excludes,
+        executions,
         playwright: playwright_projects,
     })
 }
@@ -130,8 +158,8 @@ fn append_test_project_globs(
     framework: Framework,
     project_name: &str,
     projects: &[ConfigProject],
-    includes: &mut Vec<String>,
-    excludes: &mut Vec<String>,
+    scope: &[String],
+    executions: &mut Vec<ExecutionGlobs>,
 ) -> Result<()> {
     let mut matched = false;
     for project in projects
@@ -139,8 +167,13 @@ fn append_test_project_globs(
         .filter(|project| test_project_matches(project, project_name))
     {
         matched = true;
-        includes.extend(project.include.clone());
-        excludes.extend(project.exclude.clone());
+        // An exclusion belongs to this execution only. Another selected
+        // project can still execute the same file.
+        executions.push(ExecutionGlobs {
+            include: project.include.clone(),
+            exclude: project.exclude.clone(),
+            scope: scope.to_vec(),
+        });
     }
     if !matched {
         anyhow::bail!(

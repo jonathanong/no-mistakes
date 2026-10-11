@@ -1,0 +1,7 @@
+tests:
+  vitest:
+    configs: vitest.inline.config.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [a, b]

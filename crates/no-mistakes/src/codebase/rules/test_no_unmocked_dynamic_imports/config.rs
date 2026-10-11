@@ -104,6 +104,7 @@ fn precompute_setup_data_from_config_files_inner(
             include: build_globset(&includes)?,
             include_regex: build_regexes(&extract_test_regexes(&source))?,
             exclude: build_globset(&excludes)?,
+            required: None,
         };
         let setup_files = setup_files_from_configs_inner(
             root,

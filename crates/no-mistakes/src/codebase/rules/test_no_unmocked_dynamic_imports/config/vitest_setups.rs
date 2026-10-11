@@ -63,6 +63,7 @@ pub(super) fn from_facts(
                     include: build_globset(include)?,
                     include_regex: Vec::new(),
                     exclude: build_globset(exclude)?,
+                    required: None,
                 },
                 // The runner parser has already applied extends, independent config
                 // files, explicit empty overrides, and project-relative resolution.
