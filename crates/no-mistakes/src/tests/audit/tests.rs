@@ -155,7 +155,7 @@ fn rejects_missing_changes_ambiguous_paths_and_inconsistent_symbols() {
         "embedded TestPlan",
     );
     for path in [
-        "", "/a", "a/", "a//b", "./a", "a/../b", "a\\b", "C:/a", "a\nb",
+        "", "/a", "a/", "a//b", "./a", "a/../b", "a\\b", "C:/a", "c:a", "a\nb",
     ] {
         rejects(
             |plan, _| plan.changed_files[0] = path.into(),
@@ -209,6 +209,25 @@ fn rejects_missing_changes_ambiguous_paths_and_inconsistent_symbols() {
     rejects(
         |_, run| run.tests[0].test_file = "./test".into(),
         "normalized root-relative",
+    );
+}
+
+#[test]
+fn accepts_legal_posix_colons_without_accepting_drive_prefixes() {
+    let (mut plan, mut observations) = artifacts();
+    plan.changed_files[0] = "routes/foo:bar.ts".into();
+    plan.plan.changed_files[0] = plan.changed_files[0].clone();
+    observations.tests[0].executed_files[0] = plan.changed_files[0].clone();
+    plan.plan.selected_tests[0].test_file = "tests/3:route.test.mts".into();
+    observations.tests[0].test_file = plan.plan.selected_tests[0].test_file.clone();
+    let report = audit_test_selection(&plan, &observations).unwrap();
+    assert_eq!(
+        report.selected_observed_tests[0].test_file,
+        "tests/3:route.test.mts"
+    );
+    assert_eq!(
+        report.selected_observed_tests[0].matched_files,
+        ["routes/foo:bar.ts"]
     );
 }
 

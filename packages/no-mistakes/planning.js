@@ -68,7 +68,6 @@ async function prepareAnalyzeProjectReports(reports, generatedDirs) {
       if (prepared.generatedDir) generatedDirs.push(prepared.generatedDir);
       return prepared.request;
     }
-    if (report.type === "testsAudit") return await prepareAuditOptions(report);
     return PLAN_INPUT_REPORTS.has(report.type) ? await decamelizePlanOptions(report) : report;
   });
   const settled = await Promise.allSettled(preparations);
@@ -115,22 +114,8 @@ const jsonApis = createJsonApis({
   testsWhy: "testsWhyJson",
 });
 
-async function prepareAuditOptions(options = {}) {
-  const next = await decamelizePlanOptions(options);
-  if (next.observationsJson != null) {
-    next.observationsJson = loadPlanJson(next.observationsJson);
-  } else if (typeof next.observations === "string") {
-    const document = await readPlanFile(next.observations);
-    if (document !== undefined) {
-      next.observationsJson = loadPlanJson(document);
-      delete next.observations;
-    }
-  }
-  return next;
-}
-
 async function testsAudit(options) {
-  return camelizeValue(await jsonApis.testsAudit(await prepareAuditOptions(options)));
+  return camelizeValue(await jsonApis.testsAudit(options));
 }
 
 async function testsPlan(options) {
