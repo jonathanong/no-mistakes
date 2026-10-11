@@ -25,6 +25,8 @@ for (; true; require('node:os')) { require('node:net'); break; }
 for (;;) { require('node:tls'); break; }
 for (const key in require('node:http')) require('node:os');
 for (const value of require('node:https')) require('node:os');
+for (const [value = require('node:os')] of []) {}
+for (globalThis[require('node:os')] in {}) {}
 try { require('node:querystring'); } catch (error) { require('node:os'); }
 switch (require('node:punycode')) {
   case require('node:wasi'): require('node:os'); break;
@@ -46,6 +48,7 @@ if (0x1n) require('node:perf_hooks');
 0x000n && require('node:os');
 0n || require('node:perf_hooks');
 do { require('node:process'); } while (false);
+do { break; } while (require('node:os'));
 function unused() { require('node:os'); }
 false && require('node:os');
 true || require('node:os');
