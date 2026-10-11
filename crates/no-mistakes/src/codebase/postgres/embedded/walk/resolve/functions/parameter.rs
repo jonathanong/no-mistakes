@@ -19,34 +19,36 @@ use std::collections::HashSet;
 mod fragment;
 use fragment::{alias_or_append, append};
 
-pub(super) struct ParameterBuilder {
-    pub(super) parameter_index: usize,
+pub(in crate::codebase::postgres::embedded::walk) struct ParameterBuilder {
+    pub(in crate::codebase::postgres::embedded::walk) parameter_index: usize,
     pub(super) parameter_count: usize,
     pub(super) suffix: String,
-    pub(super) fragments: Vec<ParameterFragment>,
+    pub(in crate::codebase::postgres::embedded::walk) fragments: Vec<ParameterFragment>,
 }
 
-pub(super) struct ParameterFragment {
-    pub(super) sql: String,
-    pub(super) line: u32,
-    pub(super) positions: Vec<EmbeddedSqlSourcePosition>,
+pub(in crate::codebase::postgres::embedded::walk) struct ParameterFragment {
+    pub(in crate::codebase::postgres::embedded::walk) sql: String,
+    pub(in crate::codebase::postgres::embedded::walk) line: u32,
+    pub(in crate::codebase::postgres::embedded::walk) positions: Vec<EmbeddedSqlSourcePosition>,
+    pub(in crate::codebase::postgres::embedded::walk) origins: Vec<u32>,
 }
 
 impl ParameterBuilder {
-    pub(super) fn accepts_call(&self, call: &CallExpression<'_>) -> bool {
+    pub(in crate::codebase::postgres::embedded::walk) fn checked_argument<'call, 'ast>(
+        &self,
+        call: &'call CallExpression<'ast>,
+    ) -> Option<&'call Expression<'ast>> {
         if call.optional || call.arguments.len() != self.parameter_count {
-            return false;
+            return None;
         }
-        let Some(argument) = call.arguments[self.parameter_index].as_expression() else {
-            return false;
-        };
+        let argument = call.arguments[self.parameter_index].as_expression()?;
         // A scalar argument is evaluated before the helper runs. If the
         // builder is an existing binding, a call in another argument could
         // mutate it first; keep that execution order opaque.
         if !matches!(unwrap_ts_wrappers(argument), Expression::Identifier(_)) {
-            return true;
+            return Some(argument);
         }
-        call.arguments.iter().enumerate().all(|(index, argument)| {
+        let scalar_arguments = call.arguments.iter().enumerate().all(|(index, argument)| {
             if index == self.parameter_index {
                 return true;
             }
@@ -61,7 +63,8 @@ impl ParameterBuilder {
                     | Expression::BooleanLiteral(_)
                     | Expression::NullLiteral(_)
             )
-        })
+        });
+        scalar_arguments.then_some(argument)
     }
 }
 

@@ -38,7 +38,7 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
         ascending: false,
         nulls_first: true,
     }];
-    assert_eq!(display_keys(&expected), "tenant_id DESC NULLS FIRST");
+    assert_eq!(order::display_keys(&expected), "tenant_id DESC NULLS FIRST");
 
     let shape = SqlInsertSourceShape {
         order_aliases: std::collections::BTreeMap::from([(

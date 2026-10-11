@@ -204,13 +204,14 @@ fn template_interpolations_are_binds_and_key_joins_propagate_bounds() {
 }
 
 #[test]
-fn nested_sql_fragment_fails_closed_instead_of_reading_a_bind() {
+fn nested_sql_fragment_checks_each_concrete_version_instead_of_reading_a_bind() {
     let root = fixture_dir("nested-fragment");
-    assert_eq!(
-        findings_of(check_in(&root, "fail.yml")),
-        [("src/nested.ts".to_string(), 7, "unanalyzable".to_string())]
-    );
-    assert_eq!(findings_of(check_in(&root, "ignore.yml")), []);
+    for config in ["fail.yml", "ignore.yml"] {
+        assert_eq!(
+            findings_of(check_in(&root, config)),
+            [("src/nested.ts".to_string(), 7, "table:accounts".to_string())]
+        );
+    }
 }
 
 #[test]

@@ -251,6 +251,7 @@ fn missing_source_file_errors() {
 #[test]
 fn missing_sql_text_is_ignored() {
     let call = crate::codebase::postgres::EmbeddedSqlCall {
+        variants: Vec::new(),
         line: 1,
         callee: "query".to_string(),
         sql_text: None,

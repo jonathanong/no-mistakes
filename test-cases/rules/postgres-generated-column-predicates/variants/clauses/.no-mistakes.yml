@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      sqlInclude: [schema.sql]
+
+      clauses: [where, join, order-by]

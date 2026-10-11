@@ -24,6 +24,14 @@ custom `UESCAPE`), or newline-concatenated strings.
 Ordinary strings, comments, non-PL/pgSQL functions, and runtime-built
 expressions remain inert. It does not re-parse SQL with a private parser.
 
+The rule checks every complete
+[SQL alternative](../postgres-facts.md#finite-sql-alternatives) of a branching
+executor call, up to 16 versions. Choosing between `SELECT` and a banned
+`TRUNCATE`, or appending a banned setting on only one path, still reports that
+path. All allowed versions pass without an unanalyzable finding. Findings map
+to the physical branch fragments for suppressions; opaque or over-cap calls
+retain `unanalyzableSql` behavior.
+
 ```yaml
 rules:
   - rule: postgres-sql-statement-policy
@@ -55,7 +63,7 @@ unknown kind or group is a configuration error.
 
 Rule application `include`/`exclude` limits both sources; `sqlInclude` continues
 to select only SQL files. `unanalyzableSql` defaults to `fail`; `ignore` skips unanalyzable calls, and `fail` reports
-dynamic executor arguments and unparseable recovered SQL. No executor module
+dynamic executor arguments without complete alternatives and unparseable recovered SQL. No executor module
 or factory is inferred from project conventions.
 
 `bannedSettings` is an optional list of PostgreSQL configuration parameter

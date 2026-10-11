@@ -10,6 +10,9 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 #[derive(Clone)]
 pub(crate) struct BindingState {
+    pub(super) builder_identity: Option<u32>,
+    pub(super) condition_key: Option<u64>,
+    pub(super) variants: Option<Vec<super::variants::Recovered>>,
     pub(crate) sql: Option<String>,
     pub(crate) kind: EmbeddedSqlKind,
     pub(crate) line: u32,
@@ -25,6 +28,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
+    pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
@@ -33,7 +37,10 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) next_seq: u32,
     pub(crate) track_order: bool,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
+    pub(crate) fragment_sites: Vec<Option<u32>>,
+    pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) suppress_nested_builder_fragments: usize,
+    pub(crate) variant_paths: Vec<Vec<(u64, u32)>>,
     pub(crate) control_depth: usize,
     pub(crate) loop_depth: usize,
     pub(crate) function_scopes: Vec<usize>,
@@ -45,6 +52,8 @@ pub(crate) struct CollectedCalls {
     pub(crate) call_spans: Vec<(u32, u32)>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
+    pub(crate) fragment_sites: Vec<Option<u32>>,
+    pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) confirmed_order: Vec<u32>,
 }
@@ -66,6 +75,7 @@ pub(crate) fn collect_calls<'a>(
         scoped,
         provisional,
         scopes: Vec::new(),
+        builder_aliases: crate::fx::FxHashMap::default(),
         calls: Vec::new(),
         call_spans: Vec::new(),
         pending_spans: BTreeMap::new(),
@@ -74,7 +84,10 @@ pub(crate) fn collect_calls<'a>(
         next_seq: 0,
         track_order,
         fragments: Vec::new(),
+        fragment_variants: Vec::new(),
+        fragment_sites: Vec::new(),
         suppress_nested_builder_fragments: 0,
+        variant_paths: vec![Vec::new()],
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
@@ -87,13 +100,34 @@ pub(crate) fn collect_calls<'a>(
         call_spans: visitor.call_spans,
         pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,
+        fragment_variants: visitor.fragment_variants,
+        fragment_sites: visitor.fragment_sites,
         pending_calls: visitor.pending_calls,
         confirmed_order: visitor.confirmed_order,
     }
 }
 
 impl ScopeVisitor<'_> {
-    pub(super) fn push_fragment(&mut self, line: u32, sql_text: Option<String>) {
+    pub(super) fn push_fragment(
+        &mut self,
+        line: u32,
+        sql_text: Option<String>,
+        expression: Option<&oxc_ast::ast::Expression<'_>>,
+        append_site: Option<u32>,
+    ) {
+        let variants = expression
+            .and_then(|expression| self.recover_variants(expression))
+            .filter(|values| {
+                values
+                    .iter()
+                    .all(|value| value.value == super::variants::ValueKind::Sql)
+            })
+            .unwrap_or_default()
+            .into_iter()
+            .map(|value| value.publish())
+            .collect();
+        self.fragment_variants.push(variants);
+        self.fragment_sites.push(append_site);
         self.fragments.push(EmbeddedSqlFragment {
             line,
             sql_text,

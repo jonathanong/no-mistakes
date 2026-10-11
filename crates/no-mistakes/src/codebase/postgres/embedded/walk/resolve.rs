@@ -2,9 +2,9 @@ mod executor;
 pub(super) use executor::executor_call;
 mod provisional;
 pub(super) use provisional::record_executor_call;
-mod append;
+pub(super) mod append;
 mod chain;
-mod compose;
+pub(super) mod compose;
 pub(crate) mod functions;
 mod loops;
 pub(crate) mod vars;
@@ -108,6 +108,9 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
         scope.insert(
             id.name.to_string(),
             BindingState {
+                builder_identity: None,
+                condition_key: None,
+                variants: None,
                 sql: None,
                 kind: EmbeddedSqlKind::Dynamic,
                 line,

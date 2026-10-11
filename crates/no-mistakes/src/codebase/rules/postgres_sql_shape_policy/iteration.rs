@@ -2,6 +2,7 @@
 use super::scan::finding;
 use super::{BannedShapes, RuleFinding, RULE_ID};
 use crate::codebase::postgres::idents::unwrap_expr;
+use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::{
     parse_postgres_expression, SqlConjunctFact, SqlCursorBound, SqlLimitValue,
     SqlStatementFileFacts,
@@ -109,31 +110,31 @@ fn is_cursor(conjunct: &SqlConjunctFact, order_columns: &[String]) -> bool {
             .all(|column| order_columns.contains(column))
 }
 
-pub(super) fn findings(
+pub(super) fn located_findings(
     file: &str,
     facts: &SqlStatementFileFacts,
     shapes: &BannedShapes,
     options: &IterationOptions,
     line_at: impl Fn(usize) -> usize,
-) -> Vec<RuleFinding> {
+) -> Vec<(SqlFactSite, RuleFinding)> {
     let mut findings = Vec::new();
     if shapes.literal_limit {
-        for limit in &facts.limit_uses {
+        for (index, limit) in facts.limit_uses.iter().enumerate() {
             let SqlLimitValue::Literal(value) = limit.value else {
                 continue;
             };
             if !options.allowed_limits.contains(&value) {
-                findings.push(finding(
+                findings.push((SqlFactSite::Limit(index), finding(
                     file,
                     line_at(limit.line),
                     &format!("LIMIT {value} is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list {value} in shapeOptions.literalLimit.allowedValues"),
                     "literal-limit",
-                ));
+                )));
             }
         }
     }
     if shapes.keyset_only_sweep {
-        for sweep in &facts.sweeps {
+        for (index, sweep) in facts.sweeps.iter().enumerate() {
             let cursors = |bound| {
                 sweep.conjuncts.iter().any(|conjunct| {
                     conjunct.cursor_bound == Some(bound)
@@ -159,12 +160,12 @@ pub(super) fn findings(
                     .map(|part| format!("\"{}\"", part.replace('"', "\"\"")))
                     .collect::<Vec<_>>()
                     .join(".");
-                findings.push(finding(
+                findings.push((SqlFactSite::Sweep(index), finding(
                     file,
                     line_at(sweep.line),
                     &format!("walks every row of {} in {} order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `{table_spelling}` in shapeOptions.keysetOnlySweep.ignoreTables", sweep.table, sweep.order_columns.join(", ")),
                     "keyset-only-sweep",
-                ));
+                )));
             }
         }
     }

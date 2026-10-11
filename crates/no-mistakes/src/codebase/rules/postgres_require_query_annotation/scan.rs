@@ -9,9 +9,11 @@ pub(super) fn scan_with_sources(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+) -> Result<crate::codebase::rules::PostgresFindings> {
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -20,7 +22,34 @@ pub(super) fn scan_with_sources(
             .embedded_sql(path, &opts.embedded)
             .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
-        for (call, span) in file.calls.iter().zip(&file.call_spans) {
+        let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
+        let statements = file
+            .calls
+            .iter()
+            .any(|call| !call.variants.is_empty())
+            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
+            .transpose()?
+            .map(crate::codebase::rules::index_sql_variants)
+            .unwrap_or_default();
+        for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
+            if !call.variants.is_empty() {
+                for (variant_index, version) in call.statement_calls().enumerate() {
+                    let statement = statements
+                        .get(&(call_index, variant_index))
+                        .copied()
+                        .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
+                    for finding in findings_for_call(&rel, &version) {
+                        dedup.push(
+                            &mut findings,
+                            statement,
+                            crate::codebase::postgres::statements::SqlFactSite::Annotation,
+                            Some(&source),
+                            finding,
+                        );
+                    }
+                }
+                continue;
+            }
             let prefix = facts.query_annotation_prefix(path, &opts.embedded, *span);
             let sql = match prefix {
                 Some(value) => value.as_deref(),
@@ -39,7 +68,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 

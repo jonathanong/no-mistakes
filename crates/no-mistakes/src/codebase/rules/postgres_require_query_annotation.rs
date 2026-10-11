@@ -78,13 +78,13 @@ pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
+    let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
+        .map(|rule| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
             let target_roots = super::target_roots(root, config, rule);
@@ -101,12 +101,11 @@ pub(crate) fn check_with_files_sources_and_facts(
                 .into_iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
                 .collect();
-            scan_with_sources(root, &compiled, &files, facts)
+            scan_with_sources(root, &compiled, &files, sources, facts)
         })
         .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
+    Ok(findings.finish())
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {

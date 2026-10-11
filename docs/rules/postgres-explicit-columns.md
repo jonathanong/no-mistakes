@@ -56,6 +56,13 @@ With no `relations` entries the rule still reports catalog tables wider than the
 default `maxColumns` of 12. `schemaCatalogPath` is required, so enabling the
 rule with no options is a config error rather than a silent skip.
 
+Every complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
+of a branching executor call is checked. A choice between `SELECT id` and
+`SELECT *` still reports the star path when its relation is covered; all
+explicit-column paths pass without an unanalyzable finding. Recovery is capped
+at 16 versions and preserves branch-fragment source locations for suppressions.
+Opaque or over-cap calls retain `unanalyzableSql` behavior.
+
 ## Options and defaults
 
 `include`, `exclude`, `importSpecifier`, `executorNames`, and `unanalyzableSql`

@@ -3,7 +3,7 @@ use super::{classify_init, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 
-pub(crate) fn executor_call(
+fn legacy_executor_call(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
     callee: String,
@@ -12,6 +12,7 @@ pub(crate) fn executor_call(
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, call.span.start as usize);
     let Some(argument) = first_call_argument(call) else {
         return EmbeddedSqlCall {
+            variants: Vec::new(),
             line,
             callee,
             sql_text: None,
@@ -33,6 +34,7 @@ pub(crate) fn executor_call(
                     |(sql, positions)| (Some(sql), positions),
                 );
             EmbeddedSqlCall {
+                variants: Vec::new(),
                 line,
                 callee,
                 sql_text,
@@ -57,6 +59,7 @@ pub(crate) fn executor_call(
                     |(sql, positions)| (Some(sql), positions),
                 );
             EmbeddedSqlCall {
+                variants: Vec::new(),
                 line,
                 callee,
                 sql_text,
@@ -79,4 +82,32 @@ pub(crate) fn executor_call(
             }
         }
     }
+}
+
+pub(crate) fn executor_call(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    callee: String,
+) -> EmbeddedSqlCall {
+    let mut recovered = legacy_executor_call(visitor, call, callee);
+    if recovered.kind == EmbeddedSqlKind::Dynamic {
+        recovered.variants = first_call_argument(call)
+            .and_then(|argument| visitor.recover_variants(argument))
+            .filter(|versions| {
+                versions
+                    .iter()
+                    .all(|version| version.value == super::super::variants::ValueKind::Sql)
+                    && versions
+                        .iter()
+                        .any(|version| version.enumerated || !version.choices.is_empty())
+            })
+            .unwrap_or_default()
+            .into_iter()
+            .map(|version| version.publish())
+            .fold(Vec::new(), |mut unique, variant| {
+                super::super::super::EmbeddedSqlVariant::push_unique(&mut unique, variant);
+                unique
+            });
+    }
+    recovered
 }

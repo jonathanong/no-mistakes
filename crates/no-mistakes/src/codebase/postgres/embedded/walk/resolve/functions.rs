@@ -1,4 +1,5 @@
 mod body;
+mod call;
 mod collect;
 mod parameter;
 mod positions;
@@ -61,9 +62,9 @@ impl LocalFunctions {
         }
         let reassigned = ReassignedNames::collect(program);
         raw.retain(|name, _| !reassigned.contains(name));
-        let tag_shadows = TagShadows::collect(program, trusted_sql_tags);
         let sql_statement_types =
             super::super::super::bindings::sql_statement_type_bindings(program);
+        let tag_shadows = TagShadows::collect(program, trusted_sql_tags, &sql_statement_types);
         let mut resolved = HashMap::new();
         let mut parameter_builders = HashMap::new();
         for name in raw.keys().copied() {
@@ -98,46 +99,11 @@ impl LocalFunctions {
         self.parameter_builders.contains_key(name)
     }
 
-    pub(crate) fn get_call(
+    pub(in crate::codebase::postgres::embedded::walk) fn parameter_builder(
         &self,
-        call: &CallExpression<'_>,
         name: &str,
-        depth: u8,
-        is_shadowed: &mut impl FnMut(&str) -> bool,
-        resolve_binding: &impl Fn(&str) -> Option<String>,
-    ) -> Option<String> {
-        if let Some(builder) = self.parameter_builders.get(name) {
-            if !builder.accepts_call(call) {
-                return None;
-            }
-            let argument = call
-                .arguments
-                .get(builder.parameter_index)?
-                .as_expression()?;
-            let base = match crate::codebase::ts_source::unwrap_ts_wrappers(argument) {
-                Expression::Identifier(ident) => resolve_binding(ident.name.as_str()),
-                Expression::TaggedTemplateExpression(_) => {
-                    let mut lookup =
-                        |_: &CallExpression<'_>, callee: &str, _depth: u8| self.get(callee);
-                    super::chain::resolve_expr(
-                        argument,
-                        depth,
-                        &mut lookup,
-                        is_shadowed,
-                        self.imported_sql_tags(),
-                    )
-                }
-                _ => None,
-            }?;
-            return Some(format!(
-                "{base}{}",
-                super::super::super::placeholders::renumber_placeholders(
-                    &builder.suffix,
-                    super::super::super::placeholders::count_placeholders(&base)
-                )
-            ));
-        }
-        self.get(name)
+    ) -> Option<&parameter::ParameterBuilder> {
+        self.parameter_builders.get(name)
     }
 
     /// Whether `name` is a top-level binding that rebinds a same-file

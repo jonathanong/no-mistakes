@@ -7,7 +7,9 @@ mod stars;
 mod table_arms;
 mod uses;
 pub(super) use collector::collect_query_at;
+pub(in crate::codebase::postgres::statements) use from::predicate_text;
 pub(super) use nested::{walk_expr_at, walk_node_at};
+pub(super) use stars::arg_expr;
 pub(super) use table_arms::collect as collect_table_arms;
 
 pub(super) fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&sqlparser::ast::Expr> {

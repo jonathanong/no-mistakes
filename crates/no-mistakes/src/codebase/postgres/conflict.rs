@@ -7,6 +7,8 @@ use sqlparser::ast::{Insert, SelectItem, SetExpr, TableObject};
 use std::collections::{BTreeMap, BTreeSet};
 
 mod collect;
+mod prepared;
+pub(in crate::codebase::postgres) use prepared::analyze_parsed;
 mod pinned;
 pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;

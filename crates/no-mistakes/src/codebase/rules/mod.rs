@@ -173,7 +173,11 @@ pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id
     config.rule_configured(rule_id)
 }
 
+mod postgres_findings;
 mod sort_findings;
+mod variant_findings;
+pub(crate) use postgres_findings::{LocatedRuleFinding, PostgresFindings};
+pub(crate) use variant_findings::{index_sql_variants, VariantFindingDedup};
 mod target_roots;
 pub(crate) use sort_findings::sort_findings;
 pub(crate) use target_roots::{

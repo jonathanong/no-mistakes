@@ -18,7 +18,34 @@ visits each shared container once. Containers with references retain their order
 traversal when order affects the result.
 These in-memory structures belong to the current request and are never persisted.
 Conditional binding updates retain distinct alternatives without repeatedly
-duplicating earlier possibilities; conflicting outcomes remain unproven.
+duplicating earlier possibilities; the helper-prefix projection leaves
+conflicting outcomes unproven when no complete version set is available.
+
+For an executor call with complete
+[SQL alternatives](../postgres-facts.md#finite-sql-alternatives), the rule uses
+those versions from the shared extractor instead of its separate helper-prefix
+traversal. Every version must start with an annotation or be an exempt
+transaction statement. Recovery is capped at 16 versions; a missing annotation
+on only one path is still reported at that branch's physical source location,
+where line suppressions also apply:
+
+```ts
+query(named
+  ? "/* accounts/list */ SELECT id FROM accounts"
+  : "SELECT id FROM accounts"); // The second version needs an annotation.
+```
+
+Opaque or over-cap calls retain the richer prepared helper-prefix traversal
+and `unanalyzableSql` behavior. A trusted tag that splices an opaque leading
+SQL fragment has an unknown prefix rather than a bind placeholder. A literal
+leading annotation before a later opaque fragment remains verifiable.
+
+`String.raw` strings and scalar results of
+comparisons, conditional tests, and object expressions remain bind values even
+when their operands refer to a SQL builder. Without a complete version set,
+arrays and actual fragment-valued branches remain opaque. Reads of array slots
+or object properties containing fragments also remain opaque; interpolation
+effects are evaluated once.
 
 A trusted tag that splices a nested SQL fragment has an unknown prefix when
 the fragment comes first. The rule honors `unanalyzableSql` rather than reading
@@ -32,7 +59,8 @@ fragments also remain opaque; interpolation effects are evaluated once.
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
 their lexical block, and nested functions own their bindings. Reassigned or
-conflicting SQL initializers remain unresolved rather than selecting one branch.
+conflicting SQL initializers remain unresolved when their complete alternatives
+cannot be recovered; the rule never selects one convenient branch.
 
 ```yaml
 rules:
@@ -144,7 +172,7 @@ async function runSql(statement, run) { return run(statement); }
 runSql(ordersSql("id"), statement => write(statement)); // Executor needs an annotation.
 ```
 
-Tracing is bounded and conservative. Cycles, reassignment, unsupported control
+Tracing is bounded and conservative. Cycles, unrecoverable reassignment, unsupported control
 flow, unresolved imports, arbitrary external calls, and unknown leading fragments
 produce an unanalyzable finding by default. Make the leading fragment static,
 prepend a named block comment at the caller, suppress an intentional exception,
@@ -152,7 +180,7 @@ or explicitly configure `unanalyzableSql: ignore`. This default also applies to
 opaque executor arguments that earlier versions silently skipped. Include/exclude
 filters select reported files; an imported helper outside that selection can still
 be traced through the prepared project facts. Prefix evidence is used only by this
-annotation rule and does not make dynamic SQL complete for other PostgreSQL rules.
+annotation rule and does not make opaque dynamic SQL complete for other PostgreSQL rules.
 An incomplete transaction prefix such as `BE` plus unknown text remains
 unanalyzable because it could complete an exempt `BEGIN` statement.
 

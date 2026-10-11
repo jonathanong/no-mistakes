@@ -68,16 +68,18 @@ fn a_clause_only_fragment_keeps_its_limit() {
         "OFFSET 10 LIMIT 5",
     ] {
         assert_eq!(
-            super::statement_facts(sql, &[]).limit_uses.len(),
+            super::statement_facts(sql, &[], false).0.limit_uses.len(),
             1,
             "{sql}"
         );
     }
     // A predicate fragment is unchanged, and a word that merely starts like a clause is one.
-    assert!(super::statement_facts("AND id > $1", &[])
+    assert!(super::statement_facts("AND id > $1", &[], false)
+        .0
         .limit_uses
         .is_empty());
-    assert!(super::statement_facts("limit_at > $1", &[])
+    assert!(super::statement_facts("limit_at > $1", &[], false)
+        .0
         .limit_uses
         .is_empty());
 }
@@ -85,7 +87,7 @@ fn a_clause_only_fragment_keeps_its_limit() {
 #[test]
 fn query_tail_detection_requires_real_keywords() {
     for sql in ["/*", "ORDER wrong", "\"LIMIT\" 5", "5 LIMIT 2"] {
-        assert!(!super::starts_with_clause(sql), "{sql}");
+        assert!(!super::starts_with_clause(sql, false), "{sql}");
     }
 }
 
@@ -174,4 +176,86 @@ fn executed_sql_suppression_matches_marker_provenance() {
     assert!(!super::collect(&duplicate_facts)
         .iter()
         .any(|prepared_fragment| prepared_fragment.line == fragment_line));
+}
+
+#[test]
+fn fragment_origin_metadata_does_not_change_the_public_debug_surface() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-sql-shape-policy/variants/fragment-overlap/src/query.ts",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
+        &path,
+        &source,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    assert!(embedded
+        .fragment_variants
+        .iter()
+        .any(|values| !values.is_empty()));
+    let mut without_origins = embedded.clone();
+    without_origins.fragment_variants.clear();
+    assert_eq!(format!("{embedded:?}"), format!("{without_origins:?}"));
+    assert_eq!(format!("{embedded:#?}"), format!("{without_origins:#?}"));
+}
+
+#[test]
+fn finite_where_fragment_projections_keep_a_valid_select_context() {
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]).with_trusted_sql_tags(&[
+        crate::codebase::postgres::TrustedSqlTag {
+            module: "@example/db".into(),
+            name: "sql".into(),
+        },
+    ]);
+    for name in ["finite-fragments-good", "finite-fragments-bad"] {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+            "../../test-cases/rules/postgres-sql-shape-policy/variants/{name}/src/query.ts",
+        ));
+        let source = std::fs::read_to_string(&path).unwrap();
+        let embedded =
+            crate::codebase::postgres::extract_embedded_sql_from_source(&path, &source, &profile);
+        let prepared = super::collect(&embedded);
+        assert_eq!(prepared.len(), 2, "{name}");
+        assert!(
+            prepared
+                .iter()
+                .all(|fragment| !fragment.statements.parse_failed),
+            "{name}"
+        );
+        assert_eq!(
+            prepared
+                .iter()
+                .map(|fragment| fragment.statements.function_calls.len())
+                .sum::<usize>(),
+            usize::from(name.ends_with("bad")),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn balanced_fragment_choices_isolate_the_sixteen_version_cap() {
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]).with_trusted_sql_tags(&[
+        crate::codebase::postgres::TrustedSqlTag {
+            module: "@example/db".into(),
+            name: "sql".into(),
+        },
+    ]);
+    for (name, versions) in [
+        ("finite-fragments-boundary", 16),
+        ("finite-fragments-cap", 0),
+    ] {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+            "../../test-cases/rules/postgres-sql-shape-policy/variants/{name}/src/query.ts",
+        ));
+        let source = std::fs::read_to_string(&path).unwrap();
+        let embedded =
+            crate::codebase::postgres::extract_embedded_sql_from_source(&path, &source, &profile);
+        assert_eq!(embedded.calls.len(), 1, "{name}");
+        let call = &embedded.calls[0];
+        assert_eq!(call.variants.len(), versions, "{name}");
+        assert_eq!(call.is_unanalyzable(), versions == 0, "{name}");
+        assert_eq!(embedded.fragment_variants[0].len(), versions, "{name}");
+        assert_eq!(super::collect(&embedded).len(), versions, "{name}");
+    }
 }

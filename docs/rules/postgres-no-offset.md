@@ -9,6 +9,13 @@ borrows those facts, including source locations, instead of reading or parsing
 source again. Unparseable statements are skipped while recoverable sibling
 statements remain checked; comments and prose are not clauses.
 
+Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
+of a branching executor call is checked, up to 16 versions. An `OFFSET` in
+only one path is still reported at its physical branch-fragment location;
+all versions without OFFSET pass without an unanalyzable finding. Line
+suppressions apply to those mapped locations. Opaque or over-cap calls retain
+the unanalyzable behavior below.
+
 ```yaml
 rules:
   - rule: postgres-no-offset
@@ -70,11 +77,11 @@ asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 **Behavior change:** this rule previously dropped dynamic executor SQL unless
 its recovered text already proved an `OFFSET`. With the default
-`unanalyzableSql: fail`, a dynamic executor call is reported with target
+`unanalyzableSql: fail`, a dynamic executor call without complete alternatives is reported with target
 `unanalyzable` at the executor call when OFFSET pagination cannot be ruled out:
 
 - no SQL text was recovered (an opaque `query(sql)` argument or a
-  `query(cond ? a : b)` choice), or
+  `query(cond ? a : b)` choice whose arms cannot all be recovered), or
 - the recovered text contains `SELECT`, including a CTE or query inside DML,
   or its leading statement is unknown or incomplete, and it has no OFFSET of
   its own. An interpolation or opaque appended tail could add `OFFSET`.
@@ -230,6 +237,10 @@ appended `OFFSET` is checked normally. Unknown builder arguments and dynamic
 appends retain the strict `unanalyzableSql` behavior. Put line suppression on
 the physical clause being suppressed. Existing directives on an executor call
 also suppress that call's recovered clauses through the common suppression pass.
+A directive on one executor call does not suppress another call that reuses
+the same SQL constant or fragment. Repeated unsuppressed executions report the
+shared OFFSET once; a directive on the shared OFFSET's physical line suppresses
+that clause wherever it is used.
 Prepared source failures retain their I/O kind; dispatch uses that captured
 outcome without checking filesystem state again.
 Source positions mark changes to the source-versus-SQL line offset. Between

@@ -11,13 +11,7 @@ impl LocalFunctions {
         visitor: &ScopeVisitor<'_>,
     ) -> Option<(String, Vec<EmbeddedSqlSourcePosition>, u32)> {
         let builder = self.parameter_builders.get(name)?;
-        if !builder.accepts_call(call) {
-            return None;
-        }
-        let argument = call
-            .arguments
-            .get(builder.parameter_index)?
-            .as_expression()?;
+        let argument = builder.checked_argument(call)?;
         let call_line = byte_offset_to_line(visitor.source, call.span.start as usize);
         let (mut sql, mut positions, origin) = match unwrap_ts_wrappers(argument) {
             Expression::Identifier(ident) => {
@@ -28,12 +22,9 @@ impl LocalFunctions {
                 (binding.sql?, binding.sql_source_positions, binding.line)
             }
             Expression::TaggedTemplateExpression(_) => {
-                let mut lookup =
-                    |_: &CallExpression<'_>, callee: &str, _depth: u8| self.get(callee);
-                let base = super::super::chain::resolve_expr(
+                MAX_RESOLVE_DEPTH.checked_sub(1)?;
+                let base = super::super::chain::tagged_sql(
                     argument,
-                    MAX_RESOLVE_DEPTH,
-                    &mut lookup,
                     &mut |tag| visitor.shadowed_locally(tag) || self.is_tag_shadowed(tag),
                     self.imported_sql_tags(),
                 )?;

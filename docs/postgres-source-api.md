@@ -26,6 +26,20 @@ statement is parsed once. Projections borrow that statement's AST, which is
 discarded after its serializable facts are collected. There is no persistent
 parser cache or competing parser engine.
 
+Repository checks of embedded JavaScript/TypeScript SQL can enumerate up to
+16 complete statements for one branching executor call. The async Node check
+API uses the same prepared versions as the CLI, including physical branch
+locations for findings and suppressions. This is the
+[embedded-SQL version model](postgres-facts.md#finite-sql-alternatives), not a
+change to `parsePostgresSql`: that source API still accepts concrete SQL text
+and returns the same versioned JSON contract. The Rust `EmbeddedSqlCall`
+version list is not exported as a Node source-fact shape.
+Its Rust statement projections can carry internal `variant_locations`
+provenance and prepared ordering metadata; these fields are not serialized by
+the Node check or source APIs. Finding deduplication keeps physical token
+origins in request-local internal metadata. Public `RuleFinding` fields and
+their JSON shape remain unchanged.
+
 ## Contract
 
 `PostgresSqlFacts.schemaVersion` is `1`. All public fact names are exported from

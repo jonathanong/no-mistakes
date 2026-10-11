@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      checkArbiter: false

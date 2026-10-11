@@ -1,3 +1,5 @@
+mod variant_metadata;
+mod variants;
 use super::rebase_embedded_lines;
 use crate::codebase::postgres::embedded::{
     EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlSourcePosition,
@@ -24,6 +26,7 @@ fn embedded_line_shift_covers_returning_stars_and_triggers() {
     rebase_embedded_lines(
         &mut facts,
         &EmbeddedSqlCall {
+            variants: Vec::new(),
             line: 5,
             callee: "query".to_string(),
             sql_text: Some(sql),
@@ -32,6 +35,7 @@ fn embedded_line_shift_covers_returning_stars_and_triggers() {
             sql_source_positions: Vec::new(),
             recovered_placeholder_positions: Vec::new(),
         },
+        false,
     );
     assert_eq!(facts.origin_line, 5);
     assert!(facts.triggers[0].line > 1);
@@ -60,6 +64,7 @@ fn bound_relations_rebase_by_their_sql_column() {
         source_line,
     };
     let call = EmbeddedSqlCall {
+        variants: Vec::new(),
         line: 10,
         callee: "query".to_string(),
         sql_text: Some(sql),
@@ -68,7 +73,7 @@ fn bound_relations_rebase_by_their_sql_column() {
         sql_source_positions: vec![position(1, 10), position(15, 20), position(25, 30)],
         recovered_placeholder_positions: Vec::new(),
     };
-    rebase_embedded_lines(&mut facts, &call);
+    rebase_embedded_lines(&mut facts, &call, false);
     let bound = &facts.bounds[0];
     assert_eq!(bound.line, 10);
     let lines: Vec<usize> = bound.query.items.iter().map(|item| item.line).collect();
@@ -86,6 +91,7 @@ fn conditional_lifecycle_bounds_follow_embedded_source_lines() {
     rebase_embedded_lines(
         &mut facts,
         &EmbeddedSqlCall {
+            variants: Vec::new(),
             line: 40,
             callee: "query".to_string(),
             sql_text: Some(sql.to_string()),
@@ -94,6 +100,7 @@ fn conditional_lifecycle_bounds_follow_embedded_source_lines() {
             sql_source_positions: Vec::new(),
             recovered_placeholder_positions: Vec::new(),
         },
+        false,
     );
     let lifecycle = facts.lifecycle.as_ref().unwrap();
     assert_eq!(lifecycle.raw_bounds.len(), facts.bounds.len());

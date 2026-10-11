@@ -37,7 +37,7 @@ pub(crate) fn prepare(
     if plan.postgres_schema || plan.postgres_dml {
         sql::collect(root, files, sources, plan, &mut out);
     }
-    if plan.postgres_dml || plan.postgres_fragments {
+    if plan.postgres_dml || plan.postgres_fragments || plan.postgres_variants {
         for path in files
             .iter()
             .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -58,7 +58,7 @@ pub(crate) fn prepare(
                         });
                     out.fragments.insert((path.clone(), profile.clone()), entry);
                 }
-                if !plan.postgres_dml {
+                if !plan.postgres_dml && !plan.postgres_variants {
                     continue;
                 }
                 let entry = file
@@ -66,6 +66,7 @@ pub(crate) fn prepare(
                         Arc::new(super::collect::dml::embedded_call_facts(
                             file,
                             plan.postgres_bounds,
+                            !plan.postgres_dml,
                         ))
                     })
                     .map_err(|error| {

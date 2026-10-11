@@ -84,6 +84,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         embedded_sql_options: Vec::new(),
         postgres_schema_catalog_paths: Vec::new(),
         postgres_dml: false,
+        postgres_variants: false,
         postgres_bounds: false,
         postgres_fragments: false,
         postgres_write_sql_include: Vec::new(),
@@ -99,6 +100,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
 
 pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
     plan.postgres_dml
+        || plan.postgres_variants
         || plan.postgres_fragments
         || plan.postgres_schema
         || plan.imports
