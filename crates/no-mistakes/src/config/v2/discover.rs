@@ -138,8 +138,13 @@ fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 /// Historical config comparisons use this so one request does not print a
 /// warning for a revision that is not its active configuration.
 pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
-    let config = parse_config::<NoMistakesConfig>(source, path)?;
+    let mut config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config, path)?;
+    for policy in config.tests.vitest.projects.values_mut() {
+        if !policy.setup_files.is_empty() {
+            policy.declaration_path = Some(crate::codebase::ts_resolver::normalize_path(path));
+        }
+    }
     Ok(config)
 }
 

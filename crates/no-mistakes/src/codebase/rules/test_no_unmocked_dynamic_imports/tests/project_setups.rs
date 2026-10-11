@@ -311,3 +311,43 @@ fn mocked_nested_setup_helper_does_not_require_its_facts() {
         &["nested/nested.test.mts"],
     );
 }
+
+#[test]
+fn unnamed_vitest_and_implicit_jest_keep_their_independent_executions() {
+    for (kind, selected, expected) in [
+        ("unnamed", false, vec!["tests/sample.test.mts"]),
+        ("unnamed", true, vec![]),
+        ("implicit-jest", false, vec!["tests/sample.test.mts"]),
+    ] {
+        let root = project_fixture()
+            .parent()
+            .unwrap()
+            .join("test-no-unmocked-dynamic-imports-runner-executions")
+            .join(kind);
+        let path = selected.then(|| root.join(".no-mistakes-selected.yml"));
+        let config = crate::config::v2::load_v2_config(&root, path.as_deref()).unwrap();
+        let files = crate::codebase::ts_source::discover_files(&root, &[]);
+        let facts = crate::codebase::check_facts::collect_check_facts(
+            &root,
+            files,
+            crate::codebase::check_facts::CheckFactPlan {
+                imports: true,
+                dynamic_imports: true,
+                source: true,
+                ..Default::default()
+            },
+        );
+        for findings in [
+            check(&root, &config, None).unwrap(),
+            check_with_facts(&root, &config, None, &facts).unwrap(),
+            crate::codebase::rules::run_check_with_facts(&root, path.as_deref(), None, &facts)
+                .unwrap(),
+        ] {
+            assert_scoped_findings(&findings, &expected);
+            assert_eq!(findings.len(), expected.len(), "{kind}: {findings:?}");
+            for finding in findings {
+                assert_eq!(finding.target.as_deref(), Some("src/target.mts"));
+            }
+        }
+    }
+}

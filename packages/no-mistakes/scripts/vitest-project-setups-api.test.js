@@ -9,6 +9,67 @@ const root = join(
 );
 
 test(
+  "compiled checks retain unnamed Vitest and implicit Jest executions",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [kind, config, expected] of [
+      ["unnamed", ".no-mistakes.yml", ["tests/sample.test.mts"]],
+      ["unnamed", ".no-mistakes-selected.yml", []],
+      ["implicit-jest", ".no-mistakes.yml", ["tests/sample.test.mts"]],
+    ]) {
+      const fixture = join(root, "../test-no-unmocked-dynamic-imports-runner-executions", kind);
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(
+        report.rules.map((finding) => finding.file),
+        expected,
+      );
+      assert.deepEqual(report.warnings, []);
+      for (const finding of report.rules) assert.equal(finding.target, "src/target.mts");
+    }
+  },
+);
+
+test(
+  "compiled setup triggers follow the effective policy config",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(__dirname, "../../../fixtures/test-plan/explicit-policy-setups");
+    for (const [file, expected] of [
+      [".no-mistakes.yml", []],
+      ["custom.yml", ["web/live.test.ts"]],
+    ]) {
+      const options = { root: fixture, config: join(fixture, "custom.yml") };
+      const planOptions = {
+        ...options,
+        framework: "vitest",
+        changedFiles: [file],
+        globalConfigFallback: false,
+      };
+      const plan = await cjs.testsPlan(planOptions);
+      assert.deepEqual(await esm.testsPlan(planOptions), plan);
+      assert.deepEqual(
+        plan.selectedTests.map((test) => test.testFile),
+        expected,
+      );
+      if (expected.length === 0) assert.equal(plan.fallbackTriggered, false);
+      const impactOptions = { ...options, entrypoints: [file] };
+      const impact = await cjs.testsImpact(impactOptions);
+      assert.deepEqual(await esm.testsImpact(impactOptions), impact);
+      assert.deepEqual(
+        impact.selectedTests.map((test) => test.testFile),
+        expected,
+      );
+    }
+  },
+);
+
+test(
   "compiled CJS and ESM checks scope declared Vitest setup mocks per project",
   { skip: !compiled, timeout: 20_000 },
   async () => {

@@ -134,7 +134,7 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
                 vitest_configs
                     .iter()
                     .filter(|data| {
-                        data.project_name.is_some()
+                        (data.project_name.is_some() || selected.includes_all())
                             && !projects
                                 .iter()
                                 .any(|project| project.project_name == data.project_name)

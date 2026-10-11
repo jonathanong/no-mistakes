@@ -86,6 +86,8 @@ Implicit `vitest.workspace.*` and `vitest.projects.*` catalogs supply project
 matchers and setups, taking precedence over `vitest.config.*` during discovery.
 Recovered named projects remain separate executions even when only some of
 them have explicit project policies.
+Repository checks also preserve unnamed Vitest executions independently.
+Explicit Vitest configs do not suppress automatic Jest config discovery.
 An explicit named policy replaces the recovered project's include/exclude
 matcher while retaining its runner setups. Broad checks include explicit
 project matchers even when their test filenames use custom conventions.
@@ -96,6 +98,8 @@ so changes to a setup module or its imports select the matching project's tests
 in test planning and impact reports. Project exclusions remain in effect.
 Configuration loading rejects empty, absolute, and parent-relative setup paths
 for checks, planning, and impact, even when this rule is not enabled.
+Setup declarations retain the effective policy config's path, including
+`--config` overrides, so unrelated default configs do not trigger those tests.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

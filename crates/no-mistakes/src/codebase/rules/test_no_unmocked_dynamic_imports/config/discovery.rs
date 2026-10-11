@@ -10,7 +10,7 @@ use regex::Regex;
 use regex_literals::extract_test_regex_literals;
 use std::path::{Path, PathBuf};
 
-pub(super) use visible::config_files_from_visible;
+pub(super) use visible::{config_files_from_visible, runner_config_files_from_visible};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Runner {

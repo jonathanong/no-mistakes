@@ -1,5 +1,5 @@
 use super::discovery::{ConfigFile, Runner};
-use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::{ConfigView, NoMistakesConfig};
 use crate::integration_tests::{project_config, types::Framework};
 use std::path::{Path, PathBuf};
 
@@ -10,10 +10,21 @@ pub(super) fn config_files(
     prepared: bool,
 ) -> Vec<ConfigFile> {
     let selected = super::SelectedRunners::for_config(config);
-    let mut files = super::discovery::config_files_from_visible(root, config, visible)
-        .into_iter()
-        .filter(|file| selected.includes(file.runner) && (!prepared || file.runner == Runner::Jest))
-        .collect::<Vec<_>>();
+    if !prepared {
+        return super::discovery::config_files_from_visible(root, config, visible)
+            .into_iter()
+            .filter(|file| selected.includes(file.runner))
+            .collect();
+    }
+    let mut files = Vec::new();
+    if selected.includes(Runner::Jest) {
+        files.extend(super::discovery::runner_config_files_from_visible(
+            root,
+            ConfigView::new(config).jest_configs(),
+            Runner::Jest,
+            visible,
+        ));
+    }
     if prepared && super::needs_vitest_configs(config) {
         files.extend(
             project_config::config_values_from_visible(
