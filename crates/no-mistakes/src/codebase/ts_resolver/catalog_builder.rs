@@ -1,3 +1,12 @@
+use rayon::prelude::*;
+
+fn visible_real_paths(
+    paths: &[PathBuf],
+    canonicalize: impl Fn(&Path) -> Option<PathBuf> + Sync,
+) -> BTreeSet<PathBuf> {
+    paths.par_iter().filter_map(|path| canonicalize(path)).collect()
+}
+
 struct CatalogBuilder<'a> {
     root: PathBuf,
     root_real: PathBuf,
@@ -58,8 +67,8 @@ impl<'a> CatalogBuilder<'a> {
         Self {
             root,
             root_real,
-            visible: visible_paths.iter().map(|path| normalize_path(path)).collect(),
-            visible_real: visible_paths.iter().filter_map(|path| real_path(path)).collect(),
+            visible: visible_paths.par_iter().map(|path| normalize_path(path)).collect(),
+            visible_real: visible_real_paths(visible_paths, real_path),
             candidate_roots,
             sources,
             states: BTreeMap::new(),
