@@ -22,6 +22,12 @@ summary clears finite alternatives across tracked aliases and preserves legacy
 SQL fields. The same call evaluated in an `if` test, conditional test, or logical
 left operand also clears the affected SQL prefix. Calls that remain dynamic use
 the configured `unanalyzableSql` behavior.
+A final template interpolation can mutate a fragment captured by an earlier
+interpolation, because the tag receives those references after all expressions
+run. Such calls stay dynamic and follow `unanalyzableSql`; a copied primitive
+bind, an ordinary final bind, or an append to a fresh nested fragment keeps its
+existing analysis. Static sibling calls still report OFFSET at the original
+branch line, including when other calls become dynamic.
 
 ```yaml
 rules:

@@ -6,6 +6,7 @@ use crate::codebase::postgres::embedded::{
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
+mod effects;
 
 pub(super) fn recover(
     visitor: &ScopeVisitor<'_>,
@@ -13,12 +14,7 @@ pub(super) fn recover(
     depth: u8,
     constraints: &[(u64, u32)],
 ) -> Option<Vec<Recovered>> {
-    if template
-        .expressions
-        .iter()
-        .take(template.expressions.len().saturating_sub(1))
-        .any(|expression| visitor.expression_mutates_builder(expression))
-    {
+    if effects::mutates_captured_fragment(visitor, template) {
         return None;
     }
     let origin = byte_offset_to_line(visitor.source, template.span.start as usize);
