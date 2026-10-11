@@ -78,6 +78,59 @@ describe(rule, () => {
     );
     assert.deepEqual(findings("copy-coercion-wrappers"), []);
   });
+  it("preserves supported consumers during copied-scalar proof without admitting escapes", () => {
+    assert.deepEqual(
+      findings("copy-safe-consumers", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [7, "unknown"],
+        [12, "unknown"],
+        [17, "unknown"],
+        [17, "unknown"],
+        [19, "unknown"],
+        [19, "unknown"],
+        [19, "unknown"],
+        [19, "unknown"],
+        [20, "unknown"],
+        [20, "unknown"],
+        [24, "unknown"],
+        [24, "unknown"],
+        [24, "unknown"],
+        [24, "unknown"],
+        [25, "unknown"],
+        [25, "unknown"],
+        [29, "unknown"],
+        [29, "unknown"],
+        [29, "unknown"],
+        [29, "unknown"],
+        [30, "unknown"],
+        [30, "unknown"],
+        [38, "unknown"],
+        [39, "timeout"],
+        [45, "unknown"],
+        [51, "unknown"],
+        [56, "unknown"],
+        [58, "unknown"],
+        [58, "unknown"],
+        [58, "unknown"],
+        [58, "unknown"],
+        [59, "unknown"],
+        [59, "unknown"],
+        [64, "unknown"],
+        [64, "unknown"],
+        [64, "unknown"],
+        [64, "unknown"],
+        [65, "unknown"],
+        [65, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("copy-safe-consumers").map(({ line, messageId }) => [line, messageId]),
+      [[39, "timeout"]],
+    );
+  });
   it("keeps primitive property reads known without admitting object escapes or writes", () => {
     assert.deepEqual(
       findings("primitive-reads", { unknownValues: "finding" }).map(({ line, messageId }) => [
