@@ -24,6 +24,8 @@ pub(crate) enum TestsCommand {
     Comment(CommentArgs),
     /// Generate a visual dependency/impact relationship graph.
     Graph(GraphArgs),
+    /// Compare a targeted plan with full-suite per-test-file execution observations.
+    Audit(AuditArgs),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -322,6 +324,25 @@ pub(crate) enum WhyFormat {
 pub(crate) enum GraphFormat {
     Mermaid,
     Json,
+}
+
+#[derive(Args, Debug, Clone)]
+pub(crate) struct AuditArgs {
+    /// Versioned plan envelope JSON (including caller-recorded provenance).
+    #[arg(long)]
+    pub(crate) plan: PathBuf,
+    /// Versioned full-suite per-test-file execution observations JSON.
+    #[arg(long)]
+    pub(crate) observations: PathBuf,
+    /// Output format.
+    #[arg(long, value_enum, default_value = "json")]
+    pub(crate) format: AuditFormat,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum AuditFormat {
+    Json,
+    Text,
 }
 
 #[cfg(test)]

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "checkout_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "scope_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "plan": {
+    "changed_files": [
+      "tests/executed.test.mts",
+      "tests/missed.test.mts",
+      "tests/skipped.test.mts",
+      "tests/unknown.test.mts",
+      "tests/partial.test.mts"
+    ],
+    "selected_tests": [
+      {
+        "test_file": "tests/executed.test.mts",
+        "confidence": "high",
+        "reasons": [
+          {
+            "changed_file": "tests/executed.test.mts",
+            "path": [
+              "tests/executed.test.mts"
+            ],
+            "via": [
+              "self"
+            ]
+          }
+        ]
+      },
+      {
+        "test_file": "tests/skipped.test.mts",
+        "confidence": "high",
+        "reasons": [
+          {
+            "changed_file": "tests/skipped.test.mts",
+            "path": [
+              "tests/skipped.test.mts"
+            ],
+            "via": [
+              "self"
+            ]
+          }
+        ]
+      },
+      {
+        "test_file": "tests/unknown.test.mts",
+        "confidence": "high",
+        "reasons": [
+          {
+            "changed_file": "tests/unknown.test.mts",
+            "path": [
+              "tests/unknown.test.mts"
+            ],
+            "via": [
+              "self"
+            ]
+          }
+        ]
+      },
+      {
+        "test_file": "tests/partial.test.mts",
+        "confidence": "high",
+        "reasons": [
+          {
+            "changed_file": "tests/partial.test.mts",
+            "path": [
+              "tests/partial.test.mts"
+            ],
+            "via": [
+              "self"
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": [],
+    "fallback_triggered": false,
+    "fallback_reason": null
+  },
+  "changed_files": [
+    "tests/executed.test.mts",
+    "tests/missed.test.mts",
+    "tests/skipped.test.mts",
+    "tests/unknown.test.mts",
+    "tests/partial.test.mts"
+  ],
+  "changed_symbols": []
+}

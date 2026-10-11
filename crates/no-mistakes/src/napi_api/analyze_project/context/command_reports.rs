@@ -1,3 +1,11 @@
+pub(super) fn artifact_report(
+    request: &AnalyzeReportRequest,
+    options: &AnalyzeProjectOptions,
+) -> Result<Box<RawValue>> {
+    let json = super::options::command_options(request, options)?;
+    napi_raw(crate::napi_api::tests_audit_json_impl(json))
+}
+
 impl AnalyzeProjectContext {
     pub(super) fn command_report(
         &self,

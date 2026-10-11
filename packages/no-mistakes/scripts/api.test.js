@@ -1396,3 +1396,39 @@ test("reverse query declarations export bounded collection diagnostics", () => {
   assert.match(declarations, /incompleteFiles: QueryIncompleteFile\[\];/);
   assert.match(declarations, /incompleteFiles\?: QueryIncompleteFile\[\];/);
 });
+
+test("audit declarations export named artifacts, evidence and async report contracts", () => {
+  const declarations = readFileSync(join(packageRoot, "test-audit-types.d.ts"), "utf8");
+  for (const name of [
+    "TestAuditProvenance",
+    "TestAuditSymbol",
+    "TestAuditPlanArtifact",
+    "TestAuditObservation",
+    "TestAuditObservationsArtifact",
+    "TestsAuditPlanFileInput",
+    "TestsAuditPlanInlineInput",
+    "TestsAuditObservationsFileInput",
+    "TestsAuditObservationsInlineInput",
+    "TestAuditExecutionEvidence",
+    "TestAuditSelectionEvidence",
+    "TestAuditReport",
+  ]) {
+    assert.match(declarations, new RegExp(`export interface ${name} \\{`));
+  }
+  assert.match(declarations, /granularity: "per-test-file";/);
+  assert.match(declarations, /suite: "full";/);
+  assert.match(declarations, /complete: true;/);
+  assert.match(declarations, /changedSymbols: TestAuditSymbol\[\];/);
+  assert.match(declarations, /selectedWithIncompleteTraces: string\[\];/);
+  assert.match(
+    declarations,
+    /export type TestsAuditOptions = TestsAuditPlanInput & TestsAuditObservationsInput;/,
+  );
+  const api = readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");
+  assert.match(
+    api,
+    /export function testsAudit\(\s*options: WithInvocationOptions<TestsAuditOptions>,?\s*\): Promise<TestAuditReport>;/,
+  );
+  const aggregate = readFileSync(join(packageRoot, "analyze-project-types.d.ts"), "utf8");
+  assert.match(aggregate, /type: "testsAudit"; id\?: string \} & TestsAuditOptions/);
+});

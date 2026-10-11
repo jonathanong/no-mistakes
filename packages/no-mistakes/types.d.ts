@@ -4,6 +4,7 @@ export * from "./analyze-project-types";
 export * from "./flow-types";
 export * from "./import-usage-types";
 export * from "./test-types";
+export * from "./test-audit-types";
 export * from "./report-types";
 export * from "./server-contract-types";
 export * from "./ci-types";

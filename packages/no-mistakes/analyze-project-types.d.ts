@@ -1,3 +1,4 @@
+import type { TestsAuditOptions } from "./test-audit-types";
 import type {
   CiEnvOptions,
   CiImpactOptions,
@@ -115,6 +116,7 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "fetches"; id?: string } & BatchedRootConfigOptions<FetchesOptions>)
   | ({ type: "dataPw"; id?: string } & BatchedRootConfigOptions<DataPwOptions>)
   | ({ type: "registryExtension"; id?: string } & Omit<RegistryExtensionOptions, "root">)
+  | ({ type: "testsAudit"; id?: string } & TestsAuditOptions)
   | ({ type: "testsPlan"; id?: string } & BatchedRootTsConfigOptions<TestsPlanOptions>)
   | ({ type: "testsImpact"; id?: string } & BatchedRootTsConfigOptions<TestsImpactOptions>)
   | ({ type: "testsTargets"; id?: string } & Omit<TestsTargetsOptions, "root" | "config">)

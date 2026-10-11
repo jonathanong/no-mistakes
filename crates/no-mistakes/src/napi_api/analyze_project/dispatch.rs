@@ -1,5 +1,9 @@
 use crate::codebase::dependencies::Direction;
 
+pub(super) fn is_artifact_report(report_type: &str) -> bool {
+    report_type == "testsAudit"
+}
+
 pub(super) fn graph_direction(report_type: &str) -> Option<Direction> {
     match report_type {
         "dependencies" => Some(Direction::Deps),

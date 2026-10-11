@@ -54,6 +54,7 @@ export const {
   swiftImporters,
   swiftTestTargets,
   symbols,
+  testsAudit,
   testsComment,
   testsGraph,
   testsGraphMermaid,
