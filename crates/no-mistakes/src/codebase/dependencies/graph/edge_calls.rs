@@ -66,10 +66,11 @@ include!("edge_calls/namespace_table.rs");
 
 impl CallableFileIndex {
     fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
+        let class_scopes: FxHashSet<String> = file.class_scopes.iter().cloned().collect();
         let class_scope_by_id = file
             .callable_scope_ids
             .iter()
-            .filter(|(_, scope)| file.class_scopes.contains(scope))
+            .filter(|(_, scope)| class_scopes.contains(scope))
             .map(|(id, scope)| (*id, scope.clone()))
             .collect::<FxHashMap<_, _>>();
         let members_by_class = index_class_members_by_id(&file.class_member_callable_ids);
@@ -86,7 +87,7 @@ impl CallableFileIndex {
         Self {
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
-            class_scopes: file.class_scopes.iter().cloned().collect(),
+            class_scopes,
             callable_bindings,
             imported: file
                 .imported_bindings
