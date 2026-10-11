@@ -69,7 +69,7 @@ fn imported_helper_mock_is_scoped_to_each_test_even_with_shared_dependency_cache
                 graph_files: &graph_files,
                 visible_files: &visible,
                 manual_mocks: &HashSet::new(),
-                setup_data: &[],
+                setup_files: &[],
                 shared: &shared,
                 dependency_cache: &cache,
                 defer_suppression: false,

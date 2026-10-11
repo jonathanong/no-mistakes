@@ -63,6 +63,9 @@ tests:
 
 Setup paths are repository-root-relative. Setup mocks, including mocks in
 statically imported setup helpers, apply only to the project's matched tests.
+For a test matched by multiple selected projects, the rule checks its dynamic
+imports in each project context. A mock from one project's setup does not
+cover another project's execution.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

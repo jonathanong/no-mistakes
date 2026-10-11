@@ -6,11 +6,13 @@ use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
 use dashmap::DashMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod imported_helpers;
+mod setup_mocks;
+use setup_mocks::{precompute_setup_mock_map, setup_mocks, SetupMockRequest};
 
 pub(crate) fn check_inner(
     root: &Path,
@@ -36,75 +38,79 @@ pub(crate) fn check_inner(
             continue;
         }
         let facts = ast::extract(&file, &source)?;
-        let mut mocks = manual_mocks.clone();
-        mocks.extend(setup_mocks(root, &setup_data, &file, &setup_mock_map));
         let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
-        for setup in config::setup_files_for_test_precomputed(&rel_path, &setup_data) {
+        for setup_files in config::setup_contexts_for_test_precomputed(&rel_path, &setup_data) {
+            let mut mocks = manual_mocks.clone();
+            mocks.extend(setup_mocks(SetupMockRequest {
+                setup_files: &setup_files,
+                mock_map: &setup_mock_map,
+                graph,
+                visible_files: &visible_files,
+                resolver: &resolver,
+                file_cache: &file_cache,
+            })?);
+            mocks.extend(resolve_mock_specifiers(
+                &facts.mock_specifiers,
+                &file,
+                &resolver,
+                None,
+            ));
             mocks.extend(imported_helpers::collect(
                 graph,
-                &setup,
+                &file,
                 &visible_files,
                 &resolver,
                 &file_cache,
                 &mocks,
             )?);
-        }
-        mocks.extend(resolve_mock_specifiers(
-            &facts.mock_specifiers,
-            &file,
-            &resolver,
-            None,
-        ));
-        mocks.extend(imported_helpers::collect(
-            graph,
-            &file,
-            &visible_files,
-            &resolver,
-            &file_cache,
-            &mocks,
-        )?);
-        let mut check_context = DynamicCheckContext {
-            root,
-            file: &file,
-            resolver: &resolver,
-            graph,
-            graph_files: None,
-            file_universe: Some(&visible_files),
-            mocks: &mocks,
-            dependency_cache: &dependency_cache,
-            findings: &mut findings,
-        };
-        for import in facts.dynamic_imports {
-            if has_disable_comment(&source, import.line as u32, RULE_ID) {
-                continue;
-            }
-            check_dynamic_import(&mut check_context, import);
-        }
-        let reachable = reachable::collect(
-            reachable::ReachableContext {
+            let mut check_context = DynamicCheckContext {
                 root,
-                config,
+                file: &file,
                 resolver: &resolver,
                 graph,
                 graph_files: None,
                 file_universe: Some(&visible_files),
-                shared: None,
-                file_cache: Some(&file_cache),
-            },
-            &file,
-            &mocks,
-            &dependency_cache,
-        );
-        let reachable = reachable?;
-        findings.extend(
-            reachable
-                .findings
-                .into_iter()
-                .filter(|entry| !reachable.covered.contains(&entry.key))
-                .map(|entry| entry.finding),
-        );
+                mocks: &mocks,
+                dependency_cache: &dependency_cache,
+                findings: &mut findings,
+            };
+            for import in facts.dynamic_imports.iter().cloned() {
+                if has_disable_comment(&source, import.line as u32, RULE_ID) {
+                    continue;
+                }
+                check_dynamic_import(&mut check_context, import);
+            }
+            let reachable = reachable::collect(
+                reachable::ReachableContext {
+                    root,
+                    config,
+                    resolver: &resolver,
+                    graph,
+                    graph_files: None,
+                    file_universe: Some(&visible_files),
+                    shared: None,
+                    file_cache: Some(&file_cache),
+                },
+                &file,
+                &mocks,
+                &dependency_cache,
+            );
+            let reachable = reachable?;
+            findings.extend(
+                reachable
+                    .findings
+                    .into_iter()
+                    .filter(|entry| !reachable.covered.contains(&entry.key))
+                    .map(|entry| entry.finding),
+            );
+        }
     }
-    findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
+    findings.sort_by(|a, b| {
+        (&a.file, a.line, &a.target)
+            .cmp(&(&b.file, b.line, &b.target))
+            .then_with(|| a.cmp(b))
+    });
+    findings.dedup();
     Ok(findings)
 }
 
@@ -125,34 +131,6 @@ pub(crate) fn resolve_mock_specifiers(
         .collect()
 }
 
-fn precompute_setup_mock_map(
-    root: &Path,
-    test_files: &[PathBuf],
-    setup_data: &[config::ConfigSetupData],
-    resolver: &dyn ImportResolution,
-    graph_files: Option<&GraphFiles>,
-) -> Result<HashMap<PathBuf, HashSet<PathBuf>>> {
-    let unique_setups: HashSet<PathBuf> = test_files
-        .iter()
-        .flat_map(|file| {
-            let rel = crate::codebase::ts_source::relative_slash_path(root, file);
-            config::setup_files_for_test_precomputed(&rel, setup_data)
-        })
-        .collect();
-    unique_setups
-        .into_iter()
-        .map(|setup| {
-            let source = std::fs::read_to_string(&setup)
-                .context(format!("failed to read setup file {}", setup.display()))?;
-            let facts = ast::extract(&setup, &source)?;
-            Ok((
-                setup.clone(),
-                resolve_mock_specifiers(&facts.mock_specifiers, &setup, resolver, graph_files),
-            ))
-        })
-        .collect()
-}
-
 /// Keep resolver results in the lexical namespace owned by the dependency
 /// graph. A scoped resolver may return a canonical target through a symlinked
 /// package root, while graph nodes and discovered manual mocks retain the
@@ -161,22 +139,6 @@ pub(crate) fn remap_resolved_path(graph_files: Option<&GraphFiles>, path: PathBu
     graph_files
         .and_then(|files| files.visible_path(&path).map(Path::to_path_buf))
         .unwrap_or(path)
-}
-
-fn setup_mocks(
-    root: &Path,
-    setup_data: &[config::ConfigSetupData],
-    test_file: &Path,
-    mock_map: &HashMap<PathBuf, HashSet<PathBuf>>,
-) -> HashSet<PathBuf> {
-    let rel_path = crate::codebase::ts_source::relative_slash_path(root, test_file);
-    let mut mocks = HashSet::new();
-    for setup in config::setup_files_for_test_precomputed(&rel_path, setup_data) {
-        if let Some(mocks_for_setup) = mock_map.get(&setup) {
-            mocks.extend(mocks_for_setup.iter().cloned());
-        }
-    }
-    mocks
 }
 
 fn matching_test_files(

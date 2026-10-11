@@ -1,0 +1,14 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      web:
+        include: [web/**/*.test.mts, overlap/**/*.test.mts]
+        exclude: [web/excluded.test.mts]
+        setup_files: [test-helpers/web.setup.mts]
+      other:
+        include: [other/**/*.test.mts, overlap/**/*.test.mts]
+        setup_files: [test-helpers/other.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

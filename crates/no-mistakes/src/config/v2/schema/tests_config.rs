@@ -187,7 +187,7 @@ pub struct TestProjectPolicy {
     pub include: Vec<String>,
     pub exclude: Vec<String>,
     /// Repository-root-relative Vitest setup modules for this project's tests.
-    #[serde(rename = "setup_files")]
+    #[serde(rename = "setup_files", skip_serializing_if = "Vec::is_empty")]
     pub setup_files: Vec<String>,
     #[serde(rename = "integration_suites")]
     pub integration_suites: BTreeMap<String, Vec<String>>,

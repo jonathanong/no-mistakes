@@ -8,27 +8,17 @@ fn project_fixture() -> PathBuf {
     )
 }
 
-fn assert_scoped_findings(findings: &[RuleFinding]) {
+fn assert_scoped_findings(findings: &[RuleFinding], expected: &[&str]) {
     let files = findings
         .iter()
         .map(|finding| finding.file.as_str())
         .collect::<HashSet<_>>();
-    assert_eq!(
-        files,
-        HashSet::from([
-            "web/excluded.test.mts",
-            "web/genuine.test.mts",
-            "other/uncovered.test.mts",
-        ]),
-        "{findings:?}"
-    );
+    assert_eq!(files, expected.iter().copied().collect(), "{findings:?}");
 }
 
 #[test]
 fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() {
     let root = project_fixture();
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    assert_scoped_findings(&check(&root, &config, None).unwrap());
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let facts = crate::codebase::check_facts::collect_check_facts(
         &root,
@@ -40,7 +30,42 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
             ..Default::default()
         },
     );
-    assert_scoped_findings(&check_with_facts(&root, &config, None, &facts).unwrap());
+    for (config_file, expected) in [
+        (
+            ".no-mistakes.yml",
+            vec![
+                "web/excluded.test.mts",
+                "web/genuine.test.mts",
+                "other/uncovered.test.mts",
+                "overlap/shared.test.mts",
+                "overlap/helper-cut.test.mts",
+            ],
+        ),
+        (
+            ".no-mistakes-both.yml",
+            vec![
+                "web/excluded.test.mts",
+                "web/genuine.test.mts",
+                "overlap/helper-cut.test.mts",
+            ],
+        ),
+        (
+            ".no-mistakes-selected.yml",
+            vec!["web/genuine.test.mts", "overlap/helper-cut.test.mts"],
+        ),
+        (
+            ".no-mistakes-playwright.yml",
+            vec!["overlap/shared.test.mts"],
+        ),
+    ] {
+        let config =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(config_file))).unwrap();
+        assert_scoped_findings(&check(&root, &config, None).unwrap(), &expected);
+        assert_scoped_findings(
+            &check_with_facts(&root, &config, None, &facts).unwrap(),
+            &expected,
+        );
+    }
 }
 
 #[test]

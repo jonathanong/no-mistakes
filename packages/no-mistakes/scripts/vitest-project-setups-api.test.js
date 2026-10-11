@@ -14,13 +14,29 @@ test(
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const report = await cjs.check({ root });
-    assert.deepEqual(await esm.check({ root }), report);
-    assert.deepEqual(report.rules.map((finding) => finding.file).sort(), [
-      "other/uncovered.test.mts",
-      "web/excluded.test.mts",
-      "web/genuine.test.mts",
-    ]);
+    for (const [config, expected] of [
+      [
+        ".no-mistakes.yml",
+        [
+          "other/uncovered.test.mts",
+          "overlap/helper-cut.test.mts",
+          "overlap/shared.test.mts",
+          "web/excluded.test.mts",
+          "web/genuine.test.mts",
+        ],
+      ],
+      [
+        ".no-mistakes-both.yml",
+        ["overlap/helper-cut.test.mts", "web/excluded.test.mts", "web/genuine.test.mts"],
+      ],
+      [".no-mistakes-selected.yml", ["overlap/helper-cut.test.mts", "web/genuine.test.mts"]],
+      [".no-mistakes-playwright.yml", ["overlap/shared.test.mts"]],
+    ]) {
+      const options = { root, config: join(root, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.rules.map((finding) => finding.file).sort(), expected);
+    }
     for (const [config, expected] of [
       [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
       [".no-mistakes-invalid.yml", "invalid repository-relative path"],
