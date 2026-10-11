@@ -104,7 +104,15 @@ fn check_json_accounts_for_each_same_line_dynamic_import_suppression() {
 
 #[test]
 fn check_json_reads_explicit_gitignored_test_configs_through_request_sources() {
-    let root = static_check_fixture("aggregate-dynamic-import-gitignored-config");
+    let fixture = crate::test_support::materialize_gitignore_fixture(
+        "aggregate-dynamic-import-gitignored-config",
+    );
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let config = root.join("vitest.config.mts");
+    assert!(config.is_file());
+    assert!(!crate::codebase::ts_source::discover_files(&root, &[]).contains(&config));
     let output = check_json_impl(crate::napi_api::options::test_json_arg(
         json!({ "root": root }).to_string(),
     ))

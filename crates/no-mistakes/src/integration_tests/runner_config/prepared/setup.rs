@@ -124,16 +124,8 @@ fn add_framework_specs(
     if !needs_projects && !force {
         return;
     }
-    let raw_configs = configs.map_or_else(
-        || project_config::discovered_config_paths(root, framework, visible_paths),
-        |configs| {
-            project_config::expand_explicit_config_values(
-                root,
-                &configs.values(),
-                &visible_paths.iter().cloned().collect(),
-            )
-        },
-    );
+    let raw_configs =
+        project_config::config_values_from_visible(root, framework, configs, visible_paths);
     specs.extend(raw_configs.into_iter().map(|raw| RunnerConfigSpec {
         framework,
         path: crate::codebase::ts_resolver::normalize_path(&root.join(&raw)),

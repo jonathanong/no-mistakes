@@ -21,8 +21,10 @@ impl PreparedTargets {
             .cloned()
             .map(|project| {
                 Ok(super::ConfigSetupData {
+                    workspace: false,
                     policy_filter: None,
                     filter: super::TestFilter {
+                        alternatives: Vec::new(),
                         include: build_globset(&project.include)?,
                         include_regex: Vec::new(),
                         exclude: build_globset(&project.exclude)?,

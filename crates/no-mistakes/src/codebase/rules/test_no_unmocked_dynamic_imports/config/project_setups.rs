@@ -34,6 +34,7 @@ pub(in super::super) fn explicit_project_setup_data(
             "tests.vitest.projects.{name}.setup_files requires a nonempty include matcher"
         );
         let filter = TestFilter {
+            alternatives: Vec::new(),
             include: build_globset(&project.include)?,
             include_regex: Vec::new(),
             exclude: build_globset(&project.exclude)?,
@@ -57,6 +58,7 @@ pub(in super::super) fn explicit_project_setup_data(
         let mut seen = std::collections::HashSet::new();
         setup_files.retain(|path| seen.insert(path.clone()));
         data.push(ConfigSetupData {
+            workspace: false,
             filter,
             policy_filter: None,
             setup_files,
@@ -154,6 +156,17 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
         if projects.is_empty() {
             contexts.extend(vitest_configs.iter().map(|data| data.setup_files.clone()));
         } else {
+            contexts.extend(
+                vitest_configs
+                    .iter()
+                    .filter(|data| {
+                        data.project_name.is_some()
+                            && !projects
+                                .iter()
+                                .any(|project| project.project_name == data.project_name)
+                    })
+                    .map(|data| data.setup_files.clone()),
+            );
             for project in projects {
                 let configs = vitest_configs
                     .iter()

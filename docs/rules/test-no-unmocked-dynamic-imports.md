@@ -80,6 +80,10 @@ independent project config files and `extends: false` do not, and an explicit
 empty `setupFiles` list clears inherited setups.
 A Playwright-only target leaves unrelated Vitest configs unparsed, so an invalid
 Vitest config does not suppress findings from the selected Playwright project.
+Implicit `vitest.workspace.*` and `vitest.projects.*` catalogs supply project
+matchers and setups, taking precedence over `vitest.config.*` during discovery.
+Recovered named projects remain separate executions even when only some of
+them have explicit project policies.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

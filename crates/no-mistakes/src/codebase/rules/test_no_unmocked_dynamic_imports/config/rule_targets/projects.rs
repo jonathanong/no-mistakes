@@ -47,16 +47,7 @@ fn from_facts(
     visible: &[PathBuf],
     facts: &RunnerConfigFacts,
 ) -> Result<Vec<ConfigProject>> {
-    let paths = configs.map_or_else(
-        || project_config::discovered_config_paths(root, framework, visible),
-        |configs| {
-            project_config::expand_explicit_config_values(
-                root,
-                &configs.values(),
-                &visible.iter().cloned().collect(),
-            )
-        },
-    );
+    let paths = project_config::config_values_from_visible(root, framework, configs, visible);
     let mut projects = Vec::new();
     for raw in paths {
         let path = crate::codebase::ts_resolver::normalize_path(&root.join(raw));

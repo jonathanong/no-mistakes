@@ -3,6 +3,7 @@ mod filter;
 mod prepared;
 mod project_setups;
 mod rule_targets;
+mod runner_catalog;
 mod standalone;
 mod vitest_setups;
 pub(super) use standalone::prepare_standalone;
@@ -23,6 +24,7 @@ pub(super) use project_setups::{
 pub(crate) use project_setups::{needs_playwright_configs, needs_vitest_configs};
 
 pub struct ConfigSetupData {
+    workspace: bool,
     filter: TestFilter,
     policy_filter: Option<TestFilter>,
     pub setup_files: Vec<PathBuf>,
@@ -100,6 +102,7 @@ fn precompute_setup_data_from_config_files_inner(
             extract_test_property_strings(&source, "exclude"),
         );
         let filter = TestFilter {
+            alternatives: Vec::new(),
             include: build_globset(&includes)?,
             include_regex: build_regexes(&extract_test_regexes(&source))?,
             exclude: build_globset(&excludes)?,
@@ -112,6 +115,7 @@ fn precompute_setup_data_from_config_files_inner(
         );
         let setup_files = setup_files?;
         result.push(ConfigSetupData {
+            workspace: false,
             filter,
             policy_filter: None,
             setup_files,

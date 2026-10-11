@@ -116,6 +116,12 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         (".no-mistakes-cleared.yml", vec!["web/covered.test.mts"]),
         (".no-mistakes-referenced.yml", vec!["web/covered.test.mts"]),
         (
+            ".no-mistakes-partial-projects.yml",
+            vec!["web/covered.test.mts"],
+        ),
+        (".no-mistakes-partial-app.yml", vec!["web/covered.test.mts"]),
+        (".no-mistakes-partial-selected.yml", vec![]),
+        (
             ".no-mistakes-playwright-invalid-vitest.yml",
             vec!["web/covered.test.mts"],
         ),

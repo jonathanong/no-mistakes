@@ -14,16 +14,30 @@ pub struct TestFilter {
     pub(super) include: GlobSet,
     pub(super) include_regex: Vec<Regex>,
     pub(super) exclude: GlobSet,
+    pub(super) alternatives: Vec<TestFilter>,
 }
 
 impl TestFilter {
     pub fn is_match(&self, rel_path: &str) -> bool {
-        let included = self.include.is_match(rel_path)
+        let included = self
+            .alternatives
+            .iter()
+            .any(|filter| filter.is_match(rel_path))
+            || self.include.is_match(rel_path)
             || self
                 .include_regex
                 .iter()
                 .any(|regex| regex.is_match(rel_path));
         included && !self.exclude.is_match(rel_path)
+    }
+
+    pub(super) fn union(filters: Vec<Self>, excludes: &[String]) -> Result<Self> {
+        Ok(Self {
+            include: build_globset(&[])?,
+            include_regex: Vec::new(),
+            exclude: build_globset(excludes)?,
+            alternatives: filters,
+        })
     }
 }
 
@@ -107,6 +121,7 @@ pub(super) fn test_filter_with_targets(
             .collect();
     }
     Ok(TestFilter {
+        alternatives: Vec::new(),
         include: build_globset(&includes)?,
         include_regex: build_regexes(&include_regex)?,
         exclude: build_globset(&excludes)?,

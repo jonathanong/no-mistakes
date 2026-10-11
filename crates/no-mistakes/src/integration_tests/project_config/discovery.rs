@@ -1,5 +1,24 @@
 use super::Framework;
+use crate::config::v2::schema::StringOrList;
 use std::path::{Path, PathBuf};
+
+pub(crate) fn config_values_from_visible(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    visible: &[PathBuf],
+) -> Vec<String> {
+    configs.map_or_else(
+        || discovered_config_paths(root, framework, visible),
+        |configs| {
+            super::globs::expand_explicit_config_values(
+                root,
+                &configs.values(),
+                &visible.iter().cloned().collect(),
+            )
+        },
+    )
+}
 
 const PLAYWRIGHT_CONFIGS: &[&str] = &[
     "playwright.config.ts",

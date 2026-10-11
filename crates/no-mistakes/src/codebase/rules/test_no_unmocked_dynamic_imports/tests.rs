@@ -17,6 +17,7 @@ mod mock_cut;
 mod mock_specifiers;
 mod project_setups;
 mod visibility;
+mod workspaces;
 
 pub(super) fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(

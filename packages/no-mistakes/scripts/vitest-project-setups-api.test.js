@@ -71,11 +71,14 @@ test(
       [".no-mistakes-playwright-invalid-vitest.yml", ["web/covered.test.mts"]],
       [".no-mistakes-playwright-config.yml", ["web/covered.test.mts"]],
       [".no-mistakes-mixed-config-runners.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-partial-projects.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-partial-app.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-partial-selected.yml", []],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
-      assert.deepEqual(report.rules.map((finding) => finding.file).sort(), expected);
+      assert.deepEqual(report.rules.map((finding) => finding.file).sort(), expected, config);
     }
     for (const [config, expected] of [
       [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
@@ -90,6 +93,25 @@ test(
         invalid.warnings.some((warning) => warning.includes(expected)),
         invalid.warnings,
       );
+    }
+  },
+);
+
+test(
+  "compiled checks use implicit Vitest workspace and project catalogs",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const kind of ["workspace", "projects"]) {
+      const options = { root: join(root, "../test-no-unmocked-dynamic-imports-workspaces", kind) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(
+        report.rules.map((finding) => finding.file),
+        ["custom/other.case.mts"],
+      );
+      assert.deepEqual(report.warnings, []);
     }
   },
 );

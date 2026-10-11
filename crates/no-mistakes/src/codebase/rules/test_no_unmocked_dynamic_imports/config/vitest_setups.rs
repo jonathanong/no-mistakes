@@ -53,6 +53,7 @@ pub(super) fn from_facts(
                 .filter(|policy| !policy.include.is_empty())
                 .map(|policy| {
                     Ok::<_, anyhow::Error>(TestFilter {
+                        alternatives: Vec::new(),
                         include: build_globset(&policy.include)?,
                         include_regex: Vec::new(),
                         exclude: build_globset(&policy.exclude)?,
@@ -60,8 +61,10 @@ pub(super) fn from_facts(
                 })
                 .transpose()?;
             Ok(ConfigSetupData {
+                workspace: project.workspace,
                 policy_filter,
                 filter: TestFilter {
+                    alternatives: Vec::new(),
                     include: build_globset(&project.include)?,
                     include_regex: Vec::new(),
                     exclude: build_globset(&project.exclude)?,
