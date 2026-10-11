@@ -54,6 +54,7 @@ fn finding_for_file(
         return None;
     }
     Some(RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, path),
         line: 1,

@@ -67,16 +67,13 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
-    let profiles = crate::codebase::postgres::configured_embedded_sql_options(config, &[RULE_ID])?;
-    let catalog_paths =
-        crate::codebase::postgres::configured_schema_catalog_paths(config, &[RULE_ID])?;
-    let facts = crate::codebase::postgres::prepare_embedded_sql_facts(
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
         root,
         all_files,
         std::sync::Arc::clone(sources),
-        profiles,
-        catalog_paths,
-    );
+        config,
+        &[RULE_ID],
+    )?;
     check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
 }
 

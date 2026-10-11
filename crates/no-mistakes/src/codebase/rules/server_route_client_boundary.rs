@@ -167,6 +167,7 @@ fn client_findings_for_file(root: &Path, path: &Path, facts: &FileFacts) -> Vec<
         .iter()
         .copied()
         .map(|line| RuleFinding {
+        source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line,

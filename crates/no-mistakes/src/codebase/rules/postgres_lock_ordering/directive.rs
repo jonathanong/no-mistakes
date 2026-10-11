@@ -7,7 +7,7 @@ pub(super) fn contains_for_update(sql: &str) -> bool {
 }
 
 /// Offset of the first exclusive-lock clause in already-lowercased text.
-fn lock_clause_offset(lowered: &str) -> Option<usize> {
+pub(super) fn lock_clause_offset(lowered: &str) -> Option<usize> {
     ["for update", "for no key update"]
         .iter()
         .filter_map(|clause| lowered.find(clause))

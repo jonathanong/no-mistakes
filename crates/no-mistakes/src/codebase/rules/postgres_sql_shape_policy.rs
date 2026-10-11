@@ -73,13 +73,14 @@ pub(crate) fn check_with_files_and_sources(
         config,
         &[RULE_ID],
     )?;
-    check_with_files_sources_and_facts(root, config, all_files, &facts)
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
 }
 
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
@@ -102,7 +103,7 @@ pub(crate) fn check_with_files_sources_and_facts(
                 .into_iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
                 .collect();
-            scan::scan(root, &compiled, &files, facts)
+            scan::scan(root, &compiled, &files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -173,3 +174,5 @@ mod function_projection_tests;
 
 #[cfg(test)]
 mod clause_tests;
+
+mod select_findings;

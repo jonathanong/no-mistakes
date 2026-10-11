@@ -1,4 +1,5 @@
 use super::*;
+mod origins;
 
 pub(super) fn alias_or_append(
     expr: &Expression<'_>,
@@ -38,15 +39,10 @@ pub(super) fn append(
     if !aliases.contains(receiver.name.as_str()) {
         return None;
     }
-    let arg = call.arguments.first()?.as_expression()?;
+    let arg = call.arguments[0].as_expression()?;
     let mut names = HashSet::new();
     for param in &params.items {
         super::super::super::for_each_bound_name(&param.pattern, &mut |name| {
-            names.insert(name.to_string());
-        });
-    }
-    if let Some(rest) = &params.rest {
-        super::super::super::for_each_bound_name(&rest.rest.argument, &mut |name| {
             names.insert(name.to_string());
         });
     }
@@ -64,10 +60,12 @@ pub(super) fn append(
     )?;
     let line = byte_offset_to_line(source, call.span.start as usize);
     let positions = source_positions::for_expression(arg, source, call.span.start as usize, line);
+    let origins = origins::collect(arg, source, &sql);
     Some(ParameterFragment {
         sql,
         line,
         positions,
+        origins,
     })
 }
 

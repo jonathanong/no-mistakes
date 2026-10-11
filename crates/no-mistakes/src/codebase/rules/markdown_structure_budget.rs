@@ -71,7 +71,8 @@ pub(crate) fn check_with_files_sources_and_facts(
                 (false, None) => {},
                 (true, Some(entry)) if *entry == current => {},
                 (true, Some(_)) => findings.push(stale(&file, "visual counts no longer match the baseline")),
-                (true, None) => findings.push(RuleFinding { rule: RULE_ID.to_string(), file, line: 1, message: format!("oversized Markdown has {tables} tables (max {max_tables}) and {mermaid} Mermaid blocks (max {max_mermaid})"), import: None, target: None }),
+                (true, None) => findings.push(RuleFinding {
+        source_offset: None, rule: RULE_ID.to_string(), file, line: 1, message: format!("oversized Markdown has {tables} tables (max {max_tables}) and {mermaid} Mermaid blocks (max {max_mermaid})"), import: None, target: None }),
             }
         }
         for file in baseline.keys() {
@@ -116,6 +117,7 @@ fn read_baseline(
 }
 fn stale(file: &str, message: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

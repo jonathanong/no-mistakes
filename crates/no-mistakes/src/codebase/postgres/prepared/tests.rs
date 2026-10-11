@@ -160,6 +160,7 @@ fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
 }
 
 mod bound_demand;
+mod variant_demand;
 
 mod bind_column_uses;
 mod copy_recovery;

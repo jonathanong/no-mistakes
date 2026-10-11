@@ -150,6 +150,7 @@ pub(super) fn finding(
     value: &str,
 ) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

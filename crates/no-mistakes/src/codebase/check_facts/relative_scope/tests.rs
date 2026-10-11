@@ -126,6 +126,7 @@ fn files_without_relative_candidates_are_left_untouched() {
                     calls: vec![call],
                     call_spans: vec![(0, 0)],
                     fragments: Vec::new(),
+                    fragment_variants: Vec::new(),
                     matched_factory_names: Vec::new(),
                     matched_type_names: Vec::new(),
                     pending_relative: Default::default(),

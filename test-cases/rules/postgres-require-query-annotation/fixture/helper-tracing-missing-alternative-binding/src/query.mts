@@ -25,5 +25,5 @@ export function divergentIfElse(flag: boolean) {
     const onlyElse = "/* else branch */ SELECT 2";
     query = onlyElse;
   }
-  write(query); // unanalyzable:divergent-if-else
+  write(query); // Both branches assign complete annotated SQL.
 }

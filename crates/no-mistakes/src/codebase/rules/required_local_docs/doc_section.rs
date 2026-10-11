@@ -97,6 +97,7 @@ pub(super) fn scan_doc_section_with_sources(
         let heading_text = opts.required_heading.trim_start_matches('#').trim();
         if !crate::codebase::markdown_sections::has_section(&content, heading_text) {
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: REQUIRED_DOC_SECTION_RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,

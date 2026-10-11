@@ -83,7 +83,7 @@ pub(super) fn span_line(span: sqlparser::tokenizer::Span, fallback: usize) -> us
     }
 }
 
-fn arg_expr(arg: &FunctionArg) -> &FunctionArgExpr {
+pub(in crate::codebase::postgres::statements) fn arg_expr(arg: &FunctionArg) -> &FunctionArgExpr {
     match arg {
         FunctionArg::Unnamed(expr)
         | FunctionArg::Named { arg: expr, .. }

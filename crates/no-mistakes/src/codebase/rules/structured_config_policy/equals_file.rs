@@ -94,6 +94,7 @@ fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_ke
 
 fn finding(file: &str, assertion: &ValueAssertion, message: String) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

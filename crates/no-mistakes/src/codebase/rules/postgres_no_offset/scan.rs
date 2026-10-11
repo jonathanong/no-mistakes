@@ -1,10 +1,11 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::{
-    recovered_sql_may_select, EmbeddedSqlCall, EmbeddedSqlKind, OffsetUse, SqlOffsetFact,
+    recovered_sql_may_select, EmbeddedSqlCall, OffsetUse, SqlOffsetFact,
 };
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
+use crate::fx::FxHashMap;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -16,6 +17,7 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files {
         let rel = relative_slash_path(root, path);
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);
@@ -29,21 +31,29 @@ pub(super) fn scan(
         let embedded = profile
             .map(|profile| facts.embedded_sql(path, profile))
             .transpose()?;
-        let all_calls = embedded.into_iter().flat_map(|file| file.calls.iter());
+        let all_calls = embedded
+            .into_iter()
+            .flat_map(|file| file.calls.iter().enumerate())
+            .flat_map(|(index, call)| {
+                call.statement_calls()
+                    .map(move |version| (index, !call.variants.is_empty(), version))
+            });
         if opts.fail_unanalyzable {
             // Calls without recovered text have no statement facts to pair below.
             findings.extend(
                 all_calls
                     .clone()
-                    .filter(|call| call.kind == EmbeddedSqlKind::Dynamic && call.sql_text.is_none())
-                    .map(|call| unanalyzable(&rel, call)),
+                    .filter(|(_, _, call)| call.is_unanalyzable() && call.sql_text.is_none())
+                    .map(|(_, _, call)| unanalyzable(&rel, &call)),
             );
         }
-        let mut calls = all_calls.filter(|call| call.sql_text.is_some());
+        let mut calls = all_calls.filter(|(_, _, call)| call.sql_text.is_some());
         let source = profile.map(|_| sources.read_path(path)).transpose()?;
         let mut ordinal = 0;
+        let mut variant_ordinals = FxHashMap::default();
         for statement in statements {
-            let call = calls.next();
+            let projected_call = calls.next();
+            let call = projected_call.as_ref().map(|(_, _, call)| call.as_ref());
             // Only a verified prefix was recovered; an opaque tail could add OFFSET.
             let opaque_tail = opts.fail_unanalyzable && statement.offset_uses.is_empty();
             if let Some(call) = call.filter(|call| opaque_tail && dynamic_select_prefix(call)) {
@@ -59,28 +69,51 @@ pub(super) fn scan(
                 )
                 .is_some()
             });
-            for offset in &statement.offset_uses {
-                ordinal += 1;
+            for (offset_index, offset) in statement.offset_uses.iter().enumerate() {
+                let site = crate::codebase::postgres::statements::SqlFactSite::Offset(offset_index);
+                let position = statement
+                    .variant_locations
+                    .as_ref()
+                    .and_then(|locations| locations.position(site.clone()));
+                let occurrence = match position.and_then(|position| position.source_offset) {
+                    Some(source_offset) => {
+                        *variant_ordinals.entry(source_offset).or_insert_with(|| {
+                            ordinal += 1;
+                            ordinal
+                        })
+                    }
+                    None => {
+                        ordinal += 1;
+                        ordinal
+                    }
+                };
                 let mut offset = *offset;
                 if let Some(call) = disabled_call {
                     // Preserve existing executor directives through the common suppression pass.
                     offset.line = call.line as usize;
                 }
-                findings.push(finding(&rel, &offset, ordinal));
+                dedup.push(
+                    &mut findings,
+                    statement,
+                    site,
+                    source.as_deref(),
+                    finding(&rel, &offset, occurrence),
+                );
             }
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    crate::codebase::rules::sort_postgres_findings(&mut findings);
     Ok(findings)
 }
 
-fn dynamic_select_prefix(call: &&EmbeddedSqlCall) -> bool {
-    call.kind == EmbeddedSqlKind::Dynamic && recovered_sql_may_select(call.sql_text.as_deref())
+fn dynamic_select_prefix(call: &EmbeddedSqlCall) -> bool {
+    call.is_unanalyzable() && recovered_sql_may_select(call.sql_text.as_deref())
 }
 
 fn unanalyzable(file: &str, call: &EmbeddedSqlCall) -> RuleFinding {
     let line = call.line.max(1) as usize;
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -99,6 +132,7 @@ fn finding(file: &str, offset: &SqlOffsetFact, ordinal: usize) -> RuleFinding {
         OffsetUse::Other => "do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
     };
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

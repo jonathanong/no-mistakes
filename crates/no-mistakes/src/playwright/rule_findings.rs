@@ -50,6 +50,7 @@ fn coverage_findings(report: &CoverageReport, routes: bool, selectors: bool) -> 
     if routes {
         for route in report.routes.iter().filter(|route| !route.covered) {
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: PLAYWRIGHT_COVERAGE.to_string(),
                 file: route.file.clone(),
                 line: 1,
@@ -71,6 +72,7 @@ fn coverage_findings(report: &CoverageReport, routes: bool, selectors: bool) -> 
         .filter(|selector| !selector.covered && !selector.unsupported_dynamic)
     {
         findings.push(RuleFinding {
+            source_offset: None,
             rule: PLAYWRIGHT_COVERAGE.to_string(),
             file: selector.file.clone(),
             line: 1,
@@ -114,6 +116,7 @@ fn unique_findings(
                 unique_test_ids.then_some(PLAYWRIGHT_UNIQUE_TEST_IDS)
             }?;
             Some(RuleFinding {
+                source_offset: None,
                 rule: rule.to_string(),
                 file: selector.file.clone(),
                 line: 1,
@@ -153,6 +156,7 @@ fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
             .entry((test_file.as_ref().clone(), *line as usize, locator.clone()))
             .or_insert_with(|| {
                 RuleFinding {
+        source_offset: None,
                     rule: PLAYWRIGHT_PREFER_TEST_ID_LOCATORS.to_string(),
                     file: test_file.as_ref().clone(),
                     line: *line as usize,

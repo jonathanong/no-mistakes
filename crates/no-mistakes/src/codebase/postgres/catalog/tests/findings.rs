@@ -57,6 +57,7 @@ fn catalog_findings_use_the_object_ref_as_the_locator() {
     assert_eq!(
         finding,
         RuleFinding {
+            source_offset: None,
             rule: "schema-catalog-test-rule".to_string(),
             file: "db/schema.json".to_string(),
             line: 1,
@@ -100,6 +101,7 @@ fn allow_list_suppresses_matches_and_reports_stale_entries() {
             finding("table:accounts"),
             finding("table:events"),
             RuleFinding {
+                source_offset: None,
                 target: None,
                 ..finding("table:events")
             },
@@ -169,6 +171,7 @@ fn allow_list_rejects_empty_invalid_and_duplicate_entries() {
 
 fn finding(target: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: "schema-catalog-test-rule".to_string(),
         file: "db/schema.json".to_string(),
         line: 1,

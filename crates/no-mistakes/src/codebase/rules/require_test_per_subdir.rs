@@ -93,6 +93,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
             if !has_test {
                 let rel = relative_slash_path(root, &subdir);
                 findings.push(RuleFinding {
+                    source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),
                     line: 1,

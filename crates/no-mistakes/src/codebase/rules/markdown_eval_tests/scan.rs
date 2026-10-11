@@ -24,6 +24,7 @@ pub(super) fn scan(
             continue;
         }
         findings.push(RuleFinding {
+        source_offset: None,
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: 1,
@@ -39,6 +40,7 @@ pub(super) fn scan(
             continue;
         }
         findings.push(RuleFinding {
+        source_offset: None,
             rule: RULE_ID.to_string(),
             file: allowed.clone(),
             line: 1,

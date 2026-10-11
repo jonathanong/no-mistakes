@@ -144,6 +144,7 @@ fn check_file(
                     .any(|target_root| ban.globset.is_match(relative_slash_path(target_root, path)))
         })
         .map(|ban| RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: 1,

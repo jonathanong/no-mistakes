@@ -159,6 +159,7 @@ fn issue_finding(
 
 fn finding(file: String, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file,
         line: 1,

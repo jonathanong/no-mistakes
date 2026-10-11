@@ -16,6 +16,7 @@ fn shared_suppression_only_reads_repo_relative_paths() {
 
     let mut findings = vec![
         RuleFinding {
+            source_offset: None,
             rule: "my-rule".to_string(),
             file: "safe.ts".to_string(),
             line: 1,
@@ -24,6 +25,7 @@ fn shared_suppression_only_reads_repo_relative_paths() {
             target: None,
         },
         RuleFinding {
+            source_offset: None,
             rule: "my-rule".to_string(),
             file: "../safe.ts".to_string(),
             line: 1,
@@ -32,6 +34,7 @@ fn shared_suppression_only_reads_repo_relative_paths() {
             target: None,
         },
         RuleFinding {
+            source_offset: None,
             rule: "my-rule".to_string(),
             file: root.join("safe.ts").display().to_string(),
             line: 1,
@@ -62,6 +65,7 @@ fn shared_suppression_keeps_findings_when_root_is_missing() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path().join("missing");
     let mut findings = vec![RuleFinding {
+        source_offset: None,
         rule: "my-rule".to_string(),
         file: "safe.ts".to_string(),
         line: 1,
@@ -86,6 +90,7 @@ fn shared_suppression_does_not_follow_symlinks_outside_root() {
     std::os::unix::fs::symlink(outside.path(), root.join("link.ts")).unwrap();
 
     let mut findings = vec![RuleFinding {
+        source_offset: None,
         rule: "my-rule".to_string(),
         file: "link.ts".to_string(),
         line: 1,
@@ -107,6 +112,7 @@ fn shared_suppression_only_reads_regular_files() {
     std::fs::create_dir(root.join("not-a-file.ts")).unwrap();
 
     let mut findings = vec![RuleFinding {
+        source_offset: None,
         rule: "my-rule".to_string(),
         file: "not-a-file.ts".to_string(),
         line: 1,
@@ -134,6 +140,7 @@ fn shared_suppression_reuses_the_lexical_symlink_source_slot() {
     assert!(sources.read_path(&link).is_ok());
 
     let mut findings = vec![RuleFinding {
+        source_offset: None,
         rule: "my-rule".to_string(),
         file: "link.ts".to_string(),
         line: 1,
@@ -158,6 +165,7 @@ fn shared_suppression_uses_frozen_source_after_file_deletion() {
     std::fs::remove_file(&path).unwrap();
 
     let mut findings = vec![RuleFinding {
+        source_offset: None,
         rule: "my-rule".to_string(),
         file: "safe.ts".to_string(),
         line: 1,
@@ -178,6 +186,7 @@ fn request_sources_reject_parent_paths_outside_the_frozen_inventory() {
     let root = fixture.join("request");
     let sources = super::source_store_for_files(&[root.join("safe.md")]);
     let mut findings = vec![RuleFinding {
+        source_offset: None,
         rule: "my-rule".to_string(),
         file: "../outside.md".to_string(),
         line: 1,

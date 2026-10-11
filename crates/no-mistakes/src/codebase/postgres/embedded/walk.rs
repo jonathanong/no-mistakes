@@ -6,9 +6,11 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
+mod flow;
 pub(crate) mod resolve;
 mod scope;
 mod state;
+mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
@@ -87,14 +89,38 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
+    fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
+        self.refresh_builder_identity(declaration);
+        let variants = declaration
+            .init
+            .as_ref()
+            .and_then(|init| self.recover_variants(init));
+        walk::walk_variable_declarator(self, declaration);
+        self.initialize_variants(declaration, variants);
+    }
+
+    fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {
+        if let oxc_ast::ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(id) =
+            &expression.argument
+        {
+            self.mark_dynamic(id.name.as_str());
+        }
+        walk::walk_update_expression(self, expression);
+    }
+
     fn visit_assignment_expression(&mut self, assign: &oxc_ast::ast::AssignmentExpression<'a>) {
+        let identity = self.assignment_builder_identity(assign);
+        let variants = self.assigned_variants(assign);
+        walk::walk_assignment_expression(self, assign);
         if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
             self.mark_dynamic(ident.name.as_str());
+            self.set_variants(ident.name.as_str(), variants);
+            self.set_builder_identity(ident.name.as_str(), identity);
         }
-        walk::walk_assignment_expression(self, assign);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        let helper_effect = self.parameter_helper_effect(call);
         if self.suppress_nested_builder_fragments == 0 {
             if let Some(argument) = call.arguments.first() {
                 if let Some(sql_text) = resolve::appended_builder_fragment(call, self) {
@@ -104,6 +130,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
                             argument.span().start as usize,
                         ),
                         Some(sql_text),
+                        argument.as_expression(),
                     );
                 } else if resolve::is_builder_append(call, self) {
                     self.push_fragment(
@@ -112,32 +139,41 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
                             argument.span().start as usize,
                         ),
                         None,
+                        argument.as_expression(),
                     );
                 }
             }
         }
+        let variants = self
+            .appended_variants(call)
+            .map(|(name, values)| (name.to_string(), values));
         resolve::apply_append(self, call);
+        if let Some((name, values)) = variants {
+            self.set_variants(&name, values);
+        }
         resolve::record_executor_call(self, call);
         walk::walk_call_expression(self, call);
+        self.apply_parameter_helper_effect(helper_effect);
     }
 
     fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
-        if let Some(argument) = &statement.argument {
-            if let Some(sql_text) = resolve::builder_fragment(argument, self) {
-                self.push_fragment(
-                    crate::codebase::ts_source::byte_offset_to_line(
-                        self.source,
-                        argument.span().start as usize,
-                    ),
-                    Some(sql_text),
-                );
-                self.suppress_nested_builder_fragments += 1;
-                walk::walk_return_statement(self, statement);
-                self.suppress_nested_builder_fragments -= 1;
-                return;
-            }
-        }
-        walk::walk_return_statement(self, statement);
+        flow::returned(self, statement);
+    }
+    fn visit_throw_statement(&mut self, statement: &oxc_ast::ast::ThrowStatement<'a>) {
+        walk::walk_throw_statement(self, statement);
+        self.invalidate_execution_variants();
+    }
+    fn visit_break_statement(&mut self, statement: &oxc_ast::ast::BreakStatement<'a>) {
+        walk::walk_break_statement(self, statement);
+        self.invalidate_execution_variants();
+    }
+    fn visit_continue_statement(&mut self, statement: &oxc_ast::ast::ContinueStatement<'a>) {
+        walk::walk_continue_statement(self, statement);
+        self.invalidate_execution_variants();
+    }
+    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) {
+        walk::walk_try_statement(self, statement);
+        self.invalidate_execution_variants();
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
@@ -169,29 +205,15 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
-        self.visit_expression(&statement.discriminant);
-        self.push_scope();
-        for case in &statement.cases {
-            resolve::record_statements(&case.consequent, self);
-        }
-        self.with_control_flow(|visitor| visitor.visit_switch_cases(&statement.cases));
-        self.pop_scope();
+        variants::switch::statement(self, statement);
     }
-
     fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
-        self.with_control_flow(|visitor| walk::walk_if_statement(visitor, statement));
+        variants::control::if_statement(self, statement);
     }
-
     fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {
-        self.visit_expression(&expr.test);
-        self.with_control_flow(|visitor| {
-            visitor.visit_expression(&expr.consequent);
-            visitor.visit_expression(&expr.alternate);
-        });
+        variants::control::conditional(self, expr);
     }
-
     fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
-        self.visit_expression(&expr.left);
-        self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
+        variants::control::logical(self, expr);
     }
 }

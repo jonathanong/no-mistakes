@@ -94,6 +94,7 @@ fn sibling_exists(files: &[PathBuf], package_json: &Path, name: &str) -> bool {
 
 fn finding(rel: &str, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line: 1,

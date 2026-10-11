@@ -71,6 +71,7 @@ fn collect_matches(
             continue;
         }
         findings.push(RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: rel.to_string(),
             line,

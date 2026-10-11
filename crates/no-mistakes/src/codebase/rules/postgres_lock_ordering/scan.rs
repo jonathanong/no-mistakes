@@ -14,6 +14,12 @@ pub(super) const UNPARSEABLE_TARGET: &str = "unparseable";
 pub(super) const UNRESOLVED_RELATION_TARGET: &str = "unresolved-relation";
 pub(super) const LOCK_ORDERING_TARGET: &str = "lock-ordering";
 pub(super) const UNANALYZABLE_TARGET: &str = "unanalyzable";
+mod messages;
+mod versions;
+use messages::{
+    canonical_order_message, interpolated_relation_message, lock_ordering_message,
+    unanalyzable_message, unparseable_message,
+};
 
 pub(super) fn scan_with_sources(
     root: &Path,
@@ -28,6 +34,7 @@ pub(super) fn scan_with_sources(
         .map(|path| facts.postgres_ordering_catalog(path))
         .transpose()?;
     let mut findings = Vec::new();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -40,27 +47,21 @@ pub(super) fn scan_with_sources(
         })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        for call in &file.calls {
-            findings.extend(catalog.as_ref().map_or_else(
-                || findings_for_call(&rel, &source, call, opts),
-                |catalog| findings_for_call_with_catalog(&rel, &source, call, opts, Some(catalog)),
-            ));
-        }
+        let statements = file
+            .calls
+            .iter()
+            .any(|call| !call.variants.is_empty())
+            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
+            .transpose()?;
+        findings.extend(versions::findings_for_file(
+            &rel, &source, file, opts, catalog, statements, &mut dedup,
+        )?);
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    crate::codebase::rules::sort_postgres_findings(&mut findings);
     Ok(findings)
 }
 
-pub(super) fn findings_for_call(
-    file: &str,
-    source: &str,
-    call: &crate::codebase::postgres::EmbeddedSqlCall,
-    opts: &CompiledOptions,
-) -> Vec<RuleFinding> {
-    findings_for_call_with_catalog(file, source, call, opts, None)
-}
-
-fn findings_for_call_with_catalog(
+pub(super) fn findings_for_call_with_catalog(
     file: &str,
     source: &str,
     call: &crate::codebase::postgres::EmbeddedSqlCall,
@@ -161,20 +162,9 @@ fn lock_findings(
     )]
 }
 
-fn interpolated_relation_message(file: &str, line: u32, directive: &str) -> String {
-    format!(
-        "{file}:{line}: multi-row FOR UPDATE locks a relation whose name is interpolated, so its schema-catalog key order cannot be checked; write the relation name literally, use SKIP LOCKED, or add a `{directive}` comment"
-    )
-}
-
-fn canonical_order_message(file: &str, line: u32, directive: &str) -> String {
-    format!(
-        "{file}:{line}: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `{directive}` comment"
-    )
-}
-
 fn finding(file: &str, line: u32, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: line as usize,
@@ -182,22 +172,4 @@ fn finding(file: &str, line: u32, message: String, target: &str) -> RuleFinding 
         import: None,
         target: Some(target.to_string()),
     }
-}
-
-fn lock_ordering_message(file: &str, line: u32, directive: &str) -> String {
-    format!(
-        "{file}:{line}: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `{directive}` comment"
-    )
-}
-
-fn unparseable_message(file: &str, line: u32, directive: &str) -> String {
-    format!(
-        "{file}:{line}: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `{directive}` comment"
-    )
-}
-
-fn unanalyzable_message(file: &str, line: u32, directive: &str) -> String {
-    format!(
-        "{file}:{line}: executed SQL is not statically recoverable, so a FOR UPDATE lock and its row order cannot be checked for ABBA deadlocks; pass a SQL literal or trusted tagged template, add a `{directive}` comment, or set unanalyzableSql: ignore"
-    )
 }

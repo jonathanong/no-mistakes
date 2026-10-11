@@ -1,6 +1,6 @@
 import { query, sql } from "@example/db";
 
-const inner = sql`SELECT 1`;
+const inner = sql`SELECT 1`; // missing: the finite guarded version exposes this token.
 // Plain strings, booleans, numbers, and objects stay binds, even through aliases.
 query(sql`${String.raw`SELECT 1`}`); // missing
 const raw = String.raw`SELECT 1`;
@@ -15,11 +15,11 @@ query(sql`${{ inner }}`); // missing
 const object = { inner };
 query(sql`${object}`); // missing
 
-// Actual result candidates and arrays retain the fragment opacity contract.
+// Runtime candidates and arrays stay opaque; the static guard has finite versions.
 query(sql`${cond ? inner : 1}`); // unknown
 const possible = cond ? inner : 1;
 query(sql`${possible}`); // unknown
-query(sql`${cond && inner}`); // unknown
+query(sql`${cond && inner}`); // missing: the false guard executes empty SQL.
 const logical = cond || inner;
 query(sql`${logical}`); // unknown
 query(sql`${[inner]}`); // unknown

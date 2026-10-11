@@ -192,6 +192,7 @@ fn check_source(
             let newline_count = prefix.bytes().filter(|&b| b == b'\n').count();
             let line = newline_count + 1 + usize::from(starts_at_newline);
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line,

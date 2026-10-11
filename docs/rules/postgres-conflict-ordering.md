@@ -164,7 +164,14 @@ ON CONFLICT (left_id, right_id) DO NOTHING
 
 ## Dynamic SQL and suppression
 
-Recovered dynamic SQL whose static fragments identify an `INSERT` fails closed
+Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
+of a branching executor call is checked independently, up to 16 versions.
+An `ORDER BY` appended on only one path cannot establish conflict ordering on
+the path that omits it. Every version that is a full INSERT receives the
+ordinary catalog check; a non-INSERT version stays outside this rule.
+Findings retain branch-fragment source locations for suppressions.
+
+Recovered dynamic SQL without complete alternatives whose static fragments identify an `INSERT` fails closed
 by default because an interpolation can add or alter its conflict clause and
 row order. An opaque configured executor argument (`read(assembleWriter())`,
 `write(...args)`, or `query(...args)` by default), as well as an opaque member
@@ -180,10 +187,10 @@ balanced CTE definitions; catalog ordering runs only when that recovered
 statement is a full `INSERT`/`UPSERT`. An `INSERT` that appears only inside
 a CTE does not make a final `UPDATE` an insert. Incomplete `WITH` prefixes
 and opaque or imported helpers stay fail-closed. Kind-only recovery never
-fabricates SQL. Conditional static appends keep the recovered base SQL and
-classify as dynamic: recovered non-`INSERT` SELECT/UPDATE stays outside this
-rule, while recovered `INSERT` fails closed rather than treating a
-branch-only `ORDER BY` as always present. Sequential recovered
+fabricates SQL. Conditional static appends keep the legacy recovered base SQL
+and `Dynamic` kind, but publish complete versions when every path is static.
+If a path cannot be recovered, a recovered non-`INSERT` SELECT/UPDATE stays
+outside this rule while recovered `INSERT` fails closed. Sequential recovered
 `INSERT … ON CONFLICT` gets the ordinary catalog ordering check. Unbound,
 spread, or otherwise opaque append arguments preserve a recovered leading
 statement as dynamic: leading `INSERT` stays fail-closed, while leading

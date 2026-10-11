@@ -65,6 +65,7 @@ fn check_file(
         }
         let line = source[..start].bytes().filter(|&b| b == b'\n').count() + 1;
         findings.push(RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: rel.to_string(),
             line,

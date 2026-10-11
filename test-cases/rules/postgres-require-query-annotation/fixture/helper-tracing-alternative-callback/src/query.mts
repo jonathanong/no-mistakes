@@ -20,7 +20,7 @@ export function returnedCallbackKeepsItsArmLocalFrame(condition: boolean) {
 }
 
 export function conditionalSqlRemainsUnproven(condition: boolean) {
-  write(condition ? '/* one */ SELECT 1' : '/* two */ SELECT 2'); // unanalyzable:conditional-sql
+  write(condition ? '/* one */ SELECT 1' : '/* two */ SELECT 2'); // Both complete versions start with annotations.
 }
 
 export function nestedArgumentsAppendMustNotRestoreEmptySql(condition: boolean) {

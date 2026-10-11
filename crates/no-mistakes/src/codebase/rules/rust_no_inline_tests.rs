@@ -98,6 +98,7 @@ pub(crate) fn findings_from_parsed(
     ast::cfg_test_lines(parsed)
         .into_iter()
         .map(|line| RuleFinding {
+        source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line,

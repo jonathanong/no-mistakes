@@ -82,6 +82,7 @@ fn assert_any(
 
 fn assertion_finding(rel: &str, assertion: &ValueAssertion, fallback: String) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line: 1,

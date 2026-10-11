@@ -151,6 +151,7 @@ fn check_rule_application(
             }
             let file = relative_slash_path(root, &source);
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line: 1,
@@ -190,6 +191,7 @@ fn runtime_edge_kinds() -> HashSet<EdgeKind> {
 
 fn config_finding(message: &str, target: Option<String>) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: ".no-mistakes.yml".to_string(),
         line: 1,

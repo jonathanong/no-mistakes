@@ -84,13 +84,14 @@ pub(crate) fn check_with_files_and_sources(
         config,
         &[RULE_ID],
     )?;
-    check_with_files_sources_and_facts(root, config, all_files, &facts)
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
 }
 
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
@@ -109,7 +110,7 @@ pub(crate) fn check_with_files_sources_and_facts(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan::scan(root, &compiled, &files, facts)
+            scan::scan(root, &compiled, &files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -170,6 +171,7 @@ fn is_default_dml_path(path: &Path) -> bool {
 
 fn finding(file: &str, line: usize, table: &str, column: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -184,6 +186,7 @@ PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and 
 
 fn trigger_finding(file: &str, line: usize, table: &str, column: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -198,6 +201,7 @@ it is listed in triggerMaintainedColumns, so the database sets it — remove it 
 
 fn unanalyzable_finding(file: &str, line: usize) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

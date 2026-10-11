@@ -48,6 +48,7 @@ pub(super) fn stale_exempt(
         .iter()
         .filter(|entry| !exempt_matches(catalog, compiled, require, &entry.pattern))
         .map(|entry| RuleFinding {
+            source_offset: None,
             rule: super::RULE_ID.to_string(),
             file: path.clone(),
             line: 1,

@@ -15,6 +15,7 @@ pub(super) fn finding_for_link(
         return None;
     }
     Some(RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: byte_offset_to_line(source, link.offset) as usize,

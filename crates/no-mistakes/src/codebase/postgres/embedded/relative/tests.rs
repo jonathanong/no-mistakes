@@ -41,6 +41,7 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         call_spans: vec![(0, 0); calls.len()],
         calls,
         fragments: Vec::new(),
+        fragment_variants: Vec::new(),
         matched_factory_names: Vec::new(),
         matched_type_names: Vec::new(),
         pending_relative: pending,

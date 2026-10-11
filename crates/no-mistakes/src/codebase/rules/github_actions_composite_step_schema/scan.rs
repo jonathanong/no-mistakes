@@ -93,6 +93,7 @@ fn mapping_string(step: &serde_yaml::Mapping, key: &str) -> Option<String> {
 
 fn unsupported_key_finding(rel: &str, line: usize, label: &str, key: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,
@@ -106,6 +107,7 @@ fn unsupported_key_finding(rel: &str, line: usize, label: &str, key: &str) -> Ru
 
 fn invalid_yaml_finding(rel: &str, err: &serde_yaml::Error) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line: yaml_parse_line(err),

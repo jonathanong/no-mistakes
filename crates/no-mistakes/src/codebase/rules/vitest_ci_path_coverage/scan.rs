@@ -183,5 +183,6 @@ pub(super) fn mapped_filter_names(opts: &Options, project: &str) -> Vec<String> 
         .unwrap_or_else(|| vec![project.to_string()])
 }
 pub(super) fn missing_mapping_finding(file: &str, unit: &CoverageUnit) -> RuleFinding {
-    RuleFinding { rule: RULE_ID.to_string(), file: file.to_string(), line: 1, message: format!("Vitest project `{}` {} paths are not mapped to any CI path filter; configure options.projectFilters.{}", unit.project, unit.source.label(), unit.project), import: None, target: Some(unit.project.clone()) }
+    RuleFinding {
+        source_offset: None, rule: RULE_ID.to_string(), file: file.to_string(), line: 1, message: format!("Vitest project `{}` {} paths are not mapped to any CI path filter; configure options.projectFilters.{}", unit.project, unit.source.label(), unit.project), import: None, target: Some(unit.project.clone()) }
 }

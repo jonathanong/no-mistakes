@@ -87,6 +87,7 @@ pub fn catalog_finding(
     let path = slash_normalize(catalog_path);
     let object = object.to_string();
     RuleFinding {
+        source_offset: None,
         rule: rule_id.to_string(),
         file: path.clone(),
         line: 1,
@@ -163,6 +164,7 @@ impl AllowList {
                 continue;
             }
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: self.rule_id.clone(),
                 file: path.clone(),
                 line: 1,

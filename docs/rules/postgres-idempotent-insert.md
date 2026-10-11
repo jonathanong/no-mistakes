@@ -7,7 +7,12 @@ generated-arbiter sources) default on and can be disabled.
 
 The rule consumes dual-source statement facts plus schema facts for generated
 columns and `CREATE TRIGGER`. Unparseable fragments with more than one
-`INSERT` fail closed. Dynamic embedded SQL fails closed unless
+`INSERT` fail closed. Each complete
+[SQL alternative](../postgres-facts.md#finite-sql-alternatives) of a branching
+executor call is checked independently, up to 16 versions. Choosing between
+`ON CONFLICT DO NOTHING` and a bare INSERT still reports the bare INSERT; a
+replay-safe path does not cover an unsafe sibling. Findings retain branch
+locations for suppressions. Opaque or over-cap embedded SQL fails closed unless
 `unanalyzableSql` is `ignore`.
 
 ```yaml

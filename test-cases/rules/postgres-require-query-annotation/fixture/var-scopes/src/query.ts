@@ -1,16 +1,16 @@
 import { read } from '@example/db'
 
 export function conditional() {
-  if (true) { var query = `SELECT id FROM posts` }
-  return read(query) // finding:conditional
+  if (true) { var query = `SELECT id FROM posts` } // finding:conditional
+  return read(query)
 }
 export function annotated() {
   if (true) { var query = `/* getPost */ SELECT id FROM posts` }
   return read(query) // known:annotated
 }
 export function nested() {
-  if (true) { { var query = `SELECT id FROM nested_posts` } }
-  return read(query) // finding:nested
+  if (true) { { var query = `SELECT id FROM nested_posts` } } // finding:nested
+  return read(query)
 }
 export function sibling() {
   return read(query) // unknown:sibling
@@ -48,7 +48,7 @@ export function reassigned() {
   return read(query) // unknown:reassigned
 }
 export function conflicting(flag: boolean) {
-  if (flag) { var query = `SELECT id FROM conflict_posts` }
+  if (flag) { var query = `SELECT id FROM conflict_posts` } // finding:conflicting-static-branch
   else { var query = `/* conflicting */ SELECT id FROM conflict_posts` }
   return read(query) // unknown:conflicting
 }
@@ -64,8 +64,8 @@ export function beforeDeclaration() {
   read(globalQuery) // known:after-declaration
 }
 export const arrow = () => {
-  if (true) { var query = `SELECT id FROM arrow_posts` }
-  return read(query) // finding:arrow
+  if (true) { var query = `SELECT id FROM arrow_posts` } // finding:arrow
+  return read(query)
 }
 export function destructuredShadow() {
   if (true) { var { query } = unknownValue }
@@ -77,14 +77,14 @@ export function nestedBoundary() {
   class Holder { static { var globalQuery = `/* inner */ SELECT id FROM static_inner`; read(globalQuery) } } // known:static-inner
   return read(globalQuery) // finding:nested-boundary
 }
-if (true) { var topQuery = `SELECT id FROM top_posts` }
-read(topQuery) // finding:top-level
+if (true) { var topQuery = `SELECT id FROM top_posts` } // finding:top-level
+read(topQuery)
 export function direct() {
   return read(`SELECT id FROM posts`) // finding:direct
 }
 export function bareConditional() {
-  if (true) var query = `SELECT id FROM bare_posts`
-  return read(query) // finding:bare-conditional
+  if (true) var query = `SELECT id FROM bare_posts` // finding:bare-conditional
+  return read(query)
 }
 export function destructuredReassignment() {
   var query = `SELECT id FROM destructured_posts`

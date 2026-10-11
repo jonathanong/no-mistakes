@@ -98,6 +98,7 @@ pub(crate) fn check_file(
             .any(|banned| banned.as_str() == ext)
         {
             return vec![RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,

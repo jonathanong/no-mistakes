@@ -63,6 +63,7 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
     for set in sets.values() {
         for issue in &set.issues {
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: issue.file.clone(),
                 line: issue.line,

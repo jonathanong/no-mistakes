@@ -154,6 +154,7 @@ fn scan(
 
 fn parse_finding(rel: &str, error: String) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line: 1,
@@ -165,6 +166,7 @@ fn parse_finding(rel: &str, error: String) -> RuleFinding {
 
 fn missing_finding(rel: &str, reference: &str, key: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line: 1,

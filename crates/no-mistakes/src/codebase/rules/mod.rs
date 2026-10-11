@@ -166,6 +166,10 @@ pub struct RuleFinding {
     pub import: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,
+    /// Internal physical token identity; excluded from diagnostic JSON.
+    #[doc(hidden)]
+    #[serde(skip)]
+    pub source_offset: Option<usize>,
 }
 
 pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id: &str) -> bool {
@@ -173,8 +177,10 @@ pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id
 }
 
 mod sort_findings;
+mod variant_findings;
+pub(crate) use variant_findings::{index_sql_variants, VariantFindingDedup};
 mod target_roots;
-pub(crate) use sort_findings::sort_findings;
+pub(crate) use sort_findings::{sort_findings, sort_postgres_findings};
 pub(crate) use target_roots::{
     file_allowed_by_roots_and_skip, skip_dir_set, target_project_root, target_roots,
     target_roots_with_inferred,

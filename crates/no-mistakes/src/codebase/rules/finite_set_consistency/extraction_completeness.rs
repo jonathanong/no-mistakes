@@ -10,6 +10,7 @@ pub(super) fn has_unsuppressed_issues(
         .issues
         .iter()
         .map(|issue| RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: issue.file.clone(),
             line: issue.line,

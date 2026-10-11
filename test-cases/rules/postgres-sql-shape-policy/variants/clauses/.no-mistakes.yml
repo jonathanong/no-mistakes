@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      shapeOptions: {bannedFunctionCall: {functions: [pg_sleep]}}
+
+      bannedShapes: [not-in-subquery, count-for-existence, correlated-exists-set-operation, literal-limit, keyset-only-sweep, banned-function-call]

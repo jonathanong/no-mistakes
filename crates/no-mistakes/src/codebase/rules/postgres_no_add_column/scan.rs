@@ -21,6 +21,7 @@ pub(super) fn scan(
             continue;
         }
         findings.push(RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: migration.path.clone(),
             line: 1,
@@ -61,6 +62,7 @@ pub(super) fn scan(
                 )
             };
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: column.line.max(1),
@@ -81,6 +83,7 @@ pub(super) fn scan(
 fn stale_allowed_migration(migration: &AllowedMigration) -> RuleFinding {
     let target = allowed_migration_target(migration);
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: migration.path.clone(),
         line: 1,

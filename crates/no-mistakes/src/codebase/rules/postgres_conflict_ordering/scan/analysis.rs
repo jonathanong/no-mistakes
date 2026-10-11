@@ -9,7 +9,6 @@ use crate::codebase::rules::RuleFinding;
 mod order;
 mod sql;
 pub(super) use sql::{contains_insert_conflict, sql_statements};
-
 pub(super) fn findings_for_sql(
     file: &str,
     line: usize,
@@ -41,10 +40,25 @@ pub(super) fn findings_for_sql_with_binds(
         }
         Err(_) => return Vec::new(),
     };
-    inserts
+    findings_for_inserts(file, line, &inserts, catalog)
         .into_iter()
-        .filter(|insert| insert.source.multi_row && !order::pins_one_row(insert, catalog))
-        .filter_map(|insert| finding_for_insert(file, line, insert, catalog))
+        .map(|(_, finding)| finding)
+        .collect()
+}
+
+pub(super) fn findings_for_inserts(
+    file: &str,
+    line: usize,
+    inserts: &[SqlConflictInsertFact],
+    catalog: &SchemaCatalog,
+) -> Vec<(usize, RuleFinding)> {
+    inserts
+        .iter()
+        .enumerate()
+        .filter(|(_, insert)| insert.source.multi_row && !order::pins_one_row(insert, catalog))
+        .filter_map(|(index, insert)| {
+            finding_for_insert(file, line, insert.clone(), catalog).map(|finding| (index, finding))
+        })
         .collect()
 }
 
@@ -123,7 +137,7 @@ fn finding_for_insert(
             "missing-canonical-order",
             &format!(
                 "multi-row ON CONFLICT must order its INSERT source by catalog arbiter {}",
-                display_keys(&expected)
+                order::display_keys(&expected)
             ),
         ));
     };
@@ -138,13 +152,12 @@ fn finding_for_insert(
             "noncanonical-order",
             &format!(
                 "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter {}",
-                display_keys(&expected)
+                order::display_keys(&expected)
             ),
         ));
     }
     None
 }
-
 fn target_matches_catalog(target: &[String], index: &CanonicalIndex) -> bool {
     target.len() == index.keys.len()
         && target.iter().zip(&index.keys).all(|(actual, expected)| {
@@ -170,22 +183,9 @@ fn expected_source_order(
         .collect()
 }
 
-fn display_keys(keys: &[CanonicalOrderKey]) -> String {
-    keys.iter()
-        .map(|key| {
-            format!(
-                "{} {} NULLS {}",
-                key.expression,
-                if key.ascending { "ASC" } else { "DESC" },
-                if key.nulls_first { "FIRST" } else { "LAST" }
-            )
-        })
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
 pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -194,7 +194,6 @@ pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> R
         target: Some(target.to_string()),
     }
 }
-
 #[cfg(test)]
 mod order_tests;
 #[cfg(test)]

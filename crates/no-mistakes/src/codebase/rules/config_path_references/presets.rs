@@ -86,6 +86,7 @@ fn scan_file(
             Ok(value) => value,
             Err(error) => {
                 context.findings.push(RuleFinding {
+                    source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: rel.to_string(),
                     line: 1,
@@ -119,6 +120,7 @@ fn scan_file(
         Ok(value) => value,
         Err(error) => {
             context.findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.to_string(),
                 line: 1,
@@ -159,6 +161,7 @@ fn push_missing(
     };
     if !reference_exists(root, path, &opts, &extracted.value, rel_files)? {
         findings.push(RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: rel.to_string(),
             line: 1,

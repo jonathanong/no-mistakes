@@ -1,17 +1,21 @@
-use super::{iteration, BannedShapes, CompiledOptions, RuleFinding, RULE_ID};
+use super::{iteration, CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::postgres::{postgres_sql_paths, EmbeddedSqlKind};
+use crate::codebase::postgres::postgres_sql_paths;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
+mod fragments;
 
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut fragment_findings = fragments::Findings::default();
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -21,7 +25,7 @@ pub(super) fn scan(
             .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
-            if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
+            if opts.fail_unanalyzable && call.is_unanalyzable() {
                 findings.push(finding(
                     &rel,
                     call.line.max(1) as usize,
@@ -30,8 +34,11 @@ pub(super) fn scan(
                 ));
             }
         }
-        for fragment in &file.fragments {
-            if fragment.sql_text.is_none() && opts.fail_unanalyzable {
+        for (index, fragment) in file.fragments.iter().enumerate() {
+            if fragment.sql_text.is_none()
+                && file.fragment_variants.get(index).is_none_or(Vec::is_empty)
+                && opts.fail_unanalyzable
+            {
                 findings.push(finding(
                     &rel,
                     fragment.line.max(1) as usize,
@@ -40,36 +47,59 @@ pub(super) fn scan(
                 ));
             }
         }
+        let source = crate::codebase::rules::read_source(sources, path);
         for fragment in facts.postgres_fragments(path, &opts.embedded)? {
             let statements = &fragment.statements;
-            findings.extend(super::functions::findings(
+            let line_at =
+                |line: usize| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize;
+            for (index, finding) in super::functions::located_findings(
                 &rel,
                 statements,
                 &opts.shapes,
                 &opts.banned_functions,
-                |line| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize,
-            ));
+                line_at,
+            ) {
+                fragment_findings.push(
+                    fragment,
+                    crate::codebase::postgres::statements::SqlFactSite::Function(index),
+                    source.as_deref(),
+                    finding,
+                );
+            }
             if opts.fail_unanalyzable && statements.parse_failed {
-                findings.push(finding(
-                    &rel,
-                    fragment.line.max(1) as usize,
-                    "builder SQL is not statically recoverable for shape policy",
-                    opts.shapes.unanalyzable_target(),
-                ));
+                fragment_findings.push(
+                    fragment,
+                    crate::codebase::postgres::statements::SqlFactSite::Origin,
+                    source.as_deref(),
+                    finding(
+                        &rel,
+                        fragment.line.max(1) as usize,
+                        "builder SQL is not statically recoverable for shape policy",
+                        opts.shapes.unanalyzable_target(),
+                    ),
+                );
                 continue;
             }
-            let line_at =
-                |line: usize| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize;
-            for select in &statements.selects {
-                findings.extend(select_findings(&rel, select, &opts.shapes, line_at));
+            for (select_index, select) in statements.selects.iter().enumerate() {
+                for (site, finding) in super::select_findings::located_findings(
+                    &rel,
+                    select,
+                    &opts.shapes,
+                    select_index,
+                    line_at,
+                ) {
+                    fragment_findings.push(fragment, site, source.as_deref(), finding);
+                }
             }
-            findings.extend(iteration::findings(
+            for (site, finding) in iteration::located_findings(
                 &rel,
                 statements,
                 &opts.shapes,
                 &opts.iteration,
                 line_at,
-            ));
+            ) {
+                fragment_findings.push(fragment, site, source.as_deref(), finding);
+            }
         }
     }
     let sql_paths = postgres_sql_paths(root, files, &opts.schema)?;
@@ -82,39 +112,62 @@ pub(super) fn scan(
     for (path, profile) in projections {
         for file in facts.postgres_statements(path, profile)? {
             let rel = relative_slash_path(root, &file.path);
-            findings.extend(super::functions::findings(
+            let source = crate::codebase::rules::read_source(sources, path);
+            for (index, finding) in super::functions::located_findings(
                 &rel,
                 file,
                 &opts.shapes,
                 &opts.banned_functions,
                 |line| line.max(1),
-            ));
+            ) {
+                dedup.push(
+                    &mut findings,
+                    file,
+                    crate::codebase::postgres::statements::SqlFactSite::Function(index),
+                    source.as_deref(),
+                    finding,
+                );
+            }
             if opts.fail_unanalyzable && file.parse_failed {
-                findings.push(finding(
-                    &rel,
-                    file.origin_line.max(1),
-                    "SQL could not be analyzed for shape policy",
-                    opts.shapes.unanalyzable_target(),
-                ));
+                dedup.push(
+                    &mut findings,
+                    file,
+                    crate::codebase::postgres::statements::SqlFactSite::Origin,
+                    source.as_deref(),
+                    finding(
+                        &rel,
+                        file.origin_line.max(1),
+                        "SQL could not be analyzed for shape policy",
+                        opts.shapes.unanalyzable_target(),
+                    ),
+                );
                 continue;
             }
-            for select in &file.selects {
-                findings.extend(select_findings(&rel, select, &opts.shapes, |line| {
-                    line.max(1)
-                }));
+            for (select_index, select) in file.selects.iter().enumerate() {
+                for (site, finding) in super::select_findings::located_findings(
+                    &rel,
+                    select,
+                    &opts.shapes,
+                    select_index,
+                    |line| line.max(1),
+                ) {
+                    dedup.push(&mut findings, file, site, source.as_deref(), finding);
+                }
             }
-            findings.extend(iteration::findings(
-                &rel,
-                file,
-                &opts.shapes,
-                &opts.iteration,
-                |line| line.max(1),
-            ));
+            for (site, finding) in
+                iteration::located_findings(&rel, file, &opts.shapes, &opts.iteration, |line| {
+                    line.max(1)
+                })
+            {
+                dedup.push(&mut findings, file, site, source.as_deref(), finding);
+            }
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    fragment_findings.extend(&mut findings);
+    crate::codebase::rules::sort_postgres_findings(&mut findings);
     findings.dedup_by(|left, right| {
-        left.rule == right.rule
+        left.source_offset == right.source_offset
+            && left.rule == right.rule
             && left.file == right.file
             && left.line == right.line
             && left.message == right.message
@@ -123,50 +176,9 @@ pub(super) fn scan(
     Ok(findings)
 }
 
-fn select_findings(
-    file: &str,
-    select: &crate::codebase::postgres::SqlSelectFact,
-    shapes: &BannedShapes,
-    line_at: impl Fn(usize) -> usize,
-) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    if shapes.correlated_exists_set_operation {
-        for exists in &select.exists_set_operations {
-            if exists.correlated {
-                findings.push(finding(
-                    file,
-                    line_at(exists.line),
-                    "do not wrap a set operation in a correlated EXISTS",
-                    "correlated-exists-set-operation",
-                ));
-            }
-        }
-    }
-    if shapes.not_in_subquery {
-        for line in &select.not_in_subqueries {
-            findings.push(finding(
-                file,
-                line_at(*line),
-                "NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
-                "not-in-subquery",
-            ));
-        }
-    }
-    if shapes.count_for_existence {
-        for count in &select.count_existence_checks {
-            findings.push(finding(
-                file,
-                line_at(count.line),
-                if count.negated { "COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)" } else { "COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)" },
-                "count-for-existence",
-            ));
-        }
-    }
-    findings
-}
-
 pub(super) fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

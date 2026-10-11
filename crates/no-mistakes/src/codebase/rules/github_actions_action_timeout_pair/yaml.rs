@@ -24,6 +24,7 @@ pub(super) fn step_label(step: &Mapping, index: usize) -> String {
 
 pub(super) fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

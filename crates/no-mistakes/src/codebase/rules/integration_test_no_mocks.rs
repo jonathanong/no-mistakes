@@ -164,6 +164,7 @@ fn module_findings(
                     !strings::is_inside_string(comments_removed.as_bytes(), matched.start())
                 })
                 .map(|matched| RuleFinding {
+        source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: rel.to_string(),
                     line: byte_offset_to_line(comments_removed, matched.start()) as usize,

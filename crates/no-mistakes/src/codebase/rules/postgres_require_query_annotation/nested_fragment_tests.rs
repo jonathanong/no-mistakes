@@ -5,7 +5,7 @@ use super::*;
 fn nested_fragments_do_not_become_annotation_bind_placeholders() {
     let root = fixture("nested-fragments");
     let file = ts_file(&root);
-    for (mode, count) in [("report", 11), ("ignore", 2)] {
+    for (mode, count) in [("report", 7), ("ignore", 3)] {
         let config = config_with_options(&format!(
             "importSpecifier: '@example/db'\ntrustedSqlTags: [{{module: '@example/db', name: sql}}]\nunanalyzableSql: {mode}"
         ));
@@ -16,11 +16,18 @@ fn nested_fragments_do_not_become_annotation_bind_placeholders() {
                 .iter()
                 .filter(|finding| finding.message.contains("leading SQL is unanalyzable"))
                 .count(),
-            if mode == "report" { 9 } else { 0 }
+            if mode == "report" { 4 } else { 0 }
         );
+        // Fully static nested fragments now expose their leading annotations.
+        assert!(!findings
+            .iter()
+            .any(|finding| matches!(finding.line, 3 | 5 | 8 | 10 | 12)));
         assert!(findings
             .iter()
             .any(|finding| finding.line == 6 && finding.message.contains("must start")));
+        assert!(findings
+            .iter()
+            .any(|finding| finding.line == 13 && finding.message.contains("must start")));
     }
 }
 

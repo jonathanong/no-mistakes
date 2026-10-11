@@ -166,6 +166,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
             continue;
         }
         findings.push(RuleFinding {
+        source_offset: None,
             rule: RULE_ID.to_string(),
             file: component.repo_file,
             line: component.line,

@@ -137,6 +137,7 @@ fn scan_with_sources(
         let expected_specifier = render_template(&opts.specifier_template, source);
         if companions.is_empty() {
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: source.rel.clone(),
                 line: 1,
@@ -155,6 +156,7 @@ fn scan_with_sources(
             .any(|rel| file_imports_with_sources(root, rel, &expected_specifier, source_store))
         {
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: source.rel.clone(),
                 line: 1,

@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      schemaCatalogPath: schema.json
+      relations: [accounts]
+
+      checkReturning: true
+      allowWholeRowFunctions: []

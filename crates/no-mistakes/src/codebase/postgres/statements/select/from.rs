@@ -68,7 +68,7 @@ fn push_table(table: &TableFactor, ctes: &[String], names: &mut Vec<String>) {
     }
 }
 
-pub(super) fn predicate_text(select: &Select) -> String {
+pub(in crate::codebase::postgres::statements) fn predicate_text(select: &Select) -> String {
     let mut parts = Vec::new();
     if let Some(selection) = &select.selection {
         parts.push(selection.to_string());

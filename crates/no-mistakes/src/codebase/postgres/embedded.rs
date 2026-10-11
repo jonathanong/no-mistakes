@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 mod bindings;
 mod call;
-pub use call::{EmbeddedSqlCall, EmbeddedSqlKind};
+pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 mod dml_kind;
 mod options;
 mod placeholders;
@@ -43,7 +43,7 @@ pub struct EmbeddedSqlFragment {
 }
 
 /// Embedded-SQL facts for one TypeScript/JavaScript file.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct EmbeddedSqlFileFacts {
     pub path: PathBuf,
     pub executor_bindings: Vec<String>,
@@ -51,6 +51,8 @@ pub struct EmbeddedSqlFileFacts {
     /// Private call identities, parallel to `calls`; public summaries stay unchanged.
     pub(crate) call_spans: Vec<(u32, u32)>,
     pub fragments: Vec<EmbeddedSqlFragment>,
+    /// Private complete alternatives, parallel to the legacy fragment records.
+    pub(crate) fragment_variants: Vec<Vec<EmbeddedSqlVariant>>,
     /// Configured `executor_factory_names` this file imports from the configured module.
     pub matched_factory_names: Vec<String>,
     /// Configured `executor_type_names` this file imports from the configured module.
@@ -114,6 +116,7 @@ pub fn extract_embedded_sql_from_program(
         calls: collected.calls,
         call_spans: collected.call_spans,
         fragments,
+        fragment_variants: collected.fragment_variants,
         pending_relative: PendingRelativeScope {
             candidates: scoped.candidates,
             spans: scoped.spans,
@@ -123,6 +126,8 @@ pub fn extract_embedded_sql_from_program(
         },
     }
 }
+
+mod fragment_debug;
 
 pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
     match call.arguments.first()? {
@@ -205,3 +210,6 @@ mod scoped_bindings_tests;
 mod tests;
 #[cfg(test)]
 mod trusted_sql_tag_tests;
+#[cfg(test)]
+#[path = "embedded/variants/tests.rs"]
+mod variants_tests;

@@ -11,7 +11,8 @@ mod parameter_positions;
 pub(in crate::codebase::postgres::embedded::walk) use builder::{
     appended_builder_fragment, builder_fragment, is_builder_append,
 };
-pub(super) use parameter_positions::{contains_parameter_helper, parameter_source_positions};
+pub(in crate::codebase::postgres::embedded::walk) use parameter_positions::contains_parameter_helper;
+pub(super) use parameter_positions::parameter_source_positions;
 
 pub(super) const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
 
@@ -67,7 +68,10 @@ fn composed_sql(
     Some((format!("{left}{right}"), EmbeddedSqlKind::Composed))
 }
 
-pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
+pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
@@ -153,7 +157,10 @@ pub(super) fn untrusted_tag(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -
 /// combines both checks (`functions::resolve_named`'s own `is_shadowed`);
 /// this mirrors that for calls and tags resolved directly here, without an
 /// intermediate helper.
-fn tag_shadowed(name: &str, visitor: &ScopeVisitor<'_>) -> bool {
+pub(in crate::codebase::postgres::embedded::walk) fn tag_shadowed(
+    name: &str,
+    visitor: &ScopeVisitor<'_>,
+) -> bool {
     visitor.shadowed_locally(name) || visitor.functions.is_tag_shadowed(name)
 }
 

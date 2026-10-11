@@ -3,11 +3,12 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BindingPattern, Expression,
-    FormalParameter, Function, Program, ReturnStatement, VariableDeclarator,
+    FormalParameter, Function, Program, ReturnStatement, TSType, TSTypeName, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
+use std::collections::HashSet;
 
 // The flag distinguishes a fragment value from a function returning one.
 type Key = (bool, String);
@@ -17,9 +18,11 @@ type Key = (bool, String);
 pub(in crate::codebase::postgres::embedded::tags) fn collect_fragment_bindings(
     program: &Program<'_>,
     tags: &SqlTagNames,
+    sql_statement_types: &HashSet<String>,
 ) -> (FxHashSet<String>, FxHashSet<String>) {
     let mut collector = FragmentBindings {
         tags,
+        sql_statement_types,
         found: FxHashSet::default(),
         dependents: FxHashMap::default(),
         helper_names: crate::fx::FxHashMap::default(),
@@ -50,6 +53,7 @@ pub(in crate::codebase::postgres::embedded::tags) fn collect_fragment_bindings(
 
 struct FragmentBindings<'t> {
     tags: &'t SqlTagNames,
+    sql_statement_types: &'t HashSet<String>,
     found: FxHashSet<Key>,
     dependents: FxHashMap<Key, Vec<Key>>,
     helper_names: crate::fx::FxHashMap<u32, String>,
@@ -96,6 +100,20 @@ impl FragmentBindings<'_> {
 
 impl<'a> Visit<'a> for FragmentBindings<'_> {
     fn visit_formal_parameter(&mut self, parameter: &FormalParameter<'a>) {
+        if let (BindingPattern::BindingIdentifier(ident), Some(annotation)) =
+            (&parameter.pattern, &parameter.type_annotation)
+        {
+            if let TSType::TSTypeReference(reference) = &annotation.type_annotation {
+                if matches!(&reference.type_name, TSTypeName::IdentifierReference(name)
+                    if self.sql_statement_types.contains(name.name.as_str()))
+                {
+                    // Seed the existing return/alias closure during this same
+                    // walk. Imported type aliases carry the verified builder
+                    // contract; an unrecognized type spelling does not.
+                    self.found.insert((false, ident.name.to_string()));
+                }
+            }
+        }
         if let (BindingPattern::BindingIdentifier(ident), Some(initializer)) =
             (&parameter.pattern, &parameter.initializer)
         {

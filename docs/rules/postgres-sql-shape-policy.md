@@ -17,7 +17,12 @@ Builder recovery honors the same trusted-tag and lexical-shadow rules as
 executed SQL. Unresolved raw appended identifiers become a synthetic qualified
 outer reference, so a builder that may append an outer column is conservatively
 treated as possibly correlated. Identical executed and builder SQL is reported
-once. Unparseable or dynamic SQL, including builder fragments, fails closed
+once. Every complete
+[SQL alternative](../postgres-facts.md#finite-sql-alternatives) of an executed
+branching call is checked, up to 16 versions. A banned shape in one version,
+such as `NOT IN (SELECT ...)`, is reported even when its sibling version uses
+an allowed shape. Branch-fragment lines retain their suppression locations.
+Unparseable SQL or dynamic SQL without complete alternatives, including builder fragments, fails closed
 unless `unanalyzableSql` is `ignore`.
 
 ```yaml

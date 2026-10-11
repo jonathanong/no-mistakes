@@ -1,46 +1,37 @@
-use crate::codebase::postgres::{EmbeddedSqlFileFacts, EmbeddedSqlKind, SqlStatementFileFacts};
-use std::collections::{HashMap, HashSet};
+use crate::codebase::postgres::{EmbeddedSqlFileFacts, SqlStatementFileFacts};
+use crate::fx::FxHashMap;
+use std::collections::HashMap;
 use std::sync::Arc;
+mod inputs;
+mod locations;
 
 pub(crate) struct PreparedSqlFragment {
     pub line: u32,
+    pub original_line: u32,
     pub statements: Arc<SqlStatementFileFacts>,
+    pub enumerated: bool,
+    pub physical_sites: FxHashMap<crate::codebase::postgres::statements::SqlFactSite, usize>,
 }
 
 /// Parse each unexecuted recovered builder text once within its projection.
 pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<PreparedSqlFragment> {
-    let executed: HashSet<_> = file
-        .calls
-        .iter()
-        .filter(|call| call.kind != EmbeddedSqlKind::Dynamic)
-        .filter_map(|call| {
-            call.sql_text
-                .as_deref()
-                .map(|sql| (sql, call.recovered_placeholder_positions.as_slice()))
-        })
-        .collect();
     let mut parsed = HashMap::new();
-    file.fragments
-        .iter()
-        .filter_map(|fragment| {
-            let sql = fragment.sql_text.as_deref()?;
-            if executed.contains(&(sql, fragment.recovered_placeholder_positions.as_slice())) {
-                return None;
-            }
-            let key = (
-                sql.to_string(),
-                fragment.recovered_placeholder_positions.clone(),
-            );
-            let statements = parsed.entry(key).or_insert_with(|| {
-                Arc::new(statement_facts(
-                    sql,
-                    &fragment.recovered_placeholder_positions,
-                ))
+    inputs::collect(file)
+        .into_iter()
+        .map(|fragment| {
+            let located = !fragment.origins.is_empty();
+            let key = (fragment.sql.to_string(), fragment.binds.to_vec(), located);
+            let (statements, sql) = parsed.entry(key).or_insert_with(|| {
+                let (facts, sql) = statement_facts(fragment.sql, fragment.binds, located);
+                (Arc::new(facts), sql)
             });
-            Some(PreparedSqlFragment {
+            PreparedSqlFragment {
                 line: fragment.line,
+                original_line: fragment.original_line,
                 statements: Arc::clone(statements),
-            })
+                enumerated: fragment.enumerated,
+                physical_sites: locations::collect(statements, sql, fragment.sql, fragment.origins),
+            }
         })
         .collect()
 }
@@ -48,22 +39,27 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<PreparedSqlFragment> {
 fn statement_facts(
     sql: &str,
     recovered_placeholder_positions: &[(u32, u32)],
-) -> SqlStatementFileFacts {
-    use crate::codebase::postgres::statements::extract_sql_statement_facts_with_recovered_placeholders;
-    let direct = extract_sql_statement_facts_with_recovered_placeholders(
-        sql,
-        false,
-        recovered_placeholder_positions,
-    );
+    located: bool,
+) -> (SqlStatementFileFacts, String) {
+    use crate::codebase::postgres::statements::{
+        extract_sql_statement_facts_with_recovered_placeholders,
+        extract_sql_variant_statement_facts,
+    };
+    let extract = if located {
+        extract_sql_variant_statement_facts
+    } else {
+        extract_sql_statement_facts_with_recovered_placeholders
+    };
+    let direct = extract(sql, false, recovered_placeholder_positions);
     if !direct.parse_failed || !direct.selects.is_empty() {
-        return direct;
+        return (direct, sql.to_string());
     }
     // Predicate-only fragments retain the legacy synthetic SELECT context.
     let prefix = sql.trim_start();
     let (prefix, wrapper) = if prefix.starts_with("AND ") || prefix.starts_with("OR ") {
         let prefix = "SELECT 1 WHERE true ";
         (prefix, format!("{prefix}{sql}"))
-    } else if starts_with_clause(prefix) {
+    } else if starts_with_clause(prefix, located) {
         // A fragment that is only the tail of a query (` ORDER BY id LIMIT 500`).
         let prefix = "SELECT 1 ";
         (prefix, format!("{prefix}{sql}"))
@@ -72,7 +68,7 @@ fn statement_facts(
         (prefix, format!("{prefix}{sql}"))
     };
     let wrapped_positions = prefix_positions(recovered_placeholder_positions, prefix);
-    extract_sql_statement_facts_with_recovered_placeholders(&wrapper, false, &wrapped_positions)
+    (extract(&wrapper, false, &wrapped_positions), wrapper)
 }
 
 fn prefix_positions(positions: &[(u32, u32)], prefix: &str) -> Vec<(u32, u32)> {
@@ -95,7 +91,7 @@ fn prefix_positions(positions: &[(u32, u32)], prefix: &str) -> Vec<(u32, u32)> {
 }
 
 /// Whether `text` begins with a clause that closes a query, as a word: `LIMIT 5`, not `limit_at`.
-fn starts_with_clause(text: &str) -> bool {
+fn starts_with_clause(text: &str, located: bool) -> bool {
     use sqlparser::dialect::PostgreSqlDialect;
     use sqlparser::keywords::Keyword;
     use sqlparser::tokenizer::Token;
@@ -112,10 +108,11 @@ fn starts_with_clause(text: &str) -> bool {
             matches!(tokens.next(), Some(Token::Word(word)) if word.keyword == Keyword::BY)
         }
         Some(Token::Word(word)) => {
-            matches!(
-                word.keyword,
-                Keyword::LIMIT | Keyword::OFFSET | Keyword::FETCH
-            )
+            located && word.keyword == Keyword::WHERE
+                || matches!(
+                    word.keyword,
+                    Keyword::LIMIT | Keyword::OFFSET | Keyword::FETCH
+                )
         }
         _ => false,
     }

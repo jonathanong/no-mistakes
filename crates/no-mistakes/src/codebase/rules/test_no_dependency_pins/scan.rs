@@ -167,6 +167,7 @@ fn line_at(content: &str, offset: usize) -> usize {
 
 fn finding(file: &str, line: usize, pattern: &CompiledPattern, matched: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

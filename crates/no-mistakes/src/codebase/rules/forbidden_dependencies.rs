@@ -95,6 +95,7 @@ fn check_rule_application(
         || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
     {
         return Ok(vec![RuleFinding {
+            source_offset: None,
             rule: RULE_ID.to_string(),
             file: ".no-mistakes.yml".to_string(),
             line: 1,
@@ -110,6 +111,7 @@ fn check_rule_application(
         Ok(m) => m,
         Err(e) => {
             return Ok(vec![RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: ".no-mistakes.yml".to_string(),
                 line: 1,
@@ -123,6 +125,7 @@ fn check_rule_application(
         Ok(m) => m,
         Err(e) => {
             return Ok(vec![RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: ".no-mistakes.yml".to_string(),
                 line: 1,
@@ -188,6 +191,7 @@ fn check_rule_application(
             };
             let repro = repro_command(root_str, &target_name, &entry.node, &opts.relationships);
             findings.push(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line: 1,

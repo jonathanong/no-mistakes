@@ -43,6 +43,7 @@ pub(super) fn scan_pkg(root: &Path, pkg_root: &Path, ctx: &ScanCtx) -> Vec<RuleF
             }
             let dir_rel = relative_slash_path(root, &pkg_root.join(&subdir));
             Some(RuleFinding {
+                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: dir_rel.clone(),
                 line: 1,

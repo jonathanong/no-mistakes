@@ -88,6 +88,7 @@ pub(crate) fn check_with_files_and_sources(
 
 pub(super) fn finding(message: String) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: ".github/workflows".to_string(),
         line: 1,

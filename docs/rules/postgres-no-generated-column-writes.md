@@ -11,6 +11,14 @@ schema fact source, then matches parsed `UPDATE` / `INSERT` / `MERGE`
 statements — not regexes — at TypeScript executor call sites and raw `.sql`
 files.
 
+The rule checks every complete
+[SQL alternative](../postgres-facts.md#finite-sql-alternatives) of a branching
+executor call, up to 16 versions. A generated or trigger-maintained column
+assigned on only one path is still reported; safe sibling writes do not hide
+it. All safe versions pass without an unanalyzable finding. Findings retain
+physical branch-fragment locations for suppressions. Opaque or over-cap calls
+retain the unanalyzable behavior below.
+
 ```yaml
 rules:
   - rule: postgres-no-generated-column-writes
@@ -127,12 +135,12 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
 
 **Behavior change:** this rule previously dropped dynamic executor SQL unless
 its recovered text already proved a write. With the default
-`unanalyzableSql: fail`, a dynamic TypeScript executor call is reported with
+`unanalyzableSql: fail`, a dynamic TypeScript executor call without complete alternatives is reported with
 target `unanalyzable` at the executor call when it could assign a generated or
 trigger-maintained column:
 
 - no SQL text was recovered (an opaque `write(sql)` argument or a
-  `write(cond ? a : b)` choice), or
+  `write(cond ? a : b)` choice whose arms cannot all be recovered), or
 - the recovered text contains `INSERT`, `UPDATE`, or `MERGE`, including a
   data-modifying CTE, or its leading statement is unknown or incomplete.
 

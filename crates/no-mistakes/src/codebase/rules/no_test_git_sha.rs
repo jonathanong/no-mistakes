@@ -106,6 +106,7 @@ fn check_file(
             })
             .filter(|_| !allowed)
             .map(|_| RuleFinding {
+        source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line,

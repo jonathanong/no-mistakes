@@ -36,6 +36,7 @@ pub(super) fn namespace_import_findings(
                 continue;
             }
             findings.push(RuleFinding {
+        source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: relative_slash_path(root, file),
                 line: import.line as usize,
@@ -94,6 +95,7 @@ fn component_allow_finding(
 ) -> RuleFinding {
     let file = key.split_once('#').map(|(file, _)| file).unwrap_or(key);
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &project_root.join(file)),
         line: 1,
@@ -109,6 +111,7 @@ fn component_allow_finding(
 
 fn file_allow_finding(pattern: &str, reason: &str) -> RuleFinding {
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: pattern.to_string(),
         line: 1,

@@ -43,6 +43,7 @@ fn finding(file: &str, line: usize, name: &str, max_bytes: usize) -> RuleFinding
         format!("exceeds configured maxBytes {max_bytes}; shorten the declared name to at most {max_bytes} bytes")
     };
     RuleFinding {
+        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

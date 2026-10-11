@@ -35,10 +35,21 @@ pub struct Catalog<'a> {
 }
 
 pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(usize, String)> {
+    judge_file_with_insert_indices(file, catalog)
+        .into_iter()
+        .map(|(_, line, message)| (line, message))
+        .collect()
+}
+
+pub(crate) fn judge_file_with_insert_indices(
+    file: &SqlStatementFileFacts,
+    catalog: &Catalog<'_>,
+) -> Vec<(Option<usize>, usize, String)> {
     let mut findings = Vec::new();
     if file.parse_failed && file.insert_keyword_count > file.inserts.len() {
         if file.insert_keyword_count > 1 {
             findings.push((
+                None,
                 file.origin_line.max(1),
                 "unparseable fragment carries more than one INSERT; hoist each statement"
                     .to_string(),
@@ -49,17 +60,18 @@ pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(u
             return findings;
         }
         findings.push((
+            None,
             file.origin_line.max(1),
             "INSERT could not be proven replay-safe".to_string(),
         ));
         return findings;
     }
-    for insert in &file.inserts {
+    for (index, insert) in file.inserts.iter().enumerate() {
         if !insert.executed {
             continue;
         }
         if let Some(message) = judge_insert(insert, catalog) {
-            findings.push((insert.line.max(1), message));
+            findings.push((Some(index), insert.line.max(1), message));
         }
     }
     findings
