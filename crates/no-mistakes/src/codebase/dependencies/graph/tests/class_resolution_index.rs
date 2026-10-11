@@ -79,7 +79,7 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
         callable_bindings: fx_map(),
         imported: fx_map(),
         exported: fx_map(),
-        aliases: [
+        aliases: index_scoped_names([
             (
                 (1, "run".to_string()),
                 IndexedAlias {
@@ -104,9 +104,7 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
                     invalidated_at: None,
                 },
             ),
-        ]
-        .into_iter()
-        .collect(),
+        ]),
         binding_declared_at: fx_map(),
         invocation_offsets: fx_map(),
         class_bindings: fx_map(),
@@ -154,7 +152,7 @@ fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
         callable_bindings: fx_map(),
         imported: fx_map(),
         exported: fx_map(),
-        aliases: [
+        aliases: index_scoped_names([
             (
                 (1, "run".to_string()),
                 IndexedAlias {
@@ -179,9 +177,7 @@ fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
                     invalidated_at: None,
                 },
             ),
-        ]
-        .into_iter()
-        .collect(),
+        ]),
         binding_declared_at: fx_map(),
         invocation_offsets: fx_map(),
         class_bindings: fx_map(),
@@ -351,9 +347,7 @@ fn local_callable_id_walks_parents_and_rejects_dotted_bindings() {
         known_scopes: fx_set(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),
-        callable_bindings: [((0, "fn".to_string()), CallableId(1))]
-            .into_iter()
-            .collect(),
+        callable_bindings: index_scoped_names([((0, "fn".to_string()), CallableId(1))]),
         imported: fx_map(),
         exported: fx_map(),
         aliases: fx_map(),
@@ -367,9 +361,7 @@ fn local_callable_id_walks_parents_and_rejects_dotted_bindings() {
     };
 
     assert!(index.resolve_local_callable_id(None, "fn").is_none());
-    assert!(index
-        .resolve_local_callable_id(Some(0), "obj.fn")
-        .is_none());
+    assert!(index.resolve_local_callable_id(Some(0), "obj.fn").is_none());
     assert_eq!(
         index.resolve_local_callable_id(Some(1), "fn"),
         Some(CallableId(1))

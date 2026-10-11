@@ -314,3 +314,32 @@ fn callable_file_index_fixture_constructs_and_probes_call_sites() {
     assert_eq!(probe_call_site_files(0), 0);
     assert!(probe_call_site_files(4) > 0);
 }
+
+#[test]
+fn scoped_callable_fixtures_preserve_dense_and_sparse_probe_semantics() {
+    for sparse in [false, true] {
+        let fixture = scoped_callable_fixture(16, sparse);
+        // Count bindings, not distinct scopes: 16 aliases, 17 ordinary/class
+        // bindings, 16 deep-frame bindings, and one class binding.
+        assert_eq!(construct_scoped_callable_index(&fixture), 50);
+        let index = prepare_scoped_callable_index(&fixture);
+        assert_eq!(index.local_id(fixture.scope, &fixture.binding), Some(0));
+        assert_eq!(
+            index.local_id(fixture.deep_scope, &fixture.binding),
+            Some(0)
+        );
+        assert!(index.local_id(fixture.scope, "missing").is_none());
+        assert!(index.local_id(fixture.deep_scope, "missing").is_none());
+        assert!(index.alias_resolves(fixture.scope, &fixture.alias));
+        assert!(!index.alias_resolves(fixture.scope, "missing"));
+        assert!(index.binding_live(fixture.scope, &fixture.binding));
+        assert_eq!(
+            index.class_id(fixture.class_scope, "Class0.m0"),
+            Some(2_000_000)
+        );
+        assert!(index
+            .class_id(fixture.class_scope, "Class0.missing")
+            .is_none());
+        assert!(index.class_id(fixture.class_scope, "missing").is_none());
+    }
+}

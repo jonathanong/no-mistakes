@@ -64,7 +64,11 @@ impl CallableFileIndex {
 
     fn unique_class_binding(&self, display: &str) -> Option<&ClassBindingTarget> {
         let mut found: Option<&ClassBindingTarget> = None;
-        for target in self.class_bindings.values() {
+        for target in self
+            .class_bindings
+            .values()
+            .flat_map(|bindings| bindings.values())
+        {
             if target.scope != display {
                 continue;
             }
@@ -78,10 +82,10 @@ impl CallableFileIndex {
 
     fn unique_class_binding_named(&self, name: &str) -> Option<&ClassBindingTarget> {
         let mut found: Option<&ClassBindingTarget> = None;
-        for ((_, binding), target) in &self.class_bindings {
-            if binding != name {
+        for bindings in self.class_bindings.values() {
+            let Some(target) = bindings.get(name) else {
                 continue;
-            }
+            };
             if found.is_some_and(|existing| existing.class_id != target.class_id) {
                 return None;
             }
@@ -104,8 +108,8 @@ impl CallableFileIndex {
             if let Some(resolved) = self.this_member_on_own_class(class, member, caller_is_static) {
                 return resolved;
             }
-            let base = class.local_base.clone()?;
-            class = self.unique_class_binding_named(&base)?;
+            let base = class.local_base.as_deref()?;
+            class = self.unique_class_binding_named(base)?;
         }
     }
 
@@ -127,10 +131,7 @@ impl CallableFileIndex {
         if let Some(id) = self.instance_member_id(class, member) {
             return Some(Some(self.this_member_callee(class, member, id)));
         }
-        class
-            .static_member_ids
-            .contains_key(member)
-            .then_some(None)
+        class.static_member_ids.contains_key(member).then_some(None)
     }
 
     fn this_member_callee(

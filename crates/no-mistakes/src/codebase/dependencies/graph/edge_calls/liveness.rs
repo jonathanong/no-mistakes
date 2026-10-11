@@ -1,5 +1,5 @@
 fn invocation_offsets_from_bindings(
-    bindings: &FxHashMap<(usize, String), crate::codebase::dependencies::extract::CallableId>,
+    bindings: &ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
 ) -> FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>> {
     let mut offsets: FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>> =
@@ -18,7 +18,7 @@ fn invocation_offsets_from_bindings(
             .callee
             .split_once('.')
             .map_or(call.callee.as_str(), |(binding, _)| binding);
-        if let Some(id) = bindings.get(&(scope, binding.to_string())) {
+        if let Some(id) = scoped_name(bindings, scope, binding) {
             offsets.entry(*id).or_default().push(call.offset);
         }
     }

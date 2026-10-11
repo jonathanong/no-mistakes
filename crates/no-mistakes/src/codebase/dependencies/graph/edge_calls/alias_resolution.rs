@@ -1,4 +1,4 @@
-use super::{resolve_local_call_scope, CallableFileIndex, ResolvedLocalCallee};
+use super::{resolve_local_call_scope, scoped_name, CallableFileIndex, ResolvedLocalCallee};
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::fx::fx_set;
 
@@ -13,7 +13,7 @@ impl CallableFileIndex {
             return None;
         }
         while let Some(scope) = binding_scope {
-            if let Some(id) = self.callable_bindings.get(&(scope, binding.to_string())) {
+            if let Some(id) = scoped_name(&self.callable_bindings, scope, binding) {
                 return Some(*id);
             }
             binding_scope = self.lexical_scope_parents.get(&scope).copied().flatten();
@@ -28,7 +28,9 @@ impl CallableFileIndex {
         invocation: InvocationKind,
     ) -> Option<ResolvedLocalCallee> {
         loop {
-            if let Some(target) = self.resolve_class_binding(Some(binding_scope), callee, invocation) {
+            if let Some(target) =
+                self.resolve_class_binding(Some(binding_scope), callee, invocation)
+            {
                 return Some(target);
             }
             binding_scope = self
@@ -63,9 +65,7 @@ impl CallableFileIndex {
                     let Some(candidate_scope) = scope else {
                         break None;
                     };
-                    if let Some(alias) = self
-                        .aliases
-                        .get(&(candidate_scope, target.clone()))
+                    if let Some(alias) = scoped_name(&self.aliases, candidate_scope, &target)
                         .filter(|alias| {
                             self.alias_live_at(
                                 alias,
@@ -129,10 +129,8 @@ impl CallableFileIndex {
                 let Some(candidate_scope) = scope else {
                     break None;
                 };
-                if let Some(alias) = self
-                    .aliases
-                    .get(&(candidate_scope, target.clone()))
-                    .filter(|alias| {
+                if let Some(alias) =
+                    scoped_name(&self.aliases, candidate_scope, &target).filter(|alias| {
                         self.alias_live_at(
                             alias,
                             candidate_scope,
@@ -162,9 +160,11 @@ impl CallableFileIndex {
                 target = alias.target.clone();
                 let class_target =
                     member.map_or_else(|| target.clone(), |member| format!("{target}.{member}"));
-                if let Some(class_scope) =
-                    self.resolve_class_binding_in_scope_chain(alias_scope, &class_target, invocation)
-                {
+                if let Some(class_scope) = self.resolve_class_binding_in_scope_chain(
+                    alias_scope,
+                    &class_target,
+                    invocation,
+                ) {
                     return Some(class_scope);
                 }
                 let target_binding = target

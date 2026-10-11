@@ -109,12 +109,18 @@ fn resolve_imported_class_static_member(
         return None;
     };
     let target_index = indexes.file(facts, &target_file)?;
-    let (binding_scope, class) = target_index
-        .class_bindings
-        .iter()
-        .find(|(_, class)| class.class_id == class_id)?;
+    let (binding_scope, class) =
+        target_index
+            .class_bindings
+            .iter()
+            .find_map(|(scope, bindings)| {
+                bindings
+                    .values()
+                    .find(|class| class.class_id == class_id)
+                    .map(|class| (*scope, class))
+            })?;
     let (owner, member_id) = target_index.resolve_static_member(
-        binding_scope.0,
+        binding_scope,
         class,
         member,
         crate::codebase::dependencies::extract::InvocationKind::Call,

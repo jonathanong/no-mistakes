@@ -29,6 +29,60 @@ pub(super) fn bench_callable_file_index_construction(c: &mut Criterion) {
         );
     }
     group.finish();
+    bench_scoped_callable_indexes(c);
+}
+
+fn bench_scoped_callable_indexes(c: &mut Criterion) {
+    use no_mistakes::benchmark_support::{
+        construct_scoped_callable_index, prepare_scoped_callable_index, scoped_callable_fixture,
+    };
+    let mut group = c.benchmark_group("scoped_callable_index");
+    for (label, sparse) in [("dense", false), ("sparse", true)] {
+        let fixture = scoped_callable_fixture(4_096, sparse);
+        assert!(construct_scoped_callable_index(&fixture) >= 4_096);
+        let index = prepare_scoped_callable_index(&fixture);
+        assert_eq!(index.local_id(fixture.scope, &fixture.binding), Some(0));
+        assert_eq!(
+            index.local_id(fixture.deep_scope, &fixture.binding),
+            Some(0)
+        );
+        assert!(index.local_id(fixture.deep_scope, "missing").is_none());
+        assert!(index.alias_resolves(fixture.scope, &fixture.alias));
+        assert!(index.binding_live(fixture.scope, &fixture.binding));
+        assert_eq!(
+            index.class_id(fixture.class_scope, "Class0.m0"),
+            Some(2_000_000)
+        );
+        group.bench_function(BenchmarkId::new(label, "construct"), |b| {
+            b.iter(|| black_box(construct_scoped_callable_index(black_box(&fixture))));
+        });
+        for (probe, scope, name) in [
+            ("local_hit", fixture.scope, fixture.binding.as_str()),
+            ("local_miss", fixture.scope, "missing"),
+            ("deep_hit", fixture.deep_scope, fixture.binding.as_str()),
+            ("deep_miss", fixture.deep_scope, "missing"),
+        ] {
+            group.bench_function(BenchmarkId::new(label, probe), |b| {
+                b.iter(|| black_box(index.local_id(black_box(scope), black_box(name))));
+            });
+        }
+        group.bench_function(BenchmarkId::new(label, "alias_hit"), |b| {
+            b.iter(|| {
+                black_box(index.alias_resolves(black_box(fixture.scope), black_box(&fixture.alias)))
+            });
+        });
+        group.bench_function(BenchmarkId::new(label, "binding_live"), |b| {
+            b.iter(|| {
+                black_box(index.binding_live(black_box(fixture.scope), black_box(&fixture.binding)))
+            });
+        });
+        group.bench_function(BenchmarkId::new(label, "class_hit"), |b| {
+            b.iter(|| {
+                black_box(index.class_id(black_box(fixture.class_scope), black_box("Class0.m0")))
+            });
+        });
+    }
+    group.finish();
 }
 
 pub(super) fn bench_call_site_membership(c: &mut Criterion) {

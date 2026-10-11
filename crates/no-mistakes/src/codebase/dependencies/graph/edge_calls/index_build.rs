@@ -24,8 +24,7 @@ fn index_local_construct_bases(
     let mut bases = fx_map();
     for call in calls {
         if !(call.is_callback
-            && call.invocation
-                == crate::codebase::dependencies::extract::InvocationKind::Construct
+            && call.invocation == crate::codebase::dependencies::extract::InvocationKind::Construct
             && call.target_identity
                 == crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction)
         {
@@ -40,29 +39,25 @@ fn index_local_construct_bases(
 
 fn index_callable_aliases(
     aliases: &[crate::codebase::dependencies::extract::CallableAlias],
-) -> FxHashMap<(usize, String), IndexedAlias> {
-    aliases
-        .iter()
-        .map(|alias| {
-            (
-                (alias.binding_scope, alias.local.clone()),
-                IndexedAlias {
-                    target: alias.target.clone(),
-                    declared_at: alias.declared_at,
-                    invalidated_at: alias.invalidated_at,
-                },
-            )
-        })
-        .collect()
+) -> ScopedNameMap<IndexedAlias> {
+    index_scoped_names(aliases.iter().map(|alias| {
+        (
+            (alias.binding_scope, alias.local.clone()),
+            IndexedAlias {
+                target: alias.target.clone(),
+                declared_at: alias.declared_at,
+                invalidated_at: alias.invalidated_at,
+            },
+        )
+    }))
 }
 
-fn index_binding_declared_at(
-    offsets: &[(usize, String, u32)],
-) -> FxHashMap<(usize, String), u32> {
-    offsets
-        .iter()
-        .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))
-        .collect()
+fn index_binding_declared_at(offsets: &[(usize, String, u32)]) -> ScopedNameMap<u32> {
+    index_scoped_names(
+        offsets
+            .iter()
+            .map(|(scope, name, offset)| ((*scope, name.clone()), *offset)),
+    )
 }
 
 fn index_scope_ids_by_display(
