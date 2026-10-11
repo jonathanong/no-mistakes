@@ -1,10 +1,15 @@
 mod timing_order;
+mod work;
 
 use super::context::{measure_optional, with_timing_kind};
+use dashmap::DashMap;
+use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use work::WorkCounters;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TimingKind {
@@ -31,8 +36,8 @@ pub struct InvocationObserver {
     verbose: bool,
     started: Instant,
     timings: Mutex<Vec<TimingDiagnostic>>,
-    work: Option<Mutex<BTreeMap<&'static str, u64>>>,
-    source_reads: Option<Mutex<BTreeMap<PathBuf, u64>>>,
+    work: Option<Box<WorkCounters>>,
+    source_reads: Option<DashMap<PathBuf, AtomicU64, FxBuildHasher>>,
 }
 
 impl InvocationObserver {
@@ -41,8 +46,8 @@ impl InvocationObserver {
             verbose,
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
-            work: verbose.then(|| Mutex::new(BTreeMap::new())),
-            source_reads: verbose.then(|| Mutex::new(BTreeMap::new())),
+            work: verbose.then(|| Box::new(WorkCounters::new())),
+            source_reads: verbose.then(|| DashMap::with_hasher(FxBuildHasher)),
         })
     }
 
@@ -85,22 +90,21 @@ impl InvocationObserver {
         let Some(work) = &self.work else {
             return;
         };
-        *work
-            .lock()
-            .expect("diagnostics work mutex must not be poisoned")
-            .entry(metric)
-            .or_default() += amount;
+        work.increment(metric, amount);
     }
 
     pub(crate) fn record_source_read(&self, path: &Path) {
         let Some(source_reads) = &self.source_reads else {
             return;
         };
-        *source_reads
-            .lock()
-            .expect("diagnostics source-read mutex must not be poisoned")
+        if let Some(counter) = source_reads.get(path) {
+            counter.fetch_add(1, Ordering::Relaxed);
+            return;
+        }
+        source_reads
             .entry(path.to_path_buf())
-            .or_default() += 1;
+            .or_default()
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub(crate) fn source_read_snapshot(&self) -> BTreeMap<PathBuf, u64> {
@@ -108,9 +112,9 @@ impl InvocationObserver {
             .as_ref()
             .map(|source_reads| {
                 source_reads
-                    .lock()
-                    .expect("diagnostics source-read mutex must not be poisoned")
-                    .clone()
+                    .iter()
+                    .map(|entry| (entry.key().clone(), entry.value().load(Ordering::Relaxed)))
+                    .collect()
             })
             .unwrap_or_default()
     }
@@ -145,11 +149,7 @@ impl InvocationObserver {
             work: self
                 .work
                 .as_ref()
-                .map(|work| {
-                    work.lock()
-                        .expect("diagnostics work mutex must not be poisoned")
-                        .clone()
-                })
+                .map(|work| work.snapshot())
                 .unwrap_or_default(),
         }
     }
