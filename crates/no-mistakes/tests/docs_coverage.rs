@@ -13,7 +13,8 @@ mod cli_docs_helpers;
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
 use cli_docs_helpers::{
-    enum_block, enum_variants, kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
+    consumer_identifier_paths, enum_block, enum_variants, kebab_case, reachable_cli_pages,
+    rust_sources, subcommand_enums,
 };
 
 fn repo_root() -> PathBuf {
@@ -372,27 +373,6 @@ fn rule_docs_use_supported_option_examples() {
             assert!(!body.contains(needle), "{file} still contains `{needle}`");
         }
     }
-}
-
-fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
-    ignore::WalkBuilder::new(root)
-        .hidden(false)
-        .parents(false)
-        .git_global(false)
-        .git_exclude(false)
-        .git_ignore(true)
-        .require_git(false)
-        .filter_entry(|entry| entry.file_name() != ".git")
-        .build()
-        .filter_map(|entry| {
-            let entry =
-                entry.unwrap_or_else(|err| panic!("failed to walk {}: {err}", root.display()));
-            entry
-                .file_type()
-                .is_some_and(|kind| kind.is_file())
-                .then(|| entry.into_path())
-        })
-        .collect()
 }
 
 #[test]

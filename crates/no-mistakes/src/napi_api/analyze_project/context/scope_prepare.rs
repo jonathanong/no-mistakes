@@ -127,16 +127,7 @@ impl PreparedScopePlan {
             files.sort();
             files.dedup();
         }
-        let graph_files = check
-            .as_ref()
-            .map(|check| {
-                if has_non_check_report {
-                    traversal.graph_files().iter_visible().cloned().collect()
-                } else {
-                    check.graph_files().to_vec()
-                }
-            })
-            .unwrap_or_else(|| traversal.graph_files().iter_visible().cloned().collect());
+        let graph_files = scope_graph_files(check.as_ref(), has_non_check_report, &traversal);
         check_plan
             .graph_context
             .set_visible_file_set(graph_files.iter().cloned().collect());

@@ -107,3 +107,19 @@ fn requested_deadline_evidence(options: &AnalyzeProjectOptions) -> Result<bool> 
             Ok(parsed.include_runner_config_deadlines)
         }).collect::<Result<Vec<_>>>().map(|requests| requests.into_iter().any(|value| value))
 }
+
+fn scope_graph_files(
+    check: Option<&SharedCheckContext>,
+    has_non_check_report: bool,
+    traversal: &SharedTraversalContext,
+) -> Vec<PathBuf> {
+    check
+        .map(|check| {
+            if has_non_check_report {
+                traversal.graph_files().iter_visible().cloned().collect()
+            } else {
+                check.graph_files().to_vec()
+            }
+        })
+        .unwrap_or_else(|| traversal.graph_files().iter_visible().cloned().collect())
+}
