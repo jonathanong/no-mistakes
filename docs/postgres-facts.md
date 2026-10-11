@@ -1053,3 +1053,8 @@ records that read-only evidence separately from key-eligible `Query` pins.
 Oversized CTE summaries and temporary-source shadowing preserve uncapped
 nested reads; capped inner queries retain their existing bounded behavior.
 Original source locations and normal `no-mistakes` suppression still apply.
+
+Same-file helper SQL keeps its literal byte and line origins when conditional
+appends produce finite alternatives. Diagnostics on repeated clauses remain
+separate at their authored locations, rather than being rebased to the helper
+call.

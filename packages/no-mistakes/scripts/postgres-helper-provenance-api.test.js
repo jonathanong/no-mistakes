@@ -21,6 +21,8 @@ test(
       [
         ["postgres-explicit-columns", "src/composed.mts", 7],
         ["postgres-explicit-columns", "src/composed.mts", 16],
+        ["postgres-explicit-columns", "src/conditional.mts", 14],
+        ["postgres-explicit-columns", "src/conditional.mts", 21],
         ["postgres-explicit-columns", "src/helper.mts", 12],
         ["postgres-explicit-columns", "src/imported-other.mts", 4],
         ["postgres-explicit-columns", "src/imported-source.mts", 6],

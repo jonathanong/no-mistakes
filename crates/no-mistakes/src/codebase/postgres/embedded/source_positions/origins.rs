@@ -45,24 +45,38 @@ pub(in crate::codebase::postgres::embedded) fn expression(
             literal.span.start + 1,
             false,
         ),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            let quasi = &template.quasis[0];
-            piece(
-                &source[quasi.span.start as usize..quasi.span.end as usize],
-                sql,
-                quasi.span.start,
-                quasi.value.cooked.is_none(),
-            )
-        }
-        Expression::TaggedTemplateExpression(tagged) if tagged.quasi.expressions.is_empty() => {
-            let quasi = &tagged.quasi.quasis[0];
-            piece(
-                &source[quasi.span.start as usize..quasi.span.end as usize],
-                sql,
-                quasi.span.start,
-                true,
-            )
-        }
+        Expression::TemplateLiteral(template) => template_origins(template, source, false),
+        Expression::TaggedTemplateExpression(tagged) => template_origins(
+            &tagged.quasi,
+            source,
+            super::super::tags::is_string_raw_tag_spelling(&tagged.tag),
+        ),
         _ => vec![expr.span().start; sql.len()],
     }
+}
+
+fn template_origins(
+    template: &oxc_ast::ast::TemplateLiteral<'_>,
+    source: &str,
+    raw_mode: bool,
+) -> Vec<u32> {
+    let mut origins = Vec::new();
+    for (index, quasi) in template.quasis.iter().enumerate() {
+        if index > 0 {
+            let marker = super::super::placeholders::internal_placeholder(index);
+            origins.extend(std::iter::repeat_n(
+                template.expressions[index - 1].span().start,
+                marker.len(),
+            ));
+        }
+        let raw = &source[quasi.span.start as usize..quasi.span.end as usize];
+        let decoded = super::super::tags::quasi_text(quasi, raw_mode);
+        origins.extend(piece(
+            raw,
+            decoded,
+            quasi.span.start,
+            raw_mode || quasi.value.cooked.is_none(),
+        ));
+    }
+    origins
 }

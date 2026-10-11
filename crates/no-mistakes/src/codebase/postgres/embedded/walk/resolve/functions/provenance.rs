@@ -13,6 +13,7 @@ pub(crate) struct RecoveredSql {
     pub(crate) sql: String,
     pub(crate) line: u32,
     pub(crate) positions: Vec<EmbeddedSqlSourcePosition>,
+    pub(crate) origins: Vec<u32>,
 }
 
 impl RecoveredSql {
@@ -37,6 +38,7 @@ impl RecoveredSql {
             },
         );
         Self {
+            origins: source_positions::origins::expression(expr, source, &sql),
             sql,
             line,
             positions,
@@ -45,6 +47,13 @@ impl RecoveredSql {
 
     pub(crate) fn append(&mut self, suffix: Self) {
         let offset = count_placeholders(&self.sql);
+        self.origins
+            .extend(super::super::super::variants::origins::rewrite(
+                &suffix.sql,
+                &suffix.origins,
+                offset,
+                false,
+            ));
         let mut positions = suffix.positions;
         super::super::append::positions::renumber(&mut positions, &suffix.sql, offset);
         super::super::append::positions::append(

@@ -103,17 +103,28 @@ pub(super) fn recover(
 
 fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Option<Vec<Recovered>> {
     let sql = compose::static_fragment(expr, visitor)?;
+    let helper = compose::helper_provenance(expr, visitor).filter(|value| value.sql == sql);
+    let (line, positions, origins) = helper.map_or_else(
+        || {
+            (
+                line,
+                source_positions::for_expression(
+                    expr,
+                    visitor.source,
+                    expr.span().start as usize,
+                    line,
+                ),
+                source_positions::origins::expression(expr, visitor.source, &sql),
+            )
+        },
+        |value| (value.line, value.positions, value.origins),
+    );
     Some(vec![Recovered {
         value: ValueKind::Sql,
-        origins: source_positions::origins::expression(expr, visitor.source, &sql),
+        origins,
         sql,
         line,
-        positions: source_positions::for_expression(
-            expr,
-            visitor.source,
-            expr.span().start as usize,
-            line,
-        ),
+        positions,
         fragment: tags::fragments::is_sql_fragment(
             expr,
             &mut |name| compose::tag_shadowed(name, visitor),

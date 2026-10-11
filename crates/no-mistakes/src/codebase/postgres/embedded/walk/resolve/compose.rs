@@ -14,7 +14,7 @@ pub(in crate::codebase::postgres::embedded::walk) use builder::{
 pub(in crate::codebase::postgres::embedded::walk) use parameter_positions::contains_parameter_helper;
 pub(super) use parameter_positions::parameter_source_positions;
 
-pub(super) fn helper_provenance(
+pub(in crate::codebase::postgres::embedded::walk) fn helper_provenance(
     expr: &Expression<'_>,
     visitor: &ScopeVisitor<'_>,
 ) -> Option<functions::provenance::RecoveredSql> {
