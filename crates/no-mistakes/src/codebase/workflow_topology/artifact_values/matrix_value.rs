@@ -112,7 +112,7 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
         .filter(|(axis, _)| {
             !referenced_axes
                 .iter()
-                .any(|referenced| referenced.as_str() == *axis)
+                .any(|referenced| referenced.as_str() == **axis)
         })
         .map(|(_, values)| values.len() as u32)
         .product();
