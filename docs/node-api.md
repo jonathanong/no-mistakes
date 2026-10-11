@@ -649,9 +649,11 @@ after the lock is acquired, while `lockTimeout` limits only the lock wait. The
 Node/N-API defaults disable both deadlines (`timeout`/`lockTimeout` omitted,
 `0`, or `null`). The CLI still defaults to 30 seconds; pass `0` there to
 disable. `failOnLock: true` fails immediately on contention and overrides
-`lockTimeout`. `jobs` sets the rayon worker count for that invocation.
-Pass `0` or omit it to use the CPU count (matching CLI `--jobs 0`). A
-positive integer pins the pool on the first N-API call in the process.
+`lockTimeout`. The first valid analysis call initializes the process-wide
+rayon pool. A positive `jobs` value selects its worker count, overriding
+`RAYON_NUM_THREADS`. Pass `0` or omit it to use `RAYON_NUM_THREADS` when set,
+otherwise the CPU count (matching CLI `--jobs 0`). Later calls retain the
+initialized pool, even when they request a different `jobs` value.
 
 `import-dynamic` follows every string-literal `import()`, including `if` /
 `switch` / nested-function / JSX-handler loaders (`conditional-dynamic-import`

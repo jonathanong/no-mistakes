@@ -29,7 +29,6 @@ impl Task for JsonValueTask {
     type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        ensure_rayon_threads();
         let options_json = utf8_json(&self.options_json)?;
         let (options, invocation_options) =
             crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
@@ -60,7 +59,6 @@ impl Task for JsonTask {
     type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        ensure_rayon_threads();
         let options_json = utf8_json(&self.options_json)?;
         let (options_json, invocation_options) =
             crate::invocation::extract_napi_options(options_json).map_err(to_napi_error)?;
@@ -81,10 +79,6 @@ impl Task for JsonTask {
 fn utf8_json(options_json: &Buffer) -> napi::Result<&str> {
     std::str::from_utf8(options_json.as_ref())
         .map_err(|error| napi::Error::from_reason(format!("options JSON must be UTF-8: {error}")))
-}
-
-fn ensure_rayon_threads() {
-    crate::cli::init_rayon_threads(crate::cli::JobsArg { jobs: 0 });
 }
 
 pub(super) fn to_napi_error(error: anyhow::Error) -> napi::Error {
