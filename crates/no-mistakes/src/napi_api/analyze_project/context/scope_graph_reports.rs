@@ -150,7 +150,7 @@ impl PreparedScope {
             file.display()
         );
         let symbols = if crate::ast::legacy_symbols_share_standard_parse(&file) {
-            stored.ts.symbols.as_ref()
+            stored.ts.symbols.as_ref().or(stored.legacy_symbols.as_ref())
         } else {
             stored.legacy_symbols.as_ref()
         }

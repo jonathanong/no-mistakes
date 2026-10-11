@@ -139,7 +139,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
             std::sync::Arc::clone(&sources),
         );
     ts.extend(collected);
-    ts.extend(helper_facts);
+    super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);
     collect_partitions(
         session,
         root,

@@ -185,24 +185,3 @@ fn ordinary_call_site_files(
 ) -> Vec<PathBuf> {
     calls.map_or_else(Vec::new, |calls| calls.files())
 }
-
-fn prepare_call_site_runner_facts(
-    calls: Option<&crate::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>,
-    traversal: &SharedTraversalContext,
-    plan: &mut crate::codebase::check_facts::CheckFactPlan,
-) {
-    if calls.is_some() && plan.integration_runner_configs.is_none() {
-        // Runner preparation may already have parsed these on the preparing
-        // thread. Stage their union facts there, where the request AST cache
-        // remains available, instead of reparsing on a Rayon worker.
-        plan.integration_runner_configs = Some(std::sync::Arc::new(
-            crate::integration_tests::prepare_runner_configs_with_catalog(
-                traversal.root(),
-                traversal.config(),
-                traversal.visible_paths_arc().paths_for(traversal.root()).as_ref(),
-                traversal.tsconfig_catalog_arc(),
-                traversal.source_store(),
-            ),
-        ));
-    }
-}

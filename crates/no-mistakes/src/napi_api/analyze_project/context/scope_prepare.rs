@@ -74,7 +74,6 @@ impl PreparedScopePlan {
         if check.is_some() {
             check_plan.include(report_plan.clone());
         }
-        prepare_call_site_runner_facts(ordinary_calls.as_ref(), &traversal, &mut check_plan);
         let playwright = prepare_playwright_views(options, &traversal, check.as_ref())?;
         let mut files = check
             .as_ref()

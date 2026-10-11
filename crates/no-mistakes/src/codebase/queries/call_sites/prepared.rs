@@ -65,9 +65,9 @@ fn build_graph(
         PreparedGraphBuild {
             root: &target.root,
             tsconfig: catalog.config_for(&target.abs_file),
-            tsconfig_catalog: Some(&catalog),
+            tsconfig_catalog: Some(catalog),
             plan,
-            graph_files: &graph_files,
+            graph_files,
             config_path: None,
             prepared: &graph_config,
             facts: Some(facts),
