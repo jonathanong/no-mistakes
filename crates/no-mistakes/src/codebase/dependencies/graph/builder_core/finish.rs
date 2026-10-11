@@ -100,9 +100,11 @@
             // Route-import selector analysis reads the partial graph, so keep
             // its historical reconstruction path. Direct selectors can append
             // to the finished index without renumbering the base graph.
-            crate::perf_trace::trace("graph.playwright_selector_merge", || {
-                graph.append_canonical_edges(selector_edges);
-            });
+            if !selector_edges.is_empty() {
+                crate::perf_trace::trace("graph.playwright_selector_merge", || {
+                    graph.append_canonical_edges(selector_edges);
+                });
+            }
         }
         record_graph_observability(&graph, &session);
         Ok(graph)
