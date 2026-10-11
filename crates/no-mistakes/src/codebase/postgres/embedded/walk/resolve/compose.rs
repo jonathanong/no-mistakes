@@ -7,9 +7,11 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, Expression};
 
 mod builder;
+mod parameter_positions;
 pub(in crate::codebase::postgres::embedded::walk) use builder::{
     appended_builder_fragment, builder_fragment, is_builder_append,
 };
+pub(super) use parameter_positions::{contains_parameter_helper, parameter_source_positions};
 
 pub(super) const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
 
@@ -47,65 +49,6 @@ pub(super) fn classify_init(
         },
         _ => (None, EmbeddedSqlKind::Dynamic),
     }
-}
-
-pub(super) fn contains_parameter_helper(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
-    let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
-        return false;
-    };
-    match unwrap_ts_wrappers(&call.callee) {
-        Expression::Identifier(ident) => {
-            !visitor.shadowed_locally(ident.name.as_str())
-                && visitor.functions.is_parameter_builder(ident.name.as_str())
-        }
-        Expression::StaticMemberExpression(member) if member.property.name == "append" => {
-            contains_parameter_helper(&member.object, visitor)
-        }
-        _ => false,
-    }
-}
-
-pub(super) fn parameter_source_positions(
-    expr: &Expression<'_>,
-    visitor: &ScopeVisitor<'_>,
-) -> Option<Vec<crate::codebase::postgres::embedded::EmbeddedSqlSourcePosition>> {
-    fn resolve(
-        expr: &Expression<'_>,
-        visitor: &ScopeVisitor<'_>,
-    ) -> Option<(
-        String,
-        Vec<crate::codebase::postgres::embedded::EmbeddedSqlSourcePosition>,
-        u32,
-    )> {
-        let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
-            return None;
-        };
-        match unwrap_ts_wrappers(&call.callee) {
-            Expression::Identifier(ident) if !visitor.shadowed_locally(ident.name.as_str()) => {
-                visitor
-                    .functions
-                    .call_positions(call, ident.name.as_str(), visitor)
-            }
-            Expression::StaticMemberExpression(member) if member.property.name == "append" => {
-                let (base, mut positions, origin) = resolve(&member.object, visitor)?;
-                let fragment = call.arguments.first()?.as_expression()?;
-                let text = static_fragment(fragment, visitor)?;
-                let (line, fragment_positions) =
-                    super::append::positions::fragment(call, visitor, count_placeholders(&base));
-                super::append::positions::append(
-                    &mut positions,
-                    &base,
-                    origin,
-                    line,
-                    &fragment_positions,
-                );
-                let text = renumber_placeholders(&text, count_placeholders(&base));
-                Some((format!("{base}{text}"), positions, origin))
-            }
-            _ => None,
-        }
-    }
-    resolve(expr, visitor).map(|(_, positions, _)| positions)
 }
 
 fn composed_sql(
