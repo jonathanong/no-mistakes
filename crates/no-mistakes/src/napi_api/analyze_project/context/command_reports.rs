@@ -23,6 +23,7 @@ fn run_command_report(
         "fetches" => napi_raw(crate::napi_api::fetches_json_impl(json)),
         "dataPw" => napi_raw(crate::napi_api::data_pw_json_impl(json)),
         "registryExtension" => napi_raw(crate::napi_api::registry_extension_json_impl(json)),
+        "testsAudit" => napi_raw(crate::napi_api::tests_audit_json_impl(json)),
         "testsPlan" => napi_raw(crate::napi_api::tests_plan_json_impl(json)),
         "testsImpact" => napi_raw(crate::napi_api::tests_impact_json_impl(json)),
         "testsTargets" => napi_raw(crate::napi_api::tests_targets_json_impl(json)),

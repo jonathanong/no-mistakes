@@ -49,6 +49,7 @@ pub(super) fn is_command_report(report_type: &str) -> bool {
             | "fetches"
             | "dataPw"
             | "registryExtension"
+            | "testsAudit"
             | "testsPlan"
             | "testsImpact"
             | "testsTargets"

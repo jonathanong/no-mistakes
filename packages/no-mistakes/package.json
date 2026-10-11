@@ -24,6 +24,7 @@
     "planning-impact-artifacts-privacy.js",
     "planning-impact-cli.js",
     "planning.js",
+    "planning-artifact-inputs.js",
     "workflow-topology-index.js",
     "workflow-topology-index-helpers.js",
     "scripts/native-package.js",

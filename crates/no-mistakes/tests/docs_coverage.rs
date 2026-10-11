@@ -1,3 +1,5 @@
+#[path = "support/docs_audit.rs"]
+mod docs_audit;
 #[path = "support/docs_node_runtime_exports.rs"]
 mod docs_node_runtime_exports;
 use std::collections::BTreeSet;

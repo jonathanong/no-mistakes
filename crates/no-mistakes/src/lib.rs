@@ -43,6 +43,14 @@ pub(crate) mod test_support;
 mod tests;
 pub use ci::{run as ci_run, CiArgs};
 pub use impacted_checks::{run as impacted_checks_run, ImpactedChecksArgs};
-pub use tests::{run as tests_run, TestsArgs};
+pub use tests::audit::{
+    audit_test_selection, TestAuditExecutionEvidence, TestAuditObservation,
+    TestAuditObservationsArtifact, TestAuditPlanArtifact, TestAuditProvenance, TestAuditReport,
+    TestAuditSelectionEvidence, TestAuditSymbol,
+};
+pub use tests::{
+    run as tests_run, Confidence, GroupedExecutionTarget, ImpactEdgeDetail, ImpactReason,
+    ResourceCallSite, SelectedTest, TestPlan, TestPlanGroupResult, TestsArgs, Warning,
+};
 
 pub mod postgres_catalog;

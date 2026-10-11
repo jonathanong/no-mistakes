@@ -212,6 +212,7 @@ database's name.
 | `tests impact`                             | `testsImpact(options)`                                                                                                                                                                                                                                                     |
 | `tests why`                                | `testsWhy(options)`                                                                                                                                                                                                                                                        |
 | `tests comment`                            | `testsComment(options)`                                                                                                                                                                                                                                                    |
+| `tests audit` | `testsAudit(options)` compares versioned plan/observation artifacts; see [artifact contract and producer recipe](cli/tests-audit.md) |
 | `tests graph`                              | `testsGraph(options)` or `testsGraphMermaid(options)`                                                                                                                                                                                                                      |
 | `playwright check\|edges\|related\|tests`  | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests`                                                                                                                                                                                               |
 | `queues edges\|related\|check`             | `queueEdges`, `queueRelated`, `queueCheck`                                                                                                                                                                                                                                 |
@@ -352,6 +353,7 @@ does not have a one-to-one CLI command:
 | `serverRouteList` | `serverRouteList(options)` |
 | `serverRouteRelated` | `serverRouteRelated(options)` |
 | `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
+| `testsAudit` | `testsAudit(options)` |
 | `testsGraph` | `testsGraph(options)` |
 | `testsImpact` | `testsImpact(options)` |
 | `testsPlan` | `testsPlan(options)` |
@@ -931,3 +933,15 @@ their existing asynchronous exports. `DeclaredPayloadCompatibilityOptions`,
 `DeclaredPayloadContract`, and `DeclaredPayloadSchema` name the configuration
 shapes. Reports retain the existing `RuleFinding` contract; unsupported schema
 forms produce unproven findings.
+
+`testsAudit()` accepts `TestsAuditOptions` with exactly one of `plan`/`planJson`
+and exactly one of `observations`/`observationsJson`. Import the named
+`TestAuditPlanArtifact`, `TestAuditObservationsArtifact`, `TestAuditObservation`,
+`TestAuditProvenance`, `TestAuditSymbol`, `TestAuditExecutionEvidence`,
+`TestAuditSelectionEvidence`, and `TestAuditReport` interfaces. Inline artifacts
+and results use camelCase; saved CLI artifacts use snake_case. The facade handles
+both styles, including `analyzeProject({ reports: [{ type: 'testsAudit', ... }] })`.
+Provenance is caller supplied and compared, not cryptographically verified. A
+matching full-suite trace can expose observed misses and excess-selection
+candidates; no observed misses is never a completeness proof. See the
+[artifact contract and producer recipe](cli/tests-audit.md).
