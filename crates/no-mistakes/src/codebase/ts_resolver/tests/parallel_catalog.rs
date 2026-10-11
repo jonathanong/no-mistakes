@@ -73,7 +73,10 @@ fn canonical_visible_paths_keep_small_and_single_worker_inputs_serial() {
             });
             assert_eq!(
                 actual,
-                paths.iter().filter_map(|path| real_path(path)).collect()
+                paths
+                    .iter()
+                    .filter_map(|path| real_path(path))
+                    .collect::<BTreeSet<_>>()
             );
             assert_eq!(calls.load(Ordering::Relaxed), paths.len());
         });
