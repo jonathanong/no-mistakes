@@ -21,7 +21,7 @@ const rule: ClassifyRule = (item) => {
     )
     .trim();
   const activitySummary =
-    /^<!-- codex-pull-request-review-summary -->\n\n## Codex Review Summary\n\nThis comment shows the latest Codex review activity on this pull request\.\n\n\| Review \| Status \| Commit \| Review trigger \|\n\| --- \| --- \| --- \| --- \|\n(?:\|[^\n]+\|\n?)+$/.test(
+    /^<!-- codex-pull-request-review-summary -->\n(?:<!-- codex-security-review:v1 \{[^\n]*\} -->\n)?\n?## Codex Review Summary\n\nThis comment shows the latest Codex review activity on this pull request\.\n\n\| Review \| Status \| Commit \| Review trigger \|\n\| --- \| --- \| --- \| --- \|\n(?:\|[^\n]+\|\n?)+$/.test(
       content,
     );
   const cleanReview =
