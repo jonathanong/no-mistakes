@@ -117,8 +117,14 @@ fn rejects(
 
 #[test]
 fn rejects_wrong_versions_untrusted_scope_and_mismatched_provenance() {
-    rejects(|plan, _| plan.schema_version = 2, "schema_version");
-    rejects(|_, run| run.schema_version = 2, "schema_version");
+    rejects(
+        |plan, _| plan.schema_version = 2,
+        "plan artifact has schema_version 2",
+    );
+    rejects(
+        |_, run| run.schema_version = 3,
+        "observations artifact has schema_version 3",
+    );
     rejects(
         |_, run| run.granularity = "aggregate".into(),
         "per-test-file",
@@ -145,6 +151,21 @@ fn rejects_wrong_versions_untrusted_scope_and_mismatched_provenance() {
     plan.provenance.checkout_revision = "1".repeat(64);
     run.provenance = plan.provenance.clone();
     assert!(audit_test_selection(&plan, &run).is_ok());
+}
+
+#[test]
+fn parallel_trace_classification_preserves_order_across_worker_counts() {
+    let (plan, observations) = artifacts();
+    let baseline =
+        serde_json::to_value(audit_test_selection(&plan, &observations).unwrap()).unwrap();
+    for threads in [1, 4] {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+        let result = pool.install(|| audit_test_selection(&plan, &observations).unwrap());
+        assert_eq!(serde_json::to_value(result).unwrap(), baseline);
+    }
 }
 
 #[test]

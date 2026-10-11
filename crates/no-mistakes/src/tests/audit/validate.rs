@@ -5,8 +5,13 @@ pub(super) fn artifacts(
     plan: &TestAuditPlanArtifact,
     observations: &TestAuditObservationsArtifact,
 ) -> Result<()> {
-    if plan.schema_version != 1 || observations.schema_version != 1 {
-        bail!("tests audit supports schema_version 1 artifacts only");
+    for (name, version) in [
+        ("plan", plan.schema_version),
+        ("observations", observations.schema_version),
+    ] {
+        if version != 1 {
+            bail!("Audit {name} artifact has schema_version {version}; regenerate a schema_version 1 artifact");
+        }
     }
     validate_provenance(&plan.provenance, &observations.provenance)?;
     validate_run_shape(observations)?;

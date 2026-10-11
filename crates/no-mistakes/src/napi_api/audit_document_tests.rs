@@ -103,3 +103,78 @@ fn audit_options_reject_missing_conflicting_invalid_and_unknown_inputs() {
     .reason
     .contains("schema_version"));
 }
+
+#[test]
+fn audit_inline_errors_name_the_artifact_and_repair() {
+    for field in ["plan", "observations"] {
+        for artifact in [json!("invalid"), json!({})] {
+            let mut options = request();
+            options.as_object_mut().unwrap().remove(field);
+            options[format!("{field}Json")] = artifact;
+            let reason = tests_audit_json_impl(options).unwrap_err().reason;
+            assert!(reason.contains(&format!("{field}Json")), "{reason}");
+            assert!(
+                reason.contains("regenerate a schema_version 1 artifact"),
+                "{reason}"
+            );
+        }
+    }
+}
+
+#[test]
+fn audit_only_batch_performs_no_repository_preparation() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let result = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        let mut report = request();
+        report["type"] = json!("testsAudit");
+        crate::napi_api::analyze_project::analyze_project_json_impl(json!({
+            "root":fixture("nonexistent-root"),
+            "config":fixture("nonexistent-config.yml"),
+            "reports":[report]
+        }))
+        .unwrap()
+    });
+    let batch: serde_json::Value = serde_json::from_str(&result).unwrap();
+    assert_eq!(
+        batch["reports"][0]["result"],
+        serde_json::from_str::<serde_json::Value>(&tests_audit_json_impl(request()).unwrap())
+            .unwrap()
+    );
+    assert!(observer.source_read_snapshot().is_empty());
+    assert!(
+        observer.snapshot().work.is_empty(),
+        "{:?}",
+        observer.snapshot().work
+    );
+}
+
+#[test]
+fn mixed_audit_batch_preserves_repository_report_and_work() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/simple/fixture");
+    let repository_report =
+        json!({"type":"dependencies", "files":["a.mts"], "relationships":["import"]});
+    let run = |reports| {
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        let result = crate::diagnostics::with_observer(Some(observer.clone()), || {
+            crate::napi_api::analyze_project::analyze_project_json_impl(
+                json!({"root":root,"reports":reports}),
+            )
+            .unwrap()
+        });
+        (
+            serde_json::from_str::<serde_json::Value>(&result).unwrap(),
+            observer,
+        )
+    };
+    let (baseline, baseline_work) = run(vec![repository_report.clone()]);
+    let mut audit = request();
+    audit["type"] = json!("testsAudit");
+    let (mixed, mixed_work) = run(vec![repository_report, audit]);
+    assert_eq!(mixed["reports"][0], baseline["reports"][0]);
+    assert_eq!(mixed_work.snapshot().work, baseline_work.snapshot().work);
+    assert_eq!(
+        mixed_work.source_read_snapshot(),
+        baseline_work.source_read_snapshot()
+    );
+}

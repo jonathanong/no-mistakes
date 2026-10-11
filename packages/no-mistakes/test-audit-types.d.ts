@@ -45,14 +45,32 @@ export interface TestAuditObservationsArtifact {
   tests: TestAuditObservation[];
 }
 
-export interface TestsAuditOptions {
-  /** Supply exactly one of plan (file path) and planJson (artifact object or JSON text). */
-  plan?: string;
-  planJson?: TestAuditPlanArtifact | string;
-  /** Supply exactly one of observations (file path) and observationsJson. */
-  observations?: string;
-  observationsJson?: TestAuditObservationsArtifact | string;
+export interface TestsAuditPlanFileInput {
+  plan: string;
+  planJson?: never;
 }
+
+export interface TestsAuditPlanInlineInput {
+  plan?: never;
+  planJson: TestAuditPlanArtifact | string;
+}
+
+export interface TestsAuditObservationsFileInput {
+  observations: string;
+  observationsJson?: never;
+}
+
+export interface TestsAuditObservationsInlineInput {
+  observations?: never;
+  observationsJson: TestAuditObservationsArtifact | string;
+}
+
+export type TestsAuditPlanInput = TestsAuditPlanFileInput | TestsAuditPlanInlineInput;
+export type TestsAuditObservationsInput =
+  | TestsAuditObservationsFileInput
+  | TestsAuditObservationsInlineInput;
+/** Requires exactly one path or inline artifact for each input. */
+export type TestsAuditOptions = TestsAuditPlanInput & TestsAuditObservationsInput;
 
 export interface TestAuditExecutionEvidence {
   testFile: string;

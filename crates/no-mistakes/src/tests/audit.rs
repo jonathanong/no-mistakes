@@ -1,11 +1,13 @@
 //! Offline comparison of file-scoped selections with caller-produced execution evidence.
 use anyhow::{Context, Result};
+use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::process::ExitCode;
 
 use super::{AuditArgs, AuditFormat};
 
+mod classify;
 mod model;
 pub use model::*;
 
@@ -57,46 +59,36 @@ pub fn audit_test_selection(
             "Selected tests without observed changed-code execution are investigation candidates, not proof that those tests are unnecessary.".into(),
         ],
     };
-    for (file, trace) in &observed {
-        let matched_files: Vec<_> = trace
-            .executed_files
-            .iter()
-            .map(String::as_str)
-            .filter(|file| file_changes.contains(file))
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .map(str::to_string)
-            .collect();
-        let matched_symbols: Vec<_> = trace
-            .executed_symbols
-            .iter()
-            .filter(|symbol| symbol_changes.contains(symbol))
-            .cloned()
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .collect();
-        if !matched_files.is_empty() || !matched_symbols.is_empty() {
-            let evidence = TestAuditExecutionEvidence {
-                test_file: (*file).into(),
-                matched_files,
-                matched_symbols,
-            };
-            if selected.contains_key(file) {
-                report.selected_observed_tests.push(evidence);
-            } else {
-                report.missed_observed_tests.push(evidence);
+    let mut classified: Vec<_> = observed
+        .par_iter()
+        .map(|(file, trace)| {
+            (
+                *file,
+                classify::trace(
+                    trace,
+                    selected.get(file).copied(),
+                    &file_changes,
+                    &symbol_changes,
+                ),
+            )
+        })
+        .collect();
+    classified.sort_unstable_by_key(|(file, _)| *file);
+    for (_, trace) in classified {
+        match trace {
+            Some(classify::ClassifiedTrace::Selected(evidence)) => {
+                report.selected_observed_tests.push(evidence)
             }
-        } else if let Some(test) = selected.get(file) {
-            if trace.trace_complete {
-                report
-                    .selected_without_observed_execution
-                    .push(TestAuditSelectionEvidence {
-                        test_file: (*file).into(),
-                        reasons: test.reasons.clone(),
-                    });
-            } else {
-                report.selected_with_incomplete_traces.push((*file).into());
+            Some(classify::ClassifiedTrace::Missed(evidence)) => {
+                report.missed_observed_tests.push(evidence)
             }
+            Some(classify::ClassifiedTrace::WithoutExecution(evidence)) => {
+                report.selected_without_observed_execution.push(evidence)
+            }
+            Some(classify::ClassifiedTrace::Incomplete(file)) => {
+                report.selected_with_incomplete_traces.push(file)
+            }
+            None => {}
         }
     }
     report.selected_without_observations = selected

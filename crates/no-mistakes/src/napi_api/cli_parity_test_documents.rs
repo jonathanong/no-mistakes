@@ -42,13 +42,18 @@ pub(crate) fn tests_audit_json_impl(options: serde_json::Value) -> napi::Result<
 }
 
 fn load_audit_artifact<T: serde::de::DeserializeOwned>(json: Option<serde_json::Value>, path: Option<String>, field: &str) -> AnyhowResult<T> {
+    let artifact = if json.is_some() { format!("{field}Json") } else { format!("{field} file") };
     let value = match (json, path) {
-        (Some(serde_json::Value::String(raw)), None) => serde_json::from_str(&raw)?,
+        (Some(serde_json::Value::String(raw)), None) => serde_json::from_str(&raw)
+            .with_context(|| format!("Invalid {field}Json JSON text; regenerate a schema_version 1 artifact"))?,
         (Some(value), None) => value,
         (None, Some(path)) => crate::tests::audit::read_artifact(Path::new(&path))?,
         _ => bail!("Exactly one of {field} and {field}Json is required"),
     };
-    serde_json::from_value(decamelize_audit_artifact(value)?).map_err(Into::into)
+    let value = decamelize_audit_artifact(value)
+        .with_context(|| format!("Invalid {artifact} fields; regenerate a schema_version 1 artifact"))?;
+    serde_json::from_value(value)
+        .with_context(|| format!("Invalid {artifact} artifact shape; regenerate a schema_version 1 artifact"))
 }
 
 include!("cli_parity_audit_artifacts.rs");
