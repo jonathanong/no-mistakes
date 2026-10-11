@@ -2,6 +2,7 @@
 
 mod adjacent_strings;
 mod alter;
+mod batch_pool;
 mod body;
 mod columns;
 mod completeness;
@@ -53,7 +54,7 @@ pub fn parse_postgres_source(source: &PostgresSqlSource) -> PostgresSqlFacts {
 /// Batch independent sources while preserving input order and per-source ownership.
 pub fn parse_postgres_sources(sources: &[PostgresSqlSource]) -> Vec<PostgresSqlFacts> {
     use rayon::prelude::*;
-    sources.par_iter().map(parse_postgres_source).collect()
+    batch_pool::pool().install(|| sources.par_iter().map(parse_postgres_source).collect())
 }
 
 #[cfg(test)]
