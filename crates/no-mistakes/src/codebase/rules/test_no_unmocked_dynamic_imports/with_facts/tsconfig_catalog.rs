@@ -31,9 +31,11 @@ pub(super) fn for_files(
     let tsconfig = tsconfig?;
     let catalog = if tsconfig_path.is_none() {
         let mut roots = vec![root.to_path_buf()];
-        roots.extend(crate::integration_tests::configured_runner_config_dirs(
-            root, config,
-        ));
+        roots.extend(
+            crate::integration_tests::configured_runner_config_dirs_from_visible(
+                root, config, visible,
+            ),
+        );
         TsConfigCatalog::from_visible_and_sources(root, &roots, visible, sources)
     } else {
         crate::codebase::rules::run::prepared_tsconfig_catalog(

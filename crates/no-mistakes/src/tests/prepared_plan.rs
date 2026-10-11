@@ -173,8 +173,13 @@ impl PreparedTestPlanInputs {
                 .iter()
                 .map(|package| package.dir.clone()),
         );
-        tsconfig_candidate_roots
-            .extend(no_mistakes::integration_tests::configured_runner_config_dirs(&root, &config));
+        tsconfig_candidate_roots.extend(
+            no_mistakes::integration_tests::configured_runner_config_dirs_from_visible(
+                &root,
+                &config,
+                &root_visible_paths,
+            ),
+        );
         let preliminary_tsconfig_roots = tsconfig_candidate_roots.clone();
         // Test-runner configs are parsed before their project scopes can
         // contribute more roots. Explicit runner config parents are candidate

@@ -220,11 +220,14 @@ test(
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const options = { root: join(root, "../test-no-unmocked-dynamic-imports-runner-aliases") };
-    const report = await cjs.check(options);
-    assert.deepEqual(await esm.check(options), report);
-    assert.deepEqual(report.rules, []);
-    assert.deepEqual(report.warnings, []);
+    const fixture = join(root, "../test-no-unmocked-dynamic-imports-runner-aliases");
+    for (const config of [".no-mistakes.yml", ".no-mistakes-glob.yml"]) {
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.rules, [], config);
+      assert.deepEqual(report.warnings, []);
+    }
   },
 );
 
