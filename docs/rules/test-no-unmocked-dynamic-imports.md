@@ -41,6 +41,13 @@ discovered and checked as usual:
 vi.mock(import('./dependency.mts'), () => import('./lazy.mts'))
 ```
 
+Mocks registered in a statically imported test helper also cover that test's
+dynamic imports, including helpers imported through another helper. The mock
+specifier is resolved relative to the helper that declares it. A helper that
+the test never imports, imports only as a type, or loads lazily does not
+register its mock for that test. Mock coverage stays scoped to each test;
+dynamic imports inside an imported helper's mock factory remain checked.
+
 Caveat: only the bare `import(...)` form is recognized as a type carrier. A
 TS-wrapped specifier, e.g. `vi.mock(import('./dependency.mts') as unknown, factory)`,
 is not recognized and is still treated as an unmocked dynamic import.

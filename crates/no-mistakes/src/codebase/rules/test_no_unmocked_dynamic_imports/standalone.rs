@@ -10,6 +10,8 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod imported_helpers;
+
 pub(crate) fn check_inner(
     root: &Path,
     config: &NoMistakesConfig,
@@ -42,6 +44,14 @@ pub(crate) fn check_inner(
             &resolver,
             None,
         ));
+        mocks.extend(imported_helpers::collect(
+            graph,
+            &file,
+            &visible_files,
+            &resolver,
+            &file_cache,
+            &mocks,
+        )?);
         let mut check_context = DynamicCheckContext {
             root,
             file: &file,

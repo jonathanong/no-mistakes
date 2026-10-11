@@ -4,6 +4,8 @@ use crate::codebase::dependencies::graph::test_support::from_raw_maps;
 use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfigCatalog};
 use std::collections::HashMap;
 
+mod helper_mocks;
+
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
