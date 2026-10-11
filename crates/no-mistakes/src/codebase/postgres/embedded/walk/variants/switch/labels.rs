@@ -1,7 +1,8 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, CallExpression, Expression, Function,
-    UpdateExpression,
+    Argument, ArrayExpressionElement, ArrowFunctionExpression, AssignmentExpression,
+    BindingPattern, CallExpression, Expression, ForOfStatement, FormalParameters, Function,
+    TaggedTemplateExpression, UpdateExpression, VariableDeclarator, YieldExpression,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -18,6 +19,16 @@ pub(super) fn contains_write(expression: &Expression<'_>) -> bool {
 #[derive(Default)]
 struct Writes {
     found: bool,
+    consume_generators: bool,
+}
+
+impl Writes {
+    fn visit_consumed_expression<'a>(&mut self, expression: &Expression<'a>) {
+        let previous = self.consume_generators;
+        self.consume_generators = true;
+        self.visit_expression(expression);
+        self.consume_generators = previous;
+    }
 }
 
 impl<'a> Visit<'a> for Writes {
@@ -31,17 +42,109 @@ impl<'a> Visit<'a> for Writes {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        // A member invocation or unknown argument consumer may advance an
+        // iterator. Keep that conservative context through returned closures.
+        match unwrap_ts_wrappers(&call.callee) {
+            Expression::StaticMemberExpression(member) => {
+                self.visit_consumed_expression(&member.object);
+            }
+            Expression::ComputedMemberExpression(member) => {
+                self.visit_consumed_expression(&member.object);
+                self.visit_expression(&member.expression);
+            }
+            Expression::PrivateFieldExpression(member) => {
+                self.visit_consumed_expression(&member.object);
+            }
+            callee => self.visit_expression(callee),
+        }
+        self.visit_arguments(&call.arguments);
+        if self.found {
+            return;
+        }
         match unwrap_ts_wrappers(&call.callee) {
             Expression::ArrowFunctionExpression(arrow) => {
                 walk::walk_arrow_function_expression(self, arrow);
             }
             Expression::FunctionExpression(function) => {
-                walk::walk_function(self, function, ScopeFlags::Function);
+                if function.generator && !self.consume_generators {
+                    // Defaults execute at iterator creation; its body does not.
+                    self.visit_formal_parameters(&function.params);
+                } else {
+                    walk::walk_function(self, function, ScopeFlags::Function);
+                }
             }
             _ => {}
         }
-        if !self.found {
-            walk::walk_call_expression(self, call);
+    }
+
+    fn visit_argument(&mut self, argument: &Argument<'a>) {
+        match argument {
+            Argument::SpreadElement(spread) => self.visit_consumed_expression(&spread.argument),
+            _ => self.visit_consumed_expression(argument.to_expression()),
+        }
+    }
+
+    fn visit_arguments(&mut self, arguments: &oxc_allocator::Vec<'a, Argument<'a>>) {
+        // Oxc's list walker dispatches expressions/spreads directly instead
+        // of calling visit_argument, so retain consumption context here.
+        for argument in arguments {
+            self.visit_argument(argument);
+        }
+    }
+
+    fn visit_tagged_template_expression(&mut self, expression: &TaggedTemplateExpression<'a>) {
+        self.visit_expression(&expression.tag);
+        // Tags receive interpolation values and may advance their iterators.
+        // Ordinary template coercion does not consume a native iterator.
+        for interpolation in &expression.quasi.expressions {
+            self.visit_consumed_expression(interpolation);
+        }
+    }
+
+    fn visit_array_expression_element(&mut self, element: &ArrayExpressionElement<'a>) {
+        if let ArrayExpressionElement::SpreadElement(spread) = element {
+            self.visit_consumed_expression(&spread.argument);
+        } else {
+            walk::walk_array_expression_element(self, element);
+        }
+    }
+
+    fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
+        self.visit_binding_pattern(&declarator.id);
+        if let Some(initializer) = &declarator.init {
+            // Stored iterators can be consumed through aliases later. Retain
+            // the existing conservative body scan without tracing bindings.
+            self.visit_consumed_expression(initializer);
+        }
+    }
+
+    fn visit_formal_parameters(&mut self, parameters: &FormalParameters<'a>) {
+        // Default iterator values are stored in parameter bindings too.
+        let previous = self.consume_generators;
+        self.consume_generators = true;
+        walk::walk_formal_parameters(self, parameters);
+        self.consume_generators = previous;
+    }
+
+    fn visit_binding_pattern(&mut self, pattern: &BindingPattern<'a>) {
+        // Destructuring defaults can store an iterator independently of the
+        // declaration initializer, including loop and catch bindings.
+        let previous = self.consume_generators;
+        self.consume_generators = true;
+        walk::walk_binding_pattern(self, pattern);
+        self.consume_generators = previous;
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &ForOfStatement<'a>) {
+        self.visit_for_statement_left(&statement.left);
+        self.visit_consumed_expression(&statement.right);
+        self.visit_statement(&statement.body);
+    }
+
+    fn visit_yield_expression(&mut self, expression: &YieldExpression<'a>) {
+        match (&expression.argument, expression.delegate) {
+            (Some(argument), true) => self.visit_consumed_expression(argument),
+            _ => walk::walk_yield_expression(self, expression),
         }
     }
 

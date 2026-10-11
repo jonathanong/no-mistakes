@@ -113,6 +113,14 @@ in a label make branching executor SQL inside that switch unanalyzable. The
 default `fail` reports the executor line; `ignore` skips that uncertain call.
 Literal SQL inside the switch still produces ordinary `offset` findings, and
 callbacks that are merely created or passed are not executed by this heuristic.
+Creating an unused generator iterator also leaves its body unexecuted, so body
+writes alone do not make the query unanalyzable. Arguments and parameter defaults
+still execute. Advancing or consuming an iterator (for example, `.next()`,
+`for...of`, spread, tagged template interpolation, or `yield*`), storing it, or
+passing it to an unknown consumer retains conservative body checks, including
+parameter and destructuring defaults.
+Stored iterators may remain unanalyzable even when their body is never advanced;
+the heuristic does not trace iterator aliases.
 An earlier body may be skipped by direct entry or executed by fallthrough, so
 its SQL assignments cannot supply a later case's complete statement. Bindings
 it changes become opaque for later cases. The default `fail` reports those
@@ -124,6 +132,12 @@ let gate = false;
 switch (2) {
   case (gate = true, 1): break;
   case 2: query(gate ? "SELECT 1 OFFSET 1" : "SELECT 1"); // unanalyzable
+}
+
+let unchanged = false;
+switch (2) {
+  case (function* () { unchanged = true; })(): break;
+  case 2: query(unchanged ? "SELECT 1 OFFSET 1" : "SELECT 1"); // passes
 }
 ```
 

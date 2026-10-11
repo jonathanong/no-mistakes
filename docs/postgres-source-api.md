@@ -42,6 +42,11 @@ disable finite recovery inside a switch because failed labels can change later
 scalar guards. CLI and async Node checks apply the same `unanalyzableSql` policy;
 literal SQL remains analyzable and callbacks that are only created or passed do
 not execute.
+Generator creation checks evaluated arguments and parameter defaults while
+leaving an unused iterator's body unexecuted. Consumed or stored iterators retain
+conservative body checks in both CLI and async Node checks, including iterator
+results returned through invoked literal closures. No Node source-fact JSON
+fields or TypeScript declarations change.
 The conservative traversal isolates each case's entry state. A preceding body
 cannot supply a later case's complete SQL; bindings it changes lose recovered
 prefixes and finite versions, including when the leading DML kind can change.
