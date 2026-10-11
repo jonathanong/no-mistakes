@@ -68,6 +68,8 @@ imported helper does not apply if another helper's mock prevents it from loading
 CommonJS helpers loaded through unconditional top-level literal `require()`
 calls are included. Calls behind skipped or unknown conditions, such as
 `false && require('./mock-helper')`, do not supply mock coverage.
+The same applies to loop binding defaults and assignment targets when the
+loop has no iterations, and to a `do...while` test skipped by an early `break`.
 `require.resolve()` does not execute a helper.
 For a test matched by multiple selected projects, the rule checks its dynamic
 imports in each project context. A mock from one project's setup does not
