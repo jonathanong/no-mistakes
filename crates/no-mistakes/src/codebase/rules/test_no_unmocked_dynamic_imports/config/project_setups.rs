@@ -11,9 +11,13 @@ pub(in super::super) fn explicit_project_setup_data(
     let mut data = Vec::new();
     let rules = config.rule_applications(super::super::RULE_ID);
     let all_projects = rules.is_empty()
-        || rules
-            .iter()
-            .any(|rule| rule.applies_to_repository() || !rule.projects.is_empty());
+        || rules.iter().any(|rule| {
+            rule.applies_to_repository()
+                || rule
+                    .projects
+                    .iter()
+                    .any(|project| config.projects.contains_key(project))
+        });
     let selected = rules
         .iter()
         .flat_map(|rule| rule.tests.vitest.iter().map(String::as_str))
@@ -72,9 +76,13 @@ impl SelectedRunners {
     pub(in super::super) fn for_config(config: &NoMistakesConfig) -> Self {
         let rules = config.rule_applications(super::super::RULE_ID);
         let all = rules.is_empty()
-            || rules
-                .iter()
-                .any(|rule| rule.applies_to_repository() || !rule.projects.is_empty());
+            || rules.iter().any(|rule| {
+                rule.applies_to_repository()
+                    || rule
+                        .projects
+                        .iter()
+                        .any(|project| config.projects.contains_key(project))
+            });
         Self {
             vitest: all || rules.iter().any(|rule| !rule.tests.vitest.is_empty()),
             jest: all,

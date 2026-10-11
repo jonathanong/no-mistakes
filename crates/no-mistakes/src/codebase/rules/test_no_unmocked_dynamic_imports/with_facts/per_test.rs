@@ -23,7 +23,7 @@ pub(super) struct Request<'a> {
     pub(super) graph_files: &'a GraphFiles,
     pub(super) visible_files: &'a crate::fx::PathSet,
     pub(super) manual_mocks: &'a HashSet<PathBuf>,
-    pub(super) setup_files: &'a [PathBuf],
+    pub(super) setup_mocks: &'a HashSet<PathBuf>,
     pub(super) shared: &'a CheckFactMap,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     pub(super) defer_suppression: bool,
@@ -38,7 +38,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         graph_files,
         visible_files,
         manual_mocks,
-        setup_files,
+        setup_mocks,
         shared,
         dependency_cache,
         defer_suppression,
@@ -62,16 +62,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         anyhow::bail!("missing dynamic import facts for {}", file.display());
     };
     let mut mocks = manual_mocks.clone();
-    mocks.extend(super::setup_mocks::with_facts(
-        super::setup_mocks::Request {
-            setup_files,
-            resolver,
-            graph,
-            graph_files,
-            visible_files,
-            shared,
-        },
-    )?);
+    mocks.extend(setup_mocks.iter().cloned());
     mocks.extend(resolve_mock_specifiers(
         &facts.mock_specifiers,
         &file,

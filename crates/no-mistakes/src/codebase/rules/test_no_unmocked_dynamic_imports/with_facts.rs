@@ -13,6 +13,7 @@ use std::sync::Arc;
 
 mod graph;
 mod per_test;
+mod setup_contexts;
 mod setup_mocks;
 mod tsconfig_catalog;
 
@@ -120,43 +121,57 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
             config::prepare_from_visible(root, config, &files, sources)
         })?;
-    let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
-    let setup_data = prepared.setup_data();
-    let selected_runners = config::SelectedRunners::for_config(config);
+    let prepared_contexts = setup_contexts::prepare(setup_contexts::Request {
+        root,
+        test_files: matching_test_files_with_filter(root, &files, prepared.test_filter()),
+        setup_data: prepared.setup_data(),
+        selected: config::SelectedRunners::for_config(config),
+        resolver: &resolver,
+        graph,
+        graph_files: &graph_files,
+        visible_files: &visible_files,
+        shared,
+        defer_suppression,
+    })?;
+    let empty_mocks = HashSet::new();
 
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
 
     let per_test =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.per_test_analysis", || {
-            test_files
+            prepared_contexts
+                .tests
                 .into_par_iter()
-                .map(|file| {
-                    let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
-                    config::setup_contexts_for_test_precomputed(
-                        &rel_path,
-                        setup_data,
-                        selected_runners,
-                    )
-                    .into_iter()
-                    .map(|setup_files| {
-                        per_test::analyze(
-                            per_test::Request {
-                                root,
-                                config,
-                                resolver: &resolver,
-                                graph,
-                                graph_files: &graph_files,
-                                visible_files: &visible_files,
-                                manual_mocks: &manual_mocks,
-                                setup_files: &setup_files,
-                                shared,
-                                dependency_cache: &dependency_cache,
-                                defer_suppression,
-                            },
-                            file.clone(),
-                        )
-                    })
-                    .collect::<Result<Vec<_>>>()
+                .map(|test| {
+                    test.contexts
+                        .into_iter()
+                        .map(|setup_files| {
+                            let setup_mocks = if test.setup_needed {
+                                prepared_contexts
+                                    .mocks
+                                    .get(&setup_files)
+                                    .expect("setup mocks were precomputed")
+                            } else {
+                                &empty_mocks
+                            };
+                            per_test::analyze(
+                                per_test::Request {
+                                    root,
+                                    config,
+                                    resolver: &resolver,
+                                    graph,
+                                    graph_files: &graph_files,
+                                    visible_files: &visible_files,
+                                    manual_mocks: &manual_mocks,
+                                    setup_mocks,
+                                    shared,
+                                    dependency_cache: &dependency_cache,
+                                    defer_suppression,
+                                },
+                                test.file.clone(),
+                            )
+                        })
+                        .collect::<Result<Vec<_>>>()
                 })
                 .collect::<Result<Vec<_>>>()
         })?;

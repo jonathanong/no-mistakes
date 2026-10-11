@@ -100,6 +100,8 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
             ".no-mistakes-runner-playwright-only.yml",
             vec!["web/covered.test.mts"],
         ),
+        (".no-mistakes-stale-app.yml", vec!["web/covered.test.mts"]),
+        (".no-mistakes-cjs-helper.yml", vec![]),
     ] {
         let config =
             crate::config::v2::load_v2_config(&root, Some(&root.join(config_file))).unwrap();

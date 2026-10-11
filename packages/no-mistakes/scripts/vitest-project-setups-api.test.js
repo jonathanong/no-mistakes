@@ -59,6 +59,8 @@ test(
       [".no-mistakes-runner-vitest-config-overlap.yml", ["web/covered.test.mts"]],
       [".no-mistakes-runner-jest-config-overlap.yml", ["web/covered.test.mts"]],
       [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-stale-app.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-cjs-helper.yml", []],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);
