@@ -1,6 +1,7 @@
 mod alternatives;
 mod callbacks;
 mod calls;
+mod composition;
 mod concat;
 mod member;
 use {concat::concat, scope::Scope};
@@ -97,26 +98,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 // closure copies or reference cycles between sibling functions.
                 Value::Function(Arc::clone(function), path.to_path_buf(), *env)
             }
-            Expr::Template(parts) => {
-                let mut prefix = Value::Prefix(String::new(), true, None);
-                for part in parts {
-                    prefix = concat(prefix, self.expr(part, path, env, depth, generic));
-                }
-                prefix
-            }
-            Expr::Append(base, tail) => {
-                let base = self.expr(base, path, env, depth, generic).exposed();
-                let tail = self.expr(tail, path, env, depth, generic);
-                let base = if matches!(&base, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
-                {
-                    Value::Unknown
-                } else {
-                    base
-                };
-                let value = concat(base, tail);
-                self.replace_builder(&value);
-                value
-            }
+            Expr::Template(parts) => self.template(parts, path, env, (depth, generic)),
+            Expr::Append(base, tail) => self.append(base, tail, path, env, (depth, generic)),
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
@@ -174,16 +157,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.index(value, *index)
             }
             Expr::Children(children) | Expr::Container(children) | Expr::Object(children) => {
-                let values = children
-                    .iter()
-                    .map(|child| self.expr(child, path, env, depth, generic))
-                    .collect::<Vec<_>>()
-                    .into();
-                match expr {
-                    Expr::Container(_) => Value::Aggregate(values),
-                    Expr::Object(_) => Value::Object(values),
-                    _ => Value::References(values),
-                }
+                self.container(expr, children, path, env, (depth, generic))
             }
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
