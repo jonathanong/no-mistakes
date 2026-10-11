@@ -178,3 +178,6 @@ fn mixed_audit_batch_preserves_repository_report_and_work() {
         baseline_work.source_read_snapshot()
     );
 }
+
+#[path = "audit_document_tests/batch_parity.rs"]
+mod batch_parity;
