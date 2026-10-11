@@ -1,6 +1,6 @@
 use super::*;
 
-pub(in crate::codebase::postgres::embedded::walk::resolve) fn contains_parameter_helper(
+pub(in crate::codebase::postgres::embedded::walk) fn contains_parameter_helper(
     expr: &Expression<'_>,
     visitor: &ScopeVisitor<'_>,
 ) -> bool {

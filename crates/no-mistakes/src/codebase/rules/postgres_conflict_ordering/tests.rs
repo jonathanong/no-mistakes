@@ -1,3 +1,4 @@
+mod variants;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -369,10 +370,11 @@ fn rejects_recovered_append_insert_without_canonical_order() {
 }
 
 #[test]
-fn rejects_conditional_append_insert_as_unanalyzable() {
+fn checks_both_conditional_append_paths_independently() {
     let findings = findings("fail-append-conditional-insert");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
+    // The taken path has canonical conflict ordering; the untaken path has
+    // no ON CONFLICT, so conflict-ordering does not apply to that version.
+    assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]

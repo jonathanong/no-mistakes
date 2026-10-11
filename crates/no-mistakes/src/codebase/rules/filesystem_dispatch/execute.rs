@@ -145,7 +145,14 @@ fn run_prepared_filesystem_rules(
             ],
         );
     }
-    super::super::sort_findings(&mut findings);
+    findings.sort();
+    findings.dedup_by(|left, right| {
+        // Prepared PostgreSQL producers finish physical deduplication before
+        // projecting DTOs; retain distinct columns whose DTOs compare equal.
+        left == right
+            && !crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
+                .contains(&left.rule.as_str())
+    });
     Ok(findings)
 }
 

@@ -5,7 +5,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
 use std::collections::HashSet;
 
-mod fragments;
+pub(in crate::codebase::postgres::embedded) mod fragments;
 use fragments::interpolates_sql_fragment;
 
 /// Local names that the tag check trusts, plus file-wide bindings that hold
@@ -25,9 +25,13 @@ impl SqlTagNames {
     }
 
     /// Records fragment bindings once every trusted import is known.
-    pub(crate) fn collect_fragments(&mut self, program: &oxc_ast::ast::Program<'_>) {
+    pub(crate) fn collect_fragments(
+        &mut self,
+        program: &oxc_ast::ast::Program<'_>,
+        sql_statement_types: &HashSet<String>,
+    ) {
         (self.fragments, self.fragment_functions) =
-            fragments::collect_fragment_bindings(program, self);
+            fragments::collect_fragment_bindings(program, self, sql_statement_types);
     }
 
     fn contains(&self, name: &str) -> bool {
@@ -124,7 +128,7 @@ pub(super) fn kind_for_const(sql: String, is_const: bool) -> (Option<String>, Em
     }
 }
 
-fn is_sql_tag(
+pub(in crate::codebase::postgres::embedded) fn is_sql_tag(
     tag: &Expression<'_>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,

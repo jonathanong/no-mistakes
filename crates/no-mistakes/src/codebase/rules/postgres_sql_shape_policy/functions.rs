@@ -32,17 +32,17 @@ pub(super) struct CompiledFunction {
     hint: Option<String>,
 }
 
-pub(super) fn findings(
+pub(super) fn located_findings(
     file: &str,
     facts: &SqlStatementFileFacts,
     shapes: &BannedShapes,
     names: &[CompiledFunction],
     line_at: impl Fn(usize) -> usize,
-) -> Vec<RuleFinding> {
+) -> Vec<(usize, RuleFinding)> {
     if !shapes.banned_function_call {
         return Vec::new();
     }
-    facts.function_calls.iter().filter_map(|call| {
+    facts.function_calls.iter().enumerate().filter_map(|(index, call)| {
         let entry = names.iter().find(|entry| {
             (entry.name == call.name_parts || entry.name.len() == 1 && entry.name.last() == call.name_parts.last())
                 && entry.clauses.as_ref().is_none_or(|clauses| call.clause.is_some_and(|clause| clauses.contains(&clause)))
@@ -54,7 +54,7 @@ pub(super) fn findings(
             format!("function call {spelling} is banned by this SQL shape policy; remove the call or replace it with an allowed operation")
         };
         let text = entry.hint.as_ref().map_or_else(|| text.clone(), |hint| format!("{text}; {hint}"));
-        Some(finding(file, line_at(call.line), &text, BANNED_FUNCTION_CALL))
+        Some((index, finding(file, line_at(call.line), &text, BANNED_FUNCTION_CALL)))
     }).collect()
 }
 

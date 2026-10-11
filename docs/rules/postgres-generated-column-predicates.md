@@ -48,6 +48,13 @@ With no options, the rule still tracks `uuid_extract_timestamp` of a
 single-column primary key and checks `where`, `join`, and `order-by`. It
 reports nothing until schema SQL defines such a column and a query uses it.
 
+Every complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
+of a branching executor call is checked, up to 16 versions. If only one path
+filters or orders on a tracked generated column, that path is still reported;
+all paths using the source key pass without an unanalyzable finding. Findings
+keep branch-fragment source locations for suppressions. Opaque or over-cap
+calls retain `unanalyzableSql` behavior.
+
 ## Options and defaults
 
 `include`, `exclude`, `sqlInclude`, `importSpecifier`, `executorNames`, and

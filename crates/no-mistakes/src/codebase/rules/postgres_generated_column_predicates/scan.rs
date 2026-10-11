@@ -1,12 +1,10 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::postgres::statements::{SqlColumnClause, SqlColumnUseFact};
-use crate::codebase::postgres::EmbeddedSqlKind;
+use crate::codebase::postgres::statements::{SqlColumnClause, SqlColumnUseFact, SqlFactSite};
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 mod catalog;
-
 use catalog::Tracked;
 
 pub(super) fn scan(
@@ -14,9 +12,9 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     query_files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     prepared: &crate::codebase::check_facts::CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let sql_paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
     let schema = sql_paths
         .iter()
@@ -42,14 +40,16 @@ pub(super) fn scan(
     let live = catalog::live_columns(&schema);
     let columns = catalog::column_index(&live);
     let tracked = catalog::tracked_columns(&live, opts);
-    let mut findings = catalog::stale_extras(&live, &opts.extras);
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    findings.extend(catalog::stale_extras(&live, &opts.extras));
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     if tracked.is_empty() {
         return Ok(findings);
     }
     for file in embedded.iter().filter(|file| queries.contains(&file.path)) {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
-            if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
+            if opts.fail_unanalyzable && call.is_unanalyzable() {
                 findings.push(sql_finding(
                     &rel,
                     call.line.max(1) as usize,
@@ -64,33 +64,52 @@ pub(super) fn scan(
         .filter(|file| queries.contains(&file.path))
     {
         let rel = relative_slash_path(root, &file.path);
+        let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            findings.push(sql_finding(
-                &rel,
-                file.origin_line.max(1),
-                "SQL could not be analyzed for generated column predicates",
-                "unanalyzable",
-            ));
+            dedup.push(
+                &mut findings,
+                file,
+                SqlFactSite::Origin,
+                source.as_deref(),
+                sql_finding(
+                    &rel,
+                    file.origin_line.max(1),
+                    "SQL could not be analyzed for generated column predicates",
+                    "unanalyzable",
+                ),
+            );
             continue;
         }
-        for select in &file.selects {
-            findings.extend(column_findings(
-                &rel,
-                &select.column_uses,
-                opts,
-                &tracked,
-                &columns,
-            ));
+        for (select_index, select) in file.selects.iter().enumerate() {
+            for (column_index, use_) in select.column_uses.iter().enumerate() {
+                for finding in
+                    column_findings(&rel, std::slice::from_ref(use_), opts, &tracked, &columns)
+                {
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        SqlFactSite::Column(select_index, column_index),
+                        source.as_deref(),
+                        finding,
+                    );
+                }
+            }
         }
-        findings.extend(column_findings(
-            &rel,
-            &file.mutation_column_uses,
-            opts,
-            &tracked,
-            &columns,
-        ));
+        for (index, use_) in file.mutation_column_uses.iter().enumerate() {
+            for finding in
+                column_findings(&rel, std::slice::from_ref(use_), opts, &tracked, &columns)
+            {
+                dedup.push(
+                    &mut findings,
+                    file,
+                    SqlFactSite::MutationColumn(index),
+                    source.as_deref(),
+                    finding,
+                );
+            }
+        }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 

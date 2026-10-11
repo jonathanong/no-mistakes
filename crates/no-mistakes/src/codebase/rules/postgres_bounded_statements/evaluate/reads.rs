@@ -11,6 +11,7 @@ pub(super) fn collect(
     pin_subqueries: &[Vec<Option<Evaluation>>],
     bounded: &[bool],
     catalog: &SchemaCatalog,
+    precise_columns: bool,
 ) -> Vec<Offender> {
     let mut found = Vec::new();
     for (index, item) in query.items.iter().enumerate() {
@@ -29,15 +30,19 @@ pub(super) fn collect(
         }
         if !query.capped && !bounded[index] && nested[index].is_none() {
             if let SqlBoundItemKind::Table(name) = &item.kind {
-                found.extend(table_offender(name, item.line, catalog));
+                found.extend(table_offender(name, item.line, item.column, catalog));
             }
         }
     }
-    let mut positions: HashMap<(String, usize), usize> = HashMap::new();
+    let mut positions: HashMap<(String, usize, usize), usize> = HashMap::new();
     let mut out: Vec<Offender> = Vec::new();
     for mut offender in found {
         offender.blocking_input |= query.input_mode == SqlBoundInputMode::Blocking;
-        let key = (offender.table.clone(), offender.line);
+        let key = (
+            offender.table.clone(),
+            offender.line,
+            if precise_columns { offender.column } else { 0 },
+        );
         if let Some(index) = positions.get(&key) {
             // The same CTE read may occur on streaming and blocking paths: retain either proof.
             out[*index].blocking_input |= offender.blocking_input;
@@ -49,10 +54,16 @@ pub(super) fn collect(
     out
 }
 
-pub(super) fn table_offender(name: &str, line: usize, catalog: &SchemaCatalog) -> Option<Offender> {
+pub(super) fn table_offender(
+    name: &str,
+    line: usize,
+    column: usize,
+    catalog: &SchemaCatalog,
+) -> Option<Offender> {
     Some(Offender {
         table: catalog.relation(name)?.name.clone(),
         line,
+        column,
         blocking_input: false,
     })
 }

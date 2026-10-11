@@ -1,0 +1,15 @@
+import { query } from "@example/db";
+const gate = runtimeFlag;
+const alias = gate;
+const chained = (alias as boolean);
+const inverted = !chained;
+const doubled = !!(gate as boolean);
+let direct = "SELECT 1";
+if (gate) direct += " OFFSET 1";
+if (!alias) query(direct);
+let negative = "SELECT 2";
+if (gate) negative += " OFFSET 2";
+if (inverted) query(negative);
+let positive = "SELECT 3";
+if (gate) positive += " OFFSET 3";
+if (!doubled) query(positive);

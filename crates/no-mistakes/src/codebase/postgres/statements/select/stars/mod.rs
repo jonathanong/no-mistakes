@@ -1,4 +1,5 @@
 mod expr;
+pub(in crate::codebase::postgres::statements) use expr::arg_expr;
 use expr::{span_line, walk_expr};
 
 mod dml;

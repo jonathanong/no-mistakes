@@ -29,12 +29,7 @@ pub(super) fn resolve_expr(
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }
-        Expression::TaggedTemplateExpression(_)
-            if interpolating_untrusted_tag(expr, is_shadowed, imported_sql_tags) =>
-        {
-            None
-        }
-        Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
+        Expression::TaggedTemplateExpression(_) => tagged_sql(expr, is_shadowed, imported_sql_tags),
         Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
             let left = resolve_expr(&binary.left, depth, lookup, is_shadowed, imported_sql_tags)?;
             let right = resolve_expr(&binary.right, depth, lookup, is_shadowed, imported_sql_tags)?;
@@ -45,6 +40,19 @@ pub(super) fn resolve_expr(
             resolve_call(call, depth, lookup, is_shadowed, imported_sql_tags)
         }
         _ => None,
+    }
+}
+
+/// Recovers an already-selected template without a call-target lookup.
+pub(super) fn tagged_sql(
+    expr: &Expression<'_>,
+    is_shadowed: &mut impl FnMut(&str) -> bool,
+    imported_sql_tags: &SqlTagNames,
+) -> Option<String> {
+    if interpolating_untrusted_tag(expr, is_shadowed, imported_sql_tags) {
+        None
+    } else {
+        unpublished_sql_text(expr)
     }
 }
 

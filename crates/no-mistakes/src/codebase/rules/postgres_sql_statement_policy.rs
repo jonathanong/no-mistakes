@@ -75,7 +75,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    let mut findings = super::PostgresFindings::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts)?;
@@ -89,8 +89,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         findings.extend(scan::scan(root, &compiled, &files, sources, facts)?);
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    Ok(findings.finish())
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {

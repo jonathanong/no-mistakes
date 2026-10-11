@@ -14,7 +14,8 @@ fn do_writes_keep_physical_lines_and_suppressions() {
         &[RULE_ID],
     )
     .unwrap();
-    let mut findings = check_with_files_sources_and_facts(&root, &config, &paths, &facts).unwrap();
+    let mut findings =
+        check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts).unwrap();
     assert_eq!(
         findings
             .iter()
@@ -54,7 +55,7 @@ fn write_rule_projects_prepared_targets_without_reparsing() {
     )
     .unwrap();
     assert_eq!(
-        check_with_files_sources_and_facts(&root, &config, &paths, &facts)
+        check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts)
             .unwrap()
             .len(),
         4
@@ -72,7 +73,7 @@ fn write_rule_projects_prepared_targets_without_reparsing() {
     .writes
     .clear();
     assert!(
-        check_with_files_sources_and_facts(&root, &config, &paths, &facts)
+        check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts)
             .unwrap()
             .is_empty()
     );
@@ -87,12 +88,12 @@ fn write_rule_projects_prepared_targets_without_reparsing() {
         )),
     );
     assert!(
-        check_with_files_sources_and_facts(&root, &config, &paths, &facts)
+        check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts)
             .unwrap()
             .is_empty()
     );
     facts.postgres.statements.remove(&paths[1]);
-    assert!(check_with_files_sources_and_facts(&root, &config, &paths, &facts).is_err());
+    assert!(check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts).is_err());
     assert_eq!(sources.physical_read_count(), 2);
 }
 
@@ -106,7 +107,7 @@ fn prepared_wildcard_and_non_sql_projection_remain_catalog_scoped() {
     let mut facts = crate::codebase::postgres::prepare_rule_sql_facts(
         &root,
         &paths,
-        sources,
+        sources.clone(),
         &config,
         &[RULE_ID],
     )
@@ -123,7 +124,8 @@ fn prepared_wildcard_and_non_sql_projection_remain_catalog_scoped() {
     .writes;
     writes.truncate(1);
     writes[0].columns = crate::codebase::postgres::SqlWriteColumns::All;
-    let findings = check_with_files_sources_and_facts(&root, &config, &paths, &facts).unwrap();
+    let findings =
+        check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts).unwrap();
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].target.as_deref(), Some("computed"));
 }
@@ -136,6 +138,7 @@ fn omitted_prepared_write_demand_is_an_error() {
         &root,
         &config_with_options(""),
         &paths,
+        &crate::codebase::rules::source_store_for_files(&paths),
         &Default::default(),
     )
     .unwrap_err();

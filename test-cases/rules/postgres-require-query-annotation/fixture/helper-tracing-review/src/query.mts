@@ -472,8 +472,8 @@ export function unsupportedBranchCanMutate() {
 }
 export function conditionalAppendArms() {
   const statement = sql``;
-  const ignored = flag ? statement.append('/* named */ SELECT 1') : statement.append('SELECT 2');
-  write(statement); // unanalyzable:conditional-mutation-arms
+  const ignored = flag ? statement.append('/* named */ SELECT 1') : statement.append('SELECT 2'); // finding:conditional-mutation-arms
+  write(statement);
 }
 export function conditionalExecutorArms() {
   const ignored = flag ? write(annotatedOrdersSql()) : write(unannotatedOrdersSql()); // finding:conditional-executor-arms

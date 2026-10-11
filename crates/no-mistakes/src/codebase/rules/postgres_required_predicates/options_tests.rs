@@ -141,5 +141,6 @@ fn dynamic_unparseable_and_unrelated_tables() {
         Some(&facts),
     )
     .unwrap();
+    let findings = findings.finish();
     assert!(findings.is_empty(), "{findings:?}");
 }

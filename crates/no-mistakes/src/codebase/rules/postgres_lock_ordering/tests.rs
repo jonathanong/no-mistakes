@@ -3,13 +3,14 @@ mod join_pinning;
 mod multi_target;
 mod pinned_prefix;
 mod unanalyzable;
+mod variants;
 use super::directive::{
     call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,
     has_safe_directive, line_start_offset, DEFAULT_SAFE_DIRECTIVE,
 };
 use super::scan::{
-    findings_for_call, LOCK_ORDERING_TARGET, UNANALYZABLE_TARGET, UNPARSEABLE_TARGET,
-    UNRESOLVED_RELATION_TARGET,
+    findings_for_call_with_catalog as findings_for_call, LOCK_ORDERING_TARGET, UNANALYZABLE_TARGET,
+    UNPARSEABLE_TARGET, UNRESOLVED_RELATION_TARGET,
 };
 use super::*;
 use crate::config::v2::{
@@ -280,12 +281,13 @@ fn missing_source_file_errors() {
 fn missing_sql_text_is_ignored() {
     let compiled = compile_options(&Options::default()).unwrap();
     let call = crate::codebase::postgres::EmbeddedSqlCall {
+        variants: Vec::new(),
         line: 1,
         callee: "query".to_string(),
         sql_text: None,
         ..Default::default()
     };
-    assert!(findings_for_call("src/lock.ts", "", &call, &compiled).is_empty());
+    assert!(findings_for_call("src/lock.ts", "", &call, &compiled, None).is_empty());
 }
 
 #[test]

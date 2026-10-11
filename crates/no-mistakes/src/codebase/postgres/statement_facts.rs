@@ -1,5 +1,7 @@
 mod bounds;
+mod debug;
 mod iteration;
+mod locations;
 mod writes;
 pub use bounds::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
@@ -7,6 +9,7 @@ pub use bounds::{
     SqlQualifiedRead, SqlQualifiedScope,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
+pub use locations::{SqlFactPosition, SqlFactSite, SqlVariantLocations};
 use sqlparser::ast::Statement;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -42,8 +45,11 @@ pub(crate) struct SqlViewReads {
 }
 
 /// Statement facts for one SQL source (file or embedded call).
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub struct SqlStatementFileFacts {
+    /// Request-local provenance for complete embedded alternatives; absent for legacy sources.
+    #[doc(hidden)]
+    pub variant_locations: Option<SqlVariantLocations>,
     pub path: PathBuf,
     /// Statement categories shared with schema policy, including static routine DDL.
     pub statement_kinds: Vec<super::types::SqlStatementKind>,

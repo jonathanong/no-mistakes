@@ -1,3 +1,4 @@
+mod allow;
 use crate::codebase::rules::RuleFinding;
 use anyhow::{bail, Result};
 use serde::Deserialize;
@@ -140,41 +141,6 @@ impl AllowList {
             rule_id: rule_id.to_string(),
             entries,
         })
-    }
-
-    pub fn apply(self, catalog_path: &str, mut findings: Vec<RuleFinding>) -> Vec<RuleFinding> {
-        let path = slash_normalize(catalog_path);
-        let mut used = vec![false; self.entries.len()];
-        findings.retain(|finding| {
-            let Some(target) = finding.target.as_deref() else {
-                return true;
-            };
-            let mut matched = false;
-            for (index, entry) in self.entries.iter().enumerate() {
-                if entry.object == target {
-                    used[index] = true;
-                    matched = true;
-                }
-            }
-            !matched
-        });
-        for (entry, was_used) in self.entries.iter().zip(used) {
-            if was_used {
-                continue;
-            }
-            findings.push(RuleFinding {
-                rule: self.rule_id.clone(),
-                file: path.clone(),
-                line: 1,
-                message: format!(
-                    "{path}: stale {} allow entry: {}",
-                    self.rule_id, entry.object
-                ),
-                import: None,
-                target: Some(entry.object.clone()),
-            });
-        }
-        findings
     }
 }
 

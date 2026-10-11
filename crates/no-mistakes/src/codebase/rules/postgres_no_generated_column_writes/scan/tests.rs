@@ -21,8 +21,16 @@ fn combined_catalog_reports_both_column_kinds() {
     };
     let source = sources.read_path(&paths[1]).unwrap();
     let statements = crate::codebase::postgres::extract_sql_statement_facts(&source);
-    let mut findings = Vec::new();
-    extend_writes(&mut findings, "writes.sql", &[statements], &|_| &catalogs);
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    extend_writes(
+        &mut findings,
+        "writes.sql",
+        &[statements],
+        &mut crate::codebase::rules::VariantFindingDedup::default(),
+        None,
+        &|_| &catalogs,
+    );
+    let findings = findings.finish();
     assert_eq!(findings.len(), 2);
     assert!(findings
         .iter()

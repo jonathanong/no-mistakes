@@ -9,7 +9,15 @@ hardcoded conventions. With `relations` empty and `partitionKeys` left at
 
 The rule reads prepared statement facts (`CheckFactPlan.postgres_dml`):
 matching `.sql` files plus statically recoverable embedded executor SQL. It
-does not re-parse SQL. Dynamic or unparseable SQL fails closed unless
+does not re-parse SQL. Embedded calls with
+[complete SQL alternatives](../postgres-facts.md#finite-sql-alternatives)
+are checked version by version, up to 16 versions per call. A predicate present
+only on one branch cannot satisfy another branch: choosing a tenant-filtered
+query or an unfiltered query reports the unfiltered path. Findings retain the
+physical branch-fragment lines for suppressions. Versions sharing a physical
+SQL token and finding target merge into one diagnostic. Its message preserves
+every distinct missing requirement, including requirements missing on
+different versions. Opaque, over-cap, or unparseable SQL fails closed unless
 `unanalyzableSql` is `ignore`.
 
 ```yaml

@@ -22,9 +22,10 @@ pub(super) fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<crate::codebase::rules::PostgresFindings> {
     let catalog = facts.postgres_ordering_catalog(&opts.schema_catalog_path)?;
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -37,7 +38,27 @@ pub(super) fn scan_with_sources(
         })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        for call in &file.calls {
+        let statements = file
+            .calls
+            .iter()
+            .any(|call| !call.variants.is_empty())
+            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
+            .transpose()?
+            .map(crate::codebase::rules::index_sql_variants)
+            .unwrap_or_default();
+        for (call_index, variant_index, original, call) in
+            file.calls
+                .iter()
+                .enumerate()
+                .flat_map(|(call_index, original)| {
+                    original
+                        .statement_calls()
+                        .enumerate()
+                        .map(move |(variant_index, call)| {
+                            (call_index, variant_index, original, call)
+                        })
+                })
+        {
             if has_safe_directive(
                 &source,
                 call.line,
@@ -70,14 +91,42 @@ pub(super) fn scan_with_sources(
             if !recovered_sql_needs_insert_check(Some(sql)) {
                 continue;
             }
-            findings.extend(analysis::findings_for_sql_with_binds(
+            if original.variants.is_empty() {
+                findings.extend(analysis::findings_for_sql_with_binds(
+                    &rel,
+                    call.line as usize,
+                    sql,
+                    &call.recovered_placeholder_positions,
+                    catalog,
+                    opts.fail_unanalyzable,
+                ));
+                continue;
+            }
+            let statement = statements
+                .get(&(call_index, variant_index))
+                .copied()
+                .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
+            let locations = statement.variant_locations.as_ref().unwrap();
+            if locations.conflict_error.is_some()
+                && opts.fail_unanalyzable
+                && analysis::contains_insert_conflict(sql)
+            {
+                dedup.push(&mut findings, statement, crate::codebase::postgres::statements::SqlFactSite::Origin, Some(&source), analysis::finding(&rel, call.line as usize, "unanalyzable-sql", "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked"));
+            }
+            for (index, finding) in analysis::findings_for_inserts(
                 &rel,
                 call.line as usize,
-                sql,
-                &call.recovered_placeholder_positions,
+                &locations.conflicts,
                 catalog,
-                opts.fail_unanalyzable,
-            ));
+            ) {
+                dedup.push(
+                    &mut findings,
+                    statement,
+                    crate::codebase::postgres::statements::SqlFactSite::Conflict(index),
+                    Some(&source),
+                    finding,
+                );
+            }
         }
     }
     if let Some(sql_sources) = &opts.sql_sources {
@@ -98,7 +147,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 

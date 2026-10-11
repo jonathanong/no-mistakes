@@ -7,6 +7,7 @@ mod collect;
 mod relations;
 mod single_row;
 use collect::collect_from_statement;
+pub(in crate::codebase::postgres) use collect::collect_located;
 pub use single_row::JoinEquality;
 
 /// Locking `SELECT` facts later lock-ordering rules can query.

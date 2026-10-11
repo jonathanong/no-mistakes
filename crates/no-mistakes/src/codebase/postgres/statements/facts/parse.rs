@@ -14,7 +14,7 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
     sql: &str,
     collect_bounds: bool,
 ) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_placeholder_positions(sql, collect_bounds, None)
+    extract_sql_statement_facts_with_placeholder_positions(sql, collect_bounds, None, false)
 }
 
 /// Extract facts while identifying the SQL-local positions of recovered interpolation markers.
@@ -27,6 +27,20 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         sql,
         collect_bounds,
         Some(recovered_placeholder_positions),
+        false,
+    )
+}
+
+pub(crate) fn extract_sql_variant_statement_facts(
+    sql: &str,
+    collect_bounds: bool,
+    positions: &[(u32, u32)],
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        Some(positions),
+        true,
     )
 }
 
@@ -34,6 +48,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     sql: &str,
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
+    locations: bool,
 ) -> SqlStatementFileFacts {
     let prepared = PreparedSql::new(sql);
     let parsed = prepared.parse_policy();
@@ -43,7 +58,10 @@ fn extract_sql_statement_facts_with_placeholder_positions(
             sql,
             &prepared,
             &statements,
-            super::StatementSources::default(),
+            super::StatementSources {
+                locations,
+                ..Default::default()
+            },
             false,
             collect_bounds,
             placeholder_positions,
@@ -61,6 +79,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 &prepared,
                 &statements,
                 super::StatementSources {
+                    locations,
                     tokens: Some(&sources),
                     policy: super::StatementPolicySources {
                         schema: None,
@@ -89,6 +108,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         prepared,
         statements,
         super::StatementSources {
+            locations: false,
             tokens: None,
             policy,
         },

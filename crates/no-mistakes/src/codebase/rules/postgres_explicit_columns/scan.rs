@@ -1,6 +1,7 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
+use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::statements::SqlStarProjectionFact;
-use crate::codebase::postgres::{EmbeddedSqlKind, SchemaCatalog};
+use crate::codebase::postgres::SchemaCatalog;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
@@ -8,9 +9,9 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
     let catalog = prepared.postgres_schema_catalog(&opts.schema_catalog_path)?;
@@ -31,11 +32,12 @@ pub(super) fn scan(
                 .iter(),
         );
     }
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
-            if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic {
+            if opts.fail_unanalyzable && call.is_unanalyzable() {
                 findings.push(sql_finding(
                     &rel,
                     call.line.max(1) as usize,
@@ -47,37 +49,64 @@ pub(super) fn scan(
     }
     for file in statements {
         let rel = relative_slash_path(root, &file.path);
+        let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            findings.push(sql_finding(
-                &rel,
-                file.origin_line.max(1),
-                "SQL could not be analyzed for explicit columns",
-                "unanalyzable",
-            ));
+            dedup.push(
+                &mut findings,
+                file,
+                SqlFactSite::Origin,
+                source.as_deref(),
+                sql_finding(
+                    &rel,
+                    file.origin_line.max(1),
+                    "SQL could not be analyzed for explicit columns",
+                    "unanalyzable",
+                ),
+            );
             continue;
         }
-        for select in &file.selects {
-            findings.extend(star_findings(
-                &rel,
-                &select.star_projections,
-                "SELECT *",
-                "reads",
-                opts,
-                catalog,
-            ));
+        for (select_index, select) in file.selects.iter().enumerate() {
+            for (star_index, star) in select.star_projections.iter().enumerate() {
+                for finding in star_findings(
+                    &rel,
+                    std::slice::from_ref(star),
+                    "SELECT *",
+                    "reads",
+                    opts,
+                    catalog,
+                ) {
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        SqlFactSite::Star(select_index, star_index),
+                        source.as_deref(),
+                        finding,
+                    );
+                }
+            }
         }
         if opts.check_returning {
-            findings.extend(star_findings(
-                &rel,
-                &file.returning_stars,
-                "RETURNING *",
-                "returns",
-                opts,
-                catalog,
-            ));
+            for (star_index, star) in file.returning_stars.iter().enumerate() {
+                for finding in star_findings(
+                    &rel,
+                    std::slice::from_ref(star),
+                    "RETURNING *",
+                    "returns",
+                    opts,
+                    catalog,
+                ) {
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        SqlFactSite::ReturningStar(star_index),
+                        source.as_deref(),
+                        finding,
+                    );
+                }
+            }
         }
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 

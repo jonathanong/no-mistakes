@@ -36,7 +36,9 @@ pub(super) fn run(
             findings.extend(crate::codebase::rules::postgres_unmatched_executors::check(
                 root, config, rule_id, files, sources, facts,
             )?);
-            crate::codebase::rules::sort_findings(&mut findings);
+            // Both producers have already deduplicated their own findings.
+            // Equal public DTOs can name distinct physical variant columns.
+            findings.sort();
         }
         Ok(findings)
     }))
@@ -105,7 +107,7 @@ fn run_naming_and_query_rules(
         }
         POSTGRES_NO_GENERATED_COLUMN_WRITES => match facts {
             Some(facts) => postgres_no_generated_column_writes::check_with_files_sources_and_facts(
-                root, config, files, facts,
+                root, config, files, sources, facts,
             ),
             None => postgres_no_generated_column_writes::check_with_files_and_sources(
                 root, config, files, sources,

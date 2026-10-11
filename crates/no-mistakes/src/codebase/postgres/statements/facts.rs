@@ -3,7 +3,9 @@ use super::*;
 mod collect;
 mod inserts;
 mod lifecycle;
+mod locations;
 mod parse;
+mod policy;
 use crate::codebase::postgres::parse::PreparedSql;
 use collect::{collect_one, FactOut};
 pub(crate) use lifecycle::project_bounds;
@@ -11,8 +13,9 @@ use lifecycle::LifecycleBuilder;
 pub use parse::extract_sql_statement_facts;
 pub(crate) use parse::{
     extract_from_parsed_with_recovered_placeholders, extract_sql_statement_facts_with_bounds,
-    extract_sql_statement_facts_with_recovered_placeholders,
+    extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
 };
+use policy::table_keyword;
 use sqlparser::ast::{Spanned, Statement};
 use sqlparser::tokenizer::TokenWithSpan;
 use std::collections::HashMap;
@@ -29,6 +32,7 @@ pub(crate) struct StatementPolicySources<'a> {
 
 #[derive(Default)]
 struct StatementSources<'a> {
+    locations: bool,
     tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
     policy: StatementPolicySources<'a>,
 }
@@ -45,6 +49,9 @@ fn extract_from_parsed_and_sources(
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
     let mut writes = Vec::new();
+    let mut locations = sources
+        .locations
+        .then(|| locations::Locations::new(placeholder_positions.unwrap_or_default()));
     let mut inserts = Vec::new();
     let mut selects = Vec::new();
     let mut updates = Vec::new();
@@ -104,6 +111,9 @@ fn extract_from_parsed_and_sources(
         let mut executed = Vec::new();
         wrappers::walk_executed(source_statement, &mut executed);
         for statement in executed {
+            if let Some(locations) = &mut locations {
+                locations.collect(statement);
+            }
             writes::collect(statement, &mut writes);
             collect_one(
                 sql,
@@ -145,28 +155,10 @@ fn extract_from_parsed_and_sources(
         placeholder_positions.unwrap_or_default(),
         placeholder_positions.is_some(),
     );
-    let (statement_kinds, setting_uses, mut function_calls) = sources.policy.schema.map_or_else(
-        || {
-            let facts = crate::codebase::postgres::migration::policy_facts(sql, statements);
-            (
-                facts.statement_kinds,
-                facts.setting_uses,
-                facts.function_calls,
-            )
-        },
-        |facts| {
-            (
-                facts.statement_kinds.clone(),
-                facts.setting_uses.clone(),
-                facts.function_calls.clone(),
-            )
-        },
-    );
-    if sources.policy.schema.is_none() {
-        function_calls.extend_from_slice(sources.policy.functions);
-        function_calls.extend_from_slice(&prepared_sql.functions());
-    }
-    SqlStatementFileFacts {
+    let (statement_kinds, setting_uses, function_calls) =
+        policy::collect(sql, prepared_sql, statements, sources.policy);
+    let mut facts = SqlStatementFileFacts {
+        variant_locations: None,
         path: Default::default(),
         statement_kinds,
         setting_uses,
@@ -188,11 +180,18 @@ fn extract_from_parsed_and_sources(
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
         origin_line: 0,
-    }
-}
-
-fn table_keyword(token: &TokenWithSpan) -> bool {
-    matches!(&token.token, sqlparser::tokenizer::Token::Word(word) if word.keyword == sqlparser::keywords::Keyword::TABLE)
+    };
+    facts.variant_locations = locations.map(|locations| {
+        locations::finish(
+            locations,
+            &facts,
+            tokens.all(),
+            sql,
+            statements,
+            placeholder_positions.unwrap_or_default(),
+        )
+    });
+    facts
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {

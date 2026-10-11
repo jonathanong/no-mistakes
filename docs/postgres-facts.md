@@ -164,17 +164,148 @@ This is the lock-ordering `sqlText` contract. It is intentionally different
 from a runtime-query helper, which joins quasis with `?`.
 
 A placeholder stands for a parameterized value. When a trusted tag's
-interpolation instead splices another SQL fragment, its text is not the
-statement that runs, so the call classifies `Dynamic` and keeps the template
-text only for conservative statement classification. A fragment is a nested trusted tagged
+interpolation instead splices another SQL fragment, the fragment's SQL is
+inlined into each recoverable alternative; it is never treated as a bind value.
+A fragment is a nested trusted tagged
 template, a call on the trusted tag (`sql(...)`, `sql.raw(...)`,
 `sql.join(...)`), a member call on a fragment (`.append(...)` on a nested template), a
 conditional, logical, sequence, or array expression that can yield one, or an
 identifier that is bound or assigned a fragment anywhere in the file. The
 binding lookup is file-wide and scope-insensitive, so a name reused for a
 plain value elsewhere in the file also fails closed. Rules with
-`unanalyzableSql: fail` report these calls instead of reading the fragment as
-a bind value; choosing one fragment per branch is not yet modeled.
+`unanalyzableSql: fail` report calls whose complete alternatives cannot be
+recovered instead of reading the fragment as a bind value.
+
+### Finite SQL alternatives
+
+An executor call remains one `EmbeddedSqlCall`. Its `variants` contains the
+complete SQL statements that can run when every alternative is recoverable.
+`MAX_EMBEDDED_SQL_VARIANTS` is a hard limit of **16 versions per call**. Recovery
+happens inside the existing TypeScript extractor pass; rules consume the
+request's prepared statement facts for each version.
+
+Supported alternatives include:
+
+- conditional, `||`, and `??` executor arguments with recoverable outcomes;
+- `.append(...)` and `+=` in straight-line `if` / `else` and `switch` bodies,
+  including the path that does not append and supported switch fallthrough;
+- `let` bindings assigned static SQL on different branches;
+- direct same-file helpers that append static SQL to an imported `SQLStatement`
+  typed parameter and return it, with a trusted tagged or complete local builder;
+- nested trusted `sql` fragments, including conditional fragments and
+  `condition && sql` fragments, whose absent path contributes no SQL.
+
+For example, both executed statements are checked here. The second version
+has no predicate even though the first does:
+
+```ts
+query(filtered
+  ? "SELECT id FROM accounts WHERE id = $1"
+  : "SELECT id FROM accounts");
+```
+
+Branch choices stay correlated across bindings assigned by the same branch;
+later truthy or falsy guards on those values reuse the same paths. Recovery
+does not invent combinations of mutually exclusive paths. `const` aliases of
+known immutable bindings retain this correlation, including `!` and `!!`
+aliases. Copies from mutable or unknown sources have independent snapshots;
+they do not follow later source reassignments. Equivalent binary
+arms with the same recovered SQL and physical origins count once toward the
+version limit. SQL bindings unchanged across switch alternatives retain their
+original choices, so unrelated cases do not create extra versions. Nested
+fragments contribute their own SQL text and generated
+placeholders are renumbered in composition order. Ordinary value interpolations
+remain binds.
+
+If any possible outcome is opaque, if there are more than 16 versions, or if
+recovery exceeds the depth limit of 8, no partial version set is published.
+Loops, untagged `${...}` SQL-text interpolation, cross-file calls,
+`sql.raw(variable)`, and `sql.join` over non-literal input, spreads, or array
+holes remain `Dynamic` and retain the existing `unanalyzableSql` behavior.
+An unknown falsy result from `condition && sqlFragment` cannot prove whether
+a following `??` takes its fallback, so that composed call remains `Dynamic`.
+Present and absent fragments inside trusted templates and recoverable `||`
+fallbacks remain supported.
+Stored parameter-helper returns also remain opaque: they alias a mutable builder
+that can change after the helper call, so its recovered text is not a snapshot.
+After a known mutating helper call, later reads of its caller binding and tracked
+aliases remain `Dynamic`, retaining only verified leading SQL. When branch
+assignments lose the exact builder identity, the extractor conservatively
+invalidates the connected group of simple identifier aliases, including
+historical aliases.
+Passing a tracked mutable builder to an ordinary call without a verified summary
+clears finite alternatives across tracked aliases while preserving the legacy
+`kind` and `sql_text` fields. Calls evaluated inside `if` tests, conditional
+tests, or logical left operands also clear the affected SQL prefix and keep later
+reads `Dynamic`. Literal array and object arguments retain these alias effects;
+merely declaring a callback does not execute its body. Recognized executors,
+trusted constructors, and known builder appends retain their existing behavior;
+copied SQL strings and unrelated builders remain independent.
+Finite recovery treats mutable SQL bindings and builders captured from an
+enclosing scope as opaque: the extractor cannot prove their state when the
+nested function executes. Branching calls that depend on those captures remain
+`Dynamic`. Recoverable `const` primitive SQL strings, including conditional
+string alternatives, retain finite recovery. This boundary preserves the legacy
+`kind` and `sql_text` fields of non-branching calls and leaves outer facts intact.
+Ordinary `.append()` mutations clear finite-version snapshots cached by other
+tracked aliases to the same mutable builder. Branching calls that depend on a
+cleared snapshot stay `Dynamic`; the directly updated binding can retain
+recoverable alternatives. This fallback preserves the legacy `kind` and
+`sql_text` fields and their existing non-branching alias behavior. Replacing a
+binding with a fresh builder keeps that new builder independent. These alias
+rules do not apply to copied strings changed with `+=`.
+Conditional tests, logical left operands, and earlier template interpolations
+that mutate an existing SQL binding also stay `Dynamic` when recovery would
+otherwise consume its earlier snapshot later in the same expression.
+Executor arguments follow evaluation order. Proven later mutations of the same
+directly passed builder use its final state, including conditional or logical
+appends; primitive SQL arguments keep their earlier value copies. Uncertain
+builder selection or identity, opaque helper or invoked-closure effects, and
+conditional replacement of the original binding stay `Dynamic`. Passing a
+callback without invoking it does not execute its body.
+Switch discriminants or case labels that mutate an existing SQL binding also
+remain opaque because earlier labels can change the state of later cases.
+`try`, `catch`, and `finally` phases are inspected once, but exception paths are
+not enumerated. Finite execution snapshots are discarded before handlers and
+after each phase because an earlier operation may have thrown before completing.
+SQL bindings changed during a phase also become `Dynamic`, retaining only a
+verified prefix where available; later queries cannot treat their post-mutation
+text as complete SQL. Untouched legacy fields stay unchanged. Statements
+initialized or assigned afresh in a handler and literal executor arguments
+remain recoverable within that handler.
+
+Each `EmbeddedSqlVariant` records `sql_text`, `line`,
+`sql_source_positions`, and `recovered_placeholder_positions`. Its source map
+also records `sql_source_offsets`, one physical byte origin per recovered SQL
+byte, including decoded escapes and renumbered generated placeholders. This
+identity distinguishes separate clauses on the same source line and deduplicates
+a shared clause even when an optional earlier fragment changes its SQL column.
+The mapping
+retains the physical lines and columns of SQL inside branch fragments, so
+findings and `no-mistakes-disable-*` directives apply there. A violation in
+any version is reported; repeated findings at the same physical location for
+the same rule and target are deduplicated and output stays deterministic.
+An executor-line suppression applies only to that invocation. A suppressed
+occurrence does not consume a shared finding's identity: another unsuppressed
+execution of the same SQL still reports the violation once. A directive on a
+shared SQL clause suppresses that physical clause wherever it is reused.
+Shape policies also inspect unexecuted builder fragments. An executor
+suppression covers the exact append occurrences that contributed to that
+execution, including appends in nested fragments and branch-assigned builders.
+Another append occurrence that reuses the same SQL token remains checked.
+Lock-ordering checks each version independently, so ordering on one path
+cannot make another path safe.
+
+The legacy `kind` and `sql_text` fields keep their earlier meaning. An
+enumerated call can still have `kind: Dynamic`; consumers must prefer its
+nonempty `variants` to the legacy partial text. Ordinary calls that already
+had fully static SQL keep an empty version list and their existing facts.
+
+Rust callers constructing `EmbeddedSqlCall` with a struct literal must add
+`variants: Vec::new()` for an ordinary call, or use
+`..EmbeddedSqlCall::default()` for unspecified fields. Derived equality and
+`Debug` now include the version list. The legacy `kind` and `sql_text` fields
+retain their contract; Node source-fact and check JSON shapes remain unchanged.
 
 ### Executor bindings
 
@@ -204,7 +335,8 @@ See [the breaking-change migration](migrations/explicit-postgres-executors.md).
 `collect_postgres_facts` runs these extractors when
 `CheckFactPlan.postgres_schema`, `CheckFactPlan.embedded_sql`, or
 `CheckFactPlan.postgres_dml` is set. `postgres_dml` also extracts statement
-facts from matching `.sql` files and from non-`Dynamic` embedded calls.
+facts from matching `.sql` files, non-`Dynamic` embedded calls, and every
+complete version of an enumerated call.
 
 The extractor also records recoverable SQL fragments returned from builders or
 passed to `.append(...)`. Structural policies may inspect those fragments
@@ -213,7 +345,10 @@ trusted-tag and lexical-shadow rules as executed SQL. A raw appended
 identifier that cannot be resolved becomes a synthetic qualified outer
 reference, so shape policies conservatively retain possible correlation while
 runtime table constants and column fragments remain statically parseable.
-Fragments that exactly match an executed call are inspected once.
+For complete alternatives, a builder fragment reuses executed facts only when
+the SQL and binds, contributing append occurrence, and physical byte origins
+match that version. Equal SQL produced at another source site remains checked.
+Non-enumerated calls retain the existing SQL-text and bind matching.
 
 Each `EmbeddedSqlCall` records `kind`:
 
@@ -228,13 +363,12 @@ Each `EmbeddedSqlCall` records `kind`:
   helper may also receive an imported `SQLStatement` typed parameter, make
   straight-line static `.append()` calls through that parameter or its local
   aliases, and return the same builder. Its caller must supply a trusted tagged
-  builder or a fully recovered local builder; scalar values inside trusted tagged-template appends
-  remain bound placeholders. Unknown caller builders, dynamic appended SQL,
+  builder or a fully recovered local builder; scalar values inside trusted
+  tagged-template appends remain bound placeholders. Unknown caller builders, dynamic appended SQL,
   control flow, reassignment, and use of the builder as a fragment fail closed.
-  Conditional
-  static appends keep the recovered base SQL and classify `Dynamic` so an
-  INSERT cannot pass a branch-only `ORDER BY` as if it always ran; recovered
-  non-INSERT stays ignored by conflict-ordering. Opaque statement-level and
+  Conditional static appends retain the legacy `Dynamic` kind and recovered
+  base SQL; their complete alternatives are published separately in `variants`.
+  Opaque statement-level and
   fluent appends likewise keep a verified leading `SELECT`, `UPDATE`, `INSERT`,
   `DELETE`, or `MERGE` as partial text. Incomplete prefixes such as `WITH`
   remain fully opaque. Loops, nested functions that mutate an outer binding,
@@ -243,8 +377,16 @@ Each `EmbeddedSqlCall` records `kind`:
   classify as dynamic.
 - `Dynamic` — `let`, reassignment, interpolating templates, trusted tags
   that interpolate another SQL fragment, or incomplete composition. A present `sql_text` can be verified leading text rather than
-  the complete runtime statement; consumers must use it only for conservative
-  statement classification.
+  the complete runtime statement. Without `variants`, consumers must use it
+  only for conservative statement classification; with `variants`, each
+  version is a complete statement to check.
+
+Fragment detection follows file-wide aliases to convergence, including cycles,
+default parameter values and synchronous helpers that can return trusted
+fragments. This projection deliberately ignores lexical scope collisions so it
+fails closed. Plain string-returning helpers remain bind values, as do calls to
+async functions or generators: their Promise or iterator results are not SQL
+fragments.
 
 Fragment detection follows file-wide aliases to convergence, including cycles,
 default parameter values and synchronous helpers that can return trusted
@@ -268,10 +410,20 @@ A user-written identifier such as `sql_placeholder_1` remains a column while
 the generated marker is treated as a bind. `SqlColumnUseFact` still uses the
 legacy marker-spelling heuristic; exact-position handling there is tracked in
 [issue #1391](https://github.com/jonathanong/no-mistakes/issues/1391).
-It returns `None` when the call has no recovered SQL. Fact line and column
-locations are relative to the recovered SQL text; `Dynamic` calls can contain
-only a verified leading fragment. Use `extract_sql_statement_facts(sql)` for
+It returns `None` when the call has no recovered SQL. This singular helper
+preserves the legacy `sql_text` contract; it does not select an alternative
+from `variants`. Fact line and column locations are relative to the recovered
+SQL text; a `Dynamic` call's legacy text can contain only a verified leading
+fragment. Prepared rule analysis uses complete variants and rebases their
+locations through each version's source map. Use `extract_sql_statement_facts(sql)` for
 standalone SQL without embedded interpolation provenance.
+
+The Rust-only `SqlStatementFileFacts.variant_locations` sidecar records typed
+occurrence positions (`SqlFactSite` / `SqlFactPosition`), the original executor
+call, and prepared lock/conflict metadata for complete alternatives. It is
+absent for legacy sources and is not a Node JSON output contract. This lets
+rules share the prepared SQL AST projection, preserve executor-line suppressions,
+and map branch findings without parsing the SQL again.
 
 - executed `INSERT` (EXPLAIN without ANALYZE is skipped; PREPARE inner
   statements are treated as executed; CREATE FUNCTION/PROCEDURE bodies are not)
@@ -551,6 +703,10 @@ leading `/* name */` block comment. `BEGIN` / `COMMIT` / `ROLLBACK` are
 exempt, including when they already carry a leading block comment. Line
 comments (`-- name`) and empty `/* */` comments are not annotations.
 `postgres-require-query-annotation` consumes this helper.
+When a call has complete variants, every version must have an annotation (or
+be an exempt transaction statement). Calls without variants retain the rule's
+separate prepared helper-prefix traversal, which can prove a leading
+annotation even when an opaque tail prevents full SQL recovery.
 
 ## Schema catalog model
 

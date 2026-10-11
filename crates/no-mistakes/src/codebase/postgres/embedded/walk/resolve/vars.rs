@@ -19,6 +19,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
     if let Some(scope) = visitor.current_scope() {
         for (name, position) in names {
             scope.entry(name).or_insert_with(|| BindingState {
+                builder_identity: None,
+                builder_effect_revision: 0,
+                condition_key: None,
+                variants: None,
                 sql: None,
                 kind: EmbeddedSqlKind::Dynamic,
                 line: crate::codebase::ts_source::byte_offset_to_line(source, position as usize),
@@ -91,6 +95,9 @@ pub(super) fn record_declarator(
         return;
     };
     let Some(init) = &declarator.init else {
+        if !is_var {
+            visitor.bind_self_name(ident.name.as_str());
+        }
         return;
     };
     let line =
@@ -109,6 +116,8 @@ pub(super) fn record_declarator(
         ident.span.start as usize,
         line,
     );
+    let builder_identity = visitor.builder_identity_for_init(init);
+    let condition_key = is_const.then(|| visitor.declaration_choice_key(init, ident.span.start));
     let scope_index = if is_var {
         var_scope(visitor, ident.name.as_str())
     } else {
@@ -128,6 +137,10 @@ pub(super) fn record_declarator(
         scope.insert(
             ident.name.to_string(),
             BindingState {
+                builder_identity,
+                builder_effect_revision: 0,
+                condition_key,
+                variants: None,
                 sql_builder: sql.is_some()
                     && matches!(
                         kind,
@@ -167,5 +180,8 @@ fn clear_binding(binding: &mut BindingState) {
     binding.sql = None;
     binding.sql_builder = false;
     binding.sql_source_positions.clear();
+    binding.condition_key = None;
+    binding.variants = None;
+    binding.builder_identity = None;
     binding.kind = EmbeddedSqlKind::Dynamic;
 }

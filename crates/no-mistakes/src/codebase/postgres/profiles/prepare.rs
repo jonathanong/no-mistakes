@@ -35,13 +35,29 @@ pub(crate) fn prepare_rule_sql_facts(
                 postgres_schema: rule_ids.iter().any(|id| {
                     !matches!(
                         *id,
-                        "postgres-sql-shape-policy" | "postgres-require-query-annotation"
+                        "postgres-sql-shape-policy"
+                            | "postgres-require-query-annotation"
+                            | "postgres-lock-ordering"
+                            | "postgres-conflict-ordering"
                     )
                 }),
                 postgres_dml: !profiles.is_empty()
-                    && dml_ids
-                        .iter()
-                        .any(|id| *id != "postgres-require-query-annotation"),
+                    && dml_ids.iter().any(|id| {
+                        !matches!(
+                            *id,
+                            "postgres-require-query-annotation"
+                                | "postgres-lock-ordering"
+                                | "postgres-conflict-ordering"
+                        )
+                    }),
+                postgres_variants: dml_ids.iter().any(|id| {
+                    matches!(
+                        *id,
+                        "postgres-lock-ordering"
+                            | "postgres-conflict-ordering"
+                            | "postgres-require-query-annotation"
+                    )
+                }),
                 postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,

@@ -3,11 +3,34 @@ use super::{
     has_for_update, locks_skip_locked, order_keys, set_expr_has_multi_row, unwrap_expr,
     LockingSelectMetadata,
 };
-use sqlparser::ast::{Expr, Query, SetExpr, Statement, TableFactor, TableWithJoins};
+use sqlparser::ast::{Expr, Query, SetExpr, Spanned, Statement, TableFactor, TableWithJoins};
+
+pub(super) trait LockOutput {
+    fn record(&mut self, query: &Query, metadata: LockingSelectMetadata);
+}
+impl LockOutput for Vec<LockingSelectMetadata> {
+    fn record(&mut self, _query: &Query, metadata: LockingSelectMetadata) {
+        self.push(metadata);
+    }
+}
+struct Located(Vec<(LockingSelectMetadata, sqlparser::tokenizer::Span)>);
+impl LockOutput for Located {
+    fn record(&mut self, query: &Query, metadata: LockingSelectMetadata) {
+        self.0.push((metadata, query.span()));
+    }
+}
+pub(in crate::codebase::postgres) fn collect_located(
+    statement: &Statement,
+    positions: &[(u32, u32)],
+) -> Vec<(LockingSelectMetadata, sqlparser::tokenizer::Span)> {
+    let mut out = Located(Vec::new());
+    collect_from_statement(statement, &mut out, positions);
+    out.0
+}
 
 pub(super) fn collect_from_statement(
     statement: &Statement,
-    out: &mut Vec<LockingSelectMetadata>,
+    out: &mut impl LockOutput,
     positions: &[(u32, u32)],
 ) {
     if let Statement::Query(query) = statement {
@@ -17,7 +40,7 @@ pub(super) fn collect_from_statement(
 
 pub(super) fn collect_from_query(
     query: &Query,
-    out: &mut Vec<LockingSelectMetadata>,
+    out: &mut impl LockOutput,
     positions: &[(u32, u32)],
 ) {
     if let Some(with) = &query.with {
@@ -26,9 +49,18 @@ pub(super) fn collect_from_query(
         }
     }
     collect_from_set_expr(&query.body, out, positions);
+    if let Some(metadata) = metadata_for_query(query, positions) {
+        out.record(query, metadata);
+    }
+}
+
+pub(in crate::codebase::postgres) fn metadata_for_query(
+    query: &Query,
+    positions: &[(u32, u32)],
+) -> Option<LockingSelectMetadata> {
     if has_for_update(&query.locks) {
         let locked_tables = locked_tables(&query.body, &query.locks, positions);
-        out.push(LockingSelectMetadata {
+        Some(LockingSelectMetadata {
             has_multi_row_predicate: set_expr_has_multi_row(&query.body),
             has_order_by: query.order_by.is_some(),
             skips_locked_rows: locks_skip_locked(&query.locks),
@@ -39,13 +71,15 @@ pub(super) fn collect_from_query(
                 .map_or_else(Vec::new, |tables| tables.joins.clone()),
             table_qualifiers: locked_tables.map(|tables| tables.qualifiers),
             order: query.order_by.as_ref().and_then(order_keys),
-        });
+        })
+    } else {
+        None
     }
 }
 
 pub(super) fn collect_from_set_expr(
     expr: &SetExpr,
-    out: &mut Vec<LockingSelectMetadata>,
+    out: &mut impl LockOutput,
     positions: &[(u32, u32)],
 ) {
     match expr {
@@ -68,7 +102,7 @@ pub(super) fn collect_from_set_expr(
 
 pub(super) fn collect_from_table_with_joins(
     table: &TableWithJoins,
-    out: &mut Vec<LockingSelectMetadata>,
+    out: &mut impl LockOutput,
     positions: &[(u32, u32)],
 ) {
     collect_from_table_factor(&table.relation, out, positions);
@@ -79,7 +113,7 @@ pub(super) fn collect_from_table_with_joins(
 
 pub(super) fn collect_from_table_factor(
     factor: &TableFactor,
-    out: &mut Vec<LockingSelectMetadata>,
+    out: &mut impl LockOutput,
     positions: &[(u32, u32)],
 ) {
     if let TableFactor::Derived { subquery, .. } = factor {
@@ -89,7 +123,7 @@ pub(super) fn collect_from_table_factor(
 
 pub(super) fn collect_queries_from_expr(
     expr: &Expr,
-    out: &mut Vec<LockingSelectMetadata>,
+    out: &mut impl LockOutput,
     positions: &[(u32, u32)],
 ) {
     match unwrap_expr(expr) {
