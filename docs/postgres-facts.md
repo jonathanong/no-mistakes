@@ -265,6 +265,14 @@ conditional replacement of the original binding stay `Dynamic`. Passing a
 callback without invoking it does not execute its body.
 Switch discriminants or case labels that mutate an existing SQL binding also
 remain opaque because earlier labels can change the state of later cases.
+Any assignment or update in a case label, including destructuring or a directly
+invoked arrow/function body, also disables finite recovery inside that switch.
+Failed labels can change scalar guards before a later case runs; a default in
+the middle runs only after later labels fail. This fallback scans each label and
+body once without enumerating or replaying writes along fallthrough paths.
+Merely creating or passing a callback does not execute its body. Literal SQL
+arguments and unchanged legacy constants retain their existing checks, while
+branching calls use the rule's `unanalyzableSql` policy.
 `try`, `catch`, and `finally` phases are inspected once, but exception paths are
 not enumerated. Finite execution snapshots are discarded before handlers and
 after each phase because an earlier operation may have thrown before completing.

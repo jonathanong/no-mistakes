@@ -2,6 +2,7 @@ use super::super::{resolve, ScopeVisitor};
 use super::control::{branch_paths, Snapshot};
 use oxc_ast::ast::{Statement, SwitchStatement};
 use oxc_ast_visit::Visit;
+mod labels;
 mod state;
 use state::join;
 
@@ -11,9 +12,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
 ) {
     let effectful = visitor.expression_mutates_builder(&statement.discriminant)
         || statement.cases.iter().any(|case| {
-            case.test
-                .as_ref()
-                .is_some_and(|test| visitor.expression_mutates_builder(test))
+            case.test.as_ref().is_some_and(|test| {
+                visitor.expression_mutates_builder(test) || labels::contains_write(test)
+            })
         });
     visitor.visit_expression(&statement.discriminant);
     visitor.push_scope();
@@ -22,7 +23,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
     }
     if effectful {
         // Failed labels execute cumulatively before the selected label. Their
-        // mutations cannot use independent branch-entry SQL snapshots.
+        // SQL and scalar mutations cannot use independent branch-entry facts.
         visitor.forget_effectful_sql_prefixes(&statement.discriminant);
         for case in &statement.cases {
             if let Some(test) = &case.test {

@@ -96,6 +96,21 @@ its recovered text already proved an `OFFSET`. With the default
 Recovered keyword checks ignore quoted text, nested PostgreSQL block comments,
 and keyword text within identifiers, including `$` and Unicode continuations.
 
+Switch case labels can also change scalar guards before a later case or default
+executes. Assignments, updates, destructuring, and directly invoked closure writes
+in a label make branching executor SQL inside that switch unanalyzable. The
+default `fail` reports the executor line; `ignore` skips that uncertain call.
+Literal SQL inside the switch still produces ordinary `offset` findings, and
+callbacks that are merely created or passed are not executed by this heuristic.
+
+```ts
+let gate = false;
+switch (2) {
+  case (gate = true, 1): break;
+  case 2: query(gate ? "SELECT 1 OFFSET 1" : "SELECT 1"); // unanalyzable
+}
+```
+
 Dynamic DML without a recovered query is not reported, and a
 dynamic call whose recovered text already contains `OFFSET` keeps only its
 ordinary `offset` finding. See the
