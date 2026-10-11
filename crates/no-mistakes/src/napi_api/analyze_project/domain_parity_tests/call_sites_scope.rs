@@ -251,6 +251,8 @@ fn partial_call_sites_keep_runner_helper_diagnostics_when_mixed_with_runner_repo
         assert_eq!(results[0], standalone, "mixed={mixed}");
         assert_eq!(counts.len(), 5, "{counts:#?}");
         assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
-        assert_call_batch_work(&observer, 5);
+        // Runner evaluation parses configs and the recovered setup program
+        // before session fact projection; the physical counts above include both.
+        assert_call_batch_work(&observer, if mixed { 2 } else { 5 });
     }
 }
