@@ -1,0 +1,100 @@
+[
+  {
+    "name": "empty-file",
+    "file": "",
+    "pointer": "/request",
+    "reason": "root-relative",
+    "consumer": false
+  },
+  {
+    "name": "parent-file",
+    "file": "../schemas.json",
+    "pointer": "/request",
+    "reason": "root-relative",
+    "consumer": false
+  },
+  {
+    "name": "absolute-file",
+    "file": "/schemas.json",
+    "pointer": "/request",
+    "reason": "root-relative",
+    "consumer": false
+  },
+  {
+    "name": "dot-file",
+    "file": "./pass/schemas.json",
+    "pointer": "/request",
+    "reason": "root-relative",
+    "consumer": false
+  },
+  {
+    "name": "missing-file",
+    "file": "missing.json",
+    "pointer": "/request",
+    "reason": "missing, ignored",
+    "consumer": false
+  },
+  {
+    "name": "invalid-pointer",
+    "file": "pass/schemas.json",
+    "pointer": "request",
+    "reason": "RFC 6901",
+    "consumer": false
+  },
+  {
+    "name": "invalid-escape",
+    "file": "pass/schemas.json",
+    "pointer": "/re~2quest",
+    "reason": "escape",
+    "consumer": false
+  },
+  {
+    "name": "trailing-escape",
+    "file": "pass/schemas.json",
+    "pointer": "/request~",
+    "reason": "escape",
+    "consumer": false
+  },
+  {
+    "name": "missing-pointer",
+    "file": "pass/schemas.json",
+    "pointer": "/absent",
+    "reason": "does not select",
+    "consumer": false
+  },
+  {
+    "name": "invalid-json",
+    "file": "malformed.json",
+    "pointer": "",
+    "reason": "invalid JSON",
+    "consumer": false
+  },
+  {
+    "name": "unsupported-producer",
+    "file": "pass/schemas.json",
+    "pointer": "/unsupported",
+    "reason": "unsupported keyword",
+    "consumer": false
+  },
+  {
+    "name": "unsupported-consumer",
+    "file": "pass/schemas.json",
+    "pointer": "/unsupported",
+    "reason": "unproven consumer",
+    "consumer": true
+  },
+  {
+    "name": "empty-name",
+    "file": "pass/schemas.json",
+    "pointer": "/request",
+    "reason": "name must be nonempty",
+    "consumer": false
+  },
+  {
+    "name": "unreadable",
+    "file": "unreadable.json",
+    "pointer": "",
+    "reason": "cannot read",
+    "consumer": false
+  }
+]

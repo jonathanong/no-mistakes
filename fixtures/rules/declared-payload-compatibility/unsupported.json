@@ -1,0 +1,463 @@
+[
+  {
+    "name": "boolean-schema",
+    "schema": true,
+    "expected": "schema must be an object"
+  },
+  {
+    "name": "missing-type",
+    "schema": {},
+    "expected": "single `type`"
+  },
+  {
+    "name": "type-union",
+    "schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expected": "single `type`"
+  },
+  {
+    "name": "invalid-type",
+    "schema": {
+      "type": "undefined"
+    },
+    "expected": "single `type`"
+  },
+  {
+    "name": "$ref",
+    "schema": {
+      "type": "string",
+      "$ref": "#/$defs/User"
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "oneOf",
+    "schema": {
+      "type": "string",
+      "oneOf": [
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "format",
+    "schema": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "minLength",
+    "schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "pattern",
+    "schema": {
+      "type": "string",
+      "pattern": ".*"
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "minimum",
+    "schema": {
+      "type": "string",
+      "minimum": 1
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "unknown",
+    "schema": {
+      "type": "string",
+      "unknown": true
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "wrong-shape-keyword",
+    "schema": {
+      "type": "string",
+      "properties": {}
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "object-enum",
+    "schema": {
+      "type": "object",
+      "enum": [
+        {}
+      ]
+    },
+    "expected": "unsupported keyword"
+  },
+  {
+    "name": "enum-and-const",
+    "schema": {
+      "type": "string",
+      "enum": [
+        "a"
+      ],
+      "const": "a"
+    },
+    "expected": "combined"
+  },
+  {
+    "name": "empty-enum",
+    "schema": {
+      "type": "string",
+      "enum": []
+    },
+    "expected": "nonempty array"
+  },
+  {
+    "name": "wrong-enum",
+    "schema": {
+      "type": "string",
+      "enum": "a"
+    },
+    "expected": "nonempty array"
+  },
+  {
+    "name": "wrong-enum-value",
+    "schema": {
+      "type": "string",
+      "enum": [
+        1
+      ]
+    },
+    "expected": "does not match"
+  },
+  {
+    "name": "fractional-integer",
+    "schema": {
+      "type": "integer",
+      "enum": [
+        1.1
+      ]
+    },
+    "expected": "does not match"
+  },
+  {
+    "name": "duplicate-enum",
+    "schema": {
+      "type": "integer",
+      "enum": [
+        1,
+        1.0
+      ]
+    },
+    "expected": "duplicate enum"
+  },
+  {
+    "name": "imprecise-float",
+    "schema": {
+      "type": "number",
+      "const": 9007199254740992.0
+    },
+    "expected": "exact numeric"
+  },
+  {
+    "name": "properties-not-object",
+    "schema": {
+      "type": "object",
+      "properties": []
+    },
+    "expected": "`properties` must"
+  },
+  {
+    "name": "required-not-array",
+    "schema": {
+      "type": "object",
+      "required": "id"
+    },
+    "expected": "`required` must"
+  },
+  {
+    "name": "required-not-string",
+    "schema": {
+      "type": "object",
+      "required": [
+        1
+      ]
+    },
+    "expected": "contain strings"
+  },
+  {
+    "name": "required-undeclared",
+    "schema": {
+      "type": "object",
+      "required": [
+        "id"
+      ]
+    },
+    "expected": "no declared schema"
+  },
+  {
+    "name": "required-duplicate",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "id"
+      ]
+    },
+    "expected": "duplicate required"
+  },
+  {
+    "name": "additional-schema",
+    "schema": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "expected": "must be boolean"
+  },
+  {
+    "name": "array-no-items",
+    "schema": {
+      "type": "array"
+    },
+    "expected": "requires a single"
+  },
+  {
+    "name": "tuple-items",
+    "schema": {
+      "type": "array",
+      "items": []
+    },
+    "expected": "schema must be an object"
+  },
+  {
+    "name": "depth-limit",
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "array",
+                                                  "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "array",
+                                                          "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                              "type": "array",
+                                                              "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                  "type": "array",
+                                                                  "items": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                      "type": "array",
+                                                                      "items": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                          "type": "array",
+                                                                          "items": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                              "type": "array",
+                                                                              "items": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                  "type": "array",
+                                                                                  "items": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                      "type": "array",
+                                                                                      "items": {
+                                                                                        "type": "array",
+                                                                                        "items": {
+                                                                                          "type": "array",
+                                                                                          "items": {
+                                                                                            "type": "array",
+                                                                                            "items": {
+                                                                                              "type": "array",
+                                                                                              "items": {
+                                                                                                "type": "array",
+                                                                                                "items": {
+                                                                                                  "type": "array",
+                                                                                                  "items": {
+                                                                                                    "type": "array",
+                                                                                                    "items": {
+                                                                                                      "type": "array",
+                                                                                                      "items": {
+                                                                                                        "type": "array",
+                                                                                                        "items": {
+                                                                                                          "type": "array",
+                                                                                                          "items": {
+                                                                                                            "type": "array",
+                                                                                                            "items": {
+                                                                                                              "type": "array",
+                                                                                                              "items": {
+                                                                                                                "type": "array",
+                                                                                                                "items": {
+                                                                                                                  "type": "array",
+                                                                                                                  "items": {
+                                                                                                                    "type": "array",
+                                                                                                                    "items": {
+                                                                                                                      "type": "array",
+                                                                                                                      "items": {
+                                                                                                                        "type": "array",
+                                                                                                                        "items": {
+                                                                                                                          "type": "array",
+                                                                                                                          "items": {
+                                                                                                                            "type": "array",
+                                                                                                                            "items": {
+                                                                                                                              "type": "array",
+                                                                                                                              "items": {
+                                                                                                                                "type": "array",
+                                                                                                                                "items": {
+                                                                                                                                  "type": "array",
+                                                                                                                                  "items": {
+                                                                                                                                    "type": "array",
+                                                                                                                                    "items": {
+                                                                                                                                      "type": "array",
+                                                                                                                                      "items": {
+                                                                                                                                        "type": "array",
+                                                                                                                                        "items": {
+                                                                                                                                          "type": "string"
+                                                                                                                                        }
+                                                                                                                                      }
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": "exceeds 64"
+  },
+  {
+    "name": "invalid-annotation",
+    "schema": {
+      "type": "string",
+      "title": 3
+    },
+    "expected": "annotation"
+  }
+]

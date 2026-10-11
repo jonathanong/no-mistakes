@@ -21,3 +21,7 @@ Key options: `--root`, `--tsconfig`, repeatable `--filter`, `--format`,
 `--json`, and `--timings`.
 
 Node API: `serverContracts(options)`.
+
+For explicitly declared JSON payload schemas, configure
+[declared-payload-compatibility](../rules/declared-payload-compatibility.md) and
+run `no-mistakes check`. Declaration compatibility is a separate opt-in check.

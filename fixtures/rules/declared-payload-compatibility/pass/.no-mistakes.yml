@@ -1,0 +1,17 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      contracts:
+        - name: HTTP request POST /users
+          producer: {file: schemas.json, pointer: /request}
+          consumer: {file: schemas.json, pointer: /worker}
+        - name: HTTP response GET /users
+          producer: {file: schemas.json, pointer: /response}
+          consumer: {file: schemas.json, pointer: /response}
+        - name: queue user-notifications
+          producer: {file: schemas.json, pointer: /queue}
+          consumer: {file: schemas.json, pointer: /worker}
+        - name: pointer escapes
+          producer: {file: schemas.json, pointer: /a~1b~0c}
+          consumer: {file: schemas.json, pointer: /a~1b~0c}

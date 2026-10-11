@@ -924,3 +924,10 @@ single and batch APIs. The exported `PostgresSqlTriggerEvent`,
 `PostgresSqlTriggerEventKind`, and `PostgresSqlExecuteEncoding` contracts preserve
 display text while providing typed identifiers and command provenance. See
 [structured trigger events and cast types](postgres-source-api.md#structured-trigger-events-and-cast-types).
+
+The configured [declared-payload-compatibility](rules/declared-payload-compatibility.md)
+rule is available through `check()` and `analyzeProject()` check reports using
+their existing asynchronous exports. `DeclaredPayloadCompatibilityOptions`,
+`DeclaredPayloadContract`, and `DeclaredPayloadSchema` name the configuration
+shapes. Reports retain the existing `RuleFinding` contract; unsupported schema
+forms produce unproven findings.

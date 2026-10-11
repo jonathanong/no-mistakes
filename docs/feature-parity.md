@@ -799,3 +799,9 @@ OF identifiers, cast type components, literal EXECUTE concatenations, USING
 expressions, unquoted INTO command terminators, and structural expression
 completeness through the Rust/native and asynchronous Node CJS/ESM single/batch
 APIs. Dynamic commands remain incomplete.
+
+[Declared payload compatibility](rules/declared-payload-compatibility.md) is
+language-neutral: explicit JSON Schema document pairs work for independently
+compiled HTTP request/response or queue producers/consumers through Rust, CLI,
+and asynchronous Node checks. Runtime endpoint adoption and inferred payload
+values are outside this declaration-only boundary.

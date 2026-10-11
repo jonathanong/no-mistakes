@@ -1348,3 +1348,20 @@ test("Postgres predicate and value discriminants remain public", () => {
   ])
     assert.ok(expressions.includes(declaration), declaration);
 });
+
+test("declared payload configuration types are named public exports", () => {
+  const types = readFileSync(join(packageRoot, "declared-payload-types.d.ts"), "utf8");
+  const facade = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  for (const name of [
+    "DeclaredPayloadCompatibilityOptions",
+    "DeclaredPayloadContract",
+    "DeclaredPayloadSchema",
+  ]) {
+    assert.ok(types.includes(`export interface ${name}`));
+  }
+  assert.ok(types.includes("contracts?: DeclaredPayloadContract[]"));
+  assert.ok(types.includes("producer: DeclaredPayloadSchema"));
+  assert.ok(types.includes("consumer: DeclaredPayloadSchema"));
+  assert.ok(types.includes("pointer?: string"));
+  assert.ok(facade.includes('export * from "./declared-payload-types"'));
+});

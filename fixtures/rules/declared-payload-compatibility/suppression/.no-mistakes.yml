@@ -1,0 +1,17 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      contracts:
+        - name: file
+          producer: {file: file.json}
+          consumer: {file: file.json}
+        - name: line
+          producer: {file: line.json}
+          consumer: {file: line.json}
+        - name: next
+          producer: {file: next.json}
+          consumer: {file: next.json}
+        - name: string
+          producer: {file: string.json}
+          consumer: {file: string.json}
