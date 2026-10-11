@@ -53,6 +53,12 @@ test(
       [".no-mistakes-nested-live.yml", []],
       [".no-mistakes-nested-sibling.yml", ["nested/sibling.test.mts"]],
       [".no-mistakes-ordinary.yml", ["ordinary/cut.test.mts", "ordinary/sibling.test.mts"]],
+      [".no-mistakes-runner-overlap.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-runner-reverse.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-runner-vitest-only.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-runner-vitest-config-overlap.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-runner-jest-config-overlap.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);

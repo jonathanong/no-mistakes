@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) use visible::config_files_from_visible;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Runner {
     Vitest,
     Jest,

@@ -12,6 +12,7 @@ pub(super) fn precompute_setup_mock_map(
     root: &Path,
     test_files: &[PathBuf],
     setup_data: &[config::ConfigSetupData],
+    selected_runners: config::SelectedRunners,
     resolver: &dyn ImportResolution,
     graph_files: Option<&GraphFiles>,
 ) -> Result<HashMap<PathBuf, HashSet<PathBuf>>> {
@@ -19,7 +20,9 @@ pub(super) fn precompute_setup_mock_map(
         .iter()
         .flat_map(|file| {
             let rel = crate::codebase::ts_source::relative_slash_path(root, file);
-            config::setup_files_for_test_precomputed(&rel, setup_data)
+            config::setup_contexts_for_test_precomputed(&rel, setup_data, selected_runners)
+                .into_iter()
+                .flatten()
         })
         .collect();
     unique_setups

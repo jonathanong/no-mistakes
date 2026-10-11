@@ -56,18 +56,41 @@ pub(in super::super) fn explicit_project_setup_data(
             filter,
             setup_files,
             explicit_project: true,
+            runner: super::discovery::Runner::Vitest,
         });
     }
     Ok(data)
 }
 
-/// Analyze each matching named project separately while retaining shared
-/// runner-config setup files in every execution context.
+#[derive(Clone, Copy)]
+pub(in super::super) struct SelectedRunners {
+    vitest: bool,
+    jest: bool,
+}
+
+impl SelectedRunners {
+    pub(in super::super) fn for_config(config: &NoMistakesConfig) -> Self {
+        let rules = config.rule_applications(super::super::RULE_ID);
+        let all = rules.is_empty()
+            || rules
+                .iter()
+                .any(|rule| rule.applies_to_repository() || !rule.projects.is_empty());
+        Self {
+            vitest: all || rules.iter().any(|rule| !rule.tests.vitest.is_empty()),
+            jest: all,
+        }
+    }
+}
+
+/// Analyze each matching named Vitest project and Jest config separately.
+/// Only setup files from the executing runner can cover its dynamic imports.
 pub(in super::super) fn setup_contexts_for_test_precomputed(
     rel_path: &str,
     config_data: &[ConfigSetupData],
+    selected: SelectedRunners,
 ) -> Vec<Vec<PathBuf>> {
-    let mut shared = Vec::new();
+    let mut vitest_configs = Vec::new();
+    let mut jest_contexts = Vec::new();
     let mut projects = Vec::new();
     for data in config_data {
         if !data.filter_matches(rel_path) {
@@ -75,23 +98,37 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
         }
         if data.explicit_project {
             projects.push(data.setup_files.clone());
-        } else {
-            shared.extend(data.setup_files.iter().cloned());
+        } else if data.runner == super::discovery::Runner::Vitest {
+            vitest_configs.push(data.setup_files.clone());
+        } else if data.runner == super::discovery::Runner::Jest {
+            jest_contexts.push(data.setup_files.clone());
         }
     }
-    let mut seen = std::collections::HashSet::new();
-    shared.retain(|path| seen.insert(path.clone()));
-    if projects.is_empty() {
-        return vec![shared];
+    let mut contexts = Vec::new();
+    if selected.vitest {
+        if projects.is_empty() {
+            contexts.extend(vitest_configs);
+        } else {
+            for project in projects {
+                if vitest_configs.is_empty() {
+                    contexts.push(project);
+                    continue;
+                }
+                for config_files in &vitest_configs {
+                    let mut files = config_files.clone();
+                    files.extend(project.iter().cloned());
+                    let mut seen = std::collections::HashSet::new();
+                    files.retain(|path| seen.insert(path.clone()));
+                    contexts.push(files);
+                }
+            }
+        }
     }
-    projects
-        .into_iter()
-        .map(|project| {
-            let mut files = shared.clone();
-            files.extend(project);
-            let mut seen = std::collections::HashSet::new();
-            files.retain(|path| seen.insert(path.clone()));
-            files
-        })
-        .collect()
+    if selected.jest {
+        contexts.extend(jest_contexts);
+    }
+    if contexts.is_empty() {
+        contexts.push(Vec::new());
+    }
+    contexts
 }

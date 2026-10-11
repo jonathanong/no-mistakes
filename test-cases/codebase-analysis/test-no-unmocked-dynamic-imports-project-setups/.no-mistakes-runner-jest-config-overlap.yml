@@ -1,0 +1,6 @@
+tests:
+  jest:
+    configs: [dual-runner-mocked.config.mjs, dual-runner.config.mjs]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

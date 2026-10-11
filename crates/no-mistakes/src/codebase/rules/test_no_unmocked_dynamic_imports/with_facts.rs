@@ -122,6 +122,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         })?;
     let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
     let setup_data = prepared.setup_data();
+    let selected_runners = config::SelectedRunners::for_config(config);
 
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
 
@@ -131,27 +132,31 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
                 .into_par_iter()
                 .map(|file| {
                     let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
-                    config::setup_contexts_for_test_precomputed(&rel_path, setup_data)
-                        .into_iter()
-                        .map(|setup_files| {
-                            per_test::analyze(
-                                per_test::Request {
-                                    root,
-                                    config,
-                                    resolver: &resolver,
-                                    graph,
-                                    graph_files: &graph_files,
-                                    visible_files: &visible_files,
-                                    manual_mocks: &manual_mocks,
-                                    setup_files: &setup_files,
-                                    shared,
-                                    dependency_cache: &dependency_cache,
-                                    defer_suppression,
-                                },
-                                file.clone(),
-                            )
-                        })
-                        .collect::<Result<Vec<_>>>()
+                    config::setup_contexts_for_test_precomputed(
+                        &rel_path,
+                        setup_data,
+                        selected_runners,
+                    )
+                    .into_iter()
+                    .map(|setup_files| {
+                        per_test::analyze(
+                            per_test::Request {
+                                root,
+                                config,
+                                resolver: &resolver,
+                                graph,
+                                graph_files: &graph_files,
+                                visible_files: &visible_files,
+                                manual_mocks: &manual_mocks,
+                                setup_files: &setup_files,
+                                shared,
+                                dependency_cache: &dependency_cache,
+                                defer_suppression,
+                            },
+                            file.clone(),
+                        )
+                    })
+                    .collect::<Result<Vec<_>>>()
                 })
                 .collect::<Result<Vec<_>>>()
         })?;
