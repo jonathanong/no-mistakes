@@ -1,6 +1,7 @@
 mod alternatives;
 mod callbacks;
 mod calls;
+mod composition;
 mod concat;
 mod member;
 use {concat::concat, scope::Scope};
@@ -97,26 +98,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 // closure copies or reference cycles between sibling functions.
                 Value::Function(Arc::clone(function), path.to_path_buf(), *env)
             }
-            Expr::Template(parts) => {
-                let mut prefix = Value::Prefix(String::new(), true, None);
-                for part in parts {
-                    prefix = concat(prefix, self.expr(part, path, env, depth, generic));
-                }
-                prefix
-            }
-            Expr::Append(base, tail) => {
-                let base = self.expr(base, path, env, depth, generic).exposed();
-                let tail = self.expr(tail, path, env, depth, generic);
-                let base = if matches!(&base, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
-                {
-                    Value::Unknown
-                } else {
-                    base
-                };
-                let value = concat(base, tail);
-                self.replace_builder(&value);
-                value
-            }
+            Expr::Template(parts) => self.template(parts, path, env, (depth, generic)),
+            Expr::Append(base, tail) => self.append(base, tail, path, env, (depth, generic)),
             Expr::Tagged(tag, parts, effects) => {
                 self.tagged(tag, parts, effects, path, env, (depth, generic))
             }
@@ -164,17 +147,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.member(value, name)
             }
+            Expr::ComputedMember(object, key) => {
+                let value = self.expr(object, path, env, depth, generic).exposed();
+                self.expr(key, path, env, depth, generic);
+                self.member(value, "")
+            }
             Expr::Index(object, index) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.index(value, *index)
             }
-            Expr::Children(children) => Value::Aggregate(
-                children
-                    .iter()
-                    .map(|child| self.expr(child, path, env, depth, generic))
-                    .collect::<Vec<_>>()
-                    .into(),
-            ),
+            Expr::Children(children) | Expr::Container(children) | Expr::Object(children) => {
+                self.container(expr, children, path, env, (depth, generic))
+            }
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
         {

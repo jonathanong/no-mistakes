@@ -20,6 +20,15 @@ These in-memory structures belong to the current request and are never persisted
 Conditional binding updates retain distinct alternatives without repeatedly
 duplicating earlier possibilities; conflicting outcomes remain unproven.
 
+A trusted tag that splices a nested SQL fragment has an unknown prefix when
+the fragment comes first. The rule honors `unanalyzableSql` rather than reading
+that fragment as a bind placeholder. A literal leading annotation before a
+nested fragment remains verifiable. `String.raw` strings and scalar results of
+comparisons, conditional tests, and object expressions remain bind values even
+when their operands refer to a SQL builder. Arrays and actual fragment-valued
+branches remain opaque. Reads of array slots or object properties containing
+fragments also remain opaque; interpolation effects are evaluated once.
+
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
 their lexical block, and nested functions own their bindings. Reassigned or

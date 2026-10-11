@@ -10,11 +10,11 @@ fn fixture_root() -> PathBuf {
         .join("../../test-cases/rules/postgres-require-query-annotation")
 }
 
-fn fixture(scenario: &str) -> PathBuf {
+pub(super) fn fixture(scenario: &str) -> PathBuf {
     fixture_root().join("fixture").join(scenario)
 }
 
-fn config_with_options(yaml: &str) -> NoMistakesConfig {
+pub(super) fn config_with_options(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
@@ -29,7 +29,7 @@ fn default_config() -> NoMistakesConfig {
     config_with_options("{}")
 }
 
-fn ts_file(root: &Path) -> PathBuf {
+pub(super) fn ts_file(root: &Path) -> PathBuf {
     root.join("src/query.ts")
 }
 

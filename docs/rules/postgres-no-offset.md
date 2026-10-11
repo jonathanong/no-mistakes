@@ -75,11 +75,14 @@ its recovered text already proved an `OFFSET`. With the default
 
 - no SQL text was recovered (an opaque `query(sql)` argument or a
   `query(cond ? a : b)` choice), or
-- the recovered text is a top-level `SELECT` (after a complete `WITH` list),
+- the recovered text contains `SELECT`, including a CTE or query inside DML,
   or its leading statement is unknown or incomplete, and it has no OFFSET of
   its own. An interpolation or opaque appended tail could add `OFFSET`.
 
-Dynamic `INSERT`, `UPDATE`, `DELETE`, and `MERGE` text is not reported, and a
+Recovered keyword checks ignore quoted text, nested PostgreSQL block comments,
+and keyword text within identifiers, including `$` and Unicode continuations.
+
+Dynamic DML without a recovered query is not reported, and a
 dynamic call whose recovered text already contains `OFFSET` keeps only its
 ordinary `offset` finding. See the
 [migration note](../migrations/postgres-unanalyzable-sql.md).

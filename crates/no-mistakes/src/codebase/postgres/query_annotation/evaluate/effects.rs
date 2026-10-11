@@ -33,7 +33,11 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 ids.insert(*id);
             }
             Value::Promise(value) | Value::Evaluated(value, _) => self.builder_ids(value, ids),
-            Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+            Value::Aggregate(values)
+            | Value::References(values)
+            | Value::Object(values)
+            | Value::Joined(values)
+            | Value::Possible(values) => {
                 for value in values {
                     self.builder_ids(value, ids);
                 }
@@ -94,7 +98,11 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     Value::Promise(value) | Value::Evaluated(value, _) => {
                         replace(value, id, replacement)
                     }
-                    Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+                    Value::Aggregate(values)
+                    | Value::References(values)
+                    | Value::Object(values)
+                    | Value::Joined(values)
+                    | Value::Possible(values) => {
                         for value in values {
                             replace(value, id, replacement);
                         }

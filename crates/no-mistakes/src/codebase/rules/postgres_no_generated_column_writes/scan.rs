@@ -78,35 +78,22 @@ pub(super) fn scan(
     Ok(findings)
 }
 
-/// Dynamic INSERT/UPDATE/MERGE (or unknown) executor SQL can assign columns the
-/// recovered prefix does not show. A recovered write whose every target table
-/// is literal and has no tracked column cannot reach one, so it stays quiet.
+/// An opaque tail may introduce another write even when recovered targets
+/// are literal and untracked. Only an empty applicable catalog is safe.
 fn extend_unanalyzable<'a>(
     findings: &mut Vec<RuleFinding>,
     file: &str,
     embedded: &EmbeddedSqlFileFacts,
-    statements: &[SqlStatementFileFacts],
+    _statements: &[SqlStatementFileFacts],
     lookup: &dyn Fn(usize) -> &'a Catalogs,
 ) {
-    // Statement facts exist only for calls with recovered text, in call order.
-    let mut recovered = statements.iter();
     for call in &embedded.calls {
-        let statement = call.sql_text.as_ref().and_then(|_| recovered.next());
-        if call.kind != EmbeddedSqlKind::Dynamic
-            || !recovered_sql_may_write_columns(call.sql_text.as_deref())
+        let line = call.line.max(1) as usize;
+        if call.kind == EmbeddedSqlKind::Dynamic
+            && recovered_sql_may_write_columns(call.sql_text.as_deref())
+            && !lookup(line).combined.is_empty()
         {
-            continue;
-        }
-        let untracked = statement.is_some_and(|statement| {
-            !statement.writes.is_empty()
-                && statement.writes.iter().all(|write| {
-                    // An interpolated table name could be any tracked table.
-                    !write.table.contains("sql_placeholder_")
-                        && lookup(write.line).combined.get(&write.table).is_none()
-                })
-        });
-        if !untracked {
-            findings.push(unanalyzable_finding(file, call.line.max(1) as usize));
+            findings.push(unanalyzable_finding(file, line));
         }
     }
 }

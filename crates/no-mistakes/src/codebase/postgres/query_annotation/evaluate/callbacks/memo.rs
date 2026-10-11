@@ -121,9 +121,11 @@ impl Classification<'_> {
             } if self.executors.contains(&(*start, *end)) => {
                 args.iter().any(|expr| self.expression(expr))
             }
-            Expr::Children(parts) | Expr::Template(parts) | Expr::Sequence(parts) => {
-                parts.iter().any(|expr| self.expression(expr))
-            }
+            Expr::Children(parts)
+            | Expr::Container(parts)
+            | Expr::Object(parts)
+            | Expr::Template(parts)
+            | Expr::Sequence(parts) => parts.iter().any(|expr| self.expression(expr)),
             _ => (self.effect)(expr),
         }
     }

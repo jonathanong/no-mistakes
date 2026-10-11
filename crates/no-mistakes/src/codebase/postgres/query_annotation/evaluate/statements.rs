@@ -132,7 +132,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
         match expr {
             Expr::Call { start, end, .. } => !self.files[path].executors.contains(&(*start, *end)),
-            Expr::Template(parts) | Expr::Children(parts) | Expr::Sequence(parts) => parts
+            Expr::Template(parts)
+            | Expr::Children(parts)
+            | Expr::Container(parts)
+            | Expr::Object(parts)
+            | Expr::Sequence(parts) => parts
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),
             Expr::Tagged(tag, _, _) => !self.tag_trusted(tag, path, env),

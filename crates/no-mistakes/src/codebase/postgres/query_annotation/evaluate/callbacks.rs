@@ -6,10 +6,6 @@ use super::{calls::scopes, Environment, Evaluator, Value};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
-fn callback_depth(depth: u8) -> impl Iterator<Item = u8> {
-    depth.checked_sub(1).into_iter()
-}
-
 #[derive(Default)]
 struct CallbackState {
     objects: FxHashMap<u64, (u8, Vec<Value>)>,
@@ -96,9 +92,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     fn callback_values(&mut self, values: &[Value], depth: u8, visited: &mut CallbackState) {
         for value in values {
             match value {
-                Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
-                    self.callback_values(values, depth, visited)
-                }
+                Value::Aggregate(values)
+                | Value::References(values)
+                | Value::Object(values)
+                | Value::Joined(values)
+                | Value::Possible(values) => self.callback_values(values, depth, visited),
                 Value::Promise(value) | Value::Evaluated(value, _) => {
                     self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
                 }
@@ -118,7 +116,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     if self.invalidated_builders.len() != taints {
                         visited.memo.clear();
                     }
-                    for next_depth in callback_depth(depth) {
+                    for next_depth in depth.checked_sub(1).into_iter() {
                         let key = (
                             path.clone(),
                             function.start,

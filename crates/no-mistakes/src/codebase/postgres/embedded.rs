@@ -6,6 +6,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 mod bindings;
+mod call;
+pub use call::{EmbeddedSqlCall, EmbeddedSqlKind};
 mod dml_kind;
 mod options;
 mod placeholders;
@@ -26,22 +28,6 @@ pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
 
-/// One executor call site and its recovered SQL text. For `Dynamic` calls,
-/// `sql_text` can be only a verified leading statement rather than complete SQL.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct EmbeddedSqlCall {
-    pub line: u32,
-    pub callee: String,
-    pub sql_text: Option<String>,
-    pub kind: EmbeddedSqlKind,
-    pub declaration_line: Option<u32>,
-    /// Compact physical-line mapping for literal and template recovery.
-    pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
-    /// SQL line and column of each generated interpolation marker, before any user-authored
-    /// identifier with the same spelling can be confused for it.
-    pub recovered_placeholder_positions: Vec<(u32, u32)>,
-}
-
 /// A SQL fragment returned from a builder or appended to a
 /// statement builder. These are deliberately separate from executed calls:
 /// structural policies can inspect them without treating builder code as an
@@ -54,16 +40,6 @@ pub struct EmbeddedSqlFragment {
     pub sql_text: Option<String>,
     /// SQL-local positions of generated interpolation markers in `sql_text`.
     pub recovered_placeholder_positions: Vec<(u32, u32)>,
-}
-
-/// How executed SQL was recovered from TypeScript.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum EmbeddedSqlKind {
-    #[default]
-    Inline,
-    ImmutableLocal,
-    Composed,
-    Dynamic,
 }
 
 /// Embedded-SQL facts for one TypeScript/JavaScript file.

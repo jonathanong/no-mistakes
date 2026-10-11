@@ -48,6 +48,8 @@ fn expression(expr: &Expr, names: &mut Reads) {
         }
         Expr::Template(values)
         | Expr::Children(values)
+        | Expr::Container(values)
+        | Expr::Object(values)
         | Expr::Sequence(values)
         | Expr::Alternatives(values)
         | Expr::Opaque(values)
@@ -59,7 +61,7 @@ fn expression(expr: &Expr, names: &mut Reads) {
                 expression(value, names);
             }
         }
-        Expr::Append(left, right) => {
+        Expr::Append(left, right) | Expr::ComputedMember(left, right) => {
             expression(left, names);
             expression(right, names);
         }

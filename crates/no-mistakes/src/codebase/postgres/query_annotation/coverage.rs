@@ -23,6 +23,8 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
             Expr::Function(function) => steps(&function.body, covered),
             Expr::Template(parts)
             | Expr::Children(parts)
+            | Expr::Container(parts)
+            | Expr::Object(parts)
             | Expr::Sequence(parts)
             | Expr::Opaque(parts)
             | Expr::OpaqueWrite {
@@ -45,7 +47,7 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
             | Expr::Discard(value)
             | Expr::Member(value, _)
             | Expr::Index(value, _) => expr(value, covered),
-            Expr::Append(base, tail) => {
+            Expr::Append(base, tail) | Expr::ComputedMember(base, tail) => {
                 expr(base, covered);
                 expr(tail, covered);
             }

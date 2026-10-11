@@ -1,5 +1,34 @@
 use super::super::{Expr, Function, Step};
-use oxc_ast::ast::{BindingPattern, FormalParameters};
+use oxc_ast::ast::{ArrowFunctionBody, ArrowFunctionExpression, BindingPattern, FormalParameters};
+
+pub(super) fn arrow(value: &ArrowFunctionExpression<'_>, source: &str) -> Expr {
+    let body = match &value.body {
+        ArrowFunctionBody::FunctionBody(body) => {
+            super::super::statements::steps(&body.statements, source)
+        }
+        other => vec![Step::Return(
+            other
+                .as_expression()
+                .map_or(Expr::Unknown, |expr| super::expression(expr, source)),
+        )],
+    };
+    Expr::Function(function(
+        &value.params,
+        body,
+        true,
+        value.r#async,
+        true,
+        value.span.start,
+    ))
+}
+
+pub(super) fn named_function_expression(value: &oxc_ast::ast::Function<'_>, source: &str) -> Expr {
+    let mut function = function_expression(value, source);
+    if let (Some(id), Expr::Function(summary)) = (&value.id, &mut function) {
+        std::sync::Arc::make_mut(summary).self_name = Some(id.name.to_string());
+    }
+    function
+}
 
 pub(in crate::codebase::postgres::query_annotation) fn function_expression(
     value: &oxc_ast::ast::Function<'_>,

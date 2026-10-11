@@ -22,7 +22,11 @@ impl Reachable {
                 self.identities.insert(*id);
             }
             Value::Promise(value) | Value::Evaluated(value, _) => self.value(value),
-            Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values)
+            Value::Aggregate(values)
+            | Value::References(values)
+            | Value::Object(values)
+            | Value::Joined(values)
+            | Value::Possible(values)
                 if self.visited_values.insert(values.identity()) =>
             {
                 for value in values {

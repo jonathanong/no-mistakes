@@ -49,7 +49,11 @@ impl Values {
                     Value::Promise(value) | Value::Evaluated(value, _) => {
                         collect(value, environments)
                     }
-                    Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+                    Value::Aggregate(values)
+                    | Value::References(values)
+                    | Value::Object(values)
+                    | Value::Joined(values)
+                    | Value::Possible(values) => {
                         environments.extend(values.environment_indices());
                     }
                     _ => {}
@@ -73,9 +77,11 @@ impl Values {
                 match value {
                     Value::Prefix(_, _, Some(_)) | Value::Arguments(_) => true,
                     Value::Promise(value) | Value::Evaluated(value, _) => references(value),
-                    Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
-                        values.contains_reference()
-                    }
+                    Value::Aggregate(values)
+                    | Value::References(values)
+                    | Value::Object(values)
+                    | Value::Joined(values)
+                    | Value::Possible(values) => values.contains_reference(),
                     _ => false,
                 }
             }
@@ -142,6 +148,10 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     Promise(Box<Value>),
     Evaluated(Box<Value>, bool),
     Aggregate(Values),
+    // Reachable references retained for effects, not candidate runtime values.
+    References(Values),
+    // Direct object binds are scalars; property reads may expose these values.
+    Object(Values),
     // Alternative binding values; unlike Aggregate, this is not a container.
     Joined(Values),
     // Candidate runtime values with an implicit unknown alternative.

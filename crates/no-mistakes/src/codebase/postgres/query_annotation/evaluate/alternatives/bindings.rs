@@ -5,7 +5,11 @@ use crate::fx::FxHashMap;
 fn scalar(value: &Value) -> bool {
     match value {
         Value::Unknown | Value::Prefix(_, _, None) => true,
-        Value::Aggregate(values) | Value::Joined(values) => values.iter().all(scalar),
+        Value::Evaluated(inner, _) => scalar(inner),
+        Value::Aggregate(values)
+        | Value::References(values)
+        | Value::Object(values)
+        | Value::Joined(values) => values.iter().all(scalar),
         _ => false,
     }
 }

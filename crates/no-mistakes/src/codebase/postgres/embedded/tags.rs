@@ -15,7 +15,8 @@ pub(crate) struct SqlTagNames {
     /// Default imports from `sql-template-strings`, or configured named
     /// `trustedSqlTags` imports, under the file's local names.
     imported: HashSet<String>,
-    fragments: HashSet<String>,
+    fragments: crate::fx::FxHashSet<String>,
+    fragment_functions: crate::fx::FxHashSet<String>,
 }
 
 impl SqlTagNames {
@@ -25,7 +26,8 @@ impl SqlTagNames {
 
     /// Records fragment bindings once every trusted import is known.
     pub(crate) fn collect_fragments(&mut self, program: &oxc_ast::ast::Program<'_>) {
-        self.fragments = fragments::collect_fragment_bindings(program, self);
+        (self.fragments, self.fragment_functions) =
+            fragments::collect_fragment_bindings(program, self);
     }
 
     fn contains(&self, name: &str) -> bool {

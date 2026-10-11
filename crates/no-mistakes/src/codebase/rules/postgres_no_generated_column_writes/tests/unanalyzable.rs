@@ -16,8 +16,8 @@ fn lines(findings: &[RuleFinding]) -> Vec<usize> {
 #[test]
 fn dynamic_column_writes_fail_closed_by_default() {
     let findings = findings("{}");
-    // The literal `logs` write, dynamic SELECT/DELETE and the suppressed call stay quiet.
-    assert_eq!(lines(&findings), [5, 10, 15], "{findings:#?}");
+    // Dynamic SELECT/DELETE without CTE writes and the suppressed call stay quiet.
+    assert_eq!(lines(&findings), [5, 10, 15, 20, 39, 42], "{findings:#?}");
     assert!(findings.iter().all(
         |finding| finding.target.as_deref() == Some("unanalyzable") && finding.import.is_none()
     ));
@@ -57,4 +57,16 @@ fn unknown_unanalyzable_mode_is_a_config_error() {
         ),
         "{error}"
     );
+}
+
+#[test]
+fn ordinary_schema_history_does_not_make_dynamic_writes_relevant() {
+    let root = unit_fixture("unanalyzable");
+    let findings = check_with_files(
+        &root,
+        &config_with_options("{}"),
+        &[root.join("ordinary.sql"), root.join("write.ts")],
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
 }

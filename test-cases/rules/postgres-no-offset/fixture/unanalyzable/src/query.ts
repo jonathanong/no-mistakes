@@ -30,3 +30,10 @@ export function suppressed(sql: string) {
   // no-mistakes-disable-next-line postgres-no-offset
   return query(sql);
 }
+
+export function archive(tail: string) {
+  return query(`INSERT INTO archive SELECT * FROM live ORDER BY id ${tail}`);
+}
+export function updateFromQuery(tail: string) {
+  return query(`UPDATE live SET id = (SELECT id FROM archive ${tail})`);
+}

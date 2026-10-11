@@ -285,13 +285,8 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
-    let Some(super::super::Value::Aggregate(values)) = evaluator.scopes[root].get("callback")
-    else {
+    let Some(super::super::Value::Aggregate(arms)) = evaluator.scopes[root].get("callback") else {
         panic!("expected alternative callback values");
-    };
-    // Conditional facts include the test value before the alternative result.
-    let super::super::Value::Aggregate(arms) = &values[1] else {
-        panic!("expected alternative arm values");
     };
     let super::super::Value::Function(_, _, captured) = &arms[0] else {
         panic!("expected retained callback");

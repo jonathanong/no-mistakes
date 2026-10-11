@@ -28,7 +28,11 @@ pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environm
             }
         }
         Value::Promise(value) | Value::Evaluated(value, _) => remap(value, indices),
-        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values)
+        Value::Aggregate(values)
+        | Value::References(values)
+        | Value::Object(values)
+        | Value::Joined(values)
+        | Value::Possible(values)
             if changes_environment(values, indices) =>
         {
             for value in values {

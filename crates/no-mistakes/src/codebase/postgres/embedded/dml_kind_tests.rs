@@ -154,3 +154,50 @@ fn select_and_column_write_predicates_fail_closed_on_missing_or_unknown_text() {
         assert!(!recovered_sql_may_write_columns(Some(sql)), "{sql}");
     }
 }
+
+#[test]
+fn nested_queries_and_writes_are_relevant_but_quoted_keywords_are_not() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/dml-relevance.sql");
+    let source = std::fs::read_to_string(root).unwrap();
+    let sql: Vec<_> = source.lines().collect();
+    assert!(recovered_sql_may_select(Some(sql[0])));
+    assert!(recovered_sql_may_write_columns(Some(sql[1])));
+    assert!(recovered_sql_may_write_columns(Some(sql[2])));
+    assert!(!recovered_sql_may_select(Some(sql[3])));
+    assert!(!recovered_sql_may_write_columns(Some(sql[4])));
+}
+
+#[test]
+fn nested_comments_and_identifier_continuations_do_not_create_dml_keywords() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/dml-comment-and-identifier-relevance.sql");
+    let source = std::fs::read_to_string(path).unwrap();
+    let sql: Vec<_> = source.lines().collect();
+    for index in [0, 2, 3, 4, 6, 7, 8, 13, 14, 16] {
+        assert!(
+            !recovered_sql_may_select(Some(sql[index])),
+            "{}",
+            sql[index]
+        );
+    }
+    for index in [1, 5, 15] {
+        assert!(
+            !recovered_sql_may_write_columns(Some(sql[index])),
+            "{}",
+            sql[index]
+        );
+    }
+    assert_eq!(top_level_dml_kind(sql[2]), Some(TopLevelDml::Update));
+    assert_eq!(top_level_dml_kind(sql[3]), Some(TopLevelDml::Update));
+    for index in [9, 11] {
+        assert!(recovered_sql_may_select(Some(sql[index])), "{}", sql[index]);
+    }
+    for index in [10, 12] {
+        assert!(
+            recovered_sql_may_write_columns(Some(sql[index])),
+            "{}",
+            sql[index]
+        );
+    }
+}
