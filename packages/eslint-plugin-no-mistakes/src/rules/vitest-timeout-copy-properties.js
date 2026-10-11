@@ -58,10 +58,10 @@ function createOwnDataProperty(context) {
     if (!value) return null;
     if (value !== node) return property(value, key, seen);
     if (node.type === "ArrayExpression") {
-      if (key === "length") return { data: true, value: null };
+      if (key === "length") return { data: true, enumerable: false, value: null };
       const entries = arrayValues(node, new Set());
       const element = entries?.find((entry, index) => String(index) === key && entry);
-      return element ? { data: true, value: element } : null;
+      return element ? { data: true, enumerable: true, value: element } : null;
     }
     if (node.type !== "ObjectExpression") return null;
     let uncertainValue = false;
@@ -69,9 +69,15 @@ function createOwnDataProperty(context) {
       const entry = node.properties[index];
       if (entry.type === "SpreadElement") {
         const copied = property(entry.argument, key, seen);
+        // Object spread skips non-enumerable own properties such as array length.
+        if (copied?.enumerable === false) continue;
         // Spreading reads accessors and creates ordinary own data properties.
         if (copied)
-          return { data: true, value: copied.data && !uncertainValue ? copied.value : null };
+          return {
+            data: true,
+            enumerable: true,
+            value: copied.data && !uncertainValue ? copied.value : null,
+          };
         // An opaque spread might replace an earlier accessor with a data property,
         // but cannot establish that the accessor was definitely replaced.
         uncertainValue = true;
@@ -89,7 +95,11 @@ function createOwnDataProperty(context) {
           entry.kind === "init"
         )
           return null;
-        return { data: entry.kind === "init", value: uncertainValue ? null : entry.value };
+        return {
+          data: entry.kind === "init",
+          enumerable: true,
+          value: uncertainValue ? null : entry.value,
+        };
       }
     }
     return null;
