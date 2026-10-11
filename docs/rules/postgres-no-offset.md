@@ -24,7 +24,9 @@ left operand also clears the affected SQL prefix. Calls that remain dynamic use
 the configured `unanalyzableSql` behavior.
 A final template interpolation can mutate a fragment captured by an earlier
 interpolation, because the tag receives those references after all expressions
-run. Such calls stay dynamic and follow `unanalyzableSql`; a copied primitive
+run. Such calls stay dynamic and follow `unanalyzableSql`. Exact identities or
+tracked alias groups distinguish captured objects from independent builders;
+mutating a separate builder keeps every finite statement checked. A copied primitive
 bind, an ordinary final bind, or an append to a fresh nested fragment keeps its
 existing analysis. Static sibling calls still report OFFSET at the original
 branch line, including when other calls become dynamic.

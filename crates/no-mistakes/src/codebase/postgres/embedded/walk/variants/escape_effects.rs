@@ -92,7 +92,7 @@ impl ScopeVisitor<'_> {
         effects
     }
 
-    fn known_builder_consumer(&self, call: &CallExpression<'_>) -> bool {
+    pub(super) fn known_builder_consumer(&self, call: &CallExpression<'_>) -> bool {
         let callee = unwrap_ts_wrappers(&call.callee);
         if callee_name(call, self.bindings, self.scoped).is_some()
             || self.fresh_builder_call(call)

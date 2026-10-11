@@ -258,8 +258,17 @@ Conditional tests, logical left operands, and earlier template interpolations
 that mutate an existing SQL binding also stay `Dynamic` when recovery would
 otherwise consume its earlier snapshot later in the same expression.
 Trusted template tags run after every interpolation has been evaluated. A final
-interpolation that mutates a tracked builder also makes the call `Dynamic` when
-an earlier interpolation captured a mutable fragment reference. Direct appends
+interpolation that mutates a captured builder also makes the call `Dynamic` when
+an earlier interpolation captured its mutable fragment reference. Exact builder
+identities distinguish independent objects, including fresh replacements that
+retain historical alias links. When an identity is missing, connected tracked
+aliases keep the check conservative. Mutations to a separate builder or a fresh
+helper argument retain finite recovery. Aliases created within the final
+expression are followed before later effects. Unsupported assignment targets
+and value wrappers whose identity writes cannot be proved stay conservative.
+Calls also stay conservative when argument, property, or element evaluation
+can change a later builder lookup or a retained helper result. Earlier arguments
+and receivers keep the objects captured before subsequent writes. Direct appends
 and known or opaque helper effects use this boundary. Primitive bind values are
 already copied, so reassigning their bindings in the final expression does not
 invalidate them. Ordinary final binds, a single mutating fragment interpolation,
