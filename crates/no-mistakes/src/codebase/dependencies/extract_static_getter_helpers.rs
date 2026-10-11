@@ -24,7 +24,11 @@ fn visit_computed_member_expression_with_getters<'a>(
         record_static_getter_read(collector, member.span.start, &name);
         collector.push_value_symbol_reference(name);
     }
-    walk::walk_computed_member_expression(collector, member);
+    collector.visit_expression(&member.object);
+    let conditional = member.optional || has_optional_chain(&member.object);
+    with_conditional_execution(collector, conditional, |collector| {
+        collector.visit_expression(&member.expression);
+    });
 }
 
 fn record_static_getter_read(collector: &mut ImportCollector, offset: u32, callee: &str) {
@@ -114,7 +118,9 @@ fn visit_assignment_expression_with_calls<'a>(
 ) {
     record_assignment_target_writes(collector, &assignment.left, assignment.span.start);
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
-    collector.visit_expression(&assignment.right);
+    with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
+        collector.visit_expression(&assignment.right);
+    });
 }
 
 fn walk_assignment_lhs_without_written_getter<'a>(
