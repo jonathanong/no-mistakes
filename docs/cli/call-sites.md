@@ -7,28 +7,23 @@ no-mistakes call-sites src/api.mts handler --format json
 ```
 
 Use this to see how a function is actually called before changing its signature.
-The query is scoped to files that import the export (plus the defining file), so
-it stays fast. Each call site reports the `file`, `line`, enclosing `caller`
-(when determinable), `argCount`, `hasSpread`, and a per-argument `args` shape.
+The query prepares one project-wide call graph and reports invocations whose
+resolved callable identity matches the export. Each call site reports `file`,
+`line`, enclosing `caller` (when determinable), `argCount`, `hasSpread`, and a
+per-argument `args` shape.
 
 Argument shapes are coarse syntactic tags — `string`, `number`, `boolean`,
 `null`, `identifier`, `object`, `array`, `arrow`, `call`, `spread`, or `other` —
-with no type inference. Named and star re-export barrels are followed, and
-direct re-export barrels themselves are not scanned for calls. A star barrel
-that explicitly exports a same-named local symbol can make calls in its
-consumers over-report for the target export. Import-then-re-export chains
-(`import { handler as h } from './x'; export { h as handler }`) are not followed:
-the barrel can be scanned under its imported local name, while callers that
-import from it are omitted. The defining file is scanned under the export's
-local binding, so calls to a renamed export's implementation
-(`function impl(){}; export { impl as handler }`) are included. Only direct
-identifier calls (`handler(...)`) match; namespace member calls (`ns.handler()`),
-indirect aliases (`const h = handler; h()`), and a local binding that shadows
-the import inside a nested scope are not resolved. A type-only import
-(`import type { fn }`) is treated like any other binding, so a same-named value
-call in that file may be reported. A file that fails to parse (e.g. mid-edit)
-contributes no call sites rather than failing the query, so results can be
-incomplete. Use `rg` on the returned files when exact call text matters.
+with no type inference. Named, star, and import-then-export barrels are followed.
+Named/default imports, namespace calls (`ns.handler()`), static computed members
+(`ns["handler"]()`), and statically resolvable lexical aliases
+(`const h = handler; h()`) use the canonical call resolver. Renamed exports use
+their local callable identity. A nested binding that shadows an import is
+excluded, as are type-only imports.
+
+Dynamic callee selection and aliases invalidated by reassignment may remain
+unresolved. Files with parser failures contribute no call sites. Use `rg` on
+the returned files when exact call text matters.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

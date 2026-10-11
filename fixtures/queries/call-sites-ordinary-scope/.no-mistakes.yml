@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: packages/unit/vitest.config.ts
+  playwright:
+    configs: playwright.config.ts
+    frontendRoot: packages/unit/src

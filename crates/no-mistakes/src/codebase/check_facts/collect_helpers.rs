@@ -48,6 +48,19 @@ pub(super) fn uncollected_files(
         .collect()
 }
 
+pub(super) fn extend_missing_helper_facts(
+    facts: &mut FileIdMap<CheckFileFacts>,
+    helpers: FileIdMap<CheckFileFacts>,
+) {
+    for (path, helper) in helpers {
+        // A strict runner failure is only a placeholder. The union collector
+        // may already provide recovered imports, exports, and symbols here.
+        if !facts.contains_key(&path) {
+            facts.insert(path, helper);
+        }
+    }
+}
+
 pub(crate) fn collect_fact_map_with_sources(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,

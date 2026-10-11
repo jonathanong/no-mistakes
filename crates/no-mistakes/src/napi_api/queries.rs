@@ -53,11 +53,11 @@ struct DeadExportsOptions {
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-struct CallSitesOptions {
-    file: String,
-    export_name: String,
-    root: Option<String>,
-    tsconfig: Option<String>,
+pub(crate) struct CallSitesOptions {
+    pub(crate) file: String,
+    pub(crate) export_name: String,
+    pub(crate) root: Option<String>,
+    pub(crate) tsconfig: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]

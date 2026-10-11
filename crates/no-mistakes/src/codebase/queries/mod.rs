@@ -4,10 +4,10 @@
 //! for short, single-file queries an agent can reach for without formulating a
 //! graph traversal. Local queries (`resolve-check`, the export list of
 //! `exports-of`) only parse the target file; reverse queries (`importers`,
-//! `dead-exports`, the "who imports each" of `exports-of`, and the scoping of
-//! `call-sites`) build a [`SymbolIndex`] reverse import scan — cheaper than the
-//! full `DepGraph`. Only `importers --tests` builds a graph, via the shared
-//! test-impact engine.
+//! `dead-exports`, and the "who imports each" of `exports-of`) project a
+//! prepared [`SymbolIndex`] reverse import scan. `call-sites` projects resolved
+//! callable identities from the canonical graph; `importers --tests` uses the
+//! shared test-impact graph.
 //!
 //! [`SymbolIndex`]: crate::codebase::dependencies::graph::SymbolIndex
 

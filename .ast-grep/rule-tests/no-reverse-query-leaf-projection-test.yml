@@ -1,6 +1,10 @@
 id: no-reverse-query-leaf-projection
 valid:
   - |
+    fn call_sites(target: &Target, prepared: &ReversePrepared) {
+        let facts = collect_prepared_reverse_facts(target, prepared, additional_plan);
+    }
+  - |
     fn importers(prepared: &ReverseAnalysis, file: &Path) {
         let importers = prepared.index.file_importers(file);
     }

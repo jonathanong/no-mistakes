@@ -5,6 +5,7 @@ struct PreparedPlaywrightView {
 
 struct PreparedScope {
     options: AnalyzeProjectOptions,
+    ordinary_calls: Option<crate::codebase::queries::call_sites::prepared::OrdinaryCallSites>,
     traversal: SharedTraversalContext,
     facts: crate::codebase::check_facts::CheckFactMap,
     check_facts: crate::codebase::check_facts::CheckFactMap,
@@ -20,13 +21,11 @@ struct PreparedScope {
     server_indexed_reports: ReportCache<crate::server_routes::PreparedProjectReport>,
     server_traversal_keys: std::collections::HashSet<String>,
     server_reports: ReportCache<crate::server_routes::ProjectReport>,
-    playwright_analyses:
-        ReportCache<std::sync::Arc<crate::playwright::analysis::types::Analysis>>,
+    playwright_analyses: ReportCache<std::sync::Arc<crate::playwright::analysis::types::Analysis>>,
     react_analyses: ReportCache<Vec<crate::react_traits::ComponentFacts>>,
 }
 
-type ReportCell<T> =
-    std::sync::Arc<std::sync::OnceLock<Result<T, std::sync::Arc<str>>>>;
+type ReportCell<T> = std::sync::Arc<std::sync::OnceLock<Result<T, std::sync::Arc<str>>>>;
 type ReportCache<T> = std::sync::Mutex<HashMap<String, ReportCell<T>>>;
 
 struct ScopeFactPlan {
@@ -39,6 +38,7 @@ struct ScopeFactPlan {
 
 struct PreparedScopePlan {
     options: AnalyzeProjectOptions,
+    ordinary_calls: Option<crate::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>,
     root: PathBuf,
     traversal: SharedTraversalContext,
     primary: ScopeFactPlan,

@@ -68,7 +68,7 @@ fn collect_check_facts_inner(
         );
     ts.extend(collected);
     let helper_paths = helper_facts.keys().cloned().collect::<HashSet<_>>();
-    ts.extend(helper_facts);
+    super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);
     let remaining_files = uncollected_files(&files, &ts, &helper_paths);
     let remaining_graph_files = uncollected_files(&graph_only_files, &ts, &helper_paths);
     ts.extend(collect_fact_map_with_sources(
