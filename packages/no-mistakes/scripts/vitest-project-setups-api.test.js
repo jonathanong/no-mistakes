@@ -25,8 +25,11 @@ test(
       [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
       [".no-mistakes-invalid.yml", "invalid repository-relative path"],
     ]) {
-      await assert.rejects(cjs.check({ root, config: join(root, config) }), new RegExp(expected));
-      await assert.rejects(esm.check({ root, config: join(root, config) }), new RegExp(expected));
+      const options = { root, config: join(root, config) };
+      const invalid = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), invalid);
+      assert.deepEqual(invalid.rules, []);
+      assert.ok(invalid.warnings.some((warning) => warning.includes(expected)), invalid.warnings);
     }
   },
 );
