@@ -28,6 +28,12 @@ run. Such calls stay dynamic and follow `unanalyzableSql`; a copied primitive
 bind, an ordinary final bind, or an append to a fresh nested fragment keeps its
 existing analysis. Static sibling calls still report OFFSET at the original
 branch line, including when other calls become dynamic.
+Pure identifier rebinding in the final interpolation keeps the earlier captured
+fragment checked, including its OFFSET; later reads use the replacement.
+An assignment whose right-hand side mutates or escapes a builder still follows
+`unanalyzableSql`.
+This also applies when an append or mutating helper consumes the builder returned
+by the assignment.
 
 ```yaml
 rules:
