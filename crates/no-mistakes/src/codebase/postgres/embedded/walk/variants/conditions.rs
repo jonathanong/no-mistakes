@@ -112,9 +112,9 @@ pub(super) fn nullish_at(
         ));
     }
     let values = visitor.recover_variants(expr)?;
-    let nullish = values.first()?.value == super::ValueKind::Null;
+    let nullish = values.first()?.nullish()?;
     values
         .iter()
-        .all(|value| (value.value == super::ValueKind::Null) == nullish)
+        .all(|value| value.nullish() == Some(nullish))
         .then_some(nullish)
 }

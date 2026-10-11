@@ -62,6 +62,7 @@ pub(super) fn append(
     let positions = source_positions::for_expression(arg, source, call.span.start as usize, line);
     let origins = origins::collect(arg, source, &sql);
     Some(ParameterFragment {
+        append_site: call.span.start,
         sql,
         line,
         positions,

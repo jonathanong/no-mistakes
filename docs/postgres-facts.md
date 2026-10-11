@@ -217,6 +217,10 @@ recovery exceeds the depth limit of 8, no partial version set is published.
 Loops, untagged `${...}` SQL-text interpolation, cross-file calls,
 `sql.raw(variable)`, and `sql.join` over non-literal input, spreads, or array
 holes remain `Dynamic` and retain the existing `unanalyzableSql` behavior.
+An unknown falsy result from `condition && sqlFragment` cannot prove whether
+a following `??` takes its fallback, so that composed call remains `Dynamic`.
+Present and absent fragments inside trusted templates and recoverable `||`
+fallbacks remain supported.
 Stored parameter-helper returns also remain opaque: they alias a mutable builder
 that can change after the helper call, so its recovered text is not a snapshot.
 After a known mutating helper call, later reads of its caller binding and tracked
@@ -224,6 +228,14 @@ aliases remain `Dynamic`, retaining only verified leading SQL. When branch
 assignments lose the exact builder identity, the extractor conservatively
 invalidates the connected group of simple identifier aliases, including
 historical aliases.
+Passing a tracked mutable builder to an ordinary call without a verified summary
+clears finite alternatives across tracked aliases while preserving the legacy
+`kind` and `sql_text` fields. Calls evaluated inside `if` tests, conditional
+tests, or logical left operands also clear the affected SQL prefix and keep later
+reads `Dynamic`. Literal array and object arguments retain these alias effects;
+merely declaring a callback does not execute its body. Recognized executors,
+trusted constructors, and known builder appends retain their existing behavior;
+copied SQL strings and unrelated builders remain independent.
 Ordinary `.append()` mutations clear finite-version snapshots cached by other
 tracked aliases to the same mutable builder. Branching calls that depend on a
 cleared snapshot stay `Dynamic`; the directly updated binding can retain
@@ -302,7 +314,10 @@ trusted-tag and lexical-shadow rules as executed SQL. A raw appended
 identifier that cannot be resolved becomes a synthetic qualified outer
 reference, so shape policies conservatively retain possible correlation while
 runtime table constants and column fragments remain statically parseable.
-Fragments that exactly match an executed call are inspected once.
+For complete alternatives, a builder fragment reuses executed facts only when
+the SQL and binds, contributing append occurrence, and physical byte origins
+match that version. Equal SQL produced at another source site remains checked.
+Non-enumerated calls retain the existing SQL-text and bind matching.
 
 Each `EmbeddedSqlCall` records `kind`:
 

@@ -1,5 +1,5 @@
 use super::super::super::ScopeVisitor;
-use super::super::{Recovered, ValueKind};
+use super::super::Recovered;
 use super::branch_paths;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, LogicalExpression, LogicalOperator, UnaryOperator};
@@ -23,7 +23,7 @@ pub(super) fn branches(
         expression = unwrap_ts_wrappers(&unary.argument);
     }
     recovered_paths(visitor, expression, paths, id, truth_arm, |value| {
-        value.truth() != invert
+        Some(value.truth() != invert)
     })
 }
 
@@ -35,11 +35,14 @@ pub(super) fn logical_branches(
     right_arm: u32,
 ) -> (Paths, Paths) {
     match expression.operator {
-        LogicalOperator::Coalesce => {
-            recovered_paths(visitor, &expression.left, paths, id, right_arm, |value| {
-                value.value == ValueKind::Null
-            })
-        }
+        LogicalOperator::Coalesce => recovered_paths(
+            visitor,
+            &expression.left,
+            paths,
+            id,
+            right_arm,
+            Recovered::nullish,
+        ),
         LogicalOperator::And => branches(visitor, &expression.left, paths, id, right_arm),
         LogicalOperator::Or => {
             let (retained, replaced) =
@@ -55,7 +58,7 @@ fn recovered_paths(
     paths: &[Vec<(u64, u32)>],
     id: u64,
     truth_arm: u32,
-    truth: impl Fn(&Recovered) -> bool,
+    truth: impl Fn(&Recovered) -> Option<bool>,
 ) -> (Paths, Paths) {
     let Some(values) = visitor.recover_variants(test) else {
         return (
@@ -73,11 +76,16 @@ fn recovered_paths(
         for (choice_id, choice_arm) in value.choices {
             compatible = branch_paths(&compatible, choice_id, choice_arm);
         }
-        let arm = if taken { truth_arm } else { 1 - truth_arm };
-        let output = if taken { &mut yes } else { &mut no };
-        for path in branch_paths(&compatible, id, arm) {
-            if !output.contains(&path) {
-                output.push(path);
+        // An opaque falsy && result can be nullish or non-nullish. Neither
+        // coalesce arm may be discarded before its effects are visited.
+        for (arm, output) in [(truth_arm, &mut yes), (1 - truth_arm, &mut no)] {
+            if taken.is_some_and(|taken| taken != (arm == truth_arm)) {
+                continue;
+            }
+            for path in branch_paths(&compatible, id, arm) {
+                if !output.contains(&path) {
+                    output.push(path);
+                }
             }
         }
     }

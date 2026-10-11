@@ -1,5 +1,5 @@
-use crate::codebase::postgres::{EmbeddedSqlFileFacts, EmbeddedSqlKind};
-use crate::fx::FxHashSet;
+use crate::codebase::postgres::EmbeddedSqlFileFacts;
+mod executed;
 
 pub(super) struct Input<'a> {
     pub line: u32,
@@ -12,17 +12,7 @@ pub(super) struct Input<'a> {
 }
 
 pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<Input<'_>> {
-    let executed: FxHashSet<_> = file
-        .calls
-        .iter()
-        .flat_map(|call| call.statement_calls())
-        .filter(|call| call.kind != EmbeddedSqlKind::Dynamic)
-        .filter_map(|call| {
-            call.sql_text
-                .as_ref()
-                .map(|sql| (sql.clone(), call.recovered_placeholder_positions.clone()))
-        })
-        .collect();
+    let executed = executed::Executed::collect(file);
     let located = file.calls.iter().any(|call| !call.variants.is_empty());
     let mut out = Vec::new();
     for (index, fragment) in file.fragments.iter().enumerate() {
@@ -64,6 +54,6 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<Input<'_>> {
             }));
         }
     }
-    out.retain(|fragment| !executed.contains(&(fragment.sql.to_string(), fragment.binds.to_vec())));
+    out.retain(|fragment| !executed.contains(fragment));
     out
 }

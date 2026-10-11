@@ -53,7 +53,7 @@ impl ScopeVisitor<'_> {
         for (name, identity, preserved_scope) in effects {
             // Ordinary append invalidates retained variant snapshots only;
             // legacy nonbranching fields keep their existing public behavior.
-            self.apply_builder_effect(name, identity, preserved_scope, true, false);
+            self.apply_builder_effect(name, identity, preserved_scope, true, false, 0);
         }
     }
 }

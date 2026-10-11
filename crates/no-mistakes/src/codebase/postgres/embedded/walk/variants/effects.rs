@@ -27,9 +27,9 @@ impl ScopeVisitor<'_> {
         };
         effects.visit_expression(expression);
         let prefixes = effects.prefixes.unwrap();
-        for (name, identity, aliases) in prefixes {
-            if aliases {
-                self.apply_builder_effect(name, identity, None, false, true);
+        for (name, identity, scope) in prefixes {
+            if let Some(scope) = scope {
+                self.apply_builder_effect(name, identity, None, false, true, scope);
             } else {
                 self.mark_dynamic(&name);
             }
@@ -37,10 +37,12 @@ impl ScopeVisitor<'_> {
     }
 }
 
+type PrefixEffect = (String, Option<u32>, Option<usize>);
+
 struct Effects<'visitor, 'source> {
     visitor: &'visitor ScopeVisitor<'source>,
     found: bool,
-    prefixes: Option<Vec<(String, Option<u32>, bool)>>,
+    prefixes: Option<Vec<PrefixEffect>>,
 }
 
 impl Effects<'_, '_> {
@@ -81,7 +83,7 @@ impl Effects<'_, '_> {
         if self.known_sql_binding(name) {
             self.found = true;
             if let Some(prefixes) = &mut self.prefixes {
-                prefixes.push((name.to_string(), None, false));
+                prefixes.push((name.to_string(), None, None));
             }
         }
     }
@@ -89,20 +91,22 @@ impl Effects<'_, '_> {
 
 impl<'a> Visit<'a> for Effects<'_, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        let effects = self
-            .visitor
-            .parameter_helper_effect(call)
-            .unwrap_or_default();
-        let effects = effects
-            .into_iter()
-            .chain(self.appended_builders(call))
-            .collect::<Vec<_>>();
-        self.found |= !effects.is_empty();
+        let (effects, escape) = self.visitor.call_builder_effect(call);
+        let appended = self.appended_builders(call);
+        self.found |= !effects.is_empty() || !appended.is_empty();
         if let Some(prefixes) = &mut self.prefixes {
+            let scope = escape.map_or(0, |_| {
+                self.visitor.function_scopes.last().copied().unwrap_or(0)
+            });
             prefixes.extend(
                 effects
                     .into_iter()
-                    .map(|(name, identity)| (name, identity, true)),
+                    .map(|(name, identity)| (name, identity, Some(scope))),
+            );
+            prefixes.extend(
+                appended
+                    .into_iter()
+                    .map(|(name, identity)| (name, identity, Some(0))),
             );
         }
         if !self.found || self.prefixes.is_some() {

@@ -10,12 +10,16 @@ mod branch_correlation;
 mod defensive;
 #[path = "tests/equivalent.rs"]
 mod equivalent;
+#[path = "tests/escape_effects.rs"]
+mod escape_effects;
 #[path = "tests/helper_effects.rs"]
 mod helper_effects;
 #[path = "tests/helpers.rs"]
 mod helpers;
 #[path = "tests/metadata.rs"]
 mod metadata;
+#[path = "tests/opaque_logical.rs"]
+mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
 

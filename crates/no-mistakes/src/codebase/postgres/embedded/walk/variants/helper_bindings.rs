@@ -97,7 +97,7 @@ impl ScopeVisitor<'_> {
         )
     }
 
-    fn fresh_builder_call(&self, call: &CallExpression<'_>) -> bool {
+    pub(super) fn fresh_builder_call(&self, call: &CallExpression<'_>) -> bool {
         self.trusted_builder_tag(&call.callee)
             || matches!(unwrap_ts_wrappers(&call.callee), Expression::StaticMemberExpression(member)
                 if matches!(member.property.name.as_str(), "raw" | "join") && self.trusted_builder_tag(&member.object))

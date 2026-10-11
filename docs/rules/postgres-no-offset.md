@@ -15,6 +15,13 @@ only one path is still reported at its physical branch-fragment location;
 all versions without OFFSET pass without an unanalyzable finding. Line
 suppressions apply to those mapped locations. Opaque or over-cap calls retain
 the unanalyzable behavior below.
+An opaque falsy result from `condition && sqlFragment` followed by `??` stays
+dynamic because the extractor cannot prove whether the fallback executes.
+Passing a mutable SQL builder to an ordinary helper call without a verified
+summary clears finite alternatives across tracked aliases and preserves legacy
+SQL fields. The same call evaluated in an `if` test, conditional test, or logical
+left operand also clears the affected SQL prefix. Calls that remain dynamic use
+the configured `unanalyzableSql` behavior.
 
 ```yaml
 rules:

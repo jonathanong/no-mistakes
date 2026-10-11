@@ -6,6 +6,7 @@ mod conditional;
 mod conditions;
 pub(super) mod control;
 mod effects;
+mod escape_effects;
 mod expression;
 mod helper;
 mod helper_alias;
@@ -26,6 +27,7 @@ pub(super) enum ValueKind {
     Null,
     Boolean(bool),
     Absent,
+    UnknownFalsy,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -59,8 +61,11 @@ impl Recovered {
         match self.value {
             ValueKind::Sql => self.fragment || !self.sql.is_empty(),
             ValueKind::Boolean(value) => value,
-            ValueKind::Null | ValueKind::Absent => false,
+            ValueKind::Null | ValueKind::Absent | ValueKind::UnknownFalsy => false,
         }
+    }
+    pub(super) fn nullish(&self) -> Option<bool> {
+        (self.value != ValueKind::UnknownFalsy).then_some(self.value == ValueKind::Null)
     }
     fn append_sql(&mut self, suffix: &Self) {
         if self.sql.is_empty() && self.positions.is_empty() {

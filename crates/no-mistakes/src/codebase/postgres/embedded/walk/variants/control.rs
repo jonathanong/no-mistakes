@@ -78,7 +78,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
     let (id, truth_arm) =
         super::conditions::choice_id(visitor, &statement.test, statement.span.start);
     let taken = super::conditions::truth_at(visitor, &statement.test);
-    visitor.visit_expression(&statement.test);
+    visitor.visit_variant_guard(&statement.test);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
     let (yes, no) = truthiness::branches(visitor, &statement.test, &paths, id, truth_arm);
@@ -108,7 +108,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
     let (id, truth_arm) =
         super::conditions::choice_id(visitor, &expression.test, expression.span.start);
     let taken = super::conditions::truth_at(visitor, &expression.test);
-    visitor.visit_expression(&expression.test);
+    visitor.visit_variant_guard(&expression.test);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
     let (yes, no) = truthiness::branches(visitor, &expression.test, &paths, id, truth_arm);
@@ -154,7 +154,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn logical<'a>(
             super::conditions::nullish_at(visitor, &expression.left)
         }
     };
-    visitor.visit_expression(&expression.left);
+    visitor.visit_variant_guard(&expression.left);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
     let (right_paths, omitted_paths) =

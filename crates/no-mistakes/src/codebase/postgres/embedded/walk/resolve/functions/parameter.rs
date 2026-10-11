@@ -27,6 +27,7 @@ pub(in crate::codebase::postgres::embedded::walk) struct ParameterBuilder {
 }
 
 pub(in crate::codebase::postgres::embedded::walk) struct ParameterFragment {
+    pub(in crate::codebase::postgres::embedded::walk) append_site: u32,
     pub(in crate::codebase::postgres::embedded::walk) sql: String,
     pub(in crate::codebase::postgres::embedded::walk) line: u32,
     pub(in crate::codebase::postgres::embedded::walk) positions: Vec<EmbeddedSqlSourcePosition>,

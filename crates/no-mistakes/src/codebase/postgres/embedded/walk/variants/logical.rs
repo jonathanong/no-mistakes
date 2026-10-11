@@ -29,13 +29,20 @@ pub(super) fn recover(
         }
         let mut omitted = Recovered::empty(line);
         omitted.fragment = true;
-        omitted.value = ValueKind::Absent;
+        let known_truth = truth(&branch.left);
+        // An opaque falsy operand might be null/undefined, false, zero, or
+        // empty text. It is absent SQL, but its nullishness is not known.
+        omitted.value = if known_truth.is_some() {
+            ValueKind::Absent
+        } else {
+            ValueKind::UnknownFalsy
+        };
         let (id, truth_arm) = choice_id(visitor, &branch.left, branch.span.start);
         let taken = constraints
             .iter()
             .find(|(other, _)| *other == id)
             .map(|(_, choice)| *choice == truth_arm)
-            .or_else(|| truth(&branch.left));
+            .or(known_truth);
         if taken == Some(false) {
             return Some(vec![omitted]);
         }
@@ -55,9 +62,14 @@ pub(super) fn recover(
         return alternatives(vec![omitted], right);
     }
     if let Some(left) = left {
+        if branch.operator == LogicalOperator::Coalesce
+            && left.iter().any(|value| value.nullish().is_none())
+        {
+            return None;
+        }
         let (retained, replaced): (Vec<_>, Vec<_>) = left.into_iter().partition(|value| {
             if branch.operator == LogicalOperator::Coalesce {
-                value.value != ValueKind::Null
+                value.nullish() == Some(false)
             } else {
                 value.truth()
             }
