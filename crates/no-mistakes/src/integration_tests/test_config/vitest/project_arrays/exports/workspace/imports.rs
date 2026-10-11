@@ -21,6 +21,7 @@ pub(super) fn imported_workspace_options(
                 let mut local_seen = std::collections::BTreeSet::new();
                 let mut object_seen = std::collections::BTreeSet::new();
                 let mut nested = Ctx {
+                    is_test_object: ctx.is_test_object,
                     source,
                     bindings: crate::integration_tests::test_config::vitest::shared::top_level_object_bindings(program),
                     functions: super::super::super::top_level_function_bodies(program),

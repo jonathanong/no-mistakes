@@ -23,6 +23,7 @@ fn cli_check_surfaces_precise_invalid_rule_option_type() {
         format: Format::Human,
         json: false,
         include_suppressed: false,
+        include_runner_config_deadlines: false,
         timings: false,
         verbose_timings: false,
     })

@@ -57,8 +57,12 @@ impl SharedCheckContext {
         dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
         include_suppressed: bool,
+        include_runner_config_deadlines: bool,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
+        let runner_config_deadlines = include_runner_config_deadlines
+            .then(|| self.plan.integration_runner_configs.as_ref().map(|plan| plan.deadline_evidence(facts)))
+            .flatten();
         if self.fact_files.is_empty()
             && self.graph_files.is_empty()
             && !self.filesystem_rules_enabled
@@ -67,6 +71,7 @@ impl SharedCheckContext {
         {
             let mut results = crate::check_runner::empty_results([None]);
             results.include_suppressed = include_suppressed;
+            results.runner_config_deadlines = runner_config_deadlines;
             return Ok(results);
         }
         let scoped_facts = self
@@ -121,6 +126,7 @@ impl SharedCheckContext {
         crate::check_runner::results::finalize_domain_checks(
             crate::check_runner::results::FinalizeInput {
                 root: &self.root,
+                runner_config_deadlines,
                 config,
                 filesystem_files: &self.fs_files,
                 sources: &sources,

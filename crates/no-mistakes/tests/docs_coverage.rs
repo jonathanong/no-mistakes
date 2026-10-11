@@ -1,5 +1,8 @@
 #[path = "support/docs_audit.rs"]
 mod docs_audit;
+#[path = "common/saved_fixture.rs"]
+mod saved_fixture;
+
 #[path = "support/docs_node_runtime_exports.rs"]
 mod docs_node_runtime_exports;
 use std::collections::BTreeSet;
@@ -10,7 +13,8 @@ mod cli_docs_helpers;
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
 use cli_docs_helpers::{
-    enum_block, enum_variants, kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
+    consumer_identifier_paths, enum_block, enum_variants, kebab_case, reachable_cli_pages,
+    rust_sources, subcommand_enums,
 };
 
 fn repo_root() -> PathBuf {
@@ -371,39 +375,24 @@ fn rule_docs_use_supported_option_examples() {
     }
 }
 
-fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
-    ignore::WalkBuilder::new(root)
-        .hidden(false)
-        .parents(false)
-        .git_global(false)
-        .git_exclude(false)
-        .git_ignore(true)
-        .require_git(false)
-        .build()
-        .filter_map(|entry| {
-            let entry =
-                entry.unwrap_or_else(|err| panic!("failed to walk {}: {err}", root.display()));
-            entry
-                .file_type()
-                .is_some_and(|kind| kind.is_file())
-                .then(|| entry.into_path())
-        })
-        .collect()
-}
-
 #[test]
 fn identifier_inventory_includes_root_and_agent_documents() {
     // Saved root/agent documents protect scan scope; ignored build output stays out.
-    let root = repo_root().join("test-cases/docs/identifier-inventory/fixture");
+    let source = repo_root().join("test-cases/docs/identifier-inventory/fixture");
+    let fixture = saved_fixture::materialize_path(&source);
+    let root = fixture.path();
+    std::fs::rename(root.join(".git.fixture"), root.join(".git")).unwrap();
+    assert!(root.join(".git/config").is_file());
     assert!(root.join("ignored.md").is_file());
-    let paths: BTreeSet<_> = consumer_identifier_paths(&root)
+    let paths: BTreeSet<_> = consumer_identifier_paths(root)
         .into_iter()
-        .map(|path| path.strip_prefix(&root).unwrap().to_owned())
+        .map(|path| path.strip_prefix(root).unwrap().to_owned())
         .collect();
     assert!(paths.contains(Path::new("README.md")));
     assert!(paths.contains(Path::new("skills/no-mistakes/SKILL.md")));
     assert!(paths.contains(Path::new("skills/no-mistakes/references/example.md")));
     assert!(!paths.contains(Path::new("ignored.md")));
+    assert!(!paths.iter().any(|path| path.starts_with(".git")));
 }
 
 #[test]

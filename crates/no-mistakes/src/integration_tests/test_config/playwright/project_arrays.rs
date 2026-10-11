@@ -6,6 +6,7 @@ use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, ArrowFunctionBody, Expression, FunctionBody,
     ObjectExpression, Program, Statement,
 };
+use oxc_span::GetSpan;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -102,7 +103,7 @@ pub(super) fn expression_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    match unwrap_ts_wrappers(expression) {
+    let mut options = match unwrap_ts_wrappers(expression) {
         Expression::ArrayExpression(array) => array_options(array, ctx),
         Expression::ObjectExpression(object) => {
             Ok(vec![objects::project_object_options(object, ctx)?])
@@ -116,7 +117,20 @@ pub(super) fn expression_options(
             members::namespace_member_options(member, ctx)
         }
         _ => Ok(Vec::new()),
+    }?;
+    if !matches!(
+        unwrap_ts_wrappers(expression),
+        Expression::ObjectExpression(_) | Expression::ArrayExpression(_)
+    ) {
+        for option in &mut options {
+            crate::integration_tests::test_config::deadlines::unproved_case(
+                &mut option.deadlines,
+                ctx.path,
+                expression.span(),
+            );
+        }
     }
+    Ok(options)
 }
 
 fn identifier_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Result<Vec<Options>> {

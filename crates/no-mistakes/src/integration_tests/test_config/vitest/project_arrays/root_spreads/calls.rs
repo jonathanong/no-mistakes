@@ -60,6 +60,7 @@ fn imported_project_options(
                 let mut local_seen = BTreeSet::new();
                 let mut object_seen = BTreeSet::new();
                 let mut scoped = Ctx {
+                    is_test_object: ctx.is_test_object,
                     source,
                     bindings,
                     functions,
@@ -116,6 +117,7 @@ fn body_return_project_options(
         let mut local_seen = BTreeSet::new();
         let mut object_seen = BTreeSet::new();
         let mut scoped = Ctx {
+            is_test_object: ctx.is_test_object,
             source: ctx.source,
             bindings,
             functions: ctx.functions.clone(),

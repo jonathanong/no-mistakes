@@ -18,6 +18,35 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn express
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Options>> {
+    let mut result = expression_object_options_inner(expression, ctx)?;
+    if !matches!(
+        unwrap_ts_wrappers(expression),
+        Expression::ObjectExpression(_)
+    ) {
+        if let Some(options) = &mut result {
+            use crate::integration_tests::types::{DeadlineUnknownReason, DeadlineValue};
+            use oxc_span::GetSpan;
+            for slot in [&mut options.deadlines.case, &mut options.deadlines.hook] {
+                if let Some(declaration) = slot {
+                    declaration.value =
+                        DeadlineValue::Unknown(DeadlineUnknownReason::UnprovedBinding);
+                } else {
+                    *slot = Some(crate::integration_tests::test_config::deadlines::unknown(
+                        DeadlineUnknownReason::UnprovedBinding,
+                        ctx.path,
+                        Some(expression.span()),
+                    ));
+                }
+            }
+        }
+    }
+    Ok(result)
+}
+
+fn expression_object_options_inner(
+    expression: &Expression<'_>,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Option<Options>> {
     match unwrap_ts_wrappers(expression) {
         Expression::Identifier(identifier) => {
             let name = identifier.name.as_str();
@@ -113,6 +142,7 @@ fn exported_options(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: parent.is_test_object,
         source,
         bindings,
         functions: top_level_function_bodies(program),

@@ -35,7 +35,10 @@ fn project_options_in(
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                if property.computed || property.method {
+                if property.method
+                    || property.kind != oxc_ast::ast::PropertyKind::Init
+                    || (property.computed && shared::property_key_name(&property.key).is_none())
+                {
                     continue;
                 }
                 match shared::property_key_name(&property.key).as_deref() {

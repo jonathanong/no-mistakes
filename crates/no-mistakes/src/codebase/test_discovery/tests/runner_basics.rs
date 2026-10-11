@@ -273,6 +273,7 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     }];
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();
@@ -339,4 +340,51 @@ fn jest_discovers_from_explicit_config_and_skips_filename_fallback() {
     config.tests.jest.configs = Some(StringOrList::Many(Vec::new()));
     let empty = discover_tests(&root, &config, TestRunner::Jest).unwrap();
     assert!(empty.tests.is_empty());
+}
+
+#[test]
+fn prepared_runner_deadline_projection_keeps_declared_values_and_selection_errors() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/integration-tests/declared-deadlines/fixture"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("vitest.negative.ts".into()));
+    let paths = vec![root.join("vitest.negative.ts")];
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &paths).unwrap();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &paths);
+    let prepared = prepare_test_projects_from_visible_with_sources_and_plan(
+        &root,
+        &config,
+        &paths,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root, tsconfig, None,
+        )),
+        PreparedTestProjectRequest {
+            discovery_files: &[],
+            graph: (&[], Default::default(), Default::default()),
+            sources: snapshot.source_store_for(&root),
+            collect_graph_facts: false,
+            playwright: None,
+            preparation_plan: &FrameworkPreparationPlan::for_runners([TestRunner::Vitest]),
+        },
+    );
+    let projects = prepared
+        .requested_runner_deadlines(TestRunner::Vitest)
+        .unwrap();
+    assert_eq!(projects.len(), 1);
+    let crate::integration_tests::DeclaredDeadlineSlot::Known {
+        milliseconds,
+        provenance,
+    } = &projects[0].case
+    else {
+        panic!("expected retained invalid literal");
+    };
+    assert_eq!(*milliseconds, -1.0);
+    assert_eq!(provenance.path, "vitest.negative.ts");
+    assert!(provenance.span.is_some());
+    assert!(prepared
+        .requested_runner_deadlines(TestRunner::Cargo)
+        .is_err());
 }

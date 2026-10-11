@@ -1,7 +1,10 @@
 use super::{shared, Ctx, ExprMap, Options};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::integration_tests::test_config::deadlines;
+use crate::integration_tests::types::DeadlineUnknownReason;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
+use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 
 mod calls;
@@ -17,14 +20,40 @@ pub(super) fn project_object_options(
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                let name = (!property.computed && !property.method)
-                    .then(|| shared::property_key_name(&property.key))
-                    .flatten();
+                let name = shared::property_key_name(&property.key);
+                if property.computed && name.is_none() {
+                    deadlines::obscure(
+                        &mut options.deadlines,
+                        ctx.path,
+                        property.span(),
+                        DeadlineUnknownReason::ComputedProperty,
+                        false,
+                    );
+                    continue;
+                }
+                if property.method || property.kind != oxc_ast::ast::PropertyKind::Init {
+                    if name.as_deref() == Some("timeout") {
+                        options.deadlines.case = Some(deadlines::unknown(
+                            DeadlineUnknownReason::Accessor,
+                            ctx.path,
+                            Some(property.span()),
+                        ));
+                    }
+                    continue;
+                }
                 merge_property(&mut options, name.as_deref(), &property.value, ctx)?;
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
                 if let Some(imported) = spread_options(&spread.argument, ctx)? {
                     merge_options(&mut options, imported);
+                } else {
+                    deadlines::obscure(
+                        &mut options.deadlines,
+                        ctx.path,
+                        spread.span(),
+                        DeadlineUnknownReason::OpaqueSpread,
+                        false,
+                    );
                 }
             }
         }
@@ -37,6 +66,22 @@ fn spread_options(expression: &Expression<'_>, ctx: &mut Ctx<'_, '_>) -> Result<
 }
 
 pub(super) fn expression_object_options(
+    expression: &Expression<'_>,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Option<Options>> {
+    let mut result = expression_object_options_inner(expression, ctx)?;
+    if !matches!(
+        unwrap_ts_wrappers(expression),
+        Expression::ObjectExpression(_)
+    ) {
+        if let Some(options) = &mut result {
+            deadlines::unproved_case(&mut options.deadlines, ctx.path, expression.span());
+        }
+    }
+    Ok(result)
+}
+
+fn expression_object_options_inner(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Options>> {
@@ -81,6 +126,9 @@ fn merge_property(
     value: &Expression<'_>,
     ctx: &Ctx<'_, '_>,
 ) -> Result<()> {
+    if name == Some("timeout") {
+        options.deadlines.case = Some(deadlines::declaration(value, ctx.path));
+    }
     let value = shared::expression_value(value, &ctx.bindings);
     match name {
         Some("name") => options.name = shared::optional_string(value, ctx.source),
@@ -115,6 +163,7 @@ pub(super) fn expression_object<'a>(
 }
 
 fn merge_options(base: &mut Options, next: Options) {
+    base.deadlines.overlay(next.deadlines);
     if next.name.is_some() {
         base.name = next.name;
     }

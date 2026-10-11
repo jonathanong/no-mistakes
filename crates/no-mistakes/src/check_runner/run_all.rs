@@ -9,11 +9,12 @@ use std::path::PathBuf;
 mod playwright;
 mod setup;
 
-pub(crate) fn run_all_with_suppressed(
+pub(crate) fn run_all_with_evidence(
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
     include_suppressed: bool,
+    include_runner_config_deadlines: bool,
 ) -> Result<CheckResults> {
     no_mistakes::invocation::set_timeout_phase("check.prepare");
     no_mistakes::invocation::check_timeout()?;
@@ -42,7 +43,10 @@ pub(crate) fn run_all_with_suppressed(
         plan,
         prepared_graph,
         fact_demand,
-    } = setup::build(&root, &prepared)?;
+    } = setup::build(&root, &prepared, include_runner_config_deadlines)?;
+    let runner_deadline_plan = include_runner_config_deadlines
+        .then(|| plan.integration_runner_configs.clone())
+        .flatten();
     let needs_shared_facts = fact_demand.needs_shared_facts();
     if finite_set_plan::no_analysis_requested(
         needs_shared_facts,
@@ -52,6 +56,9 @@ pub(crate) fn run_all_with_suppressed(
         fact_collection::release_extract_programs(&session);
         let mut results = empty_results([None]);
         results.include_suppressed = include_suppressed;
+        results.runner_config_deadlines = runner_deadline_plan
+            .as_ref()
+            .map(|plan| plan.deadline_evidence(&Default::default()));
         return Ok(results);
     }
     no_mistakes::invocation::set_timeout_phase("check.discovery");
@@ -131,6 +138,9 @@ pub(crate) fn run_all_with_suppressed(
     no_mistakes::invocation::check_timeout()?;
     results::finalize_domain_checks(results::FinalizeInput {
         root: &root,
+        runner_config_deadlines: runner_deadline_plan
+            .as_ref()
+            .map(|plan| plan.deadline_evidence(&facts)),
         config,
         filesystem_files: &fs_files,
         sources: &sources,

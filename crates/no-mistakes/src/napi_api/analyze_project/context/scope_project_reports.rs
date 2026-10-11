@@ -31,6 +31,7 @@ impl PreparedScope {
                     dependency_graph.as_ref(),
                     self.traversal.session_arc(),
                     parsed.include_suppressed,
+                    parsed.include_runner_config_deadlines,
                 )?))
             }
             _ => unreachable!("project report types are checked before dispatch"),

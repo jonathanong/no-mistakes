@@ -54,3 +54,9 @@ string interpolation remains executable and is checked at its source line.
 The opt-in [declared-payload-compatibility](../rules/declared-payload-compatibility.md)
 rule compares explicit directional HTTP request/response and queue payload schema
 declarations. Incompatible and unproven declarations fail this check.
+
+## Declared runner config evidence
+
+Use `no-mistakes check --include-runner-config-deadlines --json` (or `--format yml`) to include `runnerConfigDeadlines`. This opt-in extends the existing prepared demand for explicit Vitest and Playwright config lists, including configs with no integration suites. It does not scan unrelated roots. Ordinary findings and failure behavior remain unchanged; the evidence does not affect the exit code by itself.
+
+Runner statuses distinguish `notRequested`, `prepared` (including an explicit empty config list), and `failed`. Config records contain projects or their retained failure diagnostic. Project case/hook/fixture slots distinguish `absent`, `known`, and `unknown`. Absence never supplies an SDK default; invalid numeric literals remain known, and opaque expressions retain their reason. Provenance contains declaration paths, optional half-open byte spans and ordered inheritance records. This is declared config evidence, not universal runtime timeout enforcement. See [prepared ownership](../architecture.md#public-declared-deadline-evidence).

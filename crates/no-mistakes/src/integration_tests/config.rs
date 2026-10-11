@@ -119,6 +119,7 @@ pub(crate) fn configured_project(
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
         vitest_setup: super::project_config::policy_setup_dependencies(root, policy),
+        declared_deadlines: Default::default(),
     })
 }
 

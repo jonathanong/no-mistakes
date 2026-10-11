@@ -270,3 +270,24 @@ fn inventories_the_requested_source_tree_without_git_commands() {
         vec![fixture.path().join("nested/command.rs")]
     );
 }
+
+pub(super) fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
+    ignore::WalkBuilder::new(root)
+        .hidden(false)
+        .parents(false)
+        .git_global(false)
+        .git_exclude(false)
+        .git_ignore(true)
+        .require_git(false)
+        .filter_entry(|entry| entry.file_name() != ".git")
+        .build()
+        .filter_map(|entry| {
+            let entry =
+                entry.unwrap_or_else(|err| panic!("failed to walk {}: {err}", root.display()));
+            entry
+                .file_type()
+                .is_some_and(|kind| kind.is_file())
+                .then(|| entry.into_path())
+        })
+        .collect()
+}

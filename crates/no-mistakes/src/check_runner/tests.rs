@@ -28,7 +28,7 @@ fn run_all(
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
 ) -> anyhow::Result<CheckResults> {
-    super::run_all_with_suppressed(root, config_path, tsconfig_path, false)
+    super::run_all_with_evidence(root, config_path, tsconfig_path, false, false)
 }
 
 fn aggregate_html_id_rule_composition(name: &str) -> Vec<RuleFinding> {

@@ -60,6 +60,7 @@ fn imported_setup_dependencies_inner(
                     let mut local_seen = BTreeSet::new();
                     let mut object_seen = BTreeSet::new();
                     let mut ctx = Ctx {
+                        is_test_object: parent.is_test_object,
                         source,
                         // `exported_setup_dependencies` needs the bindings to
                         // locate an exported local while nested object parsing

@@ -12,6 +12,7 @@ fn project(scope: Option<&str>, setup: VitestSetupDependency) -> ConfigProject {
         scope: scope.map(str::to_string),
         include: Vec::new(),
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: vec![setup],
     }
 }

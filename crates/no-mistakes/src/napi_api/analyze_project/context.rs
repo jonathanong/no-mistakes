@@ -10,6 +10,7 @@ use serde_json::{value::RawValue, Value};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+include!("context/check_types.rs");
 include!("context/check_prepare.rs");
 include!("context/check_run.rs");
 include!("context/scope_types.rs");
@@ -43,3 +44,6 @@ mod scope_derived_resolve_tests;
 mod scope_helpers_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod deadline_evidence_tests;
