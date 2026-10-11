@@ -81,7 +81,13 @@ function createOwnDataProperty(context) {
       if (name === null) return null;
       if (name === key) {
         // The special literal prototype property is not an own data descriptor.
-        if (key === "__proto__" && !entry.computed && !entry.shorthand && entry.kind === "init")
+        if (
+          key === "__proto__" &&
+          !entry.computed &&
+          !entry.shorthand &&
+          !entry.method &&
+          entry.kind === "init"
+        )
           return null;
         return { data: entry.kind === "init", value: uncertainValue ? null : entry.value };
       }
