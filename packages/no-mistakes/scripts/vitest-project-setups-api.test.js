@@ -74,6 +74,9 @@ test(
       [".no-mistakes-partial-projects.yml", ["web/covered.test.mts"]],
       [".no-mistakes-partial-app.yml", ["web/covered.test.mts"]],
       [".no-mistakes-partial-selected.yml", []],
+      [".no-mistakes-chained-cuts.yml", []],
+      [".no-mistakes-lazy-requires.yml", ["lazy/ordinary.case.cjs", "lazy/setup.case.cjs"]],
+      [".no-mistakes-playwright-custom.yml", ["custom/sample.case.mts"]],
       [".no-mistakes-repository-playwright.yml", ["web/covered.test.mts"]],
       [".no-mistakes-app-playwright.yml", ["web/covered.test.mts"]],
       [".no-mistakes-shared-runner-path.yml", ["web/covered.test.mts"]],
@@ -130,5 +133,37 @@ test(
     assert.deepEqual(await esm.check(options), report);
     assert.deepEqual(report.rules, []);
     assert.deepEqual(report.warnings, []);
+  },
+);
+
+test(
+  "compiled test planning follows explicit project setup dependencies",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(__dirname, "../../../fixtures/test-plan/explicit-policy-setups");
+    for (const file of ["setup/web.ts", "setup/helper.ts"]) {
+      const options = {
+        root: fixture,
+        framework: "vitest",
+        changedFiles: [file],
+        globalConfigFallback: false,
+      };
+      const plan = await cjs.testsPlan(options);
+      assert.deepEqual(await esm.testsPlan(options), plan);
+      assert.deepEqual(
+        plan.selectedTests.map((test) => test.testFile),
+        ["web/live.test.ts"],
+      );
+      assert.equal(plan.fallbackTriggered, false);
+      const impactOptions = { root: fixture, entrypoints: [file] };
+      const impact = await cjs.testsImpact(impactOptions);
+      assert.deepEqual(await esm.testsImpact(impactOptions), impact);
+      assert.deepEqual(
+        impact.selectedTests.map((test) => test.testFile),
+        ["web/live.test.ts"],
+      );
+    }
   },
 );

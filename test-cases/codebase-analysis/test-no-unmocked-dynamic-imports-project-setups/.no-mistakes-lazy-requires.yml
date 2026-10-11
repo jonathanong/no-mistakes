@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    projects:
+      lazy:
+        include: [lazy/*.case.cjs]
+        setup_files: [test-helpers/lazy.setup.cjs]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [lazy]

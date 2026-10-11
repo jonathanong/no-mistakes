@@ -13,9 +13,11 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod imported_helpers;
+mod legacy_errors;
 mod mock_cut;
 mod mock_specifiers;
 mod project_setups;
+mod request_sources;
 mod runner_compatibility;
 mod visibility;
 mod workspaces;
@@ -37,7 +39,7 @@ fn collect_reachable_findings(
     mocks: &HashSet<PathBuf>,
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
 ) -> Vec<RuleFinding> {
-    reachable::collect(ctx, test_file, mocks, dependency_cache)
+    reachable::test_api::collect(ctx, test_file, mocks, dependency_cache)
         .unwrap()
         .findings
         .into_iter()
@@ -506,22 +508,6 @@ fn reachable_check_does_not_fall_back_to_disk_when_shared_facts_incomplete() {
         &dependency_cache,
     );
     assert!(findings.is_empty());
-}
-
-#[test]
-fn check_inner_propagates_reachable_dep_disk_error() {
-    let root = fixture();
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let tsconfig = load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let test_file = root.join("tests").join("bad.test.mts");
-    let unreadable = root.join("src").join("unreadable.mts");
-    let mut forward = HashMap::new();
-    forward.insert(test_file.clone(), vec![unreadable.clone()]);
-    let graph = from_raw_maps(root.clone(), forward, Default::default());
-    let files = vec![test_file, unreadable];
-    let manual_mocks = HashSet::new();
-    let error = check_inner(&root, &config, &files, &tsconfig, &graph, &manual_mocks).unwrap_err();
-    assert!(error.to_string().contains("failed to read dependency file"));
 }
 
 #[test]

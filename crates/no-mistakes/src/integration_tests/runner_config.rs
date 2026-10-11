@@ -7,6 +7,8 @@ mod cache;
 mod prepared;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_access;
 pub(in crate::integration_tests) use cache::{read_request_source, with_program};
 pub use prepared::configured_runner_config_dirs;
 pub use prepared::prepare_runner_configs_with_catalog;
@@ -91,9 +93,6 @@ pub(crate) struct ParsedRunnerConfigs {
 }
 
 impl ParsedRunnerConfigs {
-    pub(crate) fn file_facts(&self) -> &BTreeMap<PathBuf, RunnerConfigFileFacts> {
-        &self.files
-    }
     pub(crate) fn with_files(files: BTreeMap<PathBuf, RunnerConfigFileFacts>) -> Self {
         let analyses = files
             .values()

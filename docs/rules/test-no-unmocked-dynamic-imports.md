@@ -88,6 +88,9 @@ Recovered named projects remain separate executions even when only some of
 them have explicit project policies.
 Explicit runner configs use their directory's TypeScript aliases, including
 when that directory is outside a declared workspace.
+Explicit setup declarations also create canonical `VitestSetup` dependencies,
+so changes to a setup module or its imports select the matching project's tests
+in test planning and impact reports. Project exclusions remain in effect.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

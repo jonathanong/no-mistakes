@@ -104,6 +104,7 @@ fn compatibility_runner_catalog_seeds_explicit_config_aliases() {
     );
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let shared = facts(&root);
+    assert!(check(&root, &config, None).unwrap().is_empty());
     assert!(check_with_facts(&root, &config, None, &shared)
         .unwrap()
         .is_empty());

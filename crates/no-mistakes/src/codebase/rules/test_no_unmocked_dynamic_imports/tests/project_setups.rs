@@ -121,6 +121,15 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         ),
         (".no-mistakes-partial-app.yml", vec!["web/covered.test.mts"]),
         (".no-mistakes-partial-selected.yml", vec![]),
+        (".no-mistakes-chained-cuts.yml", vec![]),
+        (
+            ".no-mistakes-lazy-requires.yml",
+            vec!["lazy/ordinary.case.cjs", "lazy/setup.case.cjs"],
+        ),
+        (
+            ".no-mistakes-playwright-custom.yml",
+            vec!["custom/sample.case.mts"],
+        ),
         (
             ".no-mistakes-repository-playwright.yml",
             vec!["web/covered.test.mts"],

@@ -5,9 +5,9 @@ mod project_setups;
 mod rule_targets;
 mod runner_catalog;
 mod runner_demand;
-mod standalone;
+#[cfg(test)]
+pub(super) mod standalone;
 mod vitest_setups;
-pub(super) use standalone::prepare_standalone;
 
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

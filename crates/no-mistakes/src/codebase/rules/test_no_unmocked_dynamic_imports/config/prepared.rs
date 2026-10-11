@@ -64,12 +64,15 @@ pub(super) fn prepare_inner(
         targets.includes,
         targets.excludes.clone(),
     )?;
-    if !targeted && setup_data.iter().any(|data| data.workspace) {
+    let adds_candidates = |data: &&ConfigSetupData| {
+        data.workspace || data.runner == super::discovery::Runner::Playwright
+    };
+    if !targeted && setup_data.iter().any(|data| adds_candidates(&data)) {
         let mut filters = vec![test_filter];
         filters.extend(
             setup_data
                 .iter()
-                .filter(|data| data.workspace)
+                .filter(adds_candidates)
                 .map(|data| data.filter.clone()),
         );
         test_filter = TestFilter::union(filters, &targets.excludes)?;

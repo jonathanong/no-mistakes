@@ -9,10 +9,19 @@ pub(super) fn for_request(
     shared: &crate::codebase::check_facts::CheckFactMap,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<(TsConfig, TsConfigCatalog)> {
+    for_files(root, config, tsconfig_path, shared.files(), sources)
+}
+
+pub(super) fn for_files(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    tsconfig_path: Option<&Path>,
+    visible: &[std::path::PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<(TsConfig, TsConfigCatalog)> {
     // Prepared facts define the complete request universe. Do not rebuild a
     // live snapshot here: it can discover ignored/generated configs that the
     // caller intentionally excluded from its graph facts.
-    let visible = shared.files();
     let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
         tsconfig_path,
         root,

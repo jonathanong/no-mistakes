@@ -12,11 +12,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod deferred;
+#[cfg(test)]
+pub(super) mod test_api;
 
 pub(super) struct CachedFileFacts {
     pub(super) source: String,
-    pub(super) dynamic_imports: Vec<ast::DynamicImport>,
-    pub(super) mock_specifiers: Vec<String>,
+    pub(super) facts: ast::TestFacts,
 }
 
 pub(super) struct ReachableFinding {
@@ -27,15 +28,6 @@ pub(super) struct ReachableFinding {
 pub(super) struct ReachableResult {
     pub(super) findings: Vec<ReachableFinding>,
     pub(super) covered: HashSet<DynamicImportKey>,
-}
-
-pub(super) fn collect(
-    ctx: ReachableContext<'_>,
-    test_file: &Path,
-    mocks: &HashSet<PathBuf>,
-    dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
-) -> Result<ReachableResult> {
-    deferred::collect(ctx, test_file, mocks, dependency_cache, false)
 }
 
 pub(super) fn collect_with_deferred_suppression(
@@ -86,22 +78,14 @@ pub(super) fn get_or_cache_file(
         let source = std::fs::read_to_string(file)
             .context(format!("failed to read dependency file {}", file.display()))?;
         let facts = ast::extract(file, &source)?;
-        let arc = Arc::new(CachedFileFacts {
-            source,
-            dynamic_imports: facts.dynamic_imports,
-            mock_specifiers: facts.mock_specifiers,
-        });
+        let arc = Arc::new(CachedFileFacts { source, facts });
         cache.insert(file.clone(), arc.clone());
         return Ok(arc);
     }
     let source = std::fs::read_to_string(file)
         .context(format!("failed to read dependency file {}", file.display()))?;
     let facts = ast::extract(file, &source)?;
-    Ok(Arc::new(CachedFileFacts {
-        source,
-        dynamic_imports: facts.dynamic_imports,
-        mock_specifiers: facts.mock_specifiers,
-    }))
+    Ok(Arc::new(CachedFileFacts { source, facts }))
 }
 
 fn is_under_skipped_dir(root: &Path, config: &NoMistakesConfig, file: &Path) -> bool {

@@ -1,4 +1,5 @@
-use super::{reachable, resolve_mock_specifiers};
+use super::super::reachable;
+use super::resolve_mock_specifiers;
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::ts_resolver::ImportResolution;
 use anyhow::Result;
@@ -15,15 +16,22 @@ pub(super) fn collect(
     file_cache: &DashMap<PathBuf, Arc<reachable::CachedFileFacts>>,
     excluded: &HashSet<PathBuf>,
 ) -> Result<HashSet<PathBuf>> {
-    super::super::setup_helper_graph::collect(graph, test_file, visible_files, excluded, |file| {
-        let facts = reachable::get_or_cache_file(&file.to_path_buf(), Some(file_cache))?;
-        Ok(resolve_mock_specifiers(
-            &facts.mock_specifiers,
-            file,
-            resolver,
-            None,
-        ))
-    })
+    super::super::setup_helper_graph::collect(
+        graph,
+        test_file,
+        visible_files,
+        excluded,
+        |file| {
+            let facts = reachable::get_or_cache_file(&file.to_path_buf(), Some(file_cache))?;
+            Ok(resolve_mock_specifiers(
+                &facts.facts.mock_specifiers,
+                file,
+                resolver,
+                None,
+            ))
+        },
+        |_| HashSet::new(),
+    )
 }
 
 pub(super) fn collect_setup(
@@ -34,13 +42,20 @@ pub(super) fn collect_setup(
     file_cache: &DashMap<PathBuf, Arc<reachable::CachedFileFacts>>,
     excluded: &HashSet<PathBuf>,
 ) -> Result<HashSet<PathBuf>> {
-    super::super::setup_helper_graph::collect(graph, setup, visible_files, excluded, |file| {
-        let facts = reachable::get_or_cache_file(&file.to_path_buf(), Some(file_cache))?;
-        Ok(resolve_mock_specifiers(
-            &facts.mock_specifiers,
-            file,
-            resolver,
-            None,
-        ))
-    })
+    super::super::setup_helper_graph::collect(
+        graph,
+        setup,
+        visible_files,
+        excluded,
+        |file| {
+            let facts = reachable::get_or_cache_file(&file.to_path_buf(), Some(file_cache))?;
+            Ok(resolve_mock_specifiers(
+                &facts.facts.mock_specifiers,
+                file,
+                resolver,
+                None,
+            ))
+        },
+        |_| HashSet::new(),
+    )
 }
