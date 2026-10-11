@@ -24,11 +24,18 @@ function createValueStability(context, primitiveMemberRead) {
       ) &&
       variable.references.every(
         (reference) =>
-          reference.init || (!reference.isWrite() && safeUse(reference.identifier, mode)),
+          reference.init ||
+          // TypeScript's erased references cannot expose a runtime value.
+          typeOnlyUse(reference.identifier) ||
+          (!reference.isWrite() && safeUse(reference.identifier, mode)),
       );
     visiting.delete(variable);
     cache.set(variable, result);
     return result;
+  }
+  function typeOnlyUse(node) {
+    while (node.parent?.type === "TSQualifiedName" && node.parent.left === node) node = node.parent;
+    return node.parent?.type === "TSTypeQuery" && node.parent.exprName === node;
   }
   function configCallback(node) {
     return (

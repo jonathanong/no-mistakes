@@ -201,3 +201,8 @@ object to the reader. For example, `Math.max(options.timeout, 0)` keeps an uncha
 `const options = { timeout: 1 }` known. Passing an object-valued property to an
 unproved consumer, reading a getter, or writing a timeout still keeps analysis
 conservative.
+
+Erased TypeScript `typeof` type queries, including qualified property queries,
+do not participate in the runtime stability proof. A callback or config binding
+can retain a known timeout when it also appears in a type alias. Runtime
+consumers still require the same confinement proof.

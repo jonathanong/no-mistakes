@@ -8,6 +8,26 @@ const findings = (name, options = {}) =>
     "fixture.test.ts",
   );
 describe("vitest-timeout-cap value stability", () => {
+  it("ignores erased type queries while retaining real callback consumers", () => {
+    assert.deepEqual(
+      findings("config-type-only-references", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [9, "timeout"],
+        [21, "unknown"],
+        [21, "unknown"],
+        [21, "unknown"],
+        [32, "unknown"],
+        [32, "unknown"],
+        [32, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("config-type-only-references").map(({ line, messageId }) => [line, messageId]),
+      [[9, "timeout"]],
+    );
+  });
   it("preserves returned config bindings through known consumers and immutable callback aliases", () => {
     assert.deepEqual(
       findings("config-return-values", { unknownValues: "finding" }).map(({ line, messageId }) => [
