@@ -1,4 +1,3 @@
-use super::shard;
 use criterion::{black_box, Criterion, Throughput};
 use no_mistakes::codebase::ts_source::{
     discover_visible_paths, git_visible_files, ignore_walk_builder,
