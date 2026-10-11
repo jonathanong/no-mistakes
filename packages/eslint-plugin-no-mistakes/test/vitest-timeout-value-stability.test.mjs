@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { fixture, lint } from "./helpers.mjs";
+import { Linter } from "eslint";
+import { fixture, lint, require } from "./helpers.mjs";
 const findings = (name, options = {}) =>
   lint(
     fixture(`vitest-timeout-cap/${name}.ts`),
@@ -96,6 +97,45 @@ describe("vitest-timeout-cap value stability", () => {
     );
     assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
     assert.deepEqual(findings("config-return-escapes"), []);
+  });
+  it("proves own data descriptors conservatively across syntax and alias shapes", () => {
+    const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
+    const linter = new Linter({ configType: "flat" });
+    assert.deepEqual(
+      linter.verify(fixture("vitest-timeout-cap/copy-property-descriptors.js"), {
+        plugins: {
+          proof: {
+            rules: {
+              descriptor: {
+                create(context) {
+                  const ownData = createOwnDataProperty(context);
+                  return {
+                    AssignmentExpression(node) {
+                      if (ownData(node.left) !== node.right.value)
+                        context.report({ node, message: "Unexpected own data descriptor proof" });
+                    },
+                  };
+                },
+              },
+            },
+          },
+        },
+        rules: { "proof/descriptor": "error" },
+      }),
+      [],
+    );
+  });
+  it("rejects own, inherited, computed and aliased setters on shallow copies", () => {
+    const actual = findings("shallow-copy-accessor-writes", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [4, 9, 17, 26, 32, 41, 43, 49, 59, 70, 78, 90],
+    );
+    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.deepEqual(findings("shallow-copy-accessor-writes"), []);
+  });
+  it("preserves own data writes and deletion without invoking accessor descriptors", () => {
+    assert.deepEqual(findings("shallow-copy-data-writes", { unknownValues: "finding" }), []);
   });
   it("preserves copied values through wrapper paths and independent cached proofs", () => {
     assert.deepEqual(

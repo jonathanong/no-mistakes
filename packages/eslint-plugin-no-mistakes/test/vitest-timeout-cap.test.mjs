@@ -50,7 +50,9 @@ describe(rule, () => {
         line,
         messageId,
       ]),
-      [3, 7, 11, 33, 38, 42, 46, 56, 62, 66, 71, 80, 91].flatMap((line) =>
+      // Descriptor proof rejects a missing own field (50) and conservatively
+      // invalidates an initializer with a deletion through the same receiver (20).
+      [3, 7, 11, 20, 33, 38, 42, 46, 50, 56, 62, 66, 71, 80, 91].flatMap((line) =>
         Array(3).fill([line, "unknown"]),
       ),
     );
