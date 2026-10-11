@@ -176,3 +176,9 @@ contexts such as yield, await, tagged templates, and computed property keys reta
 unknown values. Exported numeric scalar budgets remain supported. Object stability
 uses the existing ESLint binding references and admits only recognized configuration
 and registration option positions; it does not prove arbitrary consumer behavior.
+
+Reading a statically resolved numeric or null property does not expose its options
+object to the reader. For example, `Math.max(options.timeout, 0)` keeps an unchanged
+`const options = { timeout: 1 }` known. Passing an object-valued property to an
+unproved consumer, reading a getter, or writing a timeout still keeps analysis
+conservative.

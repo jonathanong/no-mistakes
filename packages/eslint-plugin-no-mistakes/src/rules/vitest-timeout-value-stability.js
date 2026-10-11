@@ -4,7 +4,7 @@ const { unwrapTransparentParent } = require("./async-ast");
 const { configCall, overrideCall, invocationArguments } = require("./vitest-timeout-bindings");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
-function createValueStability(context) {
+function createValueStability(context, primitiveMemberRead) {
   const memo = new WeakMap();
   const active = new Set();
   function stable(variable) {
@@ -30,6 +30,7 @@ function createValueStability(context) {
     let node = unwrapTransparentParent(identifier);
     while (node.parent?.type === "MemberExpression" && node.parent.object === node)
       node = unwrapTransparentParent(node.parent);
+    const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
     let parent = node.parent;
     if (
       (parent?.type === "AssignmentExpression" && parent.left === node) ||
@@ -37,6 +38,9 @@ function createValueStability(context) {
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
       return false;
+    // A proven scalar read cannot expose the receiver, but writes above still
+    // invalidate it. Object-valued and unresolved properties remain conservative.
+    if (memberRead) return true;
     // Container copies can preserve nested references. Follow their existing binding too.
     while (
       parent &&

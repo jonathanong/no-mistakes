@@ -1,6 +1,7 @@
 "use strict";
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { unwrapExpression } = require("./async-ast");
+const { createPrimitiveMemberRead } = require("./vitest-timeout-primitive-reads");
 const { createValueStability } = require("./vitest-timeout-value-stability");
 const { configCall, staticPropertyName } = require("./vitest-timeout-bindings");
 const UNKNOWN = { kind: "unknown" };
@@ -44,7 +45,7 @@ function merge(left, right) {
 function createEvaluator(context, consumed) {
   const evaluating = new Set();
   const memo = new WeakMap();
-  const stableValue = createValueStability(context);
+  const stableValue = createValueStability(context, createPrimitiveMemberRead(context, evaluate));
   function evaluate(node) {
     if (!node) return UNKNOWN;
     node = unwrapExpression(node);
