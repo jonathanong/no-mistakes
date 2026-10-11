@@ -100,6 +100,10 @@ Use a direct `const` object binding when its timeout needs static resolution.
 A shallow copy inside an object or array wrapper retains its boundary through
 known property paths and immutable aliases: `box.copy.timeout = 30_001` leaves
 the source's timeout known. Shared children below that copy remain uncertain.
+Erased TypeScript assertions, `satisfies`, and non-null assertions around the
+copy or its enclosing wrapper preserve that same property path. Deletion aliases
+through those wrappers still invalidate descriptor proofs before assignments
+that might expose an inherited setter.
 Unknown computed wrapper keys, array offsets after opaque spreads, and custom
 iterables retain conservative handling.
 

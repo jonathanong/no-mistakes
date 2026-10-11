@@ -23,7 +23,7 @@ function createOwnDataProperty(context) {
           parent.type === "ArrayExpression" ||
           parent.type === "SpreadElement")
       ) {
-        use = parent;
+        use = unwrapTransparentParent(parent);
         parent = use.parent;
       }
       return (

@@ -140,7 +140,7 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
           copyPath = [];
         } else copyPath = path;
       }
-      node = parent;
+      node = unwrapTransparentParent(parent);
       parent = node.parent;
     }
     if (parent?.type === "VariableDeclarator" && parent.init === node)
