@@ -1,3 +1,4 @@
+use super::runtime::runtime_deps_excluding_mocks;
 use super::{ast, remap_resolved_path, runtime_deps, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::RuleFinding;
@@ -84,11 +85,19 @@ pub(super) fn evaluate_dynamic_import(
             findings: Vec::new(),
         };
     }
-    let deps = ctx
-        .dependency_cache
-        .entry(target.clone())
-        .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, target.clone(), ctx.file_universe)))
-        .clone();
+    let deps = if ctx.mocks.is_empty() {
+        ctx.dependency_cache
+            .entry(target.clone())
+            .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, target.clone(), ctx.file_universe)))
+            .clone()
+    } else {
+        Arc::new(runtime_deps_excluding_mocks(
+            ctx.graph,
+            target.clone(),
+            ctx.file_universe,
+            ctx.mocks,
+        ))
+    };
     let mut findings = Vec::new();
     for dependency in std::iter::once(&target).chain(deps.iter()) {
         if !ctx.mocks.contains(dependency) {

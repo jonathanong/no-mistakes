@@ -2,7 +2,6 @@ use super::RuleFinding;
 use super::{config, manual_mocks, matching_test_files_with_filter, reachable};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::rules::test_no_unmocked_dynamic_imports::runtime::runtime_deps;
 use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -125,16 +124,6 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
     let setup_data = prepared.setup_data();
 
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
-    crate::perf_trace::trace(
-        "test_no_unmocked_dynamic_imports.dependency_cache_prepopulate",
-        || {
-            test_files.par_iter().for_each(|file| {
-                dependency_cache.entry(file.clone()).or_insert_with(|| {
-                    Arc::new(runtime_deps(graph, file.clone(), Some(&visible_files)))
-                });
-            });
-        },
-    );
 
     let per_test =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.per_test_analysis", || {

@@ -56,6 +56,12 @@ Every dynamic import reachable from a selected Vitest or Jest test must have a
 recognized mock. Static imports and the documented bare typed mock specifier
 forms are not findings.
 
+A mock factory replaces the mocked module's body. Dynamic imports in modules
+reachable only through that body are therefore not checked for that test. If
+the test also imports a descendant through an unmocked path, its dynamic
+imports remain reachable and must be mocked. Each test uses its own resolved
+mock set, including setup and manual mocks.
+
 ## Options and defaults
 
 There are no rule-local options. The selected `tests.vitest` or `tests.jest`
