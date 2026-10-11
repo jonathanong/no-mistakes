@@ -1,13 +1,8 @@
 use super::*;
 use sqlparser::ast::{BinaryOperator, Expr, UnaryOperator};
+mod context;
 mod functions;
-
-fn opaque_context(mut context: PostgresSqlPredicateContext) -> PostgresSqlPredicateContext {
-    context.mandatory = false;
-    context.under_other = true;
-    context.effective_mandatory = None;
-    context
-}
+use context::{binary_context, opaque_context};
 
 impl Collector<'_, '_> {
     pub(super) fn expr(
@@ -38,26 +33,7 @@ impl Collector<'_, '_> {
                         span: self.locations.span(expr.span()),
                     });
                 }
-                let mut child = context;
-                match op {
-                    BinaryOperator::And => {
-                        if !self.not_depth.is_multiple_of(2) {
-                            child.effective_mandatory = child.effective_mandatory.map(|_| false);
-                        }
-                    }
-                    BinaryOperator::Or => {
-                        child.mandatory = false;
-                        child.under_or = true;
-                        if self.not_depth.is_multiple_of(2) {
-                            child.effective_mandatory = child.effective_mandatory.map(|_| false);
-                        }
-                    }
-                    _ => {
-                        child.mandatory = false;
-                        child.under_other = true;
-                        child.effective_mandatory = None;
-                    }
-                }
+                let child = binary_context(context, op, self.not_depth);
                 self.expr(left, scope, clause, join, child.clone(), env);
                 self.expr(right, scope, clause, join, child, env);
             }
