@@ -1,0 +1,13 @@
+import { test } from "vitest";
+import { defineConfig } from "vitest/config";
+const scalar = 30000;
+const bounded = { timeout: scalar };
+const alias = bounded;
+test("immutable alias", alias, () => {});
+const config = { test: { testTimeout: 1, hookTimeout: 30000 } };
+defineConfig(config);
+const changed = { timeout: 1 };
+changed.timeout = 30001;
+test("direct restoration", { ...changed, timeout: 1 }, () => {});
+const lookalike = { timeout: 30001 };
+unrelated(lookalike);

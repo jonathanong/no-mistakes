@@ -66,6 +66,17 @@ export default defineConfig({
 it("uses a bounded timeout", { timeout: 25_000 }, async () => {});
 ```
 
+Module `const` bindings do not make referenced objects immutable. Member writes,
+updates, deletion, aliased nested references, and unknown helper escapes retain
+unknown timeout values. Strict `unknownValues: "finding"` rejects these carriers;
+a later explicit property can restore a known value. Immutable scalar constants
+and unmodified object aliases remain supported.
+
+Public Vitest 5 fixture tuples carry `auto`, `injected`, and `scope` options, not a
+fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
+registrar identity, so actual test and hook overrides on their returned APIs are
+still checked. This rule does not invent a deadline from arbitrary fixture data.
+
 ## Options
 
 - `defaultMax` sets the maximum config/project `testTimeout` and `hookTimeout`
@@ -159,3 +170,9 @@ and accepts a `30 * 1000` override at the cap. Infinity is over cap; NaN
 remains unknown. Bitwise operators remain unresolved rather than duration arithmetic. Strings are not coerced and arbitrary calls are not executed.
 Unresolved expressions still follow `unknownValues`; use `"finding"` to report
 them. This source rule does not inspect shell or Vitest CLI timeout flags.
+
+Object exports (including exported declarations and aliases) and unproved consumer
+contexts such as yield, await, tagged templates, and computed property keys retain
+unknown values. Exported numeric scalar budgets remain supported. Object stability
+uses the existing ESLint binding references and admits only recognized configuration
+and registration option positions; it does not prove arbitrary consumer behavior.
