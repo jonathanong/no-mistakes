@@ -33,6 +33,7 @@ mod procedural_omit;
 mod procedural_omit_label;
 mod procedural_prepared_tokens;
 mod procedural_quoted_label;
+mod procedural_selective_fk;
 mod procedural_utility_completeness;
 mod schema;
 mod schema_virtual;

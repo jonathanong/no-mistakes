@@ -524,6 +524,13 @@ top-level statement. Comments, dollar quoting, single-quoted encoding, quoted
 or schema-qualified names, and neighboring top-level statements retain their
 source boundaries. No PostgreSQL AST or execution policy is returned.
 
+PostgreSQL's selective `ON DELETE SET NULL (column)` and
+`ON DELETE SET DEFAULT (column)` forms also keep a nested static foreign key
+complete when the nonempty column list names only distinct referencing columns.
+The returned action and exact constraint source span are retained. Invalid or
+unsupported lists, including `ON UPDATE` lists, remain incomplete rather than
+silently becoming a different constraint.
+
 Safely attributed facts can coexist with incomplete procedural coverage.
 Malformed or unsupported `LOCK` forms retain explicit `other` source
 occurrences and localized diagnostics instead of hiding a following typed

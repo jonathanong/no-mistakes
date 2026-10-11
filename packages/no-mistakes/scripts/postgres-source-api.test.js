@@ -13,6 +13,42 @@ const hasOccurrenceKind = (occurrences, kind) =>
   );
 
 test(
+  "compiled source APIs retain selective foreign-key utility completeness",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("procedural-selective-fk-valid.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.equal(facts.statements.length, 3);
+    for (const statement of facts.statements) {
+      assert.equal(statement.kind, "doBlock");
+      assert.equal(statement.block.complete, true);
+      assert.deepEqual(statement.block.diagnostics, []);
+      assert.ok(hasOccurrenceKind(statement.block.occurrences, "utility"));
+    }
+    for (const name of [
+      "procedural-selective-fk-invalid-empty.sql",
+      "procedural-selective-fk-invalid-expression.sql",
+      "procedural-selective-fk-invalid-column.sql",
+      "procedural-selective-fk-invalid-duplicate.sql",
+      "procedural-selective-fk-invalid-on-update.sql",
+    ]) {
+      const invalid = await cjs.parsePostgresSql({ sql: fixture(name) });
+      assert.equal(invalid.statements[0].block.complete, false, name);
+      assert.ok(invalid.statements[0].block.diagnostics.length > 0, name);
+    }
+    const executable = await cjs.parsePostgresSql({
+      sql: fixture("procedural-selective-fk-executable.sql"),
+    });
+    assert.equal(executable.statements[0].block.complete, false);
+    assert.ok(hasOccurrenceKind(executable.statements[0].block.occurrences, "dynamicExecute"));
+    assert.ok(hasOccurrenceKind(executable.statements[0].block.occurrences, "dml"));
+  },
+);
+
+test(
   "compiled CJS and ESM source APIs retain safely attributed conditional occurrences",
   { skip: !compiled },
   async () => {
