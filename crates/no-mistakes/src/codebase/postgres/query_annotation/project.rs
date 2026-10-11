@@ -1,6 +1,7 @@
 use super::evaluate::{Evaluator, File, Value};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::postgres::sql_requires_query_annotation;
+use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
 use rayon::prelude::*;
@@ -15,12 +16,7 @@ pub(crate) fn project(
 ) {
     let originals = files
         .into_iter()
-        .map(|(path, _)| {
-            (
-                crate::codebase::ts_resolver::normalize_path(path),
-                path.clone(),
-            )
-        })
+        .map(|(path, _)| (normalize_path(path), path.clone()))
         .collect::<FxHashMap<_, _>>();
     let mut profiles = files
         .into_iter()
@@ -49,7 +45,7 @@ pub(crate) fn project(
                     .find(|(profile, _)| profile == &options)
                     .expect("annotation summaries borrow their embedded profile");
                 Some((
-                    crate::codebase::ts_resolver::normalize_path(path),
+                    normalize_path(path),
                     File {
                         imports: binding_index(
                             file.ts
@@ -73,37 +69,41 @@ pub(crate) fn project(
                 ))
             })
             .collect::<FxHashMap<_, _>>();
+        let observer = crate::diagnostics::current();
         let mut per_file = collected
             .par_iter()
             .map(|(path, _)| {
-                let mut evaluator = Evaluator {
-                    files: &collected,
-                    resolve: &resolve,
-                    events: BTreeMap::new(),
-                    scopes: Vec::new(),
-                    modules: crate::fx::fx_map(),
-                    active_module_initials: Default::default(),
-                    active_callback_functions: Default::default(),
-                    active_callback_executions: Default::default(),
-                    next_builder: 0,
-                    invalidated_builders: Default::default(),
-                    builder_updates: Default::default(),
-                    captured_bindings: Default::default(),
-                    captured_binding_readers: Default::default(),
-                    mapped_argument_owners: Default::default(),
-                    mapped_parameter_indices: Default::default(),
-                    deleted_argument_slots: Default::default(),
-                    mapped_arguments: Default::default(),
-                    fresh_mapped_parameters: Default::default(),
-                    fresh_mapped_argument_bindings: Default::default(),
-                    argument_objects: Default::default(),
-                    argument_extra_slots: Default::default(),
-                    definite_deleted_argument_slots: Default::default(),
-                    recreated_argument_slots: Default::default(),
-                    disconnected_argument_slots: Default::default(),
-                };
-                evaluator.run(path);
-                (path.clone(), evaluator.events)
+                let events = crate::diagnostics::with_observer(observer.clone(), || {
+                    let mut evaluator = Evaluator {
+                        files: &collected,
+                        resolve: &resolve,
+                        events: BTreeMap::new(),
+                        scopes: Vec::new(),
+                        modules: crate::fx::fx_map(),
+                        active_module_initials: Default::default(),
+                        active_callback_functions: Default::default(),
+                        active_callback_executions: Default::default(),
+                        next_builder: 0,
+                        invalidated_builders: Default::default(),
+                        builder_updates: Default::default(),
+                        captured_bindings: Default::default(),
+                        captured_binding_readers: Default::default(),
+                        mapped_argument_owners: Default::default(),
+                        mapped_parameter_indices: Default::default(),
+                        deleted_argument_slots: Default::default(),
+                        mapped_arguments: Default::default(),
+                        fresh_mapped_parameters: Default::default(),
+                        fresh_mapped_argument_bindings: Default::default(),
+                        argument_objects: Default::default(),
+                        argument_extra_slots: Default::default(),
+                        definite_deleted_argument_slots: Default::default(),
+                        recreated_argument_slots: Default::default(),
+                        disconnected_argument_slots: Default::default(),
+                    };
+                    evaluator.run(path);
+                    evaluator.events
+                });
+                (path.clone(), events)
             })
             .collect::<Vec<_>>();
         per_file.sort_by(|left, right| left.0.cmp(&right.0));

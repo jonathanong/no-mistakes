@@ -8,6 +8,17 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     arena: ArenaMut<'_>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) {
+    // Scalar-only branches have no heap or mutation state to discard.
+    if arena.objects.is_empty()
+        && arena.extras.is_empty()
+        && state.deleted.is_empty()
+        && state.definite.is_empty()
+        && state.disconnected.is_empty()
+        && state.invalidated.is_empty()
+        && state.updates.is_empty()
+    {
+        return;
+    }
     let reachable = reachable::collect(
         scopes,
         scopes.len(),
@@ -34,6 +45,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     state
         .invalidated
         .retain(|id| reachable.identities.contains(id));
+    state
+        .updates
+        .retain(|id, _| reachable.identities.contains(id));
 }
 
 /// Compact request state from explicit module roots, then remap cached module
@@ -66,3 +80,6 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     }
     indices
 }
+
+#[cfg(test)]
+mod tests;

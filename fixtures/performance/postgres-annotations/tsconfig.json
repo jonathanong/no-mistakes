@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@bench/db": ["src/db.mts"] },
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "noEmit": true
+  },
+  "include": ["src/**/*.mts"]
+}

@@ -15,6 +15,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
     pub definite: &'a mut FxHashSet<(u64, usize)>,
     pub disconnected: &'a mut FxHashSet<(u64, usize)>,
     pub invalidated: &'a mut FxHashSet<u64>,
+    pub updates: &'a mut FxHashMap<u64, Value>,
 }
 
 pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
