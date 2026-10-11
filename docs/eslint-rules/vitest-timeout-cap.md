@@ -218,6 +218,11 @@ Type assertions and non-null assertions around the whole copied member preserve
 these checks, including rejection after the copied scalar is replaced by an object.
 Coercing a property through a wrapped copy receiver stays conservative when its
 scalar initializer cannot be proven; writes that do not coerce retain their copied path proof.
+Recognized test, hook and runtime option consumers remain allowed during
+that scalar proof. Arbitrary copy escapes and aliases stay conservative; admitting
+a copy consumer does not make the mutated copy itself a statically unchanged value.
+Configuration helpers can return the original copy, so those calls do not establish
+a safe scalar proof through a potentially mutable returned alias.
 
 Object exports (including exported declarations and aliases) and unproved consumer
 contexts such as yield, await, tagged templates, and computed property keys retain

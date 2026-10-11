@@ -67,6 +67,26 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
       return true;
     return safeUse(node, "callback");
   }
+  function safeConsumer(node, allowConfig = true) {
+    const parent = node.parent;
+    if (parent?.type !== "CallExpression" || parent.callee === node) return false;
+    // Public config/registration consumers are admitted; unknown helpers can mutate objects.
+    const config = configCall(parent, context);
+    if (config)
+      return (
+        allowConfig &&
+        (parent.arguments.indexOf(node) === 0 ||
+          (config === "mergeConfig" && parent.arguments.indexOf(node) === 1))
+      );
+    const args = invocationArguments(parent, context);
+    const index = args.indexOf(node);
+    const kind = overrideCall(parent, context);
+    return (
+      (kind === "runtime" && index === 0) ||
+      (kind === "hook" && index === 1) ||
+      (kind === "test" && (index === 1 || index === 2))
+    );
+  }
   function safeUse(identifier, mode = "value", copyPath = []) {
     let node = unwrapTransparentParent(identifier);
     if (mode === "callback") {
@@ -105,7 +125,7 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
         (parent.type === "UnaryExpression" ||
           (parent.type === "AssignmentExpression" &&
             ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
-          scalarCopyWrite(node))
+          scalarCopyWrite(node, (reference) => safeConsumer(reference, false)))
       );
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
@@ -150,21 +170,7 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
       );
     if (parent?.type === "CallExpression") {
       if (parent.callee === node) return false;
-      // Public config/registration consumers are admitted; unknown helpers can mutate objects.
-      const config = configCall(parent, context);
-      if (config)
-        return (
-          parent.arguments.indexOf(node) === 0 ||
-          (config === "mergeConfig" && parent.arguments.indexOf(node) === 1)
-        );
-      const args = invocationArguments(parent, context);
-      const index = args.indexOf(node);
-      const kind = overrideCall(parent, context);
-      return (
-        (kind === "runtime" && index === 0) ||
-        (kind === "hook" && index === 1) ||
-        (kind === "test" && (index === 1 || index === 2))
-      );
+      return safeConsumer(node);
     }
     if (parent?.type === "ReturnStatement") {
       const body = parent.parent;

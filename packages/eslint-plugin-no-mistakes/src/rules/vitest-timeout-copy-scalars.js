@@ -67,7 +67,7 @@ function createScalarCopyWrite(context, evaluate) {
     }
     return undefined;
   }
-  return (node) => {
+  return (node, safeConsumer) => {
     node = unwrapExpression(node);
     const name = staticPropertyName({ key: node.property, computed: node.computed }, context);
     if (name === null) return false;
@@ -78,7 +78,8 @@ function createScalarCopyWrite(context, evaluate) {
     return resolveVariable(unwrapExpression(node.object), context).references.every((reference) => {
       if (reference.init) return true;
       const member = unwrapTransparentParent(reference.identifier).parent;
-      if (member?.type !== "MemberExpression") return false;
+      if (member?.type !== "MemberExpression")
+        return safeConsumer(unwrapTransparentParent(reference.identifier));
       const assignment = unwrapTransparentParent(member).parent;
       if (
         assignment?.type !== "AssignmentExpression" ||
