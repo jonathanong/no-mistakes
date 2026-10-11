@@ -1,0 +1,27 @@
+import { test, vi } from "vitest";
+const options = { timeout: 1 };
+Math.max(options.timeout, 0);
+test("primitive read", options, () => {});
+const computed = { timeout: 30_001 };
+Math.max(computed["timeout"], 0);
+test("over cap still known", computed, () => {});
+const nested = { test: { testTimeout: 1 } };
+consume(nested.test);
+vi.setConfig(nested.test);
+const mutated = { timeout: 1 };
+Math.max(mutated.timeout, 0);
+mutated.timeout = 30_001;
+test("mutation remains unknown", mutated, () => {});
+const opaque = { timeout: readTimeout() };
+consume(opaque.timeout);
+test("unknown value stays unknown", opaque, () => {});
+// A getter is not a proven primitive even when its source resembles a number.
+const getter = { get timeout() { return 1; } };
+consume(getter.timeout);
+test("getter remains unknown", getter, () => {});
+const nullOptions = { timeout: null };
+consume(nullOptions.timeout);
+test("null stays known", nullOptions, () => {});
+const nestedPrimitive = { nested: { timeout: 1 }, timeout: 1 };
+consume(nestedPrimitive.nested.timeout);
+test("nested primitive read", nestedPrimitive, () => {});
