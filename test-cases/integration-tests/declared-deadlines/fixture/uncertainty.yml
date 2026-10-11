@@ -1,0 +1,8 @@
+tests:
+  vitest:
+    configs:
+      - vitest.uncertainty.ts
+      - vitest.accessors.ts
+      - vitest.extends.ts
+  playwright:
+    configs: playwright.computed.ts
