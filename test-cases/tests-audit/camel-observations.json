@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "checkoutRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sourceDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "scopeDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "granularity": "per-test-file",
+  "suite": "full",
+  "complete": true,
+  "tests": [
+    {
+      "testFile": "tests/selected.test.mts",
+      "executedFiles": [
+        "src/a.mts",
+        "src/a.mts"
+      ],
+      "executedSymbols": [],
+      "traceComplete": true
+    },
+    {
+      "testFile": "tests/missed.test.mts",
+      "executedFiles": [
+        "src/b.mts"
+      ],
+      "executedSymbols": [
+        {
+          "file": "src/b.mts",
+          "symbol": "changed"
+        }
+      ],
+      "traceComplete": false
+    },
+    {
+      "testFile": "tests/unrelated.test.mts",
+      "executedFiles": [
+        "src/b.mts"
+      ],
+      "executedSymbols": [
+        {
+          "file": "src/b.mts",
+          "symbol": "other"
+        }
+      ],
+      "traceComplete": true
+    },
+    {
+      "testFile": "tests/incomplete.test.mts",
+      "executedFiles": [],
+      "executedSymbols": [],
+      "traceComplete": false
+    }
+  ]
+}

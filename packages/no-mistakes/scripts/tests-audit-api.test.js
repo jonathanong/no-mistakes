@@ -54,31 +54,34 @@ test("testsAudit accepts saved artifacts, returns a promise and camelizes execut
     });
     assert.equal(typeof promise.then, "function");
     assert.deepEqual(await promise, { missedObservedTests: [{ testFile: "missed.test.mts" }] });
-    assert.equal(calls[0].planJson.schema_version, 1);
-    assert.equal(calls[0].observationsJson.tests[0].trace_complete, true);
-    assert.equal(calls[0].plan, undefined);
-    assert.equal(calls[0].observations, undefined);
+    // Saved traces must reach the worker as paths, without JS file decoding or cloning.
+    assert.equal(calls[0].plan, fixture("plan.json"));
+    assert.equal(calls[0].observations, fixture("observations.json"));
+    assert.equal(calls[0].planJson, undefined);
+    assert.equal(calls[0].observationsJson, undefined);
     const esm = await import(`${pathToFileURL(join(packageRoot, "index.mjs"))}?audit-export`);
     assert.equal(typeof esm.testsAudit, "function");
   });
 });
 
-test("testsAudit converts object/text artifacts and analyzeProject inputs and results", async () => {
+test("testsAudit leaves artifact objects and JSON text for the native worker and converts results", async () => {
   await withApi(async (api, calls) => {
     const camel = (value) => require(planningPath).camelizeValue(value);
     const plan = camel(JSON.parse(readFileSync(fixture("plan.json"), "utf8")));
     const observations = camel(JSON.parse(readFileSync(fixture("observations.json"), "utf8")));
-    await api.testsAudit({ planJson: plan, observationsJson: JSON.stringify(observations) });
-    assert.equal(calls[0].planJson.changed_symbols[0].symbol, "changed");
-    assert.equal(calls[0].observationsJson.provenance.checkout_revision, "a".repeat(40));
+    const text = JSON.stringify(observations, null, 2);
+    await api.testsAudit({ planJson: plan, observationsJson: text });
+    assert.deepEqual(calls[0].planJson, plan);
+    // Preserving whitespace/text proves the facade did not parse and normalize the trace.
+    assert.equal(calls[0].observationsJson, text);
     const aggregate = await api.analyzeProject({
       reports: [{ type: "testsAudit", planJson: plan, observations: fixture("observations.json") }],
     });
     assert.equal(
-      calls[1].reports[0].planJson.plan.selected_tests[0].test_file,
+      calls[1].reports[0].planJson.plan.selectedTests[0].testFile,
       "tests/selected.test.mts",
     );
-    assert.equal(calls[1].reports[0].observationsJson.granularity, "per-test-file");
+    assert.equal(calls[1].reports[0].observations, fixture("observations.json"));
     assert.equal(
       aggregate.reports[0].result.selectedWithoutObservedExecution[0].testFile,
       "excess.test.mts",

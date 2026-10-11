@@ -37,6 +37,13 @@ test(
       }),
       direct,
     );
+    assert.deepEqual(
+      await api.testsAudit({
+        ...options,
+        observations: join(fixtureRoot, "camel-observations.json"),
+      }),
+      direct,
+    );
     await assert.rejects(
       api.testsAudit({ ...options, plan: join(fixtureRoot, "mismatched-plan.json") }),
       /provenance mismatch/,

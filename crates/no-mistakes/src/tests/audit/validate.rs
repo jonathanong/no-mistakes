@@ -115,7 +115,11 @@ fn paths(files: &[String]) -> Result<BTreeSet<&str>> {
 }
 
 fn path(file: &str) -> Result<()> {
-    if file.contains(['\\', ':'])
+    let bytes = file.as_bytes();
+    let drive_prefix =
+        bytes.first().is_some_and(u8::is_ascii_alphabetic) && bytes.get(1) == Some(&b':');
+    if file.contains('\\')
+        || drive_prefix
         || file.chars().any(char::is_control)
         || file
             .split('/')

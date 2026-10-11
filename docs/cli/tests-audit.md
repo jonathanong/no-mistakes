@@ -186,5 +186,8 @@ Every report includes these limitations.
 
 Node API: `testsAudit({ plan, observations })` or
 `testsAudit({ planJson, observationsJson })`. Each input accepts exactly one path
-or artifact object/JSON text. Results use camelCase. `analyzeProject()` supports
+or artifact object/JSON text. The native async worker reads files, parses JSON
+text, and normalizes snake_case/camelCase artifact keys; the facade preserves
+file paths and text without decoding them on the JavaScript event loop. Results
+use camelCase. `analyzeProject()` supports
 `{ type: 'testsAudit', planJson, observationsJson }` and the same path options.

@@ -42,10 +42,13 @@ pub(crate) fn tests_audit_json_impl(options: serde_json::Value) -> napi::Result<
 }
 
 fn load_audit_artifact<T: serde::de::DeserializeOwned>(json: Option<serde_json::Value>, path: Option<String>, field: &str) -> AnyhowResult<T> {
-    match (json, path) {
-        (Some(serde_json::Value::String(raw)), None) => Ok(serde_json::from_str(&raw)?),
-        (Some(value), None) => Ok(serde_json::from_value(value)?),
-        (None, Some(path)) => crate::tests::audit::read_artifact(Path::new(&path)),
+    let value = match (json, path) {
+        (Some(serde_json::Value::String(raw)), None) => serde_json::from_str(&raw)?,
+        (Some(value), None) => value,
+        (None, Some(path)) => crate::tests::audit::read_artifact(Path::new(&path))?,
         _ => bail!("Exactly one of {field} and {field}Json is required"),
-    }
+    };
+    serde_json::from_value(decamelize_audit_artifact(value)?).map_err(Into::into)
 }
+
+include!("cli_parity_audit_artifacts.rs");
