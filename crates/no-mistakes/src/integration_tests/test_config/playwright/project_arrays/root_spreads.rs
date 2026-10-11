@@ -9,8 +9,10 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod calls;
+mod deadline_projection;
 mod exports;
 mod members;
+use deadline_projection::spread_project_options;
 pub(in crate::integration_tests::test_config::playwright::project_arrays) use exports::{
     imported_reexport, named_export_object, sourced_reexport,
 };
@@ -43,7 +45,7 @@ pub(super) fn project_options(
     Ok(found)
 }
 
-fn spread_project_options(
+fn spread_project_options_inner(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Vec<Options>>> {

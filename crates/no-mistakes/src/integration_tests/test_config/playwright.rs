@@ -4,6 +4,7 @@ use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
 use oxc_ast::ast::Program;
+use oxc_span::GetSpan;
 use std::path::{Path, PathBuf};
 
 mod project_arrays;
@@ -97,14 +98,24 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
             projects: Vec::new(),
         });
     };
-    let root_options = project_arrays::root_options(program, root_object, source, path, resolver)?;
+    let (root_options, unproved_binding) =
+        project_arrays::root_options(program, root_object, source, path, resolver)?;
     let project_options =
         project_arrays::project_options(program, root_object, source, path, resolver)?;
     if project_options.is_empty() {
-        return Ok(single_project(config_dir, &root_options, None));
+        return Ok(ParsedPlaywrightConfig {
+            projects: vec![merge_project(config_dir, &root_options, None)],
+        });
     }
     let mut projects = Vec::new();
-    for project_options in project_options {
+    for mut project_options in project_options {
+        if unproved_binding {
+            super::deadlines::unproved_case(
+                &mut project_options.deadlines,
+                path,
+                root_object.span(),
+            );
+        }
         projects.push(merge_project(
             config_dir,
             &root_options,
@@ -112,16 +123,6 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
         ));
     }
     Ok(ParsedPlaywrightConfig { projects })
-}
-
-fn single_project(
-    config_dir: &Path,
-    root: &Options,
-    project: Option<Options>,
-) -> ParsedPlaywrightConfig {
-    ParsedPlaywrightConfig {
-        projects: vec![merge_project(config_dir, root, project)],
-    }
 }
 
 impl PlaywrightProject {

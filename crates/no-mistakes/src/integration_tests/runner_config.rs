@@ -47,6 +47,7 @@ struct ProjectResult {
     framework: Framework,
     raw: String,
     projects: Result<Vec<ConfigProject>, String>,
+    deadline_error: Option<String>,
 }
 
 #[derive(Clone, Default)]

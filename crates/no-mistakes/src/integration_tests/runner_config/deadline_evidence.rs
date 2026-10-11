@@ -31,6 +31,14 @@ impl PreparedIntegrationRunnerConfigs {
                                         result.framework == framework && result.raw == spec.raw
                                     })
                                 });
+                        if let Some(error) =
+                            result.and_then(|result| result.deadline_error.as_ref())
+                        {
+                            return ConfigDeadlineEvidence::Failed {
+                                config: relative_slash_path(&self.root, &spec.path),
+                                error: error.clone(),
+                            };
+                        }
                         match result.map(|result| &result.projects) {
                             Some(Ok(projects)) => ConfigDeadlineEvidence::Prepared {
                                 config: relative_slash_path(&self.root, &spec.path),

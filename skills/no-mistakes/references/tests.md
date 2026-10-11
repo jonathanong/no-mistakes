@@ -2,6 +2,19 @@
 
 ## When to use
 
+For declared Vitest/Playwright deadlines, use
+`no-mistakes check --root . --include-runner-config-deadlines --json`.
+The optional `runnerConfigDeadlines` report uses explicit runner config lists
+and their visible-file glob expansion. It distinguishes unrequested, prepared,
+and failed configs, and absent/known/unknown case, hook and fixture slots.
+Absence is not an SDK default; unknown evidence is not a finite-budget proof.
+Opaque roots retain a failure diagnostic, while aliases without mutation proof
+retain uncertainty. Ordinary findings and errors are unchanged. Node callers
+use `check({ includeRunnerConfigDeadlines: true })` or the same option on an
+`analyzeProject()` check report. See the
+[evidence contract](../../../docs/cli/check.md#declared-runner-config-evidence).
+This does not enforce runtime registrations or a universal timeout cap.
+
 Use `tests plan` for all test selection — it is the preferred replacement for
 `dependents --test` in all repos, with or without a `testPlan:` block in
 `.no-mistakes.yml`. Without a config block it uses default direct + dependencies

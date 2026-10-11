@@ -78,3 +78,10 @@ pub(super) fn unknown(
         inherited_through: Vec::new(),
     }
 }
+
+pub(super) fn unproved_case(slots: &mut DeclaredDeadlines, path: &Path, span: Span) {
+    let declaration = slots
+        .case
+        .get_or_insert_with(|| unknown(DeadlineUnknownReason::UnprovedBinding, path, Some(span)));
+    declaration.value = DeadlineValue::Unknown(DeadlineUnknownReason::UnprovedBinding);
+}

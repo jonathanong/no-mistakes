@@ -410,3 +410,47 @@ require("./postgres-expression-span-api.test.js");
 
 require("./postgres-clause-policy-api.test.js");
 require("./postgres-key-column-types-api.test.js");
+
+test(
+  "compiled deadline evidence retains opaque roots and alias uncertainty without ordinary changes",
+  { skip: !compiledAddonPath, timeout: 20_000 },
+  async () => {
+    const api = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      repositoryRoot,
+      "test-cases",
+      "integration-tests",
+      "declared-deadlines",
+      "fixture",
+    );
+    const options = { root, config: "review.yml" };
+    const baseline = await api.check(options);
+    const evidence = await api.check({ ...options, includeRunnerConfigDeadlines: true });
+    const { runnerConfigDeadlines, ...ordinary } = evidence;
+    assert.deepEqual(ordinary, baseline);
+    assert.deepEqual(await esm.check({ ...options, includeRunnerConfigDeadlines: true }), evidence);
+    const vitest = runnerConfigDeadlines.find((runner) => runner.framework === "vitest");
+    assert.equal(vitest.configs.length, 3);
+    assert.ok(
+      vitest.configs.some(
+        (config) => config.status === "failed" && config.error.includes("unsupported opaque"),
+      ),
+    );
+    const projects = runnerConfigDeadlines
+      .find((runner) => runner.framework === "playwright")
+      .configs.flatMap((config) => config.projects);
+    assert.ok(projects.some((project) => project.case.reason === "unprovedBinding"));
+    assert.ok(
+      projects.some(
+        (project) => project.policyName === "direct" && project.case.milliseconds === 1,
+      ),
+    );
+    const batched = await api.analyzeProject({
+      ...options,
+      reports: [{ type: "check", includeRunnerConfigDeadlines: true }, { type: "check" }],
+    });
+    assert.deepEqual(batched.reports[0].result, evidence);
+    assert.deepEqual(batched.reports[1].result, baseline);
+  },
+);

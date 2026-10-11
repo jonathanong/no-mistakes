@@ -1,0 +1,6 @@
+version: 2
+tests:
+  vitest:
+    configs: ['roots/*/vitest.config.ts']
+  playwright:
+    configs: ['playwright.mutable.ts', 'playwright.projections.ts']

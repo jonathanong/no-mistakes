@@ -11,6 +11,15 @@ query supports opt-in module/export selectors with the same prepared call
 resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
 
+Explicit Vitest and Playwright configurations expose optional declared
+case/hook/fixture deadline evidence through Rust, CLI
+`check --include-runner-config-deadlines`, async Node `check()` and
+`analyzeProject()` check reports. The shared prepared owner retains config
+failures, absent/known/unknown slots and source/inheritance provenance. Absence
+does not supply SDK defaults, and this evidence does not prove runtime timeout
+enforcement. See [declared runner evidence](cli/check.md#declared-runner-config-evidence)
+and the [agent reference](../skills/no-mistakes/references/tests.md).
+
 TypeScript/JavaScript route coverage includes opt-in registered Vitest integration
 sources for exact canonical Next.js page routes. These retain Vitest ownership and share
 the canonical `route-test` graph, while selector and fetch coverage remain browser

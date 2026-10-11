@@ -10,6 +10,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
+mod deadline_root;
 mod errors;
 mod json;
 mod setup;
@@ -86,10 +87,8 @@ impl PreparedIntegrationRunnerConfigs {
         let (results, mut analyses) = collect_analyses(|| {
             specs
                 .into_iter()
-                .map(|spec| ProjectResult {
-                    framework: spec.framework,
-                    raw: spec.raw.clone(),
-                    projects: project_config::load_config_projects_from_program(
+                .map(|spec| {
+                    let projects = project_config::load_config_projects_from_program(
                         ConfigProjectInput {
                             root: &self.root,
                             framework: spec.framework,
@@ -102,7 +101,18 @@ impl PreparedIntegrationRunnerConfigs {
                         program,
                         Some(&self.visible_files),
                     )
-                    .map_err(|error| error.to_string()),
+                    .map_err(|error| error.to_string());
+                    ProjectResult {
+                        framework: spec.framework,
+                        raw: spec.raw.clone(),
+                        deadline_error: deadline_root::evidence_error(
+                            spec.framework,
+                            &path,
+                            program,
+                            &projects,
+                        ),
+                        projects,
+                    }
                 })
                 .collect()
         });

@@ -14,6 +14,7 @@ impl PreparedIntegrationRunnerConfigs {
             .map(|spec| ProjectResult {
                 framework: spec.framework,
                 raw: spec.raw.clone(),
+                deadline_error: None,
                 projects: Err(message.clone()),
             })
             .collect::<Vec<_>>();

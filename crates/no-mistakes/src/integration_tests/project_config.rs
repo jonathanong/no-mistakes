@@ -10,6 +10,7 @@ mod globs;
 mod json;
 mod parse;
 pub(crate) use discovery::discovered_config_paths;
+pub(in crate::integration_tests) use globs::expand_explicit_config_values;
 pub(crate) use globs::{build_globset, prefix_globs};
 pub(super) use json::load_vitest_json_projects;
 pub(in crate::integration_tests) use parse::load_config_projects_from_program;

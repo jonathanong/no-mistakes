@@ -303,6 +303,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
                 framework: Framework::Vitest,
                 raw: "vitest.config.ts".to_string(),
                 projects: Ok(vec![project.clone()]),
+                deadline_error: None,
             }],
             analyses: BTreeMap::from([
                 (retained_analysis.clone(), FileAnalysis::default()),
@@ -483,3 +484,4 @@ fn configured_runner_config_dirs_collect_vitest_and_playwright_parents() {
 mod declared_deadlines;
 
 mod public_deadlines;
+mod review_deadlines;

@@ -520,3 +520,6 @@ mod deadline_setup_contracts;
 
 #[path = "parser_coverage/deadline_uncertainty.rs"]
 mod deadline_uncertainty;
+
+#[path = "parser_coverage/review_deadlines.rs"]
+mod review_deadlines;

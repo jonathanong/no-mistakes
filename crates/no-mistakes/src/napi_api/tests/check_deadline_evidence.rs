@@ -227,3 +227,39 @@ fn public_deadline_unknown_reasons_preserve_computed_accessor_replacement_and_ba
     assert_eq!(computed["hook"]["status"], "absent");
     assert_eq!(computed["fixture"]["status"], "absent");
 }
+
+#[test]
+fn public_review_deadlines_globs_opaque_roots_and_aliases_preserve_ordinary_report() {
+    let baseline = report(Some("review.yml"), false, false);
+    let evidence = report(Some("review.yml"), true, false);
+    let mut comparable = evidence.clone();
+    comparable
+        .as_object_mut()
+        .unwrap()
+        .remove("runnerConfigDeadlines");
+    assert_eq!(baseline, comparable);
+    let vitest = evidence["runnerConfigDeadlines"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|runner| runner["framework"] == "vitest")
+        .unwrap();
+    assert_eq!(vitest["configs"].as_array().unwrap().len(), 3);
+    assert!(vitest["configs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|config| config["status"] == "failed"
+            && config["error"]
+                .as_str()
+                .unwrap()
+                .contains("unsupported opaque")));
+    let playwright = projects(&evidence, "playwright");
+    assert!(playwright
+        .iter()
+        .any(|project| project["case"]["reason"] == "unprovedBinding"));
+    assert!(playwright
+        .iter()
+        .any(|project| project["policyName"] == "direct"
+            && project["case"]["milliseconds"].as_f64() == Some(1.0)));
+}

@@ -46,13 +46,17 @@ fn prepare_inner(
     deadlines: bool,
 ) -> PreparedIntegrationRunnerConfigs {
     let mut specs = Vec::new();
+    let mut visible_files = visible_paths
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<crate::fx::PathSet>();
     add_framework_specs(
         &mut specs,
         root,
         Framework::Playwright,
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
-        visible_paths,
+        &visible_files,
         deadlines && config.tests.playwright.configs.is_some(),
     );
     add_framework_specs(
@@ -61,7 +65,7 @@ fn prepare_inner(
         Framework::Vitest,
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
-        visible_paths,
+        &visible_files,
         (deadlines && config.tests.vitest.configs.is_some())
             || !config.tests.playwright.route_coverage_sources.is_empty()
             || config
@@ -71,10 +75,6 @@ fn prepare_inner(
                 .values()
                 .any(|app| !app.route_coverage_sources.is_empty()),
     );
-    let mut visible_files = visible_paths
-        .iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<crate::fx::PathSet>();
     // Explicit runner configs are authoritative even when Git ignores them.
     // Add their normalized paths to the frozen request view up front; reads are
     // still memoized by the request source store and failures become prepared
@@ -105,7 +105,7 @@ fn add_framework_specs(
     framework: Framework,
     configs: Option<&StringOrList>,
     policies: &BTreeMap<String, TestProjectPolicy>,
-    visible_paths: &[PathBuf],
+    visible_files: &crate::fx::PathSet,
     force: bool,
 ) {
     let needs_projects = policies
@@ -115,8 +115,23 @@ fn add_framework_specs(
         return;
     }
     let raw_configs = configs.map_or_else(
-        || project_config::discovered_config_paths(root, framework, visible_paths),
-        StringOrList::values,
+        || {
+            project_config::discovered_config_paths(
+                root,
+                framework,
+                &visible_files.iter().cloned().collect::<Vec<_>>(),
+            )
+        },
+        |configs| {
+            configs
+                .values()
+                .into_iter()
+                .flat_map(|pattern| {
+                    // Retain repeated literal specs for ordinary discovery callers.
+                    project_config::expand_explicit_config_values(root, &[pattern], visible_files)
+                })
+                .collect()
+        },
     );
     specs.extend(raw_configs.into_iter().map(|raw| RunnerConfigSpec {
         framework,

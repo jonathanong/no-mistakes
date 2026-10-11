@@ -69,6 +69,22 @@ pub(super) fn expression_object_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Options>> {
+    let mut result = expression_object_options_inner(expression, ctx)?;
+    if !matches!(
+        unwrap_ts_wrappers(expression),
+        Expression::ObjectExpression(_)
+    ) {
+        if let Some(options) = &mut result {
+            deadlines::unproved_case(&mut options.deadlines, ctx.path, expression.span());
+        }
+    }
+    Ok(result)
+}
+
+fn expression_object_options_inner(
+    expression: &Expression<'_>,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Option<Options>> {
     match unwrap_ts_wrappers(expression) {
         Expression::Identifier(identifier) => {
             let name = identifier.name.as_str();
