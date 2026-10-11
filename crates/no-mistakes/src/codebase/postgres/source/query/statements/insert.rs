@@ -101,21 +101,18 @@ impl Collector<'_, '_> {
                     });
                 let outer_insert_source = self.insert_source;
                 self.insert_source = true;
-                let query_scope_id = self.query(
+                let query_scope_id = self.query_with_span(
                     query,
-                    Some(scope),
-                    None,
+                    (Some(scope), None),
                     PostgresSqlQueryClause::Other,
                     env,
                     self.facts.scopes[scope].cte_definition_id,
+                    source_span.clone(),
                 );
                 self.insert_source = outer_insert_source;
-                if let Some(span) = source_span.as_ref() {
-                    self.facts.scopes[query_scope_id].span = Some(span.clone());
-                }
                 PostgresSqlCteInsertSource::Select {
                     query_scope_id,
-                    span: source_span.or_else(|| self.locations.span(query.span())),
+                    span: source_span.or(self.locations.span(query.span())),
                 }
             }
         };

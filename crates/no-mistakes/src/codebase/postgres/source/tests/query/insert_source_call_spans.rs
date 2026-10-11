@@ -5,8 +5,10 @@ fn insert_source_select_spans_include_trailing_calls_before_owner_clauses() {
     // sqlparser truncates a bare SELECT source at the function name; the CTE owns its end.
     let sql = fixture("query-insert-source-call-spans.sql");
     let queries = queries("query-insert-source-call-spans.sql");
-    assert_eq!(queries.len(), 3);
-    for (query, (source_sql, insert_sql, root_sql)) in queries.iter().zip([
+    assert_eq!(queries.len(), 4);
+    for (index, (query, (source_sql, insert_sql, root_sql))) in queries
+        .iter()
+        .zip([
         (
             "SELECT now()",
             "INSERT INTO \"té\" SELECT now() RETURNING id",
@@ -22,7 +24,14 @@ fn insert_source_select_spans_include_trailing_calls_before_owner_clauses() {
             "INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning",
             "WITH c AS (INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning) SELECT * FROM c",
         ),
-    ]) {
+        (
+            "SELECT now() UNION ALL SELECT now()",
+            "INSERT INTO t SELECT now() UNION ALL SELECT now() RETURNING id",
+            "WITH c AS (INSERT INTO t SELECT now() UNION ALL SELECT now() RETURNING id) SELECT * FROM c",
+        ),
+    ])
+        .enumerate()
+    {
         assert!(query.complete, "{:?}", query.unsupported);
         assert!(query.unsupported.is_empty());
         assert_eq!(query.nested_statements.len(), 1);
@@ -54,5 +63,17 @@ fn insert_source_select_spans_include_trailing_calls_before_owner_clauses() {
         assert_eq!(&sql[scope_span.start.offset..scope_span.end.offset], source_sql);
         let root_span = query.scopes[0].span.as_ref().expect("enclosing query span");
         assert_eq!(&sql[root_span.start.offset..root_span.end.offset], root_sql);
+        if index == 3 {
+            let branches = query
+                .scopes
+                .iter()
+                .filter(|scope| scope.clause == PostgresSqlQueryClause::SetBranch)
+                .map(|scope| {
+                    let span = scope.span.as_ref().expect("INSERT source branch span");
+                    &sql[span.start.offset..span.end.offset]
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(branches, ["SELECT now()", "SELECT now()"]);
+        }
     }
 }

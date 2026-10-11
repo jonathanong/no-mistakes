@@ -337,6 +337,7 @@ expression spans refer to the original input, including comments and literals.
 An INSERT-source SELECT span includes trailing function-call syntax such as
 `SELECT now()` before the owning INSERT's `ON CONFLICT` or `RETURNING` clause.
 The source span and its query scope span use the same half-open UTF-8 offsets.
+Set-operation branch scopes inside that source retain the complete SELECT text as well.
 
 `onConflict` is null when absent. Its `target` distinguishes `omitted`, `columns`,
 `constraint`, and `expressions`. Expression arbiters retain their ordered typed
