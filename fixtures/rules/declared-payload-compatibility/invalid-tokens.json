@@ -1,0 +1,17 @@
+[
+  {
+    "name": "incomplete-exponent",
+    "source": "1e+",
+    "expected": "EOF"
+  },
+  {
+    "name": "invalid-sign",
+    "source": "--1",
+    "expected": "invalid number"
+  },
+  {
+    "name": "unterminated-number",
+    "source": "1.",
+    "expected": "EOF"
+  }
+]

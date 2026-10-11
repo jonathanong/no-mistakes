@@ -26,3 +26,9 @@ checks every recovered leading prefix.
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.
+
+[`declared-payload-compatibility`](../rules/declared-payload-compatibility.md)
+accepts `options.contracts`, an opt-in list of named producer/consumer JSON
+Schema references. Paths are relative to the invocation root; optional RFC 6901
+pointers select each declaration. It checks supported declaration compatibility
+and reports unsupported schemas as unproven, without inferring runtime adoption.

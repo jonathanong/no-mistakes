@@ -21,6 +21,11 @@ pub(super) fn run(
         MARKDOWN_EVAL_TESTS => {
             markdown_eval_tests::check_with_files_and_sources(root, config, files, sources)
         }
+        DECLARED_PAYLOAD_COMPATIBILITY => {
+            declared_payload_compatibility::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         STRUCTURED_CONFIG_POLICY => {
             structured_config_policy::check_with_files_and_sources(root, config, files, sources)
         }

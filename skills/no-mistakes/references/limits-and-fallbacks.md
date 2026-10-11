@@ -160,3 +160,10 @@ For repeated query or cache calls hidden in helpers, enable
 explicit effect families. It traces resolved per-item calls; dynamic targets
 cannot prove sink reachability. Use configured batch exemptions and reviewed
 callsite allowlists for rollout. CLI and async `check()` share the rule.
+
+For separately compiled HTTP/queue payloads, opt in to
+`declared-payload-compatibility` and run `check --root <workspace> --format json`.
+It compares explicitly paired JSON Schema declarations, including required
+properties, primitive enums, and nested objects/arrays. Unsupported keywords and
+missing declarations are unproven findings. A passing declaration check does
+not prove runtime endpoints adopt the schemas.

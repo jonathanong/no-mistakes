@@ -1,0 +1,51 @@
+{
+  "request": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "userId"
+    ],
+    "additionalProperties": false
+  },
+  "response": {
+    "type": "array",
+    "items": {
+      "type": "integer"
+    }
+  },
+  "worker": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "userId"
+    ],
+    "additionalProperties": false
+  },
+  "queue": {
+    "type": "object",
+    "properties": {
+      "accountId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "accountId"
+    ],
+    "additionalProperties": false
+  },
+  "a/b~c": {
+    "type": "string"
+  },
+  "unsupported": {
+    "type": "string",
+    "format": "uuid"
+  }
+}

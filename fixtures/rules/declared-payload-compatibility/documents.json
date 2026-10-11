@@ -1,0 +1,52 @@
+[
+  {
+    "name": "fraction-truncation",
+    "source": "{\"type\":\"number\",\"const\":1.0000000000000001}",
+    "expected": "loses decimal precision"
+  },
+  {
+    "name": "fraction-alias",
+    "source": "{\"type\":\"number\",\"const\":0.10000000000000001}",
+    "expected": "loses decimal precision"
+  },
+  {
+    "name": "decimal-exponent",
+    "source": "{\"type\":\"number\",\"enum\":[0.1,1.0,1e-1,-0.0,1e2]}",
+    "expected": ""
+  },
+  {
+    "name": "duplicate-root-key",
+    "source": "{\"type\":\"number\",\"type\":\"integer\"}",
+    "expected": "duplicate object key"
+  },
+  {
+    "name": "duplicate-nested-key",
+    "source": "{\"type\":\"object\",\"properties\":{\"x\":{\"type\":\"number\",\"type\":\"integer\"}}}",
+    "expected": "duplicate object key"
+  },
+  {
+    "name": "all-json-values",
+    "source": "{\"text\":\"escaped\\\" -3.1\\\\ 9\", \"values\":[null,true,false,-12,12,0.5], \"unicode\":\"\u96ea\"}",
+    "expected": ""
+  },
+  {
+    "name": "syntax-error",
+    "source": "{broken",
+    "expected": "invalid JSON"
+  },
+  {
+    "name": "root-null",
+    "source": "null",
+    "expected": ""
+  },
+  {
+    "name": "huge-integer",
+    "source": "{\"type\":\"integer\",\"const\":9007199254740993}",
+    "expected": ""
+  },
+  {
+    "name": "huge-rounded-integer",
+    "source": "{\"type\":\"number\",\"const\":18446744073709551617}",
+    "expected": "loses decimal precision"
+  }
+]

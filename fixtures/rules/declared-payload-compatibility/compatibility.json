@@ -1,0 +1,529 @@
+[
+  {
+    "name": "renamed-queue-field",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "accountId"
+      ],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "userId"
+      ],
+      "additionalProperties": false
+    },
+    "expected": "consumer requires"
+  },
+  {
+    "name": "optional-request-field",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "userId"
+      ],
+      "additionalProperties": false
+    },
+    "expected": "consumer requires"
+  },
+  {
+    "name": "valid-request",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "userId"
+      ],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "expected": ""
+  },
+  {
+    "name": "response-type",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "expected": "producer type"
+  },
+  {
+    "name": "response-widened",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "expected": ""
+  },
+  {
+    "name": "optional-extra-closed",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "extra": {
+          "type": "null"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "expected": "forbidden by"
+  },
+  {
+    "name": "extra-open-consumer",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "extra": {
+          "type": "null"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": true
+    },
+    "expected": ""
+  },
+  {
+    "name": "open-to-closed",
+    "producer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "expected": "open producer"
+  },
+  {
+    "name": "open-to-open",
+    "producer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "expected": ""
+  },
+  {
+    "name": "closed-missing-optional",
+    "producer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": true
+    },
+    "expected": ""
+  },
+  {
+    "name": "open-missing-optional",
+    "producer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": true
+    },
+    "expected": "unconstrained values"
+  },
+  {
+    "name": "object-default-open",
+    "producer": {
+      "type": "object"
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "expected": "open producer"
+  },
+  {
+    "name": "nested",
+    "producer": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "expected": "producer type"
+  },
+  {
+    "name": "arrays",
+    "producer": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "consumer": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "expected": ""
+  },
+  {
+    "name": "arrays-fail",
+    "producer": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "consumer": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "expected": "producer type"
+  },
+  {
+    "name": "enum-subset",
+    "producer": {
+      "type": "string",
+      "enum": [
+        "a"
+      ]
+    },
+    "consumer": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b"
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "enum-mismatch",
+    "producer": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b"
+      ]
+    },
+    "consumer": {
+      "type": "string",
+      "enum": [
+        "a"
+      ]
+    },
+    "expected": "consumer rejects"
+  },
+  {
+    "name": "enum-unrestricted",
+    "producer": {
+      "type": "string"
+    },
+    "consumer": {
+      "type": "string",
+      "enum": [
+        "a"
+      ]
+    },
+    "expected": "unrestricted producer"
+  },
+  {
+    "name": "const-to-enum",
+    "producer": {
+      "type": "integer",
+      "const": 1
+    },
+    "consumer": {
+      "type": "number",
+      "enum": [
+        1.0,
+        2
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "decimal-number-to-integer",
+    "producer": {
+      "type": "number",
+      "enum": [
+        1.0,
+        2.0
+      ]
+    },
+    "consumer": {
+      "type": "integer"
+    },
+    "expected": ""
+  },
+  {
+    "name": "fraction-to-integer",
+    "producer": {
+      "type": "number",
+      "enum": [
+        1.5
+      ]
+    },
+    "consumer": {
+      "type": "integer"
+    },
+    "expected": "producer type"
+  },
+  {
+    "name": "whole-number-to-integer",
+    "producer": {
+      "type": "number"
+    },
+    "consumer": {
+      "type": "integer"
+    },
+    "expected": "producer type"
+  },
+  {
+    "name": "boolean-total",
+    "producer": {
+      "type": "boolean"
+    },
+    "consumer": {
+      "type": "boolean",
+      "enum": [
+        true,
+        false
+      ]
+    },
+    "expected": ""
+  },
+  {
+    "name": "boolean-restricted",
+    "producer": {
+      "type": "boolean"
+    },
+    "consumer": {
+      "type": "boolean",
+      "const": true
+    },
+    "expected": "consumer rejects"
+  },
+  {
+    "name": "null-total",
+    "producer": {
+      "type": "null"
+    },
+    "consumer": {
+      "type": "null",
+      "const": null
+    },
+    "expected": ""
+  },
+  {
+    "name": "null-to-string",
+    "producer": {
+      "type": "null"
+    },
+    "consumer": {
+      "type": "string"
+    },
+    "expected": "producer type"
+  },
+  {
+    "name": "large-integer-distinct",
+    "producer": {
+      "type": "integer",
+      "const": 9007199254740993
+    },
+    "consumer": {
+      "type": "integer",
+      "const": 9007199254740992
+    },
+    "expected": "consumer rejects"
+  },
+  {
+    "name": "large-integer-equal",
+    "producer": {
+      "type": "integer",
+      "const": 18446744073709551615
+    },
+    "consumer": {
+      "type": "integer",
+      "const": 18446744073709551615
+    },
+    "expected": ""
+  },
+  {
+    "name": "primitive-annotations",
+    "producer": {
+      "type": "string",
+      "title": "Name",
+      "description": "Shown",
+      "$comment": "note"
+    },
+    "consumer": {
+      "type": "string"
+    },
+    "expected": ""
+  }
+]

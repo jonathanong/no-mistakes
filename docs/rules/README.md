@@ -32,6 +32,7 @@ behavior.
 | If you need to… | Start with |
 | --- | --- |
 | Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unconstructed-error-class`](unconstructed-error-class.md), [`unique-exports`](unique-exports.md) |
+| Check declared HTTP and queue payload compatibility | [`declared-payload-compatibility`](declared-payload-compatibility.md) |
 | Protect documentation structure and navigation | [`doc-consistency`](doc-consistency.md), [`markdown-reachability`](markdown-reachability.md), [`markdown-child-links`](markdown-child-links.md) |
 | Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
 | Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
@@ -52,6 +53,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`config-path-references`](config-path-references.md)                         | Validate path strings in structured config files, including well-known presets. |
 | [`csharp-max-lines-per-file`](csharp-max-lines-per-file.md)                   | Cap C# source/test file length by physical lines.                               |
 | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md)           | Ban async lambdas passed to void Action APIs such as Command.                   |
+| [`declared-payload-compatibility`](declared-payload-compatibility.md) | Check explicitly declared producer/consumer JSON payload schemas. |
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, and banned-substring checks.               |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets from source, paths, and YAML selectors.              |

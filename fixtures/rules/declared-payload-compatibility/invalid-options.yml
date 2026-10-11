@@ -1,0 +1,13 @@
+- contracts: false
+- unknown: true
+- contracts:
+    - producer: {file: schemas.json}
+      consumer: {file: schemas.json}
+- contracts:
+    - name: x
+      producer: {file: schemas.json, unknown: true}
+      consumer: {file: schemas.json}
+- contracts:
+    - name: x
+      producer: {file: schemas.json, pointer: false}
+      consumer: {file: schemas.json}
