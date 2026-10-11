@@ -306,11 +306,8 @@ fn direct_selector_append_matches_historical_rebuild_ordinals() {
         ),
     ];
     let mut rebuilt = test_support::from_typed_maps(p("/repo"), forward.clone(), reverse.clone());
-    let mut appended = with_materialized_vitest_cache(test_support::from_typed_maps(
-        p("/repo"),
-        forward,
-        reverse,
-    ));
+    let mut appended =
+        with_materialized_vitest_cache(test_support::from_typed_maps(p("/repo"), forward, reverse));
 
     rebuilt.merge_canonical_edges(selector_edges.clone());
     appended.append_canonical_edges(selector_edges);
