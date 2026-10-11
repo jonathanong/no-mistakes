@@ -28,7 +28,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     }
     let seq = visitor.next_seq;
     visitor.next_seq += 1;
-    visitor.pending_starts.insert(seq, call.span.start);
+    visitor
+        .pending_spans
+        .insert(seq, (call.span.start, call.span.end));
     visitor.pending_calls.push(PendingRelativeCall {
         seq,
         owners,
@@ -43,7 +45,7 @@ fn push_confirmed(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>, cal
         visitor.confirmed_order.push(seq);
     }
     visitor.calls.push(executor_call(visitor, call, callee));
-    visitor.call_starts.push(call.span.start);
+    visitor.call_spans.push((call.span.start, call.span.end));
 }
 
 fn owners_at(visitor: &ScopeVisitor<'_>, name: &str, start: u32) -> Vec<u32> {

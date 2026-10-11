@@ -28,7 +28,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mapped_argument_owners = self.mapped_argument_owners.clone();
         let mapped_parameter_indices = self.mapped_parameter_indices.clone();
         for call in unmodeled {
-            if matches!(call, Expr::Call { start, .. } if !file.executors.contains(start)) {
+            if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
+            {
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);

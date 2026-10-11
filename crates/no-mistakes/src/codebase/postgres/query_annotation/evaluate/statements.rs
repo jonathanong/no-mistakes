@@ -131,7 +131,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     pub(super) fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
         match expr {
-            Expr::Call { start, .. } => !self.files[path].executors.contains(start),
+            Expr::Call { start, end, .. } => !self.files[path].executors.contains(&(*start, *end)),
             Expr::Template(parts)
             | Expr::Children(parts)
             | Expr::Container(parts)

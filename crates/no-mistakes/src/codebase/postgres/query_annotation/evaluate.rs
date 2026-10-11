@@ -26,17 +26,19 @@ use std::{collections::BTreeMap, sync::Arc};
 pub(super) use value::Value;
 
 pub(super) type Environment = usize;
+pub(super) type CallSpan = (u32, u32);
+pub(super) type ExecutionEvents = BTreeMap<(PathBuf, CallSpan), Vec<(bool, Value)>>;
 pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
     pub ts: &'a TsFileFacts,
-    pub executors: FxHashSet<u32>,
+    pub executors: FxHashSet<CallSpan>,
     pub imports: FxHashMap<String, usize>,
     pub exports: FxHashMap<String, usize>,
 }
 pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
-    pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
+    pub events: ExecutionEvents,
     pub scopes: Vec<Scope>,
     pub modules: FxHashMap<PathBuf, Environment>,
     pub active_module_initials: Vec<alternatives::modules::Initials>,
@@ -144,7 +146,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 callee,
                 args,
                 start,
-            } => self.call(callee, args, *start, path, env, (depth, generic)),
+                end,
+            } => self.call(callee, args, (*start, *end), path, env, (depth, generic)),
             Expr::Delete(children, index) => {
                 self.deleted(children, *index, path, env, (depth, generic))
             }

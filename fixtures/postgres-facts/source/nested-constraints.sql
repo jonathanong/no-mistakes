@@ -1,4 +1,4 @@
--- Unsupported LOCK facts must not hide the safely attributed nested constraint.
+-- Recognized static LOCK utility facts coexist with the safely attributed nested constraint.
 CREATE INDEX before_constraint_idx ON "Mý"."Chïld"("Parent Id");
 DO $outer$ BEGIN
  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK雪') THEN

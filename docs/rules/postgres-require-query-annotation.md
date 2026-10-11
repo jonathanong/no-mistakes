@@ -103,7 +103,10 @@ SQL-file/native-SQL analysis where supported. See the
 Straight-line same-file and imported helpers can return SQL assembled from strings,
 templates, nested SQL builders, and `.append()` calls. Empty fragments are skipped
 in composition order. Literal arguments can establish interpolated template text;
-unknown text before the first stable prefix remains unanalyzable. A leading
+unknown text before the first stable prefix remains unanalyzable. A same-file helper can also append static
+fragments to a typed `SQLStatement` parameter and return it when the caller's
+builder is statically recoverable. Its leading annotation is preserved through
+that composition; opaque inputs and dynamic appends remain unanalyzable. A leading
 `/* name */` stays valid when a later appended fragment is opaque:
 
 ```ts
@@ -127,6 +130,9 @@ Await an async helper before passing its returned SQL to an executor; a promise 
 without awaiting it remains unanalyzable. Template substitutions are traversed for nested
 executor calls. Unknown calls or untrusted template tags that receive a mutable
 SQL builder invalidate its previous prefix, including aliases to that builder.
+Calling a method on an executor's returned value preserves the annotation of
+the exact executor call. Chained `catch`, `then`, and `finally` callbacks can
+still contain separate executor calls that require their own annotations.
 
 Callback forwarding through a straight-line helper substitutes the statement and
 callback arguments at each analyzable callsite. Findings point to the executor

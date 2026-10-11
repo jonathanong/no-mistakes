@@ -117,10 +117,29 @@ impl Collector<'_, '_> {
         outer: &CteEnvironment,
         definition: Option<usize>,
     ) -> usize {
-        let span = self
-            .span_bounds
-            .query(query, parent.is_none(), self.locations)
-            .or_else(|| self.locations.span(query.span()));
+        self.query_with_span(
+            query,
+            (parent, visible_parent),
+            clause,
+            outer,
+            definition,
+            None,
+        )
+    }
+    fn query_with_span(
+        &mut self,
+        query: &Query,
+        (parent, visible_parent): (Option<usize>, Option<usize>),
+        clause: PostgresSqlQueryClause,
+        outer: &CteEnvironment,
+        definition: Option<usize>,
+        preferred_span: Option<PostgresSqlSpan>,
+    ) -> usize {
+        let span = preferred_span.or_else(|| {
+            self.span_bounds
+                .query(query, parent.is_none(), self.locations)
+                .or_else(|| self.locations.span(query.span()))
+        });
         let scope = self.scope(parent, visible_parent, clause, definition, span);
         // Outer NOT does not apply inside a nested query. Restore even when nesting stops.
         let outer_not_depth = std::mem::take(&mut self.not_depth);
@@ -132,7 +151,12 @@ impl Collector<'_, '_> {
         }
         self.depth += 1;
         let env = self.ctes(query, scope, outer);
-        self.body(&query.body, scope, &env);
+        let body_end = self.span_bounds.body_end(
+            query,
+            self.facts.scopes[scope].span.as_ref(),
+            self.locations,
+        );
+        self.body(&query.body, scope, &env, body_end);
         self.query_clauses(query, scope, &env);
         self.depth -= 1;
         self.not_depth = outer_not_depth;

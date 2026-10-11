@@ -1,55 +1,50 @@
 "use strict";
-const { resolveVariable } = require("./test-no-shared-state-aliases");
-const { importSpecifierName } = require("./test-no-shared-state-callees");
-const { memberName, testBinding } = require("./test-no-skips-bindings");
-const { unwrapExpression } = require("./async-ast");
-const HOOKS = new Set(["beforeAll", "beforeEach", "afterAll", "afterEach"]);
-const CONFIG = new Set(["defineConfig", "defineProject", "mergeConfig"]);
-function bindingName(node, context, modules, names) {
-  node = unwrapExpression(node);
-  if (node.type === "MemberExpression" && node.object.type === "Identifier") {
-    const variable = resolveVariable(node.object, context);
-    const name = memberName(node);
-    return names.has(name) &&
-      variable?.defs.some(
-        (def) =>
-          def.type === "ImportBinding" &&
-          modules.has(def.parent.source.value) &&
-          def.node.type === "ImportNamespaceSpecifier",
-      )
-      ? name
-      : null;
-  }
-  if (node.type !== "Identifier") return null;
-  const variable = resolveVariable(node, context);
-  for (const def of variable?.defs || []) {
-    if (def.type === "ImportBinding" && modules.has(def.parent.source.value)) {
-      const name = importSpecifierName(def.node);
-      if (names.has(name)) return name;
-    }
-  }
-  if (modules.has("vitest") && !variable?.defs.length && names.has(node.name)) return node.name;
-  return null;
+const { createBindingResolver } = require("./vitest-timeout-binding-resolver");
+// One resolver per rule/context; scopes and in-progress cycles never cross requests.
+const resolvers = new WeakMap();
+function resolver(context) {
+  if (!resolvers.has(context)) resolvers.set(context, createBindingResolver(context));
+  return resolvers.get(context);
 }
 function configCall(node, context) {
-  return bindingName(node.callee, context, new Set(["vitest/config", "vite"]), CONFIG);
+  const api = resolver(context)(node.callee);
+  return api?.kind === "config" ? api.name : null;
 }
 function overrideCall(node, context) {
-  const callee = unwrapExpression(node.callee);
-  if (
-    callee.type === "MemberExpression" &&
-    memberName(callee) === "setConfig" &&
-    bindingName(callee.object, context, new Set(["vitest"]), new Set(["vi"]))
-  )
-    return "runtime";
-  if (bindingName(callee, context, new Set(["vitest"]), HOOKS)) return "hook";
-  const test = testBinding(callee, context);
-  if (test?.framework !== "vitest") return null;
-  if (
-    callee.type === "MemberExpression" &&
-    new Set(["each", "for", "skipIf", "runIf"]).has(memberName(callee))
-  )
-    return null;
-  return "test";
+  const api = resolver(context).invocation(node).api;
+  return api?.kind === "setter"
+    ? "runtime"
+    : api?.kind === "hook"
+      ? "hook"
+      : api?.kind === "test"
+        ? "test"
+        : api?.kind === "unknown"
+          ? "unknown"
+          : null;
 }
-module.exports = { configCall, overrideCall };
+function staticPropertyName(node, context) {
+  if (!node.computed) return node.key.name ?? String(node.key.value);
+  if (node.key.type === "Literal") return String(node.key.value);
+  return resolver(context).staticName(node.key);
+}
+function recordCall(node, context) {
+  resolver(context).record(node);
+}
+function invocationArguments(node, context) {
+  return resolver(context).invocation(node).args;
+}
+function callbackFunction(node, context) {
+  return resolver(context).callback(node);
+}
+function opaqueCallback(node, context) {
+  return resolver(context).opaqueCallback(node);
+}
+module.exports = {
+  configCall,
+  overrideCall,
+  staticPropertyName,
+  recordCall,
+  invocationArguments,
+  callbackFunction,
+  opaqueCallback,
+};

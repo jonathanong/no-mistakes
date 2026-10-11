@@ -224,7 +224,14 @@ Each `EmbeddedSqlCall` records `kind`:
   `sql-template-strings` init plus later `query.append(...)` in the same
   function), or a call into a same-file function whose body is a single
   `return` of such a chain or a straight-line `const`/`let` plus `.append`
-  mutations ending in `return` (recursive, up to 8 calls deep). Conditional
+  mutations ending in `return` (recursive, up to 8 calls deep). A same-file
+  helper may also receive an imported `SQLStatement` typed parameter, make
+  straight-line static `.append()` calls through that parameter or its local
+  aliases, and return the same builder. Its caller must supply a trusted tagged
+  builder or a fully recovered local builder; scalar values inside trusted tagged-template appends
+  remain bound placeholders. Unknown caller builders, dynamic appended SQL,
+  control flow, reassignment, and use of the builder as a fragment fail closed.
+  Conditional
   static appends keep the recovered base SQL and classify `Dynamic` so an
   INSERT cannot pass a branch-only `ORDER BY` as if it always ran; recovered
   non-INSERT stays ignored by conflict-ordering. Opaque statement-level and

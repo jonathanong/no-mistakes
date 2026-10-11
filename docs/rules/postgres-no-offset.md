@@ -224,7 +224,10 @@ Recovered literals and template quasis retain a compact physical-line map in
 newline escapes, line continuations, multiline interpolations, and initializers
 that begin below their declaration preserve the actual OFFSET source line.
 Static `.append()` composition retains each appended literal or bound fragment's
-physical position, including placeholder renumbering. Put line suppression on
+physical position, including placeholder renumbering. A straight-line same-file helper that receives and returns a typed
+`SQLStatement` parameter contributes its static appends to this rule, so an
+appended `OFFSET` is checked normally. Unknown builder arguments and dynamic
+appends retain the strict `unanalyzableSql` behavior. Put line suppression on
 the physical clause being suppressed. Existing directives on an executor call
 also suppress that call's recovered clauses through the common suppression pass.
 Prepared source failures retain their I/O kind; dispatch uses that captured

@@ -1,5 +1,8 @@
 //! One completeness definition for nested statement source occurrences.
 use super::types::*;
+use std::collections::BTreeSet;
+
+pub(super) type UtilitySpans = BTreeSet<(usize, usize)>;
 
 pub(super) fn statement(facts: &PostgresSqlStatementKind) -> bool {
     match facts {
@@ -27,5 +30,26 @@ pub(super) fn statement(facts: &PostgresSqlStatementKind) -> bool {
         PostgresSqlStatementKind::CreateView { view } => view.dependencies_complete,
         PostgresSqlStatementKind::Other => false,
         _ => true,
+    }
+}
+
+pub(super) fn procedural_statements(
+    statements: &[PostgresSqlStatement],
+    utilities: &UtilitySpans,
+) -> bool {
+    statements
+        .iter()
+        .all(|statement| procedural_statement(statement, utilities))
+}
+
+fn procedural_statement(statement: &PostgresSqlStatement, utilities: &UtilitySpans) -> bool {
+    match &statement.facts {
+        PostgresSqlStatementKind::Other => {
+            utilities.contains(&(statement.span.start.offset, statement.span.end.offset))
+        }
+        PostgresSqlStatementKind::Conditional { branches } => branches
+            .iter()
+            .all(|branch| procedural_statements(&branch.statements, utilities)),
+        facts => self::statement(facts),
     }
 }

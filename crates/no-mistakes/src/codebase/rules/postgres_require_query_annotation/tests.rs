@@ -56,6 +56,49 @@ fn annotated_query_is_clean() {
 }
 
 #[test]
+fn chained_executor_returns_preserve_the_exact_executed_query() {
+    let root = fixture("chained-executor-return");
+    let file = root.join("src/query.mts");
+    let source = std::fs::read_to_string(&file).unwrap();
+    let findings = check_with_files(
+        &root,
+        &config_with_options("importSpecifier: '@example/db'\nexecutorNames: [write]"),
+        &[file],
+    )
+    .unwrap();
+    let expected = source
+        .lines()
+        .enumerate()
+        .filter_map(|(index, line)| line.contains("// finding:").then_some(index + 1))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        expected,
+        "{findings:#?}"
+    );
+    let actual = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect::<Vec<_>>();
+    for (finding, line) in findings.iter().zip(expected) {
+        let marker = source.lines().nth(line - 1).unwrap();
+        assert!(
+            finding
+                .message
+                .contains(if marker.contains("finding: missing") {
+                    "query execution must start"
+                } else {
+                    "leading SQL is unanalyzable"
+                }),
+            "{actual:#?}"
+        );
+    }
+}
+
+#[test]
 fn var_sql_retains_function_scope_and_lexical_bindings_stay_local() {
     let root = fixture("var-scopes");
     let file = ts_file(&root);

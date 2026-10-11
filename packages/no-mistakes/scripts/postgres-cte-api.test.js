@@ -37,6 +37,13 @@ test(
         rootSql:
           "WITH c AS (INSERT INTO t SELECT t.returning, t.on, t.conflict, now() ON CONFLICT DO NOTHING RETURNING t.returning) SELECT * FROM c",
       },
+      {
+        sourceSql: "SELECT now() UNION ALL SELECT now()",
+        insertSql: "INSERT INTO t SELECT now() UNION ALL SELECT now() RETURNING id",
+        rootSql:
+          "WITH c AS (INSERT INTO t SELECT now() UNION ALL SELECT now() RETURNING id) SELECT * FROM c",
+        branches: ["SELECT now()", "SELECT now()"],
+      },
     ];
     assert.equal(facts.statements.length, cases.length);
     for (const [index, expected] of cases.entries()) {
@@ -53,6 +60,14 @@ test(
       assert.equal(slice(child.insert.source.span), expected.sourceSql);
       assert.equal(slice(query.scopes[child.insert.source.queryScopeId].span), expected.sourceSql);
       assert.equal(slice(query.scopes[0].span), expected.rootSql);
+      if (expected.branches) {
+        assert.deepEqual(
+          query.scopes
+            .filter((scope) => scope.clause === "setBranch")
+            .map((scope) => slice(scope.span)),
+          expected.branches,
+        );
+      }
     }
   },
 );
@@ -93,6 +108,61 @@ test(
     assert.ok(scopes[3].includes("SELECT (SELECT now()) AS value"));
     assert.ok(scopes[4].includes("(SELECT now()) ORDER BY 1"));
     assert.ok(scopes[4].includes("SELECT now()"));
+  },
+);
+
+test(
+  "compiled async CJS/ESM set branches keep exact operand source slices",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-set-branch-spans.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    const source = Buffer.from(sql);
+    const branches = facts.statements.map((statement) => {
+      assert.equal(statement.query.complete, true);
+      return statement.query.scopes
+        .filter((scope) => scope.clause === "setBranch")
+        .map((scope) => source.subarray(scope.span.start.offset, scope.span.end.offset).toString());
+    });
+    assert.equal(branches.length, 17);
+    assert.deepEqual(branches[0], ["SELECT 'é'", "SELECT now()"]);
+    assert.deepEqual(branches[1], ["(SELECT now())", "SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[2], ["SELECT now()", "(SELECT now())", "SELECT now()"]);
+    assert.deepEqual(branches[3], ["SELECT 1", "SELECT 2 AS order"]);
+    assert.deepEqual(branches[4], ["SELECT 1", "SELECT t.limit FROM metrics AS t"]);
+    assert.deepEqual(branches[5], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[6], [
+      "SELECT now() UNION ALL SELECT now()",
+      "SELECT now()",
+      "SELECT now()",
+      "SELECT now()",
+    ]);
+    assert.deepEqual(branches[7], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[8], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[9], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[10], ["SELECT 1", "SELECT t.fetch FROM metrics AS t"]);
+    assert.ok(branches[11].includes("((SELECT now()))"));
+    assert.ok(branches[12].includes("((SELECT now()))"));
+    assert.deepEqual(branches[13], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[14], ["SELECT now()", "SELECT now()"]);
+    assert.deepEqual(branches[15], ["VALUES (1)", "VALUES (2)"]);
+    assert.deepEqual(branches[16], ["SELECT now()", "SELECT now()"]);
+
+    const chainSql = fixture("query-set-branch-chain.sql");
+    const chain = await cjs.parsePostgresSql({ sql: chainSql });
+    assert.deepEqual(chain.diagnostics, []);
+    const chainSource = Buffer.from(chainSql);
+    const chainBranches = chain.statements[0].query.scopes
+      .filter((scope) => scope.clause === "setBranch")
+      .map((scope) =>
+        chainSource.subarray(scope.span.start.offset, scope.span.end.offset).toString(),
+      );
+    assert.equal(chainBranches.length, 46);
+    assert.equal(chainBranches.filter((slice) => slice === "SELECT now()").length, 24);
   },
 );
 

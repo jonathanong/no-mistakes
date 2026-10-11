@@ -29,7 +29,7 @@ fn outputs_file(scenario: &str, name: &str) -> Vec<(String, Value)> {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -65,12 +65,12 @@ fn outputs_file(scenario: &str, name: &str) -> Vec<(String, Value)> {
     embedded
         .calls
         .iter()
-        .zip(&embedded.call_starts)
+        .zip(&embedded.call_spans)
         .filter_map(|(call, start)| {
             let sql = format!(
                 "{} {}",
                 call.sql_text.as_deref().unwrap_or(""),
-                source[*start as usize..].lines().next().unwrap()
+                source[start.0 as usize..].lines().next().unwrap()
             );
             let values = evaluator.events.get(&(path.clone(), *start))?;
             Some(

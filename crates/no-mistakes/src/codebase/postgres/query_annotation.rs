@@ -20,7 +20,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub(super) raw_tag_reassigned: bool,
     pub(super) mapped_arguments: crate::fx::FxHashSet<u32>,
-    pub calls: BTreeMap<u32, Option<String>>,
+    pub calls: BTreeMap<(u32, u32), Option<String>>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -43,6 +43,7 @@ pub(super) enum Expr {
         callee: Box<Expr>,
         args: Vec<Expr>,
         start: u32,
+        end: u32,
     },
     Function(std::sync::Arc<Function>),
     // Child references/effects do not describe the expression's runtime result.
@@ -93,7 +94,7 @@ pub(super) enum Step {
     Effect(Expr),
     Return(Expr),
     Unsupported,
-    PotentialCalls(Vec<u32>),
+    PotentialCalls(Vec<(u32, u32)>),
 }
 
 pub(crate) fn collect(

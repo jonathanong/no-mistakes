@@ -31,5 +31,6 @@ pub(super) fn calls(value: &CallExpression<'_>, source: &str) -> Expr {
         callee: Box::new(expression(&value.callee, source)),
         args,
         start: value.span.start,
+        end: value.span.end,
     }
 }

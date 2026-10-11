@@ -1,0 +1,13 @@
+import { test } from 'vitest';
+const body = context => { context.onTestFinished(() => {}, 60000); };
+const bound = body.bind(undefined);
+test('receiver only', bound);
+const partial = body.bind(undefined, {});
+test('partial context unresolved', partial);
+test('spread binding unresolved', body.bind(...opaqueBinding));
+const row = (data, context) => { context.onTestFailed(() => {}, 0); };
+test.for([1])('bound row', row.bind(undefined));
+const legal = context => { context.onTestFinished(() => {}, 1); context.onTestFailed(() => {}, 30000); };
+test('bounded', legal.bind(undefined));
+const normal = context => { context.onTestFinished(() => {}, 60000); };
+ordinary(normal.bind(undefined));

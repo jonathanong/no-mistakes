@@ -1,0 +1,12 @@
+import { test, suite } from 'vitest';
+const extended = test.extend({ payload: {timeout:60000} });
+extended.override({payload:1})('override registration', {timeout:30001}, () => {});
+extended.scoped({payload:1})('scoped registration', {timeout:0}, () => {});
+suite.shuffle('shuffle suite', {timeout:-1}, () => {});
+suite.each([1])('each suite', {timeout:30001}, () => {});
+suite.for([1])('for suite', {timeout:0}, () => {});
+test.for([1])('real context', (value, {onTestFinished: finish}) => { finish(() => {}, 30001); });
+test.each([1])('table value is not context', (value) => { value.onTestFinished(() => {}, 60000); });
+const key = 'time' + 'out';
+test('computed timeout key', {[key]:30001}, () => {});
+test[method]('dynamic framework API', () => {});

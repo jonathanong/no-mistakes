@@ -1,0 +1,20 @@
+import { test, beforeAll } from 'vitest';
+const body = ({onTestFinished: finish}) => { finish(() => {}, 60000); };
+const alias = body;
+test('named alias', alias);
+function declared(context) { context.onTestFailed(() => {}, 0); }
+test('declared', declared);
+const row = (data, context) => { context.onTestFinished(() => {}, 60000); };
+test.for([1])('row context', row);
+const hook = beforeAll;
+hook.call(undefined, () => {}, 60000);
+hook.apply(undefined, [() => {}, 0]);
+hook.call(undefined, () => {}, 1); hook.apply(undefined, [() => {}, 30000]);
+hook.apply(undefined, opaqueArguments);
+hook.call(undefined, ...opaqueArguments);
+const legal = context => { context.onTestFinished(() => {}, 1); context.onTestFailed(() => {}, 30000); };
+test('bounded', legal);
+const normal = context => { context.onTestFinished(() => {}, 60000); };
+ordinary(normal); ordinary.call(undefined, () => {}, 60000);
+const eachData = context => { context.onTestFinished(() => {}, 60000); };
+test.each([{}])('each data is not TestContext', eachData);

@@ -96,6 +96,13 @@ pub(super) fn record_declarator(
     let line =
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
     let (sql, kind) = classify_init(init, is_const, visitor);
+    // The helper returns its input builder. A stored result still aliases the
+    // caller's binding, which may be appended later before execution.
+    let kind = if super::compose::contains_parameter_helper(init, visitor) {
+        EmbeddedSqlKind::Dynamic
+    } else {
+        kind
+    };
     let sql_source_positions = super::super::super::source_positions::for_expression(
         init,
         visitor.source,

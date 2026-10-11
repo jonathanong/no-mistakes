@@ -1,0 +1,15 @@
+rules:
+  - name: annotated statements
+    rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@app/db'
+      include: ['src/**/*.{ts,mts}']
+      executorNames: [write]
+  - name: no offset
+    rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@app/db'
+      include: ['src/**/*.{ts,mts}']
+      executorNames: [write]

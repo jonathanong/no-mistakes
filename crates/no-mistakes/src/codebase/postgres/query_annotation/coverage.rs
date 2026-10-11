@@ -6,14 +6,15 @@ use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 
 pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Vec<Expr> {
-    fn expr(value: &Expr, covered: &mut FxHashSet<u32>) {
+    fn expr(value: &Expr, covered: &mut FxHashSet<(u32, u32)>) {
         match value {
             Expr::Call {
                 callee,
                 args,
                 start,
+                end,
             } => {
-                covered.insert(*start);
+                covered.insert((*start, *end));
                 expr(callee, covered);
                 for arg in args {
                     expr(arg, covered);
@@ -59,7 +60,7 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
             _ => {}
         }
     }
-    fn steps(values: &[Step], covered: &mut FxHashSet<u32>) {
+    fn steps(values: &[Step], covered: &mut FxHashSet<(u32, u32)>) {
         for value in values {
             match value {
                 Step::Bind(_, value)

@@ -124,7 +124,7 @@ fn files_without_relative_candidates_are_left_untouched() {
                     path: path.clone(),
                     executor_bindings: Vec::new(),
                     calls: vec![call],
-                    call_starts: vec![0],
+                    call_spans: vec![(0, 0)],
                     fragments: Vec::new(),
                     matched_factory_names: Vec::new(),
                     matched_type_names: Vec::new(),

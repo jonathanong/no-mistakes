@@ -2,7 +2,7 @@ use super::super::PostgresSqlStatementKind;
 use super::{facts, fixture};
 
 #[test]
-fn nested_conditional_locks_retain_unsupported_occurrences_without_hiding_constraints() {
+fn nested_conditional_locks_are_classified_without_hiding_constraints() {
     for name in [
         "nested-conditional-locks.sql",
         "conditional-adjacent-locks.sql",
@@ -19,12 +19,8 @@ fn nested_conditional_locks_retain_unsupported_occurrences_without_hiding_constr
         let PostgresSqlStatementKind::DoBlock { block } = &statement.facts else {
             panic!("expected a DO fact")
         };
-        assert!(!block.complete);
-        assert_eq!(block.diagnostics.len(), 2);
-        assert!(block.diagnostics[0]
-            .message
-            .contains("Unsupported nested procedural statement"));
-        assert!(block.diagnostics[0].span.is_some());
+        assert!(block.complete);
+        assert!(block.diagnostics.is_empty());
         assert_eq!(block.statements.len(), 1);
     }
 }
@@ -62,6 +58,6 @@ fn conditional_boundary_diagnostics_preserve_neighboring_index_facts() {
     let PostgresSqlStatementKind::DoBlock { block } = &result.statements[1].facts else {
         panic!("expected the middle DO fact")
     };
-    assert!(!block.complete);
-    assert_eq!(block.diagnostics.len(), 2);
+    assert!(block.complete);
+    assert!(block.diagnostics.is_empty());
 }

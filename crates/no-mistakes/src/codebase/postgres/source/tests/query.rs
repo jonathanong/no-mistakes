@@ -175,3 +175,4 @@ mod insert_source_call_spans;
 mod modifying_cte_bounds;
 mod modifying_ctes;
 mod read_only_cte_spans;
+mod set_branch_spans;
