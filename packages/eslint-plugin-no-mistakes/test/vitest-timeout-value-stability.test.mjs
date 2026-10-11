@@ -67,6 +67,32 @@ describe("vitest-timeout-cap value stability", () => {
     assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
     assert.deepEqual(findings("config-return-escapes"), []);
   });
+  it("preserves copied values through wrapper paths and independent cached proofs", () => {
+    assert.deepEqual(
+      findings("wrapped-shallow-copy-writes", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [55, "timeout"],
+        [64, "unknown"],
+        [64, "unknown"],
+        [64, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("wrapped-shallow-copy-writes").map(({ line, messageId }) => [line, messageId]),
+      [[55, "timeout"]],
+    );
+  });
+  it("keeps wrapped shared children and uncertain indices, iterables and aliases unknown", () => {
+    const actual = findings("wrapped-shallow-copy-mutations", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [3, 7, 12, 19, 23, 27, 32, 39, 44, 46, 54, 67],
+    );
+    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.deepEqual(findings("wrapped-shallow-copy-mutations"), []);
+  });
   it("keeps shallow copy writes independent while checking each copy's own stability", () => {
     assert.deepEqual(
       findings("shallow-copy-writes", { unknownValues: "finding" }).map(({ line, messageId }) => [
