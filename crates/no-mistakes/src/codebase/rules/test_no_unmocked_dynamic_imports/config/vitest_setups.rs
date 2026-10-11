@@ -31,14 +31,7 @@ pub(super) fn from_facts(
         return Ok(Vec::new());
     }
     let rules = config.rule_applications(super::super::RULE_ID);
-    let all = rules.is_empty()
-        || rules.iter().any(|rule| {
-            rule.applies_to_repository()
-                || rule
-                    .projects
-                    .iter()
-                    .any(|name| config.projects.contains_key(name))
-        });
+    let all = super::project_setups::all_runner_projects(config);
     let selected = rules
         .iter()
         .flat_map(|rule| &rule.tests.vitest)

@@ -1,0 +1,11 @@
+projects:
+  app:
+    root: shared
+tests:
+  vitest:
+    configs: vitest.inline.config.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [app]
+    tests:
+      vitest: [a]

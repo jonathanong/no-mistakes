@@ -19,6 +19,10 @@ test(
       "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
     );
     for (const config of [
+      ".no-mistakes-a.yml",
+      ".no-mistakes-a-app.yml",
+      ".no-mistakes-a-inline-app.yml",
+      ".no-mistakes-a-b-app.yml",
       ".no-mistakes.yml",
       ".no-mistakes-b.yml",
       ".no-mistakes-inline.yml",
@@ -32,9 +36,15 @@ test(
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
       assert.deepEqual(report.warnings, []);
-      const expected = [["shared/example.test.mts", 3, "shared/real.mts"]];
+      const onlyA = [
+        ".no-mistakes-a.yml",
+        ".no-mistakes-a-app.yml",
+        ".no-mistakes-a-inline-app.yml",
+      ].includes(config);
+      const expected = onlyA ? [] : [["shared/example.test.mts", 3, "shared/real.mts"]];
       // Project A's setup mock and exclusion cannot hide project B's execution.
       if (
+        !onlyA &&
         ![
           ".no-mistakes-rule-exclude.yml",
           ".no-mistakes-include.yml",
