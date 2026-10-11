@@ -29,7 +29,10 @@ test(
       const invalid = await cjs.check(options);
       assert.deepEqual(await esm.check(options), invalid);
       assert.deepEqual(invalid.rules, []);
-      assert.ok(invalid.warnings.some((warning) => warning.includes(expected)), invalid.warnings);
+      assert.ok(
+        invalid.warnings.some((warning) => warning.includes(expected)),
+        invalid.warnings,
+      );
     }
   },
 );
