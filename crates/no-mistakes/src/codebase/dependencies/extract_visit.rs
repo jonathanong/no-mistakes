@@ -1,8 +1,7 @@
 impl<'a> Visit<'a> for ImportCollector {
-    fn visit_statement(&mut self, statement: &Statement<'a>) {
-        record_statement_type_binding(self, statement);
-        walk::walk_statement(self, statement);
-    }
+    fn visit_expression(&mut self, expression: &Expression<'a>) { visit_expression_with_annex_b_initializer(self, expression); }
+
+    fn visit_statement(&mut self, statement: &Statement<'a>) { visit_statement_with_type_binding(self, statement); }
 
     fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) { visit_if_with_execution(self, statement); }
     fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) { visit_logical_with_execution(self, expression); }

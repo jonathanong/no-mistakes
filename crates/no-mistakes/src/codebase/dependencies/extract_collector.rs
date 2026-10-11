@@ -16,6 +16,10 @@ struct ImportCollector {
     imports: Vec<ExtractedImport>,
     eager_require_specifiers: std::collections::BTreeSet<String>,
     conditional_execution: bool,
+    sloppy_script: bool,
+    /// The Annex B for-in initializer runs before the first iteration. Its
+    /// binding target still runs only when the right-hand side has a key.
+    annex_b_for_in_initializer: Option<(oxc_span::Span, bool)>,
     function_calls: Vec<FunctionCall>,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,

@@ -1,3 +1,25 @@
+fn visit_statement_with_type_binding<'a>(collector: &mut ImportCollector, statement: &Statement<'a>) {
+    record_statement_type_binding(collector, statement);
+    walk::walk_statement(collector, statement);
+}
+
+fn visit_expression_with_annex_b_initializer<'a>(
+    collector: &mut ImportCollector,
+    expression: &Expression<'a>,
+) {
+    if let Some((_, outer_conditional)) = collector.annex_b_for_in_initializer.filter(|(span, _)| {
+        !collector.suppress_imports && *span == expression.span()
+    }) {
+        let initializer = collector.annex_b_for_in_initializer.take();
+        let previous = std::mem::replace(&mut collector.conditional_execution, outer_conditional);
+        walk::walk_expression(collector, expression);
+        collector.conditional_execution = previous;
+        collector.annex_b_for_in_initializer = initializer;
+    } else {
+        walk::walk_expression(collector, expression);
+    }
+}
+
 fn visit_block_statement_with_scope<'a>(
     collector: &mut ImportCollector,
     block: &BlockStatement<'a>,
@@ -67,8 +89,24 @@ fn visit_for_in_statement_with_scope<'a>(
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-in");
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(collector, &statement.left);
-    // The binding target (including destructuring defaults) runs per iteration.
+    // In sloppy scripts Annex B evaluates `var key = init` before enumerating
+    // keys. Keep the target and any destructuring defaults per iteration.
+    let initializer = if collector.sloppy_script {
+        match &statement.left {
+            ForStatementLeft::VariableDeclaration(declaration)
+                if declaration.kind == VariableDeclarationKind::Var => declaration
+                    .declarations
+                    .first()
+                    .and_then(|declarator| declarator.init.as_ref())
+                    .map(|init| (init.span(), collector.conditional_execution)),
+            _ => None,
+        }
+    } else {
+        None
+    };
+    let previous_initializer = std::mem::replace(&mut collector.annex_b_for_in_initializer, initializer);
     with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
+    collector.annex_b_for_in_initializer = previous_initializer;
     collector.visit_expression(&statement.right);
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);

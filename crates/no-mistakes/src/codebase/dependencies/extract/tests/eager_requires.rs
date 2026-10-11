@@ -30,6 +30,30 @@ fn do_while_tests_are_eager_only_when_the_body_reaches_them() {
 }
 
 #[test]
+fn annex_b_for_in_initializer_is_eager_without_promoting_nested_guards() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-executions/conditional-requires/tests/annex-b.test.cjs"));
+    for source_type in [
+        SourceType::cjs(),
+        SourceType::script(),
+        SourceType::unambiguous(),
+    ] {
+        let allocator = Allocator::default();
+        let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+        assert_eq!(facts.eager_require_specifiers, ["../helpers/live.cjs"]);
+        assert_eq!(
+            facts
+                .imports
+                .iter()
+                .filter(|import| import.kind == ImportKind::Require)
+                .count(),
+            3,
+        );
+    }
+}
+
+#[test]
 fn require_execution_facts_keep_edges_but_exclude_guarded_helpers() {
     let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-executions/conditional-requires/execution-facts.mts"));
     let allocator = Allocator::default();

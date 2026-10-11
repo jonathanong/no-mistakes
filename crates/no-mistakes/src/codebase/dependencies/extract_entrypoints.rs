@@ -28,6 +28,9 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
         collect_per_item_calls,
         line_starts: import_line_starts(source),
         collect_resource_roots,
+        sloppy_script: program.source_type.is_javascript()
+            && !program.source_type.is_strict()
+            && !program.has_use_strict_directive(),
         ..ImportCollector::default()
     };
     // Establish the file lexical environment before visiting expressions so a

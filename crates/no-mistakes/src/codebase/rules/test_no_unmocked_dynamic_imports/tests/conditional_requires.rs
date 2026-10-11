@@ -26,6 +26,7 @@ fn skipped_commonjs_helpers_do_not_cover_dynamic_imports() {
         "helpers/live.cjs",
         "tests/conditionals.test.cjs",
         "tests/do-while-eager.test.cjs",
+        "tests/annex-b.test.cjs",
     ] {
         assert_eq!(counts.get(&root.join(file)), Some(&1), "{file}: {counts:?}");
     }
