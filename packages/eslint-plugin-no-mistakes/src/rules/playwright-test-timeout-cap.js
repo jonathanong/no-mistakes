@@ -41,7 +41,7 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
     if (!suppressed(node)) context.report({ node, messageId, data: { name, max: cap } });
   }
   function check(value, node, name, cap = max) {
-    if (value.kind !== "number") {
+    if (value.kind !== "number" || value.runtimeFunction) {
       if (option.unknownValues === "finding") report(node, "unknown", name, cap);
     } else if (!Number.isFinite(value.value) || value.value <= 0)
       report(node, "invalid", name, cap);
@@ -157,7 +157,7 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
         if (api.key === "setTimeout") {
           const value = evaluate(node.arguments[0]);
           check(value, node.arguments[0] ?? node, "runtime timeout");
-          if (ordered) state.timeout = value;
+          if (ordered && !value.runtimeFunction) state.timeout = value;
           else state.timeout = { kind: "unknown" };
         } else {
           const condition = slowCondition(node);

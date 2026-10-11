@@ -72,7 +72,7 @@ module.exports = rule(
     function check(entry, name, max, origin) {
       const node = origin || entry.origin;
       if (suppressed(node)) return;
-      if (entry.value.kind === "number") {
+      if (entry.value.kind === "number" && !entry.value.runtimeFunction) {
         if (!(entry.value.value > 0))
           context.report({ node, messageId: "invalid", data: { name } });
         else if (entry.value.value > max)

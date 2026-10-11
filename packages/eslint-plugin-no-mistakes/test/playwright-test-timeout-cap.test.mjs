@@ -16,6 +16,16 @@ const findings = (name, option) =>
   allFindings(name, option).filter((x) => x.messageId !== "effectiveSlot");
 const positions = (name) => findings(name).map(({ line, messageId }) => [line, messageId]);
 describe(rule, () => {
+  it("rejects callable deadlines and retains unknown state through slow multiplication", () => {
+    assert.deepEqual(positions("callable-timeout-sinks"), [
+      ...[3, 4, 5, 7, 8].map((line) => [line, "unknown"]),
+      [11, "timeout"],
+    ]);
+    assert.deepEqual(
+      findings("callable-timeout-sinks", {}).map(({ line, messageId }) => [line, messageId]),
+      [[11, "timeout"]],
+    );
+  });
   it("keeps opaque project/fixture carriers visible and false conditions inert", () => {
     assert.deepEqual(positions("carrier-safety"), [
       [2, "unknown"],

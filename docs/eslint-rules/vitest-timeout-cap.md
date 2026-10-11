@@ -240,4 +240,6 @@ consumers still require the same confinement proof.
 Function-valued properties and callable aliases remain object references even when
 the configuration evaluator can resolve their return values. Passing such a member
 to an unproved consumer retains unknown diagnostics; supported `defineConfig`
-callbacks still use their returned configuration.
+callbacks still use their returned configuration. Direct timeout properties also
+reject callable values: `{ timeout: () => 1 }` is unknown rather than a numeric
+one-millisecond budget, even without an earlier opaque consumer.
