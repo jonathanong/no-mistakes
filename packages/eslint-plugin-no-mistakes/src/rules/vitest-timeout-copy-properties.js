@@ -59,9 +59,12 @@ function createOwnDataProperty(context) {
     if (value !== node) return property(value, key, seen);
     if (node.type === "ArrayExpression") {
       if (key === "length") return { data: true, enumerable: false, value: null };
-      const entries = arrayValues(node, new Set());
-      const element = entries?.find((entry, index) => String(index) === key && entry);
-      return element ? { data: true, enumerable: true, value: element } : null;
+      const index = Number(key);
+      if (!Number.isInteger(index) || index < 0 || String(index) !== key) return null;
+      const element = arrayValueAt(node, index, new Set());
+      return element?.found && element.value
+        ? { data: true, enumerable: true, value: element.value }
+        : null;
     }
     if (node.type !== "ObjectExpression") return null;
     let uncertainValue = false;
@@ -104,22 +107,26 @@ function createOwnDataProperty(context) {
     }
     return null;
   }
-  function arrayValues(node, seen) {
+  function arrayValueAt(node, index, seen) {
     if (!node || seen.has(node)) return null;
     seen = new Set(seen).add(node);
     const value = initializer(node, seen);
     if (!value) return null;
-    if (value !== node) return arrayValues(value, seen);
+    if (value !== node) return arrayValueAt(value, index, seen);
     if (node.type !== "ArrayExpression") return null;
-    const entries = [];
+    let offset = 0;
     for (const element of node.elements) {
       if (element?.type === "SpreadElement") {
-        const spread = arrayValues(element.argument, seen);
+        const spread = arrayValueAt(element.argument, index - offset, seen);
         if (!spread) return null;
-        entries.push(...spread);
-      } else entries.push(element);
+        if (spread.found) return spread;
+        offset += spread.length;
+      } else {
+        if (index === offset) return { found: true, value: element };
+        offset++;
+      }
     }
-    return entries;
+    return { found: false, length: offset };
   }
   return (member) => {
     member = unwrapExpression(member);

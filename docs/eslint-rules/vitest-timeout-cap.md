@@ -113,7 +113,10 @@ Erased TypeScript assertions, `satisfies`, and non-null assertions around the
 copy or its enclosing wrapper preserve that same property path. Deletion aliases
 through those wrappers still invalidate descriptor proofs before assignments
 that might expose an inherited setter.
-Unknown computed wrapper keys, array offsets after opaque spreads, and custom
+Known array indices before an opaque trailing spread retain their own-data
+descriptor proof, including through known offsets and array aliases. Unknown
+computed wrapper keys, an opaque spread before the requested index, an incomplete
+spread whose length would shift later elements, sparse holes, and custom
 iterables retain conservative handling.
 Statically sized array spreads, including sparse arrays and immutable array
 aliases, preserve known wrapper offsets; custom or mutated iterables remain
