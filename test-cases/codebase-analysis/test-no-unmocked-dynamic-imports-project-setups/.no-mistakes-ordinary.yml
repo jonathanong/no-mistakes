@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    projects:
+      unit:
+        include: [ordinary/*.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [unit]

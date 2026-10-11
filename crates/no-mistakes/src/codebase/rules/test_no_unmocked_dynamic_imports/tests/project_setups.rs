@@ -29,6 +29,10 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
                 "overlap/shared.test.mts",
                 "overlap/helper-cut.test.mts",
                 "ordered/order.test.mts",
+                "nested/nested.test.mts",
+                "nested/sibling.test.mts",
+                "ordinary/cut.test.mts",
+                "ordinary/sibling.test.mts",
             ],
         ),
         (
@@ -38,6 +42,10 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
                 "web/genuine.test.mts",
                 "overlap/helper-cut.test.mts",
                 "ordered/order.test.mts",
+                "nested/nested.test.mts",
+                "nested/sibling.test.mts",
+                "ordinary/cut.test.mts",
+                "ordinary/sibling.test.mts",
             ],
         ),
         (
@@ -55,6 +63,19 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         (".no-mistakes-app-project.yml", vec!["web/genuine.test.mts"]),
         (".no-mistakes-ordered.yml", vec![]),
         (".no-mistakes-reversed.yml", vec!["ordered/order.test.mts"]),
+        (
+            ".no-mistakes-nested-cut.yml",
+            vec!["nested/nested.test.mts"],
+        ),
+        (".no-mistakes-nested-live.yml", vec![]),
+        (
+            ".no-mistakes-nested-sibling.yml",
+            vec!["nested/sibling.test.mts"],
+        ),
+        (
+            ".no-mistakes-ordinary.yml",
+            vec!["ordinary/cut.test.mts", "ordinary/sibling.test.mts"],
+        ),
     ] {
         let config =
             crate::config::v2::load_v2_config(&root, Some(&root.join(config_file))).unwrap();
@@ -156,4 +177,35 @@ fn imported_setup_helper_fact_failures_are_reported() {
             assert!(error.to_string().contains("web-mocks.mts"), "{error}");
         }
     }
+}
+
+#[test]
+fn mocked_nested_setup_helper_does_not_require_its_facts() {
+    let root = project_fixture();
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-nested-cut.yml")))
+            .unwrap();
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let mut facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+    facts.ts.insert(
+        root.join("test-helpers/nested-second.mts"),
+        crate::codebase::check_facts::CheckFileFacts {
+            parse_error: Some("fixture parse error".to_string()),
+            ..Default::default()
+        }
+        .into(),
+    );
+    assert_scoped_findings(
+        &check_with_facts(&root, &config, None, &facts).unwrap(),
+        &["nested/nested.test.mts"],
+    );
 }

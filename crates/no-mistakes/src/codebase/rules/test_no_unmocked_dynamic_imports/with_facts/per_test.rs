@@ -86,7 +86,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         resolver,
         shared,
         excluded: &mocks,
-    }));
+    })?);
     let mut direct_findings = Vec::new();
     {
         let mut check_context = DynamicCheckContext {

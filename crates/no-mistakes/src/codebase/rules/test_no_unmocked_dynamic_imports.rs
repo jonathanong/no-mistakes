@@ -4,6 +4,7 @@ pub(crate) mod config;
 mod manual_mocks;
 mod reachable;
 mod runtime;
+mod setup_helper_graph;
 mod standalone;
 mod with_facts;
 

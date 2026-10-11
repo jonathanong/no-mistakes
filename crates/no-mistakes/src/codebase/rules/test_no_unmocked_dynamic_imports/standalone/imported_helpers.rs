@@ -1,5 +1,5 @@
 use super::{reachable, resolve_mock_specifiers};
-use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
+use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::ts_resolver::ImportResolution;
 use anyhow::Result;
 use dashmap::DashMap;
@@ -15,27 +15,32 @@ pub(super) fn collect(
     file_cache: &DashMap<PathBuf, Arc<reachable::CachedFileFacts>>,
     excluded: &HashSet<PathBuf>,
 ) -> Result<HashSet<PathBuf>> {
-    let allowed = [EdgeKind::Import, EdgeKind::WorkspaceImport].into();
-    let mut mocks = HashSet::new();
-    for entry in graph.deps_of_in_file_universe_excluding_files(
-        &[NodeId::file(test_file)],
-        Some(&allowed),
-        visible_files,
-        excluded,
-    ) {
-        let Some(file) = entry.node.as_file() else {
-            continue;
-        };
-        if excluded.contains(file) || !crate::codebase::dependencies::extract::is_indexable(file) {
-            continue;
-        }
+    super::super::setup_helper_graph::collect(graph, test_file, visible_files, excluded, |file| {
         let facts = reachable::get_or_cache_file(&file.to_path_buf(), Some(file_cache))?;
-        mocks.extend(resolve_mock_specifiers(
+        Ok(resolve_mock_specifiers(
             &facts.mock_specifiers,
             file,
             resolver,
             None,
-        ));
-    }
-    Ok(mocks)
+        ))
+    })
+}
+
+pub(super) fn collect_setup(
+    graph: &DepGraph,
+    setup: &Path,
+    visible_files: &crate::fx::PathSet,
+    resolver: &dyn ImportResolution,
+    file_cache: &DashMap<PathBuf, Arc<reachable::CachedFileFacts>>,
+    excluded: &HashSet<PathBuf>,
+) -> Result<HashSet<PathBuf>> {
+    super::super::setup_helper_graph::collect(graph, setup, visible_files, excluded, |file| {
+        let facts = reachable::get_or_cache_file(&file.to_path_buf(), Some(file_cache))?;
+        Ok(resolve_mock_specifiers(
+            &facts.mock_specifiers,
+            file,
+            resolver,
+            None,
+        ))
+    })
 }
