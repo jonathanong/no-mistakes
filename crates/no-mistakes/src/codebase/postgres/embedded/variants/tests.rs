@@ -18,6 +18,8 @@ mod escape_effects;
 mod exception_flow;
 #[path = "tests/executor_argument_effects.rs"]
 mod executor_argument_effects;
+#[path = "tests/final_interpolation.rs"]
+mod final_interpolation;
 #[path = "tests/guard_alias.rs"]
 mod guard_alias;
 #[path = "tests/helper_effects.rs"]

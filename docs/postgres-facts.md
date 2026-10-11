@@ -257,6 +257,13 @@ rules do not apply to copied strings changed with `+=`.
 Conditional tests, logical left operands, and earlier template interpolations
 that mutate an existing SQL binding also stay `Dynamic` when recovery would
 otherwise consume its earlier snapshot later in the same expression.
+Trusted template tags run after every interpolation has been evaluated. A final
+interpolation that mutates a tracked builder also makes the call `Dynamic` when
+an earlier interpolation captured a mutable fragment reference. Direct appends
+and known or opaque helper effects use this boundary. Primitive bind values are
+already copied, so reassigning their bindings in the final expression does not
+invalidate them. Ordinary final binds, a single mutating fragment interpolation,
+and appends to fresh nested fragments retain their existing recovery.
 Executor arguments follow evaluation order. Proven later mutations of the same
 directly passed builder use its final state, including conditional or logical
 appends; primitive SQL arguments keep their earlier value copies. Uncertain
