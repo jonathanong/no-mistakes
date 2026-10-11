@@ -19,7 +19,9 @@ fn visit_switch_statement_with_scope<'a>(
     for case in &switch.cases {
         predeclare_function_declarations(collector, &case.consequent);
     }
-    collector.visit_switch_cases(&switch.cases);
+    with_conditional_execution(collector, true, |collector| {
+        collector.visit_switch_cases(&switch.cases);
+    });
     collector.pop_lexical_scope(pushed);
 }
 
@@ -36,9 +38,10 @@ fn visit_for_statement_with_scope<'a>(
         collector.visit_expression(test);
     }
     if let Some(update) = &statement.update {
-        collector.visit_expression(update);
+        with_conditional_execution(collector, true, |collector| collector.visit_expression(update));
     }
-    collector.visit_statement(&statement.body);
+    let conditional = statement.test.as_ref().is_some_and(|test| literal_truthiness(test) != Some(true));
+    with_conditional_execution(collector, conditional, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
 }
 
@@ -51,7 +54,7 @@ fn visit_for_in_statement_with_scope<'a>(
     invalidate_for_statement_assignment_target(collector, &statement.left);
     collector.visit_for_statement_left(&statement.left);
     collector.visit_expression(&statement.right);
-    collector.visit_statement(&statement.body);
+    with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
 }
 
@@ -64,7 +67,7 @@ fn visit_for_of_statement_with_scope<'a>(
     invalidate_for_statement_assignment_target(collector, &statement.left);
     collector.visit_for_statement_left(&statement.left);
     collector.visit_expression(&statement.right);
-    collector.visit_statement(&statement.body);
+    with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
 }
 
@@ -85,13 +88,16 @@ fn visit_catch_clause_with_scope<'a>(collector: &mut ImportCollector, clause: &C
     if let Some(param) = &clause.param {
         collector.add_binding_names(&param.pattern);
     }
-    walk::walk_catch_clause(collector, clause);
+    with_conditional_execution(collector, true, |collector| walk::walk_catch_clause(collector, clause));
     collector.pop_lexical_scope(pushed);
 }
 
 fn visit_while_statement_per_item<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::WhileStatement<'a>) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "while");
-    walk::walk_while_statement(collector, statement);
+    collector.visit_expression(&statement.test);
+    with_conditional_execution(collector, literal_truthiness(&statement.test) != Some(true), |collector| {
+        collector.visit_statement(&statement.body);
+    });
 }
 fn visit_do_while_statement_per_item<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "do");

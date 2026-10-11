@@ -567,6 +567,8 @@ mod class_and_overload_regressions;
 mod coverage_shapes;
 #[path = "tests/dynamic_callee_shapes.rs"]
 mod dynamic_callee_shapes;
+#[path = "tests/eager_requires.rs"]
+mod eager_requires;
 #[cfg(test)]
 #[path = "tests/namespace_facts.rs"]
 mod namespace_facts;

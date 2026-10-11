@@ -11,17 +11,7 @@ pub(super) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) 
         Ok(facts) => facts,
         // Indexable extensions are expected to have an OXC source type.
         // Reaching this branch means that allowlist and OXC support drifted.
-        Err(error) => {
-            let error = error.to_string();
-            TsFileFacts {
-                // Keep both channels populated: operational_error is the
-                // request-level collection failure, while parse_error is the
-                // legacy diagnostic channel consumed by existing projections.
-                operational_error: Some(error.clone()),
-                parse_error: Some(error),
-                ..TsFileFacts::default()
-            }
-        }
+        Err(error) => failure_facts(error.to_string()),
     }
 }
 
@@ -36,14 +26,10 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
-            let error = format!("failed to read {}: {error}", path.display());
-            return Some(TsFileFacts {
-                // A read failure is both operational and parser-visible so
-                // old graph/report consumers retain their diagnostic details.
-                operational_error: Some(error.clone()),
-                parse_error: Some(error),
-                ..TsFileFacts::default()
-            });
+            return Some(failure_facts(format!(
+                "failed to read {}: {error}",
+                path.display()
+            )));
         }
     };
     // Project-wide collection filters to known TS/JS extensions. Parse those
@@ -91,6 +77,15 @@ pub(super) fn collect_file_facts_with_sources_and_session(
         crate::ast::evict_request_parse_cache_path(path);
     }
     facts
+}
+
+fn failure_facts(error: String) -> TsFileFacts {
+    // Preserve request-level failures and the legacy parser diagnostic channel.
+    TsFileFacts {
+        operational_error: Some(error.clone()),
+        parse_error: Some(error),
+        ..TsFileFacts::default()
+    }
 }
 
 pub(crate) fn collect_file_facts_from_program(
@@ -163,6 +158,7 @@ pub(crate) fn collect_file_facts_from_program(
         fatal_parse_error: false,
         source: stored_source.or_else(|| plan.source.then(|| Arc::<str>::from(source))),
         imports: import_facts.imports,
+        eager_require_specifiers: import_facts.eager_require_specifiers,
         imported_bindings: import_facts.imported_bindings,
         exported_bindings: import_facts.exported_bindings,
         callable_aliases: import_facts.callable_aliases,

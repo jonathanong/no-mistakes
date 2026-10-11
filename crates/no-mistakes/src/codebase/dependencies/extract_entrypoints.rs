@@ -133,6 +133,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     exported_functions.sort();
     ImportFacts {
         imports: collector.imports,
+        eager_require_specifiers: collector.eager_require_specifiers.into_iter().collect(),
         imported_bindings: collector.call_import_bindings,
         exported_bindings: collector.call_export_bindings,
         callable_aliases,
