@@ -47,9 +47,8 @@ const confined = defineProject(makeHigh);
 const confinedAlias = confined;
 defineConfig(confinedAlias);
 
-const merged = { test: { testTimeout: 1 } };
-const makeMerged = () => merged;
-mergeConfig({}, defineConfig(makeMerged));
+// Merge controls use supported object-form operands.
+mergeConfig({}, { test: { testTimeout: 1 } });
 
 const unused = { test: { testTimeout: 1 } };
 const makeUnused = () => unused;
