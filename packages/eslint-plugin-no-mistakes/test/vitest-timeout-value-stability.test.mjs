@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { Linter } from "eslint";
+import tsParser from "@typescript-eslint/parser";
 import { fixture, lint, require } from "./helpers.mjs";
 const findings = (name, options = {}) =>
   lint(
@@ -123,6 +124,50 @@ describe("vitest-timeout-cap value stability", () => {
         rules: { "proof/descriptor": "error" },
       }),
       [],
+    );
+  });
+  it("distinguishes concise __proto__ methods from prototype setters and accessors", () => {
+    const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
+    const linter = new Linter({ configType: "flat" });
+    assert.deepEqual(
+      linter.verify(
+        fixture("vitest-timeout-cap/copy-proto-descriptors.ts"),
+        {
+          files: ["**/*.ts"],
+          languageOptions: { parser: tsParser, ecmaVersion: 2024, sourceType: "module" },
+          plugins: {
+            proof: {
+              rules: {
+                descriptor: {
+                  create(context) {
+                    const ownData = createOwnDataProperty(context);
+                    return {
+                      AssignmentExpression(node) {
+                        if (ownData(node.left) !== node.right.value)
+                          context.report({ node, message: "Unexpected own data descriptor proof" });
+                      },
+                    };
+                  },
+                },
+              },
+            },
+          },
+          rules: { "proof/descriptor": "error" },
+        },
+        { filename: "copy-proto-descriptors.ts" },
+      ),
+      [],
+    );
+  });
+  it("proves concise __proto__ methods through asserted aliases and retains prototype uncertainty", () => {
+    const actual = findings("copy-proto-methods", { unknownValues: "finding" });
+    assert.deepEqual(
+      [
+        ...new Set(
+          actual.filter(({ messageId }) => messageId === "unknown").map(({ line }) => line),
+        ),
+      ],
+      [15],
     );
   });
   it("rejects own, inherited, computed and aliased setters on shallow copies", () => {
