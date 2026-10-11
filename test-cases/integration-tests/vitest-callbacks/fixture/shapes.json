@@ -228,5 +228,35 @@
     "name": "deferred-function-expression",
     "source": "import { defineConfig } from 'vitest/config';\nexport default defineConfig(() => ({test:{include:['tests/*.test.mts']}, plugin:function(){return {...runtimeOptions}}}));",
     "recovered": true
+  },
+  {
+    "name": "aliased-test-spread",
+    "source": "import { defineConfig } from 'vitest/config';\nconst opts={include:['tests/*.test.mts'],...runtimeOptions}; export default defineConfig(()=>({test:opts}));",
+    "recovered": false
+  },
+  {
+    "name": "mutable-test-alias",
+    "source": "import { defineConfig } from 'vitest/config';\nlet opts={include:['tests/*.test.mts']}; opts={}; export default defineConfig(()=>({test:opts}));",
+    "recovered": false
+  },
+  {
+    "name": "const-test-alias",
+    "source": "import { defineConfig } from 'vitest/config';\nconst opts={include:['tests/*.test.mts']}; export default defineConfig(()=>({test:opts}));",
+    "recovered": true
+  },
+  {
+    "name": "cyclic-test-alias",
+    "source": "import { defineConfig } from 'vitest/config';\nconst opts={include:['tests/*.test.mts'],nested:opts}; export default defineConfig(()=>({test:opts}));",
+    "recovered": false
+  },
+  {
+    "name": "written-test-alias",
+    "source": "import { defineConfig } from 'vitest/config';\nconst opts={include:['tests/*.test.mts']}; opts.setupFiles=[]; export default defineConfig(()=>({test:opts}));",
+    "recovered": false
+  },
+  {
+    "name": "global-option-value",
+    "source": "import { defineConfig } from 'vitest/config';\nexport default defineConfig(()=>({test:{include:['tests/*.test.mts'],other:globalThis.runtimeValue}}));",
+    "recovered": true
   }
 ]

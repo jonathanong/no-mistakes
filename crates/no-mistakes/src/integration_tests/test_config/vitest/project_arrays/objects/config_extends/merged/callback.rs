@@ -25,7 +25,7 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn callbac
             return None;
         }
         let object = callback_object(call.arguments[0].as_expression()?)?;
-        return spreads::proven_object(object).then_some(object);
+        return spreads::proven_object(object, &ctx.bindings, &bindings).then_some(object);
     }
     None
 }

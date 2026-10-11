@@ -1,15 +1,30 @@
 use super::{unwrap_ts_wrappers, Expression, ObjectExpression};
-use oxc_ast::ast::{ArrowFunctionExpression, Function, ObjectPropertyKind};
+use oxc_ast::ast::{ArrowFunctionExpression, Function, IdentifierReference, ObjectPropertyKind};
 use oxc_ast_visit::{walk, Visit};
+use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) fn proven_object(object: &ObjectExpression<'_>) -> bool {
-    let mut proof = Proof(true);
+pub(super) fn proven_object<'a>(
+    object: &ObjectExpression<'a>,
+    bindings: &BTreeMap<String, &'a Expression<'a>>,
+    immutable: &BTreeMap<String, &'a Expression<'a>>,
+) -> bool {
+    let mut proof = Proof {
+        safe: true,
+        bindings,
+        immutable,
+        visiting: BTreeSet::new(),
+    };
     proof.visit_object_expression(object);
-    proof.0
+    proof.safe
 }
 
-struct Proof(bool);
-impl<'a> Visit<'a> for Proof {
+struct Proof<'a, 'b> {
+    safe: bool,
+    bindings: &'b BTreeMap<String, &'a Expression<'a>>,
+    immutable: &'b BTreeMap<String, &'a Expression<'a>>,
+    visiting: BTreeSet<String>,
+}
+impl<'a> Visit<'a> for Proof<'a, '_> {
     fn visit_object_expression(&mut self, object: &ObjectExpression<'a>) {
         for property in &object.properties {
             match property {
@@ -19,7 +34,7 @@ impl<'a> Visit<'a> for Proof {
                         unwrap_ts_wrappers(&spread.argument),
                         Expression::ObjectExpression(_)
                     ) {
-                        self.0 = false;
+                        self.safe = false;
                     }
                 }
                 ObjectPropertyKind::ObjectProperty(property) => {
@@ -29,12 +44,28 @@ impl<'a> Visit<'a> for Proof {
                         )
                         .is_none()
                     {
-                        self.0 = false;
+                        self.safe = false;
                     }
                 }
             }
         }
         walk::walk_object_expression(self, object);
+    }
+    fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
+        let name = identifier.name.as_str();
+        if !self.bindings.contains_key(name) {
+            return;
+        }
+        let Some(value) = self.immutable.get(name).copied() else {
+            self.safe = false;
+            return;
+        };
+        if !self.visiting.insert(name.to_string()) {
+            self.safe = false;
+            return;
+        }
+        self.visit_expression(value);
+        self.visiting.remove(name);
     }
     // Deferred function bodies cannot overwrite the returned object's fields.
     fn visit_function(&mut self, _function: &Function<'a>, _flags: oxc_syntax::scope::ScopeFlags) {}

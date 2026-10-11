@@ -433,6 +433,8 @@ test(
       ["named", ["tests/named-genuine.test.mts"]],
       ["spread", ["tests/spread.test.mts"]],
       ["spread-root", ["tests/spread-root.test.mts"]],
+      ["aliased-spread", ["tests/aliased-spread.test.mts"]],
+      ["mutable-test", ["tests/mutable-test.test.mts"]],
       ["known", []],
     ]) {
       const options = { root: fixture, config: join(fixture, `.no-mistakes-${name}.yml`) };

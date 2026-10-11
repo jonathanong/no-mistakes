@@ -25,6 +25,12 @@ fn callback_aliases_and_spreads_preserve_actual_setup_coverage() {
         ),
         ("spread", Some("tests/spread.test.mts"), None),
         ("spread-root", Some("tests/spread-root.test.mts"), None),
+        (
+            "aliased-spread",
+            Some("tests/aliased-spread.test.mts"),
+            None,
+        ),
+        ("mutable-test", Some("tests/mutable-test.test.mts"), None),
         ("known", None, Some("known.setup.mts")),
     ] {
         let path = root.join(format!(".no-mistakes-{name}.yml"));
