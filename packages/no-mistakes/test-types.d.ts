@@ -1,5 +1,14 @@
 import type { SymbolEntrypoint } from "./traversal-types";
 
+/** A named project under `.no-mistakes.yml` `tests.vitest.projects`. */
+export interface VitestProjectPolicy {
+  include?: string[];
+  exclude?: string[];
+  /** Repository-root-relative setup modules for this project's matched tests. */
+  setup_files?: string[];
+  integration_suites?: Record<string, string[]>;
+}
+
 /** Runner accepted by `testsPlan`, `testsTargets`, and `TestExecutionTarget`. */
 export type TestPlanFramework =
   | "vitest"

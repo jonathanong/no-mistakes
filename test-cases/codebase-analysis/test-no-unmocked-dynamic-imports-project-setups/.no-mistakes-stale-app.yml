@@ -1,0 +1,15 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/covered.test.mts]
+        setup_files: [test-helpers/web.setup.mts]
+  playwright:
+    projects:
+      e2e:
+        include: [web/covered.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [missing]
+    tests:
+      playwright: [e2e]

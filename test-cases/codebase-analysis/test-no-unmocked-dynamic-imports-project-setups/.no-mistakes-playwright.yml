@@ -1,0 +1,14 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [overlap/**/*.test.mts]
+        setup_files: [test-helpers/web.setup.mts]
+  playwright:
+    projects:
+      e2e:
+        include: [overlap/**/*.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      playwright: [e2e]

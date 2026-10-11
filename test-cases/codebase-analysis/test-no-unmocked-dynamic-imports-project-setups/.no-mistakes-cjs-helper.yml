@@ -1,0 +1,6 @@
+tests:
+  jest:
+    configs: cjs-helper.config.cjs
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
