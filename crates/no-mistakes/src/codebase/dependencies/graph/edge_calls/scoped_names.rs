@@ -2,6 +2,7 @@ type ScopedNameMap<T> = FxHashMap<usize, ScopedNames<T>>;
 
 // Most lexical frames contain a single callable binding. Keep that binding
 // inline rather than allocating a hash table for every frame.
+#[derive(Clone)]
 enum ScopedNames<T> {
     One(String, T),
     Many(FxHashMap<String, T>),

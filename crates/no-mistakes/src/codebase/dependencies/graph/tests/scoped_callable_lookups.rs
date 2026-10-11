@@ -59,6 +59,48 @@ fn scoped_names_preserve_interleaved_promoted_scope_entries() {
 }
 
 #[test]
+fn cloned_scoped_names_keep_both_storage_shapes_independent() {
+    let original = index_scoped_names([
+        ((0, "run".to_string()), "root".to_string()),
+        ((1, "run".to_string()), "nested".to_string()),
+        ((1, "stop".to_string()), "stop".to_string()),
+    ]);
+    let mut cloned = original.clone();
+    assert!(matches!(cloned.get(&0), Some(ScopedNames::One(_, _))));
+    assert!(matches!(cloned.get(&1), Some(ScopedNames::Many(_))));
+    for (scope, name) in [(0, "run"), (1, "run"), (1, "stop")] {
+        assert_eq!(
+            scoped_name(&cloned, scope, name),
+            scoped_name(&original, scope, name)
+        );
+    }
+    cloned
+        .get_mut(&0)
+        .unwrap()
+        .insert("run".to_string(), "changed-root".to_string());
+    cloned
+        .get_mut(&1)
+        .unwrap()
+        .insert("run".to_string(), "changed-nested".to_string());
+    assert_eq!(
+        scoped_name(&original, 0, "run").map(String::as_str),
+        Some("root")
+    );
+    assert_eq!(
+        scoped_name(&original, 1, "run").map(String::as_str),
+        Some("nested")
+    );
+    assert_eq!(
+        scoped_name(&cloned, 0, "run").map(String::as_str),
+        Some("changed-root")
+    );
+    assert_eq!(
+        scoped_name(&cloned, 1, "run").map(String::as_str),
+        Some("changed-nested")
+    );
+}
+
+#[test]
 fn scoped_callable_lookup_retains_shadowing_and_declaration_liveness() {
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_bindings: vec![
