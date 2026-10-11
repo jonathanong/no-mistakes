@@ -19,7 +19,9 @@ Importers are derived from static ES named/namespace/default import edges.
 Dynamic imports (`await import('./util')`), side-effect-only imports
 (`import './setup'`) and CommonJS `require('./util')` consumers are not counted.
 Recognized workspace package imports are resolved through visible package entry
-points. For transitive or symbol-level impact, CommonJS consumers, or to follow
+points. A configured tsconfig `paths` alias or `baseUrl` resolution takes
+precedence and can resolve a subpath even when the package's `exports` blocks
+it. For transitive or symbol-level impact, CommonJS consumers, or to follow
 non-import edges, use [`dependents`](dependents.md) instead. (Relative, alias,
 NodeNext `.js`, and declaration-only `.d.ts` import targets are resolved.)
 

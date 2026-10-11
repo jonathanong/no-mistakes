@@ -24,9 +24,11 @@ file imports this symbol." Wildcard edges are counted conservatively: an
 barrel — `dead-exports` favors a false "referenced" over a false "dead".
 Consumers that import through a recognized **workspace package name** such as
 `@scope/pkg` are resolved through the workspace package's visible entry points,
-so cross-package imports can keep exports alive. Missing or blocked package
-subpaths do not create import edges. Third-party packages are outside this
-query's project-wide reverse index.
+so cross-package imports can keep exports alive. A configured tsconfig `paths`
+alias or `baseUrl` resolution takes precedence and can resolve a subpath even
+when the package's `exports` blocks it. A missing or blocked subpath creates no
+edge when workspace resolution handles it. Third-party packages are outside
+this query's project-wide reverse index.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

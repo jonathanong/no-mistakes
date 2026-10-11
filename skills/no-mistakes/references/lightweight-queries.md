@@ -16,10 +16,12 @@ All emit JSON on non-TTY (or with `--json`) and accept `--root`, `--tsconfig`,
 
 These commands run one reverse import scan that resolves **relative**,
 **tsconfig path**, and recognized **workspace package** imports through visible
-package entry points. Missing or blocked workspace subpaths do not create
-import edges. Unmatched third-party packages are outside this project-wide
-index. (Relative, alias, NodeNext `.js`, and declaration-only `.d.ts` imports
-are also resolved.) When a module ships a runtime `.js` and a `.d.ts` side by
+package entry points. Configured tsconfig `paths` aliases or `baseUrl` resolution
+takes precedence and can resolve a subpath even when the package's `exports`
+blocks it. Otherwise, missing or blocked workspace subpaths do not create import
+edges. Unmatched third-party packages are outside this project-wide index.
+(Relative, alias, NodeNext `.js`, and declaration-only `.d.ts` imports are also
+resolved.) When a module ships a runtime `.js` and a `.d.ts` side by
 side at the same path, resolution prefers the runtime file, so a type-only
 import may attach to the `.js` rather than the `.d.ts`.
 
@@ -62,9 +64,12 @@ no-mistakes dead-exports src/utils.mts oldHelper legacyFn --format json
 
 Every call site of an exported function with coarse argument shapes (`string`,
 `number`, `object`, `array`, `arrow`, `spread`, `other`, …) — no type inference.
-Follows named and star re-export barrels, including import-then-re-export
-chains, and accounts for renamed local export bindings. Matches direct
-identifier calls only (`fn(...)`), not `ns.fn()` or aliased indirection.
+Follows named and star re-export barrels and accounts for renamed local export
+bindings. A star barrel that explicitly exports a same-named local symbol can
+make its consumers over-report for the target export. Import-then-re-export
+chains are not followed: the barrel can be scanned while downstream callers are
+omitted. Matches direct identifier calls only (`fn(...)`), not `ns.fn()` or
+aliased indirection.
 
 ```bash
 no-mistakes call-sites src/api.mts handler --format json

@@ -13,9 +13,13 @@ it stays fast. Each call site reports the `file`, `line`, enclosing `caller`
 
 Argument shapes are coarse syntactic tags — `string`, `number`, `boolean`,
 `null`, `identifier`, `object`, `array`, `arrow`, `call`, `spread`, or `other` —
-with no type inference. Named and star re-export barrels are followed
-transparently, including import-then-re-export chains; barrel files themselves
-are not scanned for calls. The defining file is scanned under the export's
+with no type inference. Named and star re-export barrels are followed, and
+direct re-export barrels themselves are not scanned for calls. A star barrel
+that explicitly exports a same-named local symbol can make calls in its
+consumers over-report for the target export. Import-then-re-export chains
+(`import { handler as h } from './x'; export { h as handler }`) are not followed:
+the barrel can be scanned under its imported local name, while callers that
+import from it are omitted. The defining file is scanned under the export's
 local binding, so calls to a renamed export's implementation
 (`function impl(){}; export { impl as handler }`) are included. Only direct
 identifier calls (`handler(...)`) match; namespace member calls (`ns.handler()`),
