@@ -26,7 +26,7 @@ fn callback_revisits_observe_computed_receiver_helper_reads() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -61,7 +61,7 @@ fn callback_revisits_observe_computed_receiver_helper_reads() {
     let start = source.find("database.query(saved)").unwrap() as u32;
     let events = evaluator
         .events
-        .get(&(path, start))
+        .get(&(path, (start, start + "database.query(saved)".len() as u32)))
         .expect("saved receiver query");
     assert!(
         events.len() >= 2,

@@ -250,6 +250,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         callee: Box::new(query_annotation::Expr::Name("sloppyReplacement".into())),
         args: vec![query_annotation::Expr::Text("original".into())],
         start: 0,
+        end: 0,
     };
     let result = evaluator.expr(&call, &path, &root, 16, false);
 
@@ -272,6 +273,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
             "/* disconnected formal */ SELECT 1".into(),
         )],
         start: 1,
+        end: 1,
     };
     let recreated_result = evaluator.expr(&recreated, &path, &root, 16, false);
     assert!(matches!(
@@ -311,7 +313,7 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -351,6 +353,7 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         callee: Box::new(query_annotation::Expr::Name("extraBuilderAppend".into())),
         args: vec![query_annotation::Expr::Name("stableBuilder".into())],
         start: 0,
+        end: 0,
     };
     let result = evaluator.expr(&call, &path, &root, 16, false);
 
@@ -384,7 +387,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -420,7 +423,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
     let events = embedded
         .calls
         .iter()
-        .zip(&embedded.call_starts)
+        .zip(&embedded.call_spans)
         .filter_map(|(call, start)| {
             let line = source.lines().nth(call.line as usize - 1)?;
             let value = evaluator

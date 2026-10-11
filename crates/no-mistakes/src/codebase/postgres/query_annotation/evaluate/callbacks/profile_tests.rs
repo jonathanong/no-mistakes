@@ -26,7 +26,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -154,7 +154,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
     let second = evaluator.scopes[root]["second"].clone();
     evaluator.opaque_callbacks(&[first, second], 8);
     let start = source.find("database.query(saved)").unwrap() as u32;
-    let events = &evaluator.events[&(path, start)];
+    let events = &evaluator.events[&(path, (start, start + "database.query(saved)".len() as u32))];
     assert_eq!(
         events.len(),
         4,

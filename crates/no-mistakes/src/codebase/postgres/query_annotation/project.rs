@@ -68,7 +68,7 @@ pub(crate) fn project(
                         ),
                         facts,
                         ts: &file.ts,
-                        executors: embedded.call_starts.iter().copied().collect(),
+                        executors: embedded.call_spans.iter().copied().collect(),
                     },
                 ))
             })
@@ -113,7 +113,7 @@ pub(crate) fn project(
                 events.entry(call).or_default().extend(values);
             }
         }
-        for ((path, start), events) in events {
+        for ((path, span), events) in events {
             let contextual = events.iter().any(|(generic, _)| !generic);
             let values = events
                 .into_iter()
@@ -151,7 +151,7 @@ pub(crate) fn project(
                 .iter_mut()
                 .find(|(profile, _)| profile == &options)
                 .expect("projected annotation profile remains prepared");
-            facts.calls.insert(start, value);
+            facts.calls.insert(span, value);
         }
     }
 }

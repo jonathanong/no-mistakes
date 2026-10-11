@@ -26,7 +26,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },

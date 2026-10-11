@@ -29,14 +29,14 @@ pub(super) type Environment = usize;
 pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
     pub ts: &'a TsFileFacts,
-    pub executors: FxHashSet<u32>,
+    pub executors: FxHashSet<(u32, u32)>,
     pub imports: FxHashMap<String, usize>,
     pub exports: FxHashMap<String, usize>,
 }
 pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
-    pub events: BTreeMap<(PathBuf, u32), Vec<(bool, Value)>>,
+    pub events: BTreeMap<(PathBuf, (u32, u32)), Vec<(bool, Value)>>,
     pub scopes: Vec<Scope>,
     pub modules: FxHashMap<PathBuf, Environment>,
     pub active_module_initials: Vec<alternatives::modules::Initials>,
@@ -144,7 +144,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 callee,
                 args,
                 start,
-            } => self.call(callee, args, *start, path, env, (depth, generic)),
+                end,
+            } => self.call(callee, args, (*start, *end), path, env, (depth, generic)),
             Expr::Delete(children, index) => {
                 self.deleted(children, *index, path, env, (depth, generic))
             }

@@ -26,7 +26,7 @@ fn stateful_callback_revisits_observe_changed_lexical_arguments() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -61,7 +61,10 @@ fn stateful_callback_revisits_observe_changed_lexical_arguments() {
     let start = source.find("database.query(saved)").unwrap() as u32;
     let events = evaluator
         .events
-        .get(&(path.clone(), start))
+        .get(&(
+            path.clone(),
+            (start, start + "database.query(saved)".len() as u32),
+        ))
         .expect("saved query occurrence");
     assert!(
         events.len() >= 2,

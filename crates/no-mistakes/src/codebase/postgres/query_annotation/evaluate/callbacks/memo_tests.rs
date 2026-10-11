@@ -26,7 +26,7 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },

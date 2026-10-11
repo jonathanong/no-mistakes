@@ -102,7 +102,7 @@ impl CheckFactMap {
         &self,
         path: &std::path::Path,
         options: &crate::codebase::postgres::EmbeddedSqlOptions,
-        start: u32,
+        span: (u32, u32),
     ) -> Option<&Option<String>> {
         self.ts
             .get(path)?
@@ -111,7 +111,7 @@ impl CheckFactMap {
             .find(|(profile, _)| profile == options)?
             .1
             .calls
-            .get(&start)
+            .get(&span)
     }
     #[doc(hidden)]
     pub fn postgres_schema_file(

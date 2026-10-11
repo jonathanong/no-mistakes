@@ -26,8 +26,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
-    pub(crate) call_starts: Vec<u32>,
-    pub(crate) pending_starts: BTreeMap<u32, u32>,
+    pub(crate) call_spans: Vec<(u32, u32)>,
+    pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) confirmed_order: Vec<u32>,
     pub(crate) next_seq: u32,
@@ -42,8 +42,8 @@ pub(crate) struct ScopeVisitor<'a> {
 }
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
-    pub(crate) call_starts: Vec<u32>,
-    pub(crate) pending_starts: BTreeMap<u32, u32>,
+    pub(crate) call_spans: Vec<(u32, u32)>,
+    pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) confirmed_order: Vec<u32>,
@@ -67,8 +67,8 @@ pub(crate) fn collect_calls<'a>(
         provisional,
         scopes: Vec::new(),
         calls: Vec::new(),
-        call_starts: Vec::new(),
-        pending_starts: BTreeMap::new(),
+        call_spans: Vec::new(),
+        pending_spans: BTreeMap::new(),
         pending_calls: Vec::new(),
         confirmed_order: Vec::new(),
         next_seq: 0,
@@ -84,8 +84,8 @@ pub(crate) fn collect_calls<'a>(
     visitor.visit_program(program);
     CollectedCalls {
         calls: visitor.calls,
-        call_starts: visitor.call_starts,
-        pending_starts: visitor.pending_starts,
+        call_spans: visitor.call_spans,
+        pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,
         pending_calls: visitor.pending_calls,
         confirmed_order: visitor.confirmed_order,

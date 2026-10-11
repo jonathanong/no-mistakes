@@ -45,7 +45,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         &mut self,
         callee: &Expr,
         args: &[Expr],
-        start: u32,
+        span: (u32, u32),
         path: &Path,
         env: &Environment,
         context: (u8, bool),
@@ -82,9 +82,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             .into_iter()
             .map(Value::exposed)
             .collect::<Vec<_>>();
-        if self.files[path].executors.contains(&start) {
+        if self.files[path].executors.contains(&span) {
             self.events
-                .entry((path.to_path_buf(), start))
+                .entry((path.to_path_buf(), span))
                 .or_default()
                 .push((
                     generic,

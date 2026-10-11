@@ -5,7 +5,7 @@ use oxc_ast_visit::{walk, Visit};
 
 pub(super) struct Calls<'s> {
     pub source: &'s str,
-    pub covered: FxHashSet<u32>,
+    pub covered: FxHashSet<(u32, u32)>,
     pub values: Vec<Expr>,
     pub scopes: Vec<FxHashSet<String>>,
 }
@@ -32,7 +32,7 @@ impl Calls<'_> {
 }
 impl<'a> Visit<'a> for Calls<'_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if !self.covered.contains(&call.span.start) {
+        if !self.covered.contains(&(call.span.start, call.span.end)) {
             let mut callee = expression(&call.callee, self.source);
             // An unmodeled local binding must never resolve as a same-name
             // module helper. Only module/import identities remain provable.
@@ -61,6 +61,7 @@ impl<'a> Visit<'a> for Calls<'_> {
                     })
                     .collect(),
                 start: call.span.start,
+                end: call.span.end,
             });
         }
         walk::walk_call_expression(self, call);
