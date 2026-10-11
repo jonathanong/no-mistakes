@@ -85,6 +85,9 @@ copy's own property does not make the source's timeout unknown; the copy's own
 timeout still becomes unknown. Nested references remain shared, so a write such
 as `copy.test.testTimeout = 30_001` also makes the source uncertain. Unknown copy
 escapes and uncertain alias identities remain conservative.
+Known `null` spreads contribute no properties, so `{ ...source, ...null }` and
+immutable aliases of `null` retain the copied scalar proof. Mutable null aliases
+and unresolved spread values remain conservative.
 
 The primitive member-read shortcut applies only to identifier declarations.
 Destructured bindings do not use their container initializer as the bound value;

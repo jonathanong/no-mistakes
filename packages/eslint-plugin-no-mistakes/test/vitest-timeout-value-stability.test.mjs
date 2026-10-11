@@ -142,6 +142,17 @@ describe("vitest-timeout-cap value stability", () => {
       [[12, "timeout"]],
     );
   });
+  it("skips known null copy spreads while preserving unknown and overwritten-property controls", () => {
+    const actual = findings("null-spreads", { unknownValues: "finding" });
+    assert.deepEqual(
+      [
+        ...new Set(
+          actual.filter(({ messageId }) => messageId === "unknown").map(({ line }) => line),
+        ),
+      ],
+      [25, 32, 37],
+    );
+  });
   it("retains shared nested mutations and conservative unknown copy identities", () => {
     const actual = findings("shallow-copy-alias-mutations", { unknownValues: "finding" });
     assert.deepEqual(
