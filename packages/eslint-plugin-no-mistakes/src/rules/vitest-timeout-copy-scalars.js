@@ -3,6 +3,7 @@ const { resolveVariable } = require("./async-target-bindings");
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { staticPropertyName } = require("./vitest-timeout-bindings");
 const { laterTopLevelWrite } = require("./vitest-timeout-write-order");
+const { createWrappedScalarWrite } = require("./vitest-timeout-wrapped-scalars");
 
 // Probe only the copied property: evaluating the whole spread would re-enter
 // the source whose stability is currently being checked.
@@ -34,7 +35,7 @@ function createScalarCopyWrite(context, evaluate) {
     active.delete(variable);
     return result;
   }
-  function property(node, name, active) {
+  function property(node, name, active, plain = false) {
     node = unwrapExpression(node);
     if (node.type === "Identifier") {
       const variable = resolveVariable(node, context);
@@ -48,16 +49,28 @@ function createScalarCopyWrite(context, evaluate) {
       )
         return null;
       active.add(variable);
-      const result = property(def.node.init, name, active);
+      const result = property(def.node.init, name, active, plain);
       active.delete(variable);
       return result;
     }
     if (node.type !== "ObjectExpression") return null;
+    // Wrapped probes also reject accessor effects on siblings and opaque spreads.
+    if (
+      plain &&
+      node.properties.some((entry) =>
+        entry.type === "SpreadElement"
+          ? !knownNull(entry.argument) && property(entry.argument, name, active, true) === null
+          : entry.kind !== "init" ||
+            staticPropertyName(entry, context) === null ||
+            staticPropertyName(entry, context) === "__proto__",
+      )
+    )
+      return null;
     for (let index = node.properties.length - 1; index >= 0; index--) {
       const entry = node.properties[index];
       if (entry.type === "SpreadElement") {
         if (knownNull(entry.argument)) continue;
-        const result = property(entry.argument, name, active);
+        const result = property(entry.argument, name, active, plain);
         if (result !== undefined) return result;
       } else {
         const key = staticPropertyName(entry, context);
@@ -67,10 +80,13 @@ function createScalarCopyWrite(context, evaluate) {
     }
     return undefined;
   }
+  const wrappedScalarWrite = createWrappedScalarWrite(context, scalar, property);
   return (node, safeConsumer) => {
     node = unwrapExpression(node);
     const name = staticPropertyName({ key: node.property, computed: node.computed }, context);
     if (name === null) return false;
+    if (unwrapExpression(node.object).type === "MemberExpression")
+      return wrappedScalarWrite(node, name);
     const expression = property(node.object, name, new Set());
     if (!expression) return false;
     if (!scalar(expression)) return false;

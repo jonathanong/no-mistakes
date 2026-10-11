@@ -229,11 +229,16 @@ update. Prior replacements, aliases, branches, loops, function bodies, nested
 blocks, and combined expressions retain the conservative ordering proof.
 Type assertions and non-null assertions around the whole copied member preserve
 these checks, including rejection after the copied scalar is replaced by an object.
-Coercing a property through a wrapped copy receiver stays conservative when its
-scalar initializer cannot be proven; writes that do not coerce retain their copied path proof.
+Literal object and array wrappers preserve this scalar proof, including nested
+paths such as `box.items[0].copy.counter++`. The wrapper path and copied property
+must have known data initializers. Replacing a receiver, exposing its alias,
+overwriting the scalar with a non-scalar value, or using uncertain keys, getters,
+prototype setters, or opaque spreads keeps coercion unknown. Identifier-backed
+wrapper slots and array spread wrappers also stay conservative. Writes that do
+not coerce retain their copied path proof.
 Recognized test, hook and runtime option consumers remain allowed during
-that scalar proof. Arbitrary copy escapes and aliases stay conservative; admitting
-a copy consumer does not make the mutated copy itself a statically unchanged value.
+the direct copy's scalar proof. Arbitrary copy escapes and aliases stay conservative;
+admitting a copy consumer does not make the mutated copy itself a statically unchanged value.
 Configuration helpers can return the original copy, so those calls do not establish
 a safe scalar proof through a potentially mutable returned alias.
 
