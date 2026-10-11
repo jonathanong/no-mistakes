@@ -15,7 +15,8 @@ function createPrimitiveMemberRead(context, evaluate) {
     }
     // Stability only probes reads rooted in the const binding it has validated.
     const def = resolveVariable(node, context).defs[0];
-    return evaluate(def.node.init);
+    // A pattern initializer is the container, not the projected bound value.
+    return def.node.id.type === "Identifier" ? evaluate(def.node.init) : null;
   }
   return (node) => {
     const resolved = value(node);

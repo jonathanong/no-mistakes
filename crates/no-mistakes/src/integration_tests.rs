@@ -43,7 +43,9 @@ pub fn prepare_runner_configs(
 
 pub(crate) use checks::sort_findings;
 use checks::{check_suites, check_suites_with_resolver, fail_on_dropped_files};
-pub use runner_config::configured_runner_config_dirs;
+pub use runner_config::{
+    configured_runner_config_dirs, configured_runner_config_dirs_from_visible,
+};
 pub use runner_config::{
     prepare_runner_configs_with_catalog, prepare_runner_configs_with_deadline_evidence,
 };

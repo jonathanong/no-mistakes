@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@example/db": ["packages/db/src/index.ts"],
+      "sql-template-strings": ["src/sql.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "packages/**/*.ts"]
+}

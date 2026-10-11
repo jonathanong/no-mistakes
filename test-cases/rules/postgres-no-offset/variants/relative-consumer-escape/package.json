@@ -1,0 +1,6 @@
+{
+  "name": "relative-consumer-escape-fixture",
+  "type": "module",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

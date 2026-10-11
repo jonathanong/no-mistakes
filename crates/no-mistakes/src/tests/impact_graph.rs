@@ -9,9 +9,13 @@ use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
 use no_mistakes::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use no_mistakes::config::v2::NoMistakesConfig;
+use no_mistakes::integration_tests::configured_runner_config_dirs_from_visible;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+mod catalog;
+use catalog::catalog;
 
 pub(crate) struct ImpactGraph {
     pub(crate) graph: DepGraph,
@@ -164,8 +168,11 @@ fn build_test_impact_graph_for_request(
         }
     })?;
     let mut catalog_roots = vec![root.to_path_buf()];
-    catalog_roots
-        .extend(no_mistakes::integration_tests::configured_runner_config_dirs(root, config));
+    catalog_roots.extend(configured_runner_config_dirs_from_visible(
+        root,
+        config,
+        &visible_paths,
+    ));
     let preliminary_roots = catalog_roots.clone();
     let preliminary_catalog = catalog(
         root,
@@ -392,30 +399,6 @@ fn build_test_impact_graph_for_request(
             visible_files: visible_paths.iter().cloned().collect(),
         },
         facts,
-    })
-}
-
-fn catalog(
-    root: &Path,
-    tsconfig: &TsConfig,
-    tsconfig_path: Option<&Path>,
-    roots: &[PathBuf],
-    visible: &[PathBuf],
-    sources: &Arc<SourceStore>,
-) -> Arc<TsConfigCatalog> {
-    Arc::new(if let Some(path) = tsconfig_path {
-        let path = if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            root.join(path)
-        };
-        TsConfigCatalog::forced(
-            root,
-            tsconfig.clone(),
-            Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
-        )
-    } else {
-        TsConfigCatalog::from_visible_and_sources(root, roots, visible, sources)
     })
 }
 

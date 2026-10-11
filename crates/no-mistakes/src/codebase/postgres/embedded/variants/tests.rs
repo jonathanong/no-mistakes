@@ -10,6 +10,8 @@ mod branch_correlation;
 mod captured_bindings;
 #[path = "tests/defensive.rs"]
 mod defensive;
+#[path = "tests/destructuring_assignments.rs"]
+mod destructuring_assignments;
 #[path = "tests/equivalent.rs"]
 mod equivalent;
 #[path = "tests/escape_effects.rs"]
@@ -36,6 +38,8 @@ mod metadata;
 mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
+#[path = "tests/switch_scalar_labels.rs"]
+mod switch_scalar_labels;
 #[path = "tests/unaffected_switch.rs"]
 mod unaffected_switch;
 

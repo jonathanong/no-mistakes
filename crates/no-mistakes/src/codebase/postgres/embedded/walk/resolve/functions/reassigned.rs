@@ -2,7 +2,7 @@ use super::super::for_each_bound_name;
 use super::shadows::is_function_shaped;
 use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentTarget, AssignmentTargetMaybeDefault,
-    AssignmentTargetProperty, ForStatementLeft, FormalParameters, Function, Program,
+    AssignmentTargetProperty, Expression, ForStatementLeft, FormalParameters, Function, Program,
     SimpleAssignmentTarget, UpdateExpression, VariableDeclaration, VariableDeclarationKind,
     VariableDeclarator,
 };
@@ -214,7 +214,10 @@ fn record_declarator_reassignment<'a>(
 /// `AssignmentTargetIdentifier` would miss `({ build } = providers)`
 /// reassigning a same-named top-level helper through destructuring, letting
 /// `LocalFunctions::collect` keep resolving calls through its stale body.
-fn for_each_assigned_name<'a>(target: &AssignmentTarget<'a>, on_name: &mut impl FnMut(&'a str)) {
+pub(in crate::codebase::postgres::embedded::walk) fn for_each_assigned_name<'a>(
+    target: &AssignmentTarget<'a>,
+    on_name: &mut impl FnMut(&'a str),
+) {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(ident) => on_name(ident.name.as_str()),
         AssignmentTarget::ArrayAssignmentTarget(array) => {
@@ -240,7 +243,28 @@ fn for_each_assigned_name<'a>(target: &AssignmentTarget<'a>, on_name: &mut impl 
                 for_each_assigned_name(&rest.target, on_name);
             }
         }
+        AssignmentTarget::TSAsExpression(wrapper) => {
+            for_each_wrapped_assigned_name(&wrapper.expression, on_name);
+        }
+        AssignmentTarget::TSSatisfiesExpression(wrapper) => {
+            for_each_wrapped_assigned_name(&wrapper.expression, on_name);
+        }
+        AssignmentTarget::TSNonNullExpression(wrapper) => {
+            for_each_wrapped_assigned_name(&wrapper.expression, on_name);
+        }
+        AssignmentTarget::TSTypeAssertion(wrapper) => {
+            for_each_wrapped_assigned_name(&wrapper.expression, on_name);
+        }
         _ => {}
+    }
+}
+
+fn for_each_wrapped_assigned_name<'a>(
+    expression: &Expression<'a>,
+    on_name: &mut impl FnMut(&'a str),
+) {
+    if let Expression::Identifier(ident) = expression.get_inner_expression() {
+        on_name(ident.name.as_str());
     }
 }
 

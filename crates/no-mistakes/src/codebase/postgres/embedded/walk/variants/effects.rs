@@ -1,4 +1,4 @@
-use super::super::ScopeVisitor;
+use super::super::{resolve::functions::reassigned::for_each_assigned_name, ScopeVisitor};
 use super::ValueKind;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
@@ -131,9 +131,7 @@ impl<'a> Visit<'a> for Effects<'_, '_> {
             self.visit_expression(&assignment.right);
             return;
         }
-        if let AssignmentTarget::AssignmentTargetIdentifier(id) = &assignment.left {
-            self.collect_binding(id.name.as_str());
-        }
+        for_each_assigned_name(&assignment.left, &mut |name| self.collect_binding(name));
         if !self.found || self.prefixes.is_some() {
             walk::walk_assignment_expression(self, assignment);
         }

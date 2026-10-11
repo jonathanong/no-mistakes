@@ -52,6 +52,11 @@ rules:
 `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
 configuration error).
 
+An object or array destructuring assignment invalidates any earlier SQL
+alternatives for the identifiers it overwrites. Until a fresh static assignment
+is recoverable, the call follows `unanalyzableSql` instead of checking stale
+SQL from before the assignment.
+
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
 offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET sql_placeholder_1`.
 
@@ -107,6 +112,26 @@ its recovered text already proved an `OFFSET`. With the default
 
 Recovered keyword checks ignore quoted text, nested PostgreSQL block comments,
 and keyword text within identifiers, including `$` and Unicode continuations.
+
+Switch case labels can also change scalar guards before a later case or default
+executes. Assignments, updates, destructuring, and directly invoked closure writes
+in a label make branching executor SQL inside that switch unanalyzable. The
+default `fail` reports the executor line; `ignore` skips that uncertain call.
+Literal SQL inside the switch still produces ordinary `offset` findings, and
+callbacks that are merely created or passed are not executed by this heuristic.
+An earlier body may be skipped by direct entry or executed by fallthrough, so
+its SQL assignments cannot supply a later case's complete statement. Bindings
+it changes become opaque for later cases. The default `fail` reports those
+calls as `unanalyzable`; `ignore` skips them. Fresh literal and constant SQL
+inside a case still receive ordinary checks.
+
+```ts
+let gate = false;
+switch (2) {
+  case (gate = true, 1): break;
+  case 2: query(gate ? "SELECT 1 OFFSET 1" : "SELECT 1"); // unanalyzable
+}
+```
 
 Dynamic DML without a recovered query is not reported, and a
 dynamic call whose recovered text already contains `OFFSET` keeps only its
@@ -172,6 +197,19 @@ With `importSpecifier` set, these two options also match imports from its subpat
 file is inside the package `importSpecifier` resolves to; a same-named import outside
 that package does not. If the package root cannot be determined, relative imports do
 not match. `executorNames` still requires the exact module.
+
+Relative factory/type candidates capture their own SQL before invocation, but
+their package owner is confirmed only in prepared resolver projection. A
+mutable builder passed to one loses finite alternatives for subsequent reuse,
+including aliases, even if the owner is later accepted. Subsequent branching
+calls therefore report `unanalyzable` under the default `unanalyzableSql: fail`,
+or are skipped with `ignore`; the analyzer does not invent an OFFSET clause.
+The original pending call still checks proven SQL from later argument appends,
+including OFFSET, if its owner is accepted; `ignore` does not skip this concrete
+SQL.
+Primitive SQL copies and already-confirmed direct executors retain their
+existing behavior. See the
+[finite SQL model](../postgres-facts.md#finite-sql-alternatives).
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).

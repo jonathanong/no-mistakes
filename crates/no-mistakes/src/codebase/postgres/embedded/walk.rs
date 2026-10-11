@@ -5,6 +5,7 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
+mod assignments;
 mod calls;
 mod executor_arguments;
 mod flow;
@@ -112,11 +113,24 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_assignment_expression(&mut self, assign: &oxc_ast::ast::AssignmentExpression<'a>) {
         let identity = self.assignment_builder_identity(assign);
         let variants = self.assigned_variants(assign);
+        if matches!(
+            assign.left,
+            AssignmentTarget::ArrayAssignmentTarget(_)
+                | AssignmentTarget::ObjectAssignmentTarget(_)
+        ) {
+            self.visit_expression(&assign.right);
+            assignments::visit_target(self, &assign.left);
+            return;
+        }
         walk::walk_assignment_expression(self, assign);
         if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
             self.mark_dynamic(ident.name.as_str());
             self.set_variants(ident.name.as_str(), variants);
             self.set_builder_identity(ident.name.as_str(), identity);
+        } else {
+            resolve::functions::reassigned::for_each_assigned_name(&assign.left, &mut |name| {
+                self.mark_dynamic(name);
+            });
         }
     }
 

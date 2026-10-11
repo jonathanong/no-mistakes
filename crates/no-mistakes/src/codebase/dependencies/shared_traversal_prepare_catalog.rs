@@ -52,7 +52,9 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
     let mut candidate_roots = Vec::with_capacity(workspace.packages.len() + 1);
     candidate_roots.push(root.to_path_buf());
     candidate_roots.extend(workspace.packages.iter().map(|package| package.dir.clone()));
-    candidate_roots.extend(crate::integration_tests::configured_runner_config_dirs(root, config));
+    candidate_roots.extend(crate::integration_tests::configured_runner_config_dirs_from_visible(
+        root, config, root_visible_paths,
+    ));
     let preliminary_roots = candidate_roots.clone();
     let preliminary_catalog = std::sync::Arc::new(catalog_for_request(
         root,
