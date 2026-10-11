@@ -3,10 +3,7 @@ const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-const root = join(
-  __dirname,
-  "../../../test-cases/rules/postgres-no-offset/fixture/helper-alias",
-);
+const root = join(__dirname, "../../../test-cases/rules/postgres-no-offset/fixture/helper-alias");
 
 test(
   "compiled CJS, ESM, and prepared checks retain helper SQL aliases",
