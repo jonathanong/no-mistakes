@@ -99,6 +99,19 @@ fn prepared_runner_deduplicates_config_parsing_and_supports_direct_fact_parsing(
 }
 
 #[test]
+fn prepared_runner_recognizes_esm_and_commonjs_config_exports() {
+    let root = fixture_root("cjs-cts-configs");
+    for raw in ["vitest.config.cts", "vitest.module.config.cjs"] {
+        let prepared = prepare_vitest(&root, StringOrList::One(raw.to_string()));
+        let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+        let facts = prepared
+            .parse_path_for_facts_with_session(&session, &root.join(raw))
+            .unwrap();
+        assert!(facts.has_config_export(), "{raw} is a runner config");
+    }
+}
+
+#[test]
 fn prepared_runner_parses_json_workspace_through_batch_and_direct_apis() {
     let fixture = saved_config_fixture("vitest-workspace-json");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
@@ -309,6 +322,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
                 (retained_analysis.clone(), FileAnalysis::default()),
                 (omitted_analysis, FileAnalysis::default()),
             ]),
+            has_config_export: false,
         },
     )]));
     let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(

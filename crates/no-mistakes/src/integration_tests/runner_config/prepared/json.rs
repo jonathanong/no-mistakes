@@ -46,6 +46,7 @@ impl PreparedIntegrationRunnerConfigs {
             unavailable: false,
             results,
             analyses: BTreeMap::new(),
+            has_config_export: true,
         }
     }
 }

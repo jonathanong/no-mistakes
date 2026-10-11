@@ -18,6 +18,42 @@ fn fixture() -> PathBuf {
 }
 
 #[test]
+fn named_project_helper_does_not_supply_an_unscoped_setup_fallback() {
+    use crate::codebase::ts_resolver::TsConfigCatalog;
+    use std::sync::Arc;
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/selected-vitest-excludes/fixture"),
+    );
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let runner = crate::integration_tests::runner_config::prepare_dynamic_configs(
+        &root,
+        &config,
+        &files,
+        Arc::new(TsConfigCatalog::forced(&root, Default::default(), None)),
+        Arc::clone(&sources),
+    );
+    let parsed = runner.parse_all().unwrap();
+    let prepared =
+        prepare_with_runner_facts(&root, &config, &files, &sources, parsed.file_facts()).unwrap();
+
+    // The discovered `vitest.projects.mts` exports a named array used by an
+    // alternate config. A's raw setup must not cover B's execution here.
+    assert_eq!(prepared.setup_data().len(), 2);
+    assert_eq!(
+        setup_contexts_for_test_precomputed(
+            "shared/setup.test.mts",
+            prepared.setup_data(),
+            SelectedRunners::for_config(&config),
+        ),
+        vec![vec![root.join("setup/mock.mts")], Vec::new()]
+    );
+}
+
+#[test]
 fn prepared_config_globs_only_expand_aggregate_candidates() {
     let root = fixture();
     let selected_config = root.join("jest.config.cjs");
