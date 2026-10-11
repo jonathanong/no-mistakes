@@ -15,6 +15,7 @@ fn require_execution_facts_keep_edges_but_exclude_guarded_helpers() {
             "node:buffer",
             "node:constants",
             "node:crypto",
+            "node:diagnostics_channel",
             "node:dns",
             "node:domain",
             "node:events",
@@ -24,6 +25,7 @@ fn require_execution_facts_keep_edges_but_exclude_guarded_helpers() {
             "node:module",
             "node:net",
             "node:path",
+            "node:perf_hooks",
             "node:process",
             "node:punycode",
             "node:querystring",
@@ -34,6 +36,7 @@ fn require_execution_facts_keep_edges_but_exclude_guarded_helpers() {
             "node:url",
             "node:util",
             "node:vm",
+            "node:wasi",
             "node:worker_threads",
             "node:zlib",
         ]

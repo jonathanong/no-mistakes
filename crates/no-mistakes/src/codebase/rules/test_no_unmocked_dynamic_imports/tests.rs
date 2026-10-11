@@ -21,6 +21,7 @@ mod mock_specifiers;
 mod project_setups;
 mod recovered_matchers;
 mod request_sources;
+mod require_fidelity;
 mod runner_compatibility;
 mod visibility;
 mod workspaces;

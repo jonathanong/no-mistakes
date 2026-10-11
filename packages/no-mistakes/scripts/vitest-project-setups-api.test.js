@@ -381,3 +381,26 @@ test(
     }
   },
 );
+
+test(
+  "compiled eager require metadata preserves evaluation and recovered helpers",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/require-fidelity",
+    );
+    const report = await cjs.check({ root: fixture });
+    assert.deepEqual(await esm.check({ root: fixture }), report);
+    assert.deepEqual(report.warnings, []);
+    assert.deepEqual(
+      report.rules.map((finding) => [finding.file, finding.target]),
+      [
+        ["tests/loop.test.cjs", "src/loop.cjs"],
+        ["tests/zero.test.cjs", "src/loop.cjs"],
+      ],
+    );
+  },
+);

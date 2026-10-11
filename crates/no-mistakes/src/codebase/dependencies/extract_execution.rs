@@ -27,6 +27,7 @@ fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {
         Expression::BooleanLiteral(value) => Some(value.value),
         Expression::NullLiteral(_) => Some(false),
         Expression::NumericLiteral(value) => Some(value.value != 0.0),
+        Expression::BigIntLiteral(value) => Some(!value.is_zero()),
         Expression::StringLiteral(value) => Some(!value.value.is_empty()),
         _ => None,
     }

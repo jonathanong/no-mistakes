@@ -27,9 +27,24 @@ for (const key in require('node:http')) require('node:os');
 for (const value of require('node:https')) require('node:os');
 try { require('node:querystring'); } catch (error) { require('node:os'); }
 switch (require('node:punycode')) {
+  case require('node:wasi'): require('node:os'); break;
   case require('node:os'): require('node:os'); break;
   default: require('node:os');
 }
+switch (globalThis.value) {
+  default: require('node:os');
+  case require('node:diagnostics_channel'): break;
+  case require('node:os'): break;
+}
+for (const [value = require('node:os')] of []) {}
+for (const [value = require('node:os')] in {}) {}
+for (globalThis[require('node:os')] of []) {}
+for (globalThis[require('node:os')] in {}) {}
+1n && require('node:perf_hooks');
+if (0x1n) require('node:perf_hooks');
+0n && require('node:os');
+0x000n && require('node:os');
+0n || require('node:perf_hooks');
 do { require('node:process'); } while (false);
 function unused() { require('node:os'); }
 false && require('node:os');
