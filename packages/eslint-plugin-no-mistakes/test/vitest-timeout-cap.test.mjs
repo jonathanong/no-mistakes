@@ -8,6 +8,24 @@ const code = (name) => fixture(`vitest-timeout-cap/${name}.ts`);
 const findings = (name, options) =>
   lint(code(name), { [`no-mistakes/${rule}`]: ["error", options || {}] }, "fixture.test.ts");
 describe(rule, () => {
+  it("does not probe a destructured member against its unprojected initializer", () => {
+    assert.deepEqual(
+      findings("destructured-primitive-reads", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [6, "unknown"],
+        [10, "unknown"],
+        [14, "unknown"],
+        [19, "unknown"],
+        [29, "timeout"],
+      ],
+    );
+    assert.deepEqual(
+      findings("destructured-primitive-reads").map(({ line, messageId }) => [line, messageId]),
+      [[29, "timeout"]],
+    );
+  });
   it("keeps primitive property reads known without admitting object escapes or writes", () => {
     assert.deepEqual(
       findings("primitive-reads", { unknownValues: "finding" }).map(({ line, messageId }) => [
