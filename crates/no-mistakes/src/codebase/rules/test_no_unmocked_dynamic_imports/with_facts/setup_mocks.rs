@@ -5,16 +5,28 @@ use anyhow::Result;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(super) fn with_facts(
-    root: &Path,
-    setup_data: &[config::ConfigSetupData],
-    test_file: &Path,
-    resolver: &crate::codebase::ts_resolver::ScopedImportResolver<'_>,
-    graph: &DepGraph,
-    graph_files: &GraphFiles,
-    visible_files: &crate::fx::PathSet,
-    shared: &CheckFactMap,
-) -> Result<HashSet<PathBuf>> {
+pub(super) struct Request<'a> {
+    pub(super) root: &'a Path,
+    pub(super) setup_data: &'a [config::ConfigSetupData],
+    pub(super) test_file: &'a Path,
+    pub(super) resolver: &'a crate::codebase::ts_resolver::ScopedImportResolver<'a>,
+    pub(super) graph: &'a DepGraph,
+    pub(super) graph_files: &'a GraphFiles,
+    pub(super) visible_files: &'a crate::fx::PathSet,
+    pub(super) shared: &'a CheckFactMap,
+}
+
+pub(super) fn with_facts(request: Request<'_>) -> Result<HashSet<PathBuf>> {
+    let Request {
+        root,
+        setup_data,
+        test_file,
+        resolver,
+        graph,
+        graph_files,
+        visible_files,
+        shared,
+    } = request;
     let mut mocks = HashSet::new();
     let rel_path = crate::codebase::ts_source::relative_slash_path(root, test_file);
     for setup in config::setup_files_for_test_precomputed(&rel_path, setup_data) {

@@ -63,14 +63,16 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
     };
     let mut mocks = manual_mocks.clone();
     mocks.extend(super::setup_mocks::with_facts(
-        root,
-        setup_data,
-        &file,
-        resolver,
-        graph,
-        graph_files,
-        visible_files,
-        shared,
+        super::setup_mocks::Request {
+            root,
+            setup_data,
+            test_file: &file,
+            resolver,
+            graph,
+            graph_files,
+            visible_files,
+            shared,
+        },
     )?);
     mocks.extend(resolve_mock_specifiers(
         &facts.mock_specifiers,
