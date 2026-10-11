@@ -2,6 +2,36 @@ use super::tests::{config_with_options, fixture};
 use super::*;
 
 #[test]
+fn same_file_helper_alias_appends_report_original_clause_lines() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded");
+    let path = root.join("composed-helper-alias.ts");
+    let findings = check_with_files(&root, &config_with_options("{}"), &[path]).unwrap();
+    assert_eq!(
+        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [7, 14, 22, 51, 52, 53],
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .map(|f| f.target.as_deref())
+            .collect::<Vec<_>>(),
+        [
+            Some("offset"),
+            Some("offset#2"),
+            Some("offset#3"),
+            Some("unanalyzable"),
+            Some("unanalyzable"),
+            Some("unanalyzable"),
+        ]
+    );
+    assert!(findings
+        .iter()
+        .all(|f| f.file == "composed-helper-alias.ts"));
+}
+
+#[test]
 fn non_analyzing_explain_does_not_execute_the_offset_query() {
     let root = fixture("review-followups");
     let path = root.join("db/explain.sql");

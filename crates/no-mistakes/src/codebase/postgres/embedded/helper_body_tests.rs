@@ -86,3 +86,20 @@ fn typed_parameter_builder_recovers_only_straight_line_static_appends() {
         Some("/* return */ SELECT id FROM items")
     );
 }
+
+#[test]
+fn helper_local_aliases_share_append_identity_and_unsupported_effects_fail_closed() {
+    let facts = extract("composed-helper-alias.ts");
+    assert_eq!(facts.calls.len(), 6);
+    for (call, (offset, line)) in facts.calls[..3].iter().zip([(9, 7), (10, 14), (11, 22)]) {
+        assert_eq!(call.kind, EmbeddedSqlKind::Composed);
+        assert_eq!(
+            call.sql_text.as_deref(),
+            Some(format!("SELECT id FROM accounts OFFSET {offset}").as_str())
+        );
+        assert_eq!(call.sql_source_positions.last().unwrap().source_line, line);
+    }
+    for call in &facts.calls[3..] {
+        assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
+    }
+}
