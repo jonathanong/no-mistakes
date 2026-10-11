@@ -312,8 +312,11 @@ Static `.append()` composition retains each appended literal or bound fragment's
 physical position, including placeholder renumbering. A straight-line same-file helper that receives and returns a typed
 `SQLStatement` parameter contributes its static appends to this rule, so an
 appended `OFFSET` is checked normally. Unknown builder arguments and dynamic
-appends retain the strict `unanalyzableSql` behavior. Put line suppression on
-the physical clause being suppressed. Existing directives on an executor call
+appends retain the strict `unanalyzableSql` behavior. In a straight-line same-file helper,
+local aliases of a SQL statement share its mutable value: an `.append()` through
+the original name or any alias is included when another alias is returned.
+Reassignment, branching, and unknown escapes remain unanalyzable. Put line
+suppression on the physical clause being suppressed. Existing directives on an executor call
 also suppress that call's recovered clauses through the common suppression pass.
 A directive on one executor call does not suppress another call that reuses
 the same SQL constant or fragment. Repeated unsuppressed executions report the
