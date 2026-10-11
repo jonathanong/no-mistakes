@@ -91,6 +91,12 @@ Destructured bindings do not use their container initializer as the bound value;
 member reads that escape to an unknown consumer retain unresolved timeout values.
 Use a direct `const` object binding when its timeout needs static resolution.
 
+A shallow copy inside an object or array wrapper retains its boundary through
+known property paths and immutable aliases: `box.copy.timeout = 30_001` leaves
+the source's timeout known. Shared children below that copy remain uncertain.
+Unknown computed wrapper keys, array offsets after opaque spreads, and custom
+iterables retain conservative handling.
+
 Public Vitest 5 fixture tuples carry `auto`, `injected`, and `scope` options, not a
 fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
 registrar identity, so actual test and hook overrides on their returned APIs are

@@ -2,17 +2,23 @@
 const { resolveVariable } = require("./async-target-bindings");
 const { unwrapTransparentParent } = require("./async-ast");
 const { configCall, overrideCall, invocationArguments } = require("./vitest-timeout-bindings");
+const { memberName, pathStartsWith, wrappedCopyPath } = require("./vitest-timeout-copy-paths");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead) {
   // Values, copies, and callbacks need independent consumer proofs and cycle guards.
   const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
   const active = { value: new Set(), shallow: new Set(), callback: new Set() };
-  function stable(variable, mode = "value") {
-    const cache = memo[mode],
+  function stable(variable, mode = "value", copyPath = []) {
+    const table = memo[mode],
       visiting = active[mode];
     if (!variable || visiting.has(variable)) return false;
-    if (cache.has(variable)) return cache.get(variable);
+    // One outer binding can contain copies at different paths. Their proofs
+    // must not share a boolean result even though their consumer mode matches.
+    if (!table.has(variable)) table.set(variable, new Map());
+    const cache = table.get(variable),
+      key = JSON.stringify(copyPath);
+    if (cache.has(key)) return cache.get(key);
     visiting.add(variable);
     const result =
       variable.defs.every(
@@ -27,10 +33,10 @@ function createValueStability(context, primitiveMemberRead) {
           reference.init ||
           // TypeScript's erased references cannot expose a runtime value.
           typeOnlyUse(reference.identifier) ||
-          (!reference.isWrite() && safeUse(reference.identifier, mode)),
+          (!reference.isWrite() && safeUse(reference.identifier, mode, copyPath)),
       );
     visiting.delete(variable);
-    cache.set(variable, result);
+    cache.set(key, result);
     return result;
   }
   function typeOnlyUse(node) {
@@ -59,7 +65,7 @@ function createValueStability(context, primitiveMemberRead) {
       return true;
     return safeUse(node, "callback");
   }
-  function safeUse(identifier, mode = "value") {
+  function safeUse(identifier, mode = "value", copyPath = []) {
     let node = unwrapTransparentParent(identifier);
     if (mode === "callback") {
       const parent = node.parent;
@@ -75,10 +81,10 @@ function createValueStability(context, primitiveMemberRead) {
         confinedConfigResult(parent)
       );
     }
-    let memberDepth = 0;
+    const members = [];
     while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
+      members.push(memberName(node.parent, context));
       node = unwrapTransparentParent(node.parent);
-      memberDepth++;
     }
     const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
     let parent = node.parent;
@@ -87,13 +93,24 @@ function createValueStability(context, primitiveMemberRead) {
       (parent?.type === "UpdateExpression" && parent.argument === node) ||
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
-      // Replacing a copy's own property cannot mutate the source. Its children
-      // are still shared, so writes through a second member remain unsafe.
-      return mode === "shallow" && memberDepth === 1;
+      // The copied value may be inside a wrapper. Only its own property writes
+      // are independent; following a child below that boundary stays shared.
+      return (
+        mode === "shallow" &&
+        members.length === copyPath.length + 1 &&
+        pathStartsWith(copyPath, members.slice(0, -1))
+      );
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
     if (memberRead) return true;
-    if (memberDepth) mode = "value";
+    if (members.length && mode === "shallow") {
+      if (members.length <= copyPath.length && pathStartsWith(copyPath, members))
+        copyPath = copyPath.slice(members.length);
+      else {
+        mode = "value";
+        copyPath = [];
+      }
+    }
     // Container copies can preserve nested references. Follow their existing binding too.
     while (
       parent &&
@@ -105,13 +122,25 @@ function createValueStability(context, primitiveMemberRead) {
       if (
         parent.type === "SpreadElement" &&
         (parent.parent.type === "ObjectExpression" || parent.parent.type === "ArrayExpression")
-      )
+      ) {
+        if (mode !== "shallow") copyPath = [];
         mode = "shallow";
+      }
+      if (mode === "shallow") {
+        const path = wrappedCopyPath(parent, node, copyPath, context);
+        if (path === null) {
+          mode = "value";
+          copyPath = [];
+        } else copyPath = path;
+      }
       node = parent;
       parent = node.parent;
     }
     if (parent?.type === "VariableDeclarator" && parent.init === node)
-      return parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), mode);
+      return (
+        parent.id.type === "Identifier" &&
+        stable(resolveVariable(parent.id, context), mode, copyPath)
+      );
     if (parent?.type === "CallExpression") {
       if (parent.callee === node) return false;
       // Public config/registration consumers are admitted; unknown helpers can mutate objects.
