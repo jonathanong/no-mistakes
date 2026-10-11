@@ -5,11 +5,13 @@ const { configCall, overrideCall, invocationArguments } = require("./vitest-time
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead) {
-  const memo = new WeakMap();
+  // A copy can be safe for its source while its own value is still unstable.
+  const memo = [new WeakMap(), new WeakMap()];
   const active = new Set();
-  function stable(variable) {
+  function stable(variable, shallowCopy = false) {
     if (!variable || active.has(variable)) return false;
-    if (memo.has(variable)) return memo.get(variable);
+    const cache = memo[Number(shallowCopy)];
+    if (cache.has(variable)) return cache.get(variable);
     active.add(variable);
     const result =
       variable.defs.every(
@@ -20,16 +22,20 @@ function createValueStability(context, primitiveMemberRead) {
           def.parent.parent?.type !== "ExportDefaultDeclaration",
       ) &&
       variable.references.every(
-        (reference) => reference.init || (!reference.isWrite() && safeUse(reference.identifier)),
+        (reference) =>
+          reference.init || (!reference.isWrite() && safeUse(reference.identifier, shallowCopy)),
       );
     active.delete(variable);
-    memo.set(variable, result);
+    cache.set(variable, result);
     return result;
   }
-  function safeUse(identifier) {
+  function safeUse(identifier, shallowCopy) {
     let node = unwrapTransparentParent(identifier);
-    while (node.parent?.type === "MemberExpression" && node.parent.object === node)
+    let memberDepth = 0;
+    while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
       node = unwrapTransparentParent(node.parent);
+      memberDepth++;
+    }
     const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
     let parent = node.parent;
     if (
@@ -37,10 +43,13 @@ function createValueStability(context, primitiveMemberRead) {
       (parent?.type === "UpdateExpression" && parent.argument === node) ||
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
-      return false;
+      // Replacing a copy's own property cannot mutate the source. Its children
+      // are still shared, so writes through a second member remain unsafe.
+      return shallowCopy && memberDepth === 1;
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
     if (memberRead) return true;
+    if (memberDepth) shallowCopy = false;
     // Container copies can preserve nested references. Follow their existing binding too.
     while (
       parent &&
@@ -49,11 +58,18 @@ function createValueStability(context, primitiveMemberRead) {
         parent.type === "ArrayExpression" ||
         parent.type === "SpreadElement")
     ) {
+      if (
+        parent.type === "SpreadElement" &&
+        (parent.parent.type === "ObjectExpression" || parent.parent.type === "ArrayExpression")
+      )
+        shallowCopy = true;
       node = parent;
       parent = node.parent;
     }
     if (parent?.type === "VariableDeclarator" && parent.init === node)
-      return parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context));
+      return (
+        parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), shallowCopy)
+      );
     if (parent?.type === "CallExpression") {
       if (parent.callee === node) return false;
       // Public config/registration consumers are admitted; unknown helpers can mutate objects.
@@ -72,7 +88,6 @@ function createValueStability(context, primitiveMemberRead) {
         (kind === "test" && (index === 1 || index === 2))
       );
     }
-    if (parent?.type === "ReturnStatement" || parent?.type === "AssignmentExpression") return false;
     // Exports and unproved contexts (await/yield, tagged templates, computed
     // keys, and other consumers) can expose the object. No default safe escape.
     return false;
