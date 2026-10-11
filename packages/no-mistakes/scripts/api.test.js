@@ -1099,6 +1099,22 @@ test("declarations expose invocation controls on every analysis", () => {
   assert.match(invocationDeclarations, /failOnLock\?: boolean;/);
   assert.match(invocationDeclarations, /jobs\?: number \| null;/);
   assert.match(
+    invocationDeclarations,
+    /current user's invocation lock \(shared across project roots\)/,
+  );
+  assert.match(
+    invocationDeclarations,
+    /positive integer takes precedence over `RAYON_NUM_THREADS`/,
+  );
+  assert.match(invocationDeclarations, /Omit, `0`, or `null` uses `RAYON_NUM_THREADS`/);
+  assert.match(
+    invocationDeclarations,
+    /acquires the invocation lock initializes the process-wide pool before/,
+  );
+  assert.match(invocationDeclarations, /command-specific options are validated/);
+  assert.match(invocationDeclarations, /JSON\/control or lock failures cannot/);
+  assert.match(invocationDeclarations, /Later calls cannot resize an already initialized pool/);
+  assert.match(
     indexDeclarations,
     /analyzeProject\(\n  options: WithInvocationOptions<AnalyzeProjectOptions>/,
   );

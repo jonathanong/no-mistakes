@@ -6,10 +6,16 @@ use std::time::Duration;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InvocationOptions {
     pub timeout: Option<Duration>,
+    /// Maximum wait for the current user's invocation lock, shared across project roots.
     pub lock_timeout: Option<Duration>,
     pub fail_on_lock: bool,
-    /// Rayon worker count. `None` leaves the pool unchanged; `Some(0)` uses
-    /// the CPU count, matching CLI `--jobs 0`.
+    /// Rayon worker count. A positive value takes precedence over `RAYON_NUM_THREADS`.
+    /// `None` and `Some(0)` use the environment, falling back to CPU count when
+    /// unset or invalid, matching CLI `--jobs 0`.
+    /// The first N-API analysis request with valid UTF-8 JSON and invocation controls
+    /// that acquires the invocation lock initializes the process-wide pool before
+    /// command-specific option validation, even if that validation later fails.
+    /// JSON/control or lock failures do not initialize it; later calls cannot resize it.
     pub jobs: Option<usize>,
 }
 
