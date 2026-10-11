@@ -137,30 +137,4 @@ impl CheckFactPlan {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::CheckFactPlan;
-    use crate::codebase::postgres::EmbeddedSqlOptions;
-
-    #[test]
-    fn annotation_profile_demand_merges_without_widening_explicit_requests() {
-        let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
-        let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);
-        let explicit = |profile| CheckFactPlan {
-            query_annotation: true,
-            query_annotation_options: Some(vec![profile]),
-            ..Default::default()
-        };
-
-        let mut plan = explicit(read.clone());
-        plan.include(CheckFactPlan::default());
-        assert_eq!(plan.query_annotation_options, Some(vec![read.clone()]));
-        plan.include(explicit(write.clone()));
-        assert_eq!(plan.query_annotation_options, Some(vec![read, write]));
-
-        plan.include(CheckFactPlan {
-            query_annotation: true,
-            ..Default::default()
-        });
-        assert!(plan.query_annotation_options.is_none());
-    }
-}
+mod tests;

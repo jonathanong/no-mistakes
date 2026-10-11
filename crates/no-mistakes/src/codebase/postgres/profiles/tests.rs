@@ -59,6 +59,28 @@ fn configured_annotation_demand_preserves_an_existing_all_profiles_request() {
 }
 
 #[test]
+fn configured_annotation_demand_merges_an_existing_explicit_profile() {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "postgres-require-query-annotation".into(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("importSpecifier: '@example/db'\nexecutorNames: [write]")
+            .unwrap(),
+        ..RuleDef::default()
+    });
+    let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
+    let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);
+    let mut plan = crate::codebase::check_facts::CheckFactPlan {
+        query_annotation: true,
+        query_annotation_options: Some(vec![read.clone()]),
+        ..Default::default()
+    };
+    configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    assert!(plan.query_annotation);
+    assert_eq!(plan.query_annotation_options, Some(vec![read, write]));
+}
+
+#[test]
 fn profiles_carry_scoped_executor_options_sorted_and_distinct() {
     let mut config = NoMistakesConfig::default();
     for options in [

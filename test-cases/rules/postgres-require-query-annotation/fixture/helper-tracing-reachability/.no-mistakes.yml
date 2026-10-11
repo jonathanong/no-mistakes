@@ -1,0 +1,19 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@app/db"
+      include: ["src/helper.mts"]
+      unanalyzableSql: ignore
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      importSpecifier: "@app/db"
+      executorNames: [write]
+      schemaCatalogPath: schema.json
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@app/db"
+      include: ["src/idle.mts"]
+      unanalyzableSql: ignore

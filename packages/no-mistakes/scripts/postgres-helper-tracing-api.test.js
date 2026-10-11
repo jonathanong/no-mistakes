@@ -12,6 +12,29 @@ const reviewFixtureRoot = join(
   __dirname,
   "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-review",
 );
+const reachabilityFixtureRoot = join(
+  __dirname,
+  "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-reachability",
+);
+
+test(
+  "compiled CJS and ESM retain imported helper findings with mixed SQL profiles",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const report = await cjs.check({ root: reachabilityFixtureRoot });
+    assert.deepEqual(await esm.check({ root: reachabilityFixtureRoot }), report);
+    assert.deepEqual(report.warnings, []);
+    assert.deepEqual(
+      report.rules.map((finding) => [finding.rule, finding.file, finding.line]),
+      [
+        ["postgres-conflict-ordering", "src/helper.mts", 3],
+        ["postgres-require-query-annotation", "src/helper.mts", 3],
+      ],
+    );
+  },
+);
 
 function markedLines(source, kinds) {
   return source
