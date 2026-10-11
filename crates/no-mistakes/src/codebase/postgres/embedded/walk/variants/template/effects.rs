@@ -14,7 +14,10 @@ pub(super) fn mutates_captured_fragment(
         .any(|(index, expression)| {
             // The tag runs after all expressions. A final mutation can alter
             // an earlier object reference, but not an already-copied primitive.
-            if (index < last || captured_builder) && visitor.expression_mutates_builder(expression)
+            if (index < last && visitor.expression_mutates_builder(expression))
+                || (index == last
+                    && captured_builder
+                    && visitor.expression_mutates_captured_builder(expression))
             {
                 return true;
             }
