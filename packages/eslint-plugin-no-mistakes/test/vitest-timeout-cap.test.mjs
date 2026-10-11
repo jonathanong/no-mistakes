@@ -272,6 +272,13 @@ describe(rule, () => {
         .length,
       11,
     );
+    assert.deepEqual(
+      JSON.parse(run("config-return-values").stdout)
+        .diagnostics.filter((item) => item.code?.includes(rule))
+        .map((item) => item.labels[0].span.line)
+        .toSorted((left, right) => left - right),
+      [9, 13],
+    );
     const boundaries = JSON.parse(run("positive-boundaries").stdout).diagnostics.filter((item) =>
       item.code?.includes(rule),
     );
