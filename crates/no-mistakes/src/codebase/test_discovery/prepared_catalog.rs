@@ -38,6 +38,20 @@ impl PreparedTestProjects {
             })
     }
 
+    /// Project declared slots from the already-selected runner catalog.
+    /// No fallback parsing: an unrequested runner and a failed parse stay errors.
+    #[doc(hidden)]
+    pub fn requested_runner_deadlines(
+        &self,
+        runner: TestRunner,
+    ) -> Result<Vec<crate::integration_tests::ProjectDeadlineEvidence>> {
+        self.requested_projects(runner).transpose()?
+            .ok_or_else(|| anyhow::anyhow!("{} runner projects were not prepared", runner.as_str()))
+            .map(|projects| projects.iter().map(|project| {
+                crate::integration_tests::runner_config::deadline_evidence::project_evidence(&self.root, project)
+            }).collect())
+    }
+
     #[doc(hidden)]
     pub fn project_filters(&self) -> Vec<(TestRunner, ProjectTestFilter)> {
         self.projects

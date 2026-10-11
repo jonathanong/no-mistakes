@@ -16,6 +16,7 @@ fn project(
         scope: scope.map(str::to_string),
         include: include.iter().map(|item| item.to_string()).collect(),
         exclude: exclude.iter().map(|item| item.to_string()).collect(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     }
 }

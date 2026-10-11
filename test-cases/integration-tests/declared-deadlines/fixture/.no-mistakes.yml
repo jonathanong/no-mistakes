@@ -1,0 +1,13 @@
+tests:
+  vitest:
+    configs:
+      - vitest.edges.ts
+      - vitest.negative.ts
+      - vitest.root-opaque.ts
+      - vitest.merge-direct.ts
+      - vitest.merge-opaque-flag.ts
+      - vitest.const-mutated.ts
+      - vitest.duplicate.ts
+      - vitest.projects.json
+  playwright:
+    configs: playwright.config.ts

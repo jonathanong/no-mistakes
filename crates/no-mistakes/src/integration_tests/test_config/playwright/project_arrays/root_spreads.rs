@@ -9,8 +9,10 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod calls;
+mod deadline_projection;
 mod exports;
 mod members;
+use deadline_projection::spread_project_options;
 pub(in crate::integration_tests::test_config::playwright::project_arrays) use exports::{
     imported_reexport, named_export_object, sourced_reexport,
 };
@@ -23,7 +25,10 @@ pub(super) fn project_options(
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                if property.computed || property.method {
+                if property.method
+                    || property.kind != oxc_ast::ast::PropertyKind::Init
+                    || (property.computed && shared::property_key_name(&property.key).is_none())
+                {
                     continue;
                 }
                 if shared::property_key_name(&property.key).as_deref() == Some("projects") {
@@ -40,7 +45,7 @@ pub(super) fn project_options(
     Ok(found)
 }
 
-fn spread_project_options(
+fn spread_project_options_inner(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Vec<Options>>> {

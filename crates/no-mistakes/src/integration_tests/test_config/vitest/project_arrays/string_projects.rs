@@ -140,6 +140,7 @@ fn parse_string_project_program(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut project_ctx = Ctx {
+        is_test_object: false,
         source,
         bindings,
         functions: top_level_function_bodies(program),

@@ -40,6 +40,8 @@ use string_projects::{string_project_options_for_paths, string_project_paths};
 type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
 type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
 pub(super) struct Ctx<'a, 'r> {
+    /// A nested test object retains setup planning but does not own SDK extends.
+    is_test_object: bool,
     source: &'a str,
     bindings: ExprMap<'a>,
     functions: FnMap<'a>,
@@ -62,6 +64,7 @@ pub(super) fn project_options(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),
@@ -88,6 +91,7 @@ pub(super) fn workspace_options(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),

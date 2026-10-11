@@ -1,6 +1,11 @@
 use crate::integration_tests::test_config::vitest::Options;
 
 pub(super) fn merge_options(base: &mut Options, next: Options) {
+    if next.nested_test_scope {
+        base.deadlines = next.deadlines;
+    } else if !base.nested_test_scope {
+        base.deadlines.overlay(next.deadlines);
+    }
     if next.name.is_some() {
         base.name = next.name;
     }
@@ -32,6 +37,9 @@ pub(super) fn merge_options(base: &mut Options, next: Options) {
     }
     if next.extends.is_some() {
         base.extends = next.extends;
+    }
+    if next.deadline_extends.is_some() {
+        base.deadline_extends = next.deadline_extends;
     }
     base.nested_test_scope |= next.nested_test_scope;
 }

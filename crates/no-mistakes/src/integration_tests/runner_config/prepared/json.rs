@@ -19,6 +19,7 @@ impl PreparedIntegrationRunnerConfigs {
             .map(|spec| ProjectResult {
                 framework: spec.framework,
                 raw: spec.raw.clone(),
+                deadline_error: None,
                 projects: if spec.framework == Framework::Vitest
                     && crate::integration_tests::is_vitest_project_array_path(&path)
                 {
@@ -42,6 +43,7 @@ impl PreparedIntegrationRunnerConfigs {
             })
             .collect();
         RunnerConfigFileFacts {
+            unavailable: false,
             results,
             analyses: BTreeMap::new(),
         }

@@ -966,3 +966,9 @@ Provenance is caller supplied and compared, not cryptographically verified. A
 matching full-suite trace can expose observed misses and excess-selection
 candidates; no observed misses is never a completeness proof. See the
 [artifact contract and producer recipe](cli/tests-audit.md).
+
+### Declared runner config deadlines
+
+`check({ includeRunnerConfigDeadlines: true })` exposes the CLI's optional `runnerConfigDeadlines` evidence. `analyzeProject({ reports: [{ type: "check", includeRunnerConfigDeadlines: true }] })` uses the same prepared owner and renderer. Mixed check reports prepare their union demand once; an ordinary sibling report does not receive the optional field. Existing asynchronous bindings/facades remain unchanged.
+
+The exported `RunnerConfigDeadlineEvidence`, `ConfigDeadlineEvidence`, `ProjectDeadlineEvidence`, `DeclaredDeadlineSlot`, `DeclaredDeadlineUnknownReason`, `DeadlineProvenance` and `DeadlineInheritanceEvidence` describe the tagged statuses, values and provenance. Slots are absent, known (including zero/negative/over-cap literals), or unknown with a typed reason. Paths are request-root-relative where possible; spans are byte offsets or null. Evidence survives suppression and empty findings, while ordinary integration errors are still errors. No SDK default or complete registration/runtime closure is inferred. See [CLI contract](cli/check.md#declared-runner-config-evidence).

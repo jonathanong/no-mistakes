@@ -1,0 +1,7 @@
+tests:
+  vitest:
+    configs: vitest.parse-error.ts
+    projects:
+      broken:
+        integration_suites:
+          integration: []
