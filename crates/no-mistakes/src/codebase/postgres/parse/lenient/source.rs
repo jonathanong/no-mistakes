@@ -13,6 +13,7 @@ pub(crate) struct LocatedStatement {
     /// Only the recovery wrapper projection is synthetic; nested SQL stays scoped.
     pub(crate) synthetic_select: bool,
     pub(crate) recovered_functions: Vec<crate::codebase::postgres::SqlFunctionCallFact>,
+    pub(crate) policy_arbiter: Option<crate::codebase::postgres::source::PolicyArbiter>,
 }
 
 impl LocatedStatement {
@@ -23,6 +24,7 @@ impl LocatedStatement {
             function_projection: false,
             synthetic_select: false,
             recovered_functions: Vec::new(),
+            policy_arbiter: None,
         }
     }
 

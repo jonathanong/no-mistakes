@@ -113,6 +113,11 @@ in a label make branching executor SQL inside that switch unanalyzable. The
 default `fail` reports the executor line; `ignore` skips that uncertain call.
 Literal SQL inside the switch still produces ordinary `offset` findings, and
 callbacks that are merely created or passed are not executed by this heuristic.
+Literal function or arrow closures invoked via `.call(...)` or `.apply(...)`
+also follow this boundary, including TypeScript wrappers and literal computed
+property names. Arguments are evaluated before the invoked body. Referencing
+`.call` without invoking it, using `.bind(...)`, or passing a callback keeps
+that callback body inert.
 An earlier body may be skipped by direct entry or executed by fallthrough, so
 its SQL assignments cannot supply a later case's complete statement. Bindings
 it changes become opaque for later cases. The default `fail` reports those

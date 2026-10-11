@@ -28,6 +28,24 @@ describe("vitest-timeout-cap value stability", () => {
       [[9, "timeout"]],
     );
   });
+  it("retains unknown returned objects when identity-preserving config results escape", () => {
+    const actual = findings("config-result-escapes", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [5, 9, 13, 19, 23, 27, 31, 35, 44],
+    );
+    assert.equal(actual.filter(({ messageId }) => messageId === "unknown").length, 24);
+    assert.deepEqual(
+      actual
+        .filter(({ messageId }) => messageId !== "unknown")
+        .map(({ line, messageId }) => [line, messageId]),
+      [[44, "timeout"]],
+    );
+    assert.deepEqual(
+      findings("config-result-escapes").map(({ line, messageId }) => [line, messageId]),
+      [[44, "timeout"]],
+    );
+  });
   it("preserves returned config bindings through known consumers and immutable callback aliases", () => {
     assert.deepEqual(
       findings("config-return-values", { unknownValues: "finding" }).map(({ line, messageId }) => [

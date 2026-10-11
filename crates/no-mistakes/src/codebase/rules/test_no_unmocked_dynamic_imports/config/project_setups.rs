@@ -35,6 +35,7 @@ pub(in super::super) fn explicit_project_setup_data(
             include: build_globset(&project.include)?,
             include_regex: Vec::new(),
             exclude: build_globset(&project.exclude)?,
+            required: None,
         };
         let mut setup_files = Vec::new();
         for setup in &project.setup_files {

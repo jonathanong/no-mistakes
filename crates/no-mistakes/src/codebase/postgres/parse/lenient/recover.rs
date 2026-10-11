@@ -76,11 +76,12 @@ fn parse_chunk(
         }
         _ => {
             if let Some(tokens) = original {
-                if let Some((statement, functions)) =
+                if let Some((statement, functions, arbiter)) =
                     crate::codebase::postgres::source::recover_conflict_calls(tokens)
                 {
                     let mut located = LocatedStatement::plain(statement);
                     located.recovered_functions = functions;
+                    located.policy_arbiter = arbiter;
                     return vec![located];
                 }
             }

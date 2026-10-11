@@ -1,5 +1,71 @@
 use super::*;
 
+#[test]
+fn selected_vitest_exclusions_apply_per_execution() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/selected-vitest-excludes/fixture"),
+    );
+    for (config_file, expected) in [
+        (
+            ".no-mistakes.yml",
+            vec!["shared/example.test.mts", "shared/setup.test.mts"],
+        ),
+        (
+            ".no-mistakes-b.yml",
+            vec!["shared/example.test.mts", "shared/setup.test.mts"],
+        ),
+        (
+            ".no-mistakes-inline.yml",
+            vec!["shared/example.test.mts", "shared/setup.test.mts"],
+        ),
+        (
+            ".no-mistakes-imported.yml",
+            vec!["shared/example.test.mts", "shared/setup.test.mts"],
+        ),
+        (
+            ".no-mistakes-scope.yml",
+            vec!["shared/example.test.mts", "shared/setup.test.mts"],
+        ),
+        (
+            ".no-mistakes-rule-exclude.yml",
+            vec!["shared/example.test.mts"],
+        ),
+        (".no-mistakes-include.yml", vec!["shared/example.test.mts"]),
+        (
+            ".no-mistakes-missing-app-include.yml",
+            vec!["shared/example.test.mts"],
+        ),
+    ] {
+        let config_path = root.join(config_file);
+        let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+        let files =
+            crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
+        let facts = crate::codebase::check_facts::collect_check_facts(
+            &root,
+            files,
+            crate::codebase::check_facts::CheckFactPlan {
+                imports: true,
+                dynamic_imports: true,
+                source: true,
+                ..Default::default()
+            },
+        );
+        // A's setup mocks the target, but B executes without that setup.
+        // The file excluded by both projects must never contribute a finding.
+        assert_scoped_findings(&check(&root, &config, None).unwrap(), &expected);
+        assert_scoped_findings(
+            &check_with_facts(&root, &config, None, &facts).unwrap(),
+            &expected,
+        );
+        assert_scoped_findings(
+            &crate::codebase::rules::run_check_with_facts(&root, Some(&config_path), None, &facts)
+                .unwrap(),
+            &expected,
+        );
+    }
+}
+
 fn project_fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(

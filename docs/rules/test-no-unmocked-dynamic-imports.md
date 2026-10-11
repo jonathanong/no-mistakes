@@ -137,6 +137,14 @@ when another selected test reaches it without that mock.
 There are no rule-local options. The selected `tests.vitest` or `tests.jest`
 project determines the test universe and mock semantics.
 
+When multiple Vitest projects are selected, each project's `include` and
+`exclude` patterns describe one execution. A test excluded by one project is
+still checked if another selected project runs it. A test excluded by every
+selected execution is skipped. Rule-level `exclude` patterns apply to all
+executions. An application `include` or code-project scope still limits the
+selected execution, and each execution uses its own setup files when deciding
+whether a dynamic import is mocked.
+
 ## Valid example
 
 ```ts

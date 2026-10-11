@@ -1,47 +1,36 @@
-use super::super::super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::chain;
-use super::super::{shadows_param, Resolvable};
-use crate::codebase::postgres::embedded::tags::SqlTagNames;
+use super::super::provenance::RecoveredSql;
+use super::super::shadows_param;
+use super::BodySource;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression, ExpressionStatement};
-use std::collections::HashMap;
 
 pub(super) fn apply_append_statement(
     statement: &ExpressionStatement<'_>,
-    resolvable: &Resolvable<'_>,
+    context: &BodySource<'_, '_>,
     depth: u8,
-    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &SqlTagNames,
-    locals: &mut HashMap<String, String>,
+    locals: &mut FxHashMap<String, RecoveredSql>,
 ) -> Option<()> {
     let Expression::CallExpression(call) = unwrap_ts_wrappers(&statement.expression) else {
         return None;
     };
-    let (name, appended) = local_append_parts(
-        call,
-        resolvable,
-        depth,
-        lookup,
-        is_shadowed,
-        imported_sql_tags,
-        locals,
-    )?;
+    let (name, appended) = local_append_parts(call, context, depth, lookup, is_shadowed, locals)?;
     let sql = locals.get_mut(&name)?;
-    let appended = renumber_placeholders(&appended, count_placeholders(sql));
-    sql.push_str(&appended);
+    sql.append(appended);
     Some(())
 }
 
 fn local_append_parts(
     call: &CallExpression<'_>,
-    resolvable: &Resolvable<'_>,
+    context: &BodySource<'_, '_>,
     depth: u8,
-    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &SqlTagNames,
-    locals: &HashMap<String, String>,
-) -> Option<(String, String)> {
+    locals: &FxHashMap<String, RecoveredSql>,
+) -> Option<(String, RecoveredSql)> {
     let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
         return None;
     };
@@ -56,34 +45,32 @@ fn local_append_parts(
         return None;
     }
     let expr = call.arguments.first()?.as_expression()?;
-    let appended = resolve_fragment(
-        expr,
-        resolvable,
-        depth,
-        lookup,
-        is_shadowed,
-        imported_sql_tags,
-        locals,
-    )?;
+    let appended = resolve_fragment(expr, context, depth, lookup, is_shadowed, locals)?;
     Some((name, appended))
 }
 
 pub(super) fn resolve_fragment(
     expr: &Expression<'_>,
-    resolvable: &Resolvable<'_>,
+    context: &BodySource<'_, '_>,
     depth: u8,
-    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &SqlTagNames,
-    locals: &HashMap<String, String>,
-) -> Option<String> {
+    locals: &FxHashMap<String, RecoveredSql>,
+) -> Option<RecoveredSql> {
     match unwrap_ts_wrappers(expr) {
         Expression::Identifier(ident) => {
-            if shadows_param(resolvable, ident.name.as_str()) {
+            if shadows_param(context.resolvable, ident.name.as_str()) {
                 return None;
             }
             locals.get(ident.name.as_str()).cloned()
         }
-        _ => chain::resolve_expr(expr, depth, lookup, is_shadowed, imported_sql_tags),
+        _ => chain::resolve_expr(
+            expr,
+            context.source,
+            depth,
+            lookup,
+            is_shadowed,
+            context.imported_sql_tags,
+        ),
     }
 }

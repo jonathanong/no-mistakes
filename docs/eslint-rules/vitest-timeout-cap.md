@@ -202,6 +202,13 @@ object to the reader. For example, `Math.max(options.timeout, 0)` keeps an uncha
 unproved consumer, reading a getter, or writing a timeout still keeps analysis
 conservative.
 
+Callback confinement also follows identity-preserving `defineConfig` and
+`defineProject` results through immutable aliases and nested config helpers.
+Exports, unknown consumers, direct invocation, and mutation of those results
+leave the returned config unresolved. A standalone helper call or a result
+consumed by `mergeConfig` preserves the proof because the latter builds a config
+object without retaining the callback identity.
+
 Erased TypeScript `typeof` type queries, including qualified property queries,
 do not participate in the runtime stability proof. A callback or config binding
 can retain a known timeout when it also appears in a type alias. Runtime

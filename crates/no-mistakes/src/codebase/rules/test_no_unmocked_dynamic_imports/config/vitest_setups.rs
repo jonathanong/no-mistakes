@@ -11,9 +11,14 @@ pub(super) fn from_facts(
     visible: &crate::fx::PathSet,
     facts: &RunnerConfigFacts,
 ) -> Result<Vec<ConfigSetupData>> {
-    let projects = facts
-        .get(path)
-        .and_then(|facts| facts.vitest_projects())
+    let file_facts = facts.get(path).ok_or_else(|| {
+        anyhow::anyhow!(
+            "missing prepared Vitest config projects for {}",
+            path.display()
+        )
+    })?;
+    let projects = file_facts
+        .vitest_projects()
         .ok_or_else(|| {
             anyhow::anyhow!(
                 "missing prepared Vitest config projects for {}",
@@ -21,6 +26,10 @@ pub(super) fn from_facts(
             )
         })?
         .map_err(anyhow::Error::msg)?;
+    if projects.is_empty() && !file_facts.has_config_export() {
+        // Named-only helpers supply no runner execution or global setup mocks.
+        return Ok(Vec::new());
+    }
     let rules = config.rule_applications(super::super::RULE_ID);
     let all = rules.is_empty()
         || rules.iter().any(|rule| {
@@ -60,6 +69,7 @@ pub(super) fn from_facts(
                     include: build_globset(include)?,
                     include_regex: Vec::new(),
                     exclude: build_globset(exclude)?,
+                    required: None,
                 },
                 // The runner parser has already applied extends, independent config
                 // files, explicit empty overrides, and project-relative resolution.

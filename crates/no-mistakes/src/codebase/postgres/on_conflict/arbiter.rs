@@ -21,6 +21,29 @@ pub(super) fn judge(_insert: &SqlInsertFact, conflict: &SqlOnConflictFact) -> Op
                 ))
             })
         }),
+        SqlConflictArbiter::Expressions { columns, unknown } => {
+            conflict.assignments.iter().find_map(|assignment| {
+                if form_is_self(&assignment.form, &assignment.column) {
+                    return None;
+                }
+                if columns.iter().any(|column| column.eq_ignore_ascii_case(&assignment.column)) {
+                    if form_is_excluded(&assignment.form, &assignment.column) {
+                        return None;
+                    }
+                    return Some(format!(
+                        "ON CONFLICT expression arbiter depends on {}; assign EXCLUDED.{} or leave it unchanged",
+                        assignment.column, assignment.column
+                    ));
+                }
+                if *unknown {
+                    return Some(format!(
+                        "ON CONFLICT expression arbiter cannot prove whether assignment to {} changes the conflict key",
+                        assignment.column
+                    ));
+                }
+                None
+            })
+        }
         SqlConflictArbiter::Constraint(_) => conflict.assignments.iter().find_map(|assignment| {
             if form_is_excluded(&assignment.form, &assignment.column)
                 || form_is_self(&assignment.form, &assignment.column)
