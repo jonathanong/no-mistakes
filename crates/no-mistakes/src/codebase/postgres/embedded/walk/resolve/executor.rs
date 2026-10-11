@@ -66,12 +66,15 @@ pub(crate) fn executor_call(
                     kind
                 },
                 declaration_line: None,
-                sql_source_positions: super::super::super::source_positions::for_expression(
-                    argument,
-                    visitor.source,
-                    call.span.start as usize,
-                    line,
-                ),
+                sql_source_positions: super::compose::parameter_source_positions(argument, visitor)
+                    .unwrap_or_else(|| {
+                        super::super::super::source_positions::for_expression(
+                            argument,
+                            visitor.source,
+                            call.span.start as usize,
+                            line,
+                        )
+                    }),
                 recovered_placeholder_positions,
             }
         }

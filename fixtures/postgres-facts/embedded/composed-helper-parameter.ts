@@ -73,6 +73,12 @@ write(project(timed, "item"));
 timed.append(sql` OFFSET 1`);
 write(project(timed, "item"));
 
+function mutate(select: SQLStatement): string {
+  select.append(sql` OFFSET 3`);
+  return "item";
+}
+write(project(timed, mutate(timed)));
+
 function sideEffect(select: SQLStatement): SQLStatement {
   select.append(sql` WHERE id = ${getValue()}`);
   return select;

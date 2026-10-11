@@ -76,7 +76,7 @@ fn parameter_builder_is_shared_by_annotation_and_offset_rules() {
     assert!(!out.status.success(), "expected findings: {body}");
     let report: serde_json::Value = serde_json::from_str(&body).unwrap();
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 3, "{body}");
+    assert_eq!(findings.len(), 4, "{body}");
     assert!(
         findings.iter().any(|f| f["line"] == 11
             && f["rule"] == "postgres-require-query-annotation"
@@ -84,13 +84,19 @@ fn parameter_builder_is_shared_by_annotation_and_offset_rules() {
         "{body}"
     );
     assert!(
-        findings.iter().any(|f| f["line"] == 17
+        findings.iter().any(|f| f["line"] == 16
             && f["rule"] == "postgres-no-offset"
             && f["target"] == "offset"),
         "{body}"
     );
     assert!(
-        findings.iter().any(|f| f["line"] == 23
+        findings.iter().any(|f| f["line"] == 31
+            && f["rule"] == "postgres-no-offset"
+            && f["target"] == "unanalyzable"),
+        "{body}"
+    );
+    assert!(
+        findings.iter().any(|f| f["line"] == 40
             && f["rule"] == "postgres-no-offset"
             && f["target"] == "unanalyzable"),
         "{body}"

@@ -78,7 +78,7 @@ pub(crate) fn collect_calls<'a>(
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program, trusted_sql_tags),
+        functions: resolve::LocalFunctions::collect(program, source, trusted_sql_tags),
         sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);
