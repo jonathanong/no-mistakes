@@ -100,5 +100,11 @@
     "author": "chatgpt-codex-connector",
     "body": "<!-- codex-pull-request-review-summary -->\n<!-- codex-security-review:v1 {\"blockingSeverityThreshold\":\"P0\",\"headSha\":\"feae6d2ab9991d9842b45f8cdb4a3d1033423631\",\"mergeGateEnabled\":false,\"pullRequestNumber\":1781,\"repository\":\"jonathanong/no-mistakes\",\"status\":\"running\"} -->\n## Codex Review Summary\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | 🔄 **Running** since <relative-time datetime=\"2026-10-11T06:59:15.309051Z\">2026-10-11T06:59:15.309051Z</relative-time> | `feae6d2` | New commits |\n| 🔒 **Security Review** | 🔄 **Running** since <relative-time datetime=\"2026-10-11T06:59:15.567044Z\">2026-10-11T06:59:15.567044Z</relative-time> | `feae6d2` | New commits |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>",
     "url": "https://github.com/jonathanong/no-mistakes/pull/1781#issuecomment-6106388269"
+  },
+  {
+    "name": "coderabbit-rate-limit-billing-singular-minute",
+    "author": "coderabbitai",
+    "body": "<!-- This is an auto-generated reply by CodeRabbit -->\n<!-- CodeRabbit review command invocation: v2:de0771a75659b4f80dc559b3a2d626caf56be12c8881d6c22a7a7f4ae90b5618 -->\n<details>\n<summary>⚠️ Action not completed</summary>\n\nReview rate limited.\n\n---\n\nYour included review limit is currently reached under our [Fair Usage Limits Policy](https://docs.coderabbit.ai/management/plans#fair-usage-limits-policy). This review may still proceed through usage-based billing if eligible. Your next included review will be available in 1 minute.\n\n</details>",
+    "url": "https://github.com/jonathanong/no-mistakes/pull/1779#issuecomment-6105258457"
   }
 ]
