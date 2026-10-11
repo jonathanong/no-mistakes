@@ -2,6 +2,7 @@
 const { resolveVariable } = require("./async-target-bindings");
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { staticPropertyName } = require("./vitest-timeout-bindings");
+const { laterTopLevelWrite } = require("./vitest-timeout-write-order");
 
 // Probe only the copied property: evaluating the whole spread would re-enter
 // the source whose stability is currently being checked.
@@ -66,7 +67,10 @@ function createScalarCopyWrite(context, evaluate) {
         return true;
       if (!["=", "&&=", "||=", "??="].includes(assignment.operator)) return true;
       const key = staticPropertyName({ key: member.property, computed: member.computed }, context);
-      return key !== null && (key !== name || scalar(assignment.right));
+      return (
+        key !== null &&
+        (key !== name || scalar(assignment.right) || laterTopLevelWrite(node, assignment, context))
+      );
     });
   };
 }
