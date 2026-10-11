@@ -1,3 +1,6 @@
+#[path = "common/saved_fixture.rs"]
+mod saved_fixture;
+
 #[path = "support/docs_node_runtime_exports.rs"]
 mod docs_node_runtime_exports;
 use std::collections::BTreeSet;
@@ -377,6 +380,7 @@ fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
         .git_exclude(false)
         .git_ignore(true)
         .require_git(false)
+        .filter_entry(|entry| entry.file_name() != ".git")
         .build()
         .filter_map(|entry| {
             let entry =
@@ -392,16 +396,21 @@ fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
 #[test]
 fn identifier_inventory_includes_root_and_agent_documents() {
     // Saved root/agent documents protect scan scope; ignored build output stays out.
-    let root = repo_root().join("test-cases/docs/identifier-inventory/fixture");
+    let source = repo_root().join("test-cases/docs/identifier-inventory/fixture");
+    let fixture = saved_fixture::materialize_path(&source);
+    let root = fixture.path();
+    std::fs::rename(root.join(".git.fixture"), root.join(".git")).unwrap();
+    assert!(root.join(".git/config").is_file());
     assert!(root.join("ignored.md").is_file());
-    let paths: BTreeSet<_> = consumer_identifier_paths(&root)
+    let paths: BTreeSet<_> = consumer_identifier_paths(root)
         .into_iter()
-        .map(|path| path.strip_prefix(&root).unwrap().to_owned())
+        .map(|path| path.strip_prefix(root).unwrap().to_owned())
         .collect();
     assert!(paths.contains(Path::new("README.md")));
     assert!(paths.contains(Path::new("skills/no-mistakes/SKILL.md")));
     assert!(paths.contains(Path::new("skills/no-mistakes/references/example.md")));
     assert!(!paths.contains(Path::new("ignored.md")));
+    assert!(!paths.iter().any(|path| path.starts_with(".git")));
 }
 
 #[test]

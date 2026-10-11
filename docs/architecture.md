@@ -566,3 +566,37 @@ Still to converge:
    passes.
 2. Continue replacing serial shared mutation with concurrent caches or
    thread-local collection plus deterministic merge.
+
+## Prepared declared test deadlines
+
+The prepared runner-config interpreter retains internal declaration evidence on each ConfigProject. Case, hook and fixture slots are independent; an absent slot is None, not a default or proof that its deadline is bounded. Known numeric evidence retains zero, negatives and values above a policy cap. Expressions, non-finite values, opaque spreads, dynamic properties and unresolved config bases retain typed unknown reasons.
+
+Vitest testTimeout and hookTimeout and Playwright timeout are interpreted in the existing config object traversal, through its request-owned SourceStore, parsed-program cache and import resolver. Supported config forms have no fixture-timeout field, so the fixture slot remains absent. Fixture registration tuples and callback/runtime setters are outside this first unit. Numeric literals and unary numeric literals are known; bindings and other expressions remain unknown until canonical binding evidence is available.
+
+Ordered static spreads preserve declaration origins; an opaque spread makes affected slots unknown, and a later explicit field restores only its slot. A nested Vitest test object replaces the prior test object during object spread. Inline project inheritance retains the original declaration path/span plus the inherited project provenance. Explicit false or a named config base does not fall back to aggregate-root deadlines. Named unresolved bases remain unknown for missing slots. JSON project declarations retain their path without a fabricated AST span. Explicit ownership policy replacement preserves parsed deadline evidence.
+
+The optional check report exposes this declared-config evidence through the existing shared CLI/N-API renderer; it supplies no SDK default assumption, waiver or full registration/runtime closure proof. The inline config inheritance contract follows current Vitest 5 semantics; SDK version variation is still an unresolved consumer contract. No universal timeout enforcement is inferred from these facts alone.
+
+### Declared deadline edge semantics
+
+Literal computed keys use the existing key interpreter. Accessor kinds are identified explicitly through OXC PropertyKind; known deadline accessors remain unknown in that slot while unrelated accessors preserve other slots. A dynamic extends selector is not absence, and a final opaque project spread cannot preserve an earlier false selector as proof. The SDK selector belongs to the outer project; test.extends is ignored for inheritance.
+
+Direct public imported defineConfig/defineProject and mergeConfig calls are interpreted in the existing raw-config owner. Local config-value aliases remain unknown until canonical binding evidence proves immutability. Deep merge overlays nested slots; ordinary object spread replaces its test object. Unsupported calls and legacy CommonJS forms keep their existing ownership interpretation but provide unknown deadline evidence rather than a first-argument numeric proof.
+
+Named config bases currently resolve through the existing importer catalog, which cannot certify the SDK-selected config root. Local explicit slots remain evidence, while missing slots inherited from a named base remain unknown (including when the observed candidate has no declaration). Candidate source path/span are observed provenance, not a claim that the SDK selected that file. Proving and threading the prepared config root is remaining work; this unit adds no second resolver, parser, source store or graph.
+
+### Binding identity and merge arguments
+
+The existing expression map records initializers without complete write, escape or object-mutation facts. Consequently raw config aliases and object/helper projections without canonical immutability evidence retain Unknown(UnprovedBinding), including const object aliases. Direct public calls require an actual runtime ESM import in the current Program and no competing binding/function in the current interpreter scope. CommonJS aliases and unresolved helper shadowing do not certify public identity. No new semantic pass, parser or graph is built to infer missing proof.
+
+The installed Vite public mergeConfig contract takes defaults, overrides and an optional boolean isRoot. This unit interprets two config objects with either no third argument or a literal boolean flag, and merges only the first two. Non-literal flags, a third object and extra arguments remain unknown; they are never treated as more override configs. Direct literal merge calls remain positive controls. Binding/ref and transitive helper closure remain unresolved and no universal proof is claimed.
+
+### Public declared deadline evidence
+
+`check --include-runner-config-deadlines --json`, Node `check({ includeRunnerConfigDeadlines: true })`, and an `analyzeProject` check report with the same option expose `runnerConfigDeadlines`. The option extends the existing runner-config demand before the request union fact collection. Explicit Vitest/Playwright config lists are included even when no integration suite needs project inference. It adds no automatic repository-wide runner fallback. Omitted config lists retain existing configured integration/route-coverage selection; they are not certified as an exhaustive runner inventory.
+
+The integration prepared catalog owns this check projection and its importer-scoped catalog/root. A prepared test-discovery catalog can project its own retained deadlines through `requested_runner_deadlines`; that method surfaces not requested/failed preparation rather than parsing again. These are distinct selection semantics. The renderer must not substitute a test-planning catalog merely because filenames match. Both interpretations borrow the request inventory, source store and program cache when the request needs them.
+
+Runner selection is `notRequested`, `prepared`, or `failed`. Requested empty lists are prepared empty selections. Config failures retain diagnostics separately from prepared project records. Each project exposes `case`, `hook`, and `fixture` as explicit `absent`, `known`, or `unknown` tagged slots. Known invalid values survive unchanged. Unknown reasons are exhaustive typed projections. Provenance paths use the existing request-root-relative slash formatter, byte spans are half-open offsets (or null), and inheritance order is retained. Outside-root sources retain their path rather than being silently re-rooted.
+
+Ordinary fields and integration errors remain unchanged. Missing inputs retain evidence failure records without satisfying the legacy integration coverage invariant. Suppression affects findings, not evidence. Batched requests prepare the union demand once and expose evidence only on check reports that requested it; JSON/YAML share the ordinary check renderer. This projection does not prove registration packages, browser/custom runner behavior, SDK defaults, runtime latches or transitive package closure.

@@ -16,6 +16,7 @@ pub(crate) fn prepare(
             None,
         )),
         None,
+        false,
     )
 }
 
@@ -26,7 +27,14 @@ pub(crate) fn prepare_with_catalog_and_sources(
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> PreparedIntegrationRunnerConfigs {
-    prepare_inner(root, config, visible_paths, tsconfig_catalog, Some(sources))
+    prepare_inner(
+        root,
+        config,
+        visible_paths,
+        tsconfig_catalog,
+        Some(sources),
+        false,
+    )
 }
 
 fn prepare_inner(
@@ -35,6 +43,7 @@ fn prepare_inner(
     visible_paths: &[PathBuf],
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
+    deadlines: bool,
 ) -> PreparedIntegrationRunnerConfigs {
     let mut specs = Vec::new();
     add_framework_specs(
@@ -44,7 +53,7 @@ fn prepare_inner(
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
         visible_paths,
-        false,
+        deadlines && config.tests.playwright.configs.is_some(),
     );
     add_framework_specs(
         &mut specs,
@@ -53,7 +62,8 @@ fn prepare_inner(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         visible_paths,
-        !config.tests.playwright.route_coverage_sources.is_empty()
+        (deadlines && config.tests.vitest.configs.is_some())
+            || !config.tests.playwright.route_coverage_sources.is_empty()
             || config
                 .tests
                 .playwright
@@ -73,6 +83,16 @@ fn prepare_inner(
     PreparedIntegrationRunnerConfigs {
         root: root.to_path_buf(),
         specs,
+        deadline_runners: [
+            (
+                "playwright",
+                deadlines && config.tests.playwright.configs.is_some(),
+            ),
+            ("vitest", deadlines && config.tests.vitest.configs.is_some()),
+        ]
+        .into_iter()
+        .filter_map(|(runner, requested)| requested.then_some(runner))
+        .collect(),
         tsconfig_catalog,
         visible_files,
         sources,
@@ -103,4 +123,15 @@ fn add_framework_specs(
         path: crate::codebase::ts_resolver::normalize_path(&root.join(&raw)),
         raw,
     }));
+}
+
+/// Extend existing configured selection; do not discover unrelated runner roots.
+pub fn prepare_runner_configs_with_deadline_evidence(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+    catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> PreparedIntegrationRunnerConfigs {
+    prepare_inner(root, config, visible_paths, catalog, Some(sources), true)
 }

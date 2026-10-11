@@ -54,6 +54,7 @@ pub(super) fn swift_projects_from_facts(
                             &[format!("{package_slash}/Tests/{}/**/*.swift", target.name)],
                         ),
                         exclude: Vec::new(),
+                        declared_deadlines: Default::default(),
                         vitest_setup: Vec::new(),
                     })
                     .collect::<Vec<_>>()
@@ -68,6 +69,7 @@ pub(super) fn swift_projects_from_facts(
                 scope: Some(package_slash.to_string()),
                 include: vec![format!("{package_slash}/Tests/**/*.swift")],
                 exclude: Vec::new(),
+                declared_deadlines: Default::default(),
                 vitest_setup: Vec::new(),
             });
         } else {
@@ -110,6 +112,7 @@ fn configured_swift_project(
         scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     })
 }

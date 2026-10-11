@@ -6,6 +6,8 @@ export interface CheckReport {
   queues: QueueCheckFinding[];
   rules: RuleFinding[];
   integration: IntegrationFinding[];
+  /** Present only when requested; declaration evidence, not runtime closure. */
+  runnerConfigDeadlines?: RunnerConfigDeadlineEvidence[];
   codebase: UniqueExportFinding[];
   warnings: string[];
   advisories: RuleFinding[];
@@ -54,4 +56,51 @@ export interface UniqueExportFinding {
   exportName: string;
   exportKind: string;
   message: string;
+}
+
+export type RunnerDeadlineStatus = "notRequested" | "prepared" | "failed";
+export interface RunnerConfigDeadlineEvidence {
+  framework: "playwright" | "vitest";
+  status: RunnerDeadlineStatus;
+  configs: ConfigDeadlineEvidence[];
+}
+export type ConfigDeadlineEvidence =
+  | { status: "prepared"; config: string; projects: ProjectDeadlineEvidence[] }
+  | { status: "failed"; config: string; error: string };
+export interface ProjectDeadlineEvidence {
+  config: string | null;
+  workspace: boolean;
+  policyName: string | null;
+  runnerProjectArg: string | null;
+  scope: string | null;
+  case: DeclaredDeadlineSlot;
+  hook: DeclaredDeadlineSlot;
+  fixture: DeclaredDeadlineSlot;
+}
+export type DeclaredDeadlineSlot =
+  | { status: "absent" }
+  | { status: "known"; milliseconds: number; provenance: DeadlineProvenance }
+  | { status: "unknown"; reason: DeclaredDeadlineUnknownReason; provenance: DeadlineProvenance };
+export type DeclaredDeadlineUnknownReason =
+  | "expression"
+  | "nonFinite"
+  | "opaqueSpread"
+  | "opaqueTestObject"
+  | "computedProperty"
+  | "unresolvedExtends"
+  | "unresolvedInheritance"
+  | "unprovedConfigRoot"
+  | "accessor"
+  | "unsupportedConfigCall"
+  | "unprovedBinding";
+export interface DeadlineProvenance {
+  /** Request-root-relative slash path; outside-root sources retain their path. */
+  path: string;
+  /** Half-open source byte offsets, never line numbers; null when unavailable. */
+  span: [number, number] | null;
+  inheritedThrough: DeadlineInheritanceEvidence[];
+}
+export interface DeadlineInheritanceEvidence {
+  path: string;
+  project: string | null;
 }

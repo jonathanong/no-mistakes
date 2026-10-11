@@ -28,6 +28,7 @@ pub(crate) use test_config::vitest::setup_resolution::resolve_setup_dependencies
 
 #[doc(hidden)]
 pub use runner_config::PreparedIntegrationRunnerConfigs;
+pub use types::deadline_evidence::*;
 pub use types::IntegrationFinding;
 
 #[doc(hidden)]
@@ -43,7 +44,9 @@ pub fn prepare_runner_configs(
 pub(crate) use checks::sort_findings;
 use checks::{check_suites, check_suites_with_resolver, fail_on_dropped_files};
 pub use runner_config::configured_runner_config_dirs;
-pub use runner_config::prepare_runner_configs_with_catalog;
+pub use runner_config::{
+    prepare_runner_configs_with_catalog, prepare_runner_configs_with_deadline_evidence,
+};
 
 pub fn check(root: &Path, config_path: Option<&Path>) -> Result<Vec<IntegrationFinding>> {
     standalone::check(root, config_path)

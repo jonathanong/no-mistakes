@@ -71,6 +71,7 @@ fn project_for(
         scope: Some(slash.to_string()),
         include: prefix_globs(root, &package_root, includes),
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     }
 }

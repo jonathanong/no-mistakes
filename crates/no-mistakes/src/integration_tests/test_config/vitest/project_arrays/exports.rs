@@ -38,6 +38,7 @@ fn exported_options_lookup(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: parent.is_test_object,
         source,
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),

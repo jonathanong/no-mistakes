@@ -1,0 +1,5 @@
+[
+  { "test": { "name": "one", "testTimeout": 1, "hookTimeout": 30000 } },
+  { "test": { "name": "zero", "testTimeout": 0, "hookTimeout": 30001 } },
+  { "testTimeout": 60000, "test": { "name": "absent" } }
+]

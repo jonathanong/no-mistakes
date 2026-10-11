@@ -7,7 +7,26 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options> {
+    let extends =
+        optional_bool(object, "extends")?.map(
+            |value| {
+                if value {
+                    Extends::True
+                } else {
+                    Extends::False
+                }
+            },
+        );
     Ok(Options {
+        deadlines: crate::integration_tests::types::DeclaredDeadlines {
+            case: object
+                .get("testTimeout")
+                .map(|value| super::super::super::deadlines::json_declaration(value, path)),
+            hook: object
+                .get("hookTimeout")
+                .map(|value| super::super::super::deadlines::json_declaration(value, path)),
+            fixture: None,
+        },
         name: optional_name(object)?,
         root: optional_string(object, "root")?,
         include: optional_strings(object, "include")?,
@@ -20,18 +39,14 @@ pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options>
         global_setup_cleared: object
             .get("globalSetup")
             .is_some_and(|value| value == &Value::Array(vec![])),
-        extends: optional_bool(object, "extends")?.map(|value| {
-            if value {
-                Extends::True
-            } else {
-                Extends::False
-            }
-        }),
+        deadline_extends: extends.clone(),
+        extends,
         ..Options::default()
     })
 }
 
 pub(super) fn merge(base: &mut Options, nested: Options) {
+    base.deadlines = nested.deadlines;
     base.name = nested.name.or(base.name.take());
     base.root = nested.root.or(base.root.take());
     base.include = nested.include.or(base.include.take());

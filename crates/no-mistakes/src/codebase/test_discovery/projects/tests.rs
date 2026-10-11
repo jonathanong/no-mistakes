@@ -37,6 +37,7 @@ fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProje
         scope: None,
         include: vec![include.to_string()],
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     }
 }
@@ -256,4 +257,30 @@ fn runner_config_rejects_dotnet_after_fast_path() {
     let config = NoMistakesConfig::default();
 
     let _ = runner_config(&config, TestRunner::Dotnet);
+}
+
+#[test]
+fn explicit_ownership_policy_preserves_declared_deadline_provenance() {
+    use crate::integration_tests::types::{DeadlineDeclaration, DeadlineValue};
+    let mut project = config_project("vitest.config.ts", "shared", "old/**/*.test.ts");
+    project.declared_deadlines.case = Some(DeadlineDeclaration {
+        value: DeadlineValue::Known(0.0),
+        path: PathBuf::from("budgets.ts"),
+        span: Some((1, 2)),
+        inherited_through: Vec::new(),
+    });
+    let original = project.declared_deadlines.clone();
+    let mut projects = vec![project];
+    let policy = TestProjectPolicy {
+        include: vec!["new/**/*.test.ts".to_string()],
+        ..Default::default()
+    };
+    apply_explicit_policy_projects(
+        Path::new(""),
+        None,
+        &BTreeMap::from([("shared".to_string(), policy)]),
+        &mut projects,
+    );
+    assert_eq!(projects[0].declared_deadlines, original);
+    assert_eq!(projects[0].include, vec!["new/**/*.test.ts"]);
 }

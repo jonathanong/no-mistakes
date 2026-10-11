@@ -6,8 +6,12 @@ pub fn materialize(category: &str, name: &str) -> tempfile::TempDir {
         .join("../../fixtures")
         .join(category)
         .join(name);
+    materialize_path(&source)
+}
+
+pub fn materialize_path(source: &Path) -> tempfile::TempDir {
     let destination = tempfile::TempDir::new().expect("create fixture destination");
-    copy_tree(&source, destination.path());
+    copy_tree(source, destination.path());
     destination
 }
 

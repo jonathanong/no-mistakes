@@ -28,6 +28,7 @@ pub(in crate::integration_tests) fn config_project(
         scope: (!scope.is_empty() && scope != ".").then_some(scope),
         include: include_globs(root, config_dir, source, visible_files)?,
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     })
 }

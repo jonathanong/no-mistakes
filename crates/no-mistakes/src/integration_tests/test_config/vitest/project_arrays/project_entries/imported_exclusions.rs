@@ -119,6 +119,7 @@ fn extend_imported_exclusions(
                     let mut local_seen = BTreeSet::new();
                     let mut object_seen = BTreeSet::new();
                     let mut ctx = Ctx {
+                        is_test_object: parent.is_test_object,
                         source,
                         bindings,
                         functions: top_level_function_bodies(program),
@@ -169,6 +170,7 @@ pub(super) fn extend_imported_call_exclusions(
                     let mut local_seen = BTreeSet::new();
                     let mut object_seen = BTreeSet::new();
                     let mut ctx = Ctx {
+                        is_test_object: parent.is_test_object,
                         source,
                         bindings,
                         functions: top_level_function_bodies(program),

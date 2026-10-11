@@ -40,10 +40,12 @@ pub(in crate::integration_tests) struct PlaywrightProject {
     test_dir: String,
     test_match: Vec<String>,
     test_ignore: Vec<String>,
+    deadlines: crate::integration_tests::types::DeclaredDeadlines,
 }
 
 #[derive(Default, Clone)]
 struct Options {
+    deadlines: crate::integration_tests::types::DeclaredDeadlines,
     name: Option<String>,
     test_dir: Option<String>,
     test_match: Option<Vec<String>>,
@@ -70,6 +72,7 @@ impl ParsedPlaywrightConfig {
                     )),
                     include: prefix_globs(root, &test_dir, &project.test_match),
                     exclude: prefix_globs(root, &test_dir, &project.test_ignore),
+                    declared_deadlines: project.deadlines,
                     vitest_setup: Vec::new(),
                 }
             })
@@ -135,11 +138,33 @@ impl PlaywrightProject {
 }
 
 fn merge_project(config_dir: &Path, root: &Options, project: Option<Options>) -> PlaywrightProject {
+    let has_project = project.is_some();
     let project = project.unwrap_or_default();
     let runner_project_arg = project.name.clone();
+    let mut deadlines = if has_project {
+        project.deadlines.clone()
+    } else {
+        root.deadlines.clone()
+    };
+    if has_project {
+        let path = root
+            .deadlines
+            .case
+            .as_ref()
+            .map(|declaration| declaration.path.clone())
+            .unwrap_or_default();
+        deadlines.inherit_missing(
+            &root.deadlines,
+            crate::integration_tests::types::DeadlineInheritance {
+                path,
+                project: project.name.clone(),
+            },
+        );
+    }
     PlaywrightProject {
         policy_name: project.name.or_else(|| root.name.clone()),
         runner_project_arg,
+        deadlines,
         config_dir: config_dir.to_path_buf(),
         test_dir: project
             .test_dir

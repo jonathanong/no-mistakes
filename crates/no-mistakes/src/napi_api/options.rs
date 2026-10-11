@@ -20,6 +20,7 @@ pub(crate) struct ProjectOptions {
     pub(crate) depth: Option<usize>,
     pub(crate) assert_no_fetch: bool,
     pub(crate) include_suppressed: bool,
+    pub(crate) include_runner_config_deadlines: bool,
     pub(crate) direction: Option<String>,
     /// `react usages` target component (`path` or `path#Symbol`).
     pub(crate) target: Option<String>,

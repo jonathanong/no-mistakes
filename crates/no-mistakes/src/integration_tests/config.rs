@@ -118,6 +118,7 @@ pub(crate) fn configured_project(
         scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     })
 }

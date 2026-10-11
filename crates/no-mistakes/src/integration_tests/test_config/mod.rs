@@ -1,3 +1,4 @@
+mod deadlines;
 pub mod jest;
 pub mod playwright;
 pub(super) mod shared;

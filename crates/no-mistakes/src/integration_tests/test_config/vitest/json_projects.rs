@@ -48,6 +48,7 @@ pub(super) fn parse(
             // Match Vitest's TS/JS object semantics: once `test` exists, these
             // fields belong to that nested object. `root` and `extends` may
             // still be declared on the outer project object.
+            options.deadlines = Default::default();
             options.name = None;
             options.include = None;
             options.exclude = None;
@@ -55,7 +56,9 @@ pub(super) fn parse(
             options.global_setup = None;
             options.setup_files_cleared = false;
             options.global_setup_cleared = false;
-            options::merge(&mut options, options::parse(test, path)?);
+            let mut nested = options::parse(test, path)?;
+            nested.deadline_extends = None;
+            options::merge(&mut options, nested);
         }
         projects.push(to_project(config_dir, root, options, resolver));
     }

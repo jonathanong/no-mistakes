@@ -5,12 +5,15 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct PreparedFactDemand {
     call_site_files: Vec<PathBuf>,
+    runner_config_files: Vec<PathBuf>,
     needs_other_facts: bool,
 }
 
 impl PreparedFactDemand {
     pub(crate) fn needs_shared_facts(&self) -> bool {
-        self.needs_other_facts || !self.call_site_files.is_empty()
+        self.needs_other_facts
+            || !self.call_site_files.is_empty()
+            || !self.runner_config_files.is_empty()
     }
 
     /// Files needed by the request's primary shared-facts consumers.
@@ -22,10 +25,9 @@ impl PreparedFactDemand {
         if self.needs_other_facts {
             return discovered;
         }
-        no_mistakes::codebase::check_facts::ordered_path_intersection(
-            &self.call_site_files,
-            &discovered,
-        )
+        let mut requested = self.call_site_files.clone();
+        requested.extend(self.runner_config_files.iter().cloned());
+        no_mistakes::codebase::check_facts::ordered_path_intersection(&requested, &discovered)
     }
 
     /// Call-source files absent from the request's primary fact and graph scopes.
@@ -64,6 +66,11 @@ pub(crate) fn prepare(
     }
     Ok(PreparedFactDemand {
         call_site_files: files,
+        runner_config_files: plan
+            .integration_runner_configs
+            .as_ref()
+            .map(|plan| plan.paths().cloned().collect())
+            .unwrap_or_default(),
         needs_other_facts,
     })
 }

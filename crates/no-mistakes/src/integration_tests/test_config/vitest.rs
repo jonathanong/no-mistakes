@@ -22,6 +22,7 @@ const DEFAULT_EXTENSIONS: &[&str] = &[
 
 #[derive(Default, Clone)]
 pub(super) struct Options {
+    pub(super) deadlines: crate::integration_tests::types::DeclaredDeadlines,
     pub(super) name: Option<String>,
     pub(super) root: Option<String>,
     pub(super) include: Option<Vec<String>>,
@@ -38,6 +39,8 @@ pub(super) struct Options {
     /// Whether an inline project inherits root setup fields, opts out, or
     /// inherits setup fields from another static config source.
     pub(super) extends: Option<Extends>,
+    /// SDK outer-project inheritance, independent of legacy setup planning.
+    pub(super) deadline_extends: Option<Extends>,
     /// A config named directly by `test.projects` is independent of the
     /// aggregate config that referenced it.
     pub(super) standalone_config: bool,
@@ -55,6 +58,10 @@ pub(super) enum Extends {
     False,
     True,
     Config(String),
+    Unknown {
+        path: PathBuf,
+        span: Option<(u32, u32)>,
+    },
 }
 
 pub(in crate::integration_tests) fn parse_program_with_resolver(
@@ -167,6 +174,7 @@ fn to_project(
         )),
         include: prefix_globs(root, &project_root, &include),
         exclude: prefix_globs(root, &project_root, &options.exclude.unwrap_or_default()),
+        declared_deadlines: options.deadlines,
         vitest_setup: options
             .setup_files
             .into_iter()
