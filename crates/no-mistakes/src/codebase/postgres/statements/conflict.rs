@@ -9,15 +9,27 @@ pub(super) fn expression_arbiter(
     arbiter: &crate::codebase::postgres::source::PolicyArbiter,
 ) -> SqlConflictArbiter {
     let mut columns = Vec::new();
+    let mut groups = Vec::new();
     let mut unknown = arbiter.has_operator_class;
     for expression in &arbiter.expressions {
-        if !collect_dependencies(expression, &mut columns) {
+        let mut dependencies = Vec::new();
+        if !collect_dependencies(expression, &mut dependencies) {
             unknown = true;
+        }
+        dependencies.sort();
+        dependencies.dedup();
+        columns.extend(dependencies.iter().cloned());
+        if dependencies.len() > 1 {
+            groups.push(dependencies);
         }
     }
     columns.sort();
     columns.dedup();
-    SqlConflictArbiter::Expressions { columns, unknown }
+    SqlConflictArbiter::Expressions {
+        columns,
+        groups,
+        unknown,
+    }
 }
 
 /// Only these syntax shapes prove every referenced row column. Unknown AST

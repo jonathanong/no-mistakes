@@ -123,6 +123,8 @@ pub enum SqlConflictArbiter {
     /// Source expression dependencies; `unknown` means membership cannot be proven.
     Expressions {
         columns: Vec<String>,
+        /// Columns that participate in one expression and must move together.
+        groups: Vec<Vec<String>>,
         unknown: bool,
     },
     Constraint(String),

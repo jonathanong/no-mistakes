@@ -231,6 +231,7 @@ fn postgres_idempotent_insert_expression_arbiters_fail_closed() {
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
     let findings = report["rules"].as_array().unwrap();
     for file in [
+        "coupled_partial.sql",
         "expression.sql",
         "mixed.sql",
         "parenthesized.sql",

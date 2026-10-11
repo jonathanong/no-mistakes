@@ -49,6 +49,37 @@ fn standalone_expression_arbiter_preserves_key_dependencies() {
 }
 
 #[test]
+fn coupled_expression_dependencies_must_move_together() {
+    let partial = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters/sql/coupled_partial.sql"
+    ));
+    let full = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters-safe/sql/coupled_full.sql"
+    ));
+    let independent = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters-safe/sql/independent_targets.sql"
+    ));
+    let parsed = extract_sql_statement_facts(partial);
+    assert!(!parsed.parse_failed);
+    assert!(matches!(
+        &parsed.inserts[0].on_conflict.as_ref().unwrap().arbiter,
+        crate::codebase::postgres::statement_facts::SqlConflictArbiter::Expressions {
+            groups,
+            unknown: false,
+            ..
+        } if groups == &[vec!["a".to_string(), "b".to_string()]]
+    ));
+    assert!(messages(partial)
+        .iter()
+        .any(|message| message.contains("every column in its expression")));
+    assert!(messages(full).is_empty());
+    assert!(messages(independent).is_empty());
+}
+
+#[test]
 fn expression_dependency_proof_shapes_are_conservative() {
     let sql = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
