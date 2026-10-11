@@ -18,12 +18,12 @@ test(
       [
         ".no-mistakes.yml",
         [
-          "other/uncovered.test.mts",
           "nested/nested.test.mts",
           "nested/sibling.test.mts",
           "ordered/order.test.mts",
           "ordinary/cut.test.mts",
           "ordinary/sibling.test.mts",
+          "other/uncovered.test.mts",
           "overlap/helper-cut.test.mts",
           "overlap/shared.test.mts",
           "web/excluded.test.mts",
