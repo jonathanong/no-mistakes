@@ -1,0 +1,3 @@
+matrix:
+  os: [ubuntu-latest, macos-latest, windows-latest]
+  node: [20, 22]

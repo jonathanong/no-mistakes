@@ -7,6 +7,12 @@ use super::super::artifact_types::ArtifactValue;
 use super::super::value_primitives::OrderedJson;
 use regex::Regex;
 use std::collections::BTreeMap;
+use std::sync::LazyLock;
+
+static MATRIX_REFERENCE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\$\{\{\s*matrix\.([A-Za-z_][\w-]*)\s*\}\}")
+        .expect("well-formed matrix reference regex")
+});
 
 /// Resolves a raw string (an artifact `name`/`pattern`/`artifact-ids`/
 /// `repository`/`run-id`) against an optional job matrix: a literal with no
@@ -25,10 +31,8 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
         };
     }
 
-    let reference_pattern =
-        Regex::new(r"\$\{\{\s*matrix\.([A-Za-z_][\w-]*)\s*\}\}").expect("well-formed regex");
     let mut referenced_axes: Vec<String> = Vec::new();
-    for captures in reference_pattern.captures_iter(raw) {
+    for captures in MATRIX_REFERENCE_PATTERN.captures_iter(raw) {
         let axis = captures[1].to_string();
         if !referenced_axes.contains(&axis) {
             referenced_axes.push(axis);
@@ -44,7 +48,10 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
             raw: raw.to_string(),
         };
     }
-    if reference_pattern.replace_all(raw, "").contains("${{") {
+    if MATRIX_REFERENCE_PATTERN
+        .replace_all(raw, "")
+        .contains("${{")
+    {
         return ArtifactValue::Dynamic {
             raw: raw.to_string(),
         };
