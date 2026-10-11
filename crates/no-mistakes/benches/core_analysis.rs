@@ -4,6 +4,8 @@ mod aggregate;
 mod call_index;
 #[path = "core_analysis/extract.rs"]
 mod extract;
+#[path = "core_analysis/fallback_discovery.rs"]
+mod fallback_discovery;
 #[path = "core_analysis/fixtures.rs"]
 mod fixtures;
 #[path = "core_analysis/graph.rs"]
@@ -79,6 +81,12 @@ fn bench_workflow_artifact_values(c: &mut criterion::Criterion) {
     }
 }
 
+fn bench_fallback_discovery(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        fallback_discovery::bench_fallback_discovery(c);
+    }
+}
+
 criterion_group!(
     benches,
     bench_sql_source_positions,
@@ -88,6 +96,7 @@ criterion_group!(
     bench_callable_file_index_construction,
     bench_call_site_membership,
     bench_extract_import_facts,
+    bench_fallback_discovery,
     bench_facts_graph_and_query,
     bench_graph_gates,
     bench_language_frontends,
