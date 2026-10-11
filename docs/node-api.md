@@ -98,7 +98,9 @@ from the package. Findings retain the executor's source location. See the
 configuration. Entries may be strings for an unrestricted ban or objects with
 `name`, optional `clauses`, and optional `hint` for clause-specific diagnostics.
 Checks consume shared SQL facts with innermost-clause context;
-`parsePostgresSql()` retains its existing source-report shape. See the [SQL shape policy](rules/postgres-sql-shape-policy.md).
+`parsePostgresSql()` retains its existing source-report shape. SQL batches use a
+separate worker pool and do not select the global repository-analysis worker count.
+See the [SQL shape policy](rules/postgres-sql-shape-policy.md).
 Calls in executor SQL use the prepared embedded SQL facts; the existing asynchronous `check()` API handles the query, so this option adds no
 Node export or declaration.
 

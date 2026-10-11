@@ -58,6 +58,21 @@ fn first_invocation_jobs_subprocess() {
             .expect("command-specific root validation rejects a number");
         assert!(error.reason.contains("invalid type"), "{}", error.reason);
     }
+    if std::env::var_os("NO_MISTAKES_NAPI_SQL_BATCH_FIRST").is_some() {
+        let sql = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/postgres-facts/source/schema.sql"
+        ));
+        let input = serde_json::json!([
+            {"sql": sql, "fileName": "first.sql"},
+            {"sql": sql, "fileName": "second.sql"},
+        ]);
+        let output = crate::napi_api::postgres_source::parse_postgres_sql_json_impl(input).unwrap();
+        let facts: serde_json::Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(facts[0]["fileName"], "first.sql");
+        assert_eq!(facts[1]["fileName"], "second.sql");
+        assert_eq!(facts[0]["schemaVersion"], 1);
+    }
     let payload = std::env::var("NO_MISTAKES_NAPI_JOBS_PAYLOAD").unwrap();
     let expected = std::env::var("NO_MISTAKES_NAPI_JOBS_EXPECTED").unwrap();
     let expected = if expected == "cpu" {
@@ -95,6 +110,7 @@ fn first_invocation_jobs_override_environment_and_preserve_defaults() {
                 .env("NO_MISTAKES_NAPI_JOBS_TASK", task)
                 .env("NO_MISTAKES_NAPI_JOBS_PAYLOAD", payload)
                 .env("NO_MISTAKES_NAPI_JOBS_EXPECTED", expected)
+                .env_remove("NO_MISTAKES_NAPI_SQL_BATCH_FIRST")
                 .env_remove("NO_MISTAKES_NAPI_JOBS_INVALID_FIRST")
                 .env_remove("NO_MISTAKES_NAPI_JOBS_INVALID_COMMAND_FIRST");
             if invalid_first {
@@ -127,6 +143,7 @@ fn rejected_command_options_still_select_the_global_pool() {
             .env("RAYON_NUM_THREADS", "3")
             .env("NO_MISTAKES_NAPI_JOBS_TASK", task)
             .env("NO_MISTAKES_NAPI_JOBS_INVALID_COMMAND_FIRST", "1")
+            .env_remove("NO_MISTAKES_NAPI_SQL_BATCH_FIRST")
             .env_remove("NO_MISTAKES_NAPI_JOBS_INVALID_FIRST")
             .env("NO_MISTAKES_NAPI_JOBS_PAYLOAD", r#"{"jobs":4}"#)
             .env("NO_MISTAKES_NAPI_JOBS_EXPECTED", "1")
@@ -139,5 +156,37 @@ fn rejected_command_options_still_select_the_global_pool() {
             String::from_utf8_lossy(&output.stderr)
         );
         assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+    }
+}
+
+#[test]
+fn sql_source_batch_does_not_pin_repository_analysis_worker_count() {
+    for task in ["string", "value"] {
+        for (payload, environment, expected) in
+            [(r#"{"jobs":1}"#, "4", "1"), (r#"{"jobs":4}"#, "1", "4")]
+        {
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "napi_api::async_task::tests::first_invocation_jobs_subprocess",
+                    "--nocapture",
+                ])
+                .env("RAYON_NUM_THREADS", environment)
+                .env("NO_MISTAKES_NAPI_JOBS_TASK", task)
+                .env("NO_MISTAKES_NAPI_JOBS_PAYLOAD", payload)
+                .env("NO_MISTAKES_NAPI_JOBS_EXPECTED", expected)
+                .env("NO_MISTAKES_NAPI_SQL_BATCH_FIRST", "1")
+                .env_remove("NO_MISTAKES_NAPI_JOBS_INVALID_COMMAND_FIRST")
+                .env_remove("NO_MISTAKES_NAPI_JOBS_INVALID_FIRST")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{task}, jobs={expected}, env={environment}:\n{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+        }
     }
 }
