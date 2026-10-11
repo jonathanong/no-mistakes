@@ -1,6 +1,8 @@
 use criterion::{black_box, Criterion};
 use no_mistakes::codebase::workflow_topology::{
-    artifact_types::ArtifactValue, artifact_values::artifact_value, value_primitives,
+    artifact_types::ArtifactValue,
+    artifact_values::{artifact_value, static_matrix_instance_count},
+    value_primitives,
 };
 
 pub(super) fn bench_artifact_values(c: &mut Criterion) {
@@ -79,9 +81,39 @@ pub(super) fn bench_artifact_values(c: &mut Criterion) {
     assert_eq!(dollar_counts.len(), 3);
     assert!(dollar_counts.values().all(|count| *count == 1));
 
+    let large_fixture: serde_yaml::Value = serde_yaml::from_str(include_str!(
+        "../../../../fixtures/performance/workflow-artifact-matrix-large.yml"
+    ))
+    .expect("valid large workflow artifact matrix benchmark fixture");
+    let large_matrix = value_primitives::to_json(
+        large_fixture
+            .get("matrix")
+            .expect("large matrix fixture must contain its matrix object"),
+    );
+    assert_eq!(
+        artifact_value("release-artifact", Some(&large_matrix)),
+        ArtifactValue::Static {
+            raw: "release-artifact".to_string(),
+            value: "release-artifact".to_string(),
+            instance_count: Some(256),
+        }
+    );
+    assert_eq!(static_matrix_instance_count(Some(&large_matrix)), Some(256));
+
     let mut group = c.benchmark_group("workflow_artifact_value");
     group.bench_function("static", |b| {
         b.iter(|| black_box(artifact_value(black_box("release-artifact"), None)));
+    });
+    group.bench_function("static_with_matrix", |b| {
+        b.iter(|| {
+            black_box(artifact_value(
+                black_box("release-artifact"),
+                Some(black_box(&large_matrix)),
+            ))
+        });
+    });
+    group.bench_function("matrix_instance_count", |b| {
+        b.iter(|| black_box(static_matrix_instance_count(Some(black_box(&large_matrix)))));
     });
     group.bench_function("dynamic_expression", |b| {
         b.iter(|| {

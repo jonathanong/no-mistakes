@@ -1,0 +1,21 @@
+matrix:
+  os:
+    - ubuntu-24.04-large-runner
+    - ubuntu-24.04-arm-large-runner
+    - macos-15-large-runner
+    - windows-2025-large-runner
+  runtime:
+    - node-20-lts-long-version-label
+    - node-22-lts-long-version-label
+    - node-24-current-version-label
+    - node-25-nightly-version-label
+  target:
+    - x86_64-unknown-linux-gnu
+    - aarch64-unknown-linux-gnu
+    - x86_64-apple-darwin
+    - x86_64-pc-windows-msvc
+  profile:
+    - debug-symbols-enabled
+    - release-optimized
+    - coverage-instrumented
+    - sanitizer-instrumented
