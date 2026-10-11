@@ -201,3 +201,8 @@ object to the reader. For example, `Math.max(options.timeout, 0)` keeps an uncha
 `const options = { timeout: 1 }` known. Passing an object-valued property to an
 unproved consumer, reading a getter, or writing a timeout still keeps analysis
 conservative.
+
+Function-valued properties and callable aliases remain object references even when
+the configuration evaluator can resolve their return values. Passing such a member
+to an unproved consumer retains unknown diagnostics; supported `defineConfig`
+callbacks still use their returned configuration.

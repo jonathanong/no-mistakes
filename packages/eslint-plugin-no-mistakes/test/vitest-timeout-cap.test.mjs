@@ -26,6 +26,24 @@ describe(rule, () => {
       [[29, "timeout"]],
     );
   });
+  it("keeps callable property references unknown while preserving config callback projection", () => {
+    assert.deepEqual(
+      findings("callable-primitive-reads", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [5, "unknown"],
+        [8, "unknown"],
+        [12, "unknown"],
+        [15, "unknown"],
+        [18, "unknown"],
+        [24, "timeout"],
+        [27, "timeout"],
+        [30, "unknown"],
+        [30, "unknown"],
+      ],
+    );
+  });
   it("keeps primitive property reads known without admitting object escapes or writes", () => {
     assert.deepEqual(
       findings("primitive-reads", { unknownValues: "finding" }).map(({ line, messageId }) => [
