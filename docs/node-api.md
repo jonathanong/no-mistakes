@@ -649,8 +649,13 @@ after the lock is acquired, while `lockTimeout` limits only the lock wait. The
 Node/N-API defaults disable both deadlines (`timeout`/`lockTimeout` omitted,
 `0`, or `null`). The CLI still defaults to 30 seconds; pass `0` there to
 disable. `failOnLock: true` fails immediately on contention and overrides
-`lockTimeout`. The first valid analysis call initializes the process-wide
-rayon pool. A positive `jobs` value selects its worker count, overriding
+`lockTimeout`. The first analysis request with valid UTF-8 JSON and invocation
+controls that acquires the invocation lock initializes the process-wide rayon
+pool before command-specific options are validated. A request rejected for a
+command-specific option, such as `check({ jobs: 1, root: 123 })`, can therefore
+select the pool; a later `check({ jobs: 4, root: "." })` retains that one-worker
+pool. Invalid JSON or invocation controls, and requests that fail to acquire
+the lock, do not select it. A positive `jobs` value selects its worker count, overriding
 `RAYON_NUM_THREADS`. Pass `0` or omit it to use `RAYON_NUM_THREADS` when set,
 otherwise the CPU count (matching CLI `--jobs 0`). Later calls retain the
 initialized pool, even when they request a different `jobs` value.
