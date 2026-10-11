@@ -72,14 +72,24 @@ pub(super) fn prepare(
         prepared,
     );
     let vitest_projects = vitest_projects?;
-    let playwright_projects = projects::load(
-        root,
-        Framework::Playwright,
-        config.tests.playwright.configs.as_ref(),
-        &config.tests.playwright.projects,
-        &playwright_project_names,
-        prepared,
-    );
+    let playwright_projects = if super::SelectedRunners::for_config(config).includes_all() {
+        projects::load_all(
+            root,
+            Framework::Playwright,
+            config.tests.playwright.configs.as_ref(),
+            &config.tests.playwright.projects,
+            prepared,
+        )
+    } else {
+        projects::load(
+            root,
+            Framework::Playwright,
+            config.tests.playwright.configs.as_ref(),
+            &config.tests.playwright.projects,
+            &playwright_project_names,
+            prepared,
+        )
+    };
     let playwright_projects = playwright_projects?;
     for rule in rules {
         append_rule_globs(config, rule, &mut includes, &mut excludes);

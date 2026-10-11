@@ -74,7 +74,9 @@ also separate executions: setup mocks from one config or runner do not cover
 another. A Vitest-only or Playwright-only rule target does not inherit Jest
 setup mocks.
 When both Vitest and Playwright select the same test, its Playwright execution
-is checked without Vitest setup mocks. Recovered Vitest setups follow the
+is checked without Vitest setup mocks. Repository and application scopes also
+preserve each matching configured Playwright project without an explicit
+`tests.playwright` rule selector. Recovered Vitest setups follow the
 effective project's inheritance: `extends: true` inherits root setups,
 independent project config files and `extends: false` do not, and an explicit
 empty `setupFiles` list clears inherited setups.
@@ -84,6 +86,8 @@ Implicit `vitest.workspace.*` and `vitest.projects.*` catalogs supply project
 matchers and setups, taking precedence over `vitest.config.*` during discovery.
 Recovered named projects remain separate executions even when only some of
 them have explicit project policies.
+Explicit runner configs use their directory's TypeScript aliases, including
+when that directory is outside a declared workspace.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

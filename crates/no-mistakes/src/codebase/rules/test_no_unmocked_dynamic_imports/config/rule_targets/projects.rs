@@ -40,6 +40,28 @@ pub(super) fn load(
     Ok(projects)
 }
 
+pub(super) fn load_all(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    policies: &BTreeMap<String, TestProjectPolicy>,
+    prepared: Option<(&[PathBuf], &RunnerConfigFacts)>,
+) -> Result<Vec<ConfigProject>> {
+    let mut projects = match prepared {
+        Some((visible, facts)) => from_facts(root, framework, configs, visible, facts)?,
+        None => project_config::load_projects(root, framework, configs)?,
+    };
+    for (name, policy) in policies {
+        if let Some(project) =
+            crate::integration_tests::config::configured_project(root, name, policy)
+        {
+            projects.retain(|project| project.policy_name.as_deref() != Some(name));
+            projects.push(project);
+        }
+    }
+    Ok(projects)
+}
+
 fn from_facts(
     root: &Path,
     framework: Framework,

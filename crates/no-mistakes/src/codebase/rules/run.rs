@@ -138,6 +138,11 @@ pub(crate) fn prepared_tsconfig_catalog(
     } else {
         let mut candidate_roots = vec![root.to_path_buf()];
         if let Some(config) = config {
+            if config.rule_configured(TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+                candidate_roots.extend(crate::integration_tests::configured_runner_config_dirs(
+                    root, config,
+                ));
+            }
             candidate_roots.extend(require_storybook_stories::configured_project_roots(
                 root, config,
             ));

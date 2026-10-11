@@ -4,6 +4,7 @@ use std::path::Path;
 
 pub(super) fn for_request(
     root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
     tsconfig_path: Option<&Path>,
     shared: &crate::codebase::check_facts::CheckFactMap,
     sources: &crate::codebase::ts_source::SourceStore,
@@ -19,14 +20,22 @@ pub(super) fn for_request(
         sources,
     );
     let tsconfig = tsconfig?;
-    let catalog = crate::codebase::rules::run::prepared_tsconfig_catalog(
-        root,
-        tsconfig_path,
-        &tsconfig,
-        visible,
-        sources,
-        None,
-    );
+    let catalog = if tsconfig_path.is_none() {
+        let mut roots = vec![root.to_path_buf()];
+        roots.extend(crate::integration_tests::configured_runner_config_dirs(
+            root, config,
+        ));
+        TsConfigCatalog::from_visible_and_sources(root, &roots, visible, sources)
+    } else {
+        crate::codebase::rules::run::prepared_tsconfig_catalog(
+            root,
+            tsconfig_path,
+            &tsconfig,
+            visible,
+            sources,
+            Some(config),
+        )
+    };
     Ok((tsconfig, catalog))
 }
 

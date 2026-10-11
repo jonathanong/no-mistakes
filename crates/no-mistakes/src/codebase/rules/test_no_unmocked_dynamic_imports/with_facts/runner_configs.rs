@@ -23,11 +23,7 @@ pub(crate) fn ensure(
         Arc::clone(catalog),
         Arc::clone(sources),
     );
-    let missing = runner
-        .paths()
-        .filter(|path| !shared.integration_runner_configs.contains_key(*path))
-        .cloned()
-        .collect::<Vec<_>>();
+    let missing = runner.missing_paths(&shared.integration_runner_configs);
     if missing.is_empty() {
         return None;
     }
@@ -35,7 +31,11 @@ pub(crate) fn ensure(
     runner.with_request_cache(None, || {
         for path in missing {
             if let Some(facts) = runner.parse_path_for_facts_with_session(session, &path) {
-                supplemented.integration_runner_configs.insert(path, facts);
+                supplemented
+                    .integration_runner_configs
+                    .entry(path)
+                    .or_default()
+                    .merge(facts);
             }
         }
     });

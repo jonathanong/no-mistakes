@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 
 mod errors;
 mod json;
+mod missing;
 mod setup;
 
 pub(crate) use setup::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};

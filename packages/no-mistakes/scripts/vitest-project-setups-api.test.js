@@ -74,6 +74,9 @@ test(
       [".no-mistakes-partial-projects.yml", ["web/covered.test.mts"]],
       [".no-mistakes-partial-app.yml", ["web/covered.test.mts"]],
       [".no-mistakes-partial-selected.yml", []],
+      [".no-mistakes-repository-playwright.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-app-playwright.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-shared-runner-path.yml", ["web/covered.test.mts"]],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);
@@ -113,5 +116,19 @@ test(
       );
       assert.deepEqual(report.warnings, []);
     }
+  },
+);
+
+test(
+  "compiled checks resolve runner-local aliases outside declared workspaces",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const options = { root: join(root, "../test-no-unmocked-dynamic-imports-runner-aliases") };
+    const report = await cjs.check(options);
+    assert.deepEqual(await esm.check(options), report);
+    assert.deepEqual(report.rules, []);
+    assert.deepEqual(report.warnings, []);
   },
 );

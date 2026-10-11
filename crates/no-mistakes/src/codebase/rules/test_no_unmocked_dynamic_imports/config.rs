@@ -4,6 +4,7 @@ mod prepared;
 mod project_setups;
 mod rule_targets;
 mod runner_catalog;
+mod runner_demand;
 mod standalone;
 mod vitest_setups;
 pub(super) use standalone::prepare_standalone;
@@ -21,7 +22,7 @@ pub(super) use project_setups::{
     explicit_project_setup_data, setup_contexts_for_test_precomputed, SelectedRunners,
 };
 
-pub(crate) use project_setups::{needs_playwright_configs, needs_vitest_configs};
+pub(crate) use runner_demand::{needs_playwright_configs, needs_vitest_configs};
 
 pub struct ConfigSetupData {
     workspace: bool,

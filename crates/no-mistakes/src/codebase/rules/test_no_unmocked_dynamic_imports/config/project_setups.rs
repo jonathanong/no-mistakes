@@ -70,26 +70,6 @@ pub(in super::super) fn explicit_project_setup_data(
     Ok(data)
 }
 
-pub(crate) fn needs_vitest_configs(config: &NoMistakesConfig) -> bool {
-    SelectedRunners::for_config(config).includes_vitest()
-}
-
-pub(crate) fn needs_playwright_configs(config: &NoMistakesConfig) -> bool {
-    config
-        .rule_applications(super::super::RULE_ID)
-        .iter()
-        .any(|rule| {
-            rule.tests.playwright.iter().any(|name| {
-                config
-                    .tests
-                    .playwright
-                    .projects
-                    .get(name)
-                    .is_none_or(|policy| policy.include.is_empty())
-            })
-        })
-}
-
 #[derive(Clone, Copy)]
 pub(in super::super) struct SelectedRunners {
     vitest: bool,
@@ -97,6 +77,10 @@ pub(in super::super) struct SelectedRunners {
 }
 
 impl SelectedRunners {
+    pub(super) fn includes_all(self) -> bool {
+        self.jest
+    }
+
     pub(crate) fn includes_vitest(self) -> bool {
         self.vitest
     }

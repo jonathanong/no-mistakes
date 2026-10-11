@@ -52,6 +52,23 @@ pub(crate) struct RunnerConfigFileFacts {
 }
 
 impl RunnerConfigFileFacts {
+    pub(crate) fn covers_spec(&self, framework: Framework, raw: &str) -> bool {
+        self.results
+            .iter()
+            .any(|result| result.framework == framework && result.raw == raw)
+    }
+
+    pub(crate) fn merge(&mut self, other: Self) {
+        for result in other.results {
+            if !self.covers_spec(result.framework, &result.raw) {
+                self.results.push(result);
+            }
+        }
+        for (path, analysis) in other.analyses {
+            self.analyses.entry(path).or_insert(analysis);
+        }
+    }
+
     pub(crate) fn vitest_projects(&self) -> Option<Result<Vec<ConfigProject>, String>> {
         self.projects_for(Framework::Vitest)
     }
@@ -89,12 +106,10 @@ impl ParsedRunnerConfigs {
     pub(crate) fn covers(&self, plan: &PreparedIntegrationRunnerConfigs) -> bool {
         plan.specs.iter().all(|spec| {
             !plan.visible_files.contains(&spec.path)
-                || self.files.get(&spec.path).is_some_and(|facts| {
-                    facts
-                        .results
-                        .iter()
-                        .any(|result| result.framework == spec.framework && result.raw == spec.raw)
-                })
+                || self
+                    .files
+                    .get(&spec.path)
+                    .is_some_and(|facts| facts.covers_spec(spec.framework, &spec.raw))
         })
     }
 

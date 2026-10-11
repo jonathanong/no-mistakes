@@ -16,6 +16,7 @@ mod imported_helpers;
 mod mock_cut;
 mod mock_specifiers;
 mod project_setups;
+mod runner_compatibility;
 mod visibility;
 mod workspaces;
 

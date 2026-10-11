@@ -17,7 +17,8 @@ pub fn check_with_facts(
         )),
     );
     let sources = session.visible_paths(root).source_store_for(root);
-    let (tsconfig, catalog) = tsconfig_catalog::for_request(root, tsconfig_path, shared, &sources)?;
+    let (tsconfig, catalog) =
+        tsconfig_catalog::for_request(root, config, tsconfig_path, shared, &sources)?;
     let catalog = Arc::new(catalog);
     let supplemented = runner_configs::ensure(root, config, &catalog, shared, &session, &sources);
     let shared = supplemented.as_ref().unwrap_or(shared);
