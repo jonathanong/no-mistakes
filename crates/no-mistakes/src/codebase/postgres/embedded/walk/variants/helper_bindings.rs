@@ -118,7 +118,10 @@ impl ScopeVisitor<'_> {
         }
     }
 
-    pub(super) fn builder_result_names(&self, expression: &Expression<'_>) -> Vec<String> {
+    pub(in crate::codebase::postgres::embedded::walk) fn builder_result_names(
+        &self,
+        expression: &Expression<'_>,
+    ) -> Vec<String> {
         let mut names = Vec::new();
         let mut pending = vec![expression];
         while let Some(expression) = pending.pop() {

@@ -16,6 +16,8 @@ mod equivalent;
 mod escape_effects;
 #[path = "tests/exception_flow.rs"]
 mod exception_flow;
+#[path = "tests/executor_argument_effects.rs"]
+mod executor_argument_effects;
 #[path = "tests/guard_alias.rs"]
 mod guard_alias;
 #[path = "tests/helper_effects.rs"]
@@ -28,6 +30,8 @@ mod metadata;
 mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
+#[path = "tests/unaffected_switch.rs"]
+mod unaffected_switch;
 
 fn file_facts(name: &str) -> EmbeddedSqlFileFacts {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

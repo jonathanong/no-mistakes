@@ -1,5 +1,5 @@
 use super::super::super::{first_call_argument, EmbeddedSqlCall, EmbeddedSqlKind};
-use super::{classify_init, ScopeVisitor};
+use super::{classify_init, BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 
@@ -110,4 +110,54 @@ pub(crate) fn executor_call(
             });
     }
     recovered
+}
+
+pub(in crate::codebase::postgres::embedded::walk) fn executor_call_from_binding(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    callee: String,
+    binding: &BindingState,
+) -> EmbeddedSqlCall {
+    let line =
+        crate::codebase::ts_source::byte_offset_to_line(visitor.source, call.span.start as usize);
+    let (sql_text, recovered_placeholder_positions) = binding
+        .sql
+        .clone()
+        .map(super::super::super::placeholders::publish_placeholders_with_positions)
+        .map_or_else(
+            || (None, Vec::new()),
+            |(sql, positions)| (Some(sql), positions),
+        );
+    let variants = if binding.kind == EmbeddedSqlKind::Dynamic {
+        binding
+            .variants
+            .clone()
+            .filter(|versions| {
+                versions
+                    .iter()
+                    .all(|version| version.value == super::super::variants::ValueKind::Sql)
+                    && versions
+                        .iter()
+                        .any(|version| version.enumerated || !version.choices.is_empty())
+            })
+            .unwrap_or_default()
+            .into_iter()
+            .map(|version| version.publish())
+            .fold(Vec::new(), |mut unique, variant| {
+                super::super::super::EmbeddedSqlVariant::push_unique(&mut unique, variant);
+                unique
+            })
+    } else {
+        Vec::new()
+    };
+    EmbeddedSqlCall {
+        variants,
+        line,
+        callee,
+        sql_text,
+        kind: binding.kind,
+        declaration_line: Some(binding.line),
+        sql_source_positions: binding.sql_source_positions.clone(),
+        recovered_placeholder_positions,
+    }
 }

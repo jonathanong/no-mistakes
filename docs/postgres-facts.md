@@ -211,7 +211,9 @@ known immutable bindings retain this correlation, including `!` and `!!`
 aliases. Copies from mutable or unknown sources have independent snapshots;
 they do not follow later source reassignments. Equivalent binary
 arms with the same recovered SQL and physical origins count once toward the
-version limit. Nested fragments contribute their own SQL text and generated
+version limit. SQL bindings unchanged across switch alternatives retain their
+original choices, so unrelated cases do not create extra versions. Nested
+fragments contribute their own SQL text and generated
 placeholders are renumbered in composition order. Ordinary value interpolations
 remain binds.
 
@@ -255,6 +257,12 @@ rules do not apply to copied strings changed with `+=`.
 Conditional tests, logical left operands, and earlier template interpolations
 that mutate an existing SQL binding also stay `Dynamic` when recovery would
 otherwise consume its earlier snapshot later in the same expression.
+Executor arguments follow evaluation order. Proven later mutations of the same
+directly passed builder use its final state, including conditional or logical
+appends; primitive SQL arguments keep their earlier value copies. Uncertain
+builder selection or identity, opaque helper or invoked-closure effects, and
+conditional replacement of the original binding stay `Dynamic`. Passing a
+callback without invoking it does not execute its body.
 Switch discriminants or case labels that mutate an existing SQL binding also
 remain opaque because earlier labels can change the state of later cases.
 `try`, `catch`, and `finally` phases are inspected once, but exception paths are

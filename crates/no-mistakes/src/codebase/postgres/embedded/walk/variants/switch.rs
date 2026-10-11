@@ -2,6 +2,8 @@ use super::super::{resolve, ScopeVisitor};
 use super::control::{branch_paths, Snapshot};
 use oxc_ast::ast::{Statement, SwitchStatement};
 use oxc_ast_visit::Visit;
+mod state;
+use state::join;
 
 pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
     visitor: &mut ScopeVisitor<'a>,
@@ -49,11 +51,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
     let mut fallthrough: Option<Snapshot> = None;
     let mut fallthrough_paths = Vec::new();
     let mut exits: Option<Snapshot> = None;
+    let mut exits_paths = Vec::new();
     for (index, case) in statement.cases.iter().enumerate() {
         visitor.restore_variants(&entry);
         let direct = branch_paths(&paths, u64::from(statement.span.start), index as u32);
         visitor.variant_paths = direct.clone();
-        tag_state(visitor);
         // A failed earlier label reaches this test from the entry state;
         // falling through an earlier body skips the test entirely.
         if let Some(test) = &case.test {
@@ -61,11 +63,13 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
         }
         let direct_state = visitor.variant_snapshot();
         if let Some(prior) = &fallthrough {
-            visitor.join_variants(
-                prior,
+            join(
+                visitor,
+                Some(prior),
+                &fallthrough_paths,
                 &direct_state,
+                &direct,
                 u64::from(statement.span.start),
-                (index as u32, index as u32),
             );
         }
         visitor.variant_paths.extend(fallthrough_paths.clone());
@@ -77,14 +81,17 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
             }
         });
         let current = visitor.variant_snapshot();
+        let current_paths = visitor.variant_paths.clone();
         if terminal_break {
             exits = Some(join(
                 visitor,
                 exits.as_ref(),
+                &exits_paths,
                 &current,
+                &current_paths,
                 u64::from(statement.span.start),
-                index as u32,
             ));
+            exits_paths.extend(current_paths);
             fallthrough = None;
             fallthrough_paths.clear();
         } else {
@@ -96,10 +103,12 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
         exits = Some(join(
             visitor,
             exits.as_ref(),
+            &exits_paths,
             prior,
+            &fallthrough_paths,
             u64::from(statement.span.start),
-            statement.cases.len() as u32,
         ));
+        exits_paths.extend(fallthrough_paths);
     }
     if !statement.cases.iter().any(|case| case.test.is_none()) {
         visitor.restore_variants(&entry);
@@ -108,58 +117,19 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
             u64::from(statement.span.start),
             statement.cases.len() as u32,
         );
-        tag_state(visitor);
         let absent = visitor.variant_snapshot();
+        let absent_paths = visitor.variant_paths.clone();
         exits = Some(join(
             visitor,
             exits.as_ref(),
+            &exits_paths,
             &absent,
+            &absent_paths,
             u64::from(statement.span.start),
-            statement.cases.len() as u32,
         ));
     }
     visitor.restore_variants(exits.as_ref().unwrap_or(&entry));
-    if let Some(selected) = super::conditions::selected_case(statement) {
-        for scope in &mut visitor.scopes {
-            for state in scope.values_mut() {
-                if let Some(values) = &mut state.variants {
-                    values.retain(|value| {
-                        !value.choices.iter().any(|(id, arm)| {
-                            *id == u64::from(statement.span.start) && *arm != selected
-                        })
-                    });
-                    for value in values {
-                        value.enumerated = true;
-                    }
-                }
-            }
-        }
-    }
+    state::select(visitor, statement);
     visitor.variant_paths = paths;
     visitor.pop_scope();
-}
-fn tag_state(visitor: &mut ScopeVisitor<'_>) {
-    let mut snapshot = visitor.variant_snapshot();
-    for scope in &mut snapshot {
-        for values in scope.values_mut() {
-            *values = values
-                .take()
-                .and_then(|values| visitor.with_variant_paths(values));
-        }
-    }
-    visitor.restore_variants(&snapshot);
-}
-fn join(
-    visitor: &mut ScopeVisitor<'_>,
-    prior: Option<&Snapshot>,
-    current: &Snapshot,
-    id: u64,
-    arm: u32,
-) -> Snapshot {
-    if let Some(prior) = prior {
-        visitor.join_variants(prior, current, id, (arm, arm));
-    } else {
-        visitor.restore_variants(current);
-    }
-    visitor.variant_snapshot()
 }

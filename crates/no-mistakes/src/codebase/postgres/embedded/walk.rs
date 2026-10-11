@@ -4,8 +4,9 @@ use oxc_ast::ast::{
     Program, ReturnStatement,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
+mod calls;
+mod executor_arguments;
 mod flow;
 pub(crate) mod resolve;
 mod scope;
@@ -120,44 +121,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        let helper_effect = self.call_builder_effect(call);
-        let append_effect = self.append_alias_effect(call);
-        if self.suppress_nested_builder_fragments == 0 {
-            if let Some(argument) = call.arguments.first() {
-                if let Some(sql_text) = resolve::appended_builder_fragment(call, self) {
-                    self.push_fragment(
-                        crate::codebase::ts_source::byte_offset_to_line(
-                            self.source,
-                            argument.span().start as usize,
-                        ),
-                        Some(sql_text),
-                        argument.as_expression(),
-                        Some(call.span.start),
-                    );
-                } else if resolve::is_builder_append(call, self) {
-                    self.push_fragment(
-                        crate::codebase::ts_source::byte_offset_to_line(
-                            self.source,
-                            argument.span().start as usize,
-                        ),
-                        None,
-                        argument.as_expression(),
-                        Some(call.span.start),
-                    );
-                }
-            }
-        }
-        let variants = self
-            .appended_variants(call)
-            .map(|(name, values)| (name.to_string(), values));
-        resolve::apply_append(self, call);
-        if let Some((name, values)) = variants {
-            self.set_variants(&name, values);
-        }
-        resolve::record_executor_call(self, call);
-        walk::walk_call_expression(self, call);
-        self.apply_call_builder_effect(helper_effect);
-        self.apply_append_alias_effect(append_effect);
+        self.visit_sql_call(call);
     }
 
     fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
