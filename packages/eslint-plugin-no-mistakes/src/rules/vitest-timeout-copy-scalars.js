@@ -80,22 +80,36 @@ function createScalarCopyWrite(context, evaluate) {
     }
     return undefined;
   }
-  const wrappedScalarWrite = createWrappedScalarWrite(context, scalar, property);
-  return (node, safeConsumer) => {
-    node = unwrapExpression(node);
-    const name = staticPropertyName({ key: node.property, computed: node.computed }, context);
-    if (name === null) return false;
-    if (unwrapExpression(node.object).type === "MemberExpression")
-      return wrappedScalarWrite(node, name);
-    const expression = property(node.object, name, new Set());
-    if (!expression) return false;
-    if (!scalar(expression)) return false;
-    // A later coercion must not rely on an initializer overwritten with an object.
-    return resolveVariable(unwrapExpression(node.object), context).references.every((reference) => {
+  function safeReferences(variable, name, visited, node, safeConsumer) {
+    if (visited.has(variable)) return true;
+    const def = variable?.defs[0];
+    if (
+      def?.type !== "Variable" ||
+      def.parent.kind !== "const" ||
+      def.node.id.type !== "Identifier" ||
+      !def.node.init ||
+      variable.references.some((reference) => reference.isWrite() && !reference.init)
+    )
+      return false;
+    visited.add(variable);
+    // Only identifier initializers preserve identity. A spread creates a new copy.
+    const initializer = unwrapExpression(def.node.init);
+    if (
+      initializer.type === "Identifier" &&
+      !safeReferences(resolveVariable(initializer, context), name, visited, node, safeConsumer)
+    )
+      return false;
+    return variable.references.every((reference) => {
       if (reference.init) return true;
-      const member = unwrapTransparentParent(reference.identifier).parent;
-      if (member?.type !== "MemberExpression")
-        return safeConsumer(unwrapTransparentParent(reference.identifier));
+      const identifier = unwrapTransparentParent(reference.identifier);
+      const member = identifier.parent;
+      if (member?.type === "VariableDeclarator" && member.init === identifier)
+        return (
+          member.id.type === "Identifier" &&
+          safeReferences(resolveVariable(member.id, context), name, visited, node, safeConsumer)
+        );
+      if (member?.type !== "MemberExpression" || member.object !== identifier)
+        return safeConsumer(identifier);
       const assignment = unwrapTransparentParent(member).parent;
       if (
         assignment?.type !== "AssignmentExpression" ||
@@ -109,6 +123,25 @@ function createScalarCopyWrite(context, evaluate) {
         (key !== name || scalar(assignment.right) || laterTopLevelWrite(node, assignment, context))
       );
     });
+  }
+  const wrappedScalarWrite = createWrappedScalarWrite(context, scalar, property);
+  return (node, safeConsumer) => {
+    node = unwrapExpression(node);
+    const name = staticPropertyName({ key: node.property, computed: node.computed }, context);
+    if (name === null) return false;
+    if (unwrapExpression(node.object).type === "MemberExpression")
+      return wrappedScalarWrite(node, name);
+    const expression = property(node.object, name, new Set());
+    if (!expression) return false;
+    if (!scalar(expression)) return false;
+    // A later coercion must not rely on an initializer overwritten with an object.
+    return safeReferences(
+      resolveVariable(unwrapExpression(node.object), context),
+      name,
+      new Set(),
+      node,
+      safeConsumer,
+    );
   };
 }
 module.exports = { createScalarCopyWrite };

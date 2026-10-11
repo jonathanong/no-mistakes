@@ -229,6 +229,16 @@ update. Prior replacements, aliases, branches, loops, function bodies, nested
 blocks, and combined expressions retain the conservative ordering proof.
 Type assertions and non-null assertions around the whole copied member preserve
 these checks, including rejection after the copied scalar is replaced by an object.
+Scalar proofs check writes through the original copied binding and all immutable
+identifier aliases of that same copy. For example, `const alias = copy;
+copy.counter = {}; alias.counter++` stays unknown: the alias cannot reuse the
+copy's numeric initializer after an object overwrite. Writes in either direction
+and through sibling aliases receive the same checks. Known numeric or null writes
+and writes to unrelated properties preserve the scalar proof; mutable aliases,
+bindings without initializers, dynamic property writes, and unproved escapes remain conservative. Separate
+spread copies do not share an identity proof.
+The ordering exception uses the original coercion receiver; an alias cannot borrow
+its source binding's object-literal initializer for that exception.
 Literal object and array wrappers preserve this scalar proof, including nested
 paths such as `box.items[0].copy.counter++`. The wrapper path and copied property
 must have known data initializers. Replacing a receiver, exposing its alias,
