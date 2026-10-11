@@ -1,6 +1,6 @@
 use super::super::shared::{ReversePrepared, Target};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, PreparedGraphBuild};
-use crate::codebase::ts_source::facts::{TsFactContext, TsFactPlan};
+use crate::codebase::ts_source::facts::TsFactPlan;
 
 pub(super) struct CallSitesAnalysis {
     pub(super) facts: crate::codebase::ts_source::facts::TsFactMap,
@@ -10,18 +10,15 @@ pub(super) struct CallSitesAnalysis {
 
 pub(super) fn prepare(target: &Target) -> anyhow::Result<CallSitesAnalysis> {
     let prepared = target.prepare_reverse()?;
-    let facts =
-        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
-            &target.session,
-            prepared.graph_files.indexable(),
-            TsFactPlan {
-                function_calls: true,
-                call_sites: true,
-                ..TsFactPlan::imports_and_symbols()
-            },
-            &TsFactContext::default(),
-            &target.sources,
-        );
+    let facts = super::super::reverse::collect_prepared_reverse_facts(
+        target,
+        &prepared,
+        TsFactPlan {
+            function_calls: true,
+            call_sites: true,
+            ..Default::default()
+        },
+    );
     let graph = build_graph(
         target,
         &prepared.graph_files,

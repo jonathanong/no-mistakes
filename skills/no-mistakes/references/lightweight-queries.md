@@ -100,7 +100,7 @@ for binding-aware import aliases and namespace members. Module specifiers match
 exactly for repository callables; a different repository barrel requires its own
 selector. Explicit external re-exports resolve to the external module selector.
 Shadowed bindings are excluded from target matching. See
-[effects configuration](../../../docs/configuration/effects.md).
+[effects configuration](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/effects.md).
 
 ```bash
 no-mistakes effects storage --entry src/server.ts --root . --format json

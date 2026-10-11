@@ -7,7 +7,8 @@ use std::sync::Arc;
 mod build;
 mod importers;
 pub(crate) use build::{
-    build_reverse_analysis, build_reverse_index_from_prepared, collect_target_import_facts,
+    build_reverse_analysis, build_reverse_index_from_prepared, collect_prepared_reverse_facts,
+    collect_target_import_facts,
 };
 pub(crate) use importers::{direct_importer_paths, export_importer_paths};
 

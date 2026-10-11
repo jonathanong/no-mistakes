@@ -39,19 +39,27 @@ pub(crate) fn build_reverse_analysis_with_plan(
     target: &Target,
     additional_plan: crate::codebase::ts_source::facts::TsFactPlan,
 ) -> anyhow::Result<ReverseAnalysis> {
-    let mut plan = crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols();
-    plan.include(additional_plan);
     let prepared = target.prepare_reverse()?;
-    let facts =
-        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
-            &target.session,
-            prepared.graph_files.indexable(),
-            plan,
-            &crate::codebase::ts_source::facts::TsFactContext::default(),
-            &target.sources,
-        );
+    let facts = collect_prepared_reverse_facts(target, &prepared, additional_plan);
     let index = build_reverse_index_from_prepared(target, &prepared, &facts);
     Ok(ReverseAnalysis { index, facts })
+}
+
+/// Collect the full query demand through the existing prepared reverse owner.
+pub(crate) fn collect_prepared_reverse_facts(
+    target: &Target,
+    prepared: &ReversePrepared,
+    additional_plan: crate::codebase::ts_source::facts::TsFactPlan,
+) -> crate::codebase::ts_source::facts::TsFactMap {
+    let mut plan = crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols();
+    plan.include(additional_plan);
+    crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
+        &target.session,
+        prepared.graph_files.indexable(),
+        plan,
+        &crate::codebase::ts_source::facts::TsFactContext::default(),
+        &target.sources,
+    )
 }
 
 /// Project already-collected facts through the ordinary reverse-query catalog.
