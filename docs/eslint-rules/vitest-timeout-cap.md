@@ -84,7 +84,10 @@ Assignments and updates on shallow copies require a proven own data property.
 Own or inherited setters can mutate shared children through `this`, so accessor
 writes and missing or unresolved property descriptors retain unknown values.
 Object spread creates data properties from source accessors; deleting a copied
-property does not invoke a setter.
+property does not invoke a setter. Spread copies enumerable own properties;
+array `length` is an own data property on the array but is absent from an object
+copy unless explicitly declared there. An inherited or existing setter for
+`length` therefore retains unknown values after spreading an array into an object.
 For a property named `__proto__`, concise methods, computed names, and shorthand
 properties are own data properties. The non-computed colon form changes the
 object's prototype, so it does not establish an own data property proof.

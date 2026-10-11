@@ -207,6 +207,15 @@ describe("vitest-timeout-cap value stability", () => {
     );
     assert.deepEqual(findings("asserted-deletion-alias"), []);
   });
+  it("excludes non-enumerable array length from object-copy descriptor proofs", () => {
+    assert.deepEqual(
+      findings("copy-property-enumerability", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [10, 18, 26].map((line) => [line, "unknown"]),
+    );
+    assert.deepEqual(findings("copy-property-enumerability"), []);
+  });
   it("preserves copied values through wrapper paths and independent cached proofs", () => {
     assert.deepEqual(
       findings("wrapped-shallow-copy-writes", { unknownValues: "finding" }).map(
