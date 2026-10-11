@@ -172,6 +172,9 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
     check_commands::validate(config)?;
+    for (name, project) in &config.tests.vitest.projects {
+        project.validate_vitest_setup_files(name)?;
+    }
     targeted_triggers::validate(config, path)?;
     validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())

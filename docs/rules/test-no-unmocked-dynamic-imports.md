@@ -94,6 +94,8 @@ when that directory is outside a declared workspace.
 Explicit setup declarations also create canonical `VitestSetup` dependencies,
 so changes to a setup module or its imports select the matching project's tests
 in test planning and impact reports. Project exclusions remain in effect.
+Configuration loading rejects empty, absolute, and parent-relative setup paths
+for checks, planning, and impact, even when this rule is not enabled.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

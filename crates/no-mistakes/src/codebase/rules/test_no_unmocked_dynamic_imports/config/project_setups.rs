@@ -29,10 +29,7 @@ pub(in super::super) fn explicit_project_setup_data(
         if project.include.is_empty() && project.setup_files.is_empty() {
             continue;
         }
-        anyhow::ensure!(
-            !project.include.is_empty(),
-            "tests.vitest.projects.{name}.setup_files requires a nonempty include matcher"
-        );
+        project.validate_vitest_setup_files(name)?;
         let filter = TestFilter {
             alternatives: Vec::new(),
             include: build_globset(&project.include)?,
@@ -42,12 +39,6 @@ pub(in super::super) fn explicit_project_setup_data(
         let mut setup_files = Vec::new();
         for setup in &project.setup_files {
             let relative = Path::new(setup);
-            anyhow::ensure!(
-                !setup.is_empty()
-                    && !relative.is_absolute()
-                    && relative.components().all(|part| matches!(part, std::path::Component::Normal(_) | std::path::Component::CurDir)),
-                "tests.vitest.projects.{name}.setup_files contains invalid repository-relative path {setup:?}"
-            );
             let path = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
             anyhow::ensure!(
                 visible_files.contains(&path),

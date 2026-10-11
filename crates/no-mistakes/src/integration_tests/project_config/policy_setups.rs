@@ -1,7 +1,7 @@
 use crate::config::v2::schema::TestProjectPolicy;
 use crate::integration_tests::types::{VitestSetupDependency, VitestSetupField};
 use std::collections::BTreeSet;
-use std::path::{Component, Path};
+use std::path::Path;
 
 /// Project policies resolve setup paths from the repository, not a runner root.
 /// Keep missing candidates as impact triggers without reading a second inventory.
@@ -9,23 +9,15 @@ pub(crate) fn dependencies(root: &Path, policy: &TestProjectPolicy) -> Vec<Vites
     policy
         .setup_files
         .iter()
-        .filter_map(|raw| {
+        .map(|raw| {
             let relative = Path::new(raw);
-            if raw.is_empty()
-                || relative.is_absolute()
-                || !relative
-                    .components()
-                    .all(|part| matches!(part, Component::Normal(_) | Component::CurDir))
-            {
-                return None;
-            }
             let path = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
             let specifier = format!(
                 "./{}",
                 crate::codebase::ts_source::relative_slash_path(root, &path)
             );
             let declaration = root.join(".no-mistakes.yml");
-            Some(VitestSetupDependency {
+            VitestSetupDependency {
                 field: VitestSetupField::SetupFiles,
                 specifier: Some(specifier),
                 needs_final_catalog_reparse: false,
@@ -39,7 +31,7 @@ pub(crate) fn dependencies(root: &Path, policy: &TestProjectPolicy) -> Vec<Vites
                 resolver_candidate_paths: BTreeSet::from([path]),
                 conservative_specifiers: BTreeSet::new(),
                 transitive_trigger_paths: BTreeSet::new(),
-            })
+            }
         })
         .collect()
 }

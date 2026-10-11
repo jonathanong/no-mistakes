@@ -5,10 +5,13 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 #[cfg(test)]
+#[path = "standalone/tests/imported_helpers.rs"]
 mod imported_helpers;
 #[cfg(test)]
+#[path = "standalone/tests/legacy.rs"]
 pub(super) mod legacy;
 #[cfg(test)]
+#[path = "standalone/tests/setup_mocks.rs"]
 mod setup_mocks;
 
 pub(crate) fn resolve_mock_specifiers(

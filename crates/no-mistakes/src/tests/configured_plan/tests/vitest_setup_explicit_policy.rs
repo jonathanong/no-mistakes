@@ -47,3 +47,35 @@ fn explicit_policy_setup_and_helper_select_only_matching_project_tests() {
         );
     }
 }
+
+#[test]
+fn invalid_explicit_setup_policies_fail_planning_and_impact_without_a_rule() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/explicit-policy-setups");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    for (name, expected) in [
+        ("invalid", "invalid repository-relative path"),
+        ("empty", "invalid repository-relative path"),
+        ("absolute", "invalid repository-relative path"),
+        ("no-include", "requires a nonempty include matcher"),
+    ] {
+        let config = root.join(format!(".no-mistakes-{name}.yml"));
+        let mut args = vitest_setup_args(root.clone(), vec![root.join("setup/web.ts")]);
+        args.config = Some(config.clone());
+        let error = crate::tests::plan::generate_plan(&args).unwrap_err();
+        assert!(error.to_string().contains(expected), "{name}: {error}");
+        let error = crate::tests::impact::generate_impact_plan(&crate::tests::ImpactArgs {
+            entrypoints: vec!["setup/web.ts".to_string()],
+            entrypoint_symbols: Vec::new(),
+            include_symbols: false,
+            root: root.clone(),
+            config: Some(config),
+            tsconfig: None,
+            format: None,
+            json: true,
+        })
+        .unwrap_err();
+        assert!(error.to_string().contains(expected), "{name}: {error}");
+    }
+}

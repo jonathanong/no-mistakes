@@ -202,14 +202,16 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
 #[test]
 fn explicit_project_setups_reject_missing_and_escaping_paths() {
     let root = project_fixture();
+    let invalid =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-invalid.yml")))
+            .unwrap_err();
+    assert!(invalid
+        .to_string()
+        .contains("invalid repository-relative path"));
     for (name, expected) in [
         (
             ".no-mistakes-missing.yml",
             "missing from the analysis file inventory",
-        ),
-        (
-            ".no-mistakes-invalid.yml",
-            "invalid repository-relative path",
         ),
         (
             ".no-mistakes-ignored.yml",

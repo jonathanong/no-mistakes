@@ -192,3 +192,5 @@ pub struct TestProjectPolicy {
     #[serde(rename = "integration_suites")]
     pub integration_suites: BTreeMap<String, Vec<String>>,
 }
+
+mod vitest_setup_files;

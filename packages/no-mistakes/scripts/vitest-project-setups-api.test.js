@@ -91,7 +91,6 @@ test(
     }
     for (const [config, expected] of [
       [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
-      [".no-mistakes-invalid.yml", "invalid repository-relative path"],
       [".no-mistakes-ignored.yml", "missing from the analysis file inventory"],
     ]) {
       const options = { root, config: join(root, config) };
@@ -102,6 +101,10 @@ test(
         invalid.warnings.some((warning) => warning.includes(expected)),
         invalid.warnings,
       );
+    }
+    const invalidPath = { root, config: join(root, ".no-mistakes-invalid.yml") };
+    for (const api of [cjs, esm]) {
+      await assert.rejects(api.check(invalidPath), /invalid repository-relative path/);
     }
   },
 );
@@ -167,6 +170,27 @@ test(
         impact.selectedTests.map((test) => test.testFile),
         ["web/live.test.ts"],
       );
+    }
+    for (const [name, message] of [
+      ["invalid", "invalid repository-relative path"],
+      ["empty", "invalid repository-relative path"],
+      ["absolute", "invalid repository-relative path"],
+      ["no-include", "requires a nonempty include matcher"],
+    ]) {
+      const options = {
+        root: fixture,
+        config: join(fixture, `.no-mistakes-${name}.yml`),
+      };
+      for (const api of [cjs, esm]) {
+        await assert.rejects(
+          api.testsPlan({ ...options, framework: "vitest", changedFiles: ["setup/web.ts"] }),
+          new RegExp(message),
+        );
+        await assert.rejects(
+          api.testsImpact({ ...options, entrypoints: ["setup/web.ts"] }),
+          new RegExp(message),
+        );
+      }
     }
   },
 );
