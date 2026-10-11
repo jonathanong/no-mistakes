@@ -1,0 +1,60 @@
+const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+
+test(
+  "compiled checks enforce expression arbiter dependencies without changing source facts",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(__dirname, "../../../test-cases/rules/postgres-idempotent-insert/fixture");
+    for (const scenario of ["expression-arbiters", "expression-arbiters-safe"]) {
+      const root = join(fixture, scenario);
+      const report = await cjs.check({ root });
+      assert.deepEqual(await esm.check({ root }), report);
+      assert.deepEqual(report.warnings, []);
+      const prepared = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      if (scenario === "expression-arbiters-safe") {
+        assert.deepEqual(report.rules, []);
+      } else {
+        assert.deepEqual(
+          report.rules.map(({ file }) => file),
+          [
+            "sql/expression.sql",
+            "sql/mixed.sql",
+            "sql/parenthesized.sql",
+            "sql/plain_column_control.sql",
+            "sql/quoted.sql",
+            "sql/unsupported.sql",
+          ],
+        );
+        for (const finding of report.rules)
+          assert.equal(finding.rule, "postgres-idempotent-insert");
+      }
+    }
+    const root = join(fixture, "expression-arbiters");
+    for (const name of ["expression.sql", "mixed.sql", "parenthesized.sql", "quoted.sql"]) {
+      const sql = readFileSync(join(root, "sql", name), "utf8");
+      const parsed = await cjs.parsePostgresSql({ sql });
+      assert.deepEqual(await esm.parsePostgresSql({ sql }), parsed);
+      assert.deepEqual(parsed.diagnostics, []);
+      const insert = parsed.statements[0].insert;
+      assert.equal(insert.complete, true);
+      assert.equal(insert.onConflict.target.kind, "expressions");
+      assert.ok(insert.onConflict.target.expressions.length > 0);
+      for (const expression of insert.onConflict.target.expressions) {
+        assert.ok(expression.span);
+        assert.equal(
+          Buffer.from(sql)
+            .subarray(expression.span.start.offset, expression.span.end.offset)
+            .toString(),
+          expression.sql,
+        );
+      }
+    }
+  },
+);
