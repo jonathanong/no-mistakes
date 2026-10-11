@@ -1,0 +1,1 @@
+import('../src/opaque.mts');

@@ -431,7 +431,7 @@ test(
     assert.deepEqual(ordinary, baseline);
     assert.deepEqual(await esm.check({ ...options, includeRunnerConfigDeadlines: true }), evidence);
     const vitest = runnerConfigDeadlines.find((runner) => runner.framework === "vitest");
-    assert.equal(vitest.configs.length, 3);
+    assert.equal(vitest.configs.length, 4);
     assert.ok(
       vitest.configs.some(
         (config) => config.status === "failed" && config.error.includes("unsupported opaque"),

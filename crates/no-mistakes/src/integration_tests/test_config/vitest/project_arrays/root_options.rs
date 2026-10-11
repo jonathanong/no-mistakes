@@ -50,3 +50,27 @@ fn root_options_inner(
     );
     Ok(options)
 }
+
+pub(in crate::integration_tests::test_config::vitest) fn callback_root_object<'a>(
+    program: &'a Program<'a>,
+    source: &'a str,
+    path: &Path,
+    resolver: &dyn ImportResolution,
+) -> Option<&'a ObjectExpression<'a>> {
+    let mut seen = BTreeSet::new();
+    let mut local_seen = BTreeSet::new();
+    let mut object_seen = BTreeSet::new();
+    let ctx = Ctx {
+        is_test_object: false,
+        source,
+        bindings: shared::top_level_object_bindings(program),
+        functions: top_level_function_bodies(program),
+        imports: import_bindings(program),
+        resolver,
+        path,
+        seen: &mut seen,
+        local_seen: &mut local_seen,
+        object_seen: &mut object_seen,
+    };
+    objects::callback_config_object(program, &ctx)
+}

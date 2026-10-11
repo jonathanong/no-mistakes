@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn static_setup_fallback_applies_only_when_no_project_is_recoverable() {
+fn static_callback_setups_and_unselected_projects_stay_scoped() {
     for (kind, expected, target) in [
         ("callback", "tests/genuine.test.mts", "src/genuine.mts"),
         (

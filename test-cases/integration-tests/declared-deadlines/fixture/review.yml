@@ -1,6 +1,6 @@
 version: 2
 tests:
   vitest:
-    configs: ['roots/*/vitest.config.ts']
+    configs: ['roots/*/vitest.config.ts', 'roots/opaque-workspace/vitest.workspace.ts']
   playwright:
     configs: ['playwright.mutable.ts', 'playwright.projections.ts']

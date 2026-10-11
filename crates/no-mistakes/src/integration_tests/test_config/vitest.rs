@@ -73,7 +73,8 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
     resolver: &dyn ImportResolution,
 ) -> Result<Vec<ConfigProject>> {
     let bindings = shared::top_level_object_bindings(program);
-    let root_object = shared::default_export_object(program, &bindings);
+    let root_object = shared::default_export_object(program, &bindings)
+        .or_else(|| project_arrays::callback_root_object(program, source, path, resolver));
     let workspace_options = (root_object.is_none() && is_vitest_project_array_path(path))
         .then(|| project_arrays::workspace_options(program, source, path, resolver))
         .transpose()?

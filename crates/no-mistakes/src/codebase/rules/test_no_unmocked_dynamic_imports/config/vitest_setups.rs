@@ -10,7 +10,7 @@ pub(super) fn from_facts(
     path: &Path,
     visible: &crate::fx::PathSet,
     facts: &RunnerConfigFacts,
-) -> Result<Option<Vec<ConfigSetupData>>> {
+) -> Result<Vec<ConfigSetupData>> {
     let projects = facts
         .get(path)
         .and_then(|facts| facts.vitest_projects())
@@ -21,9 +21,6 @@ pub(super) fn from_facts(
             )
         })?
         .map_err(anyhow::Error::msg)?;
-    if projects.is_empty() {
-        return Ok(None);
-    }
     let rules = config.rule_applications(super::super::RULE_ID);
     let all = rules.is_empty()
         || rules.iter().any(|rule| {
@@ -82,5 +79,4 @@ pub(super) fn from_facts(
             })
         })
         .collect::<Result<Vec<_>>>()
-        .map(Some)
 }

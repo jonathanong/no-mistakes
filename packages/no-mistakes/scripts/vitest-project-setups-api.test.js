@@ -79,6 +79,38 @@ test(
 );
 
 test(
+  "compiled callback configs preserve project boundaries and syntax",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/callback-syntax",
+    );
+    for (const [config, expected, target] of [
+      [".no-mistakes.yml", "tests/multi.test.mts", "src/multi.mts"],
+      [".no-mistakes-root.yml", "web/tests/genuine.test.mts", "web/src/root-target.mts"],
+      [".no-mistakes-comments.yml", "tests/comments.test.mts", "src/comment.mts"],
+      [".no-mistakes-opaque.yml", "tests/opaque.test.mts", "src/opaque.mts"],
+    ]) {
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(
+        report.rules.map((finding) => [finding.file, finding.target]),
+        [[expected, target]],
+      );
+      const extended = await cjs.check({ ...options, includeRunnerConfigDeadlines: true });
+      const { runnerConfigDeadlines, ...ordinary } = extended;
+      assert.deepEqual(ordinary, report);
+      assert.ok(Array.isArray(runnerConfigDeadlines));
+    }
+  },
+);
+
+test(
   "compiled setup triggers follow the effective policy config",
   { skip: !compiled, timeout: 20_000 },
   async () => {
