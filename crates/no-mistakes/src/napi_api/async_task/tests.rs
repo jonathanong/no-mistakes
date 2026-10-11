@@ -53,7 +53,9 @@ fn first_invocation_jobs_subprocess() {
     if std::env::var_os("NO_MISTAKES_NAPI_JOBS_INVALID_COMMAND_FIRST").is_some() {
         // Invocation controls are valid and the lock is acquired before the
         // command rejects root. That rejected request still selects one worker.
-        let error = compute(br#"{"jobs":1,"root":123}"#.to_vec()).unwrap_err();
+        let error = compute(br#"{"jobs":1,"root":123}"#.to_vec())
+            .err()
+            .expect("command-specific root validation rejects a number");
         assert!(error.reason.contains("invalid type"), "{}", error.reason);
     }
     let payload = std::env::var("NO_MISTAKES_NAPI_JOBS_PAYLOAD").unwrap();
