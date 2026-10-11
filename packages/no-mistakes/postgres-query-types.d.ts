@@ -87,6 +87,8 @@ export interface PostgresSqlQueryColumn {
 }
 export interface PostgresSqlPredicateContext {
   mandatory: boolean;
+  /** Required conjunct after wrapping NOT inverts AND/OR; null through opaque wrappers. */
+  effectiveMandatory: boolean | null;
   underOr: boolean;
   underNot: boolean;
   underCase: boolean;

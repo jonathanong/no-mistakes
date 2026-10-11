@@ -32,14 +32,22 @@ impl Collector<'_, '_> {
                 }
                 let mut child = context;
                 match op {
-                    BinaryOperator::And => {}
+                    BinaryOperator::And => {
+                        if self.not_depth % 2 == 1 {
+                            child.effective_mandatory = child.effective_mandatory.map(|_| false);
+                        }
+                    }
                     BinaryOperator::Or => {
                         child.mandatory = false;
                         child.under_or = true;
+                        if self.not_depth % 2 == 0 {
+                            child.effective_mandatory = child.effective_mandatory.map(|_| false);
+                        }
                     }
                     _ => {
                         child.mandatory = false;
                         child.under_other = true;
+                        child.effective_mandatory = None;
                     }
                 }
                 self.expr(left, scope, clause, join, child.clone(), env);
@@ -54,6 +62,7 @@ impl Collector<'_, '_> {
                     self.not_depth += 1;
                 } else {
                     child.under_other = true;
+                    child.effective_mandatory = None;
                 }
                 self.expr(expr, scope, clause, join, child, env);
                 self.not_depth -= u32::from(not);
@@ -67,6 +76,7 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_case = true;
+                child.effective_mandatory = None;
                 for expr in operand
                     .iter()
                     .map(|x| x.as_ref())
@@ -85,12 +95,14 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_boolean_test = true;
+                child.effective_mandatory = None;
                 self.expr(inner, scope, clause, join, child, env);
             }
             Expr::IsNull(inner) | Expr::IsNotNull(inner) | Expr::Cast { expr: inner, .. } => {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_other = true;
+                child.effective_mandatory = None;
                 self.expr(inner, scope, clause, join, child, env);
             }
             Expr::Exists { subquery, negated } => {
@@ -146,6 +158,7 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_other = true;
+                child.effective_mandatory = None;
                 self.expr(expr, scope, clause, None, child, env);
                 self.query(
                     subquery,
@@ -163,6 +176,7 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_other = true;
+                child.effective_mandatory = None;
                 for expr in exprs {
                     self.expr(expr, scope, clause, None, child.clone(), env);
                 }
@@ -171,6 +185,7 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_other = true;
+                child.effective_mandatory = None;
                 self.expr(expr, scope, clause, None, child.clone(), env);
                 for expr in list {
                     self.expr(expr, scope, clause, None, child.clone(), env);
@@ -182,6 +197,7 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_other = true;
+                child.effective_mandatory = None;
                 for expr in [expr, low, high] {
                     self.expr(expr, scope, clause, None, child.clone(), env);
                 }

@@ -12,6 +12,7 @@ impl Collector<'_, '_> {
     ) {
         context.mandatory = false;
         context.under_other = true;
+        context.effective_mandatory = None;
         for arguments in [&function.parameters, &function.args] {
             match arguments {
                 FunctionArguments::None => {}
