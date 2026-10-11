@@ -2,18 +2,18 @@ use super::{public_config_call, Ctx, Expression, Program, Statement};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ArrowFunctionBody, FunctionBody, ObjectExpression};
 
+mod exports;
+mod spreads;
+
 pub(in crate::integration_tests::test_config::vitest::project_arrays) fn callback_config_object<
     'a,
 >(
     program: &'a Program<'a>,
     ctx: &Ctx<'a, '_>,
 ) -> Option<&'a ObjectExpression<'a>> {
-    for statement in &program.body {
-        let Statement::ExportDefaultDeclaration(export) = statement else {
-            continue;
-        };
-        let expression = export.declaration.as_expression()?;
-        let expression = super::super::super::shared::expression_value(expression, &ctx.bindings);
+    let bindings = exports::immutable_bindings(program);
+    if let Some(expression) = exports::default_expression(program, &bindings) {
+        let expression = super::super::super::shared::expression_value(expression, &bindings);
         let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
             return None;
         };
@@ -24,7 +24,8 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn callbac
         if !matches!(role.as_str(), "defineConfig" | "defineProject") {
             return None;
         }
-        return callback_object(call.arguments[0].as_expression()?);
+        let object = callback_object(call.arguments[0].as_expression()?)?;
+        return spreads::proven_object(object).then_some(object);
     }
     None
 }

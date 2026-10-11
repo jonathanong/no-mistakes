@@ -417,3 +417,38 @@ test(
     }
   },
 );
+
+test(
+  "compiled callback aliases and spreads preserve actual setup coverage",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/callback-aliases",
+    );
+    for (const [name, expected] of [
+      ["mutable", ["tests/mutable.test.mts"]],
+      ["named", ["tests/named-genuine.test.mts"]],
+      ["spread", ["tests/spread.test.mts"]],
+      ["spread-root", ["tests/spread-root.test.mts"]],
+      ["known", []],
+    ]) {
+      const options = { root: fixture, config: join(fixture, `.no-mistakes-${name}.yml`) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      const { runnerConfigDeadlines: _deadlines, ...ordinary } = await cjs.check({
+        ...options,
+        includeRunnerConfigDeadlines: true,
+      });
+      assert.deepEqual(ordinary, report);
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(
+        report.rules.map((finding) => finding.file),
+        expected,
+        name,
+      );
+    }
+  },
+);

@@ -97,7 +97,10 @@ them have explicit project policies.
 Zero-parameter ESM `defineConfig` and `defineProject` callbacks with a literal
 object expression or a sole literal return use the same project and root
 resolution as ordinary configs. Comments and strings do not declare setups.
-Unsupported opaque callbacks do not supply global setup mocks.
+Callback aliases must use const bindings without writes. Local named default
+exports are supported. Inline literal object spreads retain setup evidence;
+unresolved object spreads or computed keys that may overwrite fields make the
+callback unsupported. Unsupported opaque callbacks do not supply global setup mocks.
 Repository checks also preserve unnamed Vitest executions independently.
 Explicit Vitest configs do not suppress automatic Jest config discovery.
 An explicit named policy replaces the recovered project's include/exclude

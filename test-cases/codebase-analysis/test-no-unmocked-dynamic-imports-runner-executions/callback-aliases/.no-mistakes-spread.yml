@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: [spread.config.mts]
+    projects:
+      spread:
+        include: [tests/spread.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [spread]

@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: [named.config.mts]
+    projects:
+      named:
+        include: [tests/named*.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [named]
