@@ -46,6 +46,19 @@ function createValueStability(context, primitiveMemberRead) {
       safeUse(node, "callback")
     );
   }
+  function confinedConfigResult(call) {
+    const node = unwrapTransparentParent(call);
+    const parent = node.parent;
+    if (parent?.type === "ExpressionStatement") return true;
+    // mergeConfig creates an object rather than retaining the callback identity.
+    if (
+      parent?.type === "CallExpression" &&
+      configCall(parent, context) === "mergeConfig" &&
+      (parent.arguments[0] === node || parent.arguments[1] === node)
+    )
+      return true;
+    return safeUse(node, "callback");
+  }
   function safeUse(identifier, mode = "value") {
     let node = unwrapTransparentParent(identifier);
     if (mode === "callback") {
@@ -58,7 +71,8 @@ function createValueStability(context, primitiveMemberRead) {
       return (
         parent?.type === "CallExpression" &&
         parent.arguments[0] === node &&
-        ["defineConfig", "defineProject"].includes(configCall(parent, context))
+        ["defineConfig", "defineProject"].includes(configCall(parent, context)) &&
+        confinedConfigResult(parent)
       );
     }
     let memberDepth = 0;
