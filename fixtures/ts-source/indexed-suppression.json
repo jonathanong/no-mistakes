@@ -1,0 +1,38 @@
+[
+  {
+    "source": "\ufeff// no-mistakes-disable-next-line indexed-rule: reason\r\nexport const a = 1;\r\nexport const b = 2; // no-mistakes-disable-line indexed-rule details",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "/* open\nexport const a = 1; // no-mistakes-disable-line indexed-rule\n*/\nexport const b = 2; // no-mistakes-disable-line indexed-rule",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "const text = \"// no-mistakes-disable-line indexed-rule\";\nconst template = `\n// no-mistakes-disable-line indexed-rule\n`;\nexport const a = 1;",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "// no-mistakes-disable-next-line indexed-rule-extra\nexport const a = 1; // no-mistakes-disable-line indexed-rule-extra",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "// no-mistakes-disable-next-line indexed-rule\n",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "// no-mistakes-disable-next-line indexed-rule",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "# no-mistakes-disable-next-line indexed-rule\nvalue\n-- no-mistakes-disable-line indexed-rule",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "const template = `\n// no-mistakes-disable-next-line indexed-rule\ntext`;",
+    "rule": "indexed-rule"
+  },
+  {
+    "source": "export const plain = 1;\nexport const other = 2;",
+    "rule": "indexed-rule"
+  }
+]

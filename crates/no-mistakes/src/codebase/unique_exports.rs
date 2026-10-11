@@ -78,6 +78,8 @@ fn analyze_unique_exports<R: ImportResolverFacade>(
 
     let mut occurrences = Vec::new();
     let mut export_memo = HashMap::new();
+    // Barrel recursion shares a cycle-sensitive memo across sorted roots. Keep
+    // this traversal ordered; independent source preparation runs in parallel.
     for path in sorted_paths(analysis_files.iter()) {
         let mut visiting = HashSet::new();
         occurrences.extend(collect_file_exports(

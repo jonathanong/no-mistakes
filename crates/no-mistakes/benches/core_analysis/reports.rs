@@ -80,3 +80,49 @@ pub(super) fn bench_workspace(c: &mut Criterion) {
     });
     group.finish();
 }
+
+/// Time construction/projection from prepared facts separately from source I/O
+/// and parsing. Each iteration owns a fresh invocation-scoped analysis.
+pub(super) fn bench_unique_exports(c: &mut Criterion) {
+    if !shard::should_run(shard::CHECK) {
+        return;
+    }
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/unique-exports")
+        .canonicalize()
+        .unwrap();
+    let files = vec![root.join("a.ts"), root.join("b.ts")];
+    let facts = no_mistakes::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        no_mistakes::codebase::check_facts::CheckFactPlan {
+            source: true,
+            symbols: true,
+            ..Default::default()
+        },
+    );
+    let config = no_mistakes::codebase::config::Config::default();
+    let tsconfig = no_mistakes::codebase::ts_resolver::TsConfig::default();
+    let run = || {
+        no_mistakes::codebase::unique_exports::analyze_project_with_prepared_facts(
+            &root, &config, &tsconfig, &facts,
+        )
+        .expect("prepared unique-exports analysis should succeed")
+    };
+    assert_eq!(
+        config.project_roots_for_rule(&root, "unique-exports"),
+        vec![root.clone()]
+    );
+    assert_eq!(facts.files().len(), 2);
+    assert_eq!(facts.stats.files_parsed, 2);
+    // The fixture includes one duplicate to prove analysis visits these facts.
+    let findings = run();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].export_name, "value0");
+    let mut group = c.benchmark_group("unique_exports");
+    group.throughput(Throughput::Elements(512));
+    group.bench_function("construct_from_prepared_facts", |b| {
+        b.iter(|| black_box(run()));
+    });
+    group.finish();
+}

@@ -24,7 +24,7 @@ fn source_file(root: &Path, rel: &str, source: &str) -> SourceFile {
     SourceFile {
         path: root.join(rel),
         rel: rel.to_string(),
-        source: source.into(),
+        disabled_lines: crate::codebase::ts_source::disabled_statement_lines(source, RULE_ID),
         symbols: crate::codebase::ts_symbols::extract_symbols(source, false)
             .unwrap()
             .into(),

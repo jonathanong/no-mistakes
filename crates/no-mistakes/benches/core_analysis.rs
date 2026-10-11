@@ -54,7 +54,7 @@ use query_indexes::{
 };
 use react_traits::bench_react_traits;
 use relationships::bench_relationship_projection;
-use reports::{bench_symbols, bench_workspace};
+use reports::{bench_symbols, bench_unique_exports, bench_workspace};
 fn bench_sql_source_positions(c: &mut criterion::Criterion) {
     if shard::should_run(shard::QUERY) {
         sql_source_positions::bench_sql_source_positions(c);
@@ -96,6 +96,7 @@ criterion_group!(
     bench_symbol_index_distinct_target_build,
     bench_scoped_resolver_selection,
     bench_symbols,
+    bench_unique_exports,
     bench_workspace,
     bench_react_traits,
     bench_aggregate_and_multi_report,
