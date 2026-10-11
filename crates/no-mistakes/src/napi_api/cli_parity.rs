@@ -3,8 +3,8 @@ use std::path::{Path, PathBuf};
 use super::options::{
     parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
     CiTopologyImpactOptions, CiTopologyOptions, FetchesOptions, ImpactedChecksOptions,
-    ProjectOptions, TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions,
-    TestsTargetsOptions, TestsWhyOptions,
+    ProjectOptions, TestsAuditOptions, TestsImpactOptions, TestsPlanDocumentOptions,
+    TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -186,3 +186,7 @@ include!("cli_parity_test_documents.rs");
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
     Ok(crate::cli::json_string(value))
 }
+
+#[cfg(test)]
+#[path = "audit_document_tests.rs"]
+mod audit_document_tests;

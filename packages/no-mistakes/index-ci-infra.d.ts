@@ -28,6 +28,8 @@ import type {
   SwiftOptions,
   SwiftTestTargetRow,
   TestForRow,
+  TestAuditReport,
+  TestsAuditOptions,
   WithInvocationOptions,
   WorkflowTopology,
   WorkflowTopologyIndex,
@@ -73,3 +75,7 @@ export function swiftTestTargets(
   options: WithInvocationOptions<SwiftOptions & { file: string }>,
 ): Promise<SwiftTestTargetRow[]>;
 export function version(): Promise<string>;
+
+export function testsAudit(
+  options: WithInvocationOptions<TestsAuditOptions>,
+): Promise<TestAuditReport>;

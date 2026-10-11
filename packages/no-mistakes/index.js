@@ -66,7 +66,13 @@ const jsonApis = createJsonApis({
   symbols: "symbolsJson",
 });
 
-const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
+const CAMELIZE_REPORTS = new Set([
+  "testsAudit",
+  "testsPlan",
+  "testsImpact",
+  "testsTargets",
+  "testsGraph",
+]);
 const acquirePlanningArtifactLock = createPlanningArtifactLock(native);
 
 async function analyzeProject(options = {}) {
@@ -163,6 +169,7 @@ module.exports.serverRouteEdges = planning.serverRouteEdges;
 module.exports.serverRouteList = planning.serverRouteList;
 module.exports.serverRouteRelated = planning.serverRouteRelated;
 module.exports.serverRoutes = planning.serverRoutes;
+module.exports.testsAudit = planning.testsAudit;
 module.exports.testsGraph = planning.testsGraph;
 module.exports.testsImpact = planning.testsImpact;
 module.exports.testsPlan = planning.testsPlan;

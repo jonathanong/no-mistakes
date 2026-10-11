@@ -70,3 +70,12 @@ pub(crate) struct TestsPlanDocumentOptions {
     pub(crate) plan: Option<String>,
     pub(crate) plan_json: Option<Value>,
 }
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct TestsAuditOptions {
+    pub(crate) plan: Option<String>,
+    pub(crate) plan_json: Option<Value>,
+    pub(crate) observations: Option<String>,
+    pub(crate) observations_json: Option<Value>,
+}

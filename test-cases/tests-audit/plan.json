@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "checkout_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "scope_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "plan": {
+    "changed_files": [
+      "src/a.mts",
+      "src/b.mts"
+    ],
+    "selected_tests": [
+      {
+        "test_file": "tests/selected.test.mts",
+        "confidence": "high",
+        "reasons": []
+      },
+      {
+        "test_file": "tests/unrelated.test.mts",
+        "confidence": "high",
+        "reasons": [
+          {
+            "changed_file": "src/a.mts",
+            "path": [
+              "src/a.mts",
+              "tests/unrelated.test.mts"
+            ],
+            "via": [
+              "dependency"
+            ]
+          }
+        ]
+      },
+      {
+        "test_file": "tests/absent.test.mts",
+        "confidence": "high",
+        "reasons": []
+      },
+      {
+        "test_file": "tests/incomplete.test.mts",
+        "confidence": "high",
+        "reasons": []
+      }
+    ],
+    "warnings": [],
+    "fallback_triggered": false,
+    "fallback_reason": null
+  },
+  "changed_files": [
+    "src/a.mts",
+    "src/b.mts"
+  ],
+  "changed_symbols": [
+    {
+      "file": "src/b.mts",
+      "symbol": "changed"
+    }
+  ]
+}

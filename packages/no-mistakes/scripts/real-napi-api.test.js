@@ -15,6 +15,7 @@ require("./workspace-resolve-api.test.js");
 require("./nextjs-tracked-routes.test.js");
 require("./postgres-do-constraint-api.test.js");
 require("./postgres-metadata-api.test.js");
+require("./tests-audit-native-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");

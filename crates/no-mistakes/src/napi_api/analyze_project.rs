@@ -14,7 +14,8 @@ mod options;
 mod types;
 
 use dispatch::{
-    graph_direction, is_command_report, is_playwright_report, is_project_report, is_symbols_report,
+    graph_direction, is_artifact_report, is_command_report, is_playwright_report,
+    is_project_report, is_symbols_report,
 };
 use options::{flow_options, import_usages_options, symbols_options};
 use types::{
@@ -134,6 +135,9 @@ fn run_report(
     options: &AnalyzeProjectOptions,
     context: &context::AnalyzeProjectContext,
 ) -> AnyhowResult<Box<RawValue>> {
+    if is_artifact_report(&request.report_type) {
+        return context::artifact_report(request, options);
+    }
     if let Some(direction) = graph_direction(&request.report_type) {
         return context.graph_report(request, options, direction);
     }

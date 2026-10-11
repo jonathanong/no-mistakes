@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "checkout_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "scope_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "granularity": "per-test-file",
+  "suite": "full",
+  "complete": true,
+  "tests": [
+    {
+      "test_file": "tests/selected.test.mts",
+      "executed_files": [
+        "src/a.mts",
+        "src/a.mts"
+      ],
+      "executed_symbols": [],
+      "trace_complete": true
+    },
+    {
+      "test_file": "tests/missed.test.mts",
+      "executed_files": [
+        "src/b.mts"
+      ],
+      "executed_symbols": [
+        {
+          "file": "src/b.mts",
+          "symbol": "changed"
+        }
+      ],
+      "trace_complete": false
+    },
+    {
+      "test_file": "tests/unrelated.test.mts",
+      "executed_files": [
+        "src/b.mts"
+      ],
+      "executed_symbols": [
+        {
+          "file": "src/b.mts",
+          "symbol": "other"
+        }
+      ],
+      "trace_complete": true
+    },
+    {
+      "test_file": "tests/incomplete.test.mts",
+      "executed_files": [],
+      "executed_symbols": [],
+      "trace_complete": false
+    }
+  ]
+}
