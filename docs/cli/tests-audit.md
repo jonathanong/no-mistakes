@@ -46,7 +46,10 @@ The observations artifact contains `schema_version: 1`, the same `provenance`,
 `granularity: "per-test-file"`, `suite: "full"`, `complete: true`, and `tests`.
 Each test record has `test_file`, `executed_files`, `executed_symbols` (the same
 `{ file, symbol }` shape), and `trace_complete`. Every executed symbol's file
-must also appear in `executed_files`. `complete` declares that the full-suite run
+must also appear in `executed_files`. `test_file` identifies the inventory record;
+its presence alone does not prove execution. Include the test file itself in
+`executed_files` only when runner or instrumentation evidence proves source
+evaluation. `complete` declares that the full-suite run
 finished; `trace_complete` separately declares complete tracing for this file
 within the declared file/symbol scope. Set it to false for dropped events,
 incomplete instrumentation, early interruption, or unknown trace coverage.
@@ -87,6 +90,7 @@ A runner adapter supplies `/tmp/full-suite-coverage.json`:
   "tests": [
     {
       "testFile": "tests/api.test.mts",
+      "testFileExecuted": true,
       "coverageMap": "/tmp/coverage/api/coverage-final.json",
       "traceComplete": true
     }
@@ -95,7 +99,12 @@ A runner adapter supplies `/tmp/full-suite-coverage.json`:
 ```
 
 The `tests` list must cover the runner's complete configured suite inventory,
-including files with zero execution hits. Each `coverageMap` is that test file's
+including skipped files and files with zero execution hits. The adapter requires
+`testFileExecuted`, a boolean from runner evidence that this test source was
+actually evaluated. Inventory presence or test discovery alone is insufficient.
+Set it to false when the runner did not evaluate the test source. Skipping test
+cases alone does not determine this flag: the module may still be evaluated.
+If source evaluation is unknown, also set `traceComplete: false`. Each `coverageMap` is that test file's
 isolated Istanbul map, not a copy of the same aggregate map. Execution hits are
 positive statement, function, or branch counters; listed-but-unexecuted files do
 not count.
@@ -137,6 +146,9 @@ if (run.suite !== 'full' || run.complete !== true ||
   throw new Error('Run provenance/scope changed or the full suite did not finish');
 }
 const tests = await Promise.all(run.tests.map(async row => {
+  if (typeof row.testFileExecuted !== 'boolean') {
+    throw new Error('Runner adapter must report testFileExecuted for every inventory file');
+  }
   const coverage = JSON.parse(await readFile(row.coverageMap, 'utf8'));
   const executedFiles = Object.values(coverage)
     .filter(file => [...Object.values(file.s), ...Object.values(file.f),
@@ -148,6 +160,8 @@ const tests = await Promise.all(run.tests.map(async row => {
       }
       return path;
     });
+  // Test sources are often excluded from coverage; use explicit runner evidence.
+  if (row.testFileExecuted === true) executedFiles.push(row.testFile);
   return { testFile: row.testFile, executedFiles, executedSymbols: [],
     traceComplete: row.traceComplete === true };
 }));

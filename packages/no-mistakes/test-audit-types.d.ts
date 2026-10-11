@@ -27,7 +27,9 @@ export interface TestAuditPlanArtifact {
 }
 
 export interface TestAuditObservation {
+  /** Inventory identity; does not alone prove execution. */
   testFile: string;
+  /** Explicit execution evidence, including the test file itself when its source was evaluated. */
   executedFiles: string[];
   executedSymbols: TestAuditSymbol[];
   /** Complete file AND symbol tracing for the declared scope; false makes negative evidence unknown. */

@@ -32,7 +32,9 @@ pub struct TestAuditPlanArtifact {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TestAuditObservation {
+    /// Inventory identity; does not alone prove execution.
     pub test_file: String,
+    /// Explicit execution evidence may include this test file when its source was evaluated.
     pub executed_files: Vec<String>,
     pub executed_symbols: Vec<TestAuditSymbol>,
     /// False retains positive evidence but makes negative evidence unknown.

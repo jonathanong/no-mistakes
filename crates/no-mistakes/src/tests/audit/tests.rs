@@ -336,3 +336,37 @@ fn artifact_contract_rejects_unknown_envelope_and_trace_fields() {
     unknown_trace["tests"][0]["passing"] = serde_json::json!(true);
     assert!(serde_json::from_value::<TestAuditObservationsArtifact>(unknown_trace).is_err());
 }
+
+#[test]
+fn changed_test_files_require_explicit_execution_instead_of_inventory_presence() {
+    let plan = read_artifact(&fixture("changed-test-plan.json")).unwrap();
+    let observations = read_artifact(&fixture("changed-test-observations.json")).unwrap();
+    let report = audit_test_selection(&plan, &observations).unwrap();
+    assert_eq!(
+        report
+            .selected_observed_tests
+            .iter()
+            .map(|row| row.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["tests/executed.test.mts", "tests/partial.test.mts"]
+    );
+    for row in &report.selected_observed_tests {
+        assert_eq!(row.matched_files, [row.test_file.clone()]);
+    }
+    assert_eq!(
+        report.missed_observed_tests[0].test_file,
+        "tests/missed.test.mts"
+    );
+    assert_eq!(
+        report.missed_observed_tests[0].matched_files,
+        ["tests/missed.test.mts"]
+    );
+    assert_eq!(
+        report.selected_without_observed_execution[0].test_file,
+        "tests/skipped.test.mts"
+    );
+    assert_eq!(
+        report.selected_with_incomplete_traces,
+        ["tests/unknown.test.mts"]
+    );
+}

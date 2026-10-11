@@ -1,0 +1,27 @@
+[
+  {
+    "testFile": "tests/executed.test.mts",
+    "testFileExecuted": true,
+    "traceComplete": true
+  },
+  {
+    "testFile": "tests/missed.test.mts",
+    "testFileExecuted": true,
+    "traceComplete": true
+  },
+  {
+    "testFile": "tests/skipped.test.mts",
+    "testFileExecuted": false,
+    "traceComplete": true
+  },
+  {
+    "testFile": "tests/unknown.test.mts",
+    "testFileExecuted": false,
+    "traceComplete": false
+  },
+  {
+    "testFile": "tests/partial.test.mts",
+    "testFileExecuted": true,
+    "traceComplete": false
+  }
+]

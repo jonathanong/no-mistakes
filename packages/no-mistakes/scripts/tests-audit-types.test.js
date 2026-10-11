@@ -40,3 +40,23 @@ test("documented Istanbul adapter counts statement, function and branch executio
   );
   for (const row of cases) assert.equal(executed(row), row.executed);
 });
+
+test("documented adapter uses runner evidence for test-file execution", () => {
+  const docs = readFileSync(join(root, "docs", "cli", "tests-audit.md"), "utf8");
+  const match = docs.match(
+    /if \(row\.testFileExecuted === true\) executedFiles\.push\(row\.testFile\);/,
+  );
+  assert.ok(match, "producer must use explicit test-source execution evidence");
+  const cases = JSON.parse(
+    readFileSync(
+      join(root, "test-cases", "tests-audit", "adapter-self-execution-cases.json"),
+      "utf8",
+    ),
+  );
+  for (const row of cases) {
+    const executedFiles = [];
+    // Run the actual recipe statement; inventory and unknown tracing are not execution proof.
+    runInNewContext(match[0], { row, executedFiles });
+    assert.deepEqual(executedFiles, row.testFileExecuted ? [row.testFile] : []);
+  }
+});
