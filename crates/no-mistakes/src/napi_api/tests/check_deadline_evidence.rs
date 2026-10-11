@@ -156,7 +156,7 @@ fn public_check_cli_renderer_and_batched_reports_share_evidence_without_ordinary
         crate::check_runner::run_all_with_evidence(root.clone(), None, None, false, true).unwrap();
     assert_eq!(crate::check_runner::json_value(&results), direct);
     let batch: serde_json::Value = serde_json::from_str(
-        &crate::napi_api::analyze_project_json_impl(json!({ "root": root, "reports": [
+        &crate::napi_api::analyze_project::analyze_project_json_impl(json!({ "root": root, "reports": [
             { "type": "check", "id": "evidence", "includeRunnerConfigDeadlines": true },
             { "type": "check", "id": "ordinary" },
             { "type": "check", "id": "suppressed", "includeRunnerConfigDeadlines": true, "includeSuppressed": true }
