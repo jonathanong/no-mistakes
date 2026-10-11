@@ -17,6 +17,48 @@ fn scoped_names_preserve_last_binding_and_distinguish_lexical_frames() {
 }
 
 #[test]
+fn scoped_names_keep_duplicate_only_runs_inline_even_when_revisited() {
+    let names = index_scoped_names([
+        ((0, "run".to_string()), 1),
+        ((0, "run".to_string()), 2),
+        ((0, "run".to_string()), 3),
+        ((1, "run".to_string()), 4),
+        ((0, "run".to_string()), 5),
+        ((0, "run".to_string()), 6),
+    ]);
+    assert_eq!(scoped_name(&names, 0, "run"), Some(&6));
+    assert_eq!(scoped_name(&names, 1, "run"), Some(&4));
+    assert!(names
+        .values()
+        .all(|names| matches!(names, ScopedNames::One(_, _))));
+    assert!(index_scoped_names::<u32>([]).is_empty());
+}
+
+#[test]
+fn scoped_names_reserve_dense_runs_and_extend_revisited_storage_shapes() {
+    let entries = [((0, "first".to_string()), 0), ((1, "run".to_string()), 1)]
+        .into_iter()
+        .chain((0..128).map(|id| ((0, format!("name{id}")), id)))
+        .chain([
+            ((1, "stop".to_string()), 2),
+            ((0, "first".to_string()), 3),
+            ((0, "first".to_string()), 4),
+            ((0, "last".to_string()), 5),
+            ((1, "run".to_string()), 6),
+        ]);
+    let names = index_scoped_names(entries);
+    for id in 0..128 {
+        assert_eq!(scoped_name(&names, 0, &format!("name{id}")), Some(&id));
+    }
+    assert_eq!(scoped_name(&names, 0, "first"), Some(&4));
+    assert_eq!(scoped_name(&names, 0, "last"), Some(&5));
+    assert_eq!(scoped_name(&names, 1, "run"), Some(&6));
+    assert_eq!(scoped_name(&names, 1, "stop"), Some(&2));
+    assert_eq!(names.get(&0).unwrap().len(), 130);
+    assert_eq!(names.get(&1).unwrap().len(), 2);
+}
+
+#[test]
 fn scoped_names_promote_distinct_names_and_replace_duplicates_after_promotion() {
     let names = index_scoped_names([
         ((0, "run".to_string()), 1),
@@ -158,6 +200,13 @@ fn lexical_name_tables_use_borrowed_probes() {
     assert!(lookup.contains("scopes.get(&scope)?.get(name)"));
     assert!(!lookup.contains("to_string()"));
     assert!(!lookup.contains(".clone()"));
+    // Many inserts must update in place; dense construction reserves from
+    // an exact owned run instead of growing the inner map for each row.
+    let insertion = lookup.split("fn insert(").nth(1).unwrap();
+    let insertion = insertion.split("fn extend(").next().unwrap();
+    assert!(!insertion.contains("std::mem::replace"));
+    assert!(lookup.contains("names.reserve(rows.len())"));
+    assert!(lookup.contains("ScopedNames::Many(rows.into_iter().collect())"));
     // Alias results and cycle detection still own strings; only table probes
     // must avoid allocating an owned (scope, name) lookup key.
     for probes in [

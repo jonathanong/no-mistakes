@@ -10,22 +10,30 @@ enum ScopedNames<T> {
 
 impl<T> ScopedNames<T> {
     fn insert(&mut self, name: String, value: T) {
+        match self {
+            Self::Many(names) => {
+                names.insert(name, value);
+            }
+            Self::One(existing, previous) if existing == &name => *previous = value,
+            Self::One(_, _) => self.extend(std::iter::once((name, value))),
+        }
+    }
+
+    fn extend(&mut self, rows: impl ExactSizeIterator<Item = (String, T)>) {
+        if let Self::Many(names) = self {
+            names.reserve(rows.len());
+            names.extend(rows);
+            return;
+        }
         // The empty map is allocation-free and lets promotion move both the
         // original key and value without cloning or requiring T: Default.
         let previous = std::mem::replace(self, Self::Many(fx_map()));
-        *self = match previous {
-            Self::One(existing, _) if existing == name => Self::One(existing, value),
-            Self::One(existing, previous) => {
-                let mut names = fx_map();
-                names.insert(existing, previous);
-                names.insert(name, value);
-                Self::Many(names)
-            }
-            Self::Many(mut names) => {
-                names.insert(name, value);
-                Self::Many(names)
-            }
-        };
+        if let Self::One(name, value) = previous {
+            let mut names = crate::fx::fx_map_with_capacity(rows.len() + 1);
+            names.insert(name, value);
+            names.extend(rows);
+            *self = Self::Many(names);
+        }
     }
 
     fn get(&self, name: &str) -> Option<&T> {
@@ -57,22 +65,42 @@ fn index_scoped_names<T>(
 ) -> ScopedNameMap<T> {
     let mut scopes: ScopedNameMap<T> = fx_map();
     let mut entries = entries.into_iter().peekable();
-    while let Some(((scope, name), value)) = entries.next() {
-        let names = match scopes.entry(scope) {
-            std::collections::hash_map::Entry::Vacant(entry) => {
-                entry.insert(ScopedNames::One(name, value))
-            }
-            std::collections::hash_map::Entry::Occupied(mut entry) => {
-                entry.get_mut().insert(name, value);
-                entry.into_mut()
-            }
-        };
-        // Extracted bindings are commonly scope-sorted. Reuse the same entry
-        // for that run; interleaved scopes still retain normal last-wins lookup.
-        while let Some(((_, name), value)) =
+    while let Some(((scope, name), mut value)) = entries.next() {
+        // Duplicate-only runs still fit inline and need no temporary vector.
+        while let Some(((_, _), next_value)) = entries
+            .next_if(|((next_scope, next_name), _)| *next_scope == scope && next_name == &name)
+        {
+            value = next_value;
+        }
+        if let Some(((_, next_name), next_value)) =
             entries.next_if(|((next_scope, _), _)| *next_scope == scope)
         {
-            names.insert(name, value);
+            // Extracted bindings are commonly scope-sorted. Collect one owned
+            // run so the table reserves once, without pre-counting or cloning.
+            let mut rows = vec![(name, value), (next_name, next_value)];
+            while let Some(((_, name), value)) =
+                entries.next_if(|((next_scope, _), _)| *next_scope == scope)
+            {
+                rows.push((name, value));
+            }
+            match scopes.entry(scope) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(ScopedNames::Many(rows.into_iter().collect()));
+                }
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    entry.get_mut().extend(rows.into_iter());
+                }
+            }
+        } else {
+            // Revisited scopes keep insertion order and last-wins semantics.
+            match scopes.entry(scope) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(ScopedNames::One(name, value));
+                }
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    entry.get_mut().insert(name, value);
+                }
+            }
         }
     }
     scopes
