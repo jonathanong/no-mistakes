@@ -209,6 +209,9 @@ impl DepGraph {
     }
 
     fn append_canonical_edges(&mut self, edges: Vec<Edge>) {
+        if edges.is_empty() {
+            return;
+        }
         self.edges.extend_edges_preserving_ordinals(
             edges
                 .into_iter()

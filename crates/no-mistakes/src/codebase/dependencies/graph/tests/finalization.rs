@@ -146,6 +146,47 @@ fn n(path: &str) -> NodeId {
     NodeId::file(p(path))
 }
 
+fn with_materialized_vitest_cache(mut graph: DepGraph) -> DepGraph {
+    graph = graph.with_vitest_setup_projects(vec![VitestSetupProject {
+        config: None,
+        scope: Some(".".to_string()),
+        filter: crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(
+            &crate::integration_tests::types::ConfigProject {
+                config: None,
+                workspace: false,
+                policy_name: None,
+                runner_project_arg: None,
+                scope: Some(".".to_string()),
+                include: Vec::new(),
+                exclude: Vec::new(),
+                declared_deadlines: Default::default(),
+                vitest_setup: Vec::new(),
+            },
+        )
+        .unwrap(),
+        tests: Vec::new(),
+        setups: Vec::new(),
+    }]);
+    let _ = graph.dependents_of_node(&n("/repo/unused.ts"));
+    assert!(graph.vitest_setup_edges_materialized());
+    graph
+}
+
+#[test]
+fn empty_selector_append_preserves_materialized_effective_edges() {
+    let mut graph = with_materialized_vitest_cache(test_support::from_typed_maps(
+        p("/repo"),
+        EdgeMap::default(),
+        EdgeMap::default(),
+    ));
+    let edges_before = graph.edges.edges().to_vec();
+
+    graph.append_canonical_edges(Vec::new());
+
+    assert!(graph.vitest_setup_edges_materialized());
+    assert_eq!(graph.edges.edges(), edges_before);
+}
+
 #[test]
 fn normalized_adjacency_flatten_matches_global_sort_oracle() {
     // These nodes share the same display sort keys. Keep this shuffled so the
@@ -265,11 +306,19 @@ fn direct_selector_append_matches_historical_rebuild_ordinals() {
         ),
     ];
     let mut rebuilt = test_support::from_typed_maps(p("/repo"), forward.clone(), reverse.clone());
-    let mut appended = test_support::from_typed_maps(p("/repo"), forward, reverse);
+    let mut appended = with_materialized_vitest_cache(test_support::from_typed_maps(
+        p("/repo"),
+        forward,
+        reverse,
+    ));
 
     rebuilt.merge_canonical_edges(selector_edges.clone());
     appended.append_canonical_edges(selector_edges);
 
+    assert!(
+        !appended.vitest_setup_edges_materialized(),
+        "a non-empty append must invalidate the cached effective edge index"
+    );
     assert_eq!(appended.edges.edges(), rebuilt.edges.edges());
     assert_eq!(appended.edges.forward(), rebuilt.edges.forward());
     assert_eq!(appended.edges.reverse(), rebuilt.edges.reverse());
