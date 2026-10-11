@@ -5,6 +5,9 @@ impl AnalyzeProjectContext {
         options: &AnalyzeProjectOptions,
     ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
+        if request.report_type == "callSites" {
+            return scope.call_sites_report(request, &scope.options);
+        }
         run_command_report(request, &scope.options)
     }
 }

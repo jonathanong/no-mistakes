@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 mod targets;
-pub(crate) use targets::resolve_targets;
+pub(crate) use targets::{resolve_targets, resolve_targets_with_session};
 
 /// Resolved root, tsconfig, and the single absolute target file. Shared setup
 /// for every lightweight query command so `--root`/`--tsconfig` fallback and
@@ -103,13 +103,19 @@ impl Target {
     }
 
     pub(crate) fn prepare_reverse(&self) -> Result<ReversePrepared> {
+        let mut prepared = self.prepare_reverse_base()?;
+        prepared.graph_files.add_explicit_root(&self.abs_file);
+        Ok(prepared)
+    }
+
+    pub(crate) fn prepare_reverse_base(&self) -> Result<ReversePrepared> {
         let visible_paths = self.dataset.paths_for(&self.root);
         let all = crate::codebase::ts_source::discover_files_from_visible(
             &self.root,
             &[],
             &visible_paths,
         );
-        let mut graph_files =
+        let graph_files =
             crate::codebase::dependencies::graph::GraphFiles::from_files_with_resource_candidates(
                 all,
                 self.visible_paths
@@ -117,7 +123,6 @@ impl Target {
                     .as_ref()
                     .clone(),
             );
-        graph_files.add_explicit_root(&self.abs_file);
         let workspace = self.dataset.workspace();
         let tsconfig_catalog = match &self.explicit_tsconfig {
             Some(path) => crate::codebase::ts_resolver::TsConfigCatalog::forced(

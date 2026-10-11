@@ -8,6 +8,7 @@ use super::schema::{
 use super::view::ConfigView;
 
 mod config_view;
+mod effects;
 mod impact_parse;
 mod named_triggers;
 mod test_plan_parse;
@@ -480,21 +481,4 @@ fn find_config_root_v2_stem_returns_root() {
 fn find_config_root_no_config_returns_start() {
     let dir = fixture("empty");
     assert_eq!(find_config_root(&dir), dir);
-}
-
-#[test]
-fn per_item_effect_configuration_round_trips_without_changing_query_sinks() {
-    let yaml = "effects:\n  postgres:\n    functions: [read]\n    categories: {write: [write]}\n    transactionFunctions: [tx.query]\n    batchFunctions: [readMany]\n";
-    let config: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
-    let effects = &config.effects["postgres"];
-    assert_eq!(effects.functions, ["read"]);
-    assert_eq!(effects.categories["write"], ["write"]);
-    assert_eq!(effects.transaction_functions, ["tx.query"]);
-    assert_eq!(effects.batch_functions, ["readMany"]);
-    let serialized = serde_yaml::to_string(&config).unwrap();
-    assert_eq!(config, serde_yaml::from_str(&serialized).unwrap());
-    let legacy: NoMistakesConfig =
-        serde_yaml::from_str("effects: {postgres: {functions: [read]}}").unwrap();
-    assert!(legacy.effects["postgres"].transaction_functions.is_empty());
-    assert!(legacy.effects["postgres"].batch_functions.is_empty());
 }

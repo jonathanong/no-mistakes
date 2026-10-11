@@ -538,7 +538,14 @@ resolved within that report's effective scope. `reactUsages` accepts
 `lockfileDiff`, CI/infra/swift reports, `impactedChecks`, and
 `validateMermaidMarkdown` are also valid `reports[].type` values. They inherit
 the request `root`/`tsconfig`/`config` and dispatch through the dedicated Node
-APIs. `resolveCheck` import rows include `computed: true` for non-literal
+APIs. `callSites` shares the request's prepared argument and call facts,
+including namespace calls and static lexical aliases while excluding shadowed
+bindings. Its ordinary resolver scope matches the standalone query even when
+companion reports use broader runner catalogs or ignored explicit roots;
+equivalent call graphs are reused. `effects` also supports binding-aware
+`effects.<kind>.targets` config
+selectors by exact import specifier and export path; its string lists retain
+spelling-based matching. `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
 same visible `exports`/`main` resolver as dependency `workspace` edges; missing or
@@ -931,3 +938,17 @@ their existing asynchronous exports. `DeclaredPayloadCompatibilityOptions`,
 `DeclaredPayloadContract`, and `DeclaredPayloadSchema` name the configuration
 shapes. Reports retain the existing `RuleFinding` contract; unsupported schema
 forms produce unproven findings.
+
+`importers()`, `exportsOf()`, `deadExports()`, and `callSites()` return additive
+collection diagnostics: `partial` and `incompleteFiles` (exported types
+`QueryDiagnostics`, `QueryIncompleteFile`, and `QueryIncompleteReason`). A file
+entry contains its root-relative path, a reason (`operational-error`,
+`parse-error`, `missing-facts`, or `missing-symbols`), and a message. Parser
+recovery can retain known imports while marking the result partial. These
+warnings cover the prepared candidate inventory, including files whose relevance
+cannot be determined from failed import facts. `partial: false` only means no
+recorded collection gaps, not exhaustive runtime reference resolution. The
+existing result lists, counts, and `anyDead` remain unchanged; a zero count in a
+partial report is not proof of absence. `exportsOf({ noImporters: true, ... })`
+omits both fields because no reverse scan was requested. The asynchronous native
+bindings and JS helpers expose the same fields as CLI JSON.

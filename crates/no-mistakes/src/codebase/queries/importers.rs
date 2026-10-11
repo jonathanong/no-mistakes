@@ -55,6 +55,8 @@ pub struct ImportersReport {
     dependents_count: usize,
     #[serde(skip_serializing_if = "Option::is_none")]
     test_impact: Option<TestImpact>,
+    #[serde(flatten)]
+    diagnostics: super::diagnostics::QueryDiagnostics,
 }
 
 fn test_impact(
@@ -64,6 +66,7 @@ fn test_impact(
 ) -> Result<(
     TestImpact,
     crate::codebase::dependencies::graph::SymbolIndex,
+    super::diagnostics::QueryDiagnostics,
 )> {
     let config = target.config(None)?;
     let prepared_impact = crate::tests::build_test_impact_graph_for_reverse_query_with_prepared(
@@ -101,6 +104,11 @@ fn test_impact(
     // The impact planner consumes its graph. Build the ordinary projection
     // afterwards so the large graph and SymbolIndex are not live together.
     let ordinary_index = build_reverse_index_from_prepared(target, ordinary_reverse, &facts);
+    let diagnostics = super::diagnostics::QueryDiagnostics::from_prepared(
+        ordinary_reverse.graph_files.indexable(),
+        &facts,
+        &target.root,
+    );
     let tests: Vec<String> = plan
         .selected_tests
         .into_iter()
@@ -112,23 +120,24 @@ fn test_impact(
             tests,
         },
         ordinary_index,
+        diagnostics,
     ))
 }
 
 fn compute(args: &ImportersArgs) -> Result<ImportersReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let (direct_importers, test_impact) = if args.tests {
+    let (direct_importers, test_impact, diagnostics) = if args.tests {
         // Test impact adds runner/project resolver scopes. Collect a single
         // union fact map, then project it through the ordinary reverse catalog
         // so pre-existing importer fields keep their original semantics.
         let ordinary_reverse = target.prepare_reverse()?;
-        let (impact, index) = test_impact(args, &target, &ordinary_reverse)?;
+        let (impact, index, diagnostics) = test_impact(args, &target, &ordinary_reverse)?;
         let importers: Vec<String> = index
             .file_importers(&target.abs_file)
             .iter()
             .map(|importer| rel_str(importer, &target.root))
             .collect();
-        (importers, Some(impact))
+        (importers, Some(impact), diagnostics)
     } else {
         let analysis = build_reverse_analysis(&target)?;
         let importers: Vec<String> = analysis
@@ -137,7 +146,7 @@ fn compute(args: &ImportersArgs) -> Result<ImportersReport> {
             .iter()
             .map(|importer| rel_str(importer, &target.root))
             .collect();
-        (importers, None)
+        (importers, None, analysis.diagnostics)
     };
 
     Ok(ImportersReport {
@@ -145,12 +154,14 @@ fn compute(args: &ImportersArgs) -> Result<ImportersReport> {
         dependents_count: direct_importers.len(),
         direct_importers,
         test_impact,
+        diagnostics,
     })
 }
 
 impl Report for ImportersReport {
     fn write_human(&self, w: &mut dyn Write) -> io::Result<()> {
         writeln!(w, "{} ({} dependents)", self.file, self.dependents_count)?;
+        self.diagnostics.write_human(w)?;
         for importer in &self.direct_importers {
             writeln!(w, "  {importer}")?;
         }

@@ -99,6 +99,10 @@ fn tests_flag_does_not_broaden_direct_importers_to_runner_scoped_aliases() {
     .unwrap();
     assert_eq!(with_tests.direct_importers, ordinary.direct_importers);
     assert_eq!(with_tests.dependents_count, ordinary.dependents_count);
+    assert_eq!(
+        serde_json::to_value(&with_tests.diagnostics).unwrap(),
+        serde_json::to_value(&ordinary.diagnostics).unwrap()
+    );
     let impact = with_tests.test_impact.expect("test impact present");
     assert_eq!(impact.tests, ["packages/unit/tests/owner.test.ts"]);
 }
@@ -157,6 +161,10 @@ fn tests_flag_keeps_recovered_imports_from_malformed_runner_helpers() {
     let work = observer.snapshot().work;
     assert_eq!(with_tests.direct_importers, ordinary.direct_importers);
     assert_eq!(with_tests.dependents_count, ordinary.dependents_count);
+    assert_eq!(
+        serde_json::to_value(&with_tests.diagnostics).unwrap(),
+        serde_json::to_value(&ordinary.diagnostics).unwrap()
+    );
     let importer_impact = with_tests.test_impact.expect("test impact present");
     assert_eq!(importer_impact.tests, ["tests/owner.test.ts"]);
     let standalone = crate::tests::impact::generate_impact_plan(&crate::tests::ImpactArgs {

@@ -501,3 +501,6 @@ fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
 
 #[path = "tests/playwright_regressions.rs"]
 mod playwright_regressions;
+
+#[path = "tests/batch_runner_helpers.rs"]
+mod batch_runner_helpers;

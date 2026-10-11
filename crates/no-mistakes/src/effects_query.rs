@@ -47,6 +47,10 @@ pub struct EffectsReport {
 pub(crate) struct EffectsSelection {
     kind: String,
     names: HashMap<String, Option<String>>,
+    targets: crate::fx::FxHashMap<
+        String,
+        crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>,
+    >,
 }
 
 impl EffectsReport {
@@ -142,7 +146,10 @@ pub fn run(
     let allowed = runtime_edges();
     // Build only the runtime-import edges we traverse, not every edge producer
     // (routes, queues, React, Swift, …), which an `effects` query discards.
-    let plan = GraphBuildPlan::from_allowed(Some(&allowed));
+    let plan = GraphBuildPlan {
+        calls: !selection.targets.is_empty(),
+        ..GraphBuildPlan::from_allowed(Some(&allowed))
+    };
     let mut fact_context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
     fact_context.effect_functions = selection.names.clone();
     fact_context.set_visible_file_set(graph_files.visible_path_set());

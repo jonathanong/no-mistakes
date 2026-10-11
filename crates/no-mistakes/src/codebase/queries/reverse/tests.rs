@@ -124,3 +124,25 @@ fn symbols_distinguishes_recovered_and_incomplete_prepared_facts() {
     assert!(error.contains("missing symbols for"), "{error}");
     assert!(error.contains("util.ts"), "{error}");
 }
+
+#[test]
+fn prepared_inventory_read_failure_is_reported_without_rediscovery() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture_root());
+    let root = normalize_path(fixture.path());
+    let target = resolve_target(Path::new("util.ts"), Some(&root), None).unwrap();
+    // The file existed during inventory preparation. A later read failure must
+    // retain that candidate rather than silently shrink the query universe.
+    std::fs::remove_file(root.join("consumer.ts")).unwrap();
+    let analysis = build_reverse_analysis(&target).unwrap();
+    let diagnostics = serde_json::to_value(&analysis.diagnostics).unwrap();
+    assert_eq!(diagnostics["partial"], true);
+    assert_eq!(diagnostics["incompleteFiles"][0]["file"], "consumer.ts");
+    assert_eq!(
+        diagnostics["incompleteFiles"][0]["reason"],
+        "operational-error"
+    );
+    assert!(diagnostics["incompleteFiles"][0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("failed to read"));
+}

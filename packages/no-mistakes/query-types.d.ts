@@ -19,7 +19,27 @@ export interface ImportersTestImpact {
   count: number;
 }
 
-export interface ImportersResult {
+/** A recorded gap in the prepared reverse-query source inventory. */
+export type QueryIncompleteReason =
+  | "operational-error"
+  | "parse-error"
+  | "missing-facts"
+  | "missing-symbols";
+
+export interface QueryIncompleteFile {
+  /** Root-relative candidate path; relevance can be unknown when imports are missing. */
+  file: string;
+  reason: QueryIncompleteReason;
+  message: string;
+}
+
+export interface QueryDiagnostics {
+  /** Recorded collection gaps exist. False does not guarantee exhaustive references. */
+  partial: boolean;
+  incompleteFiles: QueryIncompleteFile[];
+}
+
+export interface ImportersResult extends QueryDiagnostics {
   file: string;
   directImporters: string[];
   dependentsCount: number;
@@ -43,6 +63,10 @@ export interface ExportRowResult {
 export interface ExportsOfResult {
   file: string;
   exports: ExportRowResult[];
+  /** Omitted with noImporters because the reverse scan was not requested. */
+  partial?: boolean;
+  /** Omitted with noImporters. */
+  incompleteFiles?: QueryIncompleteFile[];
 }
 
 export interface DeadExportsOptions extends QueryFileOptions {
@@ -56,14 +80,14 @@ export interface DeadExportResult {
   importerCount: number;
 }
 
-export interface DeadExportsResult {
+export interface DeadExportsResult extends QueryDiagnostics {
   file: string;
   results: DeadExportResult[];
   anyDead: boolean;
 }
 
 export interface CallSitesOptions extends QueryFileOptions {
-  /** The exported function name to find call sites for. */
+  /** Exported callable to resolve through namespaces, static lexical aliases, and barrels. */
   exportName: string;
 }
 
@@ -90,7 +114,7 @@ export interface CallSite {
   args: ArgShape[];
 }
 
-export interface CallSitesResult {
+export interface CallSitesResult extends QueryDiagnostics {
   file: string;
   export: string;
   callSites: CallSite[];

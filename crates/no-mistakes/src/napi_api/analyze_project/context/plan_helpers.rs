@@ -31,7 +31,12 @@ fn graph_build_plan(options: &AnalyzeProjectOptions) -> Result<GraphBuildPlan> {
             let flow = crate::napi_api::project::build_flow_options(parsed)?;
             let allowed = relationship_filter(&flow.relationships);
             plan.include(GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(true));
-        } else if matches!(request.report_type.as_str(), "effects" | "rscCallers") {
+        } else if request.report_type == "effects" {
+            plan.include(GraphBuildPlan {
+                calls: true,
+                ..runtime_import_graph_plan()
+            });
+        } else if request.report_type == "rscCallers" {
             plan.include(runtime_import_graph_plan());
         }
     }
@@ -86,6 +91,16 @@ fn check_fact_plan(
         request.report_type == "symbols"
             && request.options.get("mode").and_then(Value::as_str) == Some("signature-impact")
     });
+    if options
+        .reports
+        .iter()
+        .any(|request| request.report_type == "callSites")
+    {
+        graph.0.imports = true;
+        graph.0.function_calls = true;
+        graph.0.call_sites = true;
+        graph.0.symbols = true;
+    }
     if has_server_report(options) {
         graph.0.route_refs = true;
         graph.0.server_routes = true;

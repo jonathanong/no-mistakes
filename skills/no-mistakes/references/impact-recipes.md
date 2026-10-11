@@ -380,9 +380,9 @@ Read the results as:
   its queue library behind its own enqueue-helper factory may not be modeled
   as a queue edge; fall back to `importers`/`call-sites` below.
 - `importers` and `call-sites <file> SYMBOL` find direct callers and their
-  argument shapes, but `call-sites` matches direct-identifier calls only
-  (`enqueueEmail(...)`), not `ns.enqueueEmail()` or aliased indirection — see
-  `lightweight-queries.md`.
+  argument shapes. `call-sites` resolves namespace calls and static lexical
+  aliases by callable identity, excluding shadowed bindings. Dynamic calls can
+  remain unresolved — see `lightweight-queries.md`.
 
 Then classify every call site the `call-sites` JSON returned, not just the
 ones this regex matches — it only finds *handled* dispositions by

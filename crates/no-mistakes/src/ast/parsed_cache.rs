@@ -95,6 +95,17 @@ impl ParsedProgramCache {
         self.entries.borrow().len()
     }
 
+    /// Whether the preparing thread already parsed this native source mode,
+    /// including a recovered program or cached parser failure.
+    pub(crate) fn contains_path(&self, path: &Path) -> bool {
+        let path = crate::codebase::ts_resolver::normalize_path(path);
+        self.interned_lookup(&path).is_some_and(|path| {
+            self.entries
+                .borrow()
+                .contains_key(&(path, ParseMode::Standard))
+        })
+    }
+
     pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         let interned = self.interned_lookup(&path)?;

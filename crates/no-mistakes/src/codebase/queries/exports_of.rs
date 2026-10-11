@@ -55,6 +55,8 @@ struct ExportRow {
 pub struct ExportsOfReport {
     file: String,
     exports: Vec<ExportRow>,
+    #[serde(flatten)]
+    diagnostics: Option<super::diagnostics::QueryDiagnostics>,
 }
 
 fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
@@ -113,15 +115,27 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
     Ok(ExportsOfReport {
         file: rel_str(&target.abs_file, &target.root),
         exports,
+        diagnostics: analysis.map(|analysis| analysis.diagnostics),
     })
 }
 
 impl Report for ExportsOfReport {
     fn write_human(&self, w: &mut dyn Write) -> io::Result<()> {
         writeln!(w, "{}", self.file)?;
+        if let Some(diagnostics) = &self.diagnostics {
+            diagnostics.write_human(w)?;
+        }
         for export in &self.exports {
             let consumers = if export.importers.is_empty() {
-                "(no importers)".to_string()
+                if self
+                    .diagnostics
+                    .as_ref()
+                    .is_some_and(|diagnostics| diagnostics.is_partial())
+                {
+                    "(no known importers; partial analysis)".to_string()
+                } else {
+                    "(no importers)".to_string()
+                }
             } else {
                 export.importers.join(", ")
             };

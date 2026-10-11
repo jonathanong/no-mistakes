@@ -40,6 +40,7 @@ pub(crate) fn collect_effect_calls(
         .filter_map(|(_, call)| {
             let (callee, category) = effect_match(&call.callee, names)?;
             Some(EffectCallFact {
+                offset: call.offset,
                 line: call.line as usize,
                 callee: callee.to_string(),
                 category: category.clone(),

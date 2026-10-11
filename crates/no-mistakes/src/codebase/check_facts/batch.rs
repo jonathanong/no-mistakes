@@ -18,38 +18,50 @@ struct FactDemand {
     plan: CheckFactPlan,
 }
 
+type CollectedDemand = (PathBuf, Vec<FactDemand>, Vec<Option<super::CheckFileFacts>>);
+
 pub(crate) fn collect_check_fact_batch_with_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     requests: Vec<BatchCheckFactRequest>,
 ) -> Vec<CheckFactMap> {
+    // Runner evaluation may visit helper programs before facts are collected.
+    // Only already-requested runner plans are evaluated; ordinary source
+    // queries do not activate runner discovery.
+    let mut runner_plans = crate::fx::FxHashSet::default();
+    for runner in requests
+        .iter()
+        .filter_map(|request| request.plan.integration_runner_configs.as_ref())
+    {
+        if runner_plans.insert(Arc::as_ptr(runner)) {
+            let _ = runner.parse_all();
+        }
+    }
     let demands = demands_by_path(&requests);
-    let collected = demands
-        .into_par_iter()
-        .map(|(path, demands)| {
-            crate::invocation::check_timeout().ok().map(|()| {
-                // Request parser caches are thread-local, so each Rayon path task
-                // owns a scope that all of its fact variants and modes can share.
-                crate::ast::with_request_parse_cache(|| {
-                    let variants = demands
-                        .iter()
-                        .map(|demand| {
-                            let request = &requests[demand.request];
-                            super::file::CheckFactVariant {
-                                root: &request.root,
-                                plan: &demand.plan,
-                                playwright: request.playwright.as_ref(),
-                            }
-                        })
-                        .collect::<Vec<_>>();
-                    let facts = super::file::collect_file_fact_variants_with_session(
-                        session, &path, &variants,
-                    );
-                    (path, demands, facts)
-                })
-            })
+    let cache = crate::ast::current_request_parse_cache();
+    let mut collected = Vec::new();
+    let demands = demands
+        .into_iter()
+        .filter_map(|(path, demands)| {
+            if cache
+                .as_ref()
+                .is_some_and(|cache| cache.contains_path(&path))
+            {
+                // OXC programs cannot cross threads. Project every demanded variant
+                // while the preparing thread still owns its config/helper AST.
+                collected.extend(collect_demand(session, &requests, path, demands));
+                None
+            } else {
+                Some((path, demands))
+            }
         })
-        .while_some()
         .collect::<Vec<_>>();
+    collected.extend(
+        demands
+            .into_par_iter()
+            .map(|(path, demands)| collect_demand(session, &requests, path, demands))
+            .while_some()
+            .collect::<Vec<_>>(),
+    );
     let mut precollected = (0..requests.len())
         .map(|index| {
             crate::codebase::ts_source::FileIdMap::with_inventory(Arc::clone(
@@ -82,6 +94,32 @@ pub(crate) fn collect_check_fact_batch_with_session(
             )
         })
         .collect()
+}
+
+fn collect_demand(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    requests: &[BatchCheckFactRequest],
+    path: PathBuf,
+    demands: Vec<FactDemand>,
+) -> Option<CollectedDemand> {
+    crate::invocation::check_timeout().ok().map(|()| {
+        crate::ast::with_request_parse_cache(|| {
+            let variants = demands
+                .iter()
+                .map(|demand| {
+                    let request = &requests[demand.request];
+                    super::file::CheckFactVariant {
+                        root: &request.root,
+                        plan: &demand.plan,
+                        playwright: request.playwright.as_ref(),
+                    }
+                })
+                .collect::<Vec<_>>();
+            let facts =
+                super::file::collect_file_fact_variants_with_session(session, &path, &variants);
+            (path, demands, facts)
+        })
+    })
 }
 
 fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<FactDemand>> {

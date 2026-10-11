@@ -95,7 +95,7 @@ fn call_site_facts_render_one_level_this_member_calls() {
 }
 
 #[test]
-fn call_site_facts_omit_nested_member_callees_and_non_string_args() {
+fn call_site_facts_keep_static_nested_callees_and_non_string_arg_shapes() {
     let file = fixture("nested-calls.ts");
     let facts = collect_ts_facts(
         std::slice::from_ref(&file),
@@ -111,10 +111,19 @@ fn call_site_facts_omit_nested_member_callees_and_non_string_args() {
         .find(|site| site.callee == "log")
         .expect("identifier call with a non-string arg");
     assert!(call_site.static_arg_source.is_none());
-    assert!(!facts[&file]
+    // Nested namespace paths must retain their syntax for the resolved-call
+    // projection; extraction alone does not decide callable ownership.
+    let nested = facts[&file]
         .call_sites
         .iter()
-        .any(|site| site.callee.contains("helper")));
+        .find(|site| site.callee == "ctx.helper.log")
+        .expect("static nested member call");
+    assert_eq!(nested.line, 5);
+    assert_eq!(nested.caller.as_deref(), Some("run"));
+    assert_eq!(nested.args, ["number"]);
+    assert!(nested.static_arg_source.is_none());
+    assert_eq!(nested.arg_count, 1);
+    assert!(nested.offset > call_site.offset);
 }
 
 #[test]

@@ -36,6 +36,25 @@ impl PreparedScopePlan {
             self.traversal
                 .prepare_canonical_graph_with_check_facts(&graph_facts)?;
         }
+        let reuse_calls = if self.ordinary_calls.is_some() && self.traversal.build_plan().calls {
+            Some(self.traversal.graph_shared()?)
+        } else {
+            None
+        };
+        let ordinary_calls = self
+            .ordinary_calls
+            .take()
+            .map(|calls| {
+                let reuse = reuse_calls.as_ref().map(|graph| {
+                    (
+                        self.traversal.graph_files(),
+                        self.traversal.tsconfig_catalog(),
+                        graph.clone(),
+                    )
+                });
+                calls.materialize(self.traversal.prepared_facts(), reuse)
+            })
+            .transpose()?;
         let server = has_server_report(&self.options).then(|| {
             crate::server_routes::prepare_analysis_with_shared_facts_and_session(
                 &self.root,
@@ -48,6 +67,7 @@ impl PreparedScopePlan {
         });
         Ok(PreparedScope {
             options: self.options,
+            ordinary_calls,
             traversal: self.traversal,
             facts,
             check_facts,
