@@ -7,7 +7,7 @@ fn bfs<'a, A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    bfs_with_file_universe(starts, edges, max_depth, allowed, None)
+    bfs_with_file_universe(starts, edges, max_depth, allowed, None, None)
 }
 
 fn bfs_in_file_universe<'a, A>(
@@ -20,7 +20,34 @@ fn bfs_in_file_universe<'a, A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    bfs_with_file_universe(starts, edges, max_depth, allowed, Some(file_universe))
+    bfs_with_file_universe(starts, edges, max_depth, allowed, Some(file_universe), None)
+}
+
+fn bfs_excluding_files<'a, A>(
+    starts: &'a [NodeId],
+    edges: &'a FxHashMap<NodeId, A>,
+    max_depth: Option<usize>,
+    allowed: Option<&HashSet<EdgeKind>>,
+    excluded: &HashSet<PathBuf>,
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
+    bfs_with_file_universe(starts, edges, max_depth, allowed, None, Some(excluded))
+}
+
+fn bfs_in_file_universe_excluding_files<'a, A>(
+    starts: &'a [NodeId],
+    edges: &'a FxHashMap<NodeId, A>,
+    max_depth: Option<usize>,
+    allowed: Option<&HashSet<EdgeKind>>,
+    file_universe: &crate::fx::PathSet,
+    excluded: &HashSet<PathBuf>,
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
+    bfs_with_file_universe(starts, edges, max_depth, allowed, Some(file_universe), Some(excluded))
 }
 
 fn bfs_with_file_universe<'a, A>(
@@ -29,6 +56,7 @@ fn bfs_with_file_universe<'a, A>(
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: Option<&crate::fx::PathSet>,
+    excluded: Option<&HashSet<PathBuf>>,
 ) -> Vec<NodeEntry>
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
@@ -44,6 +72,9 @@ where
 
     for start in starts {
         if file_universe.is_some_and(|universe| !start.is_in_file_universe(universe)) {
+            continue;
+        }
+        if excluded.is_some_and(|files| start.as_file().is_some_and(|path| files.contains(path))) {
             continue;
         }
         if visited.insert(start) {
@@ -65,6 +96,9 @@ where
             let neighbors: &'a [(NodeId, EdgeKind)] = neighbors.as_ref();
             for (neighbor, kind) in neighbors {
                 if file_universe.is_some_and(|universe| !neighbor.is_in_file_universe(universe)) {
+                    continue;
+                }
+                if excluded.is_some_and(|files| neighbor.as_file().is_some_and(|path| files.contains(path))) {
                     continue;
                 }
                 let from_is_dynamic_import_file = dynamic_import_files.contains(node);

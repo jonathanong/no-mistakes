@@ -41,3 +41,4 @@ file whenever you add a new fixture so orphans are immediately visible.
 | `test-correspondence/` | `src/guardrails/rules/test_correspondence/tests.rs` |
 | `test-framework/` | `src/dependencies/graph/tests.rs`; `src/dependencies/tests.rs` — Vitest/Playwright globs |
 | `test-no-unmocked-dynamic-imports/` | `src/codebase/rules/test_no_unmocked_dynamic_imports/tests.rs`; `tests/cli_extra.rs` |
+| `test-no-unmocked-dynamic-imports-mock-cut/` | `src/codebase/rules/test_no_unmocked_dynamic_imports/tests.rs`; `tests/cli_extra.rs` |

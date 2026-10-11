@@ -27,9 +27,6 @@ pub(crate) fn check_inner(
     let test_files = matching_test_files(root, files, config)?;
     let setup_mock_map =
         precompute_setup_mock_map(root, &test_files, &setup_data, &resolver, None)?;
-    let mut reachable_findings = Vec::new();
-    let mut covered_reachable_imports = HashSet::new();
-
     for file in test_files {
         let source = std::fs::read_to_string(&file)
             .context(format!("failed to read test file {}", file.display()))?;
@@ -78,16 +75,14 @@ pub(crate) fn check_inner(
             &dependency_cache,
         );
         let reachable = reachable?;
-        reachable_findings.extend(reachable.findings);
-        covered_reachable_imports.extend(reachable.covered);
+        findings.extend(
+            reachable
+                .findings
+                .into_iter()
+                .filter(|entry| !reachable.covered.contains(&entry.key))
+                .map(|entry| entry.finding),
+        );
     }
-
-    findings.extend(
-        reachable_findings
-            .into_iter()
-            .filter(|entry| !covered_reachable_imports.contains(&entry.key))
-            .map(|entry| entry.finding),
-    );
     findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
     Ok(findings)
 }
