@@ -28,3 +28,15 @@ the returned files when exact call text matters.
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 
 Node API: `callSites(options)`.
+
+The reverse scan adds `partial` and `incompleteFiles` to structured output.
+Each incomplete file reports a root-relative `file`, a `reason`
+(`operational-error`, `parse-error`, `missing-facts`, or `missing-symbols`), and a
+`message`. The list covers the prepared TS/JS candidate inventory: a failed file
+may contain an import that cannot be recovered, so its relevance can be unknown.
+Recovered imports may still contribute results when a parser diagnostic exists.
+`partial: false` means no recorded collection gaps; it does not guarantee that
+all runtime references or unsupported syntax were resolved. When `partial` is
+true, treat empty lists and zero counts as known results, not proof of absence.
+Human output prints the same warnings. `--format paths` retains the path list
+without diagnostics; use JSON before making decisions that depend on absence.

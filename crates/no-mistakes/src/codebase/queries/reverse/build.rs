@@ -42,7 +42,12 @@ pub(crate) fn build_reverse_analysis_with_plan(
     let prepared = target.prepare_reverse()?;
     let facts = collect_prepared_reverse_facts(target, &prepared, additional_plan);
     let index = build_reverse_index_from_prepared(target, &prepared, &facts);
-    Ok(ReverseAnalysis { index, facts })
+    Ok(ReverseAnalysis::from_prepared(
+        index,
+        facts,
+        prepared.graph_files.indexable(),
+        &target.root,
+    ))
 }
 
 /// Collect the full query demand through the existing prepared reverse owner.

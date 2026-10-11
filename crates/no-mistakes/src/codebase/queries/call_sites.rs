@@ -59,6 +59,8 @@ pub struct CallSitesReport {
     file: String,
     export: String,
     call_sites: Vec<CallSite>,
+    #[serde(flatten)]
+    diagnostics: super::diagnostics::QueryDiagnostics,
 }
 
 pub(crate) mod prepared;
@@ -180,12 +182,18 @@ pub(crate) fn project_report(
         file: rel_str(file, root),
         export: export_name.to_string(),
         call_sites,
+        diagnostics: super::diagnostics::QueryDiagnostics::from_prepared(
+            projection.files,
+            projection.facts,
+            root,
+        ),
     })
 }
 
 impl Report for CallSitesReport {
     fn write_human(&self, w: &mut dyn Write) -> io::Result<()> {
         writeln!(w, "{}#{}", self.file, self.export)?;
+        self.diagnostics.write_human(w)?;
         for site in &self.call_sites {
             let caller = site.caller.as_deref().unwrap_or("(top-level)");
             let args = site.args.join(", ");

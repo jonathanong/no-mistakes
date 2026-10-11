@@ -2,6 +2,7 @@ use super::shared::Target;
 use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::ts_symbols::{extract_symbols_from_program, Export, ExportKind, FileSymbols};
 use anyhow::{Context, Result};
+use std::path::Path;
 use std::sync::Arc;
 
 mod build;
@@ -15,9 +16,24 @@ pub(crate) use importers::{direct_importer_paths, export_importer_paths};
 pub(crate) struct ReverseAnalysis {
     pub(crate) index: SymbolIndex,
     facts: crate::codebase::ts_source::facts::TsFactMap,
+    pub(crate) diagnostics: super::diagnostics::QueryDiagnostics,
 }
 
 impl ReverseAnalysis {
+    pub(crate) fn from_prepared(
+        index: SymbolIndex,
+        facts: crate::codebase::ts_source::facts::TsFactMap,
+        files: &[std::path::PathBuf],
+        root: &Path,
+    ) -> Self {
+        let diagnostics = super::diagnostics::QueryDiagnostics::from_prepared(files, &facts, root);
+        Self {
+            index,
+            facts,
+            diagnostics,
+        }
+    }
+
     pub(crate) fn symbols(&self, target: &Target) -> Result<FileSymbols> {
         symbols_from_prepared(target, &self.facts)
     }

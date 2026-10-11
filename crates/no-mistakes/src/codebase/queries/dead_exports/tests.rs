@@ -196,3 +196,28 @@ fn dead_export_text_writers_surface_io_errors() {
         &dead, &alive,
     ]);
 }
+
+#[test]
+fn partial_dead_export_verdict_is_qualified_in_human_output() {
+    let mut query = args("target.ts", &["removed"]);
+    query.root = Some(
+        fixture_root()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("queries-incomplete/fixture"),
+    );
+    let report = compute(&query).unwrap();
+    assert!(report.any_dead);
+    assert_eq!(report.exit_code(), ExitCode::FAILURE);
+    let mut human = Vec::new();
+    render(&report, Format::Human, &mut human).unwrap();
+    let text = String::from_utf8(human).unwrap();
+    assert!(text.contains("no known importers (partial analysis)"));
+    assert!(!text.contains(": DEAD"));
+    let mut paths = Vec::new();
+    render(&report, Format::Paths, &mut paths).unwrap();
+    assert_eq!(String::from_utf8(paths).unwrap(), "removed\n");
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[&report]);
+}

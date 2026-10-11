@@ -55,6 +55,8 @@ pub struct DeadExportsReport {
     file: String,
     results: Vec<DeadResult>,
     any_dead: bool,
+    #[serde(flatten)]
+    diagnostics: super::diagnostics::QueryDiagnostics,
 }
 
 impl DeadExportsReport {
@@ -110,15 +112,19 @@ fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
         file: rel_str(&target.abs_file, &target.root),
         results,
         any_dead,
+        diagnostics: analysis.diagnostics,
     })
 }
 
 impl Report for DeadExportsReport {
     fn write_human(&self, w: &mut dyn Write) -> io::Result<()> {
         writeln!(w, "{}", self.file)?;
+        self.diagnostics.write_human(w)?;
         for result in &self.results {
             let line = if result.referenced {
                 format!("  {}: referenced ({})", result.name, result.importer_count)
+            } else if self.diagnostics.is_partial() {
+                format!("  {}: no known importers (partial analysis)", result.name)
             } else {
                 format!("  {}: DEAD", result.name)
             };

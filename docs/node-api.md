@@ -938,3 +938,17 @@ their existing asynchronous exports. `DeclaredPayloadCompatibilityOptions`,
 `DeclaredPayloadContract`, and `DeclaredPayloadSchema` name the configuration
 shapes. Reports retain the existing `RuleFinding` contract; unsupported schema
 forms produce unproven findings.
+
+`importers()`, `exportsOf()`, `deadExports()`, and `callSites()` return additive
+collection diagnostics: `partial` and `incompleteFiles` (exported types
+`QueryDiagnostics`, `QueryIncompleteFile`, and `QueryIncompleteReason`). A file
+entry contains its root-relative path, a reason (`operational-error`,
+`parse-error`, `missing-facts`, or `missing-symbols`), and a message. Parser
+recovery can retain known imports while marking the result partial. These
+warnings cover the prepared candidate inventory, including files whose relevance
+cannot be determined from failed import facts. `partial: false` only means no
+recorded collection gaps, not exhaustive runtime reference resolution. The
+existing result lists, counts, and `anyDead` remain unchanged; a zero count in a
+partial report is not proof of absence. `exportsOf({ noImporters: true, ... })`
+omits both fields because no reverse scan was requested. The asynchronous native
+bindings and JS helpers expose the same fields as CLI JSON.
