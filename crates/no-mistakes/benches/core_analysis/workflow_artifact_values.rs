@@ -1,4 +1,4 @@
-use criterion::{Criterion, black_box};
+use criterion::{black_box, Criterion};
 use no_mistakes::codebase::workflow_topology::{
     artifact_types::ArtifactValue, artifact_values::artifact_value, value_primitives,
 };
