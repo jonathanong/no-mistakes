@@ -97,6 +97,13 @@ copy. A copied wrapper can still share a nested receiver: deleting
 `other.copy.deadline` can expose a setter on the shared `copy`. Such deletions
 retain unknown values, including through aliases and array spreads.
 
+An own-data assignment before a later deletion remains independent when both
+operations are direct module expression statements on the same binding
+initialized by an object or array literal. The proof uses the module statement
+list, so a prior deletion still exposes inherited setters and retains unknown
+values. Receiver aliases, nested receivers, functions, loops, branches, and
+uncertain deletion keys do not establish this execution order.
+
 
 Object and array spreads make shallow copies. Replacing, updating, or deleting a
 copy's own property does not make the source's timeout unknown; the copy's own

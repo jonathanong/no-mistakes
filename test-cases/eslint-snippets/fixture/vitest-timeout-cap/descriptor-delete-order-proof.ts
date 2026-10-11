@@ -1,0 +1,30 @@
+const direct = { test: {} };
+direct.test = {};
+delete direct.test;
+const other = { test: {} };
+direct.test = {};
+delete other.test;
+const nested = { copy: { test: {} } };
+nested.copy.test = {};
+delete nested.copy.test;
+direct.test = {};
+delete nested.copy.test;
+direct.test = {};
+delete 1;
+let mutable = { test: {} };
+mutable.test = {};
+delete mutable.test;
+function parameterReceiver(parameter) {
+  parameter.test = {};
+  delete parameter.test;
+}
+unbound.test = {};
+delete unbound.test;
+const { destructured } = { destructured: { test: {} } };
+destructured.test = {};
+delete destructured.test;
+direct.test;
+delete direct.test;
+const right = {};
+right.test = direct.test;
+delete direct.test;
