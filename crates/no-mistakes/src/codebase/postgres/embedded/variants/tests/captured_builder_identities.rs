@@ -9,7 +9,7 @@ fn final_effects_match_captured_identities_and_uncertain_alias_groups() {
         .filter(|line| line.starts_with("query("))
         .collect::<Vec<_>>();
     assert_eq!(file.calls.len(), rows.len());
-    assert_eq!(rows.len(), 67);
+    assert_eq!(rows.len(), 91);
     for (call, row) in file.calls.iter().zip(rows) {
         if row.contains("opaque") {
             assert!(call.is_unanalyzable(), "{row}: {call:#?}");

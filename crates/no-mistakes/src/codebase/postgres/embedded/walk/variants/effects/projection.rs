@@ -74,58 +74,63 @@ impl Effects<'_, '_> {
         // The prepared consumer classification excludes executors, fresh
         // factories, append calls and pure summarized passthrough helpers.
         if escape.is_some() && !self.visitor.known_builder_consumer(call) {
-            let mut preceding_writes = contains_identity_writes(&call.callee);
-            for argument in &call.arguments {
-                let expression = match argument {
-                    Argument::SpreadElement(spread) => Some(&spread.argument),
-                    argument => argument.as_expression(),
-                }
-                .expect("arguments contain expressions");
-                // Each argument captures its value before the next argument
-                // runs. Prior writes can invalidate a later binding lookup;
-                // later writes must not replace an already captured object.
-                if preceding_writes && !independent_argument(self.visitor, expression) {
-                    self.uncertain = true;
-                }
-                let mut pending = vec![expression];
-                while let Some(expression) = pending.pop() {
-                    // A later property/element can read a binding changed by
-                    // an earlier one. Entry-time identities cannot prove it.
-                    self.uncertain |= matches!(
-                        unwrap_ts_wrappers(expression),
-                        Expression::ArrayExpression(_) | Expression::ObjectExpression(_)
-                    ) && contains_identity_writes(expression);
-                    match unwrap_ts_wrappers(expression) {
-                        Expression::ArrayExpression(array) => pending.extend(
-                            array.elements.iter().filter_map(|element| match element {
-                                ArrayExpressionElement::SpreadElement(spread) => {
-                                    Some(&spread.argument)
-                                }
-                                element => element.as_expression(),
-                            }),
-                        ),
-                        Expression::ObjectExpression(object) => pending.extend(
-                            object.properties.iter().map(|property| match property {
-                                ObjectPropertyKind::ObjectProperty(property) => &property.value,
-                                ObjectPropertyKind::SpreadProperty(spread) => &spread.argument,
-                            }),
-                        ),
-                        _ => {
-                            if let Some(targets) = identities.value(self.visitor, expression) {
-                                projected.extend(targets);
-                            }
-                            // Uncertain replacements keep their taint through
-                            // conditional, logical and sequence value wrappers.
-                            else if identities.tainted(expression) {
-                                self.uncertain = true;
-                            }
+            self.project_unknown_arguments(call, &mut projected);
+        }
+        (projected, Vec::new())
+    }
+    fn project_unknown_arguments(&mut self, call: &CallExpression<'_>, projected: &mut Targets) {
+        let identities = self
+            .identities
+            .as_ref()
+            .expect("unknown consumer projection requires prepared identities");
+        let mut preceding_writes = contains_identity_writes(&call.callee);
+        for argument in &call.arguments {
+            let expression = match argument {
+                Argument::SpreadElement(spread) => Some(&spread.argument),
+                argument => argument.as_expression(),
+            }
+            .expect("arguments contain expressions");
+            // Each argument captures its value before the next argument
+            // runs. Prior writes can invalidate a later binding lookup;
+            // later writes must not replace an already captured object.
+            if preceding_writes && !independent_argument(self.visitor, expression) {
+                self.uncertain = true;
+            }
+            let mut pending = vec![expression];
+            while let Some(expression) = pending.pop() {
+                // A later property/element can read a binding changed by
+                // an earlier one. Entry-time identities cannot prove it.
+                self.uncertain |= matches!(
+                    unwrap_ts_wrappers(expression),
+                    Expression::ArrayExpression(_) | Expression::ObjectExpression(_)
+                ) && contains_identity_writes(expression);
+                match unwrap_ts_wrappers(expression) {
+                    Expression::ArrayExpression(array) => {
+                        pending.extend(array.elements.iter().filter_map(|element| match element {
+                            ArrayExpressionElement::SpreadElement(spread) => Some(&spread.argument),
+                            element => element.as_expression(),
+                        }))
+                    }
+                    Expression::ObjectExpression(object) => {
+                        pending.extend(object.properties.iter().map(|property| match property {
+                            ObjectPropertyKind::ObjectProperty(property) => &property.value,
+                            ObjectPropertyKind::SpreadProperty(spread) => &spread.argument,
+                        }))
+                    }
+                    _ => {
+                        if let Some(targets) = identities.value(self.visitor, expression) {
+                            projected.extend(targets);
+                        }
+                        // Uncertain replacements keep their taint through
+                        // conditional, logical and sequence value wrappers.
+                        else if identities.tainted(expression) {
+                            self.uncertain = true;
                         }
                     }
                 }
-                preceding_writes |= contains_identity_writes(expression);
             }
+            preceding_writes |= contains_identity_writes(expression);
         }
-        (projected, Vec::new())
     }
 }
 

@@ -227,3 +227,81 @@ query(sql`SELECT ${containerArrayCapture} LIMIT ${(unknownHelper([(containerArra
 const containerObjectCapture = sql`97`;
 let containerObjectAlias = sql`SELECT 98`;
 query(sql`SELECT ${containerObjectCapture} LIMIT ${(unknownHelper({ label: (containerObjectAlias = containerObjectCapture, 0), builder: containerObjectAlias }), 0)}`); // opaque
+
+/* Independent coverage controls never replace the original bug regressions. */
+const oneSidedCapture = sql`200`;
+let oneSidedAlias = sql`SELECT 201`;
+query(sql`SELECT ${oneSidedCapture} LIMIT ${(gate ? oneSidedAlias = oneSidedCapture : 0, oneSidedAlias.append(sql` OFFSET 1`), 0)}`); // opaque
+const compoundCapture = sql`202`;
+let compoundScalar = 0;
+query(sql`SELECT ${compoundCapture} LIMIT ${(compoundScalar += 1, 0)}`); // variants: SELECT 202 LIMIT sql_placeholder_1
+const logicalCapture = sql`203`;
+const logicalOther = sql`SELECT 204`;
+query(sql`SELECT ${logicalCapture} LIMIT ${(unknownHelper(gate && logicalCapture || logicalOther), 0)}`); // opaque
+const propertyCapture = sql`205`;
+const propertyHolder = { builder: propertyCapture };
+query(sql`SELECT ${propertyCapture} LIMIT ${(addOffset(propertyHolder.builder), 0)}`); // opaque
+/* A member assignment is conservative even when only the holder is replaced. */
+const memberCapture = sql`206`;
+const memberHolder = { builder: memberCapture };
+query(sql`SELECT ${memberCapture} LIMIT ${((memberHolder.builder as SQLStatement) = sql`SELECT 207`, 0)}`); // opaque
+const factoryCapture = sql`208`;
+query(sql`SELECT ${factoryCapture} LIMIT ${(unknownHelper(sql("SELECT 209")), 0)}`); // variants: SELECT 208 LIMIT sql_placeholder_1
+const returnedStaticCapture = sql`210`;
+const returnedStaticOther = sql`SELECT 211`;
+query(sql`SELECT ${returnedStaticCapture} LIMIT ${(unknownHelper(returnedStaticOther.append(sql` OFFSET 1`)), 0)}`); // variants: SELECT 210 LIMIT sql_placeholder_1
+const returnedComputedCapture = sql`212`;
+const returnedComputedOther = sql`SELECT 213`;
+query(sql`SELECT ${returnedComputedCapture} LIMIT ${(unknownHelper(returnedComputedOther["append"](sql` OFFSET 1`)), 0)}`); // variants: SELECT 212 LIMIT sql_placeholder_1
+const unsupportedCapture = sql`214`;
+const unsupportedFactory = { make() { return unsupportedCapture; } };
+let unsupportedResult = sql`SELECT 215`;
+query(sql`SELECT ${unsupportedCapture} LIMIT ${(unsupportedResult = unsupportedFactory.make(), unsupportedResult.append(sql` OFFSET 1`), 0)}`); // opaque
+const successfulCapture = sql`216`;
+const successfulOther = sql`SELECT 217`;
+let successfulResult = successfulOther;
+query(sql`SELECT ${successfulCapture} LIMIT ${(successfulResult = passthrough(successfulOther), unknownHelper(successfulResult), 0)}`); // variants: SELECT 216 LIMIT sql_placeholder_1
+/* Creating and discarding callbacks does not execute their mutating bodies. */
+const discardedCapture = sql`218`;
+query(sql`SELECT ${discardedCapture} LIMIT ${(unknownHelper((function () { discardedCapture.append(sql` OFFSET 99`); }, () => discardedCapture.append(sql` OFFSET 99`), 0)), 0)}`); // variants: SELECT 218 LIMIT sql_placeholder_1
+const updateCapture = sql`219`;
+let updateScalar = 0;
+query(sql`SELECT ${updateCapture} LIMIT ${(unknownHelper((updateScalar++, 0)), 0)}`); // variants: SELECT 219 LIMIT sql_placeholder_1
+const spreadCapture = sql`220`;
+const spreadOther = sql`SELECT 221`;
+query(sql`SELECT ${spreadCapture} LIMIT ${(unknownHelper(...[spreadOther]), 0)}`); // variants: SELECT 220 LIMIT sql_placeholder_1
+const objectSpreadCapture = sql`222`;
+const objectSpreadOther = sql`SELECT 223`;
+query(sql`SELECT ${objectSpreadCapture} LIMIT ${(unknownHelper({ ...{ builder: objectSpreadOther } }), 0)}`); // variants: SELECT 222 LIMIT sql_placeholder_1
+/* Spread controls complement the original direct argument-order regressions. */
+const precedingSpreadCapture = sql`224`;
+let precedingSpreadOther = sql`SELECT 225`;
+query(sql`SELECT ${precedingSpreadCapture} LIMIT ${(addSecond(...[(precedingSpreadOther = precedingSpreadCapture, 0)], precedingSpreadOther), 0)}`); // opaque
+const selectedSpreadCapture = sql`226`;
+query(sql`SELECT ${selectedSpreadCapture} LIMIT ${(addOffset(...[selectedSpreadCapture]), 0)}`); // opaque
+const retainedSpreadCapture = sql`227`;
+let retainedSpreadOther = sql`SELECT 228`;
+let retainedSpreadResult = sql`SELECT 229`;
+query(sql`SELECT ${retainedSpreadCapture} LIMIT ${(retainedSpreadOther = retainedSpreadCapture, retainedSpreadResult = passthroughWithLabel(retainedSpreadOther, ...[retainedSpreadOther = sql`SELECT 230`]), retainedSpreadResult.append(sql` OFFSET 1`), 0)}`); // opaque
+const freshSelectedCapture = sql`231`;
+let freshSelectedScalar = 0;
+query(sql`SELECT ${freshSelectedCapture} LIMIT ${(unknownHelper(passthroughWithLabel(sql`SELECT 232`, ...[(freshSelectedScalar = 1, 0)])), 0)}`); // variants: SELECT 231 LIMIT sql_placeholder_1
+const laterFactoryCapture = sql`233`;
+let laterFactoryOther = sql`SELECT 234`;
+query(sql`SELECT ${laterFactoryCapture} LIMIT ${(unknownHelper((laterFactoryOther = laterFactoryCapture, 0), sql("SELECT 235")), 0)}`); // variants: SELECT 233 LIMIT sql_placeholder_1
+const laterSequenceCapture = sql`236`;
+let laterSequenceOther = sql`SELECT 237`;
+let laterSequenceScalar = 0;
+query(sql`SELECT ${laterSequenceCapture} LIMIT ${(unknownHelper((laterSequenceOther = laterSequenceCapture, 0), (laterSequenceScalar++, 0)), 0)}`); // variants: SELECT 236 LIMIT sql_placeholder_1
+const laterOpaqueCapture = sql`238`;
+let laterOpaqueOther = sql`SELECT 239`;
+query(sql`SELECT ${laterOpaqueCapture} LIMIT ${(unknownHelper((laterOpaqueOther = laterOpaqueCapture, 0), unknownBuilder()), 0)}`); // opaque
+const copiedPropertyCapture = sql`240`;
+const copiedProperty = { value: 0 };
+query(sql`SELECT ${copiedPropertyCapture} LIMIT ${(unknownHelper(copiedProperty.value), 0)}`); // variants: SELECT 240 LIMIT sql_placeholder_1
+const pureSpreadCapture = sql`241`;
+query(sql`SELECT ${pureSpreadCapture} LIMIT ${(unknownHelper(passthrough(...[sql`SELECT 242`])), 0)}`); // variants: SELECT 241 LIMIT sql_placeholder_1
+const independentConditionalCapture = sql`243`;
+const independentConditionalFirst = sql`SELECT 244`;
+const independentConditionalSecond = sql`SELECT 245`;
+query(sql`SELECT ${independentConditionalCapture} LIMIT ${(unknownHelper(gate ? independentConditionalFirst : independentConditionalSecond), 0)}`); // variants: SELECT 243 LIMIT sql_placeholder_1
