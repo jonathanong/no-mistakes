@@ -26,6 +26,39 @@ fn profiles_apply_defaults_and_deduplicate_executor_order() {
 }
 
 #[test]
+fn non_annotation_rules_do_not_request_annotation_projection() {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "postgres-conflict-ordering".into(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("importSpecifier: '@example/db'\nexecutorNames: [write]")
+            .unwrap(),
+        ..RuleDef::default()
+    });
+    let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+    configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    assert!(!plan.query_annotation);
+    assert!(plan.query_annotation_options.is_none());
+}
+
+#[test]
+fn configured_annotation_demand_preserves_an_existing_all_profiles_request() {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "postgres-require-query-annotation".into(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("importSpecifier: '@example/db'").unwrap(),
+        ..RuleDef::default()
+    });
+    let mut plan = crate::codebase::check_facts::CheckFactPlan {
+        query_annotation: true,
+        ..Default::default()
+    };
+    configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    assert!(plan.query_annotation_options.is_none());
+}
+
+#[test]
 fn profiles_carry_scoped_executor_options_sorted_and_distinct() {
     let mut config = NoMistakesConfig::default();
     for options in [

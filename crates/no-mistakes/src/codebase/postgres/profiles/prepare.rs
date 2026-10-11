@@ -69,6 +69,15 @@ pub(crate) fn prepare_rule_sql_facts(
                     Vec::new()
                 },
                 query_annotation: rule_ids.contains(&"postgres-require-query-annotation"),
+                query_annotation_options: if rule_ids.contains(&"postgres-require-query-annotation")
+                {
+                    Some(configured_embedded_sql_options(
+                        config,
+                        &["postgres-require-query-annotation"],
+                    )?)
+                } else {
+                    None
+                },
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,

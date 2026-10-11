@@ -1,4 +1,4 @@
 import { write } from "@app/db";
-export function run() {
-  write("SELECT 1"); // finding:reachable-imported-executor
+export function run(sql: string) {
+  write(sql); // finding:reachable-imported-executor
 }

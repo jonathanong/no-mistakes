@@ -24,6 +24,9 @@ pub struct CheckFactPlan {
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.
     pub query_annotation: bool,
+    /// Explicit annotation-only profiles. `None` preserves the direct fact
+    /// API's request for annotation on every embedded SQL profile.
+    pub query_annotation_options: Option<Vec<crate::codebase::postgres::EmbeddedSqlOptions>>,
     /// The owning request's ordinary importer catalog, including explicit overrides.
     #[doc(hidden)]
     pub query_annotation_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
@@ -50,7 +53,25 @@ pub struct CheckFactPlan {
 impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
-        self.query_annotation |= other.query_annotation;
+        if other.query_annotation {
+            if self.query_annotation {
+                self.query_annotation_options = match (
+                    self.query_annotation_options.take(),
+                    other.query_annotation_options,
+                ) {
+                    (Some(mut existing), Some(additional)) => {
+                        existing.extend(additional);
+                        existing.sort();
+                        existing.dedup();
+                        Some(existing)
+                    }
+                    _ => None,
+                };
+            } else {
+                self.query_annotation_options = other.query_annotation_options;
+            }
+            self.query_annotation = true;
+        }
         if self.query_annotation_catalog.is_none() {
             self.query_annotation_catalog = other.query_annotation_catalog;
         }
@@ -112,5 +133,34 @@ impl CheckFactPlan {
         plan.react |= self.react;
         plan.queue_project |= self.queue;
         plan
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CheckFactPlan;
+    use crate::codebase::postgres::EmbeddedSqlOptions;
+
+    #[test]
+    fn annotation_profile_demand_merges_without_widening_explicit_requests() {
+        let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
+        let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);
+        let explicit = |profile| CheckFactPlan {
+            query_annotation: true,
+            query_annotation_options: Some(vec![profile]),
+            ..Default::default()
+        };
+
+        let mut plan = explicit(read.clone());
+        plan.include(CheckFactPlan::default());
+        assert_eq!(plan.query_annotation_options, Some(vec![read.clone()]));
+        plan.include(explicit(write.clone()));
+        assert_eq!(plan.query_annotation_options, Some(vec![read, write]));
+
+        plan.include(CheckFactPlan {
+            query_annotation: true,
+            ..Default::default()
+        });
+        assert!(plan.query_annotation_options.is_none());
     }
 }

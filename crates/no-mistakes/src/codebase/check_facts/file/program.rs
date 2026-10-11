@@ -77,9 +77,15 @@ pub(crate) fn collect_file_facts_from_program(
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
     let embedded_sql = prepared_embedded_sql(path, source, program, plan);
     let query_annotation = if plan.query_annotation {
-        embedded_sql
+        let options = plan.query_annotation_options.clone().unwrap_or_else(|| {
+            embedded_sql
+                .iter()
+                .map(|(options, _)| options.clone())
+                .collect()
+        });
+        options
             .iter()
-            .map(|(options, _)| {
+            .map(|options| {
                 (
                     options.clone(),
                     crate::codebase::postgres::query_annotation::collect(program, source, options),

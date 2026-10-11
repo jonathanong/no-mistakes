@@ -5,9 +5,20 @@ pub fn configure_prepared_postgres_plan(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
-    plan.query_annotation |= !config
-        .rule_applications("postgres-require-query-annotation")
-        .is_empty();
+    let annotation_options =
+        configured_embedded_sql_options(config, &["postgres-require-query-annotation"])?;
+    if !annotation_options.is_empty() {
+        if plan.query_annotation {
+            if let Some(existing) = &mut plan.query_annotation_options {
+                existing.extend(annotation_options);
+                existing.sort();
+                existing.dedup();
+            }
+        } else {
+            plan.query_annotation_options = Some(annotation_options);
+        }
+        plan.query_annotation = true;
+    }
     plan.postgres_variants |= [
         "postgres-lock-ordering",
         "postgres-conflict-ordering",
