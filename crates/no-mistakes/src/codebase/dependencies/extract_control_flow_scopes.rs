@@ -19,9 +19,24 @@ fn visit_switch_statement_with_scope<'a>(
     for case in &switch.cases {
         predeclare_function_declarations(collector, &case.consequent);
     }
-    with_conditional_execution(collector, true, |collector| {
-        collector.visit_switch_cases(&switch.cases);
-    });
+    let mut previous_test_may_match = false;
+    for case in &switch.cases {
+        // A leading default does not run its body before case tests. The first
+        // actual test always runs; later tests may be skipped after a match.
+        if let Some(test) = &case.test {
+            with_conditional_execution(collector, previous_test_may_match, |collector| {
+                collector.visit_expression(test);
+            });
+            previous_test_may_match = true;
+        }
+    }
+    for case in &switch.cases {
+        with_conditional_execution(collector, true, |collector| {
+            for statement in &case.consequent {
+                collector.visit_statement(statement);
+            }
+        });
+    }
     collector.pop_lexical_scope(pushed);
 }
 

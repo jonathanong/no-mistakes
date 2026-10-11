@@ -15,6 +15,7 @@ use std::sync::Arc;
 mod callback_setups;
 mod callback_syntax;
 mod conditional_requires;
+mod eager_switch_bigint;
 mod imported_helpers;
 mod legacy_errors;
 mod mock_cut;
