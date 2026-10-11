@@ -1,3 +1,4 @@
+use super::diagnostics::QueryDiagnostics;
 use super::render::{render, resolve_format, to_json, Report};
 use super::reverse::{find_export, symbols_from_prepared};
 use super::shared::{rel_str, resolve_target};
@@ -60,7 +61,7 @@ pub struct CallSitesReport {
     export: String,
     call_sites: Vec<CallSite>,
     #[serde(flatten)]
-    diagnostics: super::diagnostics::QueryDiagnostics,
+    diagnostics: QueryDiagnostics,
 }
 
 pub(crate) mod prepared;
@@ -182,11 +183,7 @@ pub(crate) fn project_report(
         file: rel_str(file, root),
         export: export_name.to_string(),
         call_sites,
-        diagnostics: super::diagnostics::QueryDiagnostics::from_prepared(
-            projection.files,
-            projection.facts,
-            root,
-        ),
+        diagnostics: QueryDiagnostics::from_prepared(projection.files, projection.facts, root),
     })
 }
 
