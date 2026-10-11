@@ -26,6 +26,7 @@ fn root_options_inner(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),
@@ -36,5 +37,16 @@ fn root_options_inner(
         local_seen: &mut local_seen,
         object_seen: &mut object_seen,
     };
-    objects::project_options(object, &mut ctx)
+    if let Some(options) = objects::raw_config_options(program, &mut ctx)? {
+        return Ok(options);
+    }
+    let mut options = objects::project_options(object, &mut ctx)?;
+    crate::integration_tests::test_config::deadlines::obscure(
+        &mut options.deadlines,
+        path,
+        object.span,
+        objects::raw_failure_reason(program),
+        true,
+    );
+    Ok(options)
 }

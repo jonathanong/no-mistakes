@@ -1,29 +1,7 @@
-struct SharedCheckContext {
-    root: PathBuf,
-    config_path: Option<PathBuf>,
-    tsconfig_path: Option<PathBuf>,
-    prepared: crate::check_runner::prepared::PreparedCheckInputs,
-    plan: crate::codebase::check_facts::CheckFactPlan,
-    playwright_fact_plan: Option<crate::codebase::check_facts::PlaywrightFactPlan>,
-    fact_files: Vec<PathBuf>,
-    supplemental_call_site_files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    fs_files: Vec<PathBuf>,
-    prepared_graph: Option<crate::codebase::dependencies::graph::PreparedGraphConfig>,
-    react_enabled: bool,
-    queues_enabled: bool,
-    unique_exports_enabled: bool,
-    filesystem_rules_enabled: bool,
-    graph_rules_enabled: bool,
-    playwright_rules_enabled: bool,
-    graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
-}
-
 impl SharedCheckContext {
     fn prepare(
         root: &Path,
-        config_path: Option<&Path>,
-        tsconfig_path: Option<&Path>,
+        options: SharedCheckPreparationOptions<'_>,
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
         config: &crate::config::v2::NoMistakesConfig,
         tsconfig: &crate::codebase::ts_resolver::TsConfig,
@@ -36,10 +14,9 @@ impl SharedCheckContext {
             filesystem_rules_configured, queues_configured, unique_exports_configured,
         };
 
-        // The aggregate request establishes one normalized root for discovery, graph nodes,
-        // and shared fact keys. Canonicalizing only the check sub-context (for example,
-        // `/var` to `/private/var` on macOS) would split those identities and make otherwise
-        // complete shared symbol facts unreachable from the graph.
+        let SharedCheckPreparationOptions { config_path, tsconfig_path, deadlines } = options;
+
+        // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
         let prepared = crate::check_runner::prepared::prepare_from_shared(
             &root,
@@ -89,9 +66,12 @@ impl SharedCheckContext {
             )?;
         plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
         crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
-        if integration_enabled {
+        let prepare_runner_configs = if deadlines {
+            crate::integration_tests::prepare_runner_configs_with_deadline_evidence
+        } else { crate::integration_tests::prepare_runner_configs_with_catalog };
+        if integration_enabled || deadlines {
             plan.integration_runner_configs = Some(std::sync::Arc::new(
-                crate::integration_tests::prepare_runner_configs_with_catalog(
+                prepare_runner_configs(
                     &root,
                     config,
                     prepared.visible_paths.paths_for(&root).as_ref(),

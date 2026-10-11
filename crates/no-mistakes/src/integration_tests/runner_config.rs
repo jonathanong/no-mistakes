@@ -4,13 +4,16 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
 
 mod cache;
+pub(crate) mod deadline_evidence;
 mod prepared;
 #[cfg(test)]
 mod tests;
 pub(in crate::integration_tests) use cache::{read_request_source, with_program};
 pub use prepared::configured_runner_config_dirs;
-pub use prepared::prepare_runner_configs_with_catalog;
 pub(crate) use prepared::{prepare, prepare_with_catalog_and_sources};
+pub use prepared::{
+    prepare_runner_configs_with_catalog, prepare_runner_configs_with_deadline_evidence,
+};
 
 #[derive(Clone)]
 pub(crate) struct RunnerConfigFactPlan {
@@ -33,6 +36,7 @@ struct RunnerConfigSpec {
 pub struct PreparedIntegrationRunnerConfigs {
     root: PathBuf,
     specs: Vec<RunnerConfigSpec>,
+    deadline_runners: std::collections::BTreeSet<&'static str>,
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     visible_files: crate::fx::PathSet,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
@@ -47,6 +51,8 @@ struct ProjectResult {
 
 #[derive(Clone, Default)]
 pub(crate) struct RunnerConfigFileFacts {
+    /// Missing inputs retain evidence without satisfying legacy integration coverage.
+    unavailable: bool,
     results: Vec<ProjectResult>,
     analyses: BTreeMap<PathBuf, FileAnalysis>,
 }
@@ -71,10 +77,10 @@ impl ParsedRunnerConfigs {
         plan.specs.iter().all(|spec| {
             !plan.visible_files.contains(&spec.path)
                 || self.files.get(&spec.path).is_some_and(|facts| {
-                    facts
-                        .results
-                        .iter()
-                        .any(|result| result.framework == spec.framework && result.raw == spec.raw)
+                    !facts.unavailable
+                        && facts.results.iter().any(|result| {
+                            result.framework == spec.framework && result.raw == spec.raw
+                        })
                 })
         })
     }

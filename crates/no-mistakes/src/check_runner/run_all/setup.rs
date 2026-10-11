@@ -20,7 +20,11 @@ pub(super) struct CheckPlan {
     pub(super) fact_demand: finite_set_plan::PreparedFactDemand,
 }
 
-pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<CheckPlan> {
+pub(super) fn build(
+    root: &Path,
+    prepared: &PreparedCheckInputs,
+    deadlines: bool,
+) -> Result<CheckPlan> {
     let config = &prepared.config;
     let queues_enabled = check_tasks::queues_configured(config);
     let unique_exports_enabled = check_tasks::unique_exports_configured(config);
@@ -62,16 +66,18 @@ pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<Check
         no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
     );
     plan.postgres_schema_catalog_paths = schema_catalog_paths?;
-    if integration_enabled {
-        plan.integration_runner_configs = Some(std::sync::Arc::new(
-            no_mistakes::integration_tests::prepare_runner_configs_with_catalog(
-                root,
-                config,
-                prepared.visible_paths.paths_for(root).as_ref(),
-                std::sync::Arc::clone(&prepared.tsconfig_catalog),
-                prepared.visible_paths.source_store_for(root),
-            ),
-        ));
+    if integration_enabled || deadlines {
+        plan.integration_runner_configs = Some(std::sync::Arc::new((if deadlines {
+            no_mistakes::integration_tests::prepare_runner_configs_with_deadline_evidence
+        } else {
+            no_mistakes::integration_tests::prepare_runner_configs_with_catalog
+        })(
+            root,
+            config,
+            prepared.visible_paths.paths_for(root).as_ref(),
+            std::sync::Arc::clone(&prepared.tsconfig_catalog),
+            prepared.visible_paths.source_store_for(root),
+        )));
     }
     let prepared_graph_result = graph_plan::prepare(
         root,

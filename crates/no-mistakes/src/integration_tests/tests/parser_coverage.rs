@@ -511,3 +511,9 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
         .as_ref()
         .is_some_and(|path| path.ends_with("projects/direct-setup.ts")));
 }
+
+#[path = "parser_coverage/declared_deadlines.rs"]
+mod declared_deadlines;
+
+#[path = "parser_coverage/deadline_setup_contracts.rs"]
+mod deadline_setup_contracts;

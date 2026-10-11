@@ -98,3 +98,12 @@ fn effective_path(root: &Path, value: Option<&str>) -> Option<PathBuf> {
         crate::codebase::ts_resolver::normalize_path(&path)
     })
 }
+
+fn requested_deadline_evidence(options: &AnalyzeProjectOptions) -> Result<bool> {
+    options.reports.iter().filter(|request| request.report_type == "check")
+        .map(|request| -> Result<bool> {
+            let raw = project_options(request, options)?;
+            let parsed: ProjectOptions = serde_json::from_str(&raw)?;
+            Ok(parsed.include_runner_config_deadlines)
+        }).collect::<Result<Vec<_>>>().map(|requests| requests.into_iter().any(|value| value))
+}

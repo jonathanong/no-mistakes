@@ -1,0 +1,7 @@
+tests:
+  vitest:
+    configs: missing.config.ts
+    projects:
+      broken:
+        integration_suites:
+          integration: []

@@ -42,6 +42,7 @@ impl PreparedIntegrationRunnerConfigs {
             })
             .collect();
         RunnerConfigFileFacts {
+            unavailable: false,
             results,
             analyses: BTreeMap::new(),
         }

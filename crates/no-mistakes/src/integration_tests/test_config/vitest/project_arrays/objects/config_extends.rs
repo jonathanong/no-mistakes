@@ -5,7 +5,11 @@ use anyhow::Result;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-mod merged;
+mod deadline_inheritance;
+mod helpers;
+use deadline_inheritance::inherit_unresolved_deadlines;
+pub(super) mod merged;
+use helpers::{combine_excludes, normalize_inherited_root};
 
 pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_>) -> Result<()> {
     let Some(extends) = options.extends.take() else {
@@ -15,12 +19,14 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
         options.extends = Some(extends);
         return Ok(());
     };
+    // Setup planning consumes the named base; deadline_extends retains SDK provenance.
     let candidates = ctx.resolver.resolution_candidates(&specifier, ctx.path);
     let Some(path) = ctx.resolver.resolve(&specifier, ctx.path) else {
         add_unresolved_config_extends(options, specifier, candidates, ctx);
         return Ok(());
     };
     if !ctx.seen.insert(path.clone()) {
+        inherit_unresolved_deadlines(options, ctx);
         return Ok(());
     }
     let inherited = match crate::integration_tests::runner_config::read_request_source(&path) {
@@ -33,6 +39,7 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
                 let mut local_seen = BTreeSet::new();
                 let mut object_seen = BTreeSet::new();
                 let mut inherited_ctx = Ctx {
+                    is_test_object: ctx.is_test_object,
                     source,
                     bindings,
                     functions: super::super::top_level_function_bodies(program),
@@ -60,6 +67,7 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
 }
 
 fn merge_inherited_options(options: &mut Options, mut inherited: Options, path: &Path) {
+    deadline_inheritance::inherit_named_deadlines(options, &mut inherited, path);
     normalize_inherited_root(&mut inherited, path);
     options.name = options.name.take().or(inherited.name);
     options.root = options.root.take().or(inherited.root);
@@ -81,37 +89,13 @@ fn merge_inherited_options(options: &mut Options, mut inherited: Options, path: 
     }
 }
 
-fn normalize_inherited_root(inherited: &mut Options, path: &Path) {
-    let Some(root) = inherited.root.as_deref() else {
-        return;
-    };
-    let root = Path::new(root);
-    if !root.is_absolute() {
-        inherited.root = Some(
-            crate::codebase::ts_resolver::normalize_path(
-                &path.parent().unwrap_or(Path::new(".")).join(root),
-            )
-            .to_string_lossy()
-            .into_owned(),
-        );
-    }
-}
-
-fn combine_excludes(
-    inherited: Option<Vec<String>>,
-    local: Option<Vec<String>>,
-) -> Option<Vec<String>> {
-    let mut excludes = inherited.unwrap_or_default();
-    excludes.extend(local.unwrap_or_default());
-    (!excludes.is_empty()).then_some(excludes)
-}
-
 fn add_unresolved_config_extends(
     options: &mut Options,
     specifier: String,
     mut candidates: BTreeSet<PathBuf>,
     ctx: &Ctx<'_, '_>,
 ) {
+    inherit_unresolved_deadlines(options, ctx);
     candidates.insert(ctx.path.to_path_buf());
     let extends_path = Path::new(&specifier);
     if extends_path.is_absolute() || specifier.starts_with('.') {
