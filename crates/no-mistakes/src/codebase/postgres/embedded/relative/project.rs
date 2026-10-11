@@ -52,7 +52,7 @@ pub(crate) fn project_relative_scoped_facts(
         .filter(|call| kept_owner(&kept, &call.owners))
         .map(|call| {
             let start = pending
-                .call_starts
+                .call_spans
                 .get(&call.seq)
                 .copied()
                 .unwrap_or_default();
@@ -62,10 +62,10 @@ pub(crate) fn project_relative_scoped_facts(
     if promoted.is_empty() {
         return;
     }
-    (facts.calls, facts.call_starts) = merge_calls(
+    (facts.calls, facts.call_spans) = merge_calls(
         std::mem::take(&mut facts.calls)
             .into_iter()
-            .zip(std::mem::take(&mut facts.call_starts))
+            .zip(std::mem::take(&mut facts.call_spans))
             .collect(),
         &pending.confirmed_order,
         promoted,
@@ -84,10 +84,10 @@ fn sort_dedup(names: &mut Vec<String>) {
 }
 
 fn merge_calls(
-    confirmed: Vec<(super::super::EmbeddedSqlCall, u32)>,
+    confirmed: Vec<(super::super::EmbeddedSqlCall, (u32, u32))>,
     order: &[u32],
-    promoted: Vec<(PendingRelativeCall, u32)>,
-) -> (Vec<super::super::EmbeddedSqlCall>, Vec<u32>) {
+    promoted: Vec<(PendingRelativeCall, (u32, u32))>,
+) -> (Vec<super::super::EmbeddedSqlCall>, Vec<(u32, u32)>) {
     if order.len() != confirmed.len() {
         let mut calls = confirmed;
         calls.extend(

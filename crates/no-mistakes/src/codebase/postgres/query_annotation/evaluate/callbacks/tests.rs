@@ -26,7 +26,7 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },

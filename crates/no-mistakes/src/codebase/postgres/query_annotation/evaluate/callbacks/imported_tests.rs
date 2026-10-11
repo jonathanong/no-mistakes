@@ -49,7 +49,7 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
                 File {
                     facts,
                     ts,
-                    executors: embedded.call_starts.iter().copied().collect(),
+                    executors: embedded.call_spans.iter().copied().collect(),
                     imports: ts
                         .imported_bindings
                         .iter()
@@ -103,7 +103,7 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
     let start = source.find("write(saved)").unwrap() as u32;
     let events = evaluator
         .events
-        .get(&(helper, start))
+        .get(&(helper, (start, start + "write(saved)".len() as u32)))
         .expect("saved imported executor");
     assert!(
         events.len() >= 2,

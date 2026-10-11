@@ -118,6 +118,9 @@ Await an async helper before passing its returned SQL to an executor; a promise 
 without awaiting it remains unanalyzable. Template substitutions are traversed for nested
 executor calls. Unknown calls or untrusted template tags that receive a mutable
 SQL builder invalidate its previous prefix, including aliases to that builder.
+Calling a method on an executor's returned value preserves the annotation of
+the exact executor call. Chained `catch`, `then`, and `finally` callbacks can
+still contain separate executor calls that require their own annotations.
 
 Callback forwarding through a straight-line helper substitutes the statement and
 callback arguments at each analyzable callsite. Findings point to the executor

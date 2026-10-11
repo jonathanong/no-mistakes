@@ -100,7 +100,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 }
 
 struct Classification<'a> {
-    executors: &'a crate::fx::FxHashSet<u32>,
+    executors: &'a crate::fx::FxHashSet<(u32, u32)>,
     effect: &'a dyn Fn(&Expr) -> bool,
 }
 impl Classification<'_> {
@@ -116,7 +116,9 @@ impl Classification<'_> {
     }
     fn expression(&self, expr: &Expr) -> bool {
         match expr {
-            Expr::Call { start, args, .. } if self.executors.contains(start) => {
+            Expr::Call {
+                start, end, args, ..
+            } if self.executors.contains(&(*start, *end)) => {
                 args.iter().any(|expr| self.expression(expr))
             }
             Expr::Children(parts) | Expr::Template(parts) | Expr::Sequence(parts) => {

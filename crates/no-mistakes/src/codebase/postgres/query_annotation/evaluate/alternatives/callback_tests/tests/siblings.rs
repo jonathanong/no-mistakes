@@ -26,7 +26,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -64,7 +64,10 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     let start = source.find("write(arguments[0])").unwrap() as u32;
     let events = evaluator
         .events
-        .get(&(path.clone(), start))
+        .get(&(
+            path.clone(),
+            (start, start + "write(arguments[0])".len() as u32),
+        ))
         .expect("saved executor occurrence");
     assert_eq!(
         events.len(),

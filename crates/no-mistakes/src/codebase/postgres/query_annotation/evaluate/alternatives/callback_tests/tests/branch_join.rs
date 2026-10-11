@@ -26,7 +26,7 @@ fn callback_seen_in_one_arm_remains_available_after_join() {
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -61,7 +61,10 @@ fn callback_seen_in_one_arm_remains_available_after_join() {
     let start = source.find("write(statement)").unwrap() as u32;
     let events = evaluator
         .events
-        .get(&(path.clone(), start))
+        .get(&(
+            path.clone(),
+            (start, start + "write(statement)".len() as u32),
+        ))
         .expect("saved reader occurrence");
     assert_eq!(
         events.len(),

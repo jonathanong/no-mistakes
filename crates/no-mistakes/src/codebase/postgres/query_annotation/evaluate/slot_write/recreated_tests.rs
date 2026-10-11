@@ -59,6 +59,7 @@ fn recreated_deleted_slot_callback_runs_only_after_the_arguments_object_escapes(
         callee: Box::new(query_annotation::Expr::Name(name.into())),
         args: vec![query_annotation::Expr::Text(sql.into())],
         start: 0,
+        end: 0,
     };
 
     let no_escape = evaluator.expr(
@@ -103,7 +104,7 @@ fn sloppy_formal_callback_writes_are_seen_after_escape_and_by_a_later_consumer()
         File {
             facts: &facts,
             ts: &ts,
-            executors: embedded.call_starts.iter().copied().collect(),
+            executors: embedded.call_spans.iter().copied().collect(),
             imports: Default::default(),
             exports: Default::default(),
         },
@@ -143,7 +144,7 @@ fn sloppy_formal_callback_writes_are_seen_after_escape_and_by_a_later_consumer()
         let start = embedded
             .calls
             .iter()
-            .zip(&embedded.call_starts)
+            .zip(&embedded.call_spans)
             .find_map(|(call, start)| {
                 source
                     .lines()
@@ -165,7 +166,7 @@ fn sloppy_formal_callback_writes_are_seen_after_escape_and_by_a_later_consumer()
     let literal_start = embedded
         .calls
         .iter()
-        .zip(&embedded.call_starts)
+        .zip(&embedded.call_spans)
         .find_map(|(call, start)| {
             source
                 .lines()
@@ -182,7 +183,7 @@ fn sloppy_formal_callback_writes_are_seen_after_escape_and_by_a_later_consumer()
     let control_start = embedded
         .calls
         .iter()
-        .zip(&embedded.call_starts)
+        .zip(&embedded.call_spans)
         .find_map(|(call, start)| {
             source
                 .lines()
