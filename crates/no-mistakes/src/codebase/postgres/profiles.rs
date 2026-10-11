@@ -68,7 +68,15 @@ pub(crate) fn configured_embedded_sql_options(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
 ) -> Result<Vec<EmbeddedSqlOptions>> {
+    Ok(configured_embedded_sql_options_with_annotation(config, rule_ids)?.0)
+}
+
+fn configured_embedded_sql_options_with_annotation(
+    config: &NoMistakesConfig,
+    rule_ids: &[&str],
+) -> Result<(Vec<EmbeddedSqlOptions>, Vec<EmbeddedSqlOptions>)> {
     let mut profiles = Vec::new();
+    let mut annotation_profiles = Vec::new();
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
@@ -84,13 +92,18 @@ pub(crate) fn configured_embedded_sql_options(
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.
             if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {
+                if *rule_id == "postgres-require-query-annotation" {
+                    annotation_profiles.push(profile.clone());
+                }
                 profiles.push(profile);
             }
         }
     }
     profiles.sort();
     profiles.dedup();
-    Ok(profiles)
+    annotation_profiles.sort();
+    annotation_profiles.dedup();
+    Ok((profiles, annotation_profiles))
 }
 
 pub fn configured_embedded_sql_options_for_checks(

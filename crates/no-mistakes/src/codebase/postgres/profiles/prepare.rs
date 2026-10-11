@@ -12,7 +12,8 @@ pub(crate) fn prepare_rule_sql_facts(
         .copied()
         .filter(|id| PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id))
         .collect();
-    let profiles = configured_embedded_sql_options(config, &dml_ids)?;
+    let (profiles, annotation_profiles) =
+        configured_embedded_sql_options_with_annotation(config, &dml_ids)?;
     let patterns = sql_patterns(config, rule_ids)?;
     let selected = if profiles.is_empty() {
         crate::codebase::postgres::postgres_sql_paths(
@@ -69,15 +70,9 @@ pub(crate) fn prepare_rule_sql_facts(
                     Vec::new()
                 },
                 query_annotation: rule_ids.contains(&"postgres-require-query-annotation"),
-                query_annotation_options: if rule_ids.contains(&"postgres-require-query-annotation")
-                {
-                    Some(configured_embedded_sql_options(
-                        config,
-                        &["postgres-require-query-annotation"],
-                    )?)
-                } else {
-                    None
-                },
+                query_annotation_options: rule_ids
+                    .contains(&"postgres-require-query-annotation")
+                    .then_some(annotation_profiles),
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,

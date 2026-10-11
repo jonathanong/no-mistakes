@@ -81,6 +81,31 @@ fn configured_annotation_demand_merges_an_existing_explicit_profile() {
 }
 
 #[test]
+fn standalone_annotation_rejects_malformed_executor_options() {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "postgres-require-query-annotation".into(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("executorNames: false").unwrap(),
+        ..RuleDef::default()
+    });
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let files = Vec::new();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    let sources = snapshot.source_store_for(&root);
+    let error = prepare_rule_sql_facts(
+        &root,
+        &files,
+        sources,
+        &config,
+        &["postgres-require-query-annotation"],
+    )
+    .err()
+    .expect("malformed annotation options must be rejected");
+    assert!(error.to_string().contains("executorNames"), "{error:#}");
+}
+
+#[test]
 fn profiles_carry_scoped_executor_options_sorted_and_distinct() {
     let mut config = NoMistakesConfig::default();
     for options in [
