@@ -7,7 +7,7 @@ const { memberName } = require("./vitest-timeout-copy-paths");
 // Assignment can invoke an own or inherited setter. Prove a data descriptor
 // from syntax without evaluating the source whose stability is being checked.
 function createOwnDataProperty(context) {
-  function deleted(variable, seen = new Set()) {
+  function deleted(variable, seen = new Set(), ignoredDeletion) {
     if (!variable || seen.has(variable)) return false;
     seen = new Set(seen).add(variable);
     return variable.references.some(({ identifier }) => {
@@ -15,7 +15,12 @@ function createOwnDataProperty(context) {
       while (use.parent?.type === "MemberExpression" && use.parent.object === use)
         use = unwrapTransparentParent(use.parent);
       let parent = use.parent;
-      if (parent?.type === "UnaryExpression" && parent.operator === "delete") return true;
+      if (
+        parent?.type === "UnaryExpression" &&
+        parent.operator === "delete" &&
+        parent !== ignoredDeletion
+      )
+        return true;
       while (
         parent &&
         ((parent.type === "Property" && parent.value === use) ||
@@ -30,17 +35,17 @@ function createOwnDataProperty(context) {
         parent?.type === "VariableDeclarator" &&
         parent.init === use &&
         parent.id.type === "Identifier" &&
-        deleted(resolveVariable(parent.id, context), seen)
+        deleted(resolveVariable(parent.id, context), seen, ignoredDeletion)
       );
     });
   }
-  function initializer(node, seen) {
+  function initializer(node, seen, ignoredDeletion) {
     node = unwrapExpression(node);
     if (node.type === "Identifier") {
       const variable = resolveVariable(node, context);
       const def = variable?.defs[0];
       // Deletion through an alias can expose an inherited setter later.
-      if (deleted(variable)) return null;
+      if (deleted(variable, new Set(), ignoredDeletion)) return null;
       return def?.type === "Variable" &&
         def.parent.kind === "const" &&
         def.node.id.type === "Identifier"
@@ -48,20 +53,20 @@ function createOwnDataProperty(context) {
         : null;
     }
     if (node.type === "MemberExpression")
-      return property(node.object, memberName(node, context), seen)?.value ?? null;
+      return property(node.object, memberName(node, context), seen, ignoredDeletion)?.value ?? null;
     return node;
   }
-  function property(node, key, seen = new Set()) {
+  function property(node, key, seen = new Set(), ignoredDeletion) {
     if (!node || key === null || seen.has(node)) return null;
     seen = new Set(seen).add(node);
-    const value = initializer(node, seen);
+    const value = initializer(node, seen, ignoredDeletion);
     if (!value) return null;
-    if (value !== node) return property(value, key, seen);
+    if (value !== node) return property(value, key, seen, ignoredDeletion);
     if (node.type === "ArrayExpression") {
       if (key === "length") return { data: true, enumerable: false, value: null };
       const index = Number(key);
       if (!Number.isInteger(index) || index < 0 || String(index) !== key) return null;
-      const element = arrayValueAt(node, index, new Set());
+      const element = arrayValueAt(node, index, new Set(), ignoredDeletion);
       return element?.found && element.value
         ? { data: true, enumerable: true, value: element.value }
         : null;
@@ -71,7 +76,7 @@ function createOwnDataProperty(context) {
     for (let index = node.properties.length - 1; index >= 0; index--) {
       const entry = node.properties[index];
       if (entry.type === "SpreadElement") {
-        const copied = property(entry.argument, key, seen);
+        const copied = property(entry.argument, key, seen, ignoredDeletion);
         // Object spread skips non-enumerable own properties such as array length.
         if (copied?.enumerable === false) continue;
         // Spreading reads accessors and creates ordinary own data properties.
@@ -107,17 +112,17 @@ function createOwnDataProperty(context) {
     }
     return null;
   }
-  function arrayValueAt(node, index, seen) {
+  function arrayValueAt(node, index, seen, ignoredDeletion) {
     if (!node || seen.has(node)) return null;
     seen = new Set(seen).add(node);
-    const value = initializer(node, seen);
+    const value = initializer(node, seen, ignoredDeletion);
     if (!value) return null;
-    if (value !== node) return arrayValueAt(value, index, seen);
+    if (value !== node) return arrayValueAt(value, index, seen, ignoredDeletion);
     if (node.type !== "ArrayExpression") return null;
     let offset = 0;
     for (const element of node.elements) {
       if (element?.type === "SpreadElement") {
-        const spread = arrayValueAt(element.argument, index - offset, seen);
+        const spread = arrayValueAt(element.argument, index - offset, seen, ignoredDeletion);
         if (!spread) return null;
         if (spread.found) return spread;
         offset += spread.length;
@@ -128,9 +133,12 @@ function createOwnDataProperty(context) {
     }
     return { found: false, length: offset };
   }
-  return (member) => {
+  return (member, ignoredDeletion) => {
     member = unwrapExpression(member);
-    return property(member.object, memberName(member, context))?.data === true;
+    return (
+      property(member.object, memberName(member, context), new Set(), ignoredDeletion)?.data ===
+      true
+    );
   };
 }
 module.exports = { createOwnDataProperty };

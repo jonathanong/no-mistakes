@@ -113,6 +113,15 @@ Erased TypeScript assertions, `satisfies`, and non-null assertions around the
 copy or its enclosing wrapper preserve that same property path. Deletion aliases
 through those wrappers still invalidate descriptor proofs before assignments
 that might expose an inherited setter.
+Replacing or deleting the copy slot itself, or a matching wrapper ancestor,
+also preserves the source: `box.copy = {}` and `delete box.envelope.copy` discard
+the copied identity without changing the original timeout. Plain assignments
+must prove an own data property. Deletions must reach their receiver through
+known data properties and immutable aliases; another deletion can invalidate
+that receiver proof. Accessor receivers, uncertain keys or array offsets, and
+coercing updates remain unknown. References on an assignment's right side are
+checked independently, so restoring or exposing the original source there does
+not receive the detached-copy proof.
 Known array indices before an opaque trailing spread retain their own-data
 descriptor proof, including through known offsets and array aliases. Unknown
 computed wrapper keys, an opaque spread before the requested index, an incomplete

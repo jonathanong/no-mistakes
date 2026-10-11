@@ -4,10 +4,12 @@ const { unwrapTransparentParent } = require("./async-ast");
 const { configCall, overrideCall, invocationArguments } = require("./vitest-timeout-bindings");
 const { memberName, pathStartsWith, wrappedCopyPath } = require("./vitest-timeout-copy-paths");
 const { createOwnDataProperty } = require("./vitest-timeout-copy-properties");
+const { createCopySlotWrite } = require("./vitest-timeout-copy-slots");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
   const ownDataProperty = createOwnDataProperty(context);
+  const copySlotWrite = createCopySlotWrite(context, ownDataProperty);
   // Values, copies, and callbacks need independent consumer proofs and cycle guards.
   const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
   const active = { value: new Set(), shallow: new Set(), callback: new Set() };
@@ -115,17 +117,18 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
       (parent?.type === "UpdateExpression" && parent.argument === node) ||
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
-      // The copied value may be inside a wrapper. Only its own property writes
-      // are independent; coercion of a shared object can still mutate its source.
+      // Discarding a copy or its wrapper is independent. Below the boundary,
+      // coercion of a shared object can still mutate its source.
       return (
         mode === "shallow" &&
-        members.length === copyPath.length + 1 &&
-        pathStartsWith(copyPath, members.slice(0, -1)) &&
-        (parent.type === "UnaryExpression" || ownDataProperty(node)) &&
-        (parent.type === "UnaryExpression" ||
-          (parent.type === "AssignmentExpression" &&
-            ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
-          scalarCopyWrite(node, (reference) => safeConsumer(reference, false)))
+        (copySlotWrite(node, parent, members, copyPath) ||
+          (members.length === copyPath.length + 1 &&
+            pathStartsWith(copyPath, members.slice(0, -1)) &&
+            (parent.type === "UnaryExpression" || ownDataProperty(node)) &&
+            (parent.type === "UnaryExpression" ||
+              (parent.type === "AssignmentExpression" &&
+                ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
+              scalarCopyWrite(node, (reference) => safeConsumer(reference, false)))))
       );
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
