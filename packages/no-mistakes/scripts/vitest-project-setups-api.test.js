@@ -24,6 +24,8 @@ test(
       ".no-mistakes-inline.yml",
       ".no-mistakes-imported.yml",
       ".no-mistakes-scope.yml",
+      ".no-mistakes-include.yml",
+      ".no-mistakes-missing-app-include.yml",
       ".no-mistakes-rule-exclude.yml",
     ]) {
       const options = { root: fixture, config: join(fixture, config) };
@@ -32,7 +34,13 @@ test(
       assert.deepEqual(report.warnings, []);
       const expected = [["shared/example.test.mts", 3, "shared/real.mts"]];
       // Project A's setup mock and exclusion cannot hide project B's execution.
-      if (config !== ".no-mistakes-rule-exclude.yml") {
+      if (
+        ![
+          ".no-mistakes-rule-exclude.yml",
+          ".no-mistakes-include.yml",
+          ".no-mistakes-missing-app-include.yml",
+        ].includes(config)
+      ) {
         expected.push(["shared/setup.test.mts", 3, "shared/real.mts"]);
       }
       assert.deepEqual(
