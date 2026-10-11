@@ -54,6 +54,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
         let direct = branch_paths(&paths, u64::from(statement.span.start), index as u32);
         visitor.variant_paths = direct.clone();
         tag_state(visitor);
+        // A failed earlier label reaches this test from the entry state;
+        // falling through an earlier body skips the test entirely.
+        if let Some(test) = &case.test {
+            visitor.visit_expression(test);
+        }
         let direct_state = visitor.variant_snapshot();
         if let Some(prior) = &fallthrough {
             visitor.join_variants(
@@ -64,9 +69,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
             );
         }
         visitor.variant_paths.extend(fallthrough_paths.clone());
-        if let Some(test) = &case.test {
-            visitor.visit_expression(test);
-        }
         let terminal_break = matches!(case.consequent.last(), Some(Statement::BreakStatement(break_)) if break_.label.is_none());
         let length = case.consequent.len() - usize::from(terminal_break);
         visitor.with_control_flow(|visitor| {

@@ -38,7 +38,6 @@ fn dispatch_uses_fallback_for_an_unknown_rule() {
         _files: &[std::path::PathBuf],
     ) -> anyhow::Result<Vec<RuleFinding>> {
         Ok(vec![RuleFinding {
-            source_offset: None,
             rule: "fallback".to_string(),
             file: "fixture.txt".to_string(),
             line: 1,

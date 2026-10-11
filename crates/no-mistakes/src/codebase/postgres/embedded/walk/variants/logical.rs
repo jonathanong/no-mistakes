@@ -101,6 +101,10 @@ fn absent(mut value: Recovered) -> Recovered {
     value.positions.clear();
     value.append_sites.clear();
     value.fragment = true;
-    value.value = ValueKind::Absent;
+    // The SQL fragment is absent, but && still returns its original falsy
+    // scalar. Keep null distinct from false for a subsequent ?? fallback.
+    if value.value == ValueKind::Sql {
+        value.value = ValueKind::Absent;
+    }
     value
 }

@@ -91,7 +91,6 @@ pub(super) fn check_content_with_deferred_suppression(
     let line_count = count_lines(content);
     if line_count > max_lines {
         findings.push(RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: 1,
@@ -105,7 +104,6 @@ pub(super) fn check_content_with_deferred_suppression(
     let char_count = content.chars().count();
     if char_count > max_chars {
         findings.push(RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file,
             line: 1,
@@ -140,7 +138,6 @@ fn check_advisory_content(
         return None;
     }
     Some(RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, path),
         line: 1,

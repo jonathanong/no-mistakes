@@ -5,9 +5,16 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 type Key = (String, usize, String, Option<String>);
 
+struct PendingFinding {
+    identity: Option<Key>,
+    append_site: Option<u32>,
+    source_offset: Option<usize>,
+    finding: RuleFinding,
+}
+
 #[derive(Default)]
 pub(super) struct Findings {
-    pending: Vec<(Option<Key>, Option<u32>, RuleFinding)>,
+    pending: Vec<PendingFinding>,
     active_complete: FxHashSet<Key>,
     disabled_complete: FxHashMap<Key, FxHashSet<u32>>,
 }
@@ -15,7 +22,7 @@ pub(super) struct Findings {
 impl Findings {
     pub(super) fn push_complete(
         &mut self,
-        output: &mut Vec<RuleFinding>,
+        output: &mut crate::codebase::rules::PostgresFindings,
         facts: &crate::codebase::postgres::SqlStatementFileFacts,
         site: SqlFactSite,
         source: Option<&str>,
@@ -67,7 +74,6 @@ impl Findings {
                 .is_some()
             });
         if fragment.enumerated {
-            finding.source_offset = offset;
             if let Some(source) = source {
                 let line = if disabled_host {
                     fragment.original_line as usize
@@ -86,21 +92,28 @@ impl Findings {
                 finding.line = line;
             }
         }
-        self.pending.push((
-            offset
+        self.pending.push(PendingFinding {
+            identity: offset
                 .filter(|_| !disabled_host)
                 .map(|offset| key(&finding, offset)),
-            fragment.append_site,
+            append_site: fragment.append_site,
+            source_offset: fragment.enumerated.then_some(offset).flatten(),
             finding,
-        ));
+        });
     }
 
-    pub(super) fn extend(self, output: &mut Vec<RuleFinding>) {
+    pub(super) fn extend(self, output: &mut crate::codebase::rules::PostgresFindings) {
         // Active executions deduplicate shared physical tokens globally. A
         // disabled execution owns only the append sites that contributed its
         // SQL, so an unrelated active builder remains independently checked.
         let mut seen = self.active_complete;
-        for (identity, append_site, finding) in self.pending {
+        for PendingFinding {
+            identity,
+            append_site,
+            source_offset,
+            finding,
+        } in self.pending
+        {
             if let Some(identity) = identity {
                 let owned_disabled = append_site.is_some_and(|site| {
                     self.disabled_complete
@@ -110,11 +123,11 @@ impl Findings {
                 if seen.contains(&identity) || owned_disabled {
                     continue;
                 }
-                if finding.source_offset.is_some() {
+                if source_offset.is_some() {
                     seen.insert(identity);
                 }
             }
-            output.push(finding);
+            output.push_at(finding, source_offset);
         }
     }
 }

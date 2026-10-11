@@ -143,7 +143,6 @@ fn sort_filters(filters: &mut [CiFilter]) {
 
 pub(super) fn workflow_finding(file: &str, message: String, target: Option<String>) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

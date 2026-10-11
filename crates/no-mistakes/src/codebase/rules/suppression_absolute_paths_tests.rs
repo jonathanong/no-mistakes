@@ -9,7 +9,6 @@ fn request_sources_only_suppress_registered_absolute_paths() {
     let external = fixture.join("outside.md");
     let sources = source_store_for_files(&[root.join("safe.md")]);
     let mut findings = vec![RuleFinding {
-        source_offset: None,
         rule: "my-rule".to_string(),
         file: external.display().to_string(),
         line: 1,
@@ -47,7 +46,6 @@ fn registered_external_symlink_must_resolve_within_its_trusted_root() {
         std::slice::from_ref(&external),
     );
     let mut findings = vec![RuleFinding {
-        source_offset: None,
         rule: MARKDOWN_REACHABILITY.to_string(),
         file: escaped.display().to_string(),
         line: 1,

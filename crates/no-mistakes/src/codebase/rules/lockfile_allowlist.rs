@@ -111,7 +111,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                 return Vec::new();
             }
             vec![RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,

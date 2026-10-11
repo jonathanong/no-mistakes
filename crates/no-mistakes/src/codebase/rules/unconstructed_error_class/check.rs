@@ -105,7 +105,6 @@ fn finding(root: &Path, application: &RuleDef, class: &ClassDeclaration) -> Rule
         |message| format!("{message}: `{name}`"),
     );
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &class.file),
         line: class.line.max(1) as usize,

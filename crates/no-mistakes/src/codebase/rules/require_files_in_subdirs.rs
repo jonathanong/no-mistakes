@@ -89,7 +89,6 @@ fn check_subdir(
     for required in &spec.required_files {
         if !pattern_matches(subdir, required, files, file_set)? {
             findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,
@@ -105,7 +104,6 @@ fn check_subdir(
         if !any_match {
             let group_str = group.join(", ");
             findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,

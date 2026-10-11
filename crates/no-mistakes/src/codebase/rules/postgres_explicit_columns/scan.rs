@@ -11,7 +11,7 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
     let catalog = prepared.postgres_schema_catalog(&opts.schema_catalog_path)?;
@@ -32,7 +32,7 @@ pub(super) fn scan(
                 .iter(),
         );
     }
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
@@ -106,7 +106,7 @@ pub(super) fn scan(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
@@ -174,7 +174,6 @@ fn message(
 
 fn sql_finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

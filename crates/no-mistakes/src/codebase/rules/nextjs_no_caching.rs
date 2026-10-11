@@ -165,7 +165,6 @@ fn findings_for_file(
             defer_suppression || !has_disable_comment(source, finding.line as u32, RULE_ID)
         })
         .map(|finding| RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: finding.line,

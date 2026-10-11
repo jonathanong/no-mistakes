@@ -146,7 +146,6 @@ fn check_source(path: &Path, root: &Path, content: &str) -> Vec<RuleFinding> {
         ContentKind::CommentsOnly => "file contains only comments — add real content or remove it",
     };
     vec![RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file,
         line: 1,

@@ -14,7 +14,10 @@ does not re-parse SQL. Embedded calls with
 are checked version by version, up to 16 versions per call. A predicate present
 only on one branch cannot satisfy another branch: choosing a tenant-filtered
 query or an unfiltered query reports the unfiltered path. Findings retain the
-physical branch-fragment lines for suppressions. Opaque, over-cap, or unparseable SQL fails closed unless
+physical branch-fragment lines for suppressions. Versions sharing a physical
+SQL token and finding target merge into one diagnostic. Its message preserves
+every distinct missing requirement, including requirements missing on
+different versions. Opaque, over-cap, or unparseable SQL fails closed unless
 `unanalyzableSql` is `ignore`.
 
 ```yaml

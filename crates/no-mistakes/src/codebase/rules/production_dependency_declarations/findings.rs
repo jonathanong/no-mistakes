@@ -15,7 +15,6 @@ pub(super) fn dev_only(
 ) -> RuleFinding {
     let rel = relative_slash_path(root, file);
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.clone(),
         line: line as usize,
@@ -40,7 +39,6 @@ pub(super) fn undeclared(
 ) -> RuleFinding {
     let rel = relative_slash_path(root, file);
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.clone(),
         line: line as usize,
@@ -55,7 +53,6 @@ pub(super) fn undeclared(
 
 pub(super) fn config(message: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: ".no-mistakes.yml".to_string(),
         line: 1,

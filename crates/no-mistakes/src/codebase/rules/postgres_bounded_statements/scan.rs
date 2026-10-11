@@ -10,7 +10,7 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
     let catalog = prepared.postgres_schema_catalog(&opts.schema_catalog_path)?;
@@ -31,7 +31,7 @@ pub(super) fn scan(
                 .iter(),
         );
     }
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
@@ -113,13 +113,12 @@ pub(super) fn scan(
     }
     // Sorted first: dedup only removes adjacent duplicates, and one relation can be reported
     // by several statements of a file (or arms of one) with others between them.
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
-    findings.dedup();
+    findings.sort();
     let mut findings = opts
         .allow
         .clone()
-        .apply(&opts.schema_catalog_path, findings);
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+        .apply_located(&opts.schema_catalog_path, findings);
+    findings.sort();
     Ok(findings)
 }
 
@@ -147,7 +146,6 @@ fn message(kind: SqlBoundKind, table: &str) -> String {
 
 fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

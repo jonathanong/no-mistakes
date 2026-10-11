@@ -14,7 +14,7 @@ pub(super) fn scan(
     query_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: &crate::codebase::check_facts::CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let sql_paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
     let schema = sql_paths
         .iter()
@@ -40,7 +40,8 @@ pub(super) fn scan(
     let live = catalog::live_columns(&schema);
     let columns = catalog::column_index(&live);
     let tracked = catalog::tracked_columns(&live, opts);
-    let mut findings = catalog::stale_extras(&live, &opts.extras);
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    findings.extend(catalog::stale_extras(&live, &opts.extras));
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     if tracked.is_empty() {
         return Ok(findings);
@@ -108,7 +109,7 @@ pub(super) fn scan(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
@@ -189,7 +190,6 @@ fn message(clause: SqlColumnClause, column: &Tracked) -> String {
 
 fn sql_finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

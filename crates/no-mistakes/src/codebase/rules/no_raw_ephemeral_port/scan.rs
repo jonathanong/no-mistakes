@@ -50,7 +50,6 @@ fn push_finding(
         return;
     }
     findings.push(RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,

@@ -22,7 +22,6 @@ pub(super) fn check_file(
     let mut findings = match serde_yaml::from_str::<Value>(&source) {
         Ok(value) => check_document(&file, &source, &value),
         Err(error) => vec![RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: error.location().map_or(1, |location| location.line()),
@@ -91,7 +90,6 @@ fn check_steps(
             if with.contains_key(Value::String((*key).to_string())) {
                 let line = location::checkout_key_line(source, key, occurrence);
                 findings.push(RuleFinding {
-        source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: file.to_string(),
                     line,

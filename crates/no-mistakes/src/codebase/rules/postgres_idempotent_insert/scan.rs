@@ -12,7 +12,7 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let facts = collect_postgres_facts(
         root,
         sources,
@@ -43,7 +43,7 @@ pub(super) fn scan(
         check_generated: opts.check_generated,
         trigger_writes: &opts.trigger_writes,
     };
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     if opts.scan_embedded {
         for file in &facts.embedded {
@@ -86,7 +86,7 @@ pub(super) fn scan(
             );
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
@@ -99,7 +99,6 @@ fn is_embedded_source(path: &Path) -> bool {
 
 fn finding(file: &str, line: usize, message: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

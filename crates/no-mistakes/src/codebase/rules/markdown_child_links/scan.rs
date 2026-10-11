@@ -67,7 +67,6 @@ fn missing_link(root: &Path, child: &Path, require_whole_file: bool) -> RuleFind
         "markdown link"
     };
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.clone(),
         line: 1,

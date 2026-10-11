@@ -93,7 +93,6 @@ pub(super) fn finding(file: &str, assertion: &ValueAssertion, message: String) -
         assertion.key.clone()
     };
     crate::codebase::rules::RuleFinding {
-        source_offset: None,
         rule: super::RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

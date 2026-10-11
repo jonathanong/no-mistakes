@@ -7,7 +7,6 @@ pub(in crate::codebase::rules::postgres_sql_shape_policy) fn finding(
     target: &str,
 ) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

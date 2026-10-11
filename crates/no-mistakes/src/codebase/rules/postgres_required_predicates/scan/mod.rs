@@ -2,7 +2,7 @@ mod catalog;
 mod check;
 mod columns;
 
-use super::{CompiledOptions, RuleFinding};
+use super::CompiledOptions;
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
@@ -13,9 +13,9 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     if opts.relations.is_empty() && !opts.partition_keys {
-        return Ok(Vec::new());
+        return Ok(crate::codebase::rules::PostgresFindings::default());
     }
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
@@ -41,7 +41,7 @@ pub(super) fn scan(
                 .iter(),
         );
     }
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     if let Some(catalog) = &catalog {
         if opts.partition_keys {
@@ -84,9 +84,9 @@ pub(super) fn scan(
             continue;
         }
         for (site, finding) in check::statement_findings(&rel, file, opts, catalog) {
-            dedup.push(&mut findings, file, site, source.as_deref(), finding);
+            dedup.push_merged(&mut findings, file, site, source.as_deref(), finding);
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }

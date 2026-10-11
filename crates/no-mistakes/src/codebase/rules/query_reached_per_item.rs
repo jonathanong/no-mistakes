@@ -159,7 +159,6 @@ pub(crate) fn check_with_graph(
                     findings.push((
                         position.offset,
                         RuleFinding {
-                            source_offset: None,
                             rule: RULE_ID.to_string(),
                             file,
                             line: position.line as usize,

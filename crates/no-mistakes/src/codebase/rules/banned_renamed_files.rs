@@ -115,7 +115,6 @@ pub(crate) fn check_file(
         .iter()
         .filter(|banned| matches(file_name, banned, &opts.extensions))
         .map(|banned| RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: 1,

@@ -159,7 +159,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
             let found = candidates.iter().any(|c| rel_set.contains(c.as_str()));
             if !found {
                 findings.push(RuleFinding {
-                    source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),
                     line: 1,
@@ -188,7 +187,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                             && duplicate_group_base(&fbase, opts.duplicate_stem_group) == dup
                         {
                             findings.push(RuleFinding {
-                                source_offset: None,
                                 rule: RULE_ID.to_string(),
                                 file: rel.clone(),
                                 line: 1,

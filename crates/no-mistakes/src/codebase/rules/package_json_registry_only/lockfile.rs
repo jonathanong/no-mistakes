@@ -50,7 +50,6 @@ pub(super) fn check(
                     break;
                 }
                 findings.push(RuleFinding {
-        source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line: 1,
@@ -70,7 +69,6 @@ pub(super) fn check(
 
 fn parse_finding(file: &str, detail: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

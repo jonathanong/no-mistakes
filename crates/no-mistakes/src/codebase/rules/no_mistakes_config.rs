@@ -59,7 +59,6 @@ pub(crate) fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
 
 pub(super) fn finding(config_file: &str, message: String) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: config_file.to_string(),
         line: 1,

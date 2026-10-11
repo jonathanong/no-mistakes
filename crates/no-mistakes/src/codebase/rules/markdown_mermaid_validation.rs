@@ -146,7 +146,6 @@ fn finding(diagnostic: MermaidValidationDiagnostic) -> RuleFinding {
         MermaidValidationDiagnosticCode::UnclosedFence => diagnostic.message,
     };
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: diagnostic.file,
         line: diagnostic.fence_line,

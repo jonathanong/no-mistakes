@@ -36,7 +36,9 @@ pub(super) fn run(
             findings.extend(crate::codebase::rules::postgres_unmatched_executors::check(
                 root, config, rule_id, files, sources, facts,
             )?);
-            crate::codebase::rules::sort_findings(&mut findings);
+            // Both producers have already deduplicated their own findings.
+            // Equal public DTOs can name distinct physical variant columns.
+            findings.sort();
         }
         Ok(findings)
     }))

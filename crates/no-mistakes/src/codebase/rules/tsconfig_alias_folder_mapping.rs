@@ -179,7 +179,6 @@ fn check_alias(
 
 fn make_finding(file: &str, message: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

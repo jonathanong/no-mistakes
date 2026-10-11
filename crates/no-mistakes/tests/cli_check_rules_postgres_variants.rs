@@ -4,6 +4,8 @@ use std::process::Command;
 mod append_contributors;
 #[path = "cli_check_rules_postgres_variants/branch_correlation.rs"]
 mod branch_correlation;
+#[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
+mod switch_labels;
 
 fn check(rule: &str, name: &str) -> serde_json::Value {
     check_with_suppressed(rule, name, false)
@@ -445,3 +447,9 @@ fn equivalent_physical_branches_do_not_exhaust_the_concrete_version_cap() {
     let report = check("postgres-bounded-statements", "equivalent-branches");
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
 }
+
+#[path = "cli_check_rules_postgres_variants/logical.rs"]
+mod logical;
+
+#[path = "cli_check_rules_postgres_variants/required_messages.rs"]
+mod required_messages;

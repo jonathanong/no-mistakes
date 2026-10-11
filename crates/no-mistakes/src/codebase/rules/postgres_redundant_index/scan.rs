@@ -173,7 +173,6 @@ fn stale_allowlist(opts: &CompiledOptions, used: &BTreeSet<String>) -> Vec<RuleF
 
 fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

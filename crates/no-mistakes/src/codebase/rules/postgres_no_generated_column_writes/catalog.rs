@@ -67,7 +67,6 @@ pub(super) fn stale_trigger_findings(
         .iter()
         .filter(|column| !schema_has_column(tables, column))
         .map(|column| crate::codebase::rules::RuleFinding {
-            source_offset: None,
             rule: super::RULE_ID.to_string(),
             file: ".no-mistakes.yml".to_string(),
             line: 1,
@@ -104,7 +103,6 @@ pub(super) fn stale_extra_findings_from_tables(
                 }))
         })
         .map(|extra| crate::codebase::rules::RuleFinding {
-        source_offset: None,
             rule: super::RULE_ID.to_string(),
             file: ".no-mistakes.yml".to_string(),
             line: 1,

@@ -143,7 +143,6 @@ fn check_file_with_sources(
                 continue;
             }
             findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: index + 1,

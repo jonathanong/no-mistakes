@@ -26,7 +26,6 @@ pub(super) fn scan(
                 .map(String::as_str)
                 .unwrap_or("foreign key");
             findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: fk.line.max(1),

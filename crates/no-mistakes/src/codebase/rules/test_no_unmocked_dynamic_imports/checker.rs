@@ -134,7 +134,6 @@ fn build_finding(
         .unwrap_or("dynamic import")
         .to_string();
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: rel_file,
         line,

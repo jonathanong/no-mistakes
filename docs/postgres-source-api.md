@@ -36,8 +36,9 @@ and returns the same versioned JSON contract. The Rust `EmbeddedSqlCall`
 version list is not exported as a Node source-fact shape.
 Its Rust statement projections can carry internal `variant_locations`
 provenance and prepared ordering metadata; these fields are not serialized by
-the Node check or source APIs. `RuleFinding.source_offset` is also internal
-provenance used to deduplicate physical occurrences; it is omitted from JSON.
+the Node check or source APIs. Finding deduplication keeps physical token
+origins in request-local internal metadata. Public `RuleFinding` fields and
+their JSON shape remain unchanged.
 
 ## Contract
 

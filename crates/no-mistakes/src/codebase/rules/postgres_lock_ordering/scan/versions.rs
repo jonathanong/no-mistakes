@@ -19,9 +19,9 @@ pub(super) fn prepared_findings(
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
     dedup: &mut crate::codebase::rules::VariantFindingDedup,
-) -> Vec<RuleFinding> {
+) -> crate::codebase::rules::PostgresFindings {
     use crate::codebase::postgres::statements::SqlFactSite;
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let sql = call.sql_text.as_deref().unwrap();
     // A source marker belongs to this invocation; SQL markers belong only to
     // alternatives that contain them, rather than to a sibling source branch.
@@ -75,8 +75,8 @@ pub(super) fn findings_for_file(
     catalog: Option<&SchemaCatalog>,
     statements: Option<&[crate::codebase::postgres::SqlStatementFileFacts]>,
     dedup: &mut crate::codebase::rules::VariantFindingDedup,
-) -> anyhow::Result<Vec<RuleFinding>> {
-    let mut output = Vec::new();
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let mut output = crate::codebase::rules::PostgresFindings::default();
     let statements = statements
         .map(crate::codebase::rules::index_sql_variants)
         .unwrap_or_default();

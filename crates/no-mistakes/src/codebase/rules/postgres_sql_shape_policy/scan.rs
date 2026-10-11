@@ -14,8 +14,8 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     let mut fragment_findings = fragments::Findings::default();
     for path in files
@@ -182,14 +182,6 @@ pub(super) fn scan(
         }
     }
     fragment_findings.extend(&mut findings);
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
-    findings.dedup_by(|left, right| {
-        left.source_offset == right.source_offset
-            && left.rule == right.rule
-            && left.file == right.file
-            && left.line == right.line
-            && left.message == right.message
-            && left.target == right.target
-    });
+    findings.sort();
     Ok(findings)
 }

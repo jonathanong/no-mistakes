@@ -18,7 +18,6 @@ pub(super) fn scan(
         let rel = sql_rel(root, &file.path);
         for constraint in &file.unnamed_constraints {
             findings.push(RuleFinding {
-        source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: constraint.line.max(1),

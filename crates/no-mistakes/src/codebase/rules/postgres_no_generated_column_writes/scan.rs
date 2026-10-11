@@ -5,7 +5,6 @@ use crate::codebase::postgres::dml::writes::positional_insert_hits;
 use crate::codebase::postgres::{
     recovered_sql_may_write_columns, EmbeddedSqlFileFacts, SqlStatementFileFacts, SqlWriteColumns,
 };
-use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use history::{events_before, snapshots, Catalogs};
 use std::path::{Path, PathBuf};
@@ -16,7 +15,7 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let schema_files = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)
         .map_err(|error| {
             anyhow::anyhow!(
@@ -33,8 +32,11 @@ pub(super) fn scan(
         .collect();
     let tables = super::catalog::live_tables(&schema);
     let finals = Catalogs::build(&tables, opts);
-    let mut findings =
-        super::catalog::stale_extra_findings_from_tables(&tables, &opts.extra_generated_columns);
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
+    findings.extend(super::catalog::stale_extra_findings_from_tables(
+        &tables,
+        &opts.extra_generated_columns,
+    ));
     findings.extend(super::catalog::stale_trigger_findings(
         &tables,
         &opts.trigger_maintained_columns,
@@ -83,14 +85,14 @@ pub(super) fn scan(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
 /// An opaque tail may introduce another write even when recovered targets
 /// are literal and untracked. Only an empty applicable catalog is safe.
 fn extend_unanalyzable<'a>(
-    findings: &mut Vec<RuleFinding>,
+    findings: &mut crate::codebase::rules::PostgresFindings,
     file: &str,
     embedded: &EmbeddedSqlFileFacts,
     _statements: &[SqlStatementFileFacts],
@@ -108,7 +110,7 @@ fn extend_unanalyzable<'a>(
 }
 
 fn extend_writes<'a>(
-    findings: &mut Vec<RuleFinding>,
+    findings: &mut crate::codebase::rules::PostgresFindings,
     file: &str,
     statements: &[SqlStatementFileFacts],
     dedup: &mut crate::codebase::rules::VariantFindingDedup,

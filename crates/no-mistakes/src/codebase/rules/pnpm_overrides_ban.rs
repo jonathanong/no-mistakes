@@ -150,7 +150,6 @@ fn check_package_json(
 fn finding(root: &Path, path: &Path, line: usize, message: impl Into<String>) -> RuleFinding {
     let file = relative_slash_path(root, path);
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.clone(),
         line,

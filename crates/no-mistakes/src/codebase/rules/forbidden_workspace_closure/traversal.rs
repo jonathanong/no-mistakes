@@ -83,7 +83,6 @@ impl FindingSink<'_> {
         let file = relative_slash_path(self.root, &node.manifest);
         let chain_text = chain.join(" -> ");
         self.findings.push(RuleFinding {
-        source_offset: None,
             rule: RULE_ID.to_string(),
             file,
             line: 1,

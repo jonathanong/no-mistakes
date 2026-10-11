@@ -173,7 +173,6 @@ fn check_package_json_value(
             let spec = val.as_str().unwrap_or("");
             if is_blocked_specifier(spec) {
                 findings.push(RuleFinding {
-                    source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line: 1,

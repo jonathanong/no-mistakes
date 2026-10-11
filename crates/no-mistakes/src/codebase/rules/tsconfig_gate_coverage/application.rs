@@ -148,7 +148,6 @@ fn validate_allowlist(
 
 pub(super) fn project_finding(file: &str, message: String) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,
@@ -160,7 +159,6 @@ pub(super) fn project_finding(file: &str, message: String) -> RuleFinding {
 
 fn config_finding(file: &str, target: &str, message: String) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

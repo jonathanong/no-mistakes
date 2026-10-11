@@ -115,7 +115,6 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
                 let full_path = relative_slash_path(root, file);
                 if let Some(msg) = check_relative(rel, spec, test_dir, &test_globs, &full_path) {
                     findings.push(RuleFinding {
-                        source_offset: None,
                         rule: RULE_ID.to_string(),
                         file: full_path,
                         line: 1,

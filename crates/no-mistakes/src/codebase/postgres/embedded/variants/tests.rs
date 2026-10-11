@@ -411,3 +411,6 @@ fn scalar_falsy_arms_are_binds_while_untaken_fragment_guards_are_absent() {
     assert_eq!(optional, ["SELECT 7 ", "SELECT 7 LIMIT 1"]);
     assert!(calls[7..].iter().all(EmbeddedSqlCall::is_unanalyzable));
 }
+
+#[path = "tests/logical.rs"]
+mod logical;

@@ -56,3 +56,22 @@ fn effectful_switch_labels_and_discriminants_keep_executed_sql_opaque() {
     assert_eq!(calls[7].kind, EmbeddedSqlKind::ImmutableLocal);
     assert_eq!(calls[7].sql_text.as_deref(), Some("SELECT 99"));
 }
+
+#[test]
+fn switch_label_calls_keep_direct_entry_sql_and_bodies_keep_fallthrough_sql() {
+    let calls = calls("variants-switch-label-calls.ts");
+    assert_eq!(calls.len(), 5);
+    assert_eq!(texts(&calls[0]), ["SELECT id FROM users"]);
+    assert_eq!(texts(&calls[2]), ["SELECT id FROM accounts"]);
+    assert!(texts(&calls[1]).contains(&"SELECT id FROM users OFFSET 1"));
+    let mut body = texts(&calls[3]);
+    body.sort();
+    assert_eq!(
+        body,
+        [
+            "SELECT id FROM accounts LIMIT 1 OFFSET 2",
+            "SELECT id FROM accounts OFFSET 2"
+        ]
+    );
+    assert!(texts(&calls[4]).contains(&"SELECT id FROM accounts LIMIT 1 OFFSET 2"));
+}

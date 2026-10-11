@@ -168,7 +168,6 @@ fn is_word_char(ch: char) -> bool {
 
 fn finding(file: &str, line: usize, message: String) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

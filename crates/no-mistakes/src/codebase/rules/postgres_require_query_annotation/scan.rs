@@ -11,8 +11,8 @@ pub(super) fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+) -> Result<crate::codebase::rules::PostgresFindings> {
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files
         .iter()
@@ -61,7 +61,6 @@ pub(super) fn scan_with_sources(
                 findings.extend(findings_for_call(&rel, &projected));
             } else if opts.unanalyzable_sql == super::UnanalyzableSql::Report {
                 findings.push(RuleFinding {
-        source_offset: None,
                     rule: RULE_ID.to_string(), file: rel.clone(), line: call.line as usize,
                     message: format!("{rel}:{}: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation", call.line),
                     import: None, target: Some("annotation".to_string()),
@@ -69,7 +68,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
@@ -84,7 +83,6 @@ pub(super) fn findings_for_call(
         return Vec::new();
     }
     vec![RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: call.line as usize,

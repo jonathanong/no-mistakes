@@ -123,7 +123,6 @@ pub(super) fn stale_extras(
                 .is_some_and(|column| column.is_generated)
         })
         .map(|extra| RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file: ".no-mistakes.yml".to_string(),
             line: 1,

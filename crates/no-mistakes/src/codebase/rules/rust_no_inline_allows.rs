@@ -102,7 +102,6 @@ pub(crate) fn findings_from_parsed(
         .findings
         .into_iter()
         .map(|finding| RuleFinding {
-        source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: finding.line,

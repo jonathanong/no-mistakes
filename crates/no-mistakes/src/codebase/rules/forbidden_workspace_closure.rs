@@ -179,7 +179,6 @@ fn build_globset(patterns: &[String]) -> std::result::Result<GlobSet, globset::E
 
 fn config_finding(message: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: ".no-mistakes.yml".to_string(),
         line: 1,

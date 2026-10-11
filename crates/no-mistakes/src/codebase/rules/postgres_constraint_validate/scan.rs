@@ -71,7 +71,6 @@ fn constraint_name(key: &str) -> &str {
 
 fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

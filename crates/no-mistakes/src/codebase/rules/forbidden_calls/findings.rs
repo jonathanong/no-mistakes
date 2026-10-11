@@ -16,7 +16,6 @@ pub(super) fn finding_for_site(
     let target = target_label(root, site, &options.targets, &options.unknown_calls)?;
     let message = application.message.as_deref().unwrap_or("forbidden call");
     Some(RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &site.file),
         line: site.line as usize,

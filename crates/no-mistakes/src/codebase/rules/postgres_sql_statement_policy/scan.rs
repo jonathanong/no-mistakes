@@ -10,10 +10,10 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> anyhow::Result<Vec<RuleFinding>> {
+) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let schema_facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for file in &schema_facts {
         let rel = sql_rel(root, &file.path);
@@ -23,7 +23,6 @@ pub(super) fn scan(
                 continue;
             }
             findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: statement.line.max(1),
@@ -83,7 +82,6 @@ pub(super) fn scan(
                         crate::codebase::postgres::statements::SqlFactSite::StatementKind(index),
                         source.as_deref(),
                         RuleFinding {
-                            source_offset: None,
                             rule: RULE_ID.into(),
                             file: rel.clone(),
                             line: statement.line.max(1),
@@ -100,13 +98,12 @@ pub(super) fn scan(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
 fn unanalyzable(file: &str, line: usize) -> RuleFinding {
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.into(),
         file: file.into(),
         line,
@@ -126,7 +123,6 @@ fn settings(
     uses.iter()
         .filter(|setting| opts.settings.contains(&setting.name))
         .map(|setting| RuleFinding {
-            source_offset: None,
             rule: RULE_ID.into(),
             file: file.into(),
             line: setting.line.max(1),

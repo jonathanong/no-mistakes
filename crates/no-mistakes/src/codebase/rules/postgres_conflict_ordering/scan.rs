@@ -22,9 +22,9 @@ pub(super) fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<crate::codebase::rules::PostgresFindings> {
     let catalog = facts.postgres_ordering_catalog(&opts.schema_catalog_path)?;
-    let mut findings = Vec::new();
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files
         .iter()
@@ -147,7 +147,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 

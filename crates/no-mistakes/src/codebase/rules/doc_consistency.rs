@@ -95,7 +95,6 @@ fn scan_with_sources(
             let mut local = Vec::new();
             if !rel_set.contains(req_file.as_str()) {
                 local.push(RuleFinding {
-                    source_offset: None,
                     rule: RULE_ID.to_string(),
                     file: req_file.clone(),
                     line: 1,
@@ -112,7 +111,6 @@ fn scan_with_sources(
                 let heading_text = heading.trim_start_matches('#').trim();
                 if !crate::codebase::markdown_sections::has_section(&content, heading_text) {
                     local.push(RuleFinding {
-                        source_offset: None,
                         rule: RULE_ID.to_string(),
                         file: req_file.clone(),
                         line: 1,
@@ -128,7 +126,6 @@ fn scan_with_sources(
                 }
                 if !content.contains(spec.substring.as_str()) {
                     local.push(RuleFinding {
-                        source_offset: None,
                         rule: RULE_ID.to_string(),
                         file: req_file.clone(),
                         line: 1,
@@ -158,7 +155,6 @@ fn scan_with_sources(
                     .iter()
                     .filter(|banned| content.contains(banned.as_str()))
                     .map(|banned| RuleFinding {
-                        source_offset: None,
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line: 1,

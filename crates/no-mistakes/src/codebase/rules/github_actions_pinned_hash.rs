@@ -178,7 +178,6 @@ fn check_source(
                 format!("trailing comment must be `# v1.2.3` or `# 1.87.0`, got `{trailing}`")
             };
             findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line: line_num,

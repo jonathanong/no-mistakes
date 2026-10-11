@@ -106,7 +106,6 @@ fn scan_with_sources(
             .expect("cycle packages are collected from the workspace graph");
         let file = relative_slash_path(root, &dir.join("package.json"));
         findings.push(RuleFinding {
-            source_offset: None,
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: 1,

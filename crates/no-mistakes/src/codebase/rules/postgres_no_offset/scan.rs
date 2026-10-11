@@ -15,8 +15,8 @@ pub(super) fn scan(
     files: &[PathBuf],
     facts: &CheckFactMap,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+) -> Result<crate::codebase::rules::PostgresFindings> {
+    let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for path in files {
         let rel = relative_slash_path(root, path);
@@ -102,7 +102,7 @@ pub(super) fn scan(
             }
         }
     }
-    crate::codebase::rules::sort_postgres_findings(&mut findings);
+    findings.sort();
     Ok(findings)
 }
 
@@ -113,7 +113,6 @@ fn dynamic_select_prefix(call: &EmbeddedSqlCall) -> bool {
 fn unanalyzable(file: &str, call: &EmbeddedSqlCall) -> RuleFinding {
     let line = call.line.max(1) as usize;
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -132,7 +131,6 @@ fn finding(file: &str, offset: &SqlOffsetFact, ordinal: usize) -> RuleFinding {
         OffsetUse::Other => "do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
     };
     RuleFinding {
-        source_offset: None,
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

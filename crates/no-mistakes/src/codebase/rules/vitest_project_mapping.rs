@@ -111,7 +111,6 @@ fn scan(
         match matches.as_slice() {
             [_one] => {}
             [] => findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,
@@ -120,7 +119,6 @@ fn scan(
                 target: None,
             }),
             many => findings.push(RuleFinding {
-                source_offset: None,
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,
