@@ -16,7 +16,10 @@ fn canonical_visible_paths_use_multiple_workers_without_changing_membership() {
         root.join("link/src/entry.ts"),
         root.join("missing.ts"),
     ]
-    .repeat(32);
+    .into_iter()
+    .cycle()
+    .take(128)
+    .collect::<Vec<_>>();
     let expected = paths
         .iter()
         .filter_map(|path| real_path(path))
