@@ -94,9 +94,11 @@ Every schema node must declare one string `type`: `object`, `array`, `string`,
   an open producer cannot satisfy a closed consumer. An open producer also
   fails if an undeclared producer property has a constrained consumer schema.
 - Arrays: a single supported `items` schema is required and checked recursively.
-- Primitive values: either nonempty `enum` or `const`. Producer values must be
-  a subset of consumer values. Values must match their declared type; duplicate
-  enum values are rejected. Unrestricted boolean and null types are finite.
+- Primitive values: optional nonempty `enum` or `const`. Values must match their
+  declared type; duplicate enum values are rejected. When the consumer constrains
+  values, producer values must be a subset. Unrestricted boolean and null types
+  are finite; other unrestricted primitive producers require compatible
+  unrestricted consumer types.
 - String `title`, `description`, and `$comment` annotations do not restrict values.
 
 Integer producers can satisfy number consumers. Number producers satisfy
