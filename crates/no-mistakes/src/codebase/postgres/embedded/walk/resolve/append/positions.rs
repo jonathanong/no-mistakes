@@ -5,7 +5,7 @@ use crate::codebase::postgres::embedded::{
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{CallExpression, Expression};
 
-pub(super) fn fragment(
+pub(in crate::codebase::postgres::embedded::walk) fn fragment(
     call: &CallExpression<'_>,
     visitor: &ScopeVisitor<'_>,
     offset: u32,
@@ -29,7 +29,11 @@ pub(super) fn fragment(
     (line, positions)
 }
 
-fn renumber(positions: &mut [EmbeddedSqlSourcePosition], sql: &str, offset: u32) {
+pub(in crate::codebase::postgres::embedded::walk) fn renumber(
+    positions: &mut [EmbeddedSqlSourcePosition],
+    sql: &str,
+    offset: u32,
+) {
     for position in positions {
         let original_column = position.sql_column;
         for (index, (at, _)) in sql
@@ -51,7 +55,7 @@ fn renumber(positions: &mut [EmbeddedSqlSourcePosition], sql: &str, offset: u32)
     }
 }
 
-pub(super) fn append(
+pub(in crate::codebase::postgres::embedded::walk) fn append(
     positions: &mut Vec<EmbeddedSqlSourcePosition>,
     prefix: &str,
     origin: u32,

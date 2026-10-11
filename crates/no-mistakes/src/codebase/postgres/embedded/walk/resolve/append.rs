@@ -5,7 +5,7 @@ use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 
-mod positions;
+pub(in crate::codebase::postgres::embedded::walk) mod positions;
 
 pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>) {
     let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
