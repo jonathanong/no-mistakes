@@ -62,7 +62,7 @@ fn parallel_fallback_walk_uses_the_active_rayon_worker_budget() {
             .expect("construct scoped Rayon pool");
 
         pool.install(|| {
-            assert_eq!(super::super::discovery::fallback_walk_threads(), workers);
+            assert_eq!(super::super::fallback_walk_threads(), workers);
         });
     }
 }
