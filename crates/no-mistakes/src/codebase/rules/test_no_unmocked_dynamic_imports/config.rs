@@ -1,6 +1,7 @@
 mod discovery;
 mod filter;
 mod prepared;
+mod project_setups;
 mod rule_targets;
 
 use crate::config::v2::NoMistakesConfig;
@@ -14,10 +15,12 @@ pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
 pub(crate) use filter::test_filter_from_visible;
 pub use filter::{test_filter, TestFilter};
 pub(super) use prepared::prepare_from_visible;
+pub(super) use project_setups::{explicit_project_setup_data, setup_contexts_for_test_precomputed};
 
 pub struct ConfigSetupData {
     filter: TestFilter,
     pub setup_files: Vec<PathBuf>,
+    explicit_project: bool,
 }
 
 impl ConfigSetupData {
@@ -97,54 +100,10 @@ fn precompute_setup_data_from_config_files_inner(
         result.push(ConfigSetupData {
             filter,
             setup_files,
+            explicit_project: false,
         });
     }
     Ok(result)
-}
-
-fn explicit_project_setup_data(
-    root: &Path,
-    config: &NoMistakesConfig,
-    visible_files: Option<&crate::fx::PathSet>,
-) -> Result<Vec<ConfigSetupData>> {
-    let mut data = Vec::new();
-    for (name, project) in &config.tests.vitest.projects {
-        if project.setup_files.is_empty() {
-            continue;
-        }
-        anyhow::ensure!(
-            !project.include.is_empty(),
-            "tests.vitest.projects.{name}.setup_files requires a nonempty include matcher"
-        );
-        let filter = TestFilter {
-            include: build_globset(&project.include)?,
-            include_regex: Vec::new(),
-            exclude: build_globset(&project.exclude)?,
-        };
-        let mut setup_files = Vec::new();
-        for setup in &project.setup_files {
-            let relative = Path::new(setup);
-            anyhow::ensure!(
-                !setup.is_empty()
-                    && !relative.is_absolute()
-                    && relative.components().all(|part| matches!(part, std::path::Component::Normal(_) | std::path::Component::CurDir)),
-                "tests.vitest.projects.{name}.setup_files contains invalid repository-relative path {setup:?}"
-            );
-            let path = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
-            anyhow::ensure!(
-                visible_files.map_or_else(|| path.is_file(), |visible| visible.contains(&path)),
-                "tests.vitest.projects.{name}.setup_files path {setup:?} is missing from the analysis file inventory"
-            );
-            setup_files.push(path);
-        }
-        setup_files.sort();
-        setup_files.dedup();
-        data.push(ConfigSetupData {
-            filter,
-            setup_files,
-        });
-    }
-    Ok(data)
 }
 
 pub fn setup_files_for_test_precomputed(

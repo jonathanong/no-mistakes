@@ -130,29 +130,35 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
             test_files
                 .into_par_iter()
                 .map(|file| {
-                    per_test::analyze(
-                        per_test::Request {
-                            root,
-                            config,
-                            resolver: &resolver,
-                            graph,
-                            graph_files: &graph_files,
-                            visible_files: &visible_files,
-                            manual_mocks: &manual_mocks,
-                            setup_data,
-                            shared,
-                            dependency_cache: &dependency_cache,
-                            defer_suppression,
-                        },
-                        file,
-                    )
+                    let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
+                    config::setup_contexts_for_test_precomputed(&rel_path, setup_data)
+                        .into_iter()
+                        .map(|setup_files| {
+                            per_test::analyze(
+                                per_test::Request {
+                                    root,
+                                    config,
+                                    resolver: &resolver,
+                                    graph,
+                                    graph_files: &graph_files,
+                                    visible_files: &visible_files,
+                                    manual_mocks: &manual_mocks,
+                                    setup_files: &setup_files,
+                                    shared,
+                                    dependency_cache: &dependency_cache,
+                                    defer_suppression,
+                                },
+                                file.clone(),
+                            )
+                        })
+                        .collect::<Result<Vec<_>>>()
                 })
                 .collect::<Result<Vec<_>>>()
         })?;
 
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
-    for result in per_test {
+    for result in per_test.into_iter().flatten() {
         let reachable_suppression_file = result.reachable_suppression_file;
         for finding in result.direct_findings {
             findings.push(finding);
@@ -173,8 +179,13 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         .into_iter()
         .zip(suppression_sources)
         .collect::<Vec<_>>();
-    paired
-        .sort_by(|(a, _), (b, _)| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
+    paired.sort_by(|(a, source_a), (b, source_b)| {
+        (&a.file, a.line, &a.target)
+            .cmp(&(&b.file, b.line, &b.target))
+            .then_with(|| a.cmp(b))
+            .then_with(|| source_a.cmp(source_b))
+    });
+    paired.dedup();
     let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
     Ok(PreparedDynamicFindings {
         findings,

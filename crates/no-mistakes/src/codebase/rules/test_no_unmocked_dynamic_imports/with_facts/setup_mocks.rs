@@ -1,14 +1,12 @@
-use super::super::{config, resolve_mock_specifiers};
+use super::super::resolve_mock_specifiers;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use anyhow::Result;
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub(super) struct Request<'a> {
-    pub(super) root: &'a Path,
-    pub(super) setup_data: &'a [config::ConfigSetupData],
-    pub(super) test_file: &'a Path,
+    pub(super) setup_files: &'a [PathBuf],
     pub(super) resolver: &'a crate::codebase::ts_resolver::ScopedImportResolver<'a>,
     pub(super) graph: &'a DepGraph,
     pub(super) graph_files: &'a GraphFiles,
@@ -17,20 +15,13 @@ pub(super) struct Request<'a> {
 }
 
 pub(super) fn with_facts(request: Request<'_>) -> Result<HashSet<PathBuf>> {
-    let Request {
-        root,
-        setup_data,
-        test_file,
-        resolver,
-        graph,
-        graph_files,
-        visible_files,
-        shared,
-    } = request;
+    from_group(request.setup_files, &request)
+}
+
+fn from_group(files: &[PathBuf], request: &Request<'_>) -> Result<HashSet<PathBuf>> {
     let mut mocks = HashSet::new();
-    let rel_path = crate::codebase::ts_source::relative_slash_path(root, test_file);
-    for setup in config::setup_files_for_test_precomputed(&rel_path, setup_data) {
-        let Some(file_facts) = shared.ts.get(&setup) else {
+    for setup in files {
+        let Some(file_facts) = request.shared.ts.get(setup) else {
             anyhow::bail!("missing shared facts for {}", setup.display());
         };
         if let Some(error) = &file_facts.parse_error {
@@ -41,18 +32,20 @@ pub(super) fn with_facts(request: Request<'_>) -> Result<HashSet<PathBuf>> {
         };
         mocks.extend(resolve_mock_specifiers(
             &facts.mock_specifiers,
-            &setup,
-            resolver,
-            Some(graph_files),
+            setup,
+            request.resolver,
+            Some(request.graph_files),
         ));
+    }
+    for setup in files {
         mocks.extend(super::per_test::helper_mocks::collect(
             super::per_test::helper_mocks::Request {
-                test_file: &setup,
-                graph,
-                graph_files,
-                visible_files,
-                resolver,
-                shared,
+                test_file: setup,
+                graph: request.graph,
+                graph_files: request.graph_files,
+                visible_files: request.visible_files,
+                resolver: request.resolver,
+                shared: request.shared,
                 excluded: &mocks,
             },
         ));

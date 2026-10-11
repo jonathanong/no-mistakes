@@ -1,6 +1,6 @@
 use super::super::checker::{check_dynamic_import, DynamicCheckContext};
 use super::super::RULE_ID;
-use super::super::{config, reachable, resolve_mock_specifiers};
+use super::super::{reachable, resolve_mock_specifiers};
 use super::PerTestResult;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
@@ -23,7 +23,7 @@ pub(super) struct Request<'a> {
     pub(super) graph_files: &'a GraphFiles,
     pub(super) visible_files: &'a crate::fx::PathSet,
     pub(super) manual_mocks: &'a HashSet<PathBuf>,
-    pub(super) setup_data: &'a [config::ConfigSetupData],
+    pub(super) setup_files: &'a [PathBuf],
     pub(super) shared: &'a CheckFactMap,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     pub(super) defer_suppression: bool,
@@ -38,7 +38,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         graph_files,
         visible_files,
         manual_mocks,
-        setup_data,
+        setup_files,
         shared,
         dependency_cache,
         defer_suppression,
@@ -64,9 +64,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
     let mut mocks = manual_mocks.clone();
     mocks.extend(super::setup_mocks::with_facts(
         super::setup_mocks::Request {
-            root,
-            setup_data,
-            test_file: &file,
+            setup_files,
             resolver,
             graph,
             graph_files,

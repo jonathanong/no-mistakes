@@ -10,4 +10,5 @@ tests:
         include: [other/**/*.test.mts, overlap/**/*.test.mts]
 rules:
   - rule: test-no-unmocked-dynamic-imports
-    scope: repository
+    tests:
+      vitest: [web]
