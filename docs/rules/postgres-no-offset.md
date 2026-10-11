@@ -30,6 +30,13 @@ mutating a separate builder keeps every finite statement checked. A copied primi
 bind, an ordinary final bind, or an append to a fresh nested fragment keeps its
 existing analysis. Static sibling calls still report OFFSET at the original
 branch line, including when other calls become dynamic.
+Pure identifier rebinding in the final interpolation keeps the earlier captured
+fragment checked, including its OFFSET. Later reads can recover the replacement
+while its snapshot remains available under the existing alias rules.
+An assignment whose right-hand side mutates or escapes a builder still follows
+`unanalyzableSql`.
+This also applies when an append or mutating helper consumes the builder returned
+by the assignment.
 
 ```yaml
 rules:
@@ -120,6 +127,15 @@ also follow this boundary, including TypeScript wrappers and literal computed
 property names. Arguments are evaluated before the invoked body. Referencing
 `.call` without invoking it, using `.bind(...)`, or passing a callback keeps
 that callback body inert.
+Creating an unused generator iterator also leaves its body unexecuted, so body
+writes alone do not make the query unanalyzable, including literal `.call(...)`
+and `.apply(...)` invocations. Arguments and parameter defaults still execute.
+Advancing or consuming an iterator (for example, `.next()`,
+`for...of`, spread, tagged template interpolation, or `yield*`), storing it, or
+passing it to an unknown consumer retains conservative body checks, including
+parameter and destructuring defaults.
+Stored iterators may remain unanalyzable even when their body is never advanced;
+the heuristic does not trace iterator aliases.
 An earlier body may be skipped by direct entry or executed by fallthrough, so
 its SQL assignments cannot supply a later case's complete statement. Bindings
 it changes become opaque for later cases. The default `fail` reports those
@@ -131,6 +147,12 @@ let gate = false;
 switch (2) {
   case (gate = true, 1): break;
   case 2: query(gate ? "SELECT 1 OFFSET 1" : "SELECT 1"); // unanalyzable
+}
+
+let unchanged = false;
+switch (2) {
+  case (function* () { unchanged = true; })(): break;
+  case 2: query(unchanged ? "SELECT 1 OFFSET 1" : "SELECT 1"); // passes
 }
 ```
 

@@ -14,14 +14,20 @@ mod exception_flow;
 mod executed_fragments;
 #[path = "cli_check_rules_postgres_variants/executor_argument_effects.rs"]
 mod executor_argument_effects;
+#[path = "cli_check_rules_postgres_variants/final_assignment_consumers.rs"]
+mod final_assignment_consumers;
 #[path = "cli_check_rules_postgres_variants/final_interpolation.rs"]
 mod final_interpolation;
+#[path = "cli_check_rules_postgres_variants/final_rebinding.rs"]
+mod final_rebinding;
 #[path = "cli_check_rules_postgres_variants/guard_alias.rs"]
 mod guard_alias;
 #[path = "cli_check_rules_postgres_variants/helper_guards.rs"]
 mod helper_guards;
 #[path = "cli_check_rules_postgres_variants/relative_consumer_escape.rs"]
 mod relative_consumer_escape;
+#[path = "cli_check_rules_postgres_variants/switch_generators.rs"]
+mod switch_generators;
 #[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
 mod switch_labels;
 #[path = "cli_check_rules_postgres_variants/switch_member_invocations.rs"]

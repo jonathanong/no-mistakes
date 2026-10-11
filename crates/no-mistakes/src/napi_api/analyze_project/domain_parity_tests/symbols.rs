@@ -54,6 +54,58 @@ fn prepared_symbols_signature_and_flow_match_standalone_and_parse_once() {
 }
 
 #[test]
+fn visible_graph_only_symbol_targets_keep_standalone_parity_with_check() {
+    let root = repo_fixture(&["fixtures", "napi", "analyze-project-symbol-graph-only"]);
+    let standalone_check = parse_json(
+        crate::napi_api::check_json_impl(
+            crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string()),
+        )
+        .unwrap(),
+    );
+
+    for (file, exported) in [("exported.mts", true), ("empty.mts", false)] {
+        let standalone_symbols = parse_json(
+            crate::napi_api::symbols_json_impl(
+                crate::napi_api::options::test_json_arg(
+                    json!({ "root": root, "files": [file], "include": "both" }).to_string(),
+                ),
+            )
+            .unwrap(),
+        );
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        crate::ast::begin_parse_count(&root);
+        let batch = analyze_project_json_impl(
+            crate::napi_api::options::test_json_arg(
+                json!({
+                    "root": root,
+                    "reports": [
+                        { "type": "symbols", "mode": "list", "files": [file], "include": "both" },
+                        { "type": "check" }
+                    ]
+                })
+                .to_string(),
+            ),
+        )
+        .unwrap();
+        let counts = crate::ast::finish_parse_count(&root);
+        let work = observer.snapshot().work;
+        let results = report_results(&batch);
+
+        assert_eq!(results, [standalone_symbols, standalone_check.clone()]);
+        assert_eq!(counts.get(&root.join(file)), Some(&1), "{counts:#?}");
+        assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
+        assert!(work["source.reads"] <= 2, "{work:#?}");
+        assert_eq!(
+            results[0]["files"][0]["exports"]
+                .as_array()
+                .is_some_and(|exports| !exports.is_empty()),
+            exported
+        );
+    }
+}
+
+#[test]
 fn mixed_check_and_symbols_keep_explicit_ignored_targets_in_the_one_parse_scope() {
     let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());

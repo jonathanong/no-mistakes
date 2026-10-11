@@ -33,8 +33,8 @@ const wrapped = { test: { testTimeout: 1 } };
 const wrappedCallback = (() => { return wrapped; }) as () => unknown;
 defineConfig(wrappedCallback);
 
-const merged = { test: { testTimeout: 1 } };
-mergeConfig(defineConfig(() => { return merged; }), { test: { hookTimeout: 1 } });
+// Merge controls use supported object-form operands.
+mergeConfig({ test: { testTimeout: 1 } }, { test: { hookTimeout: 1 } });
 
 const hookOptions = { timeout: 1 };
 beforeEach(() => {}, hookOptions);

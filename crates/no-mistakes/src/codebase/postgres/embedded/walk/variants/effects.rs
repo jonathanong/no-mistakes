@@ -3,9 +3,11 @@ mod identities;
 mod projection;
 
 use super::super::{resolve::functions::reassigned::for_each_assigned_name, ScopeVisitor};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, CallExpression, ConditionalExpression,
-    Expression, Function, LogicalExpression, SimpleAssignmentTarget, UpdateExpression,
+    ArrowFunctionExpression, AssignmentExpression, AssignmentOperator, AssignmentTarget,
+    CallExpression, ConditionalExpression, Expression, Function, LogicalExpression,
+    SimpleAssignmentTarget, UpdateExpression,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -18,6 +20,7 @@ impl ScopeVisitor<'_> {
             prefixes: None,
             identities: None,
             uncertain: false,
+            captured: false,
         };
         effects.visit_expression(expression);
         effects.found
@@ -30,6 +33,7 @@ impl ScopeVisitor<'_> {
             prefixes: Some(Vec::new()),
             identities: None,
             uncertain: false,
+            captured: true,
         };
         effects.identities = Some(identities::EffectIdentities::default());
         effects.visit_expression(expression);
@@ -51,6 +55,7 @@ impl ScopeVisitor<'_> {
             prefixes: Some(Vec::new()),
             identities: None,
             uncertain: false,
+            captured: false,
         };
         effects.visit_expression(expression);
         let prefixes = effects.prefixes.unwrap();
@@ -77,6 +82,7 @@ struct Effects<'visitor, 'source> {
     prefixes: Option<Vec<PrefixEffect>>,
     identities: Option<identities::EffectIdentities>,
     uncertain: bool,
+    captured: bool,
 }
 
 impl<'a> Visit<'a> for Effects<'_, '_> {
@@ -130,10 +136,17 @@ impl<'a> Visit<'a> for Effects<'_, '_> {
         }
     }
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
-        for_each_assigned_name(&assignment.left, &mut |name| self.collect_binding(name));
-        if !self.found || self.prefixes.is_some() {
-            walk::walk_assignment_expression(self, assignment);
+        if self.captured && identifier_rebinding(assignment) {
+            // Earlier interpolations already hold the old object reference.
+            // Rebinding its name is harmless, but the RHS may still mutate it.
+            self.visit_expression(&assignment.right);
+        } else {
+            for_each_assigned_name(&assignment.left, &mut |name| self.collect_binding(name));
+            if !self.found || self.prefixes.is_some() {
+                walk::walk_assignment_expression(self, assignment);
+            }
         }
+        // Later consumers in the same expression observe the new binding.
         if let Some(identities) = &mut self.identities {
             self.uncertain |= identities.assign(self.visitor, assignment);
         }
@@ -149,4 +162,19 @@ impl<'a> Visit<'a> for Effects<'_, '_> {
     // Creating a callback does not execute mutations inside its body.
     fn visit_function(&mut self, _: &Function<'a>, _: ScopeFlags) {}
     fn visit_arrow_function_expression(&mut self, _: &ArrowFunctionExpression<'a>) {}
+}
+
+fn identifier_rebinding(assignment: &AssignmentExpression<'_>) -> bool {
+    if assignment.operator != AssignmentOperator::Assign {
+        return false;
+    }
+    let expression = match &assignment.left {
+        AssignmentTarget::AssignmentTargetIdentifier(_) => return true,
+        AssignmentTarget::TSAsExpression(value) => &value.expression,
+        AssignmentTarget::TSSatisfiesExpression(value) => &value.expression,
+        AssignmentTarget::TSNonNullExpression(value) => &value.expression,
+        AssignmentTarget::TSTypeAssertion(value) => &value.expression,
+        _ => return false,
+    };
+    matches!(unwrap_ts_wrappers(expression), Expression::Identifier(_))
 }

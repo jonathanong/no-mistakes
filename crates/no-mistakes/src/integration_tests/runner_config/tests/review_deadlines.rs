@@ -60,7 +60,7 @@ fn evidence(
 }
 
 #[test]
-fn review_deadlines_opaque_roots_fail_but_literal_empty_workspaces_remain_prepared() {
+fn review_deadlines_static_callbacks_prepare_but_opaque_workspaces_fail() {
     let opaque = [
         "roots/functional/vitest.config.ts",
         "roots/async/vitest.config.ts",
@@ -73,7 +73,8 @@ fn review_deadlines_opaque_roots_fail_but_literal_empty_workspaces_remain_prepar
         .unwrap();
     assert_eq!(vitest.status, RunnerDeadlineStatus::Failed);
     assert_eq!(vitest.configs.len(), 3);
-    assert!(vitest.configs.iter().all(|config| matches!(config, ConfigDeadlineEvidence::Failed { error, .. } if error.contains("unsupported opaque"))));
+    assert_eq!(vitest.configs.iter().filter(|config| matches!(config, ConfigDeadlineEvidence::Prepared { projects, .. } if projects.len() == 1)).count(), 2);
+    assert!(vitest.configs.iter().any(|config| matches!(config, ConfigDeadlineEvidence::Failed { error, .. } if error.contains("unsupported opaque"))));
     let empty = [
         "roots/empty/vitest.workspace.ts",
         "roots/wrapped-empty/vitest.workspace.ts",
@@ -111,7 +112,7 @@ fn review_deadlines_explicit_globs_use_visible_inventory_and_ignore_nonmatches()
         .unwrap();
     assert_eq!(vitest.configs.len(), 2);
     assert!(vitest.configs.iter().any(|config| matches!(config, ConfigDeadlineEvidence::Prepared { config, projects } if config == "roots/static/vitest.config.ts" && projects.len() == 1)));
-    assert!(vitest.configs.iter().any(|config| matches!(config, ConfigDeadlineEvidence::Failed { config, .. } if config == "roots/functional/vitest.config.ts")));
+    assert!(vitest.configs.iter().any(|config| matches!(config, ConfigDeadlineEvidence::Prepared { config, projects } if config == "roots/functional/vitest.config.ts" && projects.len() == 1)));
     let result = evidence(&["absent/*.ts", "[unclosed"], &[], &[]);
     let vitest = result
         .iter()

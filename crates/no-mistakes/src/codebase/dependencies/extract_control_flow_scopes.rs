@@ -52,7 +52,8 @@ fn visit_for_in_statement_with_scope<'a>(
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-in");
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(collector, &statement.left);
-    collector.visit_for_statement_left(&statement.left);
+    // The binding target (including destructuring defaults) runs per iteration.
+    with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.visit_expression(&statement.right);
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
@@ -65,7 +66,7 @@ fn visit_for_of_statement_with_scope<'a>(
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-of");
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(collector, &statement.left);
-    collector.visit_for_statement_left(&statement.left);
+    with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.visit_expression(&statement.right);
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
@@ -101,5 +102,27 @@ fn visit_while_statement_per_item<'a>(collector: &mut ImportCollector, statement
 }
 fn visit_do_while_statement_per_item<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "do");
-    walk::walk_do_while_statement(collector, statement);
+    collector.visit_statement(&statement.body);
+    // Only prove simple bodies: explicit exits can skip even the first test.
+    with_conditional_execution(collector, !do_body_reaches_test(&statement.body), |collector| collector.visit_expression(&statement.test));
+}
+
+fn do_body_reaches_test(statement: &Statement<'_>) -> bool {
+    match statement {
+        Statement::EmptyStatement(_)
+        | Statement::ExpressionStatement(_)
+        | Statement::VariableDeclaration(_)
+        | Statement::FunctionDeclaration(_)
+        | Statement::DebuggerStatement(_) => true,
+        Statement::BlockStatement(block) => block.body.iter().all(do_body_reaches_test),
+        Statement::IfStatement(branch) => {
+            do_body_reaches_test(&branch.consequent)
+                && branch.alternate.as_ref().is_none_or(do_body_reaches_test)
+        }
+        // An unlabeled continue in this body proceeds to the do-while test.
+        Statement::ContinueStatement(statement) => statement.label.is_none(),
+        // Nested loops, labels, switches and exception handling need a fuller
+        // completion model. Retain their conservative classification.
+        _ => false,
+    }
 }

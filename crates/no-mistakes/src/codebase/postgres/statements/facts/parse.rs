@@ -67,9 +67,11 @@ fn extract_sql_statement_facts_with_placeholder_positions(
             placeholder_positions,
         ),
         Err(_) => {
-            let (located, functions) = crate::codebase::postgres::parse::partition_function_sources(
-                parse_postgres_sql_lenient_with_sources(sql, prepared.normalized()),
-            );
+            let (mut located, functions) =
+                crate::codebase::postgres::parse::partition_function_sources(
+                    parse_postgres_sql_lenient_with_sources(sql, prepared.normalized()),
+                );
+            prepared.adopt_recovered_arbiters(&mut located);
             let (statements, sources): (Vec<_>, Vec<_>) = located
                 .into_iter()
                 .map(|located| (located.statement, located.source))

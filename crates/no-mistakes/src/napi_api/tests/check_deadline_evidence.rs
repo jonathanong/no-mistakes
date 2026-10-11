@@ -244,7 +244,7 @@ fn public_review_deadlines_globs_opaque_roots_and_aliases_preserve_ordinary_repo
         .iter()
         .find(|runner| runner["framework"] == "vitest")
         .unwrap();
-    assert_eq!(vitest["configs"].as_array().unwrap().len(), 3);
+    assert_eq!(vitest["configs"].as_array().unwrap().len(), 4);
     assert!(vitest["configs"]
         .as_array()
         .unwrap()

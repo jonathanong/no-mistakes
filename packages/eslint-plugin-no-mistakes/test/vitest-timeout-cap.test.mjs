@@ -26,6 +26,44 @@ describe(rule, () => {
       [[29, "timeout"]],
     );
   });
+  it("keeps callable property references unknown while preserving config callback projection", () => {
+    assert.deepEqual(
+      findings("callable-primitive-reads", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [5, "unknown"],
+        [8, "unknown"],
+        [12, "unknown"],
+        [15, "unknown"],
+        [18, "unknown"],
+        [24, "timeout"],
+        [27, "timeout"],
+        [30, "unknown"],
+        [30, "unknown"],
+      ],
+    );
+  });
+  it("keeps shared copy coercion conservative while preserving scalar updates and replacement", () => {
+    assert.deepEqual(
+      findings("copy-coercion", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [3, 7, 11, 33, 38, 42, 46, 56, 62, 66, 71, 80, 91].flatMap((line) =>
+        Array(3).fill([line, "unknown"]),
+      ),
+    );
+  });
+  it("unwraps whole-member scalar writes without losing overwritten or shared receivers", () => {
+    assert.deepEqual(
+      findings("copy-coercion-wrappers", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [14, 14, 14, 23, 23, 23, 33, 33, 34].map((line) => [line, "unknown"]),
+    );
+    assert.deepEqual(findings("copy-coercion-wrappers"), []);
+  });
   it("keeps primitive property reads known without admitting object escapes or writes", () => {
     assert.deepEqual(
       findings("primitive-reads", { unknownValues: "finding" }).map(({ line, messageId }) => [

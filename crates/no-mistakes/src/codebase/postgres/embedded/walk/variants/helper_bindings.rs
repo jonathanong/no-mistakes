@@ -38,6 +38,11 @@ impl ScopeVisitor<'_> {
                     }
                     current = self.returned_builder_argument(call)?;
                 }
+                Expression::AssignmentExpression(assignment)
+                    if assignment.operator == AssignmentOperator::Assign =>
+                {
+                    current = &assignment.right;
+                }
                 _ => return None,
             }
         }
@@ -135,6 +140,13 @@ impl ScopeVisitor<'_> {
                 }
                 Expression::SequenceExpression(sequence) => {
                     pending.extend(sequence.expressions.last())
+                }
+                Expression::AssignmentExpression(assignment)
+                    if assignment.operator == AssignmentOperator::Assign =>
+                {
+                    // Assignment returns its RHS object, so an enclosing
+                    // append or helper can still mutate that original builder.
+                    pending.push(&assignment.right);
                 }
                 Expression::CallExpression(call) if !self.fresh_builder_call(call) => {
                     pending.extend(self.returned_builder_argument(call))

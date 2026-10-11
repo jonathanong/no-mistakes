@@ -41,7 +41,9 @@ pub(super) fn judge(
     let generated_sources =
         super::generated::arbiter_source_columns(insert, conflict, catalog.schema);
     let arbiter_columns = match &conflict.arbiter {
-        SqlConflictArbiter::Columns(columns) => columns.clone(),
+        SqlConflictArbiter::Columns(columns) | SqlConflictArbiter::Expressions { columns, .. } => {
+            columns.clone()
+        }
         _ => Vec::new(),
     };
     catalog

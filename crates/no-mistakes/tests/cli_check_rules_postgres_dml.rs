@@ -221,3 +221,66 @@ fn postgres_idempotent_insert_flags_volatile_where_proof() {
     assert!(!out.status.success(), "{body}");
     assert!(body.contains("re-fire"), "{body}");
 }
+
+#[test]
+fn postgres_idempotent_insert_expression_arbiters_fail_closed() {
+    let root = fixture("postgres-idempotent-insert", "expression-arbiters");
+    let out = check_json(&root);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    for file in [
+        "expression.sql",
+        "mixed.sql",
+        "parenthesized.sql",
+        "quoted.sql",
+        "plain_column_control.sql",
+        "unsupported.sql",
+    ] {
+        assert!(
+            findings.iter().any(|finding| finding["file"]
+                .as_str()
+                .is_some_and(|path| path.ends_with(file))),
+            "missing {file}: {report}"
+        );
+    }
+    assert!(
+        findings.iter().any(|finding| finding["file"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("unsupported.sql"))
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("cannot prove"))),
+        "{report}"
+    );
+}
+
+#[test]
+fn postgres_idempotent_insert_expression_safe_updates_pass() {
+    let root = fixture("postgres-idempotent-insert", "expression-arbiters-safe");
+    let out = check_json(&root);
+    assert!(out.status.success(), "{}", stdout(&out));
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+}
+
+#[test]
+fn postgres_idempotent_insert_recovered_expression_still_fails() {
+    let root = fixture("postgres-idempotent-insert", "expression-arbiter-recovered");
+    let out = check_json(&root);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert!(
+        findings.iter().any(|finding| finding["file"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("malformed-neighbor.sql"))
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("expression arbiter depends on email"))),
+        "{report}"
+    );
+}

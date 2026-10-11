@@ -8,6 +8,36 @@ const findings = (name, options = {}) =>
     "fixture.test.ts",
   );
 describe("vitest-timeout-cap value stability", () => {
+  it("uses runtime-valid object merges without admitting captured callback effects", async () => {
+    assert.deepEqual(
+      findings("merge-object-controls", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [5, "timeout"],
+        [6, "invalid"],
+        [11, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("merge-object-controls").map(({ line, messageId }) => [line, messageId]),
+      [
+        [5, "timeout"],
+        [6, "invalid"],
+      ],
+    );
+    await assert.doesNotReject(
+      import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/merge-object-controls.ts"),
+    );
+  });
+  it("keeps callback merge operands only as explicit runtime-rejection controls", async () => {
+    assert.deepEqual(findings("unsupported-merge-callbacks", { unknownValues: "finding" }), []);
+    await assert.rejects(
+      import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/unsupported-merge-callbacks.ts"),
+      /Cannot merge config in form of callback/,
+    );
+  });
   it("ignores erased type queries while retaining real callback consumers", () => {
     assert.deepEqual(
       findings("config-type-only-references", { unknownValues: "finding" }).map(
@@ -26,6 +56,24 @@ describe("vitest-timeout-cap value stability", () => {
     assert.deepEqual(
       findings("config-type-only-references").map(({ line, messageId }) => [line, messageId]),
       [[9, "timeout"]],
+    );
+  });
+  it("retains unknown returned objects when identity-preserving config results escape", () => {
+    const actual = findings("config-result-escapes", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [5, 9, 13, 19, 23, 27, 31, 35, 44],
+    );
+    assert.equal(actual.filter(({ messageId }) => messageId === "unknown").length, 24);
+    assert.deepEqual(
+      actual
+        .filter(({ messageId }) => messageId !== "unknown")
+        .map(({ line, messageId }) => [line, messageId]),
+      [[44, "timeout"]],
+    );
+    assert.deepEqual(
+      findings("config-result-escapes").map(({ line, messageId }) => [line, messageId]),
+      [[44, "timeout"]],
     );
   });
   it("preserves returned config bindings through known consumers and immutable callback aliases", () => {
@@ -48,6 +96,34 @@ describe("vitest-timeout-cap value stability", () => {
     );
     assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
     assert.deepEqual(findings("config-return-escapes"), []);
+  });
+  it("preserves copied values through wrapper paths and independent cached proofs", () => {
+    assert.deepEqual(
+      findings("wrapped-shallow-copy-writes", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        // The wrapped receiver does not yet establish a scalar initializer proof.
+        [10, "unknown"],
+        [55, "timeout"],
+        [64, "unknown"],
+        [64, "unknown"],
+        [64, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("wrapped-shallow-copy-writes").map(({ line, messageId }) => [line, messageId]),
+      [[55, "timeout"]],
+    );
+  });
+  it("keeps wrapped shared children and uncertain indices, iterables and aliases unknown", () => {
+    const actual = findings("wrapped-shallow-copy-mutations", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [3, 7, 12, 19, 23, 27, 32, 39, 44, 46, 54, 67],
+    );
+    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.deepEqual(findings("wrapped-shallow-copy-mutations"), []);
   });
   it("keeps shallow copy writes independent while checking each copy's own stability", () => {
     assert.deepEqual(

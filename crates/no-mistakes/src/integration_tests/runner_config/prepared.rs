@@ -106,6 +106,27 @@ impl PreparedIntegrationRunnerConfigs {
             unavailable: false,
             results,
             analyses,
+            has_config_export: Self::has_config_export(program),
+        })
+    }
+
+    fn has_config_export(program: &oxc_ast::ast::Program<'_>) -> bool {
+        use oxc_ast::ast::{AssignmentTarget, Expression, Statement};
+        program.body.iter().any(|statement| match statement {
+            Statement::ExportDefaultDeclaration(_) => true,
+            Statement::ExpressionStatement(statement) => {
+                let Expression::AssignmentExpression(assignment) = &statement.expression else {
+                    return false;
+                };
+                let AssignmentTarget::StaticMemberExpression(member) = &assignment.left else {
+                    return false;
+                };
+                member.property.name == "exports"
+                    && crate::ast::expression_path(&member.object)
+                        .as_deref()
+                        .is_some_and(|parts| parts == ["module"])
+            }
+            _ => false,
         })
     }
 

@@ -2,17 +2,23 @@
 const { resolveVariable } = require("./async-target-bindings");
 const { unwrapTransparentParent } = require("./async-ast");
 const { configCall, overrideCall, invocationArguments } = require("./vitest-timeout-bindings");
+const { memberName, pathStartsWith, wrappedCopyPath } = require("./vitest-timeout-copy-paths");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
-function createValueStability(context, primitiveMemberRead) {
+function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
   // Values, copies, and callbacks need independent consumer proofs and cycle guards.
   const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
   const active = { value: new Set(), shallow: new Set(), callback: new Set() };
-  function stable(variable, mode = "value") {
-    const cache = memo[mode],
+  function stable(variable, mode = "value", copyPath = []) {
+    const table = memo[mode],
       visiting = active[mode];
     if (!variable || visiting.has(variable)) return false;
-    if (cache.has(variable)) return cache.get(variable);
+    // One outer binding can contain copies at different paths. Their proofs
+    // must not share a boolean result even though their consumer mode matches.
+    if (!table.has(variable)) table.set(variable, new Map());
+    const cache = table.get(variable),
+      key = JSON.stringify(copyPath);
+    if (cache.has(key)) return cache.get(key);
     visiting.add(variable);
     const result =
       variable.defs.every(
@@ -27,10 +33,10 @@ function createValueStability(context, primitiveMemberRead) {
           reference.init ||
           // TypeScript's erased references cannot expose a runtime value.
           typeOnlyUse(reference.identifier) ||
-          (!reference.isWrite() && safeUse(reference.identifier, mode)),
+          (!reference.isWrite() && safeUse(reference.identifier, mode, copyPath)),
       );
     visiting.delete(variable);
-    cache.set(variable, result);
+    cache.set(key, result);
     return result;
   }
   function typeOnlyUse(node) {
@@ -46,7 +52,20 @@ function createValueStability(context, primitiveMemberRead) {
       safeUse(node, "callback")
     );
   }
-  function safeUse(identifier, mode = "value") {
+  function confinedConfigResult(call) {
+    const node = unwrapTransparentParent(call);
+    const parent = node.parent;
+    if (parent?.type === "ExpressionStatement") return true;
+    // mergeConfig rejects callback operands before exposing their identity.
+    if (
+      parent?.type === "CallExpression" &&
+      configCall(parent, context) === "mergeConfig" &&
+      (parent.arguments[0] === node || parent.arguments[1] === node)
+    )
+      return true;
+    return safeUse(node, "callback");
+  }
+  function safeUse(identifier, mode = "value", copyPath = []) {
     let node = unwrapTransparentParent(identifier);
     if (mode === "callback") {
       const parent = node.parent;
@@ -58,13 +77,14 @@ function createValueStability(context, primitiveMemberRead) {
       return (
         parent?.type === "CallExpression" &&
         parent.arguments[0] === node &&
-        ["defineConfig", "defineProject"].includes(configCall(parent, context))
+        ["defineConfig", "defineProject"].includes(configCall(parent, context)) &&
+        confinedConfigResult(parent)
       );
     }
-    let memberDepth = 0;
+    const members = [];
     while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
+      members.push(memberName(node.parent, context));
       node = unwrapTransparentParent(node.parent);
-      memberDepth++;
     }
     const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
     let parent = node.parent;
@@ -73,13 +93,28 @@ function createValueStability(context, primitiveMemberRead) {
       (parent?.type === "UpdateExpression" && parent.argument === node) ||
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
-      // Replacing a copy's own property cannot mutate the source. Its children
-      // are still shared, so writes through a second member remain unsafe.
-      return mode === "shallow" && memberDepth === 1;
+      // The copied value may be inside a wrapper. Only its own property writes
+      // are independent; coercion of a shared object can still mutate its source.
+      return (
+        mode === "shallow" &&
+        members.length === copyPath.length + 1 &&
+        pathStartsWith(copyPath, members.slice(0, -1)) &&
+        (parent.type === "UnaryExpression" ||
+          (parent.type === "AssignmentExpression" &&
+            ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
+          scalarCopyWrite(node))
+      );
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
     if (memberRead) return true;
-    if (memberDepth) mode = "value";
+    if (members.length && mode === "shallow") {
+      if (members.length <= copyPath.length && pathStartsWith(copyPath, members))
+        copyPath = copyPath.slice(members.length);
+      else {
+        mode = "value";
+        copyPath = [];
+      }
+    }
     // Container copies can preserve nested references. Follow their existing binding too.
     while (
       parent &&
@@ -91,13 +126,25 @@ function createValueStability(context, primitiveMemberRead) {
       if (
         parent.type === "SpreadElement" &&
         (parent.parent.type === "ObjectExpression" || parent.parent.type === "ArrayExpression")
-      )
+      ) {
+        if (mode !== "shallow") copyPath = [];
         mode = "shallow";
+      }
+      if (mode === "shallow") {
+        const path = wrappedCopyPath(parent, node, copyPath, context);
+        if (path === null) {
+          mode = "value";
+          copyPath = [];
+        } else copyPath = path;
+      }
       node = parent;
       parent = node.parent;
     }
     if (parent?.type === "VariableDeclarator" && parent.init === node)
-      return parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), mode);
+      return (
+        parent.id.type === "Identifier" &&
+        stable(resolveVariable(parent.id, context), mode, copyPath)
+      );
     if (parent?.type === "CallExpression") {
       if (parent.callee === node) return false;
       // Public config/registration consumers are admitted; unknown helpers can mutate objects.

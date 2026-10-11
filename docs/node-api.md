@@ -546,7 +546,10 @@ APIs. `callSites` shares the request's prepared argument and call facts,
 including namespace calls and static lexical aliases while excluding shadowed
 bindings. Its ordinary resolver scope matches the standalone query even when
 companion reports use broader runner catalogs or ignored explicit roots;
-equivalent call graphs are reused. `effects` also supports binding-aware
+equivalent call graphs are reused. A `symbols` list report paired with `check`
+retains the standalone symbols result for every explicit file, including a
+visible file outside configured check candidates and a file with no exports.
+`effects` also supports binding-aware
 `effects.<kind>.targets` config
 selectors by exact import specifier and export path; its string lists retain
 spelling-based matching. `resolveCheck` import rows include `computed: true` for non-literal

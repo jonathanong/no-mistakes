@@ -91,6 +91,12 @@ Destructured bindings do not use their container initializer as the bound value;
 member reads that escape to an unknown consumer retain unresolved timeout values.
 Use a direct `const` object binding when its timeout needs static resolution.
 
+A shallow copy inside an object or array wrapper retains its boundary through
+known property paths and immutable aliases: `box.copy.timeout = 30_001` leaves
+the source's timeout known. Shared children below that copy remain uncertain.
+Unknown computed wrapper keys, array offsets after opaque spreads, and custom
+iterables retain conservative handling.
+
 Public Vitest 5 fixture tuples carry `auto`, `injected`, and `scope` options, not a
 fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
 registrar identity, so actual test and hook overrides on their returned APIs are
@@ -190,6 +196,16 @@ remains unknown. Bitwise operators remain unresolved rather than duration arithm
 Unresolved expressions still follow `unknownValues`; use `"finding"` to report
 them. This source rule does not inspect shell or Vitest CLI timeout flags.
 
+Replacing or deleting a shallow copy's own data property preserves its source.
+Increment, decrement, and arithmetic compound assignments preserve that source
+only when the copied property is proven numeric or null. Coercing a shared object
+can run `valueOf` or `Symbol.toPrimitive`, so its source stays unknown under
+`unknownValues: "finding"`. Logical assignment does not coerce the previous value.
+Type assertions and non-null assertions around the whole copied member preserve
+these checks, including rejection after the copied scalar is replaced by an object.
+Coercing a property through a wrapped copy receiver stays conservative when its
+scalar initializer cannot be proven; writes that do not coerce retain their copied path proof.
+
 Object exports (including exported declarations and aliases) and unproved consumer
 contexts such as yield, await, tagged templates, and computed property keys retain
 unknown values. Exported numeric scalar budgets remain supported. Object stability
@@ -202,7 +218,26 @@ object to the reader. For example, `Math.max(options.timeout, 0)` keeps an uncha
 unproved consumer, reading a getter, or writing a timeout still keeps analysis
 conservative.
 
+Callback confinement also follows identity-preserving `defineConfig` and
+`defineProject` results through immutable aliases and nested config helpers.
+Exports, unknown consumers, direct invocation, and mutation of those results
+leave the returned config unresolved. A standalone helper call preserves the
+confinement proof.
+
+Vitest re-exports Vite's `mergeConfig`, which accepts object-form configs. Passing
+`defineConfig(make)` as a merge operand still passes a callback and throws. Invoke
+the callback first to supply an object, for example
+`mergeConfig({}, defineConfig(make)())`. This runtime-valid invocation does not
+establish stability of captured bindings: those remain unresolved under the
+existing conservative callback proof. Literal object-form merge operands retain
+normal timeout analysis; no general detachment of nested references is inferred.
+
 Erased TypeScript `typeof` type queries, including qualified property queries,
 do not participate in the runtime stability proof. A callback or config binding
 can retain a known timeout when it also appears in a type alias. Runtime
 consumers still require the same confinement proof.
+
+Function-valued properties and callable aliases remain object references even when
+the configuration evaluator can resolve their return values. Passing such a member
+to an unproved consumer retains unknown diagnostics; supported `defineConfig`
+callbacks still use their returned configuration.

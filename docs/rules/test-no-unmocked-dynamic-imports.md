@@ -68,6 +68,12 @@ imported helper does not apply if another helper's mock prevents it from loading
 CommonJS helpers loaded through unconditional top-level literal `require()`
 calls are included. Calls behind skipped or unknown conditions, such as
 `false && require('./mock-helper')`, do not supply mock coverage.
+The same applies to loop binding defaults and assignment targets when the
+loop has no iterations, and to a `do...while` test skipped by an early `break`.
+Tests of `do...while` loops with simple, normally completing bodies execute
+at least once, so their unconditional literal `require()` helpers do supply
+coverage. Unknown nested loop, label, switch, or exception-handling completion
+remains conservative.
 `require.resolve()` does not execute a helper.
 For a test matched by multiple selected projects, the rule checks its dynamic
 imports in each project context. A mock from one project's setup does not
@@ -88,6 +94,10 @@ Implicit `vitest.workspace.*` and `vitest.projects.*` catalogs supply project
 matchers and setups, taking precedence over `vitest.config.*` during discovery.
 Recovered named projects remain separate executions even when only some of
 them have explicit project policies.
+Zero-parameter ESM `defineConfig` and `defineProject` callbacks with a literal
+object expression or a sole literal return use the same project and root
+resolution as ordinary configs. Comments and strings do not declare setups.
+Unsupported opaque callbacks do not supply global setup mocks.
 Repository checks also preserve unnamed Vitest executions independently.
 Explicit Vitest configs do not suppress automatic Jest config discovery.
 An explicit named policy replaces the recovered project's include/exclude
@@ -132,6 +142,14 @@ when another selected test reaches it without that mock.
 
 There are no rule-local options. The selected `tests.vitest` or `tests.jest`
 project determines the test universe and mock semantics.
+
+When multiple Vitest projects are selected, each project's `include` and
+`exclude` patterns describe one execution. A test excluded by one project is
+still checked if another selected project runs it. A test excluded by every
+selected execution is skipped. Rule-level `exclude` patterns apply to all
+executions. An application `include` or code-project scope still limits the
+selected execution, and each execution uses its own setup files when deciding
+whether a dynamic import is mocked.
 
 ## Valid example
 

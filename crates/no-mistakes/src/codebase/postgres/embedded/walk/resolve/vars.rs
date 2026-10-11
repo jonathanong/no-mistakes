@@ -110,12 +110,17 @@ pub(super) fn record_declarator(
     } else {
         kind
     };
-    let sql_source_positions = super::super::super::source_positions::for_expression(
-        init,
-        visitor.source,
-        ident.span.start as usize,
-        line,
-    );
+    let sql_source_positions = super::compose::helper_provenance(init, visitor)
+        .filter(|provenance| sql.as_deref() == Some(provenance.sql.as_str()))
+        .map(|provenance| provenance.positions)
+        .unwrap_or_else(|| {
+            super::super::super::source_positions::for_expression(
+                init,
+                visitor.source,
+                ident.span.start as usize,
+                line,
+            )
+        });
     let builder_identity = visitor.builder_identity_for_init(init);
     let condition_key = is_const.then(|| visitor.declaration_choice_key(init, ident.span.start));
     let scope_index = if is_var {

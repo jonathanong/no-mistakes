@@ -395,6 +395,55 @@ fn global_check_runs_test_no_unmocked_dynamic_imports_rule() {
 }
 
 #[test]
+fn check_unions_selected_vitest_executions_before_excluding_tests() {
+    let root = fixture("codebase-analysis", "selected-vitest-excludes");
+    for config_file in [
+        ".no-mistakes.yml",
+        ".no-mistakes-b.yml",
+        ".no-mistakes-inline.yml",
+        ".no-mistakes-imported.yml",
+        ".no-mistakes-scope.yml",
+    ] {
+        let config = root.join(config_file);
+        let output = run(&[
+            "check",
+            "--root",
+            root.to_str().unwrap(),
+            "--config",
+            config.to_str().unwrap(),
+            "--format",
+            "json",
+        ]);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "{config_file}: {}",
+            stderr(&output)
+        );
+        let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+        assert_eq!(json["warnings"], serde_json::json!([]), "{config_file}");
+        let files = json["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|finding| finding["file"].as_str().unwrap())
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(
+            files,
+            ["shared/example.test.mts", "shared/setup.test.mts"]
+                .into_iter()
+                .collect(),
+            "{config_file}: {json}"
+        );
+        assert!(json["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|finding| { finding["target"] == "shared/real.mts" && finding["line"] == 3 }));
+    }
+}
+
+#[test]
 fn dynamic_import_reachability_cuts_mocked_intermediaries_per_test() {
     let root = fixture(
         "codebase-analysis",

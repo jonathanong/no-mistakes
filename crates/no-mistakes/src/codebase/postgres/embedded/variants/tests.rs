@@ -22,8 +22,12 @@ mod escape_effects;
 mod exception_flow;
 #[path = "tests/executor_argument_effects.rs"]
 mod executor_argument_effects;
+#[path = "tests/final_assignment_consumers.rs"]
+mod final_assignment_consumers;
 #[path = "tests/final_interpolation.rs"]
 mod final_interpolation;
+#[path = "tests/final_rebinding.rs"]
+mod final_rebinding;
 #[path = "tests/guard_alias.rs"]
 mod guard_alias;
 #[path = "tests/helper_effects.rs"]
@@ -36,6 +40,8 @@ mod metadata;
 mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
+#[path = "tests/switch_generators.rs"]
+mod switch_generators;
 #[path = "tests/switch_member_invocations.rs"]
 mod switch_member_invocations;
 #[path = "tests/switch_scalar_labels.rs"]

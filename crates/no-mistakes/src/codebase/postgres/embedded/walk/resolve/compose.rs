@@ -14,6 +14,32 @@ pub(in crate::codebase::postgres::embedded::walk) use builder::{
 pub(in crate::codebase::postgres::embedded::walk) use parameter_positions::contains_parameter_helper;
 pub(super) use parameter_positions::parameter_source_positions;
 
+pub(super) fn helper_provenance(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<functions::provenance::RecoveredSql> {
+    fn contains_helper(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
+        match unwrap_ts_wrappers(expr) {
+            Expression::CallExpression(call) => match unwrap_ts_wrappers(&call.callee) {
+                Expression::Identifier(name) => {
+                    visitor.functions.has_static_helper(name.name.as_str())
+                }
+                Expression::StaticMemberExpression(member) if member.property.name == "append" => {
+                    contains_helper(&member.object, visitor)
+                }
+                _ => false,
+            },
+            Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
+                contains_helper(&binary.left, visitor) || contains_helper(&binary.right, visitor)
+            }
+            _ => false,
+        }
+    }
+    contains_helper(expr, visitor)
+        .then(|| resolve_chain_recovered(expr, visitor))
+        .flatten()
+}
+
 pub(super) const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
 
 pub(super) fn classify_init(
@@ -93,21 +119,24 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
 /// declaration; the top-level declaration's own binding (e.g. a const-bound
 /// helper referencing itself) is not a shadow of itself.
 fn resolve_chain(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
+    resolve_chain_recovered(expr, visitor).map(|value| value.sql)
+}
+
+fn resolve_chain_recovered(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<functions::provenance::RecoveredSql> {
     let mut lookup = |call: &oxc_ast::ast::CallExpression<'_>, name: &str, depth: u8| {
         if visitor.shadowed_locally(name) {
             return None;
         }
-        visitor.functions.get_call(
-            call,
-            name,
-            depth,
-            &mut |tag| tag_shadowed(tag, visitor),
-            &|binding| recovered_complete_builder_binding_sql(binding, visitor),
-        )
+        depth.checked_sub(1)?;
+        visitor.functions.get_call_recovered(call, name, visitor)
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
     chain::resolve_expr(
         expr,
+        visitor.source,
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,
         &mut is_shadowed,
@@ -123,22 +152,19 @@ fn resolve_dynamic_chain_prefix(
         if visitor.shadowed_locally(name) {
             return None;
         }
-        visitor.functions.get_call(
-            call,
-            name,
-            depth,
-            &mut |tag| tag_shadowed(tag, visitor),
-            &|binding| recovered_complete_builder_binding_sql(binding, visitor),
-        )
+        depth.checked_sub(1)?;
+        visitor.functions.get_call_recovered(call, name, visitor)
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
     chain::resolve_dynamic_prefix(
         expr,
+        visitor.source,
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,
         &mut is_shadowed,
         visitor.functions.imported_sql_tags(),
     )
+    .map(|value| value.sql)
 }
 
 pub(super) fn untrusted_tag(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
@@ -184,14 +210,4 @@ pub(super) fn recovered_builder_binding_sql(
 ) -> Option<String> {
     let binding = visitor.lookup(name)?;
     binding.sql_builder.then_some(binding.sql).flatten()
-}
-
-fn recovered_complete_builder_binding_sql(
-    name: &str,
-    visitor: &ScopeVisitor<'_>,
-) -> Option<String> {
-    let binding = visitor.lookup(name)?;
-    (binding.sql_builder && binding.kind != EmbeddedSqlKind::Dynamic)
-        .then_some(binding.sql)
-        .flatten()
 }

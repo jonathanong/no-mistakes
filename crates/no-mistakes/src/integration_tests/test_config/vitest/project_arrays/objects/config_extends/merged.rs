@@ -3,7 +3,9 @@ use anyhow::Result;
 use oxc_ast::ast::{Expression, Program, Statement};
 use oxc_span::GetSpan;
 
+mod callback;
 mod public_calls;
+pub(in crate::integration_tests::test_config::vitest::project_arrays) use callback::callback_config_object;
 use public_calls::public_config_call;
 
 /// Parse only static `mergeConfig` arguments. Unknown arguments make the

@@ -9,6 +9,52 @@ const root = join(
 );
 
 test(
+  "compiled selected Vitest executions retain each project's exclusions",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
+    );
+    for (const config of [
+      ".no-mistakes.yml",
+      ".no-mistakes-b.yml",
+      ".no-mistakes-inline.yml",
+      ".no-mistakes-imported.yml",
+      ".no-mistakes-scope.yml",
+      ".no-mistakes-include.yml",
+      ".no-mistakes-missing-app-include.yml",
+      ".no-mistakes-rule-exclude.yml",
+    ]) {
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.warnings, []);
+      const expected = [["shared/example.test.mts", 3, "shared/real.mts"]];
+      // Project A's setup mock and exclusion cannot hide project B's execution.
+      if (
+        ![
+          ".no-mistakes-rule-exclude.yml",
+          ".no-mistakes-include.yml",
+          ".no-mistakes-missing-app-include.yml",
+        ].includes(config)
+      ) {
+        expected.push(["shared/setup.test.mts", 3, "shared/real.mts"]);
+      }
+      assert.deepEqual(
+        report.rules.map(({ file, line, target }) => [file, line, target]),
+        expected,
+        config,
+      );
+      const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+    }
+  },
+);
+
+test(
   "compiled broad checks retain imported Vitest project matchers",
   { skip: !compiled, timeout: 20_000 },
   async () => {
@@ -55,7 +101,7 @@ test(
 );
 
 test(
-  "compiled checks ignore skipped CommonJS helper mocks",
+  "compiled checks distinguish skipped and guaranteed CommonJS helper mocks",
   { skip: !compiled, timeout: 20_000 },
   async () => {
     const cjs = require("../index.js");
@@ -67,6 +113,10 @@ test(
     const options = { root: fixture, config: join(fixture, ".no-mistakes.yml") };
     const report = await cjs.check(options);
     assert.deepEqual(await esm.check(options), report);
+    const aggregateOptions = { ...options, reports: [{ type: "check" }] };
+    const aggregate = await cjs.analyzeProject(aggregateOptions);
+    assert.deepEqual(aggregate.reports[0].result, report);
+    assert.deepEqual(await esm.analyzeProject(aggregateOptions), aggregate);
     assert.deepEqual(report.warnings, []);
     assert.deepEqual(
       report.rules.map((finding) => [finding.file, finding.target]),
@@ -75,6 +125,38 @@ test(
         ["tests/setup-skipped.test.cjs", "src/setup-target.cjs"],
       ],
     );
+  },
+);
+
+test(
+  "compiled callback configs preserve project boundaries and syntax",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/callback-syntax",
+    );
+    for (const [config, expected, target] of [
+      [".no-mistakes.yml", "tests/multi.test.mts", "src/multi.mts"],
+      [".no-mistakes-root.yml", "web/tests/genuine.test.mts", "web/src/root-target.mts"],
+      [".no-mistakes-comments.yml", "tests/comments.test.mts", "src/comment.mts"],
+      [".no-mistakes-opaque.yml", "tests/opaque.test.mts", "src/opaque.mts"],
+    ]) {
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.warnings, []);
+      assert.deepEqual(
+        report.rules.map((finding) => [finding.file, finding.target]),
+        [[expected, target]],
+      );
+      const extended = await cjs.check({ ...options, includeRunnerConfigDeadlines: true });
+      const { runnerConfigDeadlines, ...ordinary } = extended;
+      assert.deepEqual(ordinary, report);
+      assert.ok(Array.isArray(runnerConfigDeadlines));
+    }
   },
 );
 

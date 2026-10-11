@@ -297,6 +297,13 @@ and known or opaque helper effects use this boundary. Primitive bind values are
 already copied, so reassigning their bindings in the final expression does not
 invalidate them. Ordinary final binds, a single mutating fragment interpolation,
 and appends to fresh nested fragments retain their existing recovery.
+Pure identifier reassignment in the final interpolation also preserves an
+earlier captured fragment: replacing the binding does not change that object.
+Later reads can recover the replacement while its snapshot remains available;
+existing conservative alias invalidation still applies. Mutations or escapes on
+the assignment's right-hand side still make the call `Dynamic`.
+An append or mutating helper that consumes the builder returned by an assignment
+also stays `Dynamic`; assigning the reference does not copy the builder.
 Executor arguments follow evaluation order. Proven later mutations of the same
 directly passed builder use its final state, including conditional or logical
 appends; primitive SQL arguments keep their earlier value copies. Uncertain
@@ -321,6 +328,18 @@ and fallthrough can see different statements, including different DML kinds.
 Merely creating or passing a callback does not execute its body. Literal SQL
 arguments and unchanged legacy constants retain their existing checks, while
 branching calls use the rule's `unanalyzableSql` policy.
+Invoking a generator in a label creates an iterator without executing its body.
+Its evaluated arguments and parameter defaults still count as effects. A visibly
+unused iterator therefore does not discard finite SQL versions merely because
+the generator body contains a write. Iterator consumption through a member call
+(including `.next()`), `for...of`, array or argument spread, tagged template
+interpolations, or `yield*` retains the conservative body check, including
+iterators returned by invoked literal
+closures. Iterators stored in bindings, including parameter and destructuring
+defaults, and unknown consumers keep that conservative check without tracing
+aliases or iterator steps; even a stored unused iterator may remain opaque.
+Ordinary invoked functions and arrows retain their body checks.
+Plain template string coercion does not advance a fresh native iterator.
 `try`, `catch`, and `finally` phases are inspected once, but exception paths are
 not enumerated. Finite execution snapshots are discarded before handlers and
 after each phase because an earlier operation may have thrown before completing.
