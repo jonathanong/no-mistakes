@@ -41,6 +41,8 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         path: PathBuf::from("file.ts"),
         executor_bindings: Vec::new(),
         call_spans: vec![(0, 0); calls.len()],
+        local_helpers: Default::default(),
+        pending_imported_calls: Vec::new(),
         source_comment_spans: Vec::new(),
         calls,
         fragments: Vec::new(),

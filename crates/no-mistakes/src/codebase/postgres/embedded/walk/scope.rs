@@ -55,6 +55,7 @@ impl ScopeVisitor<'_> {
                         initialized: false,
                         sql_builder,
                         sql_source_positions: Vec::new(),
+                        pending_imported_helper: None,
                     },
                 );
             }
@@ -82,6 +83,7 @@ impl ScopeVisitor<'_> {
                     initialized: false,
                     sql_builder: false,
                     sql_source_positions: Vec::new(),
+                    pending_imported_helper: None,
                 },
             );
         }
@@ -98,6 +100,7 @@ impl ScopeVisitor<'_> {
                 binding.sql_builder = false;
                 binding.sql = None;
                 binding.sql_source_positions.clear();
+                binding.pending_imported_helper = None;
                 return;
             }
         }
@@ -182,6 +185,7 @@ fn param_is_sql_statement(
 
 pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingState) {
     binding.kind = EmbeddedSqlKind::Dynamic;
+    binding.pending_imported_helper = None;
     binding.condition_key = None;
     binding.variants = None;
     if binding

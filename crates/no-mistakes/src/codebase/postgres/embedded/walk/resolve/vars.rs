@@ -29,6 +29,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
                 initialized: false,
                 sql_builder: false,
                 sql_source_positions: Vec::new(),
+                pending_imported_helper: None,
             });
         }
     }
@@ -103,6 +104,7 @@ pub(super) fn record_declarator(
     let line =
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
     let (sql, kind) = classify_init(init, is_const, visitor);
+    let pending_imported_helper = super::super::imported::unresolved_helper_name(init, visitor);
     // The helper returns its input builder. A stored result still aliases the
     // caller's binding, which may be appended later before execution.
     let kind = if super::compose::contains_parameter_helper(init, visitor) {
@@ -156,6 +158,7 @@ pub(super) fn record_declarator(
                 line,
                 initialized: true,
                 sql_source_positions,
+                pending_imported_helper,
             },
         );
     }
@@ -185,6 +188,7 @@ fn clear_binding(binding: &mut BindingState) {
     binding.sql = None;
     binding.sql_builder = false;
     binding.sql_source_positions.clear();
+    binding.pending_imported_helper = None;
     binding.condition_key = None;
     binding.variants = None;
     binding.builder_identity = None;

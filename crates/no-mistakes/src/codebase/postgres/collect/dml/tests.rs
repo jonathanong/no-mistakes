@@ -62,6 +62,7 @@ fn bound_relations_rebase_by_their_sql_column() {
         sql_line: 1,
         sql_column,
         source_line,
+        source_path: None,
     };
     let call = EmbeddedSqlCall {
         variants: Vec::new(),

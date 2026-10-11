@@ -31,6 +31,14 @@ pub(super) fn rebase_embedded_lines(
             position.source_line = source_line(position.sql_line, position.sql_column);
             position.source_offset =
                 call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column);
+            position.source_path = call
+                .sql_source_positions
+                .partition_point(|origin| {
+                    (origin.sql_line as usize, origin.sql_column as usize)
+                        <= (position.sql_line, position.sql_column)
+                })
+                .checked_sub(1)
+                .and_then(|index| call.sql_source_positions[index].source_path.clone());
         }
     }
     let physical_line = |site: SqlFactSite, line: usize, column: usize| {

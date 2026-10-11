@@ -2,6 +2,7 @@ use super::{placeholders, tags};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_span::GetSpan;
+use std::path::PathBuf;
 
 mod compose;
 pub(in crate::codebase::postgres::embedded) mod origins;
@@ -17,6 +18,8 @@ pub struct EmbeddedSqlSourcePosition {
     pub sql_line: u32,
     pub sql_column: u32,
     pub source_line: u32,
+    /// Present when SQL originated in a different module from its executor.
+    pub source_path: Option<PathBuf>,
 }
 
 pub(super) fn for_expression(
@@ -130,6 +133,7 @@ impl Positions {
                 sql_line: self.line,
                 sql_column: self.column,
                 source_line,
+                source_path: None,
             });
         }
     }

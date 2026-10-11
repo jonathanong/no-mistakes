@@ -102,7 +102,8 @@ impl CheckFactPlan {
     /// reject facts that were already collected in the same parse pass.
     pub(super) fn collected_ts_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
         let mut plan = self.graph;
-        plan.imports |= self.query_annotation;
+        plan.imports |=
+            self.query_annotation || self.embedded_sql || !self.embedded_sql_options.is_empty();
         if self.imports {
             plan.include(crate::codebase::ts_source::facts::TsFactPlan::imports());
         }

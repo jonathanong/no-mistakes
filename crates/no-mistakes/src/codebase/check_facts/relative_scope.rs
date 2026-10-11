@@ -14,6 +14,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod imported_sql;
+
 /// Promote relative scoped-executor candidates using the request resolver cache.
 ///
 /// Files with no candidates are left untouched. A missing package root drops them.
@@ -27,7 +29,7 @@ pub(super) fn project_relative_executor_scopes(
     let annotation = files
         .into_iter()
         .any(|(_, file)| !file.query_annotation.is_empty());
-    if !has_relative_candidates(files) && !annotation {
+    if !has_relative_candidates(files) && !annotation && !imported_sql::has_candidates(files) {
         return;
     }
     let tsconfig = tsconfig_for(session, root, sources);
@@ -55,6 +57,7 @@ pub(super) fn project_relative_executor_scopes(
             });
         }
     }
+    imported_sql::project(files, |specifier, from| resolver.resolve(specifier, from));
     if annotation {
         // Compatibility collectors lack a boundary catalog, but still reuse
         // their supplied inventory, sources and workspace. Prepared entrypoints

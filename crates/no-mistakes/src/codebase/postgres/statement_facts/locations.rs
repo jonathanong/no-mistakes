@@ -1,4 +1,5 @@
 use crate::fx::FxHashMap;
+use std::path::PathBuf;
 
 /// Internal identity of an occurrence in one prepared SQL projection.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -40,6 +41,7 @@ pub struct SqlFactPosition {
     pub sql_column: usize,
     pub source_line: usize,
     pub source_offset: Option<usize>,
+    pub source_path: Option<PathBuf>,
 }
 
 /// Provenance is populated only for complete variants, preserving legacy facts.
@@ -86,6 +88,7 @@ impl SqlVariantLocations {
                 sql_column: column.max(1),
                 source_line: line.max(1),
                 source_offset: None,
+                source_path: None,
             },
         );
     }

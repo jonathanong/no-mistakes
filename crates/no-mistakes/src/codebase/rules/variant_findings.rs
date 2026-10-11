@@ -25,12 +25,19 @@ impl VariantFindingDedup {
                 let disabled_call = source.is_some_and(|source| {
                     crate::codebase::ts_source::matching_disable_directive(
                         source,
-                        Some(locations.original_call_line),
+                        Some(
+                            position
+                                .source_path
+                                .as_ref()
+                                .map_or(locations.original_call_line, |_| {
+                                    position.source_line as u32
+                                }),
+                        ),
                         &finding.rule,
                     )
                     .is_some()
                 });
-                let line = if disabled_call {
+                let line = if disabled_call && position.source_path.is_none() {
                     locations.original_call_line as usize
                 } else {
                     position.source_line

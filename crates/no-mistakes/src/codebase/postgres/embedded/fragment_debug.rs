@@ -1,6 +1,12 @@
 use super::{EmbeddedSqlCall, EmbeddedSqlVariant, PendingRelativeScope};
 use std::path::PathBuf;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct PendingImportedSqlCall {
+    pub span: (u32, u32),
+    pub local: String,
+}
+
 /// A SQL fragment returned from a builder or appended to a
 /// statement builder. These are deliberately separate from executed calls:
 /// structural policies can inspect them without treating builder code as an
@@ -23,6 +29,11 @@ pub struct EmbeddedSqlFileFacts {
     pub calls: Vec<EmbeddedSqlCall>,
     /// Private call identities, parallel to `calls`; public summaries stay unchanged.
     pub(crate) call_spans: Vec<(u32, u32)>,
+    /// Same-file summaries collected during this file's single AST pass.
+    pub(crate) local_helpers:
+        crate::fx::FxHashMap<String, super::walk::resolve::functions::provenance::RecoveredSql>,
+    /// Executor arguments whose imported builder can be projected after resolution.
+    pub(crate) pending_imported_calls: Vec<PendingImportedSqlCall>,
     /// Real TypeScript comments from the same parse, excluding SQL literal text.
     pub(crate) source_comment_spans: Vec<(u32, u32)>,
     pub fragments: Vec<EmbeddedSqlFragment>,
@@ -52,5 +63,35 @@ impl std::fmt::Debug for EmbeddedSqlFileFacts {
             .field("matched_type_names", &self.matched_type_names)
             .field("pending_relative", &self.pending_relative)
             .finish()
+    }
+}
+
+impl EmbeddedSqlFileFacts {
+    pub(crate) fn apply_imported_helper(
+        &mut self,
+        span: (u32, u32),
+        recovered: super::walk::resolve::functions::provenance::RecoveredSql,
+    ) {
+        let Some(index) = self
+            .call_spans
+            .iter()
+            .position(|candidate| *candidate == span)
+        else {
+            return;
+        };
+        let call = &mut self.calls[index];
+        if call.kind != super::EmbeddedSqlKind::Dynamic
+            || call.sql_text.is_some()
+            || !call.variants.is_empty()
+        {
+            return;
+        }
+        let (sql, placeholders) =
+            super::placeholders::publish_placeholders_with_positions(recovered.sql);
+        call.sql_text = Some(sql);
+        call.kind = super::EmbeddedSqlKind::Composed;
+        call.declaration_line = Some(recovered.line);
+        call.sql_source_positions = recovered.positions;
+        call.recovered_placeholder_positions = placeholders;
     }
 }
