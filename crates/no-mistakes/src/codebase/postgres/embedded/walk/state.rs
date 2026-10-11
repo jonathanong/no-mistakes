@@ -22,7 +22,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) source: &'a str,
     pub(crate) query_members: bool,
     pub(crate) bindings: &'a HashSet<String>,
-    pub(crate) scoped: &'a ScopedExecutors,
+    pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
