@@ -13,20 +13,18 @@ it stays fast. Each call site reports the `file`, `line`, enclosing `caller`
 
 Argument shapes are coarse syntactic tags — `string`, `number`, `boolean`,
 `null`, `identifier`, `object`, `array`, `arrow`, `call`, `spread`, or `other` —
-with no type inference. Re-export barrels are followed, so call sites in files
-that import the function through a barrel are included (a barrel that locally
-shadows the re-exported name is an edge case that may over-report). Only direct identifier
-calls (`handler(...)`) match; namespace member calls (`ns.handler()`), indirect
-aliases (`const h = handler; h()`), and a local binding that shadows the import
-inside a nested scope are not resolved. In-file calls are searched under the
-export's public name, so a call to the local binding of a renamed export
-(`function impl(){}; export { impl as handler }`) may be missed. Import-then-
-re-export chains (`import { handler as h } from './x'; export { h }`) are not
-followed past the importing file; a type-only import (`import type { fn }`) is
-treated like any other binding, so a same-named value call in that file may be
-reported; and a file that fails to parse (e.g. mid-edit) contributes no call
-sites rather than failing the query, so results can be incomplete. Use `rg` on
-the returned files when exact call text matters.
+with no type inference. Named and star re-export barrels are followed
+transparently, including import-then-re-export chains; barrel files themselves
+are not scanned for calls. The defining file is scanned under the export's
+local binding, so calls to a renamed export's implementation
+(`function impl(){}; export { impl as handler }`) are included. Only direct
+identifier calls (`handler(...)`) match; namespace member calls (`ns.handler()`),
+indirect aliases (`const h = handler; h()`), and a local binding that shadows
+the import inside a nested scope are not resolved. A type-only import
+(`import type { fn }`) is treated like any other binding, so a same-named value
+call in that file may be reported. A file that fails to parse (e.g. mid-edit)
+contributes no call sites rather than failing the query, so results can be
+incomplete. Use `rg` on the returned files when exact call text matters.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 
