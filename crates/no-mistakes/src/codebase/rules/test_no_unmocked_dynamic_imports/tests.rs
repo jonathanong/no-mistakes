@@ -15,6 +15,7 @@ use std::sync::Arc;
 mod imported_helpers;
 mod mock_cut;
 mod mock_specifiers;
+mod project_setups;
 mod visibility;
 
 pub(super) fn fixture() -> PathBuf {

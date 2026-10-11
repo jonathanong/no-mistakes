@@ -27,6 +27,7 @@ fn configured_suite_filters_keep_explicit_globs_when_project_config_fails_to_loa
                 "openai".to_string(),
                 vec!["openai".to_string()],
             )]),
+            setup_files: Vec::new(),
         },
     );
     config.tests.vitest.projects.insert(
@@ -59,6 +60,7 @@ fn configured_suite_filters_use_explicit_globs_without_loading_project_config() 
                 "openai".to_string(),
                 vec!["openai".to_string()],
             )]),
+            setup_files: Vec::new(),
         },
     );
 

@@ -1,7 +1,6 @@
 use super::super::{config, resolve_mock_specifiers};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::graph::GraphFiles;
-use crate::codebase::ts_resolver::ImportResolution;
+use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use anyhow::Result;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -10,8 +9,10 @@ pub(super) fn with_facts(
     root: &Path,
     setup_data: &[config::ConfigSetupData],
     test_file: &Path,
-    resolver: &dyn ImportResolution,
+    resolver: &crate::codebase::ts_resolver::ScopedImportResolver<'_>,
+    graph: &DepGraph,
     graph_files: &GraphFiles,
+    visible_files: &crate::fx::PathSet,
     shared: &CheckFactMap,
 ) -> Result<HashSet<PathBuf>> {
     let mut mocks = HashSet::new();
@@ -31,6 +32,17 @@ pub(super) fn with_facts(
             &setup,
             resolver,
             Some(graph_files),
+        ));
+        mocks.extend(super::per_test::helper_mocks::collect(
+            super::per_test::helper_mocks::Request {
+                test_file: &setup,
+                graph,
+                graph_files,
+                visible_files,
+                resolver,
+                shared,
+                excluded: &mocks,
+            },
         ));
     }
     Ok(mocks)

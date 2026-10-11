@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/**/*.test.mts]
+        setup_files: [test-helpers/missing.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

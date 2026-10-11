@@ -124,12 +124,23 @@ tests:
       web:
         include: [web/**/*.test.ts]
         exclude: [web/**/*.generated.test.ts]
+        setup_files: [web/test-helpers/vitest.setup.web.mts]
 ```
 
 These policies are also used by `vitest-project-mapping` when that rule sets
 `explicitProjectsOnly: true`, and by [`forbidden-calls`](../rules/forbidden-calls.md)
 Vitest and Playwright roots (`vitest: true`, `playwright: true`, and named
 project lists).
+
+`setup_files` declares setup modules for this named Vitest project's matched
+tests. Paths are relative to the repository root, even when Vitest project
+definitions live in imported modules. `test-no-unmocked-dynamic-imports`
+recognizes mock registrations in these modules and their statically imported
+helpers. It merges them with setup files recovered from readable runner
+configs, then applies each project's include and exclude matchers independently.
+An explicit setup path must exist in the analysis file inventory, and a
+project with `setup_files` must have a nonempty `include` matcher; invalid or
+missing paths fail the check.
 
 ## Jest
 

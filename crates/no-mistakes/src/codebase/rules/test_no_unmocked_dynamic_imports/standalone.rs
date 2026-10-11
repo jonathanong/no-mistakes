@@ -38,6 +38,17 @@ pub(crate) fn check_inner(
         let facts = ast::extract(&file, &source)?;
         let mut mocks = manual_mocks.clone();
         mocks.extend(setup_mocks(root, &setup_data, &file, &setup_mock_map));
+        let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
+        for setup in config::setup_files_for_test_precomputed(&rel_path, &setup_data) {
+            mocks.extend(imported_helpers::collect(
+                graph,
+                &setup,
+                &visible_files,
+                &resolver,
+                &file_cache,
+                &mocks,
+            )?);
+        }
         mocks.extend(resolve_mock_specifiers(
             &facts.mock_specifiers,
             &file,
