@@ -1,43 +1,46 @@
 "use strict";
 const { resolveVariable } = require("./async-target-bindings");
-const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+const { unwrapExpression } = require("./async-ast");
+const { createDeletedValue } = require("./vitest-timeout-deleted-values");
 const { staticPropertyName } = require("./vitest-timeout-bindings");
 const { memberName } = require("./vitest-timeout-copy-paths");
 
 // Assignment can invoke an own or inherited setter. Prove a data descriptor
 // from syntax without evaluating the source whose stability is being checked.
 function createOwnDataProperty(context) {
-  function deleted(variable, seen = new Set(), ignoredDeletion) {
-    if (!variable || seen.has(variable)) return false;
-    seen = new Set(seen).add(variable);
-    return variable.references.some(({ identifier }) => {
-      let use = unwrapTransparentParent(identifier);
-      while (use.parent?.type === "MemberExpression" && use.parent.object === use)
-        use = unwrapTransparentParent(use.parent);
-      let parent = use.parent;
-      if (
-        parent?.type === "UnaryExpression" &&
-        parent.operator === "delete" &&
-        parent !== ignoredDeletion
-      )
-        return true;
-      while (
-        parent &&
-        ((parent.type === "Property" && parent.value === use) ||
-          parent.type === "ObjectExpression" ||
-          parent.type === "ArrayExpression" ||
-          parent.type === "SpreadElement")
-      ) {
-        use = unwrapTransparentParent(parent);
-        parent = use.parent;
-      }
+  const deleted = createDeletedValue(context);
+  function receiverDeleted(node, depth, ignoredDeletion, seen = new Set()) {
+    if (!node || seen.has(node)) return false;
+    seen = new Set(seen).add(node);
+    node = unwrapExpression(node);
+    if (node.type === "MemberExpression")
+      return receiverDeleted(node.object, depth + 1, ignoredDeletion, seen);
+    if (node.type === "Identifier") {
+      const variable = resolveVariable(node, context);
+      if (deleted(variable, depth, ignoredDeletion)) return true;
+      const def = variable?.defs[0];
       return (
-        parent?.type === "VariableDeclarator" &&
-        parent.init === use &&
-        parent.id.type === "Identifier" &&
-        deleted(resolveVariable(parent.id, context), seen, ignoredDeletion)
+        def?.type === "Variable" &&
+        def.parent.kind === "const" &&
+        def.node.id.type === "Identifier" &&
+        receiverDeleted(def.node.init, depth, ignoredDeletion, seen)
       );
-    });
+    }
+    // A wrapper alias can retain children through its own literal initializer.
+    if (depth && (node.type === "ObjectExpression" || node.type === "ArrayExpression")) {
+      const children = node.type === "ObjectExpression" ? node.properties : node.elements;
+      return children.some((child) =>
+        child?.type === "SpreadElement"
+          ? receiverDeleted(child.argument, depth, ignoredDeletion, seen)
+          : receiverDeleted(
+              child?.type === "Property" ? child.value : child,
+              depth - 1,
+              ignoredDeletion,
+              seen,
+            ),
+      );
+    }
+    return false;
   }
   function initializer(node, seen, ignoredDeletion) {
     node = unwrapExpression(node);
@@ -45,7 +48,7 @@ function createOwnDataProperty(context) {
       const variable = resolveVariable(node, context);
       const def = variable?.defs[0];
       // Deletion through an alias can expose an inherited setter later.
-      if (deleted(variable, new Set(), ignoredDeletion)) return null;
+      if (deleted(variable, 0, ignoredDeletion)) return null;
       return def?.type === "Variable" &&
         def.parent.kind === "const" &&
         def.node.id.type === "Identifier"
@@ -53,7 +56,9 @@ function createOwnDataProperty(context) {
         : null;
     }
     if (node.type === "MemberExpression")
-      return property(node.object, memberName(node, context), seen, ignoredDeletion)?.value ?? null;
+      return receiverDeleted(node, 0, ignoredDeletion)
+        ? null
+        : (property(node.object, memberName(node, context), seen, ignoredDeletion)?.value ?? null);
     return node;
   }
   function property(node, key, seen = new Set(), ignoredDeletion) {
@@ -61,7 +66,15 @@ function createOwnDataProperty(context) {
     seen = new Set(seen).add(node);
     const value = initializer(node, seen, ignoredDeletion);
     if (!value) return null;
-    if (value !== node) return property(value, key, seen, ignoredDeletion);
+    if (value !== node) {
+      const descriptor = property(value, key, seen, ignoredDeletion);
+      // A copied wrapper can preserve a child whose own descriptor was deleted.
+      return descriptor &&
+        node.type === "Identifier" &&
+        deleted(resolveVariable(node, context), 1, ignoredDeletion)
+        ? { ...descriptor, value: null }
+        : descriptor;
+    }
     if (node.type === "ArrayExpression") {
       if (key === "length") return { data: true, enumerable: false, value: null };
       const index = Number(key);
@@ -117,7 +130,11 @@ function createOwnDataProperty(context) {
     seen = new Set(seen).add(node);
     const value = initializer(node, seen, ignoredDeletion);
     if (!value) return null;
-    if (value !== node) return arrayValueAt(value, index, seen, ignoredDeletion);
+    if (value !== node) {
+      if (node.type === "Identifier" && deleted(resolveVariable(node, context), 1, ignoredDeletion))
+        return null;
+      return arrayValueAt(value, index, seen, ignoredDeletion);
+    }
     if (node.type !== "ArrayExpression") return null;
     let offset = 0;
     for (const element of node.elements) {
