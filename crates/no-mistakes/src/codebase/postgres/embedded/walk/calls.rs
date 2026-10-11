@@ -1,4 +1,5 @@
 use super::{resolve, ScopeVisitor};
+use crate::codebase::postgres::embedded::fragment_debug::PendingImportedSqlCall;
 use oxc_ast::ast::CallExpression;
 use oxc_ast_visit::walk;
 use oxc_span::GetSpan;
@@ -40,7 +41,21 @@ impl<'a> ScopeVisitor<'a> {
             self.set_variants(&name, values);
         }
         let before = (self.calls.len(), self.pending_calls.len());
+        let imported_helper = super::super::first_call_argument(call)
+            .and_then(|argument| super::imported::unresolved_helper_name(argument, self));
         resolve::record_executor_call(self, call);
+        if self.calls.len() > before.0 {
+            if let Some(local) = imported_helper {
+                if self.calls[before.0].kind == super::EmbeddedSqlKind::Dynamic
+                    && self.calls[before.0].sql_text.is_none()
+                {
+                    self.pending_imported_calls.push(PendingImportedSqlCall {
+                        span: (call.span.start, call.span.end),
+                        local,
+                    });
+                }
+            }
+        }
         let arguments = self.begin_executor_arguments(call, before);
         self.record_argument_append_effects(&append_effect, call.span.start);
         let invocation = self.begin_argument_invocation(call);

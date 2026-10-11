@@ -118,6 +118,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
                 initialized: false,
                 sql_builder: false,
                 sql_source_positions: Vec::new(),
+                pending_imported_helper: None,
             },
         );
     }

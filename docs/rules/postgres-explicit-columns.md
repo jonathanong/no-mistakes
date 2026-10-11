@@ -139,13 +139,15 @@ WITH recent AS (SELECT * FROM orders WHERE id > $1) SELECT id FROM recent;
 when that name is in `relations` and the query stars it. The CTE reports the
 inner `SELECT *`.
 
-When a same-file helper returns a static SQL template, a finding points to the
-star in that helper's literal. Assignment to a local variable and static
-`.append()` fragments retain the line of each original literal, including
-separate stars in a composed query. An imported SQL tag such as
-`sql-template-strings` is supported inside these helpers.
-Calls to SQL-returning functions imported from another source file are outside
-the rule's current static SQL recovery scope.
+When a local or directly imported helper returns a static SQL template, a
+finding points to the star in that helper's source file and literal. Assignment
+to a local variable and static `.append()` fragments retain the file and line
+of each original literal, including separate stars in a composed query. An
+imported SQL tag such as `sql-template-strings` is supported inside these
+helpers. The caller must be included in the check; an unused exported helper
+does not create a finding. Imported helper recovery supports direct named
+exports and zero-argument calls through relative imports. Dynamic arguments,
+re-exports, and computed helper calls remain unanalyzable.
 
 ## Fix
 
@@ -164,7 +166,8 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`,
 `-- no-mistakes-disable-next-line`, and `-- no-mistakes-disable-file` for
 `postgres-explicit-columns`. Findings point to each star projection, and
 embedded SQL parse failures point to their host call or declaration, so line
-suppression applies at the affected query.
+suppression applies at the affected query. For a recovered imported helper,
+line suppression at the original SQL literal applies to that finding.
 
 ## Related rules
 

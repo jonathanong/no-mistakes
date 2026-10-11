@@ -82,6 +82,8 @@ pub fn extract_embedded_sql_from_program(
         executor_bindings,
         calls: collected.calls,
         call_spans: collected.call_spans,
+        local_helpers: collected.local_helpers,
+        pending_imported_calls: collected.pending_imported_calls,
         source_comment_spans: program
             .comments
             .iter()

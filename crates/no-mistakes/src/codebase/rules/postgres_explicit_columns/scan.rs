@@ -5,6 +5,9 @@ use crate::codebase::postgres::SchemaCatalog;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
+mod source;
+use source::physical_source;
+
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
@@ -67,8 +70,11 @@ pub(super) fn scan(
         }
         for (select_index, select) in file.selects.iter().enumerate() {
             for (star_index, star) in select.star_projections.iter().enumerate() {
+                let site = SqlFactSite::Star(select_index, star_index);
+                let (physical_rel, physical_source) =
+                    physical_source(root, sources, file, &site, &rel, source.as_ref());
                 for finding in star_findings(
-                    &rel,
+                    &physical_rel,
                     std::slice::from_ref(star),
                     "SELECT *",
                     "reads",
@@ -78,8 +84,8 @@ pub(super) fn scan(
                     dedup.push(
                         &mut findings,
                         file,
-                        SqlFactSite::Star(select_index, star_index),
-                        source.as_deref(),
+                        site.clone(),
+                        physical_source.as_deref(),
                         finding,
                     );
                 }
@@ -87,8 +93,11 @@ pub(super) fn scan(
         }
         if opts.check_returning {
             for (star_index, star) in file.returning_stars.iter().enumerate() {
+                let site = SqlFactSite::ReturningStar(star_index);
+                let (physical_rel, physical_source) =
+                    physical_source(root, sources, file, &site, &rel, source.as_ref());
                 for finding in star_findings(
-                    &rel,
+                    &physical_rel,
                     std::slice::from_ref(star),
                     "RETURNING *",
                     "returns",
@@ -98,8 +107,8 @@ pub(super) fn scan(
                     dedup.push(
                         &mut findings,
                         file,
-                        SqlFactSite::ReturningStar(star_index),
-                        source.as_deref(),
+                        site.clone(),
+                        physical_source.as_deref(),
                         finding,
                     );
                 }

@@ -82,6 +82,7 @@ fn make_opaque(binding: &mut BindingState) {
     binding.kind = super::super::super::EmbeddedSqlKind::Dynamic;
     binding.sql = None;
     binding.sql_source_positions.clear();
+    binding.pending_imported_helper = None;
     binding.variants = None;
     binding.condition_key = None;
     binding.builder_identity = None;

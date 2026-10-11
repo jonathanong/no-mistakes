@@ -3,6 +3,7 @@ use super::super::options::TrustedSqlTag;
 use super::super::relative::{PendingRelativeCall, PendingRelativeSpan};
 use super::super::scoped_bindings::ScopedExecutors;
 use super::resolve;
+use crate::codebase::postgres::embedded::fragment_debug::PendingImportedSqlCall;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
@@ -20,6 +21,7 @@ pub(crate) struct BindingState {
     pub(crate) initialized: bool,
     pub(crate) sql_builder: bool,
     pub(crate) sql_source_positions: Vec<super::super::EmbeddedSqlSourcePosition>,
+    pub(crate) pending_imported_helper: Option<String>,
 }
 
 pub(crate) struct ScopeVisitor<'a> {
@@ -34,6 +36,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) argument_frames: usize,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
+    pub(crate) pending_imported_calls: Vec<PendingImportedSqlCall>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) confirmed_order: Vec<u32>,
@@ -54,6 +57,9 @@ pub(crate) struct ScopeVisitor<'a> {
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
+    pub(crate) local_helpers:
+        crate::fx::FxHashMap<String, resolve::functions::provenance::RecoveredSql>,
+    pub(crate) pending_imported_calls: Vec<PendingImportedSqlCall>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
     pub(crate) fragment_sites: Vec<Option<u32>>,
@@ -84,6 +90,7 @@ pub(crate) fn collect_calls<'a>(
         argument_frames: 0,
         calls: Vec::new(),
         call_spans: Vec::new(),
+        pending_imported_calls: Vec::new(),
         pending_spans: BTreeMap::new(),
         pending_calls: Vec::new(),
         confirmed_order: Vec::new(),
@@ -105,6 +112,8 @@ pub(crate) fn collect_calls<'a>(
     CollectedCalls {
         calls: visitor.calls,
         call_spans: visitor.call_spans,
+        local_helpers: visitor.functions.summaries(),
+        pending_imported_calls: visitor.pending_imported_calls,
         pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,
         fragment_variants: visitor.fragment_variants,

@@ -59,7 +59,7 @@ pub(crate) fn embedded_call_facts(
         })
         .filter_map(|(call, variant, call_index, variant_index)| {
             let sql = call.sql_text.as_deref()?;
-            let extract = if variant {
+            let extract = if variant || !call.sql_source_positions.is_empty() {
                 extract_sql_variant_statement_facts
             } else {
                 extract_sql_statement_facts_with_recovered_placeholders
@@ -79,7 +79,10 @@ pub(crate) fn embedded_call_facts(
                 locations.original_call_line = call.line;
                 locations.call_index = call_index;
                 locations.variant_index = variant_index;
-                locations.append_sites = call.variants[0].append_sites.clone();
+                locations.append_sites = call
+                    .variants
+                    .first()
+                    .map_or_else(Vec::new, |variant| variant.append_sites.clone());
             }
             rebase_embedded_lines(&mut facts, &call, variant);
             Some(facts)

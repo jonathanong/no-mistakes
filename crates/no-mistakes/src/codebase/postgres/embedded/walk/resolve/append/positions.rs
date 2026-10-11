@@ -73,11 +73,20 @@ pub(in crate::codebase::postgres::embedded) fn append(
         .last()
         .map(|position| position.source_line + line - position.sql_line)
         .unwrap_or(origin + line - 1);
-    if expected != fragment_origin {
+    let fragment_path = fragment_positions
+        .first()
+        .and_then(|position| position.source_path.clone());
+    if expected != fragment_origin
+        || positions
+            .last()
+            .and_then(|position| position.source_path.as_ref())
+            != fragment_path.as_ref()
+    {
         positions.push(EmbeddedSqlSourcePosition {
             sql_line: line,
             sql_column: column,
             source_line: fragment_origin,
+            source_path: fragment_path,
         });
     }
     positions.extend(
@@ -92,6 +101,7 @@ pub(in crate::codebase::postgres::embedded) fn append(
                         0
                     },
                 source_line: position.source_line,
+                source_path: position.source_path.clone(),
             }),
     );
 }

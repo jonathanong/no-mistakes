@@ -15,6 +15,7 @@ use crate::codebase::postgres::embedded::{
     source_positions, EmbeddedSqlKind, EmbeddedSqlSourcePosition,
 };
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
+use crate::fx::FxHashMap;
 use collect::collect_named_functions;
 use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
@@ -34,7 +35,7 @@ pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 /// collection to nested scopes only widens what resolves as `Composed`, it
 /// never narrows it.
 pub(crate) struct LocalFunctions {
-    resolved: HashMap<String, provenance::RecoveredSql>,
+    resolved: FxHashMap<String, provenance::RecoveredSql>,
     parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
 }
@@ -52,6 +53,10 @@ pub(super) struct Resolvable<'a> {
 }
 
 impl LocalFunctions {
+    pub(crate) fn summaries(&self) -> FxHashMap<String, provenance::RecoveredSql> {
+        self.resolved.clone()
+    }
+
     pub(crate) fn has_static_helper(&self, name: &str) -> bool {
         self.resolved.contains_key(name)
     }
@@ -70,7 +75,7 @@ impl LocalFunctions {
         let sql_statement_types =
             super::super::super::bindings::sql_statement_type_bindings(program);
         let tag_shadows = TagShadows::collect(program, trusted_sql_tags, &sql_statement_types);
-        let mut resolved = HashMap::new();
+        let mut resolved = FxHashMap::default();
         let mut parameter_builders = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();

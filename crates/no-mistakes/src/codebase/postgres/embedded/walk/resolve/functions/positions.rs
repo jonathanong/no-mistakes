@@ -45,6 +45,7 @@ impl LocalFunctions {
                     sql_line: 1,
                     sql_column: 1,
                     source_line: origin,
+                    source_path: None,
                 },
             );
         }
