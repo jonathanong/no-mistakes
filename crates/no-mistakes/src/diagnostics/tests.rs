@@ -301,6 +301,10 @@ fn concurrent_work_and_source_counts_preserve_exact_totals() {
                         // Start with missing keys to exercise concurrent insertion
                         // as well as the established counter fast path.
                         current().unwrap().increment("shared", 3);
+                        observer.increment("parse.requests", 1);
+                        observer.increment("resolver.computations", 2);
+                        observer.increment("source.bytes", 0);
+                        observer.increment("extension.zero", 0);
                         observer.record_source_read(std::path::Path::new("shared.ts"));
                         observer.record_source_read(&own_path);
                         with_observer(Some(Arc::clone(other)), || {
@@ -313,7 +317,13 @@ fn concurrent_work_and_source_counts_preserve_exact_totals() {
     });
     assert_eq!(
         observer.snapshot().work,
-        std::collections::BTreeMap::from([("shared", 24_000)])
+        std::collections::BTreeMap::from([
+            ("extension.zero", 0),
+            ("parse.requests", 8_000),
+            ("resolver.computations", 16_000),
+            ("shared", 24_000),
+            ("source.bytes", 0),
+        ])
     );
     assert_eq!(
         other.snapshot().work,

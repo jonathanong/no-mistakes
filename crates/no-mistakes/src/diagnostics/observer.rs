@@ -1,4 +1,5 @@
 mod timing_order;
+mod work;
 
 use super::context::{measure_optional, with_timing_kind};
 use dashmap::DashMap;
@@ -8,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use work::WorkCounters;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TimingKind {
@@ -34,7 +36,7 @@ pub struct InvocationObserver {
     verbose: bool,
     started: Instant,
     timings: Mutex<Vec<TimingDiagnostic>>,
-    work: Option<DashMap<&'static str, AtomicU64, FxBuildHasher>>,
+    work: Option<Box<WorkCounters>>,
     source_reads: Option<DashMap<PathBuf, AtomicU64, FxBuildHasher>>,
 }
 
@@ -44,7 +46,7 @@ impl InvocationObserver {
             verbose,
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
-            work: verbose.then(|| DashMap::with_hasher(FxBuildHasher)),
+            work: verbose.then(|| Box::new(WorkCounters::new())),
             source_reads: verbose.then(|| DashMap::with_hasher(FxBuildHasher)),
         })
     }
@@ -88,15 +90,7 @@ impl InvocationObserver {
         let Some(work) = &self.work else {
             return;
         };
-        // Established metrics only take a shared shard lock. Atomic addition
-        // preserves totals when many workers increment the same metric.
-        if let Some(counter) = work.get(metric) {
-            counter.fetch_add(amount, Ordering::Relaxed);
-            return;
-        }
-        work.entry(metric)
-            .or_default()
-            .fetch_add(amount, Ordering::Relaxed);
+        work.increment(metric, amount);
     }
 
     pub(crate) fn record_source_read(&self, path: &Path) {
@@ -155,11 +149,7 @@ impl InvocationObserver {
             work: self
                 .work
                 .as_ref()
-                .map(|work| {
-                    work.iter()
-                        .map(|entry| (*entry.key(), entry.value().load(Ordering::Relaxed)))
-                        .collect()
-                })
+                .map(|work| work.snapshot())
                 .unwrap_or_default(),
         }
     }
