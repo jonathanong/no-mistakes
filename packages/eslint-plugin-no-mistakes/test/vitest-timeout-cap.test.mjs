@@ -8,6 +8,18 @@ const code = (name) => fixture(`vitest-timeout-cap/${name}.ts`);
 const findings = (name, options) =>
   lint(code(name), { [`no-mistakes/${rule}`]: ["error", options || {}] }, "fixture.test.ts");
 describe(rule, () => {
+  it("rejects callable timeout sinks without requiring an opaque consumer", () => {
+    assert.deepEqual(
+      findings("callable-timeout-sinks", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [...[4, 5, 7, 8, 9, 9, 10, 10].map((line) => [line, "unknown"]), [12, "timeout"]],
+    );
+    assert.deepEqual(
+      findings("callable-timeout-sinks").map(({ line, messageId }) => [line, messageId]),
+      [[12, "timeout"]],
+    );
+  });
   it("does not probe a destructured member against its unprojected initializer", () => {
     assert.deepEqual(
       findings("destructured-primitive-reads", { unknownValues: "finding" }).map(

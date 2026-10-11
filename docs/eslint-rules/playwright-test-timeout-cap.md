@@ -147,3 +147,8 @@ test('owner proof example', async () => {});
 
 - [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md) owns assertion waits.
 - [`vitest-timeout-cap`](vitest-timeout-cap.md) owns Vitest timeout carriers.
+
+Callable timeout values remain unknown even when their return expression is a
+known number. For example, `test.setTimeout(() => 1)` does not establish a
+one-millisecond deadline, and a subsequent `test.slow()` retains an unknown
+effective deadline. Numeric timeout values retain their normal cap checks.
