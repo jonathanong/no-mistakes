@@ -7,6 +7,7 @@ mod body;
 mod columns;
 mod completeness;
 mod conflict_calls;
+pub(crate) use conflict_calls::PolicyArbiter;
 pub(super) use conflict_calls::{
     parse_program as parse_conflict_program, recover as recover_conflict_calls,
 };

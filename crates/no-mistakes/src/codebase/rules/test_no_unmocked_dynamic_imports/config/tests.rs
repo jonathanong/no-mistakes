@@ -47,6 +47,7 @@ fn setup_files_for_test(
             include: build_globset(&includes)?,
             include_regex: build_regexes(&extract_test_regexes(&source))?,
             exclude: build_globset(&excludes)?,
+            required: None,
         };
         if filter.is_match(&rel_path) {
             files.extend(setup_files_from_configs(root, vec![config_file.path])?);

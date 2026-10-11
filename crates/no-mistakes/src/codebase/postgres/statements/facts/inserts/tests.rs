@@ -16,6 +16,7 @@ fn ignores_set_expression_that_is_not_an_insert_statement() {
         &mut insert_n,
         &mut inserts,
         None,
+        &Default::default(),
     );
     assert!(inserts.is_empty());
     assert_eq!(insert_n, 0);

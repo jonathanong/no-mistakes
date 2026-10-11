@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    projects:
+      b:
+        include: ['**/*.test.mts']
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [missing]
+    tests:
+      vitest: [b]
+    include: ['shared/example.test.mts']

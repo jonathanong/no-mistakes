@@ -73,3 +73,20 @@ pub(super) fn normalize(statement: Statement) -> (Statement, Option<ConflictFact
     }
     (Statement::Insert(insert), Some(facts))
 }
+
+/// Keep the same INSERT identity through WITH, EXPLAIN, and PREPARE wrappers.
+pub(in crate::codebase::postgres::source) fn inner_insert(
+    statement: &mut Statement,
+) -> Option<&mut sqlparser::ast::Insert> {
+    match statement {
+        Statement::Insert(insert) => Some(insert),
+        Statement::Query(query) => match query.body.as_mut() {
+            SetExpr::Insert(statement) => inner_insert(statement),
+            _ => None,
+        },
+        Statement::Explain { statement, .. } | Statement::Prepare { statement, .. } => {
+            inner_insert(statement)
+        }
+        _ => None,
+    }
+}

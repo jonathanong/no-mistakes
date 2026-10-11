@@ -56,14 +56,9 @@ pub(super) fn prepare_inner(
         &visible_files,
     )?);
     setup_data.extend(targets.playwright_setup_data()?);
-    let targeted = !targets.includes.is_empty();
-    let mut test_filter = super::filter::test_filter_with_targets(
-        root,
-        &config_files,
-        Some(sources),
-        targets.includes,
-        targets.excludes.clone(),
-    )?;
+    let targeted = !targets.includes.is_empty() || !targets.executions.is_empty();
+    let mut test_filter =
+        super::filter::test_filter_with_targets(root, &config_files, Some(sources), &targets)?;
     let adds_candidates = |data: &&ConfigSetupData| {
         data.workspace
             || data.explicit_project

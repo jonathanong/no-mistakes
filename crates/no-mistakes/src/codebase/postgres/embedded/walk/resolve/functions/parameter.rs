@@ -4,9 +4,6 @@
 
 use super::super::chain;
 use super::shadows::TagShadows;
-use crate::codebase::postgres::embedded::placeholders::{
-    count_placeholders, renumber_placeholders,
-};
 use crate::codebase::postgres::embedded::{source_positions, EmbeddedSqlSourcePosition};
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -22,7 +19,6 @@ use fragment::{alias_or_append, append};
 pub(in crate::codebase::postgres::embedded::walk) struct ParameterBuilder {
     pub(in crate::codebase::postgres::embedded::walk) parameter_index: usize,
     pub(super) parameter_count: usize,
-    pub(super) suffix: String,
     pub(in crate::codebase::postgres::embedded::walk) fragments: Vec<ParameterFragment>,
 }
 
@@ -102,7 +98,6 @@ pub(super) fn summarize(
     }
     let (parameter_index, parameter_name) = builder?;
     let mut aliases = HashSet::from([parameter_name]);
-    let mut suffix = String::new();
     let mut fragments = Vec::new();
     let mut statements = body.statements.iter().peekable();
     while let Some(statement) = statements.next() {
@@ -124,10 +119,6 @@ pub(super) fn summarize(
                     let init = declarator.init.as_ref()?;
                     let appended = alias_or_append(init, &aliases, params, shadows, source)?;
                     if let Some(fragment) = appended {
-                        suffix.push_str(&renumber_placeholders(
-                            &fragment.sql,
-                            count_placeholders(&suffix),
-                        ));
                         fragments.push(fragment);
                     }
                     aliases.insert(ident.name.as_str());
@@ -136,10 +127,6 @@ pub(super) fn summarize(
             Statement::ExpressionStatement(statement) => {
                 let appended =
                     alias_or_append(&statement.expression, &aliases, params, shadows, source)??;
-                suffix.push_str(&renumber_placeholders(
-                    &appended.sql,
-                    count_placeholders(&suffix),
-                ));
                 fragments.push(appended);
             }
             Statement::ReturnStatement(ret) if statements.peek().is_none() => {
@@ -148,10 +135,6 @@ pub(super) fn summarize(
                     Expression::Identifier(ident) if aliases.contains(ident.name.as_str()) => {}
                     Expression::CallExpression(call) => {
                         let fragment = append(call, &aliases, params, shadows, source)?;
-                        suffix.push_str(&renumber_placeholders(
-                            &fragment.sql,
-                            count_placeholders(&suffix),
-                        ));
                         fragments.push(fragment);
                     }
                     _ => return None,
@@ -159,7 +142,6 @@ pub(super) fn summarize(
                 return Some(ParameterBuilder {
                     parameter_index,
                     parameter_count: params.items.len(),
-                    suffix,
                     fragments,
                 });
             }

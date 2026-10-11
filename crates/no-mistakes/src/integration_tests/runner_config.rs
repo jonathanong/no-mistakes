@@ -58,9 +58,13 @@ pub(crate) struct RunnerConfigFileFacts {
     unavailable: bool,
     results: Vec<ProjectResult>,
     analyses: BTreeMap<PathBuf, FileAnalysis>,
+    has_config_export: bool,
 }
 
 impl RunnerConfigFileFacts {
+    pub(crate) fn has_config_export(&self) -> bool {
+        self.has_config_export
+    }
     pub(crate) fn covers_spec(&self, framework: Framework, raw: &str) -> bool {
         self.results
             .iter()
@@ -68,6 +72,7 @@ impl RunnerConfigFileFacts {
     }
 
     pub(crate) fn merge(&mut self, other: Self) {
+        self.has_config_export |= other.has_config_export;
         for result in other.results {
             if !self.covers_spec(result.framework, &result.raw) {
                 self.results.push(result);

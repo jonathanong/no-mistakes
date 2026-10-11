@@ -11,6 +11,8 @@ mod coverage_more_tests;
 #[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]
+mod expression_arbiter_tests;
+#[cfg(test)]
 mod trigger_tests;
 #[cfg(test)]
 mod where_noop_gap_tests;

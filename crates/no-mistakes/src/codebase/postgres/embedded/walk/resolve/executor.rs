@@ -69,7 +69,9 @@ fn legacy_executor_call(
                     kind
                 },
                 declaration_line: None,
-                sql_source_positions: super::compose::parameter_source_positions(argument, visitor)
+                sql_source_positions: super::compose::helper_provenance(argument, visitor)
+                    .map(|provenance| provenance.positions)
+                    .or_else(|| super::compose::parameter_source_positions(argument, visitor))
                     .unwrap_or_else(|| {
                         super::super::super::source_positions::for_expression(
                             argument,

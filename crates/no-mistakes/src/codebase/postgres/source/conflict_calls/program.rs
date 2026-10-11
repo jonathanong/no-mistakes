@@ -1,5 +1,5 @@
 //! The native parser remains unchanged unless a prepared conflict marker is present.
-use super::{parse_statement, parsing, PostgreSqlDialect, SqlFunctionCallFact};
+use super::{parse_statement, parsing, PolicyArbiter, PostgreSqlDialect, SqlFunctionCallFact};
 use sqlparser::{
     ast::Statement,
     keywords::Keyword,
@@ -7,19 +7,22 @@ use sqlparser::{
     tokenizer::{Token, TokenWithSpan},
 };
 
+type ParsedPolicyProgram = (Vec<Statement>, Vec<SqlFunctionCallFact>, Vec<PolicyArbiter>);
+
 pub(in crate::codebase::postgres) fn parse(
     mut tokens: Vec<TokenWithSpan>,
-) -> Result<(Vec<Statement>, Vec<SqlFunctionCallFact>), ParserError> {
+) -> Result<ParsedPolicyProgram, ParserError> {
     let markers = parsing::prepare(&mut tokens);
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
     if markers.is_empty() {
         return parser
             .parse_statements()
-            .map(|statements| (statements, Vec::new()));
+            .map(|statements| (statements, Vec::new(), Vec::new()));
     }
     let mut statements = Vec::new();
     let mut functions = Vec::new();
+    let mut arbiters = Vec::new();
     let mut delimiter = false;
     loop {
         while parser.consume_token(&Token::SemiColon) {
@@ -36,10 +39,11 @@ pub(in crate::codebase::postgres) fn parse(
         if delimiter {
             return parser.expected_ref("end of statement", &token);
         }
-        let (statement, mut calls) = parse_statement(&mut parser, &markers)?;
+        let (statement, mut calls, arbiter) = parse_statement(&mut parser, &markers)?;
         statements.push(statement);
         functions.append(&mut calls);
+        arbiters.extend(arbiter);
         delimiter = true;
     }
-    Ok((statements, functions))
+    Ok((statements, functions, arbiters))
 }

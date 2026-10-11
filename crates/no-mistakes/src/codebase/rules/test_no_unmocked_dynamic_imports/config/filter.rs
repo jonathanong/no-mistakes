@@ -2,7 +2,7 @@ use super::discovery::{
     build_globset, build_regexes, config_files, extract_property_strings,
     extract_test_property_strings, extract_test_regexes, ConfigFile,
 };
-use super::rule_targets::rule_test_project_globs;
+use super::rule_targets::{rule_test_project_globs, PreparedTargets};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::GlobSet;
@@ -14,6 +14,7 @@ pub struct TestFilter {
     pub(super) include: GlobSet,
     pub(super) include_regex: Vec<Regex>,
     pub(super) exclude: GlobSet,
+    pub(super) required: Option<GlobSet>,
     pub(super) alternatives: Vec<TestFilter>,
 }
 
@@ -28,7 +29,12 @@ impl TestFilter {
                 .include_regex
                 .iter()
                 .any(|regex| regex.is_match(rel_path));
-        included && !self.exclude.is_match(rel_path)
+        included
+            && !self.exclude.is_match(rel_path)
+            && self
+                .required
+                .as_ref()
+                .is_none_or(|scope| scope.is_match(rel_path))
     }
 
     pub(super) fn union(filters: Vec<Self>, excludes: &[String]) -> Result<Self> {
@@ -36,6 +42,7 @@ impl TestFilter {
             include: build_globset(&[])?,
             include_regex: Vec::new(),
             exclude: build_globset(excludes)?,
+            required: None,
             alternatives: filters,
         })
     }
@@ -71,21 +78,40 @@ pub(super) fn test_filter_from_config_files_with_sources(
     config_files: &[ConfigFile],
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<TestFilter> {
-    let (includes, excludes) = rule_test_project_globs(root, config)?;
-    test_filter_with_targets(root, config_files, sources, includes, excludes)
+    let targets = rule_test_project_globs(root, config)?;
+    test_filter_with_targets(root, config_files, sources, &targets)
 }
 
 pub(super) fn test_filter_with_targets(
     root: &Path,
     config_files: &[ConfigFile],
     sources: Option<&crate::codebase::ts_source::SourceStore>,
-    mut includes: Vec<String>,
-    mut excludes: Vec<String>,
+    targets: &PreparedTargets,
 ) -> Result<TestFilter> {
-    let has_rule_target_includes = !includes.is_empty();
+    let mut includes = targets.includes.clone();
+    let mut excludes = targets.excludes.clone();
+    let has_rule_target_includes = !includes.is_empty() || !targets.executions.is_empty();
+    let alternatives = targets
+        .executions
+        .iter()
+        .map(|execution| {
+            Ok(TestFilter {
+                alternatives: Vec::new(),
+                include: build_globset(&execution.include)?,
+                include_regex: Vec::new(),
+                exclude: build_globset(&execution.exclude)?,
+                required: (!execution.scope.is_empty())
+                    .then(|| build_globset(&execution.scope))
+                    .transpose()?,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
     let mut include_regex = Vec::new();
     let mut config_includes = Vec::new();
-    for config_file in config_files {
+    // Selected runner projects already carry their effective include/exclude
+    // pairs. Re-reading raw config exclusions here would let one project veto
+    // a test executed by another project in the same config file.
+    for config_file in config_files.iter().filter(|_| alternatives.is_empty()) {
         let source = match sources {
             Some(sources) => crate::codebase::rules::read_source(sources, &config_file.path)
                 .ok_or_else(|| anyhow::anyhow!("failed to read {}", config_file.path.display()))?
@@ -121,9 +147,10 @@ pub(super) fn test_filter_with_targets(
             .collect();
     }
     Ok(TestFilter {
-        alternatives: Vec::new(),
+        alternatives,
         include: build_globset(&includes)?,
         include_regex: build_regexes(&include_regex)?,
         exclude: build_globset(&excludes)?,
+        required: None,
     })
 }

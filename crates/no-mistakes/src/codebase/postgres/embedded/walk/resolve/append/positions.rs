@@ -18,6 +18,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn fragment(
         renumber(&mut positions, binding.sql.as_deref().unwrap(), offset);
         return (binding.line, positions);
     }
+    if let Some(mut provenance) = super::super::compose::helper_provenance(expression, visitor) {
+        renumber(&mut provenance.positions, &provenance.sql, offset);
+        return (provenance.line, provenance.positions);
+    }
     let line = byte_offset_to_line(visitor.source, call.span.start as usize);
     let positions = source_positions::for_expression_with_offset(
         expression,

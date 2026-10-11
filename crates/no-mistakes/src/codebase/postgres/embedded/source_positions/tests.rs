@@ -1,4 +1,26 @@
 #[test]
+fn helper_return_and_appended_sql_keep_literal_lines_through_assignment() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/source-position-helper.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = super::super::extract_embedded_sql_from_source(
+        &path,
+        &source,
+        &super::super::EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    assert_eq!(facts.calls.len(), 3);
+    let statements =
+        crate::codebase::postgres::collect::dml::embedded_call_facts(&facts, false, false);
+    let lines: Vec<_> = statements
+        .iter()
+        .flat_map(|facts| &facts.selects)
+        .flat_map(|select| &select.star_projections)
+        .map(|star| star.line)
+        .collect();
+    assert_eq!(lines, [7, 16, 25, 7]);
+}
+
+#[test]
 fn saved_escape_encodings_keep_offsets_on_the_physical_source_line() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded");

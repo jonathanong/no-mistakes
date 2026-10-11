@@ -22,6 +22,7 @@ impl PreparedIntegrationRunnerConfigs {
             unavailable: false,
             results,
             analyses: BTreeMap::new(),
+            has_config_export: false,
         })
     }
     pub(crate) fn parse_path_for_facts_with_session(

@@ -42,6 +42,49 @@ fn messages(root: &str, yaml: &str, files: &[&str]) -> Vec<String> {
 }
 
 #[test]
+fn helper_sql_findings_point_to_each_original_literal_in_standalone_and_prepared_checks() {
+    let root = fixture("helper-provenance");
+    let files: Vec<PathBuf> = ["src/helper.mts", "src/single.mts", "src/composed.mts"]
+        .iter()
+        .map(|file| root.join(file))
+        .collect();
+    let config = config_yaml(
+        "importSpecifier: '@example/db'\nschemaCatalogPath: schema.json\nmaxColumns: 0\ninclude: ['src/**/*.mts']\n",
+    );
+    let locations = |findings: Vec<crate::codebase::rules::RuleFinding>| {
+        let mut locations: Vec<_> = findings
+            .into_iter()
+            .map(|finding| (finding.file, finding.line))
+            .collect();
+        locations.sort();
+        locations
+    };
+    let expected = vec![
+        ("src/composed.mts".to_string(), 7),
+        ("src/composed.mts".to_string(), 16),
+        ("src/helper.mts".to_string(), 12),
+        ("src/single.mts".to_string(), 7),
+    ];
+    assert_eq!(
+        locations(check_with_files(&root, &config, &files).unwrap()),
+        expected
+    );
+
+    let sources = super::super::source_store_for_files(&files);
+    let prepared = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        Arc::clone(&sources),
+        &config,
+        &[RULE_ID],
+    )
+    .unwrap();
+    let findings =
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &prepared).unwrap();
+    assert_eq!(locations(findings), expected);
+}
+
+#[test]
 fn invalid_examples_are_reported() {
     let found = messages(
         "fail",

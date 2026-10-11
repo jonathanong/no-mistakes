@@ -9,6 +9,52 @@ const root = join(
 );
 
 test(
+  "compiled selected Vitest executions retain each project's exclusions",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
+    );
+    for (const config of [
+      ".no-mistakes.yml",
+      ".no-mistakes-b.yml",
+      ".no-mistakes-inline.yml",
+      ".no-mistakes-imported.yml",
+      ".no-mistakes-scope.yml",
+      ".no-mistakes-include.yml",
+      ".no-mistakes-missing-app-include.yml",
+      ".no-mistakes-rule-exclude.yml",
+    ]) {
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.warnings, []);
+      const expected = [["shared/example.test.mts", 3, "shared/real.mts"]];
+      // Project A's setup mock and exclusion cannot hide project B's execution.
+      if (
+        ![
+          ".no-mistakes-rule-exclude.yml",
+          ".no-mistakes-include.yml",
+          ".no-mistakes-missing-app-include.yml",
+        ].includes(config)
+      ) {
+        expected.push(["shared/setup.test.mts", 3, "shared/real.mts"]);
+      }
+      assert.deepEqual(
+        report.rules.map(({ file, line, target }) => [file, line, target]),
+        expected,
+        config,
+      );
+      const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+    }
+  },
+);
+
+test(
   "compiled broad checks retain imported Vitest project matchers",
   { skip: !compiled, timeout: 20_000 },
   async () => {

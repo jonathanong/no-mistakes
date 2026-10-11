@@ -2,6 +2,8 @@ use super::inserts::collect_query_inserts;
 use super::*;
 
 pub(super) struct FactOut<'a> {
+    pub(super) policy_arbiters:
+        &'a crate::fx::FxHashMap<sqlparser::tokenizer::Location, SqlConflictArbiter>,
     pub(super) insert_sources: &'a super::lines::InsertSources<'a>,
     pub(super) insert_n: &'a mut usize,
     pub(super) trigger_n: &'a mut usize,
@@ -23,12 +25,13 @@ pub(super) fn collect_one(
 ) {
     if let Statement::Insert(insert) = statement {
         *out.insert_n += 1;
-        if let Some(fact) = insert::from_statement_at(
+        if let Some(mut fact) = insert::from_statement_at(
             out.insert_sources,
             statement,
             *out.insert_n,
             placeholder_positions,
         ) {
+            insert::apply_policy_arbiter(insert, &mut fact, out.policy_arbiters);
             out.inserts.push(fact);
         }
         if let Some(source) = insert.source.as_deref() {
@@ -38,6 +41,7 @@ pub(super) fn collect_one(
                 out.insert_n,
                 out.inserts,
                 placeholder_positions,
+                out.policy_arbiters,
             );
         }
     }
@@ -54,6 +58,7 @@ pub(super) fn collect_one(
             out.insert_n,
             out.inserts,
             placeholder_positions,
+            out.policy_arbiters,
         );
     }
     select::collect_with_placeholder_positions(sql, statement, placeholder_positions, out.selects);

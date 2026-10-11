@@ -3,6 +3,7 @@ mod call;
 mod collect;
 mod parameter;
 mod positions;
+pub(crate) mod provenance;
 pub(crate) mod reassigned;
 mod shadows;
 pub(crate) use shadows::looks_like_tag_implementation;
@@ -33,7 +34,7 @@ pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 /// collection to nested scopes only widens what resolves as `Composed`, it
 /// never narrows it.
 pub(crate) struct LocalFunctions {
-    resolved: HashMap<String, String>,
+    resolved: HashMap<String, provenance::RecoveredSql>,
     parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
 }
@@ -51,6 +52,10 @@ pub(super) struct Resolvable<'a> {
 }
 
 impl LocalFunctions {
+    pub(crate) fn has_static_helper(&self, name: &str) -> bool {
+        self.resolved.contains_key(name)
+    }
+
     pub(crate) fn collect(
         program: &Program<'_>,
         source: &str,
@@ -69,10 +74,15 @@ impl LocalFunctions {
         let mut parameter_builders = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
-            if let Some(text) =
-                resolve_named(name, MAX_RESOLVE_DEPTH, &raw, &mut resolving, &tag_shadows)
-            {
-                resolved.insert(name.to_string(), text);
+            if let Some(value) = resolve_named(
+                name,
+                source,
+                MAX_RESOLVE_DEPTH,
+                &raw,
+                &mut resolving,
+                &tag_shadows,
+            ) {
+                resolved.insert(name.to_string(), value);
             }
             if let Some(builder) = parameter::summarize(
                 raw[name].params,
@@ -89,10 +99,6 @@ impl LocalFunctions {
             parameter_builders,
             tag_shadows,
         }
-    }
-
-    pub(crate) fn get(&self, name: &str) -> Option<String> {
-        self.resolved.get(name).cloned()
     }
 
     pub(crate) fn is_parameter_builder(&self, name: &str) -> bool {
@@ -145,11 +151,12 @@ pub(super) fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
 /// other than a same-file helper (see [`shadows::TagShadows`]).
 fn resolve_named(
     name: &str,
+    source: &str,
     depth: u8,
     raw: &HashMap<&str, Resolvable<'_>>,
     resolving: &mut Vec<String>,
     tag_shadows: &TagShadows,
-) -> Option<String> {
+) -> Option<provenance::RecoveredSql> {
     if resolving.iter().any(|seen| seen == name) {
         return None;
     }
@@ -159,11 +166,12 @@ fn resolve_named(
         if shadows_param(resolvable, callee) {
             return None;
         }
-        resolve_named(callee, depth, raw, resolving, tag_shadows)
+        resolve_named(callee, source, depth, raw, resolving, tag_shadows)
     };
     let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag) || tag_shadows.contains(tag);
     let text = body::resolve(
         resolvable,
+        source,
         depth,
         &mut lookup,
         &mut is_shadowed,

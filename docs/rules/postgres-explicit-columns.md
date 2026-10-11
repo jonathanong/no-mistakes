@@ -139,6 +139,14 @@ WITH recent AS (SELECT * FROM orders WHERE id > $1) SELECT id FROM recent;
 when that name is in `relations` and the query stars it. The CTE reports the
 inner `SELECT *`.
 
+When a same-file helper returns a static SQL template, a finding points to the
+star in that helper's literal. Assignment to a local variable and static
+`.append()` fragments retain the line of each original literal, including
+separate stars in a composed query. An imported SQL tag such as
+`sql-template-strings` is supported inside these helpers.
+Calls to SQL-returning functions imported from another source file are outside
+the rule's current static SQL recovery scope.
+
 ## Fix
 
 List the columns the caller uses:
