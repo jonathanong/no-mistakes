@@ -32,6 +32,8 @@ mod shard;
 mod sql_fetch;
 #[path = "core_analysis/sql_source_positions.rs"]
 mod sql_source_positions;
+#[path = "core_analysis/workflow_artifact_values.rs"]
+mod workflow_artifact_values;
 
 use aggregate::{
     bench_aggregate_and_multi_report, bench_finite_set_membership, bench_impacted_checks,
@@ -71,6 +73,12 @@ fn bench_postgres_scopes(c: &mut criterion::Criterion) {
     }
 }
 
+fn bench_workflow_artifact_values(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        workflow_artifact_values::bench_artifact_values(c);
+    }
+}
+
 criterion_group!(
     benches,
     bench_sql_source_positions,
@@ -97,5 +105,6 @@ criterion_group!(
     bench_postgres_scopes,
     bench_relationship_projection,
     bench_sql_fetch_fast_path,
+    bench_workflow_artifact_values,
 );
 criterion_main!(benches);
