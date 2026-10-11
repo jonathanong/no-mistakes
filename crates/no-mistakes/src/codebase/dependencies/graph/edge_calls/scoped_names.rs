@@ -35,6 +35,7 @@ impl<T> ScopedNames<T> {
         }
     }
 
+    #[cfg(any(test, feature = "test-instrumentation"))]
     fn len(&self) -> usize {
         match self {
             Self::One(_, _) => 1,
