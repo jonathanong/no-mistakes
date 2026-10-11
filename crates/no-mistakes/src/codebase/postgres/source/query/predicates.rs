@@ -33,14 +33,14 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 match op {
                     BinaryOperator::And => {
-                        if self.not_depth % 2 == 1 {
+                        if !self.not_depth.is_multiple_of(2) {
                             child.effective_mandatory = child.effective_mandatory.map(|_| false);
                         }
                     }
                     BinaryOperator::Or => {
                         child.mandatory = false;
                         child.under_or = true;
-                        if self.not_depth % 2 == 0 {
+                        if self.not_depth.is_multiple_of(2) {
                             child.effective_mandatory = child.effective_mandatory.map(|_| false);
                         }
                     }
