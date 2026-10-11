@@ -1,0 +1,16 @@
+import { test, beforeAll, vi } from 'vitest';
+vi.setConfig.call(vi, {testTimeout:60001});
+vi.setConfig.apply(vi, [{hookTimeout:0}]);
+vi.setConfig.call({}, {testTimeout:60001});
+beforeAll.apply(undefined, [...opaqueArguments]);
+beforeAll.apply(undefined, [, 60000]);
+const row = (value, context) => { context.onTestFinished(() => {}, 60001); };
+test.for([1]).call(undefined, 'literal invocation callback', row);
+const key = 'bi' + 'nd';
+const bound = row[key](undefined);
+test.for([1])('computed bound callback', bound);
+const partial = bound.bind(undefined, 1);
+test.for([1])('nested shifted callback', partial);
+const receiver = {};
+const foreign = () => {};
+foreign.apply(receiver, [, 60000]);

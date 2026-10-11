@@ -1,12 +1,13 @@
 "use strict";
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { unwrapExpression } = require("./async-ast");
-const { configCall } = require("./vitest-timeout-bindings");
+const { configCall, staticPropertyName } = require("./vitest-timeout-bindings");
 const UNKNOWN = { kind: "unknown" };
 function taint(value) {
   if (value.kind === "object")
     return {
       ...value,
+      unknown: true,
       properties: new Map(
         [...value.properties].map(([name, entry]) => [
           name,
@@ -37,7 +38,7 @@ function merge(left, right) {
       value = { kind: "array", entries: [...previous.value.entries, ...value.entries] };
     properties.set(name, { ...entry, value });
   }
-  return { kind: "object", properties };
+  return { kind: "object", properties, unknown: Boolean(left.unknown || right.unknown) };
 }
 function createEvaluator(context, consumed) {
   const evaluating = new Set();
@@ -125,11 +126,7 @@ function createEvaluator(context, consumed) {
           continue;
         }
         if (property.type !== "Property") continue;
-        const name = property.computed
-          ? property.key.type === "Literal"
-            ? String(property.key.value)
-            : null
-          : (property.key.name ?? String(property.key.value));
+        const name = staticPropertyName(property, context);
         if (name !== null)
           properties.set(name, {
             value: property.kind === "init" ? evaluate(property.value) : UNKNOWN,

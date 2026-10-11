@@ -1,0 +1,17 @@
+import { vi, vitest, aroundAll, aroundEach, onTestFinished } from 'vitest';
+const runtime = vi;
+const { setConfig: update } = runtime;
+update({ testTimeout: 30001 });
+const bound = vitest.setConfig.bind(vitest);
+bound({ hookTimeout: 0 });
+const key = 'set' + 'Config';
+runtime[key]({ testTimeout: 30001 });
+const { ['setConfig']: renamed } = vitest;
+renamed({ hookTimeout: -1 });
+const wrapSuite = aroundAll;
+wrapSuite(async run => run(), 30001);
+const wrapTest = aroundEach;
+wrapTest(async run => run(), 0);
+const finish = onTestFinished;
+finish(() => {}, 30001);
+update({ testTimeout: 30000, hookTimeout: 25 });

@@ -1,0 +1,4 @@
+{
+  "jsPlugins": [{ "name": "no-mistakes", "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js" }],
+  "rules": { "no-mistakes/playwright-test-timeout-cap": ["error", { "unknownValues": "finding" }] }
+}
