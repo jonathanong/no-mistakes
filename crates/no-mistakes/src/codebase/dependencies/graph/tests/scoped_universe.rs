@@ -61,7 +61,7 @@ fn excluded_file_cuts_only_paths_through_that_file() {
     .collect();
     let excluded = HashSet::from([p("/repo/mocked.ts")]);
     assert!(graph
-        .deps_of_in_file_universe_excluding_files(&[test.clone()], None, &universe, &excluded)
+        .deps_of_in_file_universe_excluding_files(std::slice::from_ref(&test), None, &universe, &excluded)
         .is_empty());
 
     // The shared descendant remains reachable by an independent import.
