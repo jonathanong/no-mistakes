@@ -190,6 +190,12 @@ remains unknown. Bitwise operators remain unresolved rather than duration arithm
 Unresolved expressions still follow `unknownValues`; use `"finding"` to report
 them. This source rule does not inspect shell or Vitest CLI timeout flags.
 
+Replacing or deleting a shallow copy's own data property preserves its source.
+Increment, decrement, and arithmetic compound assignments preserve that source
+only when the copied property is proven numeric or null. Coercing a shared object
+can run `valueOf` or `Symbol.toPrimitive`, so its source stays unknown under
+`unknownValues: "finding"`. Logical assignment does not coerce the previous value.
+
 Object exports (including exported declarations and aliases) and unproved consumer
 contexts such as yield, await, tagged templates, and computed property keys retain
 unknown values. Exported numeric scalar budgets remain supported. Object stability

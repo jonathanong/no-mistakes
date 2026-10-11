@@ -44,6 +44,17 @@ describe(rule, () => {
       ],
     );
   });
+  it("keeps shared copy coercion conservative while preserving scalar updates and replacement", () => {
+    assert.deepEqual(
+      findings("copy-coercion", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [3, 7, 11, 33, 38, 42, 46, 56, 62, 66, 71, 80].flatMap((line) =>
+        Array(3).fill([line, "unknown"]),
+      ),
+    );
+  });
   it("keeps primitive property reads known without admitting object escapes or writes", () => {
     assert.deepEqual(
       findings("primitive-reads", { unknownValues: "finding" }).map(({ line, messageId }) => [

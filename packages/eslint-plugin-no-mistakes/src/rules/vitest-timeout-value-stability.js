@@ -4,7 +4,7 @@ const { unwrapTransparentParent } = require("./async-ast");
 const { configCall, overrideCall, invocationArguments } = require("./vitest-timeout-bindings");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
-function createValueStability(context, primitiveMemberRead) {
+function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
   // Values, copies, and callbacks need independent consumer proofs and cycle guards.
   const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
   const active = { value: new Set(), shallow: new Set(), callback: new Set() };
@@ -68,7 +68,14 @@ function createValueStability(context, primitiveMemberRead) {
     )
       // Replacing a copy's own property cannot mutate the source. Its children
       // are still shared, so writes through a second member remain unsafe.
-      return mode === "shallow" && memberDepth === 1;
+      return (
+        mode === "shallow" &&
+        memberDepth === 1 &&
+        (parent.type === "UnaryExpression" ||
+          (parent.type === "AssignmentExpression" &&
+            ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
+          scalarCopyWrite(node))
+      );
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
     if (memberRead) return true;
