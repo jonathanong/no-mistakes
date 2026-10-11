@@ -37,7 +37,7 @@ export interface EffectsOptions {
   tsconfig?: string;
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
-  /** Effect kind to resolve (a key under `effects:` in config). */
+  /** Effect family from config; supports spelling lists and binding-aware module/export targets. */
   kind: string;
   /** Entry file whose transitive imports are scanned. */
   entry: string;

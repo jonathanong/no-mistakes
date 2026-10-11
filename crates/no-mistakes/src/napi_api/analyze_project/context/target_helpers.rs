@@ -27,8 +27,14 @@ fn legacy_symbol_target_files(
     for request in options
         .reports
         .iter()
-        .filter(|request| request.report_type == "symbols")
+        .filter(|request| matches!(request.report_type.as_str(), "symbols" | "callSites"))
     {
+        if request.report_type == "callSites" {
+            let raw = super::options::command_options(request, options)?;
+            let parsed: crate::napi_api::queries::CallSitesOptions = serde_json::from_value(raw)?;
+            files.insert(authoritative_path(root, PathBuf::from(parsed.file)));
+            continue;
+        }
         let raw = super::symbols_options(request, options)?;
         let parsed: crate::napi_api::options::SymbolOptions = serde_json::from_str(&raw)?;
         let args = crate::napi_api::codebase::build_symbols_args(parsed)?;
@@ -96,6 +102,10 @@ fn authoritative_report_files(
                 };
                 authoritative_path(root, raw)
             }));
+        } else if request.report_type == "callSites" {
+            let raw = super::options::command_options(request, options)?;
+            let parsed: crate::napi_api::queries::CallSitesOptions = serde_json::from_value(raw)?;
+            files.push(authoritative_path(root, PathBuf::from(parsed.file)));
         } else if request.report_type == "effects" {
             if let Some(entry) = super::options::effects_options(request, options)?.entry {
                 files.push(authoritative_path(root, PathBuf::from(entry)));
@@ -140,4 +150,59 @@ fn has_server_report(options: &AnalyzeProjectOptions) -> bool {
         .reports
         .iter()
         .any(|request| super::is_server_report(&request.report_type))
+}
+
+fn prepare_ordinary_call_sites(
+    options: &AnalyzeProjectOptions,
+    root: &Path,
+    session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+) -> Result<Option<crate::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>> {
+    let files = options
+        .reports
+        .iter()
+        .filter(|request| request.report_type == "callSites")
+        .map(|request| {
+            let raw = super::options::command_options(request, options)?;
+            let parsed: crate::napi_api::queries::CallSitesOptions = serde_json::from_value(raw)?;
+            Ok(PathBuf::from(parsed.file))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if files.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(
+        crate::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan::new(
+            &files,
+            root,
+            options.tsconfig.as_deref().map(Path::new),
+            session,
+        )?,
+    ))
+}
+
+fn ordinary_call_site_files(
+    calls: Option<&crate::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>,
+) -> Vec<PathBuf> {
+    calls.map_or_else(Vec::new, |calls| calls.files())
+}
+
+fn prepare_call_site_runner_facts(
+    calls: Option<&crate::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>,
+    traversal: &SharedTraversalContext,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) {
+    if calls.is_some() && plan.integration_runner_configs.is_none() {
+        // Runner preparation may already have parsed these on the preparing
+        // thread. Stage their union facts there, where the request AST cache
+        // remains available, instead of reparsing on a Rayon worker.
+        plan.integration_runner_configs = Some(std::sync::Arc::new(
+            crate::integration_tests::prepare_runner_configs_with_catalog(
+                traversal.root(),
+                traversal.config(),
+                traversal.visible_paths_arc().paths_for(traversal.root()).as_ref(),
+                traversal.tsconfig_catalog_arc(),
+                traversal.source_store(),
+            ),
+        ));
+    }
 }

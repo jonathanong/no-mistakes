@@ -28,12 +28,36 @@ pub(crate) fn selection_from_config(
             names.entry(function.clone()).or_insert(None);
         }
     }
-    if names.is_empty() {
+    for target in &kind_config.targets {
+        anyhow::ensure!(
+            !target.module.trim().is_empty() && !target.export.trim().is_empty(),
+            "effects kind `{kind}` targets require non-empty module and export"
+        );
+    }
+    let mut targets: crate::fx::FxHashMap<
+        String,
+        crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>,
+    > = crate::fx::FxHashMap::default();
+    for target in &kind_config.targets {
+        if categories.is_empty()
+            || target
+                .category
+                .as_ref()
+                .is_some_and(|category| categories.contains(category))
+        {
+            targets
+                .entry(target.module.clone())
+                .or_default()
+                .insert(target.export.clone(), target.clone());
+        }
+    }
+    if names.is_empty() && targets.is_empty() {
         bail!("effects kind `{kind}` has no functions for the requested categories");
     }
     Ok(EffectsSelection {
         kind: kind.to_string(),
         names,
+        targets,
     })
 }
 
@@ -72,26 +96,72 @@ pub(crate) fn run_with_prepared(
             file_depths.entry(path.to_path_buf()).or_insert(entry.depth);
         }
     }
-    let mut call_sites: Vec<EffectCallSite> = file_depths
-        .iter()
-        .filter_map(|(path, depth)| facts.get(path).map(|file| (path, file, *depth)))
-        .flat_map(|(path, file, depth)| {
-            let relative_path = relative_slash_path(root, path);
-            file.effect_calls.iter().filter_map(move |call| {
-                selection
-                    .names
-                    .get(&call.callee)
-                    .map(|category| EffectCallSite {
-                        file: relative_path.clone(),
-                        line: call.line,
-                        callee: call.callee.clone(),
-                        category: category.clone(),
-                        caller: call.caller.clone(),
-                        depth,
-                    })
-            })
-        })
-        .collect();
+    let mut call_sites = Vec::new();
+    for (path, depth) in &file_depths {
+        let Some(file) = facts.get(path) else {
+            continue;
+        };
+        let relative_path = relative_slash_path(root, path);
+        let mut matched_offsets = crate::fx::FxHashSet::default();
+        for call in &file.effect_calls {
+            if let Some(category) = selection.names.get(&call.callee) {
+                call_sites.push(EffectCallSite {
+                    file: relative_path.clone(),
+                    line: call.line,
+                    callee: call.callee.clone(),
+                    category: category.clone(),
+                    caller: call.caller.clone(),
+                    depth: *depth,
+                });
+                matched_offsets.insert(call.offset);
+            }
+        }
+        if selection.targets.is_empty() {
+            continue;
+        }
+        let callers: crate::fx::FxHashMap<_, _> = file
+            .function_calls
+            .iter()
+            .map(|call| (call.offset, &call.syntactic_caller))
+            .collect();
+        for site in graph.call_sites_in_file(path) {
+            if !matches!(
+                site.invocation,
+                crate::codebase::dependencies::extract::InvocationKind::Call
+                    | crate::codebase::dependencies::extract::InvocationKind::Construct
+            ) {
+                continue;
+            }
+            let crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport {
+                specifier,
+                export_path,
+                ..
+            } = &site.target
+            else {
+                continue;
+            };
+            let Some(target) = selection
+                .targets
+                .get(specifier.as_str())
+                .and_then(|exports| exports.get(export_path.as_str()))
+            else {
+                continue;
+            };
+            if !matched_offsets.insert(site.offset) {
+                continue;
+            }
+            call_sites.push(EffectCallSite {
+                file: relative_path.clone(),
+                line: site.line as usize,
+                callee: target.export.clone(),
+                category: target.category.clone(),
+                caller: callers
+                    .get(&site.offset)
+                    .and_then(|caller| (*caller).clone()),
+                depth: *depth,
+            });
+        }
+    }
     call_sites.sort();
     let mut by_category: BTreeMap<String, usize> = BTreeMap::new();
     for site in &call_sites {

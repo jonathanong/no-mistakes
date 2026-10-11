@@ -14,14 +14,23 @@ pub(crate) fn resolve_targets(
     root: Option<&Path>,
     tsconfig: Option<&Path>,
 ) -> Result<Vec<Target>> {
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    resolve_targets_with_session(files, root, tsconfig, session)
+}
+
+pub(crate) fn resolve_targets_with_session(
+    files: &[PathBuf],
+    root: Option<&Path>,
+    tsconfig: Option<&Path>,
+    session: Arc<crate::codebase::analysis_session::AnalysisSession>,
+) -> Result<Vec<Target>> {
     anyhow::ensure!(!files.is_empty(), "at least one file is required");
     let cwd = std::env::current_dir().context("reading current directory")?;
     let root = normalize_path(&crate::cli::resolve_root(
         root.unwrap_or_else(|| Path::new(".")),
         &cwd,
     ));
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let dataset = session.dataset(&root);
     let snapshot = dataset.visible_paths_arc();
     let sources = dataset.sources_for(&root);

@@ -1,0 +1,15 @@
+effects:
+  resolved:
+    targets:
+      - {module: '@vendor/effects', export: 'write', category: storage}
+      - {module: '@vendor/effects', export: 'Client'}
+  mixed:
+    functions: [write]
+    targets:
+      - {module: '@vendor/effects', export: 'write', category: storage}
+  invalid:
+    targets:
+      - {module: '', export: write}
+  repository:
+    targets:
+      - {module: './local', export: write}

@@ -75,7 +75,9 @@ impl PreparedScope {
         let raw = super::flow_options(request, options)?;
         let parsed: crate::napi_api::options::FlowOptions = serde_json::from_str(&raw)?;
         let options = crate::napi_api::project::build_flow_options(parsed)?;
-        Ok(crate::cli::json_value(&self.traversal.flow_report(&options)?))
+        Ok(crate::cli::json_value(
+            &self.traversal.flow_report(&options)?,
+        ))
     }
 
     pub(super) fn effects_report(
@@ -118,5 +120,57 @@ impl PreparedScope {
             .traversal
             .rsc_callers_report(Path::new(component), parsed.depth)?;
         Ok(crate::cli::json_value(&report))
+    }
+}
+
+impl PreparedScope {
+    fn call_sites_report(
+        &self,
+        request: &AnalyzeReportRequest,
+        options: &AnalyzeProjectOptions,
+    ) -> Result<Box<RawValue>> {
+        let raw = super::options::command_options(request, options)?;
+        let parsed: crate::napi_api::queries::CallSitesOptions = serde_json::from_value(raw)?;
+        anyhow::ensure!(!parsed.file.trim().is_empty(), "file is required");
+        anyhow::ensure!(
+            !parsed.export_name.trim().is_empty(),
+            "exportName is required"
+        );
+        let root = self.traversal.root();
+        let file = authoritative_path(root, PathBuf::from(parsed.file));
+        let stored = self
+            .facts
+            .ts
+            .get(&file)
+            .or_else(|| self.symbol_facts.ts.get(&file))
+            .with_context(|| format!("missing facts for {}", file.display()))?;
+        anyhow::ensure!(
+            !stored.ts.fatal_parse_error,
+            "extracting symbols from {}: fatal parser failure",
+            file.display()
+        );
+        let symbols = if crate::ast::legacy_symbols_share_standard_parse(&file) {
+            stored.ts.symbols.as_ref()
+        } else {
+            stored.legacy_symbols.as_ref()
+        }
+        .with_context(|| format!("missing symbols for {}", file.display()))?;
+        let (files, graph) = self
+            .ordinary_calls
+            .as_ref()
+            .and_then(|calls| calls.projection_for(&file))
+            .context("ordinary call-sites projection is missing")?;
+        let report = crate::codebase::queries::call_sites::project_report(
+            root,
+            &file,
+            &parsed.export_name,
+            symbols,
+            crate::codebase::queries::call_sites::PreparedCallSitesProjection {
+                graph,
+                facts: self.traversal.prepared_facts(),
+                files: files.indexable(),
+            },
+        )?;
+        Ok(RawValue::from_string(crate::cli::json_string(&report))?)
     }
 }

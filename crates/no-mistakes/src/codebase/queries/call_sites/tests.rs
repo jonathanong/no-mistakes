@@ -1,10 +1,7 @@
 use super::*;
 use crate::cli::Format;
-use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::queries::render::render;
-use crate::codebase::ts_symbols::FileSymbols;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -93,13 +90,6 @@ fn export_without_importers_has_no_call_sites() {
 }
 
 #[test]
-fn unreadable_file_yields_no_sites() {
-    let names: HashSet<String> = ["used".to_string()].into_iter().collect();
-    let sites = sites_for_file(Path::new("/no/such/file.ts"), &names, Path::new("/"), None);
-    assert!(sites.is_empty());
-}
-
-#[test]
 fn reverse_preparation_parses_each_project_file_once() {
     let source = fixture_root("queries");
     let fixture = crate::test_support::materialize_saved_fixture(&source);
@@ -119,23 +109,6 @@ fn reverse_preparation_parses_each_project_file_once() {
         files.iter().all(|file| counts.get(file) == Some(&1)),
         "each source file must be parsed once: {counts:#?}"
     );
-}
-
-#[test]
-fn reexport_cycle_terminates() {
-    // a.ts and b.ts re-export `S` from each other; the visited guard must stop
-    // the worklist from looping forever.
-    let a = PathBuf::from("/repo/a.ts");
-    let b = PathBuf::from("/repo/b.ts");
-    let mut map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    map.insert(b.clone(), vec![(a.clone(), "S".into(), "S".into(), true)]);
-    map.insert(a.clone(), vec![(b.clone(), "S".into(), "S".into(), true)]);
-    let index = SymbolIndex::build(&map);
-    // The visited guard must make this terminate rather than loop forever.
-    let by_file = local_names_by_file(&index, &FileSymbols::default(), &a, "S");
-    // Only the defining file is scanned; the re-export barrels are traversal
-    // hops, not call-site sources.
-    assert!(by_file.contains_key(&a));
 }
 
 #[test]
@@ -261,4 +234,58 @@ fn call_site_text_writers_surface_io_errors() {
     crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
         &used, &dead,
     ]);
+}
+
+#[test]
+fn resolves_namespace_lexical_aliases_and_shadowed_bindings() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("resolved-call-sites");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&args(root, "target.ts", "used")).unwrap();
+    let sites: Vec<_> = report
+        .call_sites
+        .iter()
+        .map(|site| (site.file.as_str(), site.line))
+        .collect();
+    assert_eq!(
+        sites,
+        vec![
+            ("consumer.ts", 3),
+            ("consumer.ts", 4),
+            ("consumer.ts", 6),
+            ("consumer.ts", 8),
+            ("consumer.ts", 9),
+            ("consumer.ts", 21),
+            ("consumer.ts", 21),
+            ("consumer.ts", 22),
+            ("consumer.ts", 29),
+            ("consumer.ts", 33),
+            ("target.ts", 3)
+        ]
+    );
+    assert_eq!(report.call_sites[0].args, vec!["number"]);
+    assert_eq!(report.call_sites[1].args, vec!["string"]);
+}
+
+#[test]
+fn renamed_export_selects_the_same_callable_as_its_declaration() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("resolved-call-sites");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let declared = run_json(args(root.clone(), "target.ts", "used")).unwrap();
+    let renamed = run_json(args(root, "target.ts", "exposed")).unwrap();
+    let declared: serde_json::Value = serde_json::from_str(&declared).unwrap();
+    let renamed: serde_json::Value = serde_json::from_str(&renamed).unwrap();
+    assert_eq!(declared["callSites"], renamed["callSites"]);
+}
+
+#[test]
+fn explicit_value_export_shadows_anonymous_star_forwarding() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("resolved-call-sites");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&args(root, "star-shadow.ts", "used")).unwrap();
+    assert_eq!(report.call_sites.len(), 1);
+    assert_eq!(report.call_sites[0].file, "consumer.ts");
+    assert_eq!(report.call_sites[0].line, 31);
 }

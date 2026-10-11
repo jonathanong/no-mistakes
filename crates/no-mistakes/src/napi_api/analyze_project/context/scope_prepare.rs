@@ -18,6 +18,7 @@ impl PreparedScopePlan {
         session.insert_visible_paths(&root, visible_paths.clone());
         let (import_usages, import_usage_files) =
             prepare_import_usage_views(options, &root, &session)?;
+        let ordinary_calls = prepare_ordinary_call_sites(options, &root, session.clone())?;
         let build_plan = graph_build_plan(options)?;
         let has_non_check_report = options
             .reports
@@ -73,6 +74,7 @@ impl PreparedScopePlan {
         if check.is_some() {
             check_plan.include(report_plan.clone());
         }
+        prepare_call_site_runner_facts(ordinary_calls.as_ref(), &traversal, &mut check_plan);
         let playwright = prepare_playwright_views(options, &traversal, check.as_ref())?;
         let mut files = check
             .as_ref()
@@ -153,6 +155,11 @@ impl PreparedScopePlan {
         } else {
             Vec::new()
         };
+        supplemental_report_files.extend(
+            ordinary_call_site_files(ordinary_calls.as_ref())
+                .into_iter()
+                .filter(|path| !primary_paths.contains(path)),
+        );
         supplemental_report_files.sort();
         supplemental_report_files.dedup();
         let sources = traversal.source_store();
@@ -168,6 +175,7 @@ impl PreparedScopePlan {
         let (queue_traversal_keys, server_traversal_keys) = traversal_report_keys(options)?;
         Ok(Self {
             options: options.clone(),
+            ordinary_calls,
             root,
             traversal,
             primary: ScopeFactPlan {

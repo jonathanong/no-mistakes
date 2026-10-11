@@ -538,7 +538,14 @@ resolved within that report's effective scope. `reactUsages` accepts
 `lockfileDiff`, CI/infra/swift reports, `impactedChecks`, and
 `validateMermaidMarkdown` are also valid `reports[].type` values. They inherit
 the request `root`/`tsconfig`/`config` and dispatch through the dedicated Node
-APIs. `resolveCheck` import rows include `computed: true` for non-literal
+APIs. `callSites` shares the request's prepared argument and call facts,
+including namespace calls and static lexical aliases while excluding shadowed
+bindings. Its ordinary resolver scope matches the standalone query even when
+companion reports use broader runner catalogs or ignored explicit roots;
+equivalent call graphs are reused. `effects` also supports binding-aware
+`effects.<kind>.targets` config
+selectors by exact import specifier and export path; its string lists retain
+spelling-based matching. `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
 same visible `exports`/`main` resolver as dependency `workspace` edges; missing or

@@ -66,6 +66,8 @@ pub struct BackendRouteFact {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EffectCallFact {
+    /// Source byte identifying the canonical effect occurrence.
+    pub offset: u32,
     pub line: usize,
     pub callee: String,
     pub category: Option<String>,

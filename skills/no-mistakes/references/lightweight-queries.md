@@ -14,7 +14,7 @@ All emit JSON on non-TTY (or with `--json`) and accept `--root`, `--tsconfig`,
 
 ## Resolution scope
 
-These commands run one reverse import scan that resolves **relative**,
+Reverse queries resolve **relative**,
 **tsconfig path**, and recognized **workspace package** imports through visible
 package entry points. Configured tsconfig `paths` aliases or `baseUrl` resolution
 takes precedence and can resolve a subpath even when the package's `exports`
@@ -64,12 +64,9 @@ no-mistakes dead-exports src/utils.mts oldHelper legacyFn --format json
 
 Every call site of an exported function with coarse argument shapes (`string`,
 `number`, `object`, `array`, `arrow`, `spread`, `other`, …) — no type inference.
-Follows named and star re-export barrels and accounts for renamed local export
-bindings. A star barrel that explicitly exports a same-named local symbol can
-make its consumers over-report for the target export. Import-then-re-export
-chains are not followed: the barrel can be scanned while downstream callers are
-omitted. Matches direct identifier calls only (`fn(...)`), not `ns.fn()` or
-aliased indirection.
+Matches the canonical exported callable identity through namespace calls,
+static lexical aliases, and re-export barrels. Shadowed bindings are excluded.
+Dynamic selection and aliases invalidated by reassignment can remain unresolved.
 
 ```bash
 no-mistakes call-sites src/api.mts handler --format json
@@ -93,3 +90,18 @@ One input returns the historical per-file result. Multiple inputs return sorted
 `results`, an `allResolve` summary, and sorted `unresolvedFiles`; duplicate
 paths are checked once. The batch uses one visible-file inventory and one
 parallel union import-fact pass.
+
+## `effects KIND --entry FILE`
+
+Report configured effect occurrences in runtime imports reachable from an entry.
+String `functions`/`categories` match source spellings; use
+`effects.<kind>.targets: [{ module: "@vendor/database", export: "query", category: "storage" }]`
+for binding-aware import aliases and namespace members. Module specifiers match
+exactly for repository callables; a different repository barrel requires its own
+selector. Explicit external re-exports resolve to the external module selector.
+Shadowed bindings are excluded from target matching. See
+[effects configuration](../../../docs/configuration/effects.md).
+
+```bash
+no-mistakes effects storage --entry src/server.ts --root . --format json
+```

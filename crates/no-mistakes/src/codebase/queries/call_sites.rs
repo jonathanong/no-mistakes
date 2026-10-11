@@ -1,14 +1,14 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_reverse_analysis_with_plan, export_lookup_symbol, find_export};
+use super::reverse::{find_export, symbols_from_prepared};
 use super::shared::{rel_str, resolve_target};
 use crate::cli::Format;
-use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::{ExportKind, FileSymbols};
+use crate::codebase::dependencies::extract::InvocationKind;
+use crate::codebase::dependencies::graph::{CallRoot, DepGraph};
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use rayon::prelude::*;
 use serde::Serialize;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::BTreeSet;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -61,86 +61,33 @@ pub struct CallSitesReport {
     call_sites: Vec<CallSite>,
 }
 
-/// Map every file that may call the export to the local name(s) it is bound to.
-///
-/// The defining file is scanned under the export's local binding (which differs
-/// from the public name for renamed and default exports). Re-export barrels —
-/// named (`export { x } from`) and star (`export * from`) — are transparent: we
-/// follow them to their consumers but never scan the barrel file itself, so an
-/// unrelated local call in a barrel is not mistaken for a call of the export.
-fn local_names_by_file(
-    index: &SymbolIndex,
-    symbols: &FileSymbols,
-    abs_file: &Path,
-    export_name: &str,
-) -> HashMap<PathBuf, HashSet<String>> {
-    let export = find_export(symbols, export_name);
-    let lookup = export.map_or_else(|| export_name.to_string(), export_lookup_symbol);
-    // Scan the defining file under the export's local binding (its declaration
-    // name for a default/renamed export), not the public query name.
-    let local = export
-        .map(|export| export.local.clone().unwrap_or_else(|| export.name.clone()))
-        .unwrap_or_else(|| export_name.to_string());
-    // A re-export (`export { x } from`) creates no local binding in this file,
-    // so don't scan it — only follow it to its consumers.
-    let is_reexport_target = matches!(
-        export.map(|export| &export.kind),
-        Some(ExportKind::ReExport { .. })
-    );
-
-    let mut by_file: HashMap<PathBuf, HashSet<String>> = HashMap::new();
-    if !is_reexport_target {
-        by_file.insert(abs_file.to_path_buf(), HashSet::from([local]));
-    }
-    let mut visited: HashSet<(PathBuf, String)> = HashSet::new();
-    let mut worklist = vec![(abs_file.to_path_buf(), lookup)];
-
-    while let Some((file, name)) = worklist.pop() {
-        if !visited.insert((file.clone(), name.clone())) {
-            continue;
-        }
-        if let Some(records) = index.importers_of(&file, &name) {
-            for (importer, local, is_reexport) in records {
-                if *is_reexport {
-                    // Named re-export forwards the symbol under the barrel's name.
-                    worklist.push((importer.to_path_buf(), local.to_string()));
-                } else {
-                    by_file
-                        .entry(importer.to_path_buf())
-                        .or_default()
-                        .insert(local.to_string());
-                }
-            }
-        }
-        // Anonymous `export *` barrels (local name `*`) forward `name`
-        // unchanged. Default is not forwarded by `export *`, and a named
-        // `export * as ns` is not a transparent forward, so neither is followed.
-        if name != "default" {
-            if let Some(records) = index.importers_of(&file, "*") {
-                for (importer, local, is_reexport) in records {
-                    if *is_reexport && local.as_ref() == "*" {
-                        worklist.push((importer.to_path_buf(), name.clone()));
-                    }
-                }
-            }
-        }
-    }
-    by_file
-}
+pub(crate) mod prepared;
 
 fn sites_for_file(
     path: &Path,
-    names: &HashSet<String>,
+    targets: &crate::fx::FxHashSet<crate::codebase::dependencies::NodeId>,
     root: &Path,
+    graph: &DepGraph,
     facts: Option<&crate::codebase::ts_source::facts::TsFileFacts>,
 ) -> Vec<CallSite> {
     let Some(facts) = facts.filter(|facts| facts.parse_error.is_none()) else {
         return Vec::new();
     };
+    let offsets: crate::fx::FxHashSet<_> = graph
+        .call_sites_in_file(path)
+        .iter()
+        .filter(|site| site.invocation == InvocationKind::Call)
+        .filter(|site| {
+            site.target_node
+                .as_ref()
+                .is_some_and(|node| targets.contains(node))
+        })
+        .map(|site| site.offset)
+        .collect();
     facts
         .call_sites
         .iter()
-        .filter(|raw| names.contains(&raw.callee))
+        .filter(|raw| offsets.contains(&raw.offset))
         .map(|raw| CallSite {
             file: rel_str(path, root),
             line: raw.line,
@@ -152,43 +99,86 @@ fn sites_for_file(
         .collect()
 }
 
-fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
-    let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let analysis = build_reverse_analysis_with_plan(
-        &target,
-        crate::codebase::ts_source::facts::TsFactPlan {
-            call_sites: true,
-            ..crate::codebase::ts_source::facts::TsFactPlan::default()
-        },
-    );
-    let analysis = analysis?;
-    let symbols = analysis.symbols(&target)?;
-    // call-sites finds invocations, so the target must be a value export — a
-    // type-only export (interface/type alias) has no runtime callee.
-    anyhow::ensure!(
-        find_export(&symbols, &args.export_name).is_some_and(|export| !export.is_type_only),
-        "`{}` is not a value export of {}",
-        args.export_name,
-        args.file.display()
-    );
-    let by_file = local_names_by_file(
-        &analysis.index,
-        &symbols,
-        &target.abs_file,
-        &args.export_name,
-    );
+pub(crate) struct PreparedCallSitesProjection<'a> {
+    pub(crate) graph: &'a DepGraph,
+    pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
+    pub(crate) files: &'a [PathBuf],
+}
 
-    let mut call_sites: Vec<CallSite> = by_file
+fn project_sites(
+    root: &Path,
+    file: &Path,
+    export_name: &str,
+    projection: &PreparedCallSitesProjection<'_>,
+) -> Vec<CallSite> {
+    let targets = projection
+        .graph
+        .expand_call_roots(&[CallRoot::Function {
+            file: file.to_path_buf(),
+            symbol: export_name.to_string(),
+        }])
+        .into_iter()
+        .collect();
+    let mut sites: Vec<_> = projection
+        .files
         .par_iter()
-        .flat_map(|(path, names)| {
-            sites_for_file(path, names, &target.root, analysis.facts_at(path))
+        .flat_map(|path| {
+            sites_for_file(
+                path,
+                &targets,
+                root,
+                projection.graph,
+                projection.facts.get(path),
+            )
         })
         .collect();
-    call_sites.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
+    sites.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
+    sites
+}
 
+fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
+    let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
+    let analysis = prepared::prepare(&target)?;
+    let symbols = symbols_from_prepared(&target, &analysis.facts)?;
+    project_report(
+        &target.root,
+        &target.abs_file,
+        &args.export_name,
+        &symbols,
+        PreparedCallSitesProjection {
+            graph: &analysis.graph,
+            facts: &analysis.facts,
+            files: analysis.files.indexable(),
+        },
+    )
+}
+
+pub(crate) fn project_report(
+    root: &Path,
+    file: &Path,
+    export_name: &str,
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+    projection: PreparedCallSitesProjection<'_>,
+) -> Result<CallSitesReport> {
+    let export = find_export(symbols, export_name).filter(|export| !export.is_type_only);
+    anyhow::ensure!(
+        export.is_some(),
+        "`{}` is not a value export of {}",
+        export_name,
+        rel_str(file, root)
+    );
+    // The public default declaration name remains accepted alongside `default`.
+    let canonical_export = export.map_or(export_name, |export| {
+        if export.kind == crate::codebase::ts_symbols::ExportKind::Default {
+            "default"
+        } else {
+            export_name
+        }
+    });
+    let call_sites = project_sites(root, file, canonical_export, &projection);
     Ok(CallSitesReport {
-        file: rel_str(&target.abs_file, &target.root),
-        export: args.export_name.clone(),
+        file: rel_str(file, root),
+        export: export_name.to_string(),
         call_sites,
     })
 }

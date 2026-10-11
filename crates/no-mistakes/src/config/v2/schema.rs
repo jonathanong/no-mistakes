@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 
 mod applications;
 mod ci_checks;
+mod effects;
 mod infra_config;
 mod postgres_executors;
 mod rule_targets;
@@ -17,6 +18,7 @@ mod string_or_list;
 mod tests_config;
 
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
+pub use effects::{EffectKindConfig, EffectTargetConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
     DartConfig, DotnetConfig, DotnetProjectConfig, ElixirConfig, GoConfig, ImpactConfig,
@@ -60,22 +62,6 @@ pub struct NoMistakesConfig {
 pub struct ReactTraitsConfig {
     pub frontend_root: Option<String>,
     pub assert_no_fetch: Option<bool>,
-}
-
-/// One named effect family (e.g. `valkey`) for the `effects` query.
-///
-/// `categories` maps a category label (e.g. `cache`, `pubsub`) to the function
-/// or constructor names that belong to it; `functions` is a flat list applied
-/// when no category split is needed (reported as uncategorized).
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct EffectKindConfig {
-    pub categories: BTreeMap<String, Vec<String>>,
-    pub functions: Vec<String>,
-    /// Configured transaction-client sinks for per-item query diagnostics.
-    pub transaction_functions: Vec<String>,
-    /// Configured batch/pipeline builders which exempt their own call paths.
-    pub batch_functions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

@@ -5,6 +5,12 @@ and JavaScript are the reference implementation for the full product surface.
 This page is the contract for bringing other languages and their key frameworks
 up to that surface.
 
+TS/JS `call-sites` resolves exported callable identities through namespace calls,
+static lexical aliases, and barrels, excluding shadowed bindings. The `effects`
+query supports opt-in module/export selectors with the same prepared call
+resolver while retaining spelling-based string configuration. CLI, async Node,
+and batched `analyzeProject` queries share this behavior.
+
 TypeScript/JavaScript route coverage includes opt-in registered Vitest integration
 sources for exact canonical Next.js page routes. These retain Vitest ownership and share
 the canonical `route-test` graph, while selector and fetch coverage remain browser

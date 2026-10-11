@@ -26,6 +26,10 @@ effects:
       pubsub: [createPublisher, createSubscriber]
       invalidation: [invalidate]
       queue: [GlideMQ]
+    targets:
+      - module: "@vendor/cache"
+        export: "ValkeyCache"
+        category: cache
 ```
 
 Key options: `--entry` (required), `--category` (repeatable, restricts to those
@@ -44,8 +48,20 @@ Output shape:
 }
 ```
 
-Limitation: matching is by simple call/constructor name, so an aliased import
-(`import { ValkeyCache as VC }`) called as `VC()` is not matched. Reachability
+`functions` and `categories` retain spelling-based matching: an aliased import
+called under another name is not matched, and a same-named local binding can
+match. Use `targets` for binding-aware matching by exact import `module` and
+`export` path. These selectors follow named/default imports, namespace members,
+and statically resolvable lexical aliases, while excluding shadowed bindings.
+`category` is optional; selectors without one are uncategorized. A target-only
+family is valid. The report's `callee` is the configured export path.
+
+Module selectors match the import specifier exactly for repository callables;
+a different repository barrel needs its own selector. Explicit re-exports of
+external modules resolve to the external module/export selector. Dynamic calls
+and invalidated aliases can remain unresolved.
+When both a spelling and a target select one occurrence, the spelling match
+keeps its existing category and the occurrence appears once. Reachability
 follows import edges from the entry, so a file that `filesystem.skipDirectories`
 excludes from discovery can still be reported if it is imported from the entry.
 An unknown `<kind>` or a missing entry file is an error.

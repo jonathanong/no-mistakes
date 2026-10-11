@@ -63,7 +63,7 @@ export interface DeadExportsResult {
 }
 
 export interface CallSitesOptions extends QueryFileOptions {
-  /** The exported function name to find call sites for. */
+  /** Exported callable to resolve through namespaces, static lexical aliases, and barrels. */
   exportName: string;
 }
 
