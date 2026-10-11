@@ -90,6 +90,7 @@ pub struct TsFileFacts {
     pub fatal_parse_error: bool,
     pub source: Option<std::sync::Arc<str>>,
     pub imports: Vec<ExtractedImport>,
+    pub eager_require_specifiers: Vec<String>,
     pub imported_bindings: Vec<ImportedBinding>,
     pub exported_bindings: Vec<ExportedBinding>,
     pub callable_aliases: Vec<crate::codebase::dependencies::extract::CallableAlias>,

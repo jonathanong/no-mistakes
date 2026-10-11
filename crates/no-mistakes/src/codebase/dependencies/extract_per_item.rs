@@ -71,7 +71,9 @@ impl ImportCollector {
 fn visit_call_expression_per_item<'a>(collector: &mut ImportCollector, call: &CallExpression<'a>) {
     let iteration = collector.record_iteration_callback(call);
     let before = collector.function_calls.len();
-    visit_call_expression_with_imports(collector, call);
+    with_conditional_execution(collector, call_has_execution_guard(call), |collector| {
+        visit_call_expression_with_imports(collector, call);
+    });
     if let Some((offset, name)) = iteration {
         // Generic repository argument transitions predate precise callback
         // positions. Preserve this actual use offset for canonical alias/TDZ
@@ -81,5 +83,5 @@ fn visit_call_expression_per_item<'a>(collector: &mut ImportCollector, call: &Ca
         }
     }
     collector.record_per_item_invocations(before);
-    walk::walk_call_expression(collector, call);
+    walk_call_with_execution(collector, call);
 }

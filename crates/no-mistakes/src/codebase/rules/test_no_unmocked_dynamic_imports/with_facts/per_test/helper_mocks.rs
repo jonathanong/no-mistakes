@@ -82,20 +82,7 @@ fn eager_requires(request: &Request<'_>, file: &Path) -> HashSet<PathBuf> {
         .shared
         .ts
         .get(file)
-        .map(|facts| {
-            facts
-                .ts
-                .imports
-                .iter()
-                .filter(|import| {
-                    import.kind == crate::codebase::dependencies::extract::ImportKind::Require
-                        && import.function_scope.is_none()
-                        && import.function_scope_id.is_none()
-                        && !import.computed
-                })
-                .map(|import| import.specifier.clone())
-                .collect::<Vec<_>>()
-        })
+        .map(|facts| facts.ts.eager_require_specifiers.clone())
         .unwrap_or_default();
     resolve_mock_specifiers(
         &specifiers,

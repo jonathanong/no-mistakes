@@ -16,7 +16,7 @@ fn inert_generator_labels_pass_and_executed_effects_follow_fail_ignore_and_suppr
             _ => None,
         })
         .collect::<Vec<_>>();
-    assert_eq!(expected.len(), 28);
+    assert_eq!(expected.len(), 40);
     let report = check_with_suppressed("postgres-no-offset", "switch-inert-generators", true);
     let findings = report["rules"].as_array().unwrap();
     assert_eq!(findings.len(), expected.len(), "{report}");

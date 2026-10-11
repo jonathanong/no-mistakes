@@ -12,7 +12,7 @@ fn generator_creation_skips_bodies_but_preserves_evaluated_and_consumed_effects(
                 .map(|(_, expectation)| (index as u32 + 1, expectation))
         })
         .collect::<Vec<_>>();
-    assert_eq!(expected.len(), 52);
+    assert_eq!(expected.len(), 72);
     assert_eq!(file.calls.len(), expected.len(), "{:#?}", file.calls);
     for (call, (line, expectation)) in file.calls.iter().zip(expected) {
         assert_eq!(call.line, line, "{call:#?}");

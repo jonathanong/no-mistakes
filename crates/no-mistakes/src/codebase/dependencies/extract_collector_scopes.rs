@@ -48,6 +48,7 @@ impl ImportCollector {
             return;
         }
         if !specifier.is_empty() {
+            record_eager_require(self, specifier, kind, computed);
             // Flag a runtime import in the callback directly forming an exported
             // value (e.g. `next/dynamic(() => import('./Foo'))`) so the edge
             // survives reachability analysis. Limit it to one function level below

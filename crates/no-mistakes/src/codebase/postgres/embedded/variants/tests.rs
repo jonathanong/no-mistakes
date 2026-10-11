@@ -36,6 +36,8 @@ mod opaque_logical;
 mod positions;
 #[path = "tests/switch_generators.rs"]
 mod switch_generators;
+#[path = "tests/switch_member_invocations.rs"]
+mod switch_member_invocations;
 #[path = "tests/switch_scalar_labels.rs"]
 mod switch_scalar_labels;
 #[path = "tests/unaffected_switch.rs"]

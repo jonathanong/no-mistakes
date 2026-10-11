@@ -61,7 +61,7 @@ impl<'a> Visit<'a> for Writes {
         if self.found {
             return;
         }
-        match unwrap_ts_wrappers(&call.callee) {
+        match invocation_target(&call.callee) {
             Expression::ArrowFunctionExpression(arrow) => {
                 walk::walk_arrow_function_expression(self, arrow);
             }
@@ -151,4 +151,23 @@ impl<'a> Visit<'a> for Writes {
     // Creating or passing a callback does not execute its body.
     fn visit_function(&mut self, _: &Function<'a>, _: ScopeFlags) {}
     fn visit_arrow_function_expression(&mut self, _: &ArrowFunctionExpression<'a>) {}
+}
+
+fn invocation_target<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
+    let expression = unwrap_ts_wrappers(expression);
+    let receiver = match expression {
+        Expression::StaticMemberExpression(member)
+            if matches!(member.property.name.as_str(), "call" | "apply") =>
+        {
+            &member.object
+        }
+        Expression::ComputedMemberExpression(member)
+            if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(property)
+                if matches!(property.value.as_str(), "call" | "apply")) =>
+        {
+            &member.object
+        }
+        _ => return expression,
+    };
+    unwrap_ts_wrappers(receiver)
 }

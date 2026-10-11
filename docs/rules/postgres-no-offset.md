@@ -113,9 +113,15 @@ in a label make branching executor SQL inside that switch unanalyzable. The
 default `fail` reports the executor line; `ignore` skips that uncertain call.
 Literal SQL inside the switch still produces ordinary `offset` findings, and
 callbacks that are merely created or passed are not executed by this heuristic.
+Literal function or arrow closures invoked via `.call(...)` or `.apply(...)`
+also follow this boundary, including TypeScript wrappers and literal computed
+property names. Arguments are evaluated before the invoked body. Referencing
+`.call` without invoking it, using `.bind(...)`, or passing a callback keeps
+that callback body inert.
 Creating an unused generator iterator also leaves its body unexecuted, so body
-writes alone do not make the query unanalyzable. Arguments and parameter defaults
-still execute. Advancing or consuming an iterator (for example, `.next()`,
+writes alone do not make the query unanalyzable, including literal `.call(...)`
+and `.apply(...)` invocations. Arguments and parameter defaults still execute.
+Advancing or consuming an iterator (for example, `.next()`,
 `for...of`, spread, tagged template interpolation, or `yield*`), storing it, or
 passing it to an unknown consumer retains conservative body checks, including
 parameter and destructuring defaults.
@@ -205,6 +211,19 @@ With `importSpecifier` set, these two options also match imports from its subpat
 file is inside the package `importSpecifier` resolves to; a same-named import outside
 that package does not. If the package root cannot be determined, relative imports do
 not match. `executorNames` still requires the exact module.
+
+Relative factory/type candidates capture their own SQL before invocation, but
+their package owner is confirmed only in prepared resolver projection. A
+mutable builder passed to one loses finite alternatives for subsequent reuse,
+including aliases, even if the owner is later accepted. Subsequent branching
+calls therefore report `unanalyzable` under the default `unanalyzableSql: fail`,
+or are skipped with `ignore`; the analyzer does not invent an OFFSET clause.
+The original pending call still checks proven SQL from later argument appends,
+including OFFSET, if its owner is accepted; `ignore` does not skip this concrete
+SQL.
+Primitive SQL copies and already-confirmed direct executors retain their
+existing behavior. See the
+[finite SQL model](../postgres-facts.md#finite-sql-alternatives).
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).

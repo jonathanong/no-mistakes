@@ -18,10 +18,14 @@ mod final_interpolation;
 mod guard_alias;
 #[path = "cli_check_rules_postgres_variants/helper_guards.rs"]
 mod helper_guards;
+#[path = "cli_check_rules_postgres_variants/relative_consumer_escape.rs"]
+mod relative_consumer_escape;
 #[path = "cli_check_rules_postgres_variants/switch_generators.rs"]
 mod switch_generators;
 #[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
 mod switch_labels;
+#[path = "cli_check_rules_postgres_variants/switch_member_invocations.rs"]
+mod switch_member_invocations;
 #[path = "cli_check_rules_postgres_variants/switch_scalar_labels.rs"]
 mod switch_scalar_labels;
 #[path = "cli_check_rules_postgres_variants/unaffected_switch.rs"]

@@ -42,8 +42,13 @@ disable finite recovery inside a switch because failed labels can change later
 scalar guards. CLI and async Node checks apply the same `unanalyzableSql` policy;
 literal SQL remains analyzable and callbacks that are only created or passed do
 not execute.
+This includes literal closures invoked through `.call(...)` or `.apply(...)`,
+with TypeScript wrappers or literal computed property names. Callee and argument
+writes are inspected before the body; merely referencing or binding a closure
+does not invoke it.
 Generator creation checks evaluated arguments and parameter defaults while
-leaving an unused iterator's body unexecuted. Consumed or stored iterators retain
+leaving an unused iterator's body unexecuted, including creation through literal
+`.call(...)` and `.apply(...)` invocations. Consumed or stored iterators retain
 conservative body checks in both CLI and async Node checks, including iterator
 results returned through invoked literal closures. No Node source-fact JSON
 fields or TypeScript declarations change.
@@ -59,6 +64,14 @@ provenance and prepared ordering metadata; these fields are not serialized by
 the Node check or source APIs. Finding deduplication keeps physical token
 origins in request-local internal metadata. Public `RuleFinding` fields and
 their JSON shape remain unchanged.
+
+For repository checks, relative executor factory/type owners are confirmed in
+prepared resolver projection after extraction. A provisional consumer may
+mutate its builder argument, so later finite builder alternatives are discarded
+conservatively, even when that owner is later accepted. The original pending
+call retains its captured SQL and source order, and each rule's existing
+`unanalyzableSql` policy handles subsequent branching calls. This reuses the
+same prepared facts and does not change Node types or JSON contracts.
 
 ## Contract
 

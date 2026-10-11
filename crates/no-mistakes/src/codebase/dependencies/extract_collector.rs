@@ -14,6 +14,8 @@ struct ImportCollector {
     /// unused so the collector does not retain a full source copy.
     line_starts: Vec<u32>,
     imports: Vec<ExtractedImport>,
+    eager_require_specifiers: std::collections::BTreeSet<String>,
+    conditional_execution: bool,
     function_calls: Vec<FunctionCall>,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,

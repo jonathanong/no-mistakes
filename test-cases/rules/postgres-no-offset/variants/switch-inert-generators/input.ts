@@ -256,3 +256,143 @@ switch (2) {
   case consumeTagged`${function* () { tagGate36 = true; yield 1; }}`: break;
   case 2: query(tagGate36 ? "SELECT 36 OFFSET 1" : "SELECT 36"); break; // pass
 }
+
+/* generator call creation. */
+let invocationGate37 = false;
+switch (2) {
+  case (function* () { invocationGate37 = true; yield 1; }).call(null): break;
+  case 2: query(invocationGate37 ? "SELECT 37 OFFSET 1" : "SELECT 37"); break; // pass
+}
+
+/* generator apply creation. */
+let invocationGate38 = false;
+switch (2) {
+  case (function* () { invocationGate38 = true; yield 1; }).apply(null, []): break;
+  case 2: query(invocationGate38 ? "SELECT 38 OFFSET 1" : "SELECT 38"); break; // pass
+}
+
+/* computed call creation. */
+let invocationGate39 = false;
+switch (2) {
+  case (function* () { invocationGate39 = true; yield 1; })["call"](null): break;
+  case 2: query(invocationGate39 ? "SELECT 39 OFFSET 1" : "SELECT 39"); break; // pass
+}
+
+/* wrapped apply creation. */
+let invocationGate40 = false;
+switch (2) {
+  case ((function* () { invocationGate40 = true; yield 1; }) as () => Generator).apply(null, []): break;
+  case 2: query(invocationGate40 ? "SELECT 40 OFFSET 1" : "SELECT 40"); break; // pass
+}
+
+/* advanced call iterator. */
+let invocationGate41 = false;
+switch (2) {
+  case (function* () { invocationGate41 = true; yield 1; }).call(null).next(): break;
+  case 2: query(invocationGate41 ? "SELECT 41 OFFSET 1" : "SELECT 41"); break; // unanalyzable
+}
+
+/* advanced computed apply iterator. */
+let invocationGate42 = false;
+switch (2) {
+  case (function* () { invocationGate42 = true; yield 1; })["apply"](null, []).next(): break;
+  case 2: query(invocationGate42 ? "SELECT 42 OFFSET 1" : "SELECT 42"); break; // unanalyzable
+}
+
+/* call evaluates generator argument. */
+let invocationGate43 = false;
+switch (2) {
+  case (function* (value) { yield value; }).call(null, invocationGate43 = true): break;
+  case 2: query(invocationGate43 ? "SELECT 43 OFFSET 1" : "SELECT 43"); break; // unanalyzable
+}
+
+/* apply evaluates generator argument. */
+let invocationGate44 = false;
+switch (2) {
+  case (function* (value) { yield value; }).apply(null, [invocationGate44 = true]): break;
+  case 2: query(invocationGate44 ? "SELECT 44 OFFSET 1" : "SELECT 44"); break; // unanalyzable
+}
+
+/* call evaluates generator default. */
+let invocationGate45 = false;
+switch (2) {
+  case (function* (value = (invocationGate45 = true)) { yield value; }).call(null): break;
+  case 2: query(invocationGate45 ? "SELECT 45 OFFSET 1" : "SELECT 45"); break; // unanalyzable
+}
+
+/* apply evaluates generator default. */
+let invocationGate46 = false;
+switch (2) {
+  case (function* (value = (invocationGate46 = true)) { yield value; }).apply(null, []): break;
+  case 2: query(invocationGate46 ? "SELECT 46 OFFSET 1" : "SELECT 46"); break; // unanalyzable
+}
+
+/* call stores generator iterator. */
+let invocationGate47 = false;
+switch (2) {
+  case (function () { const iterator = (function* () { invocationGate47 = true; yield 1; }).call(null); iterator.next(); return 1; }).call(null): break;
+  case 2: query(invocationGate47 ? "SELECT 47 OFFSET 1" : "SELECT 47"); break; // unanalyzable
+}
+
+/* apply stores parameter default iterator. */
+let invocationGate48 = false;
+switch (2) {
+  case ((iterator = (function* () { invocationGate48 = true; yield 1; }).apply(null, [])) => { const alias = iterator; alias.next(); return 1; }).call(null): break;
+  case 2: query(invocationGate48 ? "SELECT 48 OFFSET 1" : "SELECT 48"); break; // unanalyzable
+}
+
+/* tag consumes call iterator. */
+let invocationGate49 = false;
+switch (2) {
+  case consumeTagged`${(function* () { invocationGate49 = true; yield 1; }).call(null)}`: break;
+  case 2: query(invocationGate49 ? "SELECT 49 OFFSET 1" : "SELECT 49"); break; // unanalyzable
+}
+
+/* spread consumes apply iterator. */
+let invocationGate50 = false;
+switch (2) {
+  case [...(function* () { invocationGate50 = true; yield 1; }).apply(null, [])]: break;
+  case 2: query(invocationGate50 ? "SELECT 50 OFFSET 1" : "SELECT 50"); break; // unanalyzable
+}
+
+/* closure call returns advanced iterator. */
+let invocationGate51 = false;
+switch (2) {
+  case (() => (function* () { invocationGate51 = true; yield 1; }).call(null)).call(null).next(): break;
+  case 2: query(invocationGate51 ? "SELECT 51 OFFSET 1" : "SELECT 51"); break; // unanalyzable
+}
+
+/* generator call reference is inert. */
+let invocationGate52 = false;
+switch (2) {
+  case (function* () { invocationGate52 = true; yield 1; }).call: break;
+  case 2: query(invocationGate52 ? "SELECT 52 OFFSET 1" : "SELECT 52"); break; // pass
+}
+
+/* generator bind leaves body inert. */
+let invocationGate53 = false;
+switch (2) {
+  case (function* () { invocationGate53 = true; yield 1; }).bind(null): break;
+  case 2: query(invocationGate53 ? "SELECT 53 OFFSET 1" : "SELECT 53"); break; // pass
+}
+
+/* pure advanced call iterator. */
+let invocationGate54 = false;
+switch (2) {
+  case (function* () { yield 1; }).call(null).next(): break;
+  case 2: query(invocationGate54 ? "SELECT 54 OFFSET 1" : "SELECT 54"); break; // pass
+}
+
+/* delegated apply default iterator. */
+let invocationGate55 = false;
+switch (2) {
+  case (function* (iterator = (function* () { invocationGate55 = true; yield 1; }).call(null)) { yield* iterator; }).apply(null, []).next(): break;
+  case 2: query(invocationGate55 ? "SELECT 55 OFFSET 1" : "SELECT 55"); break; // unanalyzable
+}
+
+/* async generator apply creation. */
+let invocationGate56 = false;
+switch (2) {
+  case (async function* () { invocationGate56 = true; yield 1; }).apply(null, []): break;
+  case 2: query(invocationGate56 ? "SELECT 56 OFFSET 1" : "SELECT 56"); break; // pass
+}

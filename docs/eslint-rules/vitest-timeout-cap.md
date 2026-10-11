@@ -66,6 +66,14 @@ export default defineConfig({
 it("uses a bounded timeout", { timeout: 25_000 }, async () => {});
 ```
 
+Returned object bindings remain known for synchronous expression-body or
+single-return callbacks whose immutable aliases are consumed only by
+`defineConfig` or `defineProject`. For example, `const settings = { test: {
+testTimeout: 1 } }; const make = () => { return settings; }; defineConfig(make)`
+is accepted under `unknownValues: "finding"`. Unknown callback consumers,
+exports, additional body statements, async/generator callbacks, and parameter
+defaults or destructuring retain unknown values.
+
 Module `const` bindings do not make referenced objects immutable. Member writes,
 updates, deletion, aliased nested references, and unknown helper escapes retain
 unknown timeout values. Strict `unknownValues: "finding"` rejects these carriers;
@@ -77,6 +85,11 @@ copy's own property does not make the source's timeout unknown; the copy's own
 timeout still becomes unknown. Nested references remain shared, so a write such
 as `copy.test.testTimeout = 30_001` also makes the source uncertain. Unknown copy
 escapes and uncertain alias identities remain conservative.
+
+The primitive member-read shortcut applies only to identifier declarations.
+Destructured bindings do not use their container initializer as the bound value;
+member reads that escape to an unknown consumer retain unresolved timeout values.
+Use a direct `const` object binding when its timeout needs static resolution.
 
 Public Vitest 5 fixture tuples carry `auto`, `injected`, and `scope` options, not a
 fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
@@ -188,3 +201,8 @@ object to the reader. For example, `Math.max(options.timeout, 0)` keeps an uncha
 `const options = { timeout: 1 }` known. Passing an object-valued property to an
 unproved consumer, reading a getter, or writing a timeout still keeps analysis
 conservative.
+
+Erased TypeScript `typeof` type queries, including qualified property queries,
+do not participate in the runtime stability proof. A callback or config binding
+can retain a known timeout when it also appears in a type alias. Runtime
+consumers still require the same confinement proof.

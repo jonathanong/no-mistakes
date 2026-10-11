@@ -14,8 +14,10 @@ mod deadline_root;
 mod errors;
 mod json;
 mod missing;
+mod roots;
 mod setup;
 
+pub use roots::{configured_runner_config_dirs, configured_runner_config_dirs_from_visible};
 pub use setup::prepare_runner_configs_with_deadline_evidence;
 pub(crate) use setup::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};
 
@@ -30,27 +32,6 @@ pub fn prepare_runner_configs_with_catalog(
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> PreparedIntegrationRunnerConfigs {
     prepare_with_catalog_and_sources(root, config, visible_paths, tsconfig_catalog, sources)
-}
-
-/// Directories containing explicitly configured runner configs. These seed
-/// request-local TypeScript config discovery before the runner config itself
-/// is parsed, so its imports use the owning package's aliases even outside a
-/// declared workspace.
-#[doc(hidden)]
-pub fn configured_runner_config_dirs(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
-    [
-        config.tests.vitest.configs.as_ref(),
-        config.tests.playwright.configs.as_ref(),
-    ]
-    .into_iter()
-    .flatten()
-    .flat_map(StringOrList::values)
-    .filter_map(|path| {
-        crate::codebase::ts_resolver::normalize_path(&root.join(path))
-            .parent()
-            .map(Path::to_path_buf)
-    })
-    .collect()
 }
 
 impl PreparedIntegrationRunnerConfigs {

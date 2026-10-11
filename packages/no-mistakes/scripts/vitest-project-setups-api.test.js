@@ -55,6 +55,30 @@ test(
 );
 
 test(
+  "compiled checks ignore skipped CommonJS helper mocks",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/conditional-requires",
+    );
+    const options = { root: fixture, config: join(fixture, ".no-mistakes.yml") };
+    const report = await cjs.check(options);
+    assert.deepEqual(await esm.check(options), report);
+    assert.deepEqual(report.warnings, []);
+    assert.deepEqual(
+      report.rules.map((finding) => [finding.file, finding.target]),
+      [
+        ["tests/conditionals.test.cjs", "src/target.cjs"],
+        ["tests/setup-skipped.test.cjs", "src/setup-target.cjs"],
+      ],
+    );
+  },
+);
+
+test(
   "compiled setup triggers follow the effective policy config",
   { skip: !compiled, timeout: 20_000 },
   async () => {
@@ -220,11 +244,14 @@ test(
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const options = { root: join(root, "../test-no-unmocked-dynamic-imports-runner-aliases") };
-    const report = await cjs.check(options);
-    assert.deepEqual(await esm.check(options), report);
-    assert.deepEqual(report.rules, []);
-    assert.deepEqual(report.warnings, []);
+    const fixture = join(root, "../test-no-unmocked-dynamic-imports-runner-aliases");
+    for (const config of [".no-mistakes.yml", ".no-mistakes-glob.yml"]) {
+      const options = { root: fixture, config: join(fixture, config) };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(report.rules, [], config);
+      assert.deepEqual(report.warnings, []);
+    }
   },
 );
 
@@ -276,6 +303,34 @@ test(
           api.testsImpact({ ...options, entrypoints: ["setup/web.ts"] }),
           new RegExp(message),
         );
+      }
+    }
+  },
+);
+
+test(
+  "compiled checks preserve static callback setups without borrowing unselected projects",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [kind, expected] of [
+      ["callback", "tests/genuine.test.mts"],
+      ["unselected-project", "tests/covered.test.mts"],
+    ]) {
+      const fixture = join(root, "../test-no-unmocked-dynamic-imports-runner-executions", kind);
+      const report = await cjs.check({ root: fixture });
+      assert.deepEqual(await esm.check({ root: fixture }), report);
+      assert.deepEqual(
+        report.rules.map((finding) => finding.file),
+        [expected],
+      );
+      assert.deepEqual(report.warnings, []);
+      if (kind === "callback") {
+        const evidence = await cjs.check({ root: fixture, includeRunnerConfigDeadlines: true });
+        const { runnerConfigDeadlines, ...ordinary } = evidence;
+        assert.ok(Array.isArray(runnerConfigDeadlines));
+        assert.deepEqual(ordinary, report);
       }
     }
   },
