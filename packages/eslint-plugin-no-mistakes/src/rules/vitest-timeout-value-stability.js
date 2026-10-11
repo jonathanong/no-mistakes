@@ -5,12 +5,15 @@ const { configCall, overrideCall, invocationArguments } = require("./vitest-time
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead) {
-  const memo = new WeakMap();
-  const active = new Set();
-  function stable(variable) {
-    if (!variable || active.has(variable)) return false;
-    if (memo.has(variable)) return memo.get(variable);
-    active.add(variable);
+  // Values, copies, and callbacks need independent consumer proofs and cycle guards.
+  const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
+  const active = { value: new Set(), shallow: new Set(), callback: new Set() };
+  function stable(variable, mode = "value") {
+    const cache = memo[mode],
+      visiting = active[mode];
+    if (!variable || visiting.has(variable)) return false;
+    if (cache.has(variable)) return cache.get(variable);
+    visiting.add(variable);
     const result =
       variable.defs.every(
         (def) =>
@@ -20,16 +23,49 @@ function createValueStability(context, primitiveMemberRead) {
           def.parent.parent?.type !== "ExportDefaultDeclaration",
       ) &&
       variable.references.every(
-        (reference) => reference.init || (!reference.isWrite() && safeUse(reference.identifier)),
+        (reference) =>
+          reference.init ||
+          // TypeScript's erased references cannot expose a runtime value.
+          typeOnlyUse(reference.identifier) ||
+          (!reference.isWrite() && safeUse(reference.identifier, mode)),
       );
-    active.delete(variable);
-    memo.set(variable, result);
+    visiting.delete(variable);
+    cache.set(variable, result);
     return result;
   }
-  function safeUse(identifier) {
+  function typeOnlyUse(node) {
+    while (node.parent?.type === "TSQualifiedName" && node.parent.left === node) node = node.parent;
+    return node.parent?.type === "TSTypeQuery" && node.parent.exprName === node;
+  }
+  function configCallback(node) {
+    return (
+      (node?.type === "ArrowFunctionExpression" || node?.type === "FunctionExpression") &&
+      !node.async &&
+      !node.generator &&
+      node.params.every((param) => param.type === "Identifier") &&
+      safeUse(node, "callback")
+    );
+  }
+  function safeUse(identifier, mode = "value") {
     let node = unwrapTransparentParent(identifier);
-    while (node.parent?.type === "MemberExpression" && node.parent.object === node)
+    if (mode === "callback") {
+      const parent = node.parent;
+      if (parent?.type === "VariableDeclarator" && parent.init === node)
+        return (
+          parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), "callback")
+        );
+      // Test callbacks and mergeConfig object operands do not prove a config callback consumer.
+      return (
+        parent?.type === "CallExpression" &&
+        parent.arguments[0] === node &&
+        ["defineConfig", "defineProject"].includes(configCall(parent, context))
+      );
+    }
+    let memberDepth = 0;
+    while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
       node = unwrapTransparentParent(node.parent);
+      memberDepth++;
+    }
     const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
     let parent = node.parent;
     if (
@@ -37,10 +73,13 @@ function createValueStability(context, primitiveMemberRead) {
       (parent?.type === "UpdateExpression" && parent.argument === node) ||
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
-      return false;
+      // Replacing a copy's own property cannot mutate the source. Its children
+      // are still shared, so writes through a second member remain unsafe.
+      return mode === "shallow" && memberDepth === 1;
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
     if (memberRead) return true;
+    if (memberDepth) mode = "value";
     // Container copies can preserve nested references. Follow their existing binding too.
     while (
       parent &&
@@ -49,11 +88,16 @@ function createValueStability(context, primitiveMemberRead) {
         parent.type === "ArrayExpression" ||
         parent.type === "SpreadElement")
     ) {
+      if (
+        parent.type === "SpreadElement" &&
+        (parent.parent.type === "ObjectExpression" || parent.parent.type === "ArrayExpression")
+      )
+        mode = "shallow";
       node = parent;
       parent = node.parent;
     }
     if (parent?.type === "VariableDeclarator" && parent.init === node)
-      return parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context));
+      return parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), mode);
     if (parent?.type === "CallExpression") {
       if (parent.callee === node) return false;
       // Public config/registration consumers are admitted; unknown helpers can mutate objects.
@@ -72,7 +116,14 @@ function createValueStability(context, primitiveMemberRead) {
         (kind === "test" && (index === 1 || index === 2))
       );
     }
-    if (parent?.type === "ReturnStatement" || parent?.type === "AssignmentExpression") return false;
+    if (parent?.type === "ReturnStatement") {
+      const body = parent.parent;
+      return (
+        body?.type === "BlockStatement" && body.body.length === 1 && configCallback(body.parent)
+      );
+    }
+    if (parent?.type === "ArrowFunctionExpression" && parent.body === node)
+      return configCallback(parent);
     // Exports and unproved contexts (await/yield, tagged templates, computed
     // keys, and other consumers) can expose the object. No default safe escape.
     return false;

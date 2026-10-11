@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      web:
+        include: [tests/*.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [web]

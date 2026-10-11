@@ -2,11 +2,10 @@ mod bindings;
 mod identities;
 mod projection;
 
-use super::super::ScopeVisitor;
+use super::super::{resolve::functions::reassigned::for_each_assigned_name, ScopeVisitor};
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, CallExpression,
-    ConditionalExpression, Expression, Function, LogicalExpression, SimpleAssignmentTarget,
-    UpdateExpression,
+    ArrowFunctionExpression, AssignmentExpression, CallExpression, ConditionalExpression,
+    Expression, Function, LogicalExpression, SimpleAssignmentTarget, UpdateExpression,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -131,9 +130,7 @@ impl<'a> Visit<'a> for Effects<'_, '_> {
         }
     }
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
-        if let AssignmentTarget::AssignmentTargetIdentifier(id) = &assignment.left {
-            self.collect_binding(id.name.as_str());
-        }
+        for_each_assigned_name(&assignment.left, &mut |name| self.collect_binding(name));
         if !self.found || self.prefixes.is_some() {
             walk::walk_assignment_expression(self, assignment);
         }

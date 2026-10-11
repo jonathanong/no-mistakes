@@ -11,6 +11,8 @@ use crate::codebase::workspaces::load_indexed_from_source_store;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod consumer_escapes;
+
 fn call(sql: &str) -> EmbeddedSqlCall {
     EmbeddedSqlCall {
         sql_text: Some(sql.to_string()),

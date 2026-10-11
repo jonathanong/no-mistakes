@@ -4,6 +4,10 @@ impl<'a> Visit<'a> for ImportCollector {
         walk::walk_statement(self, statement);
     }
 
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) { visit_if_with_execution(self, statement); }
+    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) { visit_logical_with_execution(self, expression); }
+    fn visit_conditional_expression(&mut self, expression: &oxc_ast::ast::ConditionalExpression<'a>) { visit_conditional_with_execution(self, expression); }
+
     fn visit_function(
         &mut self,
         function: &oxc_ast::ast::Function<'a>,

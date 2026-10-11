@@ -47,10 +47,13 @@ impl<'a> ScopeVisitor<'a> {
         walk::walk_call_expression(self, call);
         self.finish_argument_invocation(invocation);
         self.record_argument_helper_effects(&helper_effect.0, call.span.start);
-        self.apply_call_builder_effect(helper_effect);
-        self.apply_append_alias_effect(append_effect);
         if let Some(arguments) = arguments {
+            // Capture all argument evaluations before this invocation consumes
+            // the builder. An unconfirmed relative callee can invalidate later
+            // reuse without erasing its own pending executor arguments.
             self.finish_executor_arguments(call, arguments);
         }
+        self.apply_call_builder_effect(helper_effect);
+        self.apply_append_alias_effect(append_effect);
     }
 }

@@ -8,6 +8,73 @@ const findings = (name, options = {}) =>
     "fixture.test.ts",
   );
 describe("vitest-timeout-cap value stability", () => {
+  it("ignores erased type queries while retaining real callback consumers", () => {
+    assert.deepEqual(
+      findings("config-type-only-references", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [9, "timeout"],
+        [21, "unknown"],
+        [21, "unknown"],
+        [21, "unknown"],
+        [32, "unknown"],
+        [32, "unknown"],
+        [32, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("config-type-only-references").map(({ line, messageId }) => [line, messageId]),
+      [[9, "timeout"]],
+    );
+  });
+  it("preserves returned config bindings through known consumers and immutable callback aliases", () => {
+    assert.deepEqual(
+      findings("config-return-values", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [9, "timeout"],
+        [13, "invalid"],
+      ],
+    );
+  });
+  it("retains unknown returned objects when callback consumers or effects are unproved", () => {
+    const actual = findings("config-return-escapes", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [5, 10, 14, 19, 24, 28, 32, 36, 40, 45, 51, 56, 61, 65],
+    );
+    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.deepEqual(findings("config-return-escapes"), []);
+  });
+  it("keeps shallow copy writes independent while checking each copy's own stability", () => {
+    assert.deepEqual(
+      findings("shallow-copy-writes", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [8, "unknown"],
+        [12, "timeout"],
+        [42, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("shallow-copy-writes").map(({ line, messageId }) => [line, messageId]),
+      [[12, "timeout"]],
+    );
+  });
+  it("retains shared nested mutations and conservative unknown copy identities", () => {
+    const actual = findings("shallow-copy-alias-mutations", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [4, 8, 13, 18, 26, 30, 35, 36, 40, 47, 52, 57],
+    );
+    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.deepEqual(findings("shallow-copy-alias-mutations"), []);
+  });
   it("retains unknown deadlines after member writes, aliases, deletion and helper escape", () => {
     const strict = { unknownValues: "finding", defaultMax: 30000 };
     const actual = findings("mutable-values", strict);

@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ["src/query.ts"]
+      importSpecifier: "@example/db"
+      executorFactoryNames: [openTransaction]
+      executorTypeNames: [TxExecutor]

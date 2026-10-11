@@ -84,8 +84,13 @@ pub(crate) fn prepare_from_shared(
         )
     } else {
         let mut candidate_roots = vec![root.to_path_buf()];
-        candidate_roots
-            .extend(no_mistakes::integration_tests::configured_runner_config_dirs(root, &config));
+        candidate_roots.extend(
+            no_mistakes::integration_tests::configured_runner_config_dirs_from_visible(
+                root,
+                &config,
+                root_paths.as_ref(),
+            ),
+        );
         candidate_roots.extend(
             no_mistakes::codebase::rules::require_storybook_stories::configured_project_roots(
                 root, &config,

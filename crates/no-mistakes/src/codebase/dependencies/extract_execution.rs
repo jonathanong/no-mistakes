@@ -1,0 +1,98 @@
+fn record_eager_require(collector: &mut ImportCollector, specifier: &str, kind: ImportKind, computed: bool) {
+    if kind == ImportKind::Require
+        && !computed
+        && collector.function_stack.is_empty()
+        && collector.current_function_id().is_none()
+        && !collector.conditional_execution
+    {
+        collector.eager_require_specifiers.insert(specifier.to_string());
+    }
+}
+
+fn with_conditional_execution(
+    collector: &mut ImportCollector,
+    conditional: bool,
+    visit: impl FnOnce(&mut ImportCollector),
+) {
+    let previous = collector.conditional_execution;
+    collector.conditional_execution |= conditional;
+    visit(collector);
+    collector.conditional_execution = previous;
+}
+
+// Literal conditions can prove one branch executes. Unknown conditions remain
+// conservative; these facts do not evaluate bindings or replace syntactic edges.
+fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        Expression::BooleanLiteral(value) => Some(value.value),
+        Expression::NullLiteral(_) => Some(false),
+        Expression::NumericLiteral(value) => Some(value.value != 0.0),
+        Expression::StringLiteral(value) => Some(!value.value.is_empty()),
+        _ => None,
+    }
+}
+
+fn visit_if_with_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::IfStatement<'a>) {
+    collector.visit_expression(&statement.test);
+    let truthy = literal_truthiness(&statement.test);
+    with_conditional_execution(collector, truthy != Some(true), |collector| {
+        collector.visit_statement(&statement.consequent);
+    });
+    if let Some(alternate) = &statement.alternate {
+        with_conditional_execution(collector, truthy != Some(false), |collector| {
+            collector.visit_statement(alternate);
+        });
+    }
+}
+
+fn visit_conditional_with_execution<'a>(collector: &mut ImportCollector, expression: &oxc_ast::ast::ConditionalExpression<'a>) {
+    collector.visit_expression(&expression.test);
+    let truthy = literal_truthiness(&expression.test);
+    with_conditional_execution(collector, truthy != Some(true), |collector| {
+        collector.visit_expression(&expression.consequent);
+    });
+    with_conditional_execution(collector, truthy != Some(false), |collector| {
+        collector.visit_expression(&expression.alternate);
+    });
+}
+
+fn visit_logical_with_execution<'a>(collector: &mut ImportCollector, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+    collector.visit_expression(&expression.left);
+    let unconditional = match expression.operator {
+        oxc_ast::ast::LogicalOperator::And => literal_truthiness(&expression.left) == Some(true),
+        oxc_ast::ast::LogicalOperator::Or => literal_truthiness(&expression.left) == Some(false),
+        oxc_ast::ast::LogicalOperator::Coalesce => matches!(
+            crate::codebase::ts_source::unwrap_ts_wrappers(&expression.left),
+            Expression::NullLiteral(_)
+        ),
+    };
+    with_conditional_execution(collector, !unconditional, |collector| {
+        collector.visit_expression(&expression.right);
+    });
+}
+
+fn walk_call_with_execution<'a>(collector: &mut ImportCollector, call: &CallExpression<'a>) {
+    // The callee executes even when an optional call skips its arguments.
+    collector.visit_expression(&call.callee);
+    if let Some(type_arguments) = &call.type_arguments {
+        collector.visit_ts_type_parameter_instantiation(type_arguments);
+    }
+    with_conditional_execution(collector, call_has_execution_guard(call), |collector| {
+        collector.visit_arguments(&call.arguments);
+    });
+}
+
+fn call_has_execution_guard(call: &CallExpression<'_>) -> bool {
+    call.optional || has_optional_chain(&call.callee)
+}
+
+fn has_optional_chain(expression: &Expression<'_>) -> bool {
+    let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
+    if let Some(member) = expression.as_member_expression() {
+        member.optional() || has_optional_chain(member.object())
+    } else if let Expression::CallExpression(call) = expression {
+        call_has_execution_guard(call)
+    } else {
+        false
+    }
+}

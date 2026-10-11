@@ -6,6 +6,8 @@ mod append_contributors;
 mod branch_correlation;
 #[path = "cli_check_rules_postgres_variants/captured_builder_identities.rs"]
 mod captured_builder_identities;
+#[path = "cli_check_rules_postgres_variants/destructuring_assignments.rs"]
+mod destructuring_assignments;
 #[path = "cli_check_rules_postgres_variants/exception_flow.rs"]
 mod exception_flow;
 #[path = "cli_check_rules_postgres_variants/executed_fragments.rs"]
@@ -18,8 +20,14 @@ mod final_interpolation;
 mod guard_alias;
 #[path = "cli_check_rules_postgres_variants/helper_guards.rs"]
 mod helper_guards;
+#[path = "cli_check_rules_postgres_variants/relative_consumer_escape.rs"]
+mod relative_consumer_escape;
 #[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
 mod switch_labels;
+#[path = "cli_check_rules_postgres_variants/switch_member_invocations.rs"]
+mod switch_member_invocations;
+#[path = "cli_check_rules_postgres_variants/switch_scalar_labels.rs"]
+mod switch_scalar_labels;
 #[path = "cli_check_rules_postgres_variants/unaffected_switch.rs"]
 mod unaffected_switch;
 

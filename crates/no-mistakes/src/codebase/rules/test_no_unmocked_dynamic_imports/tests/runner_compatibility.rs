@@ -102,15 +102,27 @@ fn compatibility_runner_catalog_seeds_explicit_config_aliases() {
             "../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-aliases",
         ),
     );
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let shared = facts(&root);
-    assert!(check(&root, &config, None).unwrap().is_empty());
-    assert!(check_with_facts(&root, &config, None, &shared)
-        .unwrap()
-        .is_empty());
-    assert!(
-        crate::codebase::rules::run_check_with_facts(&root, None, None, &shared)
+    for filename in [".no-mistakes.yml", ".no-mistakes-glob.yml"] {
+        let path = root.join(filename);
+        let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+        crate::ast::begin_parse_count_this_thread(&root);
+        assert!(check(&root, &config, None).unwrap().is_empty());
+        let counts = crate::ast::finish_parse_count(&root);
+        for file in [
+            "tools/vitest.config.mts",
+            "tools/project-definitions.mts",
+            "tools/setup.mts",
+        ] {
+            assert_eq!(counts.get(&root.join(file)), Some(&1), "{counts:?}");
+        }
+        assert!(check_with_facts(&root, &config, None, &shared)
             .unwrap()
-            .is_empty()
-    );
+            .is_empty());
+        assert!(
+            crate::codebase::rules::run_check_with_facts(&root, Some(&path), None, &shared)
+                .unwrap()
+                .is_empty()
+        );
+    }
 }
