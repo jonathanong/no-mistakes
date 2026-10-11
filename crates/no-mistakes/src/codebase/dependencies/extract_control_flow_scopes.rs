@@ -94,9 +94,11 @@ fn visit_for_in_statement_with_scope<'a>(
     let initializer = if collector.sloppy_script {
         match &statement.left {
             ForStatementLeft::VariableDeclaration(declaration)
-                if declaration.kind == VariableDeclarationKind::Var => declaration
+                if declaration.kind == VariableDeclarationKind::Var
+                    && declaration.declarations.len() == 1 => declaration
                     .declarations
                     .first()
+                    .filter(|declarator| binding_identifier_name(&declarator.id).is_some())
                     .and_then(|declarator| declarator.init.as_ref())
                     .map(|init| (init.span(), collector.conditional_execution)),
             _ => None,

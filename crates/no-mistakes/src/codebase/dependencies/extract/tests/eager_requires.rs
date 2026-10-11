@@ -54,6 +54,20 @@ fn annex_b_for_in_initializer_is_eager_without_promoting_nested_guards() {
 }
 
 #[test]
+fn recovered_invalid_annex_b_heads_do_not_prove_eager_helpers() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-executions/annex-b-recovery/invalid.cjs"));
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::cjs()).parse();
+    assert!(!parsed.diagnostics.is_empty());
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+    assert!(facts.eager_require_specifiers.is_empty());
+    assert!(facts
+        .imports
+        .iter()
+        .any(|import| import.specifier == "./destructured.cjs"));
+}
+
+#[test]
 fn require_execution_facts_keep_edges_but_exclude_guarded_helpers() {
     let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-executions/conditional-requires/execution-facts.mts"));
     let allocator = Allocator::default();

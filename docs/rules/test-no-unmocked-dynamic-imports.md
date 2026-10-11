@@ -79,8 +79,9 @@ later case tests can be skipped after a match. Statically truthy BigInt values
 such as `1n && require('./mock-helper')` execute the helper, while `0n` skips it.
 When a helper has a recoverable parse error, recovered eager `require()` facts
 still guide nested helper traversal; the parse diagnostic remains visible.
-In a non-strict CommonJS script, the Annex B `for (var key = require('./helper')
-in object)` initializer runs before checking for keys, so its helper can supply
+In a non-strict CommonJS script, the single-identifier Annex B
+`for (var key = require('./helper') in object)` initializer runs before
+checking for keys, so its helper can supply
 mock coverage. A condition inside that initializer still guards its own call;
 binding defaults and assignment targets remain per iteration.
 `require.resolve()` does not execute a helper.
