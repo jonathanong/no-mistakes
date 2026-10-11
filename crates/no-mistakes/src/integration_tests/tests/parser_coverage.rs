@@ -517,3 +517,6 @@ mod declared_deadlines;
 
 #[path = "parser_coverage/deadline_setup_contracts.rs"]
 mod deadline_setup_contracts;
+
+#[path = "parser_coverage/deadline_uncertainty.rs"]
+mod deadline_uncertainty;

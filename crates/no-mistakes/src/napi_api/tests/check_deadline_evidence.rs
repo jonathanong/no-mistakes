@@ -181,3 +181,49 @@ fn ordinary_integration_errors_are_preserved_when_deadline_evidence_is_requested
         assert!(!baseline.reason.is_empty());
     }
 }
+
+#[test]
+fn public_deadline_unknown_reasons_preserve_computed_accessor_replacement_and_base_provenance() {
+    let evidence = report(Some("uncertainty.yml"), true, false);
+    let vitest = projects(&evidence, "vitest");
+    let find = |name: &str| {
+        vitest
+            .iter()
+            .find(|project| project["policyName"] == name)
+            .unwrap()
+    };
+    for (name, slot, reason) in [
+        ("computed-test", "case", "computedProperty"),
+        ("opaque-test", "case", "opaqueTestObject"),
+        ("hook-getter", "hook", "accessor"),
+        ("missing", "case", "unresolvedExtends"),
+        ("base", "case", "unprovedConfigRoot"),
+    ] {
+        let slot = &find(name)[slot];
+        assert_eq!(slot["status"], "unknown", "{name}");
+        assert_eq!(slot["reason"], reason, "{name}");
+        assert!(!slot["provenance"]["path"]
+            .as_str()
+            .unwrap()
+            .starts_with('/'));
+    }
+    assert!(find("computed-test")["case"]["provenance"]["span"].is_array());
+    assert!(find("missing")["case"]["provenance"]["span"].is_null());
+    assert_eq!(find("base")["case"]["provenance"]["path"], "base.config.ts");
+    assert!(!find("base")["case"]["provenance"]["inheritedThrough"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert_eq!(
+        find("computed-restored")["case"]["milliseconds"].as_f64(),
+        Some(1.0)
+    );
+    let playwright = projects(&evidence, "playwright");
+    let computed = playwright
+        .iter()
+        .find(|project| project["policyName"] == "computed")
+        .unwrap();
+    assert_eq!(computed["case"]["reason"], "computedProperty");
+    assert_eq!(computed["hook"]["status"], "absent");
+    assert_eq!(computed["fixture"]["status"], "absent");
+}
