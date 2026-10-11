@@ -7,6 +7,14 @@ fn selected_vitest_exclusions_apply_per_execution() {
             .join("../../test-cases/codebase-analysis/selected-vitest-excludes/fixture"),
     );
     for (config_file, expected) in [
+        // App scope must not add B's unmocked execution when only A is selected.
+        (".no-mistakes-a.yml", vec![]),
+        (".no-mistakes-a-app.yml", vec![]),
+        (".no-mistakes-a-inline-app.yml", vec![]),
+        (
+            ".no-mistakes-a-b-app.yml",
+            vec!["shared/example.test.mts", "shared/setup.test.mts"],
+        ),
         (
             ".no-mistakes.yml",
             vec!["shared/example.test.mts", "shared/setup.test.mts"],

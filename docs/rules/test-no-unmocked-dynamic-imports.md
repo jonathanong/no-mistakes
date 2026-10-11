@@ -91,6 +91,9 @@ cover another project's execution. Matching Vitest and Jest runner configs are
 also separate executions: setup mocks from one config or runner do not cover
 another. A Vitest-only or Playwright-only rule target does not inherit Jest
 setup mocks.
+An application scope such as `projects: [webapp]` intersects an explicit
+`tests.vitest: [web]` selection; it does not add other Vitest projects whose
+include patterns also match the same test.
 When both Vitest and Playwright select the same test, its Playwright execution
 is checked without Vitest setup mocks. Repository and application scopes also
 preserve each matching configured Playwright project without an explicit

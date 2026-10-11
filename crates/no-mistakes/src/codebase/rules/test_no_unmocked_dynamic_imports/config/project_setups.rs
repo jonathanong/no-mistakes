@@ -1,4 +1,5 @@
 use super::{build_globset, ConfigSetupData, TestFilter};
+use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -10,14 +11,7 @@ pub(in super::super) fn explicit_project_setup_data(
 ) -> Result<Vec<ConfigSetupData>> {
     let mut data = Vec::new();
     let rules = config.rule_applications(super::super::RULE_ID);
-    let all_projects = rules.is_empty()
-        || rules.iter().any(|rule| {
-            rule.applies_to_repository()
-                || rule
-                    .projects
-                    .iter()
-                    .any(|project| config.projects.contains_key(project))
-        });
+    let all_projects = all_runner_projects(config);
     let selected = rules
         .iter()
         .flat_map(|rule| rule.tests.vitest.iter().map(String::as_str))
@@ -86,19 +80,32 @@ impl SelectedRunners {
 
     pub(in super::super) fn for_config(config: &NoMistakesConfig) -> Self {
         let rules = config.rule_applications(super::super::RULE_ID);
-        let all = rules.is_empty()
-            || rules.iter().any(|rule| {
-                rule.applies_to_repository()
-                    || rule
-                        .projects
-                        .iter()
-                        .any(|project| config.projects.contains_key(project))
-            });
+        let all = all_runner_projects(config);
         Self {
             vitest: all || rules.iter().any(|rule| !rule.tests.vitest.is_empty()),
             jest: all,
         }
     }
+}
+
+pub(super) fn all_runner_projects(config: &NoMistakesConfig) -> bool {
+    let rules = config.rule_applications(super::super::RULE_ID);
+    rules.is_empty()
+        || rules
+            .iter()
+            .any(|rule| rule_selects_all_runners(config, rule))
+}
+
+fn rule_selects_all_runners(config: &NoMistakesConfig, rule: &RuleDef) -> bool {
+    // Application scope narrows an explicit runner selection; it does not turn
+    // that selection into a broad Vitest/Jest execution.
+    rule.tests.vitest.is_empty()
+        && rule.tests.playwright.is_empty()
+        && (rule.applies_to_repository()
+            || rule
+                .projects
+                .iter()
+                .any(|name| config.projects.contains_key(name)))
 }
 
 /// Analyze each matching named Vitest project and Jest config separately.
