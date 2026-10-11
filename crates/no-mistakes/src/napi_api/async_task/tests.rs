@@ -19,3 +19,84 @@ fn utf8_json_rejects_invalid_utf8() {
     let error = super::utf8_json(&buffer).expect_err("invalid UTF-8");
     assert!(error.reason.contains("UTF-8"));
 }
+
+// Rayon cannot reset its global pool, so each case must execute in a fresh process.
+#[test]
+fn first_invocation_jobs_subprocess() {
+    let Ok(task) = std::env::var("NO_MISTAKES_NAPI_JOBS_TASK") else {
+        return;
+    };
+    use napi::Task;
+    fn run_string(_: String) -> napi::Result<String> {
+        Ok(rayon::current_num_threads().to_string())
+    }
+    fn run_value(_: serde_json::Value) -> napi::Result<String> {
+        Ok(rayon::current_num_threads().to_string())
+    }
+    let compute = |payload: Vec<u8>| {
+        let buffer = napi::bindgen_prelude::Buffer::from(payload);
+        if task == "string" {
+            super::JsonTask::new(buffer, run_string).compute()
+        } else {
+            super::JsonValueTask::new(buffer, run_value).compute()
+        }
+    };
+    if std::env::var_os("NO_MISTAKES_NAPI_JOBS_INVALID_FIRST").is_some() {
+        assert!(compute(b"{".to_vec()).is_err());
+        assert!(compute(vec![0xff]).is_err());
+    }
+    let payload = std::env::var("NO_MISTAKES_NAPI_JOBS_PAYLOAD").unwrap();
+    let expected = std::env::var("NO_MISTAKES_NAPI_JOBS_EXPECTED").unwrap();
+    let expected = if expected == "cpu" {
+        num_cpus::get().to_string()
+    } else {
+        expected
+    };
+    let output = compute(payload.into_bytes()).unwrap();
+    assert_eq!(std::str::from_utf8(output.as_ref()).unwrap(), expected);
+    // A later request must preserve the pool selected by the first valid invocation.
+    let output = compute(br#"{"jobs":2}"#.to_vec()).unwrap();
+    assert_eq!(std::str::from_utf8(output.as_ref()).unwrap(), expected);
+}
+
+#[test]
+fn first_invocation_jobs_override_environment_and_preserve_defaults() {
+    for task in ["string", "value"] {
+        for (payload, environment, expected, invalid_first) in [
+            (r#"{"jobs":1}"#, "4", "1", false),
+            (r#"{"jobs":4}"#, "1", "4", false),
+            ("{}", "3", "3", false),
+            (r#"{"jobs":0}"#, "3", "3", false),
+            ("{}", "", "cpu", false),
+            (r#"{"jobs":0}"#, "", "cpu", false),
+            (r#"{"jobs":1}"#, "4", "1", true),
+        ] {
+            let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+            command
+                .args([
+                    "--exact",
+                    "napi_api::async_task::tests::first_invocation_jobs_subprocess",
+                    "--nocapture",
+                ])
+                .env("RAYON_NUM_THREADS", environment)
+                .env("NO_MISTAKES_NAPI_JOBS_TASK", task)
+                .env("NO_MISTAKES_NAPI_JOBS_PAYLOAD", payload)
+                .env("NO_MISTAKES_NAPI_JOBS_EXPECTED", expected)
+                .env_remove("NO_MISTAKES_NAPI_JOBS_INVALID_FIRST");
+            if invalid_first {
+                command.env("NO_MISTAKES_NAPI_JOBS_INVALID_FIRST", "1");
+            }
+            if environment.is_empty() {
+                command.env_remove("RAYON_NUM_THREADS");
+            }
+            let output = command.output().unwrap();
+            assert!(
+                output.status.success(),
+                "{task}, {payload}, RAYON_NUM_THREADS={environment}, invalid_first={invalid_first}:\n{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+            );
+            assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+        }
+    }
+}
