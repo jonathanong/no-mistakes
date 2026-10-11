@@ -517,6 +517,12 @@ jobs:
         timeout-minutes: 2
         run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
 
+      - name: Enforce cyclomatic complexity threshold
+        timeout-minutes: 2
+        # Without LCOV, optimistic coverage makes CRAP equal cyclomatic complexity.
+        # Include workspace source even when coverage omits it (such as src/tests/).
+        run: cargo crap --workspace --missing optimistic --fail-above --threshold 30 --summary
+
       - name: Enforce Rust coverage floors
         timeout-minutes: 5
         run: |

@@ -170,6 +170,11 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
 3. Maintain 98% project and patch test coverage
 
+CI enforces per-function CRAP and cyclomatic complexity limits of 30. The
+complexity gate runs `cargo crap --workspace --missing optimistic --fail-above
+--threshold 30 --summary` without LCOV: assuming full coverage makes CRAP equal
+cyclomatic complexity, including source omitted from the coverage report.
+
 Native CI builds and platform tests omit Rust debug metadata to keep compilation
 within their ten-minute step deadlines. Development and test profiles use the same
 setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;

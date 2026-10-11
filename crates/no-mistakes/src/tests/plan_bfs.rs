@@ -186,25 +186,11 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         | EdgeKind::WorkspaceTypeImport => "dependency",
         EdgeKind::PackageDependency => "package-json dependency",
         EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
-        EdgeKind::Layout => "layout",
-        EdgeKind::TestOf => "test",
-        EdgeKind::VitestSetup(_) => "vitest-setup",
         EdgeKind::QueueEnqueue | EdgeKind::QueueWorker => "queue",
-        EdgeKind::MarkdownLink => "md",
-        EdgeKind::CiInvocation => "ci",
-        EdgeKind::HttpCall => "http",
-        EdgeKind::ProcessSpawn => "process",
-        EdgeKind::AssetImport => "asset",
-        EdgeKind::Resource => "resource",
-        EdgeKind::ReactRender => "react-render",
-        EdgeKind::Selector => "selector",
         EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",
         EdgeKind::SwiftPackageDependency => "swift package dependency",
         EdgeKind::DotnetUsing | EdgeKind::DotnetReference => "dotnet",
         EdgeKind::DotnetProjectDependency => "dotnet project dependency",
-        EdgeKind::TerraformReference => "terraform-ref",
-        EdgeKind::TerraformModuleRef => "terraform-module",
-        EdgeKind::TerraformOutputRef => "terraform-output",
         EdgeKind::PythonImport | EdgeKind::PythonReference => "python",
         EdgeKind::GoImport | EdgeKind::GoReference => "go",
         EdgeKind::RustUse | EdgeKind::RustMod | EdgeKind::RustPackage => "rust",
@@ -215,13 +201,28 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::ElixirImport | EdgeKind::ElixirReference => "elixir",
         EdgeKind::DartImport | EdgeKind::DartReference => "dart",
         EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => "trpc",
-        EdgeKind::Call => "call",
-        EdgeKind::Extends => "extends",
-        EdgeKind::WorkflowJob => "workflow-job",
-        EdgeKind::WorkflowStep => "workflow-step",
-        EdgeKind::WorkflowNeeds => "workflow-needs",
-        EdgeKind::WorkflowUses => "workflow-uses",
-        EdgeKind::WorkflowRun => "workflow-run",
-        EdgeKind::WorkflowArtifact => "workflow-artifact",
+        // These labels already have their canonical graph spelling.
+        EdgeKind::Layout
+        | EdgeKind::TestOf
+        | EdgeKind::VitestSetup(_)
+        | EdgeKind::MarkdownLink
+        | EdgeKind::CiInvocation
+        | EdgeKind::HttpCall
+        | EdgeKind::ProcessSpawn
+        | EdgeKind::AssetImport
+        | EdgeKind::Resource
+        | EdgeKind::ReactRender
+        | EdgeKind::Selector
+        | EdgeKind::TerraformReference
+        | EdgeKind::TerraformModuleRef
+        | EdgeKind::TerraformOutputRef
+        | EdgeKind::Call
+        | EdgeKind::Extends
+        | EdgeKind::WorkflowJob
+        | EdgeKind::WorkflowStep
+        | EdgeKind::WorkflowNeeds
+        | EdgeKind::WorkflowUses
+        | EdgeKind::WorkflowRun
+        | EdgeKind::WorkflowArtifact => edge.as_str(),
     }
 }
