@@ -290,8 +290,9 @@ invalidate them. Ordinary final binds, a single mutating fragment interpolation,
 and appends to fresh nested fragments retain their existing recovery.
 Pure identifier reassignment in the final interpolation also preserves an
 earlier captured fragment: replacing the binding does not change that object.
-Later reads use the replacement. Mutations or escapes on the assignment's
-right-hand side still make the call `Dynamic`.
+Later reads can recover the replacement while its snapshot remains available;
+existing conservative alias invalidation still applies. Mutations or escapes on
+the assignment's right-hand side still make the call `Dynamic`.
 An append or mutating helper that consumes the builder returned by an assignment
 also stays `Dynamic`; assigning the reference does not copy the builder.
 Executor arguments follow evaluation order. Proven later mutations of the same

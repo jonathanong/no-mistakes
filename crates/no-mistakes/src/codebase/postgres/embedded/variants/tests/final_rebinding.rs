@@ -30,7 +30,15 @@ fn final_identifier_rebinding_preserves_captured_fragments_and_replacement_reads
         texts(&calls[7]),
         ["SELECT id FROM aliases OFFSET 2", "SELECT id FROM aliases"]
     );
-    assert_eq!(texts(&calls[16]), ["SELECT id FROM replacements OFFSET 9"]);
+    // Earlier RHS mutations have already invalidated the shared replacement's
+    // historical alias group. This later read retains that conservative fallback.
+    assert_eq!(calls[16].kind, EmbeddedSqlKind::Dynamic);
+    assert!(calls[16].is_unanalyzable());
+    assert_eq!(
+        calls[16].sql_text.as_deref(),
+        Some("SELECT sql_placeholder_1")
+    );
+    assert!(calls[16].variants.is_empty());
     assert_eq!(calls, self::calls("variants-final-rebinding.ts"));
 }
 
