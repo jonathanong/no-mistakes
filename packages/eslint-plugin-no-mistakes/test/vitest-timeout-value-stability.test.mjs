@@ -137,6 +137,31 @@ describe("vitest-timeout-cap value stability", () => {
   it("preserves own data writes and deletion without invoking accessor descriptors", () => {
     assert.deepEqual(findings("shallow-copy-data-writes", { unknownValues: "finding" }), []);
   });
+  it("preserves copy paths through transparent assertions around copies and wrappers", () => {
+    assert.deepEqual(
+      findings("transparent-copy-wrappers", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [
+        [31, "timeout"],
+        [36, "unknown"],
+        [40, "unknown"],
+      ],
+    );
+    assert.deepEqual(
+      findings("transparent-copy-wrappers").map(({ line, messageId }) => [line, messageId]),
+      [[31, "timeout"]],
+    );
+  });
+  it("retains deleted own-descriptor invalidation through asserted container aliases", () => {
+    assert.deepEqual(
+      findings("asserted-deletion-alias", { unknownValues: "finding" }).map(
+        ({ line, messageId }) => [line, messageId],
+      ),
+      [4, 14, 24].flatMap((line) => Array(3).fill([line, "unknown"])),
+    );
+    assert.deepEqual(findings("asserted-deletion-alias"), []);
+  });
   it("preserves copied values through wrapper paths and independent cached proofs", () => {
     assert.deepEqual(
       findings("wrapped-shallow-copy-writes", { unknownValues: "finding" }).map(
