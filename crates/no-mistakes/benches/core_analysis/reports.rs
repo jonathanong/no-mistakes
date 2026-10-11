@@ -113,14 +113,8 @@ pub(super) fn bench_unique_exports(c: &mut Criterion) {
         config.project_roots_for_rule(&root, "unique-exports"),
         vec![root.clone()]
     );
-    assert_eq!(
-        facts
-            .ts
-            .iter()
-            .map(|(_, facts)| facts.symbols.as_ref().unwrap().exports.len())
-            .sum::<usize>(),
-        512
-    );
+    assert_eq!(facts.files().len(), 2);
+    assert_eq!(facts.stats.files_parsed, 2);
     // The fixture includes one duplicate to prove analysis visits these facts.
     let findings = run();
     assert_eq!(findings.len(), 1);
