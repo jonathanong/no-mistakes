@@ -1,0 +1,117 @@
+[
+  {
+    "name": "expression",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => ({test:{include:['tests/*.test.mts']}}));",
+    "recovered": true
+  },
+  {
+    "name": "block",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => {return ({test:{include:['tests/*.test.mts']}});});",
+    "recovered": true
+  },
+  {
+    "name": "function",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(function(){return ({test:{include:['tests/*.test.mts']}});});",
+    "recovered": true
+  },
+  {
+    "name": "binding",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nconst config = defineConfig(() => ({test:{include:['tests/*.test.mts']}})); export default config;",
+    "recovered": true
+  },
+  {
+    "name": "empty-export",
+    "source": "import 'vitest/config';",
+    "recovered": false
+  },
+  {
+    "name": "declaration",
+    "source": "export default function config(){return ({test:{include:['tests/*.test.mts']}});}",
+    "recovered": false
+  },
+  {
+    "name": "not-call",
+    "source": "export default 42;",
+    "recovered": false
+  },
+  {
+    "name": "optional",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig?.(() => ({test:{include:['tests/*.test.mts']}}));",
+    "recovered": false
+  },
+  {
+    "name": "arity",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig();",
+    "recovered": false
+  },
+  {
+    "name": "spread",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(...callbacks);",
+    "recovered": false
+  },
+  {
+    "name": "unknown",
+    "source": "function wrapper(value){return value;} export default wrapper(() => ({test:{include:['tests/*.test.mts']}}));",
+    "recovered": false
+  },
+  {
+    "name": "merge",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default mergeConfig(() => ({test:{include:['tests/*.test.mts']}}));",
+    "recovered": false
+  },
+  {
+    "name": "not-callback",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(42);",
+    "recovered": false
+  },
+  {
+    "name": "parameter",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig((env) => ({test:{include:['tests/*.test.mts']}}));",
+    "recovered": false
+  },
+  {
+    "name": "rest",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig((...env) => ({test:{include:['tests/*.test.mts']}}));",
+    "recovered": false
+  },
+  {
+    "name": "function-parameter",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(function(env){return ({test:{include:['tests/*.test.mts']}});});",
+    "recovered": false
+  },
+  {
+    "name": "generator",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(function*(){return ({test:{include:['tests/*.test.mts']}});});",
+    "recovered": false
+  },
+  {
+    "name": "empty-body",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => {});",
+    "recovered": false
+  },
+  {
+    "name": "multiple-statements",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => {const x=1; return ({test:{include:['tests/*.test.mts']}});});",
+    "recovered": false
+  },
+  {
+    "name": "no-return",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => {({test:{include:['tests/*.test.mts']}});});",
+    "recovered": false
+  },
+  {
+    "name": "bare-return",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => {return;});",
+    "recovered": false
+  },
+  {
+    "name": "not-object",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => 42);",
+    "recovered": false
+  },
+  {
+    "name": "conditional",
+    "source": "import { defineConfig, mergeConfig } from 'vitest/config';\nexport default defineConfig(() => flag ? ({test:{include:['tests/*.test.mts']}}) : {});",
+    "recovered": false
+  }
+]

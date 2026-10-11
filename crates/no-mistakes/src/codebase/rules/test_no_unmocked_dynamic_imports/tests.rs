@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod callback_setups;
+mod callback_syntax;
 mod conditional_requires;
 mod imported_helpers;
 mod legacy_errors;

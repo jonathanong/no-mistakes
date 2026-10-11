@@ -22,7 +22,7 @@ mod setup_imports;
 mod static_members;
 
 pub(super) use config_extends::merged::{
-    default_options as raw_config_options, raw_failure_reason,
+    callback_config_object, default_options as raw_config_options, raw_failure_reason,
 };
 use config_extends::resolve_config_extends;
 use merge::merge_options;

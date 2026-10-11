@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: [opaque.config.mts]
+    projects:
+      opaque:
+        include: [tests/opaque.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [opaque]

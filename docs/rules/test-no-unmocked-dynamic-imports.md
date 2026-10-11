@@ -90,6 +90,10 @@ Implicit `vitest.workspace.*` and `vitest.projects.*` catalogs supply project
 matchers and setups, taking precedence over `vitest.config.*` during discovery.
 Recovered named projects remain separate executions even when only some of
 them have explicit project policies.
+Zero-parameter ESM `defineConfig` and `defineProject` callbacks with a literal
+object expression or a sole literal return use the same project and root
+resolution as ordinary configs. Comments and strings do not declare setups.
+Unsupported opaque callbacks do not supply global setup mocks.
 Repository checks also preserve unnamed Vitest executions independently.
 Explicit Vitest configs do not suppress automatic Jest config discovery.
 An explicit named policy replaces the recovered project's include/exclude

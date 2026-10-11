@@ -31,7 +31,7 @@ use project_entries::{
     flattened_project_elements, global_excluded_string_projects, selected_string_project_paths,
     selected_string_project_roots,
 };
-pub(super) use root_options::root_options;
+pub(super) use root_options::{callback_root_object, root_options};
 pub(in crate::integration_tests::test_config::vitest) use string_projects::{
     parse_string_project_with_resolver, string_project_paths_with_resolver,
     string_project_roots_with_resolver,
