@@ -17,6 +17,7 @@ mod legacy_errors;
 mod mock_cut;
 mod mock_specifiers;
 mod project_setups;
+mod recovered_matchers;
 mod request_sources;
 mod runner_compatibility;
 mod visibility;

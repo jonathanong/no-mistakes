@@ -9,6 +9,27 @@ const root = join(
 );
 
 test(
+  "compiled broad checks retain imported Vitest project matchers",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/recovered-custom",
+    );
+    const report = await cjs.check({ root: fixture });
+    assert.deepEqual(await esm.check({ root: fixture }), report);
+    assert.deepEqual(
+      report.rules.map((finding) => finding.file),
+      ["custom/genuine.case.mts"],
+    );
+    assert.equal(report.rules[0].target, "src/genuine.mts");
+    assert.deepEqual(report.warnings, []);
+  },
+);
+
+test(
   "compiled checks retain unnamed Vitest and implicit Jest executions",
   { skip: !compiled, timeout: 20_000 },
   async () => {
@@ -114,14 +135,18 @@ test(
       [".no-mistakes-nested-live.yml", []],
       [".no-mistakes-nested-sibling.yml", ["nested/sibling.test.mts"]],
       [".no-mistakes-ordinary.yml", ["ordinary/cut.test.mts", "ordinary/sibling.test.mts"]],
-      [".no-mistakes-runner-overlap.yml", ["web/covered.test.mts"]],
+      // Repository checks retain implicit Vitest projects beside narrower Jest matchers.
+      [".no-mistakes-runner-overlap.yml", ["other/uncovered.test.mts", "web/covered.test.mts"]],
       [".no-mistakes-runner-reverse.yml", ["web/covered.test.mts"]],
       [".no-mistakes-runner-vitest-only.yml", ["web/covered.test.mts"]],
       [".no-mistakes-runner-vitest-config-overlap.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-runner-jest-config-overlap.yml", ["web/covered.test.mts"]],
+      [
+        ".no-mistakes-runner-jest-config-overlap.yml",
+        ["other/uncovered.test.mts", "web/covered.test.mts", "web/genuine.test.mts"],
+      ],
       [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
       [".no-mistakes-stale-app.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-cjs-helper.yml", []],
+      [".no-mistakes-cjs-helper.yml", ["other/uncovered.test.mts", "web/genuine.test.mts"]],
       [".no-mistakes-mixed-runners.yml", ["web/covered.test.mts"]],
       [".no-mistakes-disjoint-runners.yml", ["other/uncovered.test.mts"]],
       [".no-mistakes-inherit.yml", []],

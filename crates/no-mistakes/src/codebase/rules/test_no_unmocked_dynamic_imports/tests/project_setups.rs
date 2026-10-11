@@ -76,9 +76,10 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
             ".no-mistakes-ordinary.yml",
             vec!["ordinary/cut.test.mts", "ordinary/sibling.test.mts"],
         ),
+        // Repository checks retain implicit Vitest projects beside narrower Jest matchers.
         (
             ".no-mistakes-runner-overlap.yml",
-            vec!["web/covered.test.mts"],
+            vec!["web/covered.test.mts", "other/uncovered.test.mts"],
         ),
         (
             ".no-mistakes-runner-reverse.yml",
@@ -94,14 +95,21 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         ),
         (
             ".no-mistakes-runner-jest-config-overlap.yml",
-            vec!["web/covered.test.mts"],
+            vec![
+                "web/covered.test.mts",
+                "web/genuine.test.mts",
+                "other/uncovered.test.mts",
+            ],
         ),
         (
             ".no-mistakes-runner-playwright-only.yml",
             vec!["web/covered.test.mts"],
         ),
         (".no-mistakes-stale-app.yml", vec!["web/covered.test.mts"]),
-        (".no-mistakes-cjs-helper.yml", vec![]),
+        (
+            ".no-mistakes-cjs-helper.yml",
+            vec!["other/uncovered.test.mts", "web/genuine.test.mts"],
+        ),
         (
             ".no-mistakes-mixed-runners.yml",
             vec!["web/covered.test.mts"],
