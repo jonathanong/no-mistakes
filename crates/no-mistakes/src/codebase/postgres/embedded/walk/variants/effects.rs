@@ -1,31 +1,51 @@
+mod bindings;
+mod identities;
+mod projection;
+
 use super::super::{resolve::functions::reassigned::for_each_assigned_name, ScopeVisitor};
-use super::ValueKind;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentExpression, AssignmentOperator, AssignmentTarget,
-    CallExpression, Expression, Function, SimpleAssignmentTarget, UpdateExpression,
+    CallExpression, ConditionalExpression, Expression, Function, LogicalExpression,
+    SimpleAssignmentTarget, UpdateExpression,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 
 impl ScopeVisitor<'_> {
     pub(super) fn expression_mutates_builder(&self, expression: &Expression<'_>) -> bool {
-        self.builder_expression_effects(expression, false)
-    }
-
-    pub(super) fn expression_mutates_captured_builder(&self, expression: &Expression<'_>) -> bool {
-        self.builder_expression_effects(expression, true)
-    }
-
-    fn builder_expression_effects(&self, expression: &Expression<'_>, captured: bool) -> bool {
         let mut effects = Effects {
             visitor: self,
             found: false,
             prefixes: None,
-            captured,
+            identities: None,
+            uncertain: false,
+            captured: false,
         };
         effects.visit_expression(expression);
         effects.found
+    }
+
+    pub(super) fn expression_builder_effects(&self, expression: &Expression<'_>) -> BuilderEffects {
+        let mut effects = Effects {
+            visitor: self,
+            found: false,
+            prefixes: Some(Vec::new()),
+            identities: None,
+            uncertain: false,
+            captured: true,
+        };
+        effects.identities = Some(identities::EffectIdentities::default());
+        effects.visit_expression(expression);
+        BuilderEffects {
+            targets: effects
+                .prefixes
+                .unwrap()
+                .into_iter()
+                .map(|(name, identity, _)| (name, identity))
+                .collect(),
+            uncertain: effects.uncertain,
+        }
     }
 
     pub(super) fn forget_effectful_sql_prefixes(&mut self, expression: &Expression<'_>) {
@@ -33,6 +53,8 @@ impl ScopeVisitor<'_> {
             visitor: self,
             found: false,
             prefixes: Some(Vec::new()),
+            identities: None,
+            uncertain: false,
             captured: false,
         };
         effects.visit_expression(expression);
@@ -47,63 +69,26 @@ impl ScopeVisitor<'_> {
     }
 }
 
+pub(super) struct BuilderEffects {
+    pub(super) targets: Vec<(String, Option<u32>)>,
+    pub(super) uncertain: bool,
+}
+
 type PrefixEffect = (String, Option<u32>, Option<usize>);
 
 struct Effects<'visitor, 'source> {
     visitor: &'visitor ScopeVisitor<'source>,
     found: bool,
     prefixes: Option<Vec<PrefixEffect>>,
+    identities: Option<identities::EffectIdentities>,
+    uncertain: bool,
     captured: bool,
-}
-
-impl Effects<'_, '_> {
-    fn known_sql_binding(&self, name: &str) -> bool {
-        self.visitor.lookup(name).is_some_and(|binding| {
-            binding.sql_builder
-                || binding.builder_identity.is_some()
-                || binding
-                    .variants
-                    .as_ref()
-                    .is_some_and(|values| values.iter().any(|value| value.value == ValueKind::Sql))
-        })
-    }
-    fn appended_builders(&self, call: &CallExpression<'_>) -> Vec<(String, Option<u32>)> {
-        let receiver = match unwrap_ts_wrappers(&call.callee) {
-            Expression::StaticMemberExpression(member) if member.property.name == "append" => {
-                &member.object
-            }
-            Expression::ComputedMemberExpression(member) if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(property) if property.value == "append") => {
-                &member.object
-            }
-            _ => return Vec::new(),
-        };
-        self.visitor
-            .builder_result_names(receiver)
-            .into_iter()
-            .filter(|name| self.known_sql_binding(name))
-            .map(|name| {
-                let identity = self
-                    .visitor
-                    .lookup(&name)
-                    .and_then(|binding| binding.builder_identity);
-                (name, identity)
-            })
-            .collect()
-    }
-    fn collect_binding(&mut self, name: &str) {
-        if self.known_sql_binding(name) {
-            self.found = true;
-            if let Some(prefixes) = &mut self.prefixes {
-                prefixes.push((name.to_string(), None, None));
-            }
-        }
-    }
 }
 
 impl<'a> Visit<'a> for Effects<'_, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         let (effects, escape) = self.visitor.call_builder_effect(call);
-        let appended = self.appended_builders(call);
+        let (effects, appended) = self.project_call(call, effects, escape);
         self.found |= !effects.is_empty() || !appended.is_empty();
         if let Some(prefixes) = &mut self.prefixes {
             let scope = escape.map_or(0, |_| {
@@ -124,16 +109,46 @@ impl<'a> Visit<'a> for Effects<'_, '_> {
             walk::walk_call_expression(self, call);
         }
     }
+    fn visit_conditional_expression(&mut self, branch: &ConditionalExpression<'a>) {
+        if self.identities.is_none() {
+            walk::walk_conditional_expression(self, branch);
+            return;
+        }
+        self.visit_expression(&branch.test);
+        let before = self.identities.clone().unwrap();
+        self.visit_expression(&branch.consequent);
+        let left = self.identities.replace(before.clone()).unwrap();
+        self.visit_expression(&branch.alternate);
+        self.identities
+            .as_mut()
+            .unwrap()
+            .join(self.visitor, &before, left);
+    }
+    fn visit_logical_expression(&mut self, branch: &LogicalExpression<'a>) {
+        self.visit_expression(&branch.left);
+        let before = self.identities.clone();
+        self.visit_expression(&branch.right);
+        if let Some(before) = before {
+            self.identities
+                .as_mut()
+                .unwrap()
+                .join(self.visitor, &before, before.clone());
+        }
+    }
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
         if self.captured && identifier_rebinding(assignment) {
             // Earlier interpolations already hold the old object reference.
             // Rebinding its name is harmless, but the RHS may still mutate it.
             self.visit_expression(&assignment.right);
-            return;
+        } else {
+            for_each_assigned_name(&assignment.left, &mut |name| self.collect_binding(name));
+            if !self.found || self.prefixes.is_some() {
+                walk::walk_assignment_expression(self, assignment);
+            }
         }
-        for_each_assigned_name(&assignment.left, &mut |name| self.collect_binding(name));
-        if !self.found || self.prefixes.is_some() {
-            walk::walk_assignment_expression(self, assignment);
+        // Later consumers in the same expression observe the new binding.
+        if let Some(identities) = &mut self.identities {
+            self.uncertain |= identities.assign(self.visitor, assignment);
         }
     }
     fn visit_update_expression(&mut self, update: &UpdateExpression<'a>) {

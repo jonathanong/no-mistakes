@@ -92,7 +92,7 @@ impl ScopeVisitor<'_> {
         effects
     }
 
-    fn known_builder_consumer(&self, call: &CallExpression<'_>) -> bool {
+    pub(super) fn known_builder_consumer(&self, call: &CallExpression<'_>) -> bool {
         let callee = unwrap_ts_wrappers(&call.callee);
         // Relative candidates are recorded before their arguments escape, but
         // ownership is still unconfirmed here. A rejected owner can mutate a

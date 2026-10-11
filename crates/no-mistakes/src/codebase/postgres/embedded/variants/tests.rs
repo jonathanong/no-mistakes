@@ -8,6 +8,8 @@ mod append_sites;
 mod branch_correlation;
 #[path = "tests/captured_bindings.rs"]
 mod captured_bindings;
+#[path = "tests/captured_builder_identities.rs"]
+mod captured_builder_identities;
 #[path = "tests/defensive.rs"]
 mod defensive;
 #[path = "tests/destructuring_assignments.rs"]
