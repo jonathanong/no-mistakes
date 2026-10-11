@@ -1,10 +1,11 @@
 "use strict";
 const { resolveVariable } = require("./async-target-bindings");
 const { unwrapTransparentParent } = require("./async-ast");
+const { laterTopLevelDeletion } = require("./vitest-timeout-descriptor-order");
 
 // Own slots detach at a shallow spread; nested receiver identities remain shared.
 function createDeletedValue(context) {
-  function deleted(variable, depth = 0, ignoredDeletion, seen = new Set()) {
+  function deleted(variable, depth = 0, probe, seen = new Set()) {
     if (!variable || seen.has(variable)) return false;
     seen = new Set(seen).add(variable);
     return variable.references.some(({ identifier }) => {
@@ -16,7 +17,11 @@ function createDeletedValue(context) {
       }
       let parent = use.parent;
       if (parent?.type === "UnaryExpression" && parent.operator === "delete")
-        return members > depth && parent !== ignoredDeletion;
+        return (
+          members > depth &&
+          parent !== probe.ignoredDeletion &&
+          !laterTopLevelDeletion(probe.member, parent, context)
+        );
       if (members > depth) return false;
       let nested = depth - members;
       while (
@@ -39,7 +44,7 @@ function createDeletedValue(context) {
         parent?.type === "VariableDeclarator" &&
         parent.init === use &&
         parent.id.type === "Identifier" &&
-        deleted(resolveVariable(parent.id, context), nested, ignoredDeletion, seen)
+        deleted(resolveVariable(parent.id, context), nested, probe, seen)
       );
     });
   }
