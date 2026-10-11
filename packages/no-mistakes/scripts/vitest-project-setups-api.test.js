@@ -161,6 +161,30 @@ test(
 );
 
 test(
+  "compiled CJS and ESM preserve switch, BigInt, and recovered helper execution",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixture = join(
+      root,
+      "../test-no-unmocked-dynamic-imports-runner-executions/eager-switch-bigint",
+    );
+    const options = { root: fixture };
+    const report = await cjs.check(options);
+    assert.deepEqual(await esm.check(options), report);
+    assert.deepEqual(
+      report.rules.map((finding) => [finding.file, finding.target]),
+      [
+        ["tests/bigint-if-zero.test.cjs", "src/target.cjs"],
+        ["tests/bigint-zero.test.cjs", "src/target.cjs"],
+        ["tests/switch-later.test.cjs", "src/target.cjs"],
+      ],
+    );
+  },
+);
+
+test(
   "compiled setup triggers follow the effective policy config",
   { skip: !compiled, timeout: 20_000 },
   async () => {

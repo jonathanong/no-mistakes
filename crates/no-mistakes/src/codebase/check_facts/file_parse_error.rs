@@ -21,6 +21,7 @@ pub(crate) fn ts_facts(
         parse_error: Some(parse_error),
         source,
         imports: import_facts.imports,
+        eager_require_specifiers: import_facts.eager_require_specifiers,
         imported_bindings: import_facts.imported_bindings,
         exported_bindings: import_facts.exported_bindings,
         callable_aliases: import_facts.callable_aliases,

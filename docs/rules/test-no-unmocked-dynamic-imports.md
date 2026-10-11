@@ -74,6 +74,11 @@ Tests of `do...while` loops with simple, normally completing bodies execute
 at least once, so their unconditional literal `require()` helpers do supply
 coverage. Unknown nested loop, label, switch, or exception-handling completion
 remains conservative.
+The first `switch` case test executes even when a `default` label comes first;
+later case tests can be skipped after a match. Statically truthy BigInt values
+such as `1n && require('./mock-helper')` execute the helper, while `0n` skips it.
+When a helper has a recoverable parse error, recovered eager `require()` facts
+still guide nested helper traversal; the parse diagnostic remains visible.
 `require.resolve()` does not execute a helper.
 For a test matched by multiple selected projects, the rule checks its dynamic
 imports in each project context. A mock from one project's setup does not
