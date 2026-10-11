@@ -20,7 +20,10 @@ console.log(facts.diagnostics);
 ```
 
 Passing an array of `PostgresSqlSource` inputs returns an array of facts in input
-order. Independent sources run in parallel. The optional `fileName` is an opaque
+order. Independent sources run in parallel on a separate, reusable worker pool.
+Its first batch selects `RAYON_NUM_THREADS` when it is a positive integer,
+otherwise the CPU count. Source parsing leaves the global analysis pool available
+for the first repository invocation's `jobs` option. The optional `fileName` is an opaque
 label; it is never opened. Each source owns one prepared token inventory and each
 statement is parsed once. Projections borrow that statement's AST, which is
 discarded after its serializable facts are collected. There is no persistent

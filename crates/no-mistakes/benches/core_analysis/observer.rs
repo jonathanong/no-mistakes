@@ -3,9 +3,10 @@ use super::fixtures::{
     EXPECTED_CHECK_MANIFEST_REQUESTS, EXPECTED_CHECK_RESOLVER_KEYS, EXPECTED_CHECK_SOURCE_READS,
 };
 use super::shard;
-use criterion::{black_box, BenchmarkId, Criterion};
+use criterion::{black_box, BatchSize, BenchmarkId, Criterion};
 use no_mistakes::benchmark_support;
-use no_mistakes::diagnostics::DiagnosticsSnapshot;
+use no_mistakes::diagnostics::{DiagnosticsSnapshot, InvocationObserver};
+use rayon::prelude::*;
 use std::path::Path;
 
 fn observed_check(root: &Path, mode: &str) -> (String, Option<DiagnosticsSnapshot>) {
@@ -78,6 +79,46 @@ pub(super) fn bench_observer_overhead(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(mode), &mode, |b, mode| {
             b.iter(|| black_box(observed_check(black_box(&root), black_box(mode))));
         });
+    }
+    group.finish();
+
+    // The fixture has little same-key contention. Keep a fixed four-worker
+    // benchmark for the hot verbose-counter path independently of fixture I/O.
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .expect("observer benchmark pool should build");
+    let mut group = c.benchmark_group("observer_counters_4threads");
+    for verbose in [false, true] {
+        let mode = if verbose { "verbose" } else { "timings" };
+        group.bench_with_input(
+            BenchmarkId::from_parameter(mode),
+            &verbose,
+            |b, &verbose| {
+                b.iter_batched(
+                    || InvocationObserver::new(verbose),
+                    |observer| {
+                        pool.install(|| {
+                            (0..4).into_par_iter().for_each(|_| {
+                                for _ in 0..10_000 {
+                                    observer.increment(black_box("parse.requests"), 1);
+                                    observer.increment(black_box("resolver.computations"), 2);
+                                }
+                            });
+                        });
+                        let snapshot = observer.snapshot();
+                        if verbose {
+                            assert_eq!(snapshot.work["parse.requests"], 40_000);
+                            assert_eq!(snapshot.work["resolver.computations"], 80_000);
+                        } else {
+                            assert!(snapshot.work.is_empty());
+                        }
+                        black_box(snapshot)
+                    },
+                    BatchSize::SmallInput,
+                );
+            },
+        );
     }
     group.finish();
 }

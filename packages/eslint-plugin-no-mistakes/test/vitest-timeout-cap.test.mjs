@@ -8,6 +8,22 @@ const code = (name) => fixture(`vitest-timeout-cap/${name}.ts`);
 const findings = (name, options) =>
   lint(code(name), { [`no-mistakes/${rule}`]: ["error", options || {}] }, "fixture.test.ts");
 describe(rule, () => {
+  it("keeps primitive property reads known without admitting object escapes or writes", () => {
+    assert.deepEqual(
+      findings("primitive-reads", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [7, "timeout"],
+        [10, "unknown"],
+        [14, "unknown"],
+        [17, "unknown"],
+        [21, "unknown"],
+        [24, "unknown"],
+      ],
+    );
+  });
   it("preserves runtime receivers, literal invocation callbacks and opaque argument safety", () => {
     assert.deepEqual(
       findings("invocation-safety", { unknownValues: "finding" }).map(({ line, messageId }) => [

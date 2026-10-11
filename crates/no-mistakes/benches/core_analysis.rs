@@ -26,6 +26,8 @@ mod react_traits;
 mod relationships;
 #[path = "core_analysis/reports.rs"]
 mod reports;
+#[path = "core_analysis/resolver_catalog.rs"]
+mod resolver_catalog;
 #[path = "core_analysis/shard.rs"]
 mod shard;
 #[path = "core_analysis/sql_fetch.rs"]
@@ -81,6 +83,7 @@ fn bench_workflow_artifact_values(c: &mut criterion::Criterion) {
 
 criterion_group!(
     benches,
+    resolver_catalog::bench_resolver_catalog,
     bench_sql_source_positions,
     bench_lazy_traversal,
     postgres_bounds::bench_postgres_bounds,
