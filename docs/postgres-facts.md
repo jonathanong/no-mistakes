@@ -217,6 +217,15 @@ fragments contribute their own SQL text and generated
 placeholders are renumbered in composition order. Ordinary value interpolations
 remain binds.
 
+Object and array destructuring assignments discard the earlier SQL snapshot
+of every identifier they write, including nested, renamed, computed, rest and
+default targets and TypeScript target wrappers. Subsequent calls remain
+`Dynamic` until a fresh recoverable assignment supplies SQL. Member targets
+write properties without discarding their receiver's binding; unrelated
+bindings and aliases holding the old value retain their facts. Queries in
+right-hand expressions, computed keys and defaults use the state at their
+evaluation point, before the corresponding target is overwritten.
+
 If any possible outcome is opaque, if there are more than 16 versions, or if
 recovery exceeds the depth limit of 8, no partial version set is published.
 Loops, untagged `${...}` SQL-text interpolation, cross-file calls,
