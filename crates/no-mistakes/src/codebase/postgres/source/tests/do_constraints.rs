@@ -112,8 +112,8 @@ fn nested_do_constraints_keep_typed_names_validation_and_exact_source_provenance
         let PostgresSqlStatementKind::DoBlock { block } = &block_statement.facts else {
             panic!()
         };
-        assert_eq!(block.complete, plain);
-        assert_eq!(block.diagnostics.len(), if plain { 0 } else { 2 });
+        assert!(block.complete);
+        assert!(block.diagnostics.is_empty());
         for (statement, _, _) in &constraints {
             assert!(statement.span.start.offset > block_statement.span.start.offset);
             assert!(statement.span.end.offset < block_statement.span.end.offset);

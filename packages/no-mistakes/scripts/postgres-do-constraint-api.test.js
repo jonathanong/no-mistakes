@@ -39,8 +39,8 @@ test(
         plain ? ["doBlock"] : ["createIndex", "doBlock", "createIndex"],
       );
       const owner = facts.statements.find((statement) => statement.kind === "doBlock");
-      assert.equal(owner.block.complete, plain);
-      assert.equal(owner.block.diagnostics.length, plain ? 0 : 2);
+      assert.equal(owner.block.complete, true);
+      assert.deepEqual(owner.block.diagnostics, []);
       const all = facts.statements.flatMap(occurrences);
       const constraints = all.filter((statement) => statement.kind === "alterTable");
       assert.equal(constraints.length, plain ? 1 : 3);

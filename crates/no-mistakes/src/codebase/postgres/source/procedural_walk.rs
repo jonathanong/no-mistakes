@@ -39,12 +39,10 @@ pub(super) fn finish_unparsed(block: &mut PostgresSqlProceduralBlock, span: &Pos
 }
 
 pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock, retain_walker: bool) {
+    let utilities = super::procedural_occurrences::utility_spans(&block.occurrences);
     let safe = recognized(&block.occurrences)
         && block.diagnostics.is_empty()
-        && block.statements.iter().all(|statement| {
-            matches!(statement.facts, PostgresSqlStatementKind::Other)
-                || super::completeness::statement(&statement.facts)
-        });
+        && super::completeness::procedural_statements(&block.statements, &utilities);
     if safe {
         block.complete = true;
     } else {
@@ -52,12 +50,10 @@ pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock, retain_walke
             .diagnostics
             .extend(super::procedural_occurrences::unsupported(
                 &block.statements,
+                &utilities,
             ));
         block.complete = block.diagnostics.is_empty()
-            && block
-                .statements
-                .iter()
-                .all(|statement| super::completeness::statement(&statement.facts));
+            && super::completeness::procedural_statements(&block.statements, &utilities);
         // Dynamic commands stay fail-closed even when neighboring SQL facts parse.
         if has_kind(
             &block.occurrences,

@@ -3,6 +3,7 @@ mod controls;
 mod cursor;
 mod header_execute;
 mod literal;
+mod lock_table;
 mod scan;
 mod select_gate;
 mod statements;

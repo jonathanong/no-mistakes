@@ -40,6 +40,8 @@ fn plain_statement(ctx: &mut Ctx<'_>) -> PostgresSqlProceduralOccurrence {
         simple(ctx, Kind::ControlFlow)
     } else if at_dml(ctx) {
         simple(ctx, Kind::Dml)
+    } else if super::lock_table::is_static_lock_table(ctx) {
+        simple(ctx, Kind::Utility)
     } else if at_word(ctx, "WITH") {
         with_stmt(ctx)
     } else if at_utility(ctx) {
