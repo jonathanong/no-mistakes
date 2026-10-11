@@ -1,0 +1,14 @@
+import { default as test } from '@playwright/test';
+import { default as ordinary } from './ordinary-default';
+test.setTimeout(60000);
+test.setTimeout(1); test.setTimeout(30000);
+const body = ({}, info) => { info.setTimeout(60000); };
+const bound = body.bind(undefined);
+test('receiver only', bound);
+const partial = body.bind(undefined, {});
+test('partial parameters unresolved', partial);
+test('spread binding unresolved', body.bind(...opaqueBinding));
+const legal = ({}, info) => { info.setTimeout(5000); info.slow(false); info.slow(); };
+test('legal short bound callback', legal.bind(undefined));
+const normal = ({}, info) => { info.setTimeout(60000); };
+ordinary('unrelated default', normal.bind(undefined)); ordinary.setTimeout(60000);

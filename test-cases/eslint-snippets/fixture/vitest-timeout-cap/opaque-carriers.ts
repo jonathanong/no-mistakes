@@ -1,0 +1,12 @@
+import { defineConfig, defineProject } from 'vitest/config';
+import { vi, test } from 'vitest';
+import { importedConfig, importedProject } from 'opaque-config';
+defineConfig(importedConfig);
+defineProject(importedProject);
+defineConfig({ test: opaqueTest });
+defineConfig({ test: { projects: opaqueProjects } });
+defineConfig({ test: { projects: [importedProject] } });
+vi.setConfig(opaqueRuntime);
+test('opaque options', opaqueOptions, () => {});
+vi.setConfig({ ...opaqueRuntime });
+defineConfig({ ...opaqueRoot });

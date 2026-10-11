@@ -40,6 +40,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | Rule                                                                                                    | Purpose                                                       |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md)                               | Cap assertion-specific waits.                                 |
+| [`playwright-test-timeout-cap`](playwright-test-timeout-cap.md) | Cap positive test deadlines and resolved slow slots. |
 | [`playwright-consistent-attribute`](playwright-consistent-attribute.md)                                 | Require one canonical test-id attribute.                      |
 | [`playwright-defaults`](playwright-defaults.md)                                                         | Require literal defaults for passed-through test IDs.         |
 | [`playwright-literals`](playwright-literals.md)                                                         | Require statically analyzable test-id values.                 |

@@ -20,6 +20,7 @@ const rules = {
   "playwright-consistent-attribute": require("./rules/playwright-consistent-attribute"),
   "playwright-defaults": require("./rules/playwright-defaults"),
   "playwright-assertion-timeout-cap": require("./rules/playwright-assertion-timeout-cap"),
+  "playwright-test-timeout-cap": require("./rules/playwright-test-timeout-cap"),
   "playwright-literals": require("./rules/playwright-literals"),
   "playwright-naming-convention": require("./rules/playwright-naming-convention"),
   "playwright-no-empty": require("./rules/playwright-no-empty"),

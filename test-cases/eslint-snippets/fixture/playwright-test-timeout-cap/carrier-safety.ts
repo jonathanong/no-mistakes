@@ -1,0 +1,12 @@
+import { test, defineConfig } from '@playwright/test';
+defineConfig({projects:opaqueProjects});
+defineConfig({...opaqueConfig});
+test.extend({...opaqueFixtures});
+test.extend({plain:[async ({}, use) => { await use(1); }, {}]});
+test.describe.configure({});
+test('negated false is inert', async ({}, info) => { info.slow(!true); });
+test('negated unknown remains unknown', async ({}, info) => { info.slow(!opaqueCondition); });
+const falseFlag = false;
+test('immutable false is inert', async ({}, info) => { info.slow(falseFlag); });
+test('unbound condition', async ({}, info) => { info.slow(unboundFlag); });
+test('explicit undefined is not omitted', async ({}, info) => { info.slow(undefined); });

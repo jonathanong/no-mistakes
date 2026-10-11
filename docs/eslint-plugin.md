@@ -246,13 +246,24 @@ accepts `skip`, `skipIf`, `runIf`, `only`, `todo`, and `fixme`.
 See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
 table callbacks, configuration, and `no-mistakes` suppression directives.
 
+### `playwright-test-timeout-cap`
+
+Opt-in bounded Playwright test deadline policy. Options: `max`, `fixtureMax`,
+`unknownValues`, `registrationPackages`, `exportRoles`, and `configFiles`.
+Reviewed helper export roles distinguish assertions from opaque registrars;
+builtin SDK and known registrar identities cannot be overridden. Under finding
+policy, `effectiveSlot` reports unproved inherited registration deadlines/latches,
+even when subsequent local slow operations are legal. This is not canonical
+cross-file owner proof. See [the rule reference](eslint-rules/playwright-test-timeout-cap.md).
+
 ### `vitest-timeout-cap`
 
 Enable this single-file ESLint/Oxlint rule with explicit `files` globs for
 Vitest configs/projects and test files. `defaultMax` defaults to `5000` ms for
 config/project `testTimeout` and `hookTimeout`; `overrideMax` defaults to
 `30000` ms for test/suite/hook overrides and `vi.setConfig` timeout defaults.
-Both caps must be positive finite numbers. `unknownValues` defaults to
+`configRoot` explicitly admits plain standalone configuration exports; enable it
+only for actual configuration-file scopes. Both caps must be positive finite numbers. `unknownValues` defaults to
 `ignore`; set `finding` to require statically recoverable timeout values.
 Same-module constants, aliases, config callbacks with a single return,
 object/array spreads and effective `mergeConfig` precedence are supported.

@@ -2,6 +2,21 @@
 
 ## Why
 
+Receiver-only callback `.bind(thisArg)` preserves TestContext parameter positions,
+including test.for's second parameter. Pre-bound or spread arguments produce an
+unresolved callback-carrier finding at a known registration rather than silently
+assuming an unchanged context position. Ordinary unrelated bound callbacks remain
+outside framework admission; imported callback implementations are not resolved.
+
+Named callbacks, immutable callback aliases and function declarations acquire
+TestContext only through actual collected test registrations. `test.for` uses
+its second context parameter; `test.each` data is not TestContext. Hook/test/runtime
+`.call` and `.apply` retain their known API identity: call drops the receiver,
+apply admits only literal argument arrays without holes or spreads. Opaque arrays
+and spread arguments produce unknown findings under finding policy rather than
+silently dropping the framework call. Ordinary lookalike calls remain outside
+admission. This does not establish cross-file configured deadline/latch closure.
+
 Very long test and hook timeouts can hide hangs and make CI spend minutes
 waiting on a test that should fail promptly. Keep normal timeouts small, and
 use a specific synchronization signal or test seam when work is legitimately
@@ -83,6 +98,24 @@ export default [
   },
 ];
 ```
+
+- `configRoot` is `false` by default. Enable it only in explicitly selected
+  Vitest configuration files to check a plain standalone default-export object.
+  An unrelated default export in an ordinary source file is not admitted.
+
+Immutable local API aliases, renamed destructuring, matching bound runtime
+receivers, static computed names, `vitest.setConfig`, current suite chains and
+returned `extend`/`override`/`scoped` APIs retain SDK provenance. `aroundAll`,
+`aroundEach`, global completion hooks and completion hooks on the actual test
+context are checked. Table data is not a TestContext. Partially bound or
+unresolved framework calls remain findings under finding policy; later call
+arguments are never substituted for pre-bound arguments.
+
+Opaque recognized config/test/project/runtime/options carriers and unresolved
+relevant spread/merge keys also produce findings under finding policy, including
+carriers whose literal timeout field was never observed. Explicit later
+overrides recover relevant fields without guessing imported config contents.
+These file-local findings do not claim cross-file helper/project closure.
 
 The rule does not discover tests or inspect files outside the configured
 globs. Include project configuration files and any Vitest project files that
