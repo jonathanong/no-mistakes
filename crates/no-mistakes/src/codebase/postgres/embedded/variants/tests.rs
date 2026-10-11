@@ -6,6 +6,8 @@ mod append_aliases;
 mod append_sites;
 #[path = "tests/branch_correlation.rs"]
 mod branch_correlation;
+#[path = "tests/captured_bindings.rs"]
+mod captured_bindings;
 #[path = "tests/defensive.rs"]
 mod defensive;
 #[path = "tests/equivalent.rs"]

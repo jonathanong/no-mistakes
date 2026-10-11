@@ -236,6 +236,12 @@ reads `Dynamic`. Literal array and object arguments retain these alias effects;
 merely declaring a callback does not execute its body. Recognized executors,
 trusted constructors, and known builder appends retain their existing behavior;
 copied SQL strings and unrelated builders remain independent.
+Finite recovery treats mutable SQL bindings and builders captured from an
+enclosing scope as opaque: the extractor cannot prove their state when the
+nested function executes. Branching calls that depend on those captures remain
+`Dynamic`. Recoverable `const` primitive SQL strings, including conditional
+string alternatives, retain finite recovery. This boundary preserves the legacy
+`kind` and `sql_text` fields of non-branching calls and leaves outer facts intact.
 Ordinary `.append()` mutations clear finite-version snapshots cached by other
 tracked aliases to the same mutable builder. Branching calls that depend on a
 cleared snapshot stay `Dynamic`; the directly updated binding can retain

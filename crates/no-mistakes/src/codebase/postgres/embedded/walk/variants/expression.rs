@@ -27,18 +27,33 @@ pub(super) fn recover(
             scalar.value = ValueKind::Boolean(value.value);
             Some(vec![scalar])
         }
-        Expression::Identifier(id) => visitor.lookup(id.name.as_str())?.variants.map(|values| {
-            values
-                .into_iter()
-                .filter(|value| {
-                    !value.choices.iter().any(|(id, arm)| {
-                        constraints
-                            .iter()
-                            .any(|(other, choice)| id == other && arm != choice)
+        Expression::Identifier(id) => {
+            let binding = visitor.lookup(id.name.as_str())?;
+            // A declaration's body can run after its enclosing SQL changes.
+            // Only immutable primitive values have a stable captured snapshot.
+            if visitor.append_crosses_function(id.name.as_str())
+                && (binding.condition_key.is_none()
+                    || binding.builder_identity.is_some()
+                    || binding
+                        .variants
+                        .as_ref()
+                        .is_some_and(|values| values.iter().any(|value| value.fragment)))
+            {
+                return None;
+            }
+            binding.variants.map(|values| {
+                values
+                    .into_iter()
+                    .filter(|value| {
+                        !value.choices.iter().any(|(id, arm)| {
+                            constraints
+                                .iter()
+                                .any(|(other, choice)| id == other && arm != choice)
+                        })
                     })
-                })
-                .collect()
-        }),
+                    .collect()
+            })
+        }
         Expression::ConditionalExpression(branch) => {
             super::conditional::recover(visitor, branch, depth, constraints)
         }
