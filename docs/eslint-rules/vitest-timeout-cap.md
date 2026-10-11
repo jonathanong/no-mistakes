@@ -66,6 +66,14 @@ export default defineConfig({
 it("uses a bounded timeout", { timeout: 25_000 }, async () => {});
 ```
 
+Returned object bindings remain known for synchronous expression-body or
+single-return callbacks whose immutable aliases are consumed only by
+`defineConfig` or `defineProject`. For example, `const settings = { test: {
+testTimeout: 1 } }; const make = () => { return settings; }; defineConfig(make)`
+is accepted under `unknownValues: "finding"`. Unknown callback consumers,
+exports, additional body statements, async/generator callbacks, and parameter
+defaults or destructuring retain unknown values.
+
 Module `const` bindings do not make referenced objects immutable. Member writes,
 updates, deletion, aliased nested references, and unknown helper escapes retain
 unknown timeout values. Strict `unknownValues: "finding"` rejects these carriers;

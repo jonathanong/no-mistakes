@@ -8,6 +8,27 @@ const findings = (name, options = {}) =>
     "fixture.test.ts",
   );
 describe("vitest-timeout-cap value stability", () => {
+  it("preserves returned config bindings through known consumers and immutable callback aliases", () => {
+    assert.deepEqual(
+      findings("config-return-values", { unknownValues: "finding" }).map(({ line, messageId }) => [
+        line,
+        messageId,
+      ]),
+      [
+        [9, "timeout"],
+        [13, "invalid"],
+      ],
+    );
+  });
+  it("retains unknown returned objects when callback consumers or effects are unproved", () => {
+    const actual = findings("config-return-escapes", { unknownValues: "finding" });
+    assert.deepEqual(
+      [...new Set(actual.map(({ line }) => line))],
+      [5, 10, 14, 19, 24, 28, 32, 36, 40, 45, 51, 56, 61, 65],
+    );
+    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.deepEqual(findings("config-return-escapes"), []);
+  });
   it("keeps shallow copy writes independent while checking each copy's own stability", () => {
     assert.deepEqual(
       findings("shallow-copy-writes", { unknownValues: "finding" }).map(({ line, messageId }) => [

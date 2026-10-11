@@ -5,14 +5,15 @@ const { configCall, overrideCall, invocationArguments } = require("./vitest-time
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead) {
-  // A copy can be safe for its source while its own value is still unstable.
-  const memo = [new WeakMap(), new WeakMap()];
-  const active = new Set();
-  function stable(variable, shallowCopy = false) {
-    if (!variable || active.has(variable)) return false;
-    const cache = memo[Number(shallowCopy)];
+  // Values, copies, and callbacks need independent consumer proofs and cycle guards.
+  const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
+  const active = { value: new Set(), shallow: new Set(), callback: new Set() };
+  function stable(variable, mode = "value") {
+    const cache = memo[mode],
+      visiting = active[mode];
+    if (!variable || visiting.has(variable)) return false;
     if (cache.has(variable)) return cache.get(variable);
-    active.add(variable);
+    visiting.add(variable);
     const result =
       variable.defs.every(
         (def) =>
@@ -23,14 +24,36 @@ function createValueStability(context, primitiveMemberRead) {
       ) &&
       variable.references.every(
         (reference) =>
-          reference.init || (!reference.isWrite() && safeUse(reference.identifier, shallowCopy)),
+          reference.init || (!reference.isWrite() && safeUse(reference.identifier, mode)),
       );
-    active.delete(variable);
+    visiting.delete(variable);
     cache.set(variable, result);
     return result;
   }
-  function safeUse(identifier, shallowCopy) {
+  function configCallback(node) {
+    return (
+      (node?.type === "ArrowFunctionExpression" || node?.type === "FunctionExpression") &&
+      !node.async &&
+      !node.generator &&
+      node.params.every((param) => param.type === "Identifier") &&
+      safeUse(node, "callback")
+    );
+  }
+  function safeUse(identifier, mode = "value") {
     let node = unwrapTransparentParent(identifier);
+    if (mode === "callback") {
+      const parent = node.parent;
+      if (parent?.type === "VariableDeclarator" && parent.init === node)
+        return (
+          parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), "callback")
+        );
+      // Test callbacks and mergeConfig object operands do not prove a config callback consumer.
+      return (
+        parent?.type === "CallExpression" &&
+        parent.arguments[0] === node &&
+        ["defineConfig", "defineProject"].includes(configCall(parent, context))
+      );
+    }
     let memberDepth = 0;
     while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
       node = unwrapTransparentParent(node.parent);
@@ -45,11 +68,11 @@ function createValueStability(context, primitiveMemberRead) {
     )
       // Replacing a copy's own property cannot mutate the source. Its children
       // are still shared, so writes through a second member remain unsafe.
-      return shallowCopy && memberDepth === 1;
+      return mode === "shallow" && memberDepth === 1;
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.
     if (memberRead) return true;
-    if (memberDepth) shallowCopy = false;
+    if (memberDepth) mode = "value";
     // Container copies can preserve nested references. Follow their existing binding too.
     while (
       parent &&
@@ -62,14 +85,12 @@ function createValueStability(context, primitiveMemberRead) {
         parent.type === "SpreadElement" &&
         (parent.parent.type === "ObjectExpression" || parent.parent.type === "ArrayExpression")
       )
-        shallowCopy = true;
+        mode = "shallow";
       node = parent;
       parent = node.parent;
     }
     if (parent?.type === "VariableDeclarator" && parent.init === node)
-      return (
-        parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), shallowCopy)
-      );
+      return parent.id.type === "Identifier" && stable(resolveVariable(parent.id, context), mode);
     if (parent?.type === "CallExpression") {
       if (parent.callee === node) return false;
       // Public config/registration consumers are admitted; unknown helpers can mutate objects.
@@ -88,6 +109,14 @@ function createValueStability(context, primitiveMemberRead) {
         (kind === "test" && (index === 1 || index === 2))
       );
     }
+    if (parent?.type === "ReturnStatement") {
+      const body = parent.parent;
+      return (
+        body?.type === "BlockStatement" && body.body.length === 1 && configCallback(body.parent)
+      );
+    }
+    if (parent?.type === "ArrowFunctionExpression" && parent.body === node)
+      return configCallback(parent);
     // Exports and unproved contexts (await/yield, tagged templates, computed
     // keys, and other consumers) can expose the object. No default safe escape.
     return false;
