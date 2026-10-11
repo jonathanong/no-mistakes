@@ -94,6 +94,17 @@ pub(super) fn run_check(
         Some(&config),
     ));
     fact_plan.query_annotation_catalog = Some(Arc::clone(&prepared_tsconfig_catalog));
+    if rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+        fact_plan.integration_runner_configs = Some(Arc::new(
+            crate::integration_tests::prepare_runner_configs_with_catalog(
+                root,
+                &config,
+                &visible_paths,
+                Arc::clone(&prepared_tsconfig_catalog),
+                Arc::clone(&sources),
+            ),
+        ));
+    }
     let prepared_vitest_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
         crate::codebase::rules::prepare_vitest_project_catalog(
             root,

@@ -16,6 +16,7 @@ pub(crate) fn prepare(
             None,
         )),
         None,
+        false,
     )
 }
 
@@ -26,7 +27,31 @@ pub(crate) fn prepare_with_catalog_and_sources(
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> PreparedIntegrationRunnerConfigs {
-    prepare_inner(root, config, visible_paths, tsconfig_catalog, Some(sources))
+    prepare_inner(
+        root,
+        config,
+        visible_paths,
+        tsconfig_catalog,
+        Some(sources),
+        false,
+    )
+}
+
+pub(crate) fn prepare_dynamic_configs(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> PreparedIntegrationRunnerConfigs {
+    prepare_inner(
+        root,
+        config,
+        visible_paths,
+        tsconfig_catalog,
+        Some(sources),
+        true,
+    )
 }
 
 fn prepare_inner(
@@ -35,6 +60,7 @@ fn prepare_inner(
     visible_paths: &[PathBuf],
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
+    force_vitest: bool,
 ) -> PreparedIntegrationRunnerConfigs {
     let mut specs = Vec::new();
     add_framework_specs(
@@ -53,7 +79,9 @@ fn prepare_inner(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         visible_paths,
-        !config.tests.playwright.route_coverage_sources.is_empty()
+        force_vitest
+            || !config.tests.playwright.route_coverage_sources.is_empty()
+            || config.rule_configured(crate::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
             || config
                 .tests
                 .playwright
@@ -96,7 +124,13 @@ fn add_framework_specs(
     }
     let raw_configs = configs.map_or_else(
         || project_config::discovered_config_paths(root, framework, visible_paths),
-        StringOrList::values,
+        |configs| {
+            project_config::expand_explicit_config_values(
+                root,
+                &configs.values(),
+                &visible_paths.iter().cloned().collect(),
+            )
+        },
     );
     specs.extend(raw_configs.into_iter().map(|raw| RunnerConfigSpec {
         framework,

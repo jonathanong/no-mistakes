@@ -27,7 +27,7 @@ pub(crate) fn check_inner(
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     let file_cache: DashMap<PathBuf, Arc<reachable::CachedFileFacts>> = DashMap::new();
     let mut findings = Vec::new();
-    let setup_data = config::precompute_setup_data(root, config, &visible_files)?;
+    let setup_data = config::precompute_setup_data(root, config, &visible_files, tsconfig)?;
     let test_files = matching_test_files(root, files, config)?;
     let selected_runners = config::SelectedRunners::for_config(config);
     let setup_mock_map = precompute_setup_mock_map(
@@ -38,6 +38,7 @@ pub(crate) fn check_inner(
         &resolver,
         None,
     )?;
+    let mut tests = Vec::new();
     for file in test_files {
         let source = std::fs::read_to_string(&file)
             .context(format!("failed to read test file {}", file.display()))?;
@@ -46,18 +47,29 @@ pub(crate) fn check_inner(
         }
         let facts = ast::extract(&file, &source)?;
         let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
-        for setup_files in
-            config::setup_contexts_for_test_precomputed(&rel_path, &setup_data, selected_runners)
-        {
-            let mut mocks = manual_mocks.clone();
-            mocks.extend(setup_mocks(SetupMockRequest {
-                setup_files: &setup_files,
+        let contexts =
+            config::setup_contexts_for_test_precomputed(&rel_path, &setup_data, selected_runners);
+        tests.push((file, source, facts, contexts));
+    }
+    let context_mocks = setup_mocks::precompute_contexts(
+        tests
+            .iter()
+            .flat_map(|(_, _, _, contexts)| contexts.iter().cloned()),
+        |setup_files| {
+            setup_mocks(SetupMockRequest {
+                setup_files,
                 mock_map: &setup_mock_map,
                 graph,
                 visible_files: &visible_files,
                 resolver: &resolver,
                 file_cache: &file_cache,
-            })?);
+            })
+        },
+    )?;
+    for (file, source, facts, contexts) in tests {
+        for setup_files in contexts {
+            let mut mocks = manual_mocks.clone();
+            mocks.extend(context_mocks[&setup_files].iter().cloned());
             mocks.extend(resolve_mock_specifiers(
                 &facts.mock_specifiers,
                 &file,

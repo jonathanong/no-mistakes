@@ -19,11 +19,22 @@ impl PreparedConfig {
     }
 }
 
-pub(in super::super) fn prepare_from_visible(
+pub(in super::super) fn prepare_with_runner_facts(
     root: &Path,
     config: &NoMistakesConfig,
     visible_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::RunnerConfigFacts,
+) -> Result<PreparedConfig> {
+    prepare_inner(root, config, visible_files, sources, Some(facts))
+}
+
+pub(super) fn prepare_inner(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&crate::codebase::check_facts::RunnerConfigFacts>,
 ) -> Result<PreparedConfig> {
     let config_files = config_files_from_visible(root, config, visible_files);
     let visible_files = visible_files
@@ -35,12 +46,14 @@ pub(in super::super) fn prepare_from_visible(
         &config_files,
         &visible_files,
         sources,
+        facts.map(|facts| (config, facts)),
     )?;
     setup_data.extend(super::explicit_project_setup_data(
         root,
         config,
         &visible_files,
     )?);
+    setup_data.extend(super::rule_targets::playwright_setup_data(root, config)?);
     Ok(PreparedConfig {
         test_filter: super::filter::test_filter_from_config_files_with_sources(
             root,

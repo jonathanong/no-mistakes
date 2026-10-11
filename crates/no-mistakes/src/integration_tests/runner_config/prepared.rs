@@ -14,7 +14,7 @@ mod errors;
 mod json;
 mod setup;
 
-pub(crate) use setup::{prepare, prepare_with_catalog_and_sources};
+pub(crate) use setup::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};
 
 /// Prepare configured runner files with the request's importer-scoped
 /// TypeScript catalog and source store.

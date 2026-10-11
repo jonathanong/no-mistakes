@@ -3,6 +3,9 @@ mod filter;
 mod prepared;
 mod project_setups;
 mod rule_targets;
+mod standalone;
+mod vitest_setups;
+pub(super) use standalone::precompute_setup_data;
 
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -12,7 +15,7 @@ use std::path::{Path, PathBuf};
 pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
 pub(crate) use filter::test_filter_from_visible;
 pub use filter::{test_filter, TestFilter};
-pub(super) use prepared::prepare_from_visible;
+pub(super) use prepared::prepare_with_runner_facts;
 pub(super) use project_setups::{
     explicit_project_setup_data, setup_contexts_for_test_precomputed, SelectedRunners,
 };
@@ -22,6 +25,7 @@ pub struct ConfigSetupData {
     pub setup_files: Vec<PathBuf>,
     explicit_project: bool,
     runner: discovery::Runner,
+    project_name: Option<String>,
 }
 
 impl ConfigSetupData {
@@ -30,37 +34,22 @@ impl ConfigSetupData {
     }
 }
 
-/// Pre-compute per-config filter and setup files once, so the per-test loop can skip
-/// re-reading and re-parsing config files on every iteration.
-pub fn precompute_setup_data(
-    root: &Path,
-    config: &NoMistakesConfig,
-    visible_files: &crate::fx::PathSet,
-) -> Result<Vec<ConfigSetupData>> {
-    let mut files = visible_files.iter().cloned().collect::<Vec<_>>();
-    files.sort();
-    let config_files = discovery::config_files_from_visible(root, config, &files);
-    let mut data = precompute_setup_data_from_config_files_inner(
-        root,
-        &config_files,
-        Some(visible_files),
-        None,
-    )?;
-    data.extend(explicit_project_setup_data(root, config, visible_files)?);
-    Ok(data)
-}
-
 fn precompute_setup_data_from_config_files_from_visible(
     root: &Path,
     config_files: &[ConfigFile],
     visible_files: &crate::fx::PathSet,
     sources: &crate::codebase::ts_source::SourceStore,
+    runner_facts: Option<(
+        &NoMistakesConfig,
+        &crate::codebase::check_facts::RunnerConfigFacts,
+    )>,
 ) -> Result<Vec<ConfigSetupData>> {
     precompute_setup_data_from_config_files_inner(
         root,
         config_files,
         Some(visible_files),
         Some(sources),
+        runner_facts,
     )
 }
 
@@ -69,9 +58,24 @@ fn precompute_setup_data_from_config_files_inner(
     config_files: &[ConfigFile],
     visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
+    runner_facts: Option<(
+        &NoMistakesConfig,
+        &crate::codebase::check_facts::RunnerConfigFacts,
+    )>,
 ) -> Result<Vec<ConfigSetupData>> {
     let mut result = Vec::new();
     for config_file in config_files {
+        if config_file.runner == discovery::Runner::Vitest {
+            if let Some((config, facts)) = runner_facts {
+                result.extend(vitest_setups::from_facts(
+                    config,
+                    &config_file.path,
+                    visible_files.expect("prepared Vitest configs require an inventory"),
+                    facts,
+                )?);
+                continue;
+            }
+        }
         let source = match sources {
             Some(sources) => crate::codebase::rules::read_source(sources, &config_file.path)
                 .ok_or(anyhow::anyhow!(
@@ -105,6 +109,7 @@ fn precompute_setup_data_from_config_files_inner(
             setup_files,
             explicit_project: false,
             runner: config_file.runner,
+            project_name: None,
         });
     }
     Ok(result)

@@ -10,7 +10,7 @@ mod tests;
 pub(in crate::integration_tests) use cache::{read_request_source, with_program};
 pub use prepared::configured_runner_config_dirs;
 pub use prepared::prepare_runner_configs_with_catalog;
-pub(crate) use prepared::{prepare, prepare_with_catalog_and_sources};
+pub(crate) use prepared::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};
 
 #[derive(Clone)]
 pub(crate) struct RunnerConfigFactPlan {
@@ -51,6 +51,15 @@ pub(crate) struct RunnerConfigFileFacts {
     analyses: BTreeMap<PathBuf, FileAnalysis>,
 }
 
+impl RunnerConfigFileFacts {
+    pub(crate) fn vitest_projects(&self) -> Option<Result<Vec<ConfigProject>, String>> {
+        self.results
+            .iter()
+            .find(|result| result.framework == Framework::Vitest)
+            .map(|result| result.projects.clone())
+    }
+}
+
 #[derive(Clone, Default)]
 pub(crate) struct ParsedRunnerConfigs {
     files: BTreeMap<PathBuf, RunnerConfigFileFacts>,
@@ -58,6 +67,9 @@ pub(crate) struct ParsedRunnerConfigs {
 }
 
 impl ParsedRunnerConfigs {
+    pub(crate) fn file_facts(&self) -> &BTreeMap<PathBuf, RunnerConfigFileFacts> {
+        &self.files
+    }
     pub(crate) fn with_files(files: BTreeMap<PathBuf, RunnerConfigFileFacts>) -> Self {
         let analyses = files
             .values()

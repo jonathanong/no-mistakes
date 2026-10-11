@@ -16,6 +16,7 @@ pub(super) use visible::config_files_from_visible;
 pub(super) enum Runner {
     Vitest,
     Jest,
+    Playwright,
 }
 
 pub(super) struct ConfigFile {
@@ -27,7 +28,7 @@ impl ConfigFile {
     pub fn includes(&self, source: &str) -> Vec<String> {
         let mut includes = match self.runner {
             Runner::Vitest => extract_test_property_strings(source, "include"),
-            Runner::Jest => extract_property_strings(source, "testMatch"),
+            Runner::Jest | Runner::Playwright => extract_property_strings(source, "testMatch"),
         };
         if includes.is_empty() && !self.has_configured_matcher(source) {
             for pattern in crate::codebase::dependencies::VITEST_JEST_TEST_GLOBS {
@@ -40,7 +41,7 @@ impl ConfigFile {
     fn has_configured_matcher(&self, source: &str) -> bool {
         match self.runner {
             Runner::Vitest => !extract_test_property_strings(source, "include").is_empty(),
-            Runner::Jest => {
+            Runner::Jest | Runner::Playwright => {
                 !extract_property_strings(source, "testMatch").is_empty()
                     || !extract_test_regexes(source).is_empty()
             }

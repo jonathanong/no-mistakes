@@ -61,6 +61,7 @@ pub(in super::super) fn explicit_project_setup_data(
             setup_files,
             explicit_project: true,
             runner: super::discovery::Runner::Vitest,
+            project_name: Some(name.clone()),
         });
     }
     Ok(data)
@@ -100,31 +101,39 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
     let mut vitest_configs = Vec::new();
     let mut jest_contexts = Vec::new();
     let mut projects = Vec::new();
+    let mut playwright = false;
     for data in config_data {
         if !data.filter_matches(rel_path) {
             continue;
         }
         if data.explicit_project {
-            projects.push(data.setup_files.clone());
+            projects.push(data);
         } else if data.runner == super::discovery::Runner::Vitest {
-            vitest_configs.push(data.setup_files.clone());
+            vitest_configs.push(data);
         } else if data.runner == super::discovery::Runner::Jest {
             jest_contexts.push(data.setup_files.clone());
+        } else if data.runner == super::discovery::Runner::Playwright {
+            playwright = true;
         }
     }
     let mut contexts = Vec::new();
     if selected.vitest {
         if projects.is_empty() {
-            contexts.extend(vitest_configs);
+            contexts.extend(vitest_configs.iter().map(|data| data.setup_files.clone()));
         } else {
             for project in projects {
-                if vitest_configs.is_empty() {
-                    contexts.push(project);
-                    continue;
+                let configs = vitest_configs
+                    .iter()
+                    .filter(|data| {
+                        data.project_name.is_none() || data.project_name == project.project_name
+                    })
+                    .collect::<Vec<_>>();
+                if configs.is_empty() {
+                    contexts.push(project.setup_files.clone());
                 }
-                for config_files in &vitest_configs {
-                    let mut files = config_files.clone();
-                    files.extend(project.iter().cloned());
+                for config in configs {
+                    let mut files = config.setup_files.clone();
+                    files.extend(project.setup_files.iter().cloned());
                     let mut seen = std::collections::HashSet::new();
                     files.retain(|path| seen.insert(path.clone()));
                     contexts.push(files);
@@ -134,6 +143,9 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
     }
     if selected.jest {
         contexts.extend(jest_contexts);
+    }
+    if playwright {
+        contexts.push(Vec::new());
     }
     if contexts.is_empty() {
         contexts.push(Vec::new());

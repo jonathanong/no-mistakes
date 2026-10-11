@@ -7,7 +7,41 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 mod path_patterns;
+use super::build_globset;
 use path_patterns::{append_project_globs, append_rule_globs};
+
+pub(super) fn playwright_setup_data(
+    root: &Path,
+    config: &NoMistakesConfig,
+) -> Result<Vec<super::ConfigSetupData>> {
+    let rules = config.rule_applications(super::super::RULE_ID);
+    let names = rules
+        .iter()
+        .flat_map(|rule| &rule.tests.playwright)
+        .collect::<Vec<_>>();
+    load_target_projects(
+        root,
+        Framework::Playwright,
+        config.tests.playwright.configs.as_ref(),
+        &config.tests.playwright.projects,
+        &names,
+    )?
+    .into_iter()
+    .map(|project| {
+        Ok(super::ConfigSetupData {
+            filter: super::TestFilter {
+                include: build_globset(&project.include)?,
+                include_regex: Vec::new(),
+                exclude: build_globset(&project.exclude)?,
+            },
+            setup_files: Vec::new(),
+            explicit_project: false,
+            runner: super::discovery::Runner::Playwright,
+            project_name: project.policy_name,
+        })
+    })
+    .collect()
+}
 
 pub(super) fn rule_test_project_globs(
     root: &Path,

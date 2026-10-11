@@ -1,6 +1,15 @@
 use super::*;
 use crate::config::v2::schema::StringOrList;
 
+fn prepare_from_visible(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<prepared::PreparedConfig> {
+    prepared::prepare_inner(root, config, files, sources, None)
+}
+
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -33,7 +42,7 @@ fn prepared_config_globs_only_expand_aggregate_candidates() {
 fn aggregate_rule_uses_prepared_config_without_standalone_discovery() {
     let source = include_str!("../with_facts.rs");
 
-    assert!(source.contains("config::prepare_from_visible(root, config, &files, sources)"));
+    assert!(source.contains("config::prepare_with_runner_facts("));
     assert!(!source.contains("config::test_filter("));
     assert!(!source.contains("config::precompute_setup_data("));
     assert!(!source.contains("discover_files("));
@@ -79,4 +88,24 @@ fn pass4b_prepared_setup_files_drop_ignored_candidate_and_keep_visible_fallback(
         prepared.setup_data()[0].setup_files,
         vec![root.join("dynamic/setup.ts")]
     );
+}
+
+#[test]
+fn runner_setup_projection_requires_prepared_vitest_projects() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-project-setups",
+        ),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-inherit.yml")))
+            .unwrap();
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let error = prepare_with_runner_facts(&root, &config, &files, &sources, &Default::default())
+        .err()
+        .expect("the runner projection must be supplied by its owner");
+    assert!(error
+        .to_string()
+        .contains("missing prepared Vitest config projects"));
 }

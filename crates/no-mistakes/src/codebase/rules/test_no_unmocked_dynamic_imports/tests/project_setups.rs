@@ -102,6 +102,19 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         ),
         (".no-mistakes-stale-app.yml", vec!["web/covered.test.mts"]),
         (".no-mistakes-cjs-helper.yml", vec![]),
+        (
+            ".no-mistakes-mixed-runners.yml",
+            vec!["web/covered.test.mts"],
+        ),
+        (
+            ".no-mistakes-disjoint-runners.yml",
+            vec!["other/uncovered.test.mts"],
+        ),
+        (".no-mistakes-inherit.yml", vec![]),
+        (".no-mistakes-independent.yml", vec!["web/covered.test.mts"]),
+        (".no-mistakes-omitted.yml", vec!["web/covered.test.mts"]),
+        (".no-mistakes-cleared.yml", vec!["web/covered.test.mts"]),
+        (".no-mistakes-referenced.yml", vec!["web/covered.test.mts"]),
     ] {
         let config =
             crate::config::v2::load_v2_config(&root, Some(&root.join(config_file))).unwrap();

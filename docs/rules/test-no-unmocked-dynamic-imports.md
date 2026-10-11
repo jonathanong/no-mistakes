@@ -73,6 +73,11 @@ cover another project's execution. Matching Vitest and Jest runner configs are
 also separate executions: setup mocks from one config or runner do not cover
 another. A Vitest-only or Playwright-only rule target does not inherit Jest
 setup mocks.
+When both Vitest and Playwright select the same test, its Playwright execution
+is checked without Vitest setup mocks. Recovered Vitest setups follow the
+effective project's inheritance: `extends: true` inherits root setups,
+independent project config files and `extends: false` do not, and an explicit
+empty `setupFiles` list clears inherited setups.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 

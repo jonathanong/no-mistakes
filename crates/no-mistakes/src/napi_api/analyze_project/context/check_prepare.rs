@@ -89,7 +89,7 @@ impl SharedCheckContext {
             )?;
         plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
         crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
-        if integration_enabled {
+        if integration_enabled || enabled.dynamic_import_rules {
             plan.integration_runner_configs = Some(std::sync::Arc::new(
                 crate::integration_tests::prepare_runner_configs_with_catalog(
                     &root,

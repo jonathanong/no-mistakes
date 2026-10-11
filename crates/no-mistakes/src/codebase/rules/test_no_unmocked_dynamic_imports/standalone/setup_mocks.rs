@@ -4,9 +4,27 @@ use crate::codebase::rules::test_no_unmocked_dynamic_imports::{ast, config, reac
 use crate::codebase::ts_resolver::ImportResolution;
 use anyhow::{Context, Result};
 use dashmap::DashMap;
+use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+pub(super) fn precompute_contexts(
+    contexts: impl Iterator<Item = Vec<PathBuf>>,
+    collect: impl Fn(&[PathBuf]) -> Result<HashSet<PathBuf>> + Sync,
+) -> Result<crate::fx::FxHashMap<Vec<PathBuf>, HashSet<PathBuf>>> {
+    let mut unique = contexts.collect::<Vec<_>>();
+    unique.sort();
+    unique.dedup();
+    unique
+        .into_par_iter()
+        .map(|files| {
+            let mocks = collect(&files)?;
+            Ok((files, mocks))
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|pairs| pairs.into_iter().collect())
+}
 
 pub(super) fn precompute_setup_mock_map(
     root: &Path,
@@ -65,3 +83,6 @@ pub(super) fn setup_mocks(request: SetupMockRequest<'_>) -> Result<HashSet<PathB
     }
     Ok(mocks)
 }
+
+#[cfg(test)]
+mod tests;

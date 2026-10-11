@@ -2,7 +2,7 @@ use super::RuleFinding;
 use super::{config, manual_mocks, matching_test_files_with_filter, reachable};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig};
+use crate::codebase::ts_resolver::ScopedImportResolver;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use dashmap::DashMap;
@@ -11,8 +11,11 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod entrypoints;
 mod graph;
+pub use entrypoints::{check_with_facts, check_with_prepared_facts};
 mod per_test;
+mod runner_configs;
 mod setup_contexts;
 mod setup_mocks;
 mod tsconfig_catalog;
@@ -30,51 +33,6 @@ struct PerTestResult {
 pub(crate) struct PreparedDynamicFindings {
     pub(crate) findings: Vec<RuleFinding>,
     pub(crate) suppression_sources: Vec<Option<String>>,
-}
-
-pub fn check_with_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig_path: Option<&Path>,
-    shared: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    session.insert_visible_paths(
-        root,
-        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
-            root,
-            shared.files(),
-        )),
-    );
-    let sources = session.visible_paths(root).source_store_for(root);
-    let (tsconfig, catalog) = tsconfig_catalog::for_request(root, tsconfig_path, shared, &sources)?;
-    check_with_prepared_facts_and_session(
-        root, config, &tsconfig, &catalog, shared, &session, &sources,
-    )
-}
-
-#[doc(hidden)]
-pub fn check_with_prepared_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
-    shared: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let catalog = tsconfig_catalog::forced(root, tsconfig);
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    session.insert_visible_paths(
-        root,
-        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
-            root,
-            shared.files(),
-        )),
-    );
-    let sources = session.visible_paths(root).source_store_for(root);
-    check_with_prepared_facts_and_session(
-        root, config, tsconfig, &catalog, shared, &session, &sources,
-    )
 }
 
 pub(crate) struct PreparedFactsGraphRequest<'a> {
@@ -119,7 +77,13 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         });
     let prepared =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
-            config::prepare_from_visible(root, config, &files, sources)
+            config::prepare_with_runner_facts(
+                root,
+                config,
+                &files,
+                sources,
+                &shared.integration_runner_configs,
+            )
         })?;
     let prepared_contexts = setup_contexts::prepare(setup_contexts::Request {
         root,

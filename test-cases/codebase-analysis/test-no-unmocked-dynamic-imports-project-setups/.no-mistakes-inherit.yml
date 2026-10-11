@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: inherit.config.mts
+    projects:
+      web:
+        include: [web/covered.test.mts]
+        setup_files: [test-helpers/empty.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [web]

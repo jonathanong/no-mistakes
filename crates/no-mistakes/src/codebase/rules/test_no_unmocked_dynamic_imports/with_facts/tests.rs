@@ -1,7 +1,7 @@
 use super::*;
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::dependencies::graph::test_support::from_raw_maps;
-use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfigCatalog};
+use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig, TsConfigCatalog};
 use std::collections::HashMap;
 
 mod helper_mocks;

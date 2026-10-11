@@ -62,7 +62,7 @@ pub(super) fn build(root: &Path, prepared: &PreparedCheckInputs) -> Result<Check
         no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
     );
     plan.postgres_schema_catalog_paths = schema_catalog_paths?;
-    if integration_enabled {
+    if integration_enabled || dynamic_import_rules {
         plan.integration_runner_configs = Some(std::sync::Arc::new(
             no_mistakes::integration_tests::prepare_runner_configs_with_catalog(
                 root,
