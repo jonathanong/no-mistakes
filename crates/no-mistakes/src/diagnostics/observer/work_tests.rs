@@ -27,3 +27,19 @@ fn timing_only_observers_allocate_no_counter_storage() {
     observer.increment("extension.zero", 0);
     assert!(observer.snapshot().work.is_empty());
 }
+
+#[test]
+fn unknown_metrics_in_every_length_bucket_use_extensions() {
+    let counters = WorkCounters::new();
+    for metric in [
+        "",
+        "unknown.short",
+        "unknown.middle.xx",
+        "unknown.longer.xxxxxx",
+        "unknown.longest.xxxxxxxxxxx",
+    ] {
+        assert_eq!(core_index(metric), None);
+        counters.increment(metric, 1);
+        assert_eq!(counters.snapshot()[metric], 1);
+    }
+}

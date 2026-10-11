@@ -1,5 +1,7 @@
 //! Request-owned counters: built-in metrics need no map lock on increment.
+mod index;
 use dashmap::DashMap;
+use index::core_index;
 use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -120,62 +122,6 @@ const NAMES: &[&str] = &[
     "ts_facts.files",
     "workspace.builds",
 ];
-
-fn core_index(metric: &str) -> Option<usize> {
-    Some(match metric {
-        "analysis.requests" => 0,
-        "ast.walks" => 1,
-        "discovery.cache_hits" => 2,
-        "discovery.candidates" => 3,
-        "discovery.projections" => 4,
-        "discovery.requests" => 5,
-        "discovery.roots" => 6,
-        "graph.builds" => 7,
-        "graph.candidate_excluded" => 8,
-        "graph.candidate_files" => 9,
-        "graph.edges" => 10,
-        "graph.nodes" => 11,
-        "graph.reuses" => 12,
-        "manifest.cache_hits" => 13,
-        "manifest.errors" => 14,
-        "manifest.parses" => 15,
-        "manifest.requests" => 16,
-        "output.errors" => 17,
-        "output.renders" => 18,
-        "parse.errors" => 19,
-        "parse.files" => 20,
-        "parse.files_after_extract" => 21,
-        "parse.requests" => 22,
-        "query_diagnostics.builds" => 23,
-        "resolver.cache_hits" => 24,
-        "resolver.classification_requests" => 25,
-        "resolver.classifications" => 26,
-        "resolver.computations" => 27,
-        "resolver.requests" => 28,
-        "resolver.resolved" => 29,
-        "resolver.scope_cache_requests" => 30,
-        "resolver.unique_keys" => 31,
-        "resolver.unresolved" => 32,
-        "source.bytes" => 33,
-        "source.cache_hits" => 34,
-        "source.read_errors" => 35,
-        "source.reads" => 36,
-        "source.requests" => 37,
-        "symbol_index.builds" => 38,
-        "symbol_index.reuses" => 39,
-        "test_filter.builds" => 40,
-        "test_filter.project_filters" => 41,
-        "traversal.computations" => 42,
-        "traversal.lazy_nodes" => 43,
-        "traversal.nodes" => 44,
-        "traversal.requests" => 45,
-        "traversal.reuses" => 46,
-        "ts_facts.collections" => 47,
-        "ts_facts.files" => 48,
-        "workspace.builds" => 49,
-        _ => return None,
-    })
-}
 
 #[cfg(test)]
 #[path = "work_tests.rs"]
