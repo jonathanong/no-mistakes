@@ -141,7 +141,15 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
             plans.insert(normalize(path), request.plan.clone());
         }
         for path in graph_only {
-            plans.entry(normalize(&path)).or_insert(graph_plan.clone());
+            let path = normalize(&path);
+            let mut plan = graph_plan.clone();
+            if request.plan.legacy_symbol_paths.contains(&path) {
+                // An explicit symbols target can be visible to the graph while
+                // remaining outside the configured check file scope.
+                plan.symbols = request.plan.symbols;
+                plan.legacy_symbol_paths.insert(path.clone());
+            }
+            plans.entry(path).or_insert(plan);
         }
         if let Some(playwright) = &request.playwright {
             for path in playwright.paths() {
