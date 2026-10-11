@@ -163,7 +163,7 @@ fn query_impls_require_inputs() {
 #[test]
 fn reverse_collection_diagnostics_match_cli_and_napi() {
     use crate::codebase::queries::*;
-    let root = fixture_root("queries-incomplete");
+    let root = PathBuf::from(fixture_root("queries-incomplete"));
     let options = json!({ "file": "target.ts", "exportName": "unknown", "root": root });
     let cli = [
         importers::run_json(ImportersArgs { file: "target.ts".into(), tests: false, root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
