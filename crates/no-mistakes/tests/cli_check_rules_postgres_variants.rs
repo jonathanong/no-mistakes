@@ -4,6 +4,8 @@ use std::process::Command;
 mod append_contributors;
 #[path = "cli_check_rules_postgres_variants/branch_correlation.rs"]
 mod branch_correlation;
+#[path = "cli_check_rules_postgres_variants/destructuring_assignments.rs"]
+mod destructuring_assignments;
 #[path = "cli_check_rules_postgres_variants/exception_flow.rs"]
 mod exception_flow;
 #[path = "cli_check_rules_postgres_variants/executed_fragments.rs"]

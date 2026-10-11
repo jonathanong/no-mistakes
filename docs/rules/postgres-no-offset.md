@@ -46,6 +46,11 @@ rules:
 `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
 configuration error).
 
+An object or array destructuring assignment invalidates any earlier SQL
+alternatives for the identifiers it overwrites. Until a fresh static assignment
+is recoverable, the call follows `unanalyzableSql` instead of checking stale
+SQL from before the assignment.
+
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
 offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET sql_placeholder_1`.
 

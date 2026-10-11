@@ -10,6 +10,8 @@ mod branch_correlation;
 mod captured_bindings;
 #[path = "tests/defensive.rs"]
 mod defensive;
+#[path = "tests/destructuring_assignments.rs"]
+mod destructuring_assignments;
 #[path = "tests/equivalent.rs"]
 mod equivalent;
 #[path = "tests/escape_effects.rs"]
