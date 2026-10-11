@@ -285,3 +285,50 @@ fn record_ast_walk_increments_only_when_an_observer_is_installed() {
     drop(guard);
     assert_eq!(observer.snapshot().work["ast.walks"], 2);
 }
+
+#[test]
+fn concurrent_work_and_source_counts_preserve_exact_totals() {
+    let observer = InvocationObserver::new(true);
+    let other = InvocationObserver::new(true);
+    std::thread::scope(|scope| {
+        for worker in 0..8 {
+            let observer = &observer;
+            let other = &other;
+            scope.spawn(move || {
+                let own_path = std::path::PathBuf::from(format!("worker-{worker}.ts"));
+                with_observer(Some(Arc::clone(observer)), || {
+                    for _ in 0..1_000 {
+                        // Start with missing keys to exercise concurrent insertion
+                        // as well as the established counter fast path.
+                        current().unwrap().increment("shared", 3);
+                        observer.record_source_read(std::path::Path::new("shared.ts"));
+                        observer.record_source_read(&own_path);
+                        with_observer(Some(Arc::clone(other)), || {
+                            current().unwrap().increment("nested", 2);
+                        });
+                    }
+                });
+            });
+        }
+    });
+    assert_eq!(
+        observer.snapshot().work,
+        std::collections::BTreeMap::from([("shared", 24_000)])
+    );
+    assert_eq!(
+        other.snapshot().work,
+        std::collections::BTreeMap::from([("nested", 16_000)])
+    );
+    let reads = observer.source_read_snapshot();
+    assert_eq!(reads.len(), 9);
+    assert_eq!(reads[std::path::Path::new("shared.ts")], 8_000);
+    for worker in 0..8 {
+        assert_eq!(
+            reads[&std::path::PathBuf::from(format!("worker-{worker}.ts"))],
+            1_000
+        );
+    }
+    let basic = InvocationObserver::new(false);
+    basic.record_source_read(std::path::Path::new("ignored.ts"));
+    assert!(basic.source_read_snapshot().is_empty());
+}
