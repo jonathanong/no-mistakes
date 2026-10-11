@@ -11,7 +11,11 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const fixture = join(__dirname, "../../../test-cases/rules/postgres-idempotent-insert/fixture");
-    for (const scenario of ["expression-arbiters", "expression-arbiters-safe"]) {
+    for (const scenario of [
+      "expression-arbiters",
+      "expression-arbiters-safe",
+      "expression-arbiter-recovered",
+    ]) {
       const root = join(fixture, scenario);
       const report = await cjs.check({ root });
       assert.deepEqual(await esm.check({ root }), report);
@@ -20,6 +24,12 @@ test(
       assert.deepEqual(prepared.reports[0].result, report);
       if (scenario === "expression-arbiters-safe") {
         assert.deepEqual(report.rules, []);
+      } else if (scenario === "expression-arbiter-recovered") {
+        assert.deepEqual(
+          report.rules.map(({ file }) => file),
+          ["sql/malformed-neighbor.sql"],
+        );
+        assert.match(report.rules[0].message, /expression arbiter depends on email/);
       } else {
         assert.deepEqual(
           report.rules.map(({ file }) => file),

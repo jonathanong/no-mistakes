@@ -23,6 +23,7 @@ test(
       ".no-mistakes-b.yml",
       ".no-mistakes-inline.yml",
       ".no-mistakes-imported.yml",
+      ".no-mistakes-scope.yml",
       ".no-mistakes-rule-exclude.yml",
     ]) {
       const options = { root: fixture, config: join(fixture, config) };
