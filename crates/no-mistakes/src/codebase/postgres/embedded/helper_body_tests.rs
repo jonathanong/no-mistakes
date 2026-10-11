@@ -51,3 +51,36 @@ fn incomplete_with_prefix_plus_opaque_append_fails_closed() {
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(facts.calls[0].sql_text, None);
 }
+
+#[test]
+fn typed_parameter_builder_recovers_only_straight_line_static_appends() {
+    let facts = extract("composed-helper-parameter.ts");
+    assert_eq!(facts.calls.len(), 17);
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("/* good */ SELECT id FROM items WHERE id = sql_placeholder_1")
+    );
+    assert_eq!(facts.calls[1].kind, EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[1].sql_text.as_deref(),
+        Some("/* offset */ SELECT id FROM items OFFSET 2")
+    );
+    for call in &facts.calls[2..12] {
+        assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
+    }
+    assert_eq!(
+        facts.calls[12].sql_text.as_deref(),
+        Some("/* timed */ SELECT id FROM items WHERE id = sql_placeholder_1")
+    );
+    assert_eq!(
+        facts.calls[13].sql_text.as_deref(),
+        Some("/* timed */ SELECT OFFSET 1 id FROM items WHERE id = sql_placeholder_1")
+    );
+    assert_eq!(facts.calls[14].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(facts.calls[15].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        facts.calls[16].sql_text.as_deref(),
+        Some("/* return */ SELECT id FROM items")
+    );
+}

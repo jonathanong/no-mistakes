@@ -19,7 +19,7 @@ use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
 pub(super) fn resolve_expr(
     expr: &Expression<'_>,
     depth: u8,
-    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
@@ -54,7 +54,7 @@ pub(super) fn resolve_expr(
 pub(super) fn resolve_dynamic_prefix(
     expr: &Expression<'_>,
     depth: u8,
-    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
@@ -90,7 +90,7 @@ pub(super) fn resolve_dynamic_prefix(
 fn resolve_call(
     call: &CallExpression<'_>,
     depth: u8,
-    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
@@ -113,7 +113,7 @@ fn resolve_call(
             let appended = renumber_placeholders(&appended, count_placeholders(&base));
             Some(format!("{base}{appended}"))
         }
-        Expression::Identifier(ident) => lookup(ident.name.as_str(), depth),
+        Expression::Identifier(ident) => lookup(call, ident.name.as_str(), depth),
         _ => None,
     }
 }

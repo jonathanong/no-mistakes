@@ -1,5 +1,6 @@
 mod body;
 mod collect;
+mod parameter;
 pub(crate) mod reassigned;
 mod shadows;
 pub(crate) use shadows::looks_like_tag_implementation;
@@ -7,7 +8,7 @@ pub(crate) use shadows::looks_like_tag_implementation;
 use super::super::super::options::TrustedSqlTag;
 use super::super::super::tags::SqlTagNames;
 use collect::collect_named_functions;
-use oxc_ast::ast::{FormalParameters, FunctionBody, Program};
+use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
 use shadows::TagShadows;
 use std::collections::HashMap;
@@ -26,6 +27,7 @@ pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 /// never narrows it.
 pub(crate) struct LocalFunctions {
     resolved: HashMap<String, String>,
+    parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
 }
 
@@ -50,7 +52,10 @@ impl LocalFunctions {
         let reassigned = ReassignedNames::collect(program);
         raw.retain(|name, _| !reassigned.contains(name));
         let tag_shadows = TagShadows::collect(program, trusted_sql_tags);
+        let sql_statement_types =
+            super::super::super::bindings::sql_statement_type_bindings(program);
         let mut resolved = HashMap::new();
+        let mut parameter_builders = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
             if let Some(text) =
@@ -58,15 +63,63 @@ impl LocalFunctions {
             {
                 resolved.insert(name.to_string(), text);
             }
+            if let Some(builder) = parameter::summarize(
+                raw[name].params,
+                raw[name].body,
+                &sql_statement_types,
+                &tag_shadows,
+            ) {
+                parameter_builders.insert(name.to_string(), builder);
+            }
         }
         Self {
             resolved,
+            parameter_builders,
             tag_shadows,
         }
     }
 
     pub(crate) fn get(&self, name: &str) -> Option<String> {
         self.resolved.get(name).cloned()
+    }
+
+    pub(crate) fn get_call(
+        &self,
+        call: &CallExpression<'_>,
+        name: &str,
+        depth: u8,
+        is_shadowed: &mut impl FnMut(&str) -> bool,
+        resolve_binding: &impl Fn(&str) -> Option<String>,
+    ) -> Option<String> {
+        if let Some(builder) = self.parameter_builders.get(name) {
+            let argument = call
+                .arguments
+                .get(builder.parameter_index)?
+                .as_expression()?;
+            let base = match crate::codebase::ts_source::unwrap_ts_wrappers(argument) {
+                Expression::Identifier(ident) => resolve_binding(ident.name.as_str()),
+                Expression::TaggedTemplateExpression(_) => {
+                    let mut lookup =
+                        |_: &CallExpression<'_>, callee: &str, _depth: u8| self.get(callee);
+                    super::chain::resolve_expr(
+                        argument,
+                        depth,
+                        &mut lookup,
+                        is_shadowed,
+                        self.imported_sql_tags(),
+                    )
+                }
+                _ => None,
+            }?;
+            return Some(format!(
+                "{base}{}",
+                super::super::super::placeholders::renumber_placeholders(
+                    &builder.suffix,
+                    super::super::super::placeholders::count_placeholders(&base)
+                )
+            ));
+        }
+        self.get(name)
     }
 
     /// Whether `name` is a top-level binding that rebinds a same-file
@@ -118,7 +171,7 @@ fn resolve_named(
     }
     let resolvable = raw.get(name)?;
     resolving.push(name.to_string());
-    let mut lookup = |callee: &str, depth: u8| {
+    let mut lookup = |_: &CallExpression<'_>, callee: &str, depth: u8| {
         if shadows_param(resolvable, callee) {
             return None;
         }

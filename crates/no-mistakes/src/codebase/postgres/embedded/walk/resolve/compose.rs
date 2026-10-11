@@ -87,11 +87,17 @@ pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>)
 /// declaration; the top-level declaration's own binding (e.g. a const-bound
 /// helper referencing itself) is not a shadow of itself.
 fn resolve_chain(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
-    let mut lookup = |name: &str, _depth: u8| {
+    let mut lookup = |call: &oxc_ast::ast::CallExpression<'_>, name: &str, depth: u8| {
         if visitor.shadowed_locally(name) {
             return None;
         }
-        visitor.functions.get(name)
+        visitor.functions.get_call(
+            call,
+            name,
+            depth,
+            &mut |tag| tag_shadowed(tag, visitor),
+            &|binding| recovered_complete_builder_binding_sql(binding, visitor),
+        )
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
     chain::resolve_expr(
@@ -107,11 +113,17 @@ fn resolve_dynamic_chain_prefix(
     expr: &Expression<'_>,
     visitor: &ScopeVisitor<'_>,
 ) -> Option<String> {
-    let mut lookup = |name: &str, _depth: u8| {
+    let mut lookup = |call: &oxc_ast::ast::CallExpression<'_>, name: &str, depth: u8| {
         if visitor.shadowed_locally(name) {
             return None;
         }
-        visitor.functions.get(name)
+        visitor.functions.get_call(
+            call,
+            name,
+            depth,
+            &mut |tag| tag_shadowed(tag, visitor),
+            &|binding| recovered_complete_builder_binding_sql(binding, visitor),
+        )
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
     chain::resolve_dynamic_prefix(
@@ -163,4 +175,14 @@ pub(super) fn recovered_builder_binding_sql(
 ) -> Option<String> {
     let binding = visitor.lookup(name)?;
     binding.sql_builder.then_some(binding.sql).flatten()
+}
+
+fn recovered_complete_builder_binding_sql(
+    name: &str,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
+    let binding = visitor.lookup(name)?;
+    (binding.sql_builder && binding.kind != EmbeddedSqlKind::Dynamic)
+        .then_some(binding.sql)
+        .flatten()
 }

@@ -94,7 +94,10 @@ SQL-file/native-SQL analysis where supported. See the
 Straight-line same-file and imported helpers can return SQL assembled from strings,
 templates, nested SQL builders, and `.append()` calls. Empty fragments are skipped
 in composition order. Literal arguments can establish interpolated template text;
-unknown text before the first stable prefix remains unanalyzable. A leading
+unknown text before the first stable prefix remains unanalyzable. A same-file helper can also append static
+fragments to a typed `SQLStatement` parameter and return it when the caller's
+builder is statically recoverable. Its leading annotation is preserved through
+that composition; opaque inputs and dynamic appends remain unanalyzable. A leading
 `/* name */` stays valid when a later appended fragment is opaque:
 
 ```ts

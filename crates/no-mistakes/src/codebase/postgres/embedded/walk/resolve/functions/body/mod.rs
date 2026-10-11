@@ -14,7 +14,7 @@ use std::collections::HashMap;
 pub(super) fn resolve(
     resolvable: &Resolvable<'_>,
     depth: u8,
-    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&oxc_ast::ast::CallExpression<'_>, &str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<String> {
@@ -69,7 +69,7 @@ fn bind_declaration(
     declaration: &VariableDeclaration<'_>,
     resolvable: &Resolvable<'_>,
     depth: u8,
-    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&oxc_ast::ast::CallExpression<'_>, &str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
     locals: &mut HashMap<String, String>,
@@ -98,7 +98,7 @@ fn bind_declarator(
     declarator: &VariableDeclarator<'_>,
     resolvable: &Resolvable<'_>,
     depth: u8,
-    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    lookup: &mut impl FnMut(&oxc_ast::ast::CallExpression<'_>, &str, u8) -> Option<String>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
     locals: &mut HashMap<String, String>,

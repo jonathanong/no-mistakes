@@ -64,6 +64,40 @@ fn postgres_no_offset_passes_with_limit_only() {
 }
 
 #[test]
+fn parameter_builder_is_shared_by_annotation_and_offset_rules() {
+    let root = fixture("parameter-builder");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .args(["--config", ".no-mistakes.yml", "--json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected findings: {body}");
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{body}");
+    assert!(
+        findings.iter().any(|f| f["line"] == 11
+            && f["rule"] == "postgres-require-query-annotation"
+            && f["target"] == "annotation"),
+        "{body}"
+    );
+    assert!(
+        findings.iter().any(|f| f["line"] == 17
+            && f["rule"] == "postgres-no-offset"
+            && f["target"] == "offset"),
+        "{body}"
+    );
+    assert!(
+        findings.iter().any(|f| f["line"] == 23
+            && f["rule"] == "postgres-no-offset"
+            && f["target"] == "unanalyzable"),
+        "{body}"
+    );
+}
+
+#[test]
 fn postgres_no_offset_passes_prose_offset() {
     let root = fixture("pass-prose");
     let out = check_fixture_config(&root, ".no-mistakes.yml");
