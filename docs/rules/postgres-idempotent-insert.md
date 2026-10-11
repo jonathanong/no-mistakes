@@ -94,10 +94,14 @@ targets such as `(email, lower(name))` check both dependencies. The rule proves
 dependencies for identifiers (including qualified and quoted names), nested
 expressions, casts, unary and binary operations, and ordinary positional
 function arguments. Operator classes and other expression forms, including
-`CASE` and subqueries, cannot be proven complete. An assignment to a known
-dependency still passes when it uses its matching `EXCLUDED` value; self
-assignments also pass. Other non-self assignments report an explicit proof
-failure. This conservative result may include an unrelated assignment;
+`CASE` and subqueries, cannot be proven complete. A dependency of a single-column
+expression still passes when assigned its matching `EXCLUDED` value or itself.
+For an expression combining columns, such as `(a + b)`, every dependency must
+be assigned its matching `EXCLUDED` value, or the expression must remain
+unchanged. Assigning only `a = EXCLUDED.a` could move the conflict key and make
+the next replay insert a second row. Separate target expressions such as
+`(a, lower(b))` remain independent. Other non-self assignments report an
+explicit proof failure. This conservative result may include an unrelated assignment;
 simplify the expression or use a rule suppression when you have verified its
 safety.
 

@@ -21,13 +21,34 @@ pub(super) fn judge(_insert: &SqlInsertFact, conflict: &SqlOnConflictFact) -> Op
                 ))
             })
         }),
-        SqlConflictArbiter::Expressions { columns, unknown } => {
+        SqlConflictArbiter::Expressions {
+            columns,
+            groups,
+            unknown,
+        } => {
             conflict.assignments.iter().find_map(|assignment| {
                 if form_is_self(&assignment.form, &assignment.column) {
                     return None;
                 }
                 if columns.iter().any(|column| column.eq_ignore_ascii_case(&assignment.column)) {
                     if form_is_excluded(&assignment.form, &assignment.column) {
+                        // A conflict on f(a,b) proves only that the complete
+                        // expression matches. Replacing a alone can move the
+                        // row's key, so every dependency of f must move too.
+                        if groups.iter().any(|group| {
+                            group.iter().any(|column| column.eq_ignore_ascii_case(&assignment.column))
+                                && !group.iter().all(|column| {
+                                    conflict.assignments.iter().any(|other| {
+                                        other.column.eq_ignore_ascii_case(column)
+                                            && form_is_excluded(&other.form, column)
+                                    })
+                                })
+                        }) {
+                            return Some(format!(
+                                "ON CONFLICT expression arbiter depends on {}; assign EXCLUDED values to every column in its expression or leave it unchanged",
+                                assignment.column
+                            ));
+                        }
                         return None;
                     }
                     return Some(format!(
