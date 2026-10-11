@@ -14,7 +14,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
             // Preserve conservative member effects for other object shapes.
-            value => Value::Aggregate(vec![value].into()),
+            value => member_candidates(value),
         }
+    }
+}
+
+pub(super) fn member_candidates(value: Value) -> Value {
+    match value.exposed() {
+        Value::Object(values) => Value::Aggregate(values),
+        Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
+            Value::Aggregate(
+                values
+                    .into_iter()
+                    .map(member_candidates)
+                    .collect::<Vec<_>>()
+                    .into(),
+            )
+        }
+        value => Value::Aggregate(vec![value].into()),
     }
 }

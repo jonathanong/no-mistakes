@@ -11,7 +11,10 @@ pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Ex
         (None, Expression::StringLiteral(name)) => {
             Expr::Member(Box::new(object), name.value.to_string())
         }
-        (None, _) => Expr::Children(vec![object, expression(&value.expression, source)]),
+        (None, _) => Expr::ComputedMember(
+            Box::new(object),
+            Box::new(expression(&value.expression, source)),
+        ),
     }
 }
 

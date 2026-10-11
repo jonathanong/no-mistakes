@@ -64,8 +64,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
             Expr::Await(inner) => self.handled_deletion_effect(inner, value, path, env),
             Expr::Delete(_, _) => matches!(value, Value::SlotDeletion),
-            Expr::Children(parts) | Expr::Alternatives(parts) => {
-                let Value::Aggregate(values) = value else {
+            Expr::Children(parts)
+            | Expr::Container(parts)
+            | Expr::Object(parts)
+            | Expr::Alternatives(parts) => {
+                let (Value::Aggregate(values) | Value::References(values) | Value::Object(values)) =
+                    value
+                else {
                     return false;
                 };
                 parts.len() == values.len()

@@ -79,7 +79,13 @@ pub(super) fn skip_delimited(sql: &str, start: usize) -> Option<usize> {
         b'"' => Some(quoted_end(bytes, start, b'"')),
         b'-' if bytes.get(start + 1) == Some(&b'-') => Some(line_comment_end(bytes, start)),
         b'/' if bytes.get(start + 1) == Some(&b'*') => Some(block_comment_end(bytes, start)),
-        b'$' => dollar_quote_end(bytes, start),
+        b'$' if !bytes
+            .get(start.wrapping_sub(1))
+            .copied()
+            .is_some_and(is_ident_byte) =>
+        {
+            dollar_quote_end(bytes, start)
+        }
         _ => None,
     }
 }
@@ -111,20 +117,40 @@ fn line_comment_end(bytes: &[u8], start: usize) -> usize {
 }
 
 fn block_comment_end(bytes: &[u8], start: usize) -> usize {
-    bytes[start + 2..]
-        .windows(2)
-        .position(|pair| pair == b"*/")
-        .map_or(bytes.len(), |relative| start + relative + 4)
+    // PostgreSQL allows nested comments; inner terminators do not expose
+    // keywords or parentheses that still belong to the outer comment.
+    let mut depth = 1usize;
+    let mut index = start + 2;
+    while index + 1 < bytes.len() {
+        match &bytes[index..index + 2] {
+            b"/*" => {
+                depth += 1;
+                index += 2;
+            }
+            b"*/" => {
+                depth -= 1;
+                index += 2;
+                if depth == 0 {
+                    return index;
+                }
+            }
+            _ => index += 1,
+        }
+    }
+    bytes.len()
 }
 
 fn dollar_quote_end(bytes: &[u8], start: usize) -> Option<usize> {
     let first = *bytes.get(start + 1)?;
-    if !(first.is_ascii_alphabetic() || first == b'_') && first != b'$' {
+    if !(first.is_ascii_alphabetic() || first == b'_' || !first.is_ascii()) && first != b'$' {
         return None;
     }
     let mut delimiter_end = start + 2;
     if first != b'$' {
-        while delimiter_end < bytes.len() && is_ident_byte(bytes[delimiter_end]) {
+        while delimiter_end < bytes.len()
+            && bytes[delimiter_end] != b'$'
+            && is_ident_byte(bytes[delimiter_end])
+        {
             delimiter_end += 1;
         }
         if bytes.get(delimiter_end) != Some(&b'$') {
@@ -144,5 +170,5 @@ fn dollar_quote_end(bytes: &[u8], start: usize) -> Option<usize> {
 }
 
 fn is_ident_byte(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || byte == b'_'
+    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$') || !byte.is_ascii()
 }

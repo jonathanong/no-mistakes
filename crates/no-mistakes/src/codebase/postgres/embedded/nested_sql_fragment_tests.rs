@@ -113,3 +113,13 @@ fn value_interpolations_stay_inline() {
         "{calls:?}"
     );
 }
+
+#[test]
+fn asynchronous_and_generator_helpers_remain_bind_values() {
+    let mut expected = vec![EmbeddedSqlKind::Inline; 6];
+    expected.extend([EmbeddedSqlKind::Dynamic; 2]);
+    assert_eq!(
+        kinds("nested-sql-fragment-helper-result-kinds.ts"),
+        expected
+    );
+}

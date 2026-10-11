@@ -240,9 +240,11 @@ Each `EmbeddedSqlCall` records `kind`:
   statement classification.
 
 Fragment detection follows file-wide aliases to convergence, including cycles,
-default parameter values and helpers that can return trusted fragments. This
-projection deliberately ignores lexical scope collisions so it fails closed.
-Plain string-returning helpers remain bind values.
+default parameter values and synchronous helpers that can return trusted
+fragments. This projection deliberately ignores lexical scope collisions so it
+fails closed. Plain string-returning helpers remain bind values, as do calls to
+async functions or generators: their Promise or iterator results are not SQL
+fragments.
 
 ## Statement facts
 

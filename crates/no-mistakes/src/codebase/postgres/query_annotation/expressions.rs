@@ -2,6 +2,7 @@ mod calls;
 mod children;
 mod functions;
 mod members;
+mod objects;
 mod tagged;
 mod writes;
 use super::{Expr, Step};
@@ -101,15 +102,15 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         ]),
         // Boolean control values carry no SQL text and have no side effects.
         Expression::BooleanLiteral(_) => Expr::Primitive,
-        Expression::LogicalExpression(value) => Expr::Children(vec![
+        Expression::LogicalExpression(value) => Expr::Container(vec![
             expression(&value.left, source),
             Expr::Alternatives(vec![
                 expression(&value.right, source),
                 Expr::Children(vec![]),
             ]),
         ]),
-        Expression::ConditionalExpression(value) => Expr::Children(vec![
-            expression(&value.test, source),
+        Expression::ConditionalExpression(value) => Expr::Sequence(vec![
+            Expr::Discard(Box::new(expression(&value.test, source))),
             Expr::Alternatives(vec![
                 expression(&value.consequent, source),
                 expression(&value.alternate, source),
@@ -122,9 +123,8 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 .map(|expr| expression(expr, source))
                 .collect(),
         ),
-        Expression::ArrayExpression(_) | Expression::ObjectExpression(_) => {
-            Expr::Children(children::collect(expr, source))
-        }
+        Expression::ArrayExpression(_) => Expr::Container(children::collect(expr, source)),
+        Expression::ObjectExpression(value) => objects::object(value, source),
         Expression::AssignmentExpression(_) | Expression::UpdateExpression(_) => {
             writes::collect(expr, source)
         }

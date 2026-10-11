@@ -34,7 +34,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     slot
                 }
             }
-            value => Value::Aggregate(vec![value].into()),
+            value => super::member::member_candidates(value),
         }
     }
 }

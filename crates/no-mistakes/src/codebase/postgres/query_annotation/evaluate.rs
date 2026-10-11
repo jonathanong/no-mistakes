@@ -161,17 +161,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.member(value, name)
             }
+            Expr::ComputedMember(object, key) => {
+                let value = self.expr(object, path, env, depth, generic).exposed();
+                self.expr(key, path, env, depth, generic);
+                self.member(value, "")
+            }
             Expr::Index(object, index) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.index(value, *index)
             }
-            Expr::Children(children) => Value::Aggregate(
-                children
+            Expr::Children(children) | Expr::Container(children) | Expr::Object(children) => {
+                let values = children
                     .iter()
                     .map(|child| self.expr(child, path, env, depth, generic))
                     .collect::<Vec<_>>()
-                    .into(),
-            ),
+                    .into();
+                match expr {
+                    Expr::Container(_) => Value::Aggregate(values),
+                    Expr::Object(_) => Value::Object(values),
+                    _ => Value::References(values),
+                }
+            }
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
         {

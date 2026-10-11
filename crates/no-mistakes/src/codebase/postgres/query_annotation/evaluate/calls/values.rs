@@ -20,9 +20,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Promise(inner) | Value::Evaluated(inner, _) => {
                 self.refresh_argument(inner);
             }
-            Value::Aggregate(values) | Value::Joined(values) | Value::Possible(values) => {
-                self.refresh_arguments(values)
-            }
+            Value::Aggregate(values)
+            | Value::References(values)
+            | Value::Object(values)
+            | Value::Joined(values)
+            | Value::Possible(values) => self.refresh_arguments(values),
             // Argument containers already resolve their slots by identity.
             _ => {}
         }

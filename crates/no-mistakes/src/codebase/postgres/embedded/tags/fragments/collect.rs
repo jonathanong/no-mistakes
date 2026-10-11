@@ -1,5 +1,6 @@
 use super::{yields_fragment, SqlTagNames};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BindingPattern, Expression,
     FormalParameter, Function, Program, ReturnStatement, VariableDeclarator,
@@ -7,7 +8,6 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
-use std::collections::{HashMap, HashSet};
 
 // The flag distinguishes a fragment value from a function returning one.
 type Key = (bool, String);
@@ -17,11 +17,11 @@ type Key = (bool, String);
 pub(in crate::codebase::postgres::embedded::tags) fn collect_fragment_bindings(
     program: &Program<'_>,
     tags: &SqlTagNames,
-) -> (HashSet<String>, HashSet<String>) {
+) -> (FxHashSet<String>, FxHashSet<String>) {
     let mut collector = FragmentBindings {
         tags,
-        found: HashSet::new(),
-        dependents: HashMap::new(),
+        found: FxHashSet::default(),
+        dependents: FxHashMap::default(),
         helper_names: crate::fx::FxHashMap::default(),
         return_targets: Vec::new(),
     };
@@ -36,8 +36,8 @@ pub(in crate::codebase::postgres::embedded::tags) fn collect_fragment_bindings(
             }
         }
     }
-    let mut values = HashSet::new();
-    let mut functions = HashSet::new();
+    let mut values = FxHashSet::default();
+    let mut functions = FxHashSet::default();
     for (called, name) in collector.found {
         if called {
             functions.insert(name);
@@ -50,8 +50,8 @@ pub(in crate::codebase::postgres::embedded::tags) fn collect_fragment_bindings(
 
 struct FragmentBindings<'t> {
     tags: &'t SqlTagNames,
-    found: HashSet<Key>,
-    dependents: HashMap<Key, Vec<Key>>,
+    found: FxHashSet<Key>,
+    dependents: FxHashMap<Key, Vec<Key>>,
     helper_names: crate::fx::FxHashMap<u32, String>,
     return_targets: Vec<Option<Key>>,
 }
@@ -135,7 +135,9 @@ impl<'a> Visit<'a> for FragmentBindings<'_> {
             .get(&function.span.start)
             .cloned()
             .or_else(|| function.id.as_ref().map(|id| id.name.to_string()));
-        self.return_targets.push(name.map(|name| (true, name)));
+        // Async and generator calls return Promise/iterator values, not SQL.
+        let target = name.filter(|_| !function.r#async && !function.generator);
+        self.return_targets.push(target.map(|name| (true, name)));
         walk::walk_function(self, function, flags);
         self.return_targets.pop();
     }
@@ -145,6 +147,7 @@ impl<'a> Visit<'a> for FragmentBindings<'_> {
             .helper_names
             .get(&arrow.span.start)
             .cloned()
+            .filter(|_| !arrow.r#async)
             .map(|name| (true, name));
         if let (Some(key), Some(expression)) = (&key, arrow.body.as_expression()) {
             self.record(key.clone(), expression);

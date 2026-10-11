@@ -79,6 +79,9 @@ its recovered text already proved an `OFFSET`. With the default
   or its leading statement is unknown or incomplete, and it has no OFFSET of
   its own. An interpolation or opaque appended tail could add `OFFSET`.
 
+Recovered keyword checks ignore quoted text, nested PostgreSQL block comments,
+and keyword text within identifiers, including `$` and Unicode continuations.
+
 Dynamic DML without a recovered query is not reported, and a
 dynamic call whose recovered text already contains `OFFSET` keeps only its
 ordinary `offset` finding. See the

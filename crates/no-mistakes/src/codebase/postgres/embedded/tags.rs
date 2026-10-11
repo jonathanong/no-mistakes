@@ -15,8 +15,8 @@ pub(crate) struct SqlTagNames {
     /// Default imports from `sql-template-strings`, or configured named
     /// `trustedSqlTags` imports, under the file's local names.
     imported: HashSet<String>,
-    fragments: HashSet<String>,
-    fragment_functions: HashSet<String>,
+    fragments: crate::fx::FxHashSet<String>,
+    fragment_functions: crate::fx::FxHashSet<String>,
 }
 
 impl SqlTagNames {

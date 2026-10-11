@@ -36,6 +36,7 @@ pub(super) enum Expr {
     Spread(Box<Expr>),
     Index(Box<Expr>, usize),
     Member(Box<Expr>, String),
+    ComputedMember(Box<Expr>, Box<Expr>),
     OpaqueCallback(Box<Expr>),
     Append(Box<Expr>, Box<Expr>),
     Call {
@@ -44,7 +45,10 @@ pub(super) enum Expr {
         start: u32,
     },
     Function(std::sync::Arc<Function>),
+    // Child references/effects do not describe the expression's runtime result.
     Children(Vec<Expr>),
+    Container(Vec<Expr>),
+    Object(Vec<Expr>),
     Sequence(Vec<Expr>),
     Discard(Box<Expr>),
     Alternatives(Vec<Expr>),

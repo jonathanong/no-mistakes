@@ -136,6 +136,9 @@ trigger-maintained column:
 - the recovered text contains `INSERT`, `UPDATE`, or `MERGE`, including a
   data-modifying CTE, or its leading statement is unknown or incomplete.
 
+Recovered keyword checks ignore quoted text, nested PostgreSQL block comments,
+and keyword text within identifiers, including `$` and Unicode continuations.
+
 Dynamic `SELECT` and `DELETE` text without a recovered column write is not
 reported. Literal untracked targets do not exempt an opaque write: its tail
 could introduce another statement targeting a protected column. Nothing is reported

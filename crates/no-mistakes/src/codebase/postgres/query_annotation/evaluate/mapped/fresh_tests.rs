@@ -96,10 +96,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             continue;
         }
         if name == "frame.cjs" {
-            let Value::Aggregate(values) = result else {
-                panic!("conditional wrapper");
-            };
-            let Value::Aggregate(arms) = &values[1] else {
+            let Value::Aggregate(arms) = result else {
                 panic!("alternative wrapper");
             };
             let Value::Function(_, _, captured) = &arms[0] else {
