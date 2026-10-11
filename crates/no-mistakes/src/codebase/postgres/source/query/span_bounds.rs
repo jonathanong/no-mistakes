@@ -23,12 +23,22 @@ struct BoundToken {
 
 pub(super) struct QuerySpanBounds {
     tokens: Vec<BoundToken>,
+    set_operators: Vec<usize>,
+    order_by: Vec<usize>,
+    limits: Vec<usize>,
+    offsets: Vec<usize>,
+    fetches: Vec<usize>,
 }
 
 impl QuerySpanBounds {
     pub(super) fn new(tokens: &[TokenWithSpan], locations: &Locations<'_>) -> Self {
         let mut significant = Vec::<BoundToken>::new();
         let mut openings = Vec::<usize>::new();
+        let mut set_operators = Vec::<usize>::new();
+        let mut order_by = Vec::<usize>::new();
+        let mut limits = Vec::<usize>::new();
+        let mut offsets = Vec::<usize>::new();
+        let mut fetches = Vec::<usize>::new();
         for token in tokens {
             if matches!(
                 token.token,
@@ -60,6 +70,20 @@ impl QuerySpanBounds {
                 Token::Word(word) if word.quote_style.is_none() => word.keyword,
                 _ => Keyword::NoKeyword,
             };
+            if keyword == Keyword::BY
+                && significant
+                    .last()
+                    .is_some_and(|token| token.keyword == Keyword::ORDER)
+            {
+                order_by.push(index - 1);
+            }
+            match keyword {
+                Keyword::LIMIT => limits.push(index),
+                Keyword::OFFSET => offsets.push(index),
+                Keyword::FETCH => fetches.push(index),
+                Keyword::UNION | Keyword::INTERSECT | Keyword::EXCEPT => set_operators.push(index),
+                _ => {}
+            }
             significant.push(BoundToken {
                 start: start.offset,
                 end: end.offset,
@@ -70,6 +94,11 @@ impl QuerySpanBounds {
         }
         Self {
             tokens: significant,
+            set_operators,
+            order_by,
+            limits,
+            offsets,
+            fetches,
         }
     }
 
@@ -80,75 +109,40 @@ impl QuerySpanBounds {
         locations: &Locations<'_>,
     ) -> Option<PostgresSqlSpan> {
         let start = locations.position(query.span().start)?.offset;
+        let first = self.tokens.first()?;
         let index = self.tokens.partition_point(|token| token.start < start);
-        // A root's leading `(` can wrap only its body; ORDER BY may follow it.
-        let (span_start, end) = if root
-            && (self.tokens.first()?.start == start
-                || (self.tokens.first()?.kind == Kind::Open && self.tokens.get(1)?.start == start))
+        // A root's leading parentheses can wrap only its body; ORDER BY may
+        // follow them. Keep all wrappers when sqlparser starts at the body.
+        let root_wrappers = root
+            && index > 0
+            && self.tokens[..index]
+                .iter()
+                .all(|token| token.kind == Kind::Open);
+        if root_wrappers
+            && self.tokens[..index]
+                .iter()
+                .any(|token| token.closing.is_none())
         {
-            (self.tokens.first()?.start, self.tokens.last()?.end)
+            return None;
+        }
+        let (span_start, end) = if root && (first.start == start || root_wrappers) {
+            (first.start, self.tokens[self.tokens.len() - 1].end)
         } else {
             let opening = self.tokens.get(index.checked_sub(1)?)?;
             if opening.kind != Kind::Open {
                 return None;
             }
             let closing = opening.closing?;
-            (start, self.tokens.get(closing.checked_sub(1)?)?.end)
+            // A paired close always follows its opening token.
+            (start, self.tokens[closing - 1].end)
         };
         (end >= span_start).then(|| locations.range(span_start, end))
     }
-
-    /// A bare INSERT source has no opening delimiter; use its owning CTE boundary.
-    pub(super) fn insert_source(
-        &self,
-        query: &Query,
-        owner_end: usize,
-        on_conflict_cutoff: Option<usize>,
-        returning_item_start: Option<usize>,
-        locations: &Locations<'_>,
-    ) -> Option<PostgresSqlSpan> {
-        let start = locations.position(query.span().start)?.offset;
-        let from = self.tokens.partition_point(|token| token.start < start);
-        let mut depth = 0usize;
-        let mut last_on_conflict = None;
-        let mut last_returning = None;
-        let mut until = from;
-        for (offset, token) in self.tokens[from..].iter().enumerate() {
-            if token.start >= owner_end {
-                break;
-            }
-            let index = from + offset;
-            until = index + 1;
-            match token.kind {
-                Kind::Open => depth += 1,
-                Kind::Close => depth = depth.saturating_sub(1),
-                Kind::Other => {}
-            }
-            if depth == 0 {
-                if on_conflict_cutoff.is_some_and(|end| token.start < end)
-                    && token.keyword == Keyword::ON
-                    && self.tokens.get(index + 1).is_some_and(|next| {
-                        next.keyword == Keyword::CONFLICT && next.start < owner_end
-                    })
-                {
-                    last_on_conflict = Some(index);
-                }
-                if returning_item_start.is_some_and(|start| token.start < start)
-                    && token.keyword == Keyword::RETURNING
-                {
-                    last_returning = Some(index);
-                }
-            }
-        }
-        let boundary = [last_on_conflict, last_returning]
-            .into_iter()
-            .flatten()
-            .min()
-            .unwrap_or(until);
-        let end = self.tokens.get(from..boundary)?.last()?.end;
-        (end >= start).then(|| locations.range(start, end))
-    }
 }
+
+mod body_end;
+mod insert_source;
+mod set_branches;
 
 #[cfg(test)]
 mod tests;

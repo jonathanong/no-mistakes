@@ -790,6 +790,8 @@ slice the original SQL with their half-open UTF-8 byte offsets.
 An INSERT-source SELECT in a data-modifying CTE also includes closing function
 syntax before the INSERT's conflict or RETURNING clause in both its source and
 query scope spans.
+Set-operation branch scopes slice exactly their own operand, including its
+parenthesis wrapper, and exclude query-level ordering and limiting clauses.
 
 `check()` applies `nextjs-redirect-destinations` to recovered static tuple maps
 and template destinations, and reports incomplete extraction for partially dynamic returns.

@@ -1,7 +1,13 @@
 use super::*;
 use sqlparser::ast::{Distinct, GroupByExpr, Select, SelectItem, SetExpr};
 impl Collector<'_, '_> {
-    pub(super) fn body(&mut self, body: &SetExpr, scope: usize, env: &CteEnvironment) {
+    pub(super) fn body(
+        &mut self,
+        body: &SetExpr,
+        scope: usize,
+        env: &CteEnvironment,
+        body_end: Option<usize>,
+    ) {
         match body {
             SetExpr::Select(select) => self.select(select, scope, env),
             SetExpr::Query(query) => {
@@ -22,15 +28,26 @@ impl Collector<'_, '_> {
             } => {
                 self.facts.scopes[scope].set_operation = Some(op.to_string());
                 self.facts.scopes[scope].set_quantifier = Some(set_quantifier.to_string());
-                for branch in [left, right] {
+                let (left_span, right_span) = self.span_bounds.set_branches(
+                    left,
+                    right,
+                    self.facts.scopes[scope].span.as_ref(),
+                    body_end,
+                    self.locations,
+                );
+                for (branch, span) in [(left, left_span), (right, right_span)] {
                     let child = self.scope(
                         Some(scope),
                         self.states[scope].visible_parent,
                         PostgresSqlQueryClause::SetBranch,
                         self.facts.scopes[scope].cte_definition_id,
-                        self.locations.span(branch.span()),
+                        span.or_else(|| self.locations.span(branch.span())),
                     );
-                    self.body(branch, child, env);
+                    let child_end = self.facts.scopes[child]
+                        .span
+                        .as_ref()
+                        .map(|span| span.end.offset);
+                    self.body(branch, child, env, child_end);
                 }
             }
             SetExpr::Values(values) => {

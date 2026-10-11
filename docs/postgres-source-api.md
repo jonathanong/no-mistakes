@@ -265,6 +265,10 @@ query, including trailing function parentheses. A root query with a parenthesize
 body includes its wrapper and query-level suffix. Offsets are half-open UTF-8
 byte positions in the original SQL, even across earlier statements or multibyte
 text.
+Set-operation branch scopes include their own parenthesized operand wrapper
+when present, and end before query-level `ORDER BY`, `LIMIT`, `OFFSET`, or
+`FETCH` clauses. Their spans retain function-call syntax and aliases whose
+names match clause keywords.
 
 Qualified columns resolve against visible relation aliases in the current
 scope, then permitted outer scopes. Non-lateral derived tables and CTE bodies
