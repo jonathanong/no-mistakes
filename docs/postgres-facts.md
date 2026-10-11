@@ -250,6 +250,21 @@ reads `Dynamic`. Literal array and object arguments retain these alias effects;
 merely declaring a callback does not execute its body. Recognized executors,
 trusted constructors, and known builder appends retain their existing behavior;
 copied SQL strings and unrelated builders remain independent.
+Relative factory and type candidates are not confirmed consumers during
+extraction when `importSpecifier` is configured. Their pending executor calls
+capture SQL before invocation, and prepared resolver projection later keeps
+only owners inside the configured package. Passing a mutable builder to such a
+candidate clears finite alternatives for subsequent reuse and tracked aliases,
+because a rejected owner can mutate that builder. This is deliberately
+conservative even when projection later accepts the owner: it does not replay
+the extractor to restore discarded alternatives. The pending call's captured
+SQL, including proven mutations in later arguments, and source order stay
+intact: the call captures its arguments before applying its own consumer
+effects. Copied SQL strings, unrelated builders, and
+already-confirmed direct executors retain their facts; ordinary-call
+invalidation preserves the legacy `kind` and `sql_text` fields. Subsequent
+branching builder calls without complete alternatives follow each rule's
+existing `unanalyzableSql` policy.
 Finite recovery treats mutable SQL bindings and builders captured from an
 enclosing scope as opaque: the extractor cannot prove their state when the
 nested function executes. Branching calls that depend on those captures remain

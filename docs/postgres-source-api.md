@@ -55,6 +55,14 @@ the Node check or source APIs. Finding deduplication keeps physical token
 origins in request-local internal metadata. Public `RuleFinding` fields and
 their JSON shape remain unchanged.
 
+For repository checks, relative executor factory/type owners are confirmed in
+prepared resolver projection after extraction. A provisional consumer may
+mutate its builder argument, so later finite builder alternatives are discarded
+conservatively, even when that owner is later accepted. The original pending
+call retains its captured SQL and source order, and each rule's existing
+`unanalyzableSql` policy handles subsequent branching calls. This reuses the
+same prepared facts and does not change Node types or JSON contracts.
+
 ## Contract
 
 `PostgresSqlFacts.schemaVersion` is `1`. All public fact names are exported from

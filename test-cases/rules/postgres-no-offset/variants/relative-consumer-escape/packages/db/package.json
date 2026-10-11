@@ -1,0 +1,6 @@
+{
+  "name": "@example/db",
+  "type": "module",
+  "private": true,
+  "exports": "./src/index.ts"
+}

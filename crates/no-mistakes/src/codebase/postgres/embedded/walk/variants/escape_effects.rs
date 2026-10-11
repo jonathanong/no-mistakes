@@ -94,16 +94,12 @@ impl ScopeVisitor<'_> {
 
     fn known_builder_consumer(&self, call: &CallExpression<'_>) -> bool {
         let callee = unwrap_ts_wrappers(&call.callee);
-        if callee_name(call, self.bindings, self.scoped).is_some()
+        // Relative candidates are recorded before their arguments escape, but
+        // ownership is still unconfirmed here. A rejected owner can mutate a
+        // builder, so only already-confirmed consumers preserve its variants.
+        callee_name(call, self.bindings, self.scoped).is_some()
             || self.fresh_builder_call(call)
             || self.known_append_receiver(callee)
-        {
-            return true;
-        }
-        // Relative executors are confirmed after this same extractor pass.
-        matches!(callee, Expression::Identifier(name) if self.provisional.iter().any(|span|
-            span.name == name.name.as_str() && call.span.start >= span.start
-                && call.span.start < span.end && !span.owners.is_empty()))
     }
 
     fn known_append_receiver(&self, callee: &Expression<'_>) -> bool {
