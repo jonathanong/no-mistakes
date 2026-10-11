@@ -29,11 +29,11 @@ pub(super) fn collect(request: Request<'_>) -> HashSet<PathBuf> {
     // A typed mock specifier's import(...) is a type carrier, not a helper edge.
     let allowed = [EdgeKind::Import, EdgeKind::WorkspaceImport].into();
     graph
-        .deps_of_in_file_universe(
+        .deps_of_in_file_universe_excluding_files(
             &[NodeId::file(test_file)],
-            None,
             Some(&allowed),
             visible_files,
+            excluded,
         )
         .into_iter()
         .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))

@@ -17,11 +17,11 @@ pub(super) fn collect(
 ) -> Result<HashSet<PathBuf>> {
     let allowed = [EdgeKind::Import, EdgeKind::WorkspaceImport].into();
     let mut mocks = HashSet::new();
-    for entry in graph.deps_of_in_file_universe(
+    for entry in graph.deps_of_in_file_universe_excluding_files(
         &[NodeId::file(test_file)],
-        None,
         Some(&allowed),
         visible_files,
+        excluded,
     ) {
         let Some(file) = entry.node.as_file() else {
             continue;
