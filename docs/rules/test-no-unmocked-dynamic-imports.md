@@ -65,6 +65,8 @@ Setup paths are repository-root-relative. Setup mocks, including mocks in
 statically imported setup helpers, apply only to the project's matched tests.
 Setup files are processed in their declared order. A mock from a statically
 imported helper does not apply if another helper's mock prevents it from loading.
+CommonJS helpers loaded through `require()` are included; `require.resolve()`
+does not execute a helper.
 For a test matched by multiple selected projects, the rule checks its dynamic
 imports in each project context. A mock from one project's setup does not
 cover another project's execution. Matching Vitest and Jest runner configs are

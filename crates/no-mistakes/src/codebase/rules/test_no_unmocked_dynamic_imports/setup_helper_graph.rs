@@ -13,7 +13,12 @@ pub(super) fn collect(
     initial_mocks: &HashSet<PathBuf>,
     mut registrations: impl FnMut(&Path) -> Result<HashSet<PathBuf>>,
 ) -> Result<HashSet<PathBuf>> {
-    let allowed = [EdgeKind::Import, EdgeKind::WorkspaceImport].into();
+    let allowed = [
+        EdgeKind::Import,
+        EdgeKind::WorkspaceImport,
+        EdgeKind::Require,
+    ]
+    .into();
     let helper_files = |excluded: &HashSet<PathBuf>| {
         graph
             .deps_of_in_file_universe_excluding_files(
