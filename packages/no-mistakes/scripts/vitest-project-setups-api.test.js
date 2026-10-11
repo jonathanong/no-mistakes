@@ -19,6 +19,7 @@ test(
         ".no-mistakes.yml",
         [
           "other/uncovered.test.mts",
+          "ordered/order.test.mts",
           "overlap/helper-cut.test.mts",
           "overlap/shared.test.mts",
           "web/excluded.test.mts",
@@ -27,10 +28,19 @@ test(
       ],
       [
         ".no-mistakes-both.yml",
-        ["overlap/helper-cut.test.mts", "web/excluded.test.mts", "web/genuine.test.mts"],
+        [
+          "ordered/order.test.mts",
+          "overlap/helper-cut.test.mts",
+          "web/excluded.test.mts",
+          "web/genuine.test.mts",
+        ],
       ],
       [".no-mistakes-selected.yml", ["overlap/helper-cut.test.mts", "web/genuine.test.mts"]],
       [".no-mistakes-playwright.yml", ["overlap/shared.test.mts"]],
+      [".no-mistakes-runner-ignored.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-app-project.yml", ["web/genuine.test.mts"]],
+      [".no-mistakes-ordered.yml", []],
+      [".no-mistakes-reversed.yml", ["ordered/order.test.mts"]],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);
@@ -40,6 +50,7 @@ test(
     for (const [config, expected] of [
       [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
       [".no-mistakes-invalid.yml", "invalid repository-relative path"],
+      [".no-mistakes-ignored.yml", "missing from the analysis file inventory"],
     ]) {
       const options = { root, config: join(root, config) };
       const invalid = await cjs.check(options);

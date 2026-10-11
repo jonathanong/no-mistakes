@@ -36,9 +36,7 @@ fn from_group(files: &[PathBuf], request: &Request<'_>) -> Result<HashSet<PathBu
             request.resolver,
             Some(request.graph_files),
         ));
-    }
-    for setup in files {
-        mocks.extend(super::per_test::helper_mocks::collect(
+        mocks.extend(super::per_test::helper_mocks::collect_strict(
             super::per_test::helper_mocks::Request {
                 test_file: setup,
                 graph: request.graph,
@@ -48,7 +46,7 @@ fn from_group(files: &[PathBuf], request: &Request<'_>) -> Result<HashSet<PathBu
                 shared: request.shared,
                 excluded: &mocks,
             },
-        ));
+        )?);
     }
     Ok(mocks)
 }

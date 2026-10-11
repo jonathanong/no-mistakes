@@ -27,7 +27,7 @@ pub(crate) fn check_inner(
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     let file_cache: DashMap<PathBuf, Arc<reachable::CachedFileFacts>> = DashMap::new();
     let mut findings = Vec::new();
-    let setup_data = config::precompute_setup_data(root, config)?;
+    let setup_data = config::precompute_setup_data(root, config, &visible_files)?;
     let test_files = matching_test_files(root, files, config)?;
     let setup_mock_map =
         precompute_setup_mock_map(root, &test_files, &setup_data, &resolver, None)?;
@@ -146,7 +146,7 @@ fn matching_test_files(
     files: &[PathBuf],
     config: &NoMistakesConfig,
 ) -> Result<Vec<PathBuf>> {
-    let filter = config::test_filter(root, config)?;
+    let filter = config::test_filter_from_visible(root, config, files)?;
     Ok(matching_test_files_with_filter(root, files, &filter))
 }
 

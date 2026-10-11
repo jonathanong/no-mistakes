@@ -971,6 +971,7 @@ test("route coverage declarations expose integration ownership and helper argume
 test("Vitest project policy declarations expose repository-relative setup files", () => {
   const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
   assert.match(declarations, /export interface VitestProjectPolicy \{/);
+  assert.match(declarations, /include\?: string\[\];/);
   assert.match(declarations, /setup_files\?: string\[\];/);
 });
 

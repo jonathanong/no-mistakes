@@ -6,9 +6,7 @@ mod rule_targets;
 
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use discovery::{
-    build_globset, build_regexes, config_files, extract_test_property_strings, ConfigFile,
-};
+use discovery::{build_globset, build_regexes, extract_test_property_strings, ConfigFile};
 use std::path::{Path, PathBuf};
 
 pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
@@ -34,17 +32,19 @@ impl ConfigSetupData {
 pub fn precompute_setup_data(
     root: &Path,
     config: &NoMistakesConfig,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<ConfigSetupData>> {
-    let mut data = precompute_setup_data_from_config_files(root, &config_files(root, config))?;
-    data.extend(explicit_project_setup_data(root, config, None)?);
+    let mut files = visible_files.iter().cloned().collect::<Vec<_>>();
+    files.sort();
+    let config_files = discovery::config_files_from_visible(root, config, &files);
+    let mut data = precompute_setup_data_from_config_files_inner(
+        root,
+        &config_files,
+        Some(visible_files),
+        None,
+    )?;
+    data.extend(explicit_project_setup_data(root, config, visible_files)?);
     Ok(data)
-}
-
-fn precompute_setup_data_from_config_files(
-    root: &Path,
-    config_files: &[ConfigFile],
-) -> Result<Vec<ConfigSetupData>> {
-    precompute_setup_data_from_config_files_inner(root, config_files, None, None)
 }
 
 fn precompute_setup_data_from_config_files_from_visible(
@@ -116,8 +116,8 @@ pub fn setup_files_for_test_precomputed(
             files.extend(data.setup_files.iter().cloned());
         }
     }
-    files.sort();
-    files.dedup();
+    let mut seen = std::collections::HashSet::new();
+    files.retain(|path| seen.insert(path.clone()));
     files
 }
 
@@ -167,8 +167,8 @@ fn setup_files_from_configs_inner(
             }
         }
     }
-    files.sort();
-    files.dedup();
+    let mut seen = std::collections::HashSet::new();
+    files.retain(|path| seen.insert(path.clone()));
     Ok(files)
 }
 

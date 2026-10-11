@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [ordered/order.test.mts]
+        setup_files:
+          - test-helpers/order-second.setup.mts
+          - test-helpers/order-first.setup.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [web]

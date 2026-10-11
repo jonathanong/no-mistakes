@@ -6,11 +6,14 @@ use std::path::{Path, PathBuf};
 pub(in super::super) fn explicit_project_setup_data(
     root: &Path,
     config: &NoMistakesConfig,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<ConfigSetupData>> {
     let mut data = Vec::new();
     let rules = config.rule_applications(super::super::RULE_ID);
-    let all_projects = rules.is_empty() || rules.iter().any(|rule| rule.applies_to_repository());
+    let all_projects = rules.is_empty()
+        || rules
+            .iter()
+            .any(|rule| rule.applies_to_repository() || !rule.projects.is_empty());
     let selected = rules
         .iter()
         .flat_map(|rule| rule.tests.vitest.iter().map(String::as_str))
@@ -42,13 +45,13 @@ pub(in super::super) fn explicit_project_setup_data(
             );
             let path = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
             anyhow::ensure!(
-                visible_files.map_or_else(|| path.is_file(), |visible| visible.contains(&path)),
+                visible_files.contains(&path),
                 "tests.vitest.projects.{name}.setup_files path {setup:?} is missing from the analysis file inventory"
             );
             setup_files.push(path);
         }
-        setup_files.sort();
-        setup_files.dedup();
+        let mut seen = std::collections::HashSet::new();
+        setup_files.retain(|path| seen.insert(path.clone()));
         data.push(ConfigSetupData {
             filter,
             setup_files,
@@ -76,8 +79,8 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
             shared.extend(data.setup_files.iter().cloned());
         }
     }
-    shared.sort();
-    shared.dedup();
+    let mut seen = std::collections::HashSet::new();
+    shared.retain(|path| seen.insert(path.clone()));
     if projects.is_empty() {
         return vec![shared];
     }
@@ -86,8 +89,8 @@ pub(in super::super) fn setup_contexts_for_test_precomputed(
         .map(|project| {
             let mut files = shared.clone();
             files.extend(project);
-            files.sort();
-            files.dedup();
+            let mut seen = std::collections::HashSet::new();
+            files.retain(|path| seen.insert(path.clone()));
             files
         })
         .collect()
