@@ -34,6 +34,8 @@ mod metadata;
 mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
+#[path = "tests/switch_scalar_labels.rs"]
+mod switch_scalar_labels;
 #[path = "tests/unaffected_switch.rs"]
 mod unaffected_switch;
 
