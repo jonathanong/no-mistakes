@@ -17,6 +17,7 @@ pub mod exports_of;
 pub mod importers;
 pub mod resolve_check;
 
+mod diagnostics;
 mod render;
 mod reverse;
 mod shared;

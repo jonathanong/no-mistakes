@@ -289,3 +289,27 @@ fn explicit_value_export_shadows_anonymous_star_forwarding() {
     assert_eq!(report.call_sites[0].file, "consumer.ts");
     assert_eq!(report.call_sites[0].line, 31);
 }
+
+#[test]
+fn skipped_calls_and_unknown_candidate_relevance_are_reported() {
+    let report = compute(&args(
+        fixture_root("queries-incomplete"),
+        "target.ts",
+        "unknown",
+    ))
+    .unwrap();
+    assert!(report.call_sites.is_empty());
+    let json = serde_json::to_value(&report).unwrap();
+    assert_eq!(json["partial"], true);
+    let files = json["incompleteFiles"].as_array().unwrap();
+    assert_eq!(files.len(), 2);
+    assert_eq!(files[0]["file"], "broken.ts");
+    assert_eq!(files[1]["file"], "unrelated.ts");
+    assert!(files.iter().all(|file| file["reason"] == "parse-error"));
+    let mut human = Vec::new();
+    render(&report, Format::Human, &mut human).unwrap();
+    assert!(String::from_utf8(human)
+        .unwrap()
+        .contains("Partial analysis"));
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[&report]);
+}

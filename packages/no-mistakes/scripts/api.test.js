@@ -70,6 +70,18 @@ function nativeExportNameForApi(apiName) {
 }
 
 test("programmatic API proxies object options through async native addon calls", async () => {
+  const collectionGap = {
+    partial: true,
+    incompleteFiles: [{ file: "broken.ts", reason: "parse-error", message: "Invalid syntax" }],
+  };
+  const queryResult = (command, json) => {
+    const options = JSON.parse(json);
+    return JSON.stringify({
+      command,
+      options,
+      ...(options.file === "__partial__" ? collectionGap : {}),
+    });
+  };
   const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(planningPath)];
@@ -91,14 +103,10 @@ test("programmatic API proxies object options through async native addon calls",
     symbolsJson: async (json) => JSON.stringify({ command: "symbols", options: JSON.parse(json) }),
     importUsagesJson: async (json) =>
       JSON.stringify({ command: "importUsages", options: JSON.parse(json) }),
-    importersJson: async (json) =>
-      JSON.stringify({ command: "importers", options: JSON.parse(json) }),
-    exportsOfJson: async (json) =>
-      JSON.stringify({ command: "exportsOf", options: JSON.parse(json) }),
-    deadExportsJson: async (json) =>
-      JSON.stringify({ command: "deadExports", options: JSON.parse(json) }),
-    callSitesJson: async (json) =>
-      JSON.stringify({ command: "callSites", options: JSON.parse(json) }),
+    importersJson: async (json) => queryResult("importers", json),
+    exportsOfJson: async (json) => queryResult("exportsOf", json),
+    deadExportsJson: async (json) => queryResult("deadExports", json),
+    callSitesJson: async (json) => queryResult("callSites", json),
     resolveCheckJson: async (json) => {
       const options = JSON.parse(json);
       if (Array.isArray(options.files) && options.files.length === 0) {
@@ -259,6 +267,11 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.callSites({ file: "a.ts", exportName: "foo" })).options.exportName,
       "foo",
     );
+    for (const name of ["importers", "exportsOf", "deadExports", "callSites"]) {
+      const report = await api[name]({ file: "__partial__", exportName: "foo" });
+      assert.equal(report.partial, true);
+      assert.deepEqual(report.incompleteFiles, collectionGap.incompleteFiles);
+    }
     assert.equal((await api.resolveCheck({ file: "a.ts" })).command, "resolveCheck");
     assert.deepEqual((await api.resolveCheck({ files: ["a.ts", "b.ts"] })).options.files, [
       "a.ts",
@@ -1364,4 +1377,22 @@ test("declared payload configuration types are named public exports", () => {
   assert.ok(types.includes("consumer: DeclaredPayloadSchema"));
   assert.ok(types.includes("pointer?: string"));
   assert.ok(facade.includes('export * from "./declared-payload-types"'));
+});
+
+test("reverse query declarations export bounded collection diagnostics", () => {
+  const declarations = readFileSync(join(packageRoot, "query-types.d.ts"), "utf8");
+  assert.match(declarations, /export type QueryIncompleteReason =/);
+  for (const reason of ["operational-error", "parse-error", "missing-facts", "missing-symbols"]) {
+    assert.ok(declarations.includes(`| "${reason}"`));
+  }
+  for (const name of ["QueryIncompleteFile", "QueryDiagnostics"]) {
+    assert.match(declarations, new RegExp(`export interface ${name} \\{`));
+  }
+  for (const name of ["ImportersResult", "DeadExportsResult", "CallSitesResult"]) {
+    assert.match(declarations, new RegExp(`export interface ${name} extends QueryDiagnostics`));
+  }
+  assert.match(declarations, /partial: boolean;/);
+  assert.match(declarations, /partial\?: boolean;/);
+  assert.match(declarations, /incompleteFiles: QueryIncompleteFile\[\];/);
+  assert.match(declarations, /incompleteFiles\?: QueryIncompleteFile\[\];/);
 });

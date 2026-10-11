@@ -43,6 +43,8 @@ fn call_sites_json_reports_sites() {
     let output = call_sites_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["callSites"].as_array().unwrap().len(), 4);
+    assert_eq!(value["partial"], false);
+    assert_eq!(value["incompleteFiles"], json!([]));
 }
 
 #[test]
@@ -156,4 +158,30 @@ fn query_impls_require_inputs() {
     assert!(resolve_ambiguous
         .reason
         .contains("exactly one of file or files is required"));
+}
+
+#[test]
+fn reverse_collection_diagnostics_match_cli_and_napi() {
+    use crate::codebase::queries::*;
+    let root = fixture_root("queries-incomplete");
+    let options = json!({ "file": "target.ts", "exportName": "unknown", "root": root });
+    let cli = [
+        importers::run_json(ImportersArgs { file: "target.ts".into(), tests: false, root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
+        exports_of::run_json(ExportsOfArgs { file: "target.ts".into(), no_importers: false, root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
+        dead_exports::run_json(DeadExportsArgs { file: "target.ts".into(), names: vec![], root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
+        call_sites::run_json(CallSitesArgs { file: "target.ts".into(), export_name: "unknown".into(), root: Some(root.clone()), tsconfig: None, format: None, json: false }).unwrap(),
+    ];
+    let bindings = [importers_json_impl, exports_of_json_impl, dead_exports_json_impl, call_sites_json_impl];
+    for (cli, binding) in cli.into_iter().zip(bindings) {
+        let cli: serde_json::Value = serde_json::from_str(&cli).unwrap();
+        let napi: serde_json::Value = serde_json::from_str(&binding(crate::napi_api::options::test_json_arg(options.to_string())).unwrap()).unwrap();
+        assert_eq!(napi, cli);
+        assert_eq!(napi["partial"], true);
+        assert_eq!(napi["incompleteFiles"][0]["file"], "broken.ts");
+        assert_eq!(napi["incompleteFiles"][1]["file"], "unrelated.ts");
+    }
+    let no_scan = exports_of_json_impl(crate::napi_api::options::test_json_arg(json!({"file": "target.ts", "root": root, "noImporters": true}).to_string())).unwrap();
+    let no_scan: serde_json::Value = serde_json::from_str(&no_scan).unwrap();
+    assert!(no_scan.get("partial").is_none());
+    assert!(no_scan.get("incompleteFiles").is_none());
 }

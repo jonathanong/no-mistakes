@@ -25,6 +25,18 @@ resolved.) When a module ships a runtime `.js` and a `.d.ts` side by
 side at the same path, resolution prefers the runtime file, so a type-only
 import may attach to the `.js` rather than the `.d.ts`.
 
+## Collection gaps
+
+Reverse query JSON includes `partial` and `incompleteFiles`; each file has a
+root-relative `file`, `reason`, and `message`. Reasons are `operational-error`,
+`parse-error`, `missing-facts`, and `missing-symbols`. Check these before treating
+an empty caller/importer list as proof that an export is unused. Failed source
+facts can hide imports, so warnings include candidate files with unknown
+relevance. Recovered imports can still be reported. `partial: false` means no
+recorded collection gaps and does not promise exhaustive runtime references.
+`exports-of --no-importers` omits both fields; `--format paths` omits diagnostics.
+Repair incomplete files and rerun before deleting code based on `anyDead`.
+
 ## `importers <file>`
 
 Direct importers of one file plus a `dependentsCount`. One reverse import scan,

@@ -402,3 +402,27 @@ fn export_text_writers_surface_io_errors() {
         &without_importers,
     ]);
 }
+
+#[test]
+fn partial_export_consumers_are_qualified_in_human_output() {
+    let mut query = args("target.ts", false);
+    query.root = Some(
+        fixture_root()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("queries-incomplete/fixture"),
+    );
+    let report = compute(&query).unwrap();
+    assert!(report
+        .exports
+        .iter()
+        .any(|export| export.name == "unused" && export.importers.is_empty()));
+    let mut human = Vec::new();
+    render(&report, Format::Human, &mut human).unwrap();
+    assert!(String::from_utf8(human)
+        .unwrap()
+        .contains("no known importers; partial analysis"));
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[&report]);
+}
