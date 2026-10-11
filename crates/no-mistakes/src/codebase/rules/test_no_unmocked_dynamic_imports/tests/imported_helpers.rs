@@ -11,9 +11,12 @@ fn assert_helper_mock_outcomes(findings: &[RuleFinding]) {
         .iter()
         .filter_map(|finding| finding.target.as_deref())
         .collect::<HashSet<_>>();
-    assert!(!targets.contains("src/covered-leaf.mts"), "{findings:?}");
-    assert!(targets.contains("src/factory-leaf.mts"), "{findings:?}");
+    // A separate test without the imported helper and a test whose helper is
+    // behind a mocked bridge still need these same-source findings.
     for unmocked in [
+        "src/covered-leaf.mts",
+        "src/bridge-leaf.mts",
+        "src/factory-leaf.mts",
         "src/unimported-leaf.mts",
         "src/type-only-leaf.mts",
         "src/lazy-leaf.mts",
