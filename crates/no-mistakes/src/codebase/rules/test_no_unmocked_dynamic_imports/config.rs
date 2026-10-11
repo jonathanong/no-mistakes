@@ -13,12 +13,15 @@ pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
 pub(crate) use filter::test_filter_from_visible;
 pub use filter::{test_filter, TestFilter};
 pub(super) use prepared::prepare_from_visible;
-pub(super) use project_setups::{explicit_project_setup_data, setup_contexts_for_test_precomputed};
+pub(super) use project_setups::{
+    explicit_project_setup_data, setup_contexts_for_test_precomputed, SelectedRunners,
+};
 
 pub struct ConfigSetupData {
     filter: TestFilter,
     pub setup_files: Vec<PathBuf>,
     explicit_project: bool,
+    runner: discovery::Runner,
 }
 
 impl ConfigSetupData {
@@ -101,24 +104,10 @@ fn precompute_setup_data_from_config_files_inner(
             filter,
             setup_files,
             explicit_project: false,
+            runner: config_file.runner,
         });
     }
     Ok(result)
-}
-
-pub fn setup_files_for_test_precomputed(
-    rel_path: &str,
-    config_data: &[ConfigSetupData],
-) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    for data in config_data {
-        if data.filter_matches(rel_path) {
-            files.extend(data.setup_files.iter().cloned());
-        }
-    }
-    let mut seen = std::collections::HashSet::new();
-    files.retain(|path| seen.insert(path.clone()));
-    files
 }
 
 fn normalize_matcher_patterns(root: &Path, base: &Path, patterns: Vec<String>) -> Vec<String> {

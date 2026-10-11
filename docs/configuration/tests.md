@@ -136,14 +136,15 @@ project lists).
 tests. Paths are relative to the repository root, even when Vitest project
 definitions live in imported modules. `test-no-unmocked-dynamic-imports`
 recognizes mock registrations in these modules and their statically imported
-helpers. It merges them with setup files recovered from readable runner
+helpers. It combines them with setup files recovered from readable Vitest
 configs, then applies each project's include and exclude matchers independently.
 The rule processes setup files in their declared order, so a mock in a later
 setup cannot suppress an earlier setup's imported helper.
 If a test belongs to multiple selected named projects, the rule checks its
 dynamic imports in each project context. A mock from one project's setup does
-not cover another project's execution; runner-config setup mocks shared by
-those projects apply to all of them.
+not cover another project's execution. Each matching runner config is checked
+in its own context, so one config's setup mocks cannot cover another config's
+execution. Jest setups remain separate from Vitest project contexts.
 An explicit setup path must exist in the analysis file inventory, and a
 project with `setup_files` must have a nonempty `include` matcher; invalid or
 missing paths report a configuration warning and skip the rule in aggregate

@@ -29,8 +29,15 @@ pub(crate) fn check_inner(
     let mut findings = Vec::new();
     let setup_data = config::precompute_setup_data(root, config, &visible_files)?;
     let test_files = matching_test_files(root, files, config)?;
-    let setup_mock_map =
-        precompute_setup_mock_map(root, &test_files, &setup_data, &resolver, None)?;
+    let selected_runners = config::SelectedRunners::for_config(config);
+    let setup_mock_map = precompute_setup_mock_map(
+        root,
+        &test_files,
+        &setup_data,
+        selected_runners,
+        &resolver,
+        None,
+    )?;
     for file in test_files {
         let source = std::fs::read_to_string(&file)
             .context(format!("failed to read test file {}", file.display()))?;
@@ -39,7 +46,9 @@ pub(crate) fn check_inner(
         }
         let facts = ast::extract(&file, &source)?;
         let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
-        for setup_files in config::setup_contexts_for_test_precomputed(&rel_path, &setup_data) {
+        for setup_files in
+            config::setup_contexts_for_test_precomputed(&rel_path, &setup_data, selected_runners)
+        {
             let mut mocks = manual_mocks.clone();
             mocks.extend(setup_mocks(SetupMockRequest {
                 setup_files: &setup_files,
