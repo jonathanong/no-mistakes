@@ -79,6 +79,7 @@ pub(crate) fn embedded_call_facts(
                 locations.original_call_line = call.line;
                 locations.call_index = call_index;
                 locations.variant_index = variant_index;
+                locations.append_sites = call.variants[0].append_sites.clone();
             }
             rebase_embedded_lines(&mut facts, &call, variant);
             Some(facts)

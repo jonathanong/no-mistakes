@@ -14,7 +14,7 @@ pub(super) fn findings(
 pub(super) fn prepared_findings(
     file: &str,
     source: &str,
-    call: &EmbeddedSqlCall,
+    (call, call_start, comments): (&EmbeddedSqlCall, u32, &[(u32, u32)]),
     statement: &crate::codebase::postgres::SqlStatementFileFacts,
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
@@ -23,7 +23,15 @@ pub(super) fn prepared_findings(
     use crate::codebase::postgres::statements::SqlFactSite;
     let mut findings = Vec::new();
     let sql = call.sql_text.as_deref().unwrap();
-    if super::super::directive::has_safe_directive(source, call.line, sql, &opts.safe_directive) {
+    // A source marker belongs to this invocation; SQL markers belong only to
+    // alternatives that contain them, rather than to a sibling source branch.
+    if super::super::directive::has_safe_variant_directive(
+        source,
+        call_start,
+        comments,
+        sql,
+        &opts.safe_directive,
+    ) {
         return findings;
     }
     if statement.parse_failed && super::super::directive::contains_for_update(sql) {
@@ -83,7 +91,17 @@ pub(super) fn findings_for_file(
                 .copied()
                 .ok_or(anyhow::anyhow!("prepared SQL variant facts are missing"))?;
             output.extend(prepared_findings(
-                file, source, &call, statement, opts, catalog, dedup,
+                file,
+                source,
+                (
+                    &call,
+                    embedded.call_spans[call_index].0,
+                    &embedded.source_comment_spans,
+                ),
+                statement,
+                opts,
+                catalog,
+                dedup,
             ));
         }
     }

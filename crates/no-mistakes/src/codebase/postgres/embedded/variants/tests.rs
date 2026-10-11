@@ -1,7 +1,15 @@
 use super::*;
 use std::path::PathBuf;
+#[path = "tests/append_aliases.rs"]
+mod append_aliases;
+#[path = "tests/append_sites.rs"]
+mod append_sites;
+#[path = "tests/branch_correlation.rs"]
+mod branch_correlation;
 #[path = "tests/defensive.rs"]
 mod defensive;
+#[path = "tests/equivalent.rs"]
+mod equivalent;
 #[path = "tests/helper_effects.rs"]
 mod helper_effects;
 #[path = "tests/helpers.rs"]

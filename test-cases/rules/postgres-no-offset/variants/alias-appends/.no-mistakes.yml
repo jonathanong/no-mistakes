@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]

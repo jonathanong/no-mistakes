@@ -3,7 +3,7 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{Argument, CallExpression, Expression, Program, TemplateLiteral};
 use oxc_span::SourceType;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod bindings;
 mod call;
@@ -27,39 +27,6 @@ pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
-
-/// A SQL fragment returned from a builder or appended to a
-/// statement builder. These are deliberately separate from executed calls:
-/// structural policies can inspect them without treating builder code as an
-/// executed DML statement.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EmbeddedSqlFragment {
-    pub line: u32,
-    /// `None` records a proven SQL-builder append whose argument cannot be
-    /// recovered. Structural policies can then honor their fail-closed mode.
-    pub sql_text: Option<String>,
-    /// SQL-local positions of generated interpolation markers in `sql_text`.
-    pub recovered_placeholder_positions: Vec<(u32, u32)>,
-}
-
-/// Embedded-SQL facts for one TypeScript/JavaScript file.
-#[derive(Clone, PartialEq, Eq)]
-pub struct EmbeddedSqlFileFacts {
-    pub path: PathBuf,
-    pub executor_bindings: Vec<String>,
-    pub calls: Vec<EmbeddedSqlCall>,
-    /// Private call identities, parallel to `calls`; public summaries stay unchanged.
-    pub(crate) call_spans: Vec<(u32, u32)>,
-    pub fragments: Vec<EmbeddedSqlFragment>,
-    /// Private complete alternatives, parallel to the legacy fragment records.
-    pub(crate) fragment_variants: Vec<Vec<EmbeddedSqlVariant>>,
-    /// Configured `executor_factory_names` this file imports from the configured module.
-    pub matched_factory_names: Vec<String>,
-    /// Configured `executor_type_names` this file imports from the configured module.
-    pub matched_type_names: Vec<String>,
-    /// Relative imports of configured names, projected after the request resolver exists.
-    pub(crate) pending_relative: PendingRelativeScope,
-}
 
 /// Parse `source` and extract executor SQL call sites.
 pub fn extract_embedded_sql_from_source(
@@ -115,8 +82,14 @@ pub fn extract_embedded_sql_from_program(
         executor_bindings,
         calls: collected.calls,
         call_spans: collected.call_spans,
+        source_comment_spans: program
+            .comments
+            .iter()
+            .map(|comment| (comment.span.start, comment.span.end))
+            .collect(),
         fragments,
         fragment_variants: collected.fragment_variants,
+        fragment_sites: collected.fragment_sites,
         pending_relative: PendingRelativeScope {
             candidates: scoped.candidates,
             spans: scoped.spans,
@@ -128,6 +101,7 @@ pub fn extract_embedded_sql_from_program(
 }
 
 mod fragment_debug;
+pub use fragment_debug::{EmbeddedSqlFileFacts, EmbeddedSqlFragment};
 
 pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
     match call.arguments.first()? {

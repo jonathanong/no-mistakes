@@ -13,6 +13,42 @@ const hasOccurrenceKind = (occurrences, kind) =>
   );
 
 test(
+  "compiled source APIs retain selective foreign-key utility completeness",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("procedural-selective-fk-valid.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.equal(facts.statements.length, 3);
+    for (const statement of facts.statements) {
+      assert.equal(statement.kind, "doBlock");
+      assert.equal(statement.block.complete, true);
+      assert.deepEqual(statement.block.diagnostics, []);
+      assert.ok(hasOccurrenceKind(statement.block.occurrences, "utility"));
+    }
+    for (const name of [
+      "procedural-selective-fk-invalid-empty.sql",
+      "procedural-selective-fk-invalid-expression.sql",
+      "procedural-selective-fk-invalid-column.sql",
+      "procedural-selective-fk-invalid-duplicate.sql",
+      "procedural-selective-fk-invalid-on-update.sql",
+    ]) {
+      const invalid = await cjs.parsePostgresSql({ sql: fixture(name) });
+      assert.equal(invalid.statements[0].block.complete, false, name);
+      assert.ok(invalid.statements[0].block.diagnostics.length > 0, name);
+    }
+    const executable = await cjs.parsePostgresSql({
+      sql: fixture("procedural-selective-fk-executable.sql"),
+    });
+    assert.equal(executable.statements[0].block.complete, false);
+    assert.ok(hasOccurrenceKind(executable.statements[0].block.occurrences, "dynamicExecute"));
+    assert.ok(hasOccurrenceKind(executable.statements[0].block.occurrences, "dml"));
+  },
+);
+
+test(
   "compiled CJS and ESM source APIs retain safely attributed conditional occurrences",
   { skip: !compiled },
   async () => {
@@ -1310,6 +1346,7 @@ test(
     assert.deepEqual(facts.diagnostics, []);
     const context = {
       mandatory: false,
+      effectiveMandatory: true,
       underOr: false,
       underNot: true,
       underCase: false,
@@ -1385,6 +1422,52 @@ test(
       assert.equal(fact.context.underOther, true);
       assert.equal(fact.context.underNot, true);
     }
+  },
+);
+
+test(
+  "compiled source API exposes effective EXISTS conjunctiveness through NOT",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("query-exists-effective-mandatory.sql");
+    const facts = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 12);
+    const occurrences = facts.statements.map((statement) => {
+      const query = statement.kind === "insert" ? statement.insert.source.query : statement.query;
+      assert.equal(query.complete, true, statement.sql);
+      return query.exists;
+    });
+    assert.deepEqual(
+      occurrences
+        .slice(0, 9)
+        .map(([exists]) => [exists.effectiveNegated, exists.context.effectiveMandatory]),
+      [
+        [true, true],
+        [true, false],
+        [true, true],
+        [false, true],
+        [true, true],
+        [true, false],
+        [true, true],
+        [true, false],
+        [true, false],
+      ],
+    );
+    assert.deepEqual(
+      occurrences[9].map((exists) => exists.context.effectiveMandatory),
+      [true, false],
+    );
+    assert.notEqual(occurrences[9][0].scopeId, occurrences[9][1].scopeId);
+    for (const [exists] of occurrences.slice(10)) {
+      assert.equal(exists.effectiveNegated, null);
+      assert.equal(exists.context.effectiveMandatory, null);
+    }
+    assert.equal(occurrences[0][0].context.mandatory, false);
+    assert.equal(occurrences[0][0].context.effectiveMandatory, true);
   },
 );
 

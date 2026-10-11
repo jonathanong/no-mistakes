@@ -53,6 +53,7 @@ pub struct SqlVariantLocations {
     pub locking: Vec<super::super::LockingSelectMetadata>,
     pub conflicts: Vec<super::super::SqlConflictInsertFact>,
     pub conflict_error: Option<String>,
+    pub(crate) append_sites: Vec<u32>,
     pub(crate) bound_tables: Vec<(usize, String, SqlFactSite)>,
 }
 

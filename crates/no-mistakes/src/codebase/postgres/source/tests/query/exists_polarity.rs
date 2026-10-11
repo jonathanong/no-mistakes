@@ -418,3 +418,49 @@ fn nested_not_keeps_node_negation_and_exposes_effective_polarity() {
         assert_eq!(json["negated"], exists.negated);
     }
 }
+
+#[test]
+fn effective_mandatory_accounts_for_de_morgan_and_opaque_wrappers() {
+    let facts = facts("query-exists-effective-mandatory.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 12);
+    let expected = [
+        (Some(true), Some(true)),  // direct NOT EXISTS
+        (Some(true), Some(false)), // NOT (false AND EXISTS)
+        (Some(true), Some(true)),  // NOT (true OR EXISTS)
+        (Some(false), Some(true)), // double NOT
+        (Some(true), Some(true)),  // triple NOT
+        (Some(true), Some(false)), // nested OR beneath disjunctive AND
+        (Some(true), Some(true)),  // nested ORs beneath NOT
+        (Some(true), Some(false)), // ordinary OR
+        (Some(true), Some(false)), // projection, not WHERE
+    ];
+    for (statement, (negated, mandatory)) in facts.statements.iter().zip(expected) {
+        let occurrences = exists_in(statement);
+        assert_eq!(occurrences.len(), 1, "{}", statement.sql);
+        assert_eq!(
+            occurrences[0].effective_negated, negated,
+            "{}",
+            statement.sql
+        );
+        assert_eq!(
+            occurrences[0].context.effective_mandatory, mandatory,
+            "{}",
+            statement.sql
+        );
+    }
+
+    let branches = exists_in(&facts.statements[9]);
+    assert_eq!(branches.len(), 2);
+    assert_ne!(branches[0].scope_id, branches[1].scope_id);
+    assert_eq!(branches[0].context.effective_mandatory, Some(true));
+    assert_eq!(branches[1].context.effective_mandatory, Some(false));
+    for statement in &facts.statements[10..] {
+        let occurrence = &exists_in(statement)[0];
+        assert_eq!(occurrence.effective_negated, None);
+        assert_eq!(occurrence.context.effective_mandatory, None);
+    }
+    let json = serde_json::to_value(&branches[0]).unwrap();
+    assert_eq!(json["context"]["effectiveMandatory"], true);
+    assert_eq!(json["context"]["mandatory"], false);
+}

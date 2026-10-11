@@ -19,21 +19,24 @@ impl VariantFindingDedup {
     ) {
         if let Some(locations) = &facts.variant_locations {
             if let Some(position) = locations.position(site) {
-                let line = source
-                    .filter(|source| {
-                        crate::codebase::ts_source::matching_disable_directive(
-                            source,
-                            Some(locations.original_call_line),
-                            &finding.rule,
-                        )
-                        .is_some()
-                    })
-                    .map_or(position.source_line, |_| {
-                        locations.original_call_line as usize
-                    });
+                let disabled_call = source.is_some_and(|source| {
+                    crate::codebase::ts_source::matching_disable_directive(
+                        source,
+                        Some(locations.original_call_line),
+                        &finding.rule,
+                    )
+                    .is_some()
+                });
+                let line = if disabled_call {
+                    locations.original_call_line as usize
+                } else {
+                    position.source_line
+                };
                 move_line(&mut finding, line);
                 finding.source_offset = position.source_offset;
-                if !self.keep_at(&finding, position.source_offset) {
+                // Keep disabled executions for suppression accounting, without
+                // hiding another execution of the same SQL token.
+                if !disabled_call && !self.keep_at(&finding, position.source_offset) {
                     return;
                 }
             }

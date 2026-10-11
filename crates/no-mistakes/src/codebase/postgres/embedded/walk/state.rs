@@ -37,6 +37,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) next_seq: u32,
     pub(crate) track_order: bool,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
+    pub(crate) fragment_sites: Vec<Option<u32>>,
     pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) suppress_nested_builder_fragments: usize,
     pub(crate) variant_paths: Vec<Vec<(u64, u32)>>,
@@ -51,6 +52,7 @@ pub(crate) struct CollectedCalls {
     pub(crate) call_spans: Vec<(u32, u32)>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
+    pub(crate) fragment_sites: Vec<Option<u32>>,
     pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) confirmed_order: Vec<u32>,
@@ -83,6 +85,7 @@ pub(crate) fn collect_calls<'a>(
         track_order,
         fragments: Vec::new(),
         fragment_variants: Vec::new(),
+        fragment_sites: Vec::new(),
         suppress_nested_builder_fragments: 0,
         variant_paths: vec![Vec::new()],
         control_depth: 0,
@@ -98,6 +101,7 @@ pub(crate) fn collect_calls<'a>(
         pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,
         fragment_variants: visitor.fragment_variants,
+        fragment_sites: visitor.fragment_sites,
         pending_calls: visitor.pending_calls,
         confirmed_order: visitor.confirmed_order,
     }
@@ -109,6 +113,7 @@ impl ScopeVisitor<'_> {
         line: u32,
         sql_text: Option<String>,
         expression: Option<&oxc_ast::ast::Expression<'_>>,
+        append_site: Option<u32>,
     ) {
         let variants = expression
             .and_then(|expression| self.recover_variants(expression))
@@ -122,6 +127,7 @@ impl ScopeVisitor<'_> {
             .map(|value| value.publish())
             .collect();
         self.fragment_variants.push(variants);
+        self.fragment_sites.push(append_site);
         self.fragments.push(EmbeddedSqlFragment {
             line,
             sql_text,

@@ -4,18 +4,18 @@ pub type ImporterRecord = (Arc<Path>, Arc<str>, bool);
 
 /// Index mapping (source_file, exported_symbol) → list of files importing that symbol.
 pub struct SymbolIndex {
-    sources: HashMap<Arc<Path>, SourceIndex>,
+    sources: FxHashMap<Arc<Path>, SourceIndex>,
 }
 
 struct SourceIndex {
-    by_symbol: HashMap<Arc<str>, Vec<ImporterRecord>>,
+    by_symbol: FxHashMap<Arc<str>, Vec<ImporterRecord>>,
     file_importers: Vec<Arc<Path>>,
 }
 
 impl SymbolIndex {
     pub fn build(symbols_by_file: &HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>>) -> Self {
         let mut intern = SymbolIndexInterner::default();
-        let mut source_buckets = SourceBuckets::with_capacity(symbols_by_file.len());
+        let mut source_buckets = crate::fx::fx_map_with_capacity(symbols_by_file.len());
 
         for (importer, imports) in symbols_by_file {
             let importer = intern.path(importer);
@@ -106,11 +106,13 @@ impl SymbolIndex {
     }
 
     fn from_source_buckets(source_buckets: SourceBuckets) -> Self {
-        let mut sources = HashMap::with_capacity(source_buckets.len());
+        let mut sources = crate::fx::fx_map_with_capacity(source_buckets.len());
 
         for (source, entries) in source_buckets {
             let mut importers = Vec::with_capacity(entries.len());
-            let mut by_symbol = HashMap::with_capacity(entries.len());
+            // Many importer rows can share a symbol; grow by distinct keys
+            // instead of reserving a hash bucket for every import occurrence.
+            let mut by_symbol = fx_map();
             for (imported_name, importer) in entries {
                 importers.push(importer.0.clone());
                 by_symbol

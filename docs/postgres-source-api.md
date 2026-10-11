@@ -306,6 +306,18 @@ never promoted to mandatory predicates. Consumers must interpret these facts
 for their own policies; the parser does not prove authorization or tenant
 isolation.
 
+`context.effectiveMandatory` is a separate, nullable required-conjunct fact.
+It starts from the clause's mandatory status and accounts for wrapping `NOT`
+when descending through `AND` and `OR`: an `AND` under odd NOT is effectively
+disjunctive, while an `OR` under odd NOT is effectively conjunctive. Once an
+occurrence is optional it remains optional under further nesting. CASE,
+boolean tests, functions, comparisons, casts, and other opaque wrappers set it
+to `null`; consumers seeking a proof should require `true`. The syntactic
+`mandatory` and `underOr` flags are unchanged. For an EXISTS guard, combine
+`effectiveMandatory: true` with `effectiveNegated: true` and verify the
+occurrence belongs to the required WHERE scope; neither fact alone proves a
+consumer's replay policy.
+
 EXISTS facts expose the node's own `negated` flag, predicate context, child
 scope, and resolved references to outer relations. `correlated` describes those
 known qualified references; unqualified references cannot establish correlation
@@ -536,6 +548,13 @@ UTF-8 byte offsets, so a nested occurrence remains distinguishable from a
 top-level statement. Comments, dollar quoting, single-quoted encoding, quoted
 or schema-qualified names, and neighboring top-level statements retain their
 source boundaries. No PostgreSQL AST or execution policy is returned.
+
+PostgreSQL's selective `ON DELETE SET NULL (column)` and
+`ON DELETE SET DEFAULT (column)` forms also keep a nested static foreign key
+complete when the nonempty column list names only distinct referencing columns.
+The returned action and exact constraint source span are retained. Invalid or
+unsupported lists, including `ON UPDATE` lists, remain incomplete rather than
+silently becoming a different constraint.
 
 Safely attributed facts can coexist with incomplete procedural coverage.
 Malformed or unsupported `LOCK` forms retain explicit `other` source

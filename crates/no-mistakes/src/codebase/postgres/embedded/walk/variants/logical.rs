@@ -99,6 +99,7 @@ fn absent(mut value: Recovered) -> Recovered {
     value.sql.clear();
     value.origins.clear();
     value.positions.clear();
+    value.append_sites.clear();
     value.fragment = true;
     value.value = ValueKind::Absent;
     value

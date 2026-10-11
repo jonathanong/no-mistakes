@@ -1,7 +1,7 @@
-use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{
     placeholders, EmbeddedSqlSourcePosition, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS,
 };
+mod append_effects;
 mod conditional;
 mod conditions;
 pub(super) mod control;
@@ -15,6 +15,7 @@ mod limit;
 mod logical;
 use limit::bounded;
 mod origins;
+mod recovery;
 mod state;
 pub(super) mod switch;
 mod template;
@@ -37,6 +38,7 @@ pub(super) struct Recovered {
     pub fragment: bool,
     pub enumerated: bool,
     pub choices: Vec<(u64, u32)>,
+    pub append_sites: Vec<u32>,
 }
 
 impl Recovered {
@@ -50,6 +52,7 @@ impl Recovered {
             fragment: false,
             enumerated: false,
             choices: Vec::new(),
+            append_sites: Vec::new(),
         }
     }
     pub(super) fn truth(&self) -> bool {
@@ -81,6 +84,7 @@ impl Recovered {
         );
         self.sql
             .push_str(&placeholders::renumber_placeholders(&suffix.sql, offset));
+        self.merge_append_sites(suffix);
         self.fragment |= suffix.fragment;
         self.enumerated |= suffix.enumerated;
         for choice in &suffix.choices {
@@ -88,6 +92,20 @@ impl Recovered {
                 self.choices.push(*choice);
             }
         }
+    }
+    pub(super) fn merge_append_sites(&mut self, other: &Self) {
+        for site in &other.append_sites {
+            if !self.append_sites.contains(site) {
+                self.append_sites.push(*site);
+            }
+        }
+    }
+    pub(super) fn same_value(&self, other: &Self) -> bool {
+        let mut left = self.clone();
+        let mut right = other.clone();
+        left.append_sites.clear();
+        right.append_sites.clear();
+        left == right
     }
     pub(super) fn publish(self) -> EmbeddedSqlVariant {
         let sql_source_offsets = origins::rewrite(&self.sql, &self.origins, 0, true);
@@ -99,6 +117,7 @@ impl Recovered {
             line: self.line,
             sql_source_positions: self.positions,
             recovered_placeholder_positions,
+            append_sites: self.append_sites,
         }
     }
 }
@@ -135,61 +154,4 @@ fn combine(left: Vec<Recovered>, right: Vec<Recovered>) -> Option<Vec<Recovered>
         }
     }
     bounded(out)
-}
-
-impl ScopeVisitor<'_> {
-    pub(super) fn recover_variants(
-        &self,
-        expression: &oxc_ast::ast::Expression<'_>,
-    ) -> Option<Vec<Recovered>> {
-        if self.loop_depth > 0 {
-            return None;
-        }
-        let mut recovered = Vec::new();
-        for path in &self.variant_paths {
-            let values = expression::recover(self, expression, 8, path)?;
-            recovered.extend(values.into_iter().map(|mut value| {
-                for choice in path {
-                    if !value.choices.contains(choice) {
-                        value.choices.push(*choice);
-                    }
-                }
-                value
-            }));
-        }
-        bounded(recovered)
-    }
-    pub(super) fn with_variant_paths(&self, values: Vec<Recovered>) -> Option<Vec<Recovered>> {
-        let paths: Vec<Recovered> = self
-            .variant_paths
-            .iter()
-            .map(|choices| {
-                let mut value = Recovered::empty(1);
-                value.choices = choices.clone();
-                value
-            })
-            .collect();
-        // Choice-only suffixes do not change the physical mapping.
-        let mut result = Vec::new();
-        for value in values {
-            for path in &paths {
-                let path: &Recovered = path;
-                if value.choices.iter().any(|(id, arm)| {
-                    path.choices
-                        .iter()
-                        .any(|(other, branch)| id == other && arm != branch)
-                }) {
-                    continue;
-                }
-                let mut value = value.clone();
-                for choice in &path.choices {
-                    if !value.choices.contains(choice) {
-                        value.choices.push(*choice);
-                    }
-                }
-                result.push(value);
-            }
-        }
-        bounded(result)
-    }
 }

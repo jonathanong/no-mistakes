@@ -7,6 +7,12 @@ use super::super::artifact_types::ArtifactValue;
 use super::super::value_primitives::OrderedJson;
 use regex::Regex;
 use std::collections::BTreeMap;
+use std::sync::LazyLock;
+
+static MATRIX_REFERENCE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\$\{\{\s*matrix\.([A-Za-z_][\w-]*)\s*\}\}")
+        .expect("well-formed matrix reference regex")
+});
 
 /// Resolves a raw string (an artifact `name`/`pattern`/`artifact-ids`/
 /// `repository`/`run-id`) against an optional job matrix: a literal with no
@@ -25,10 +31,8 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
         };
     }
 
-    let reference_pattern =
-        Regex::new(r"\$\{\{\s*matrix\.([A-Za-z_][\w-]*)\s*\}\}").expect("well-formed regex");
     let mut referenced_axes: Vec<String> = Vec::new();
-    for captures in reference_pattern.captures_iter(raw) {
+    for captures in MATRIX_REFERENCE_PATTERN.captures_iter(raw) {
         let axis = captures[1].to_string();
         if !referenced_axes.contains(&axis) {
             referenced_axes.push(axis);
@@ -44,7 +48,10 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
             raw: raw.to_string(),
         };
     }
-    if reference_pattern.replace_all(raw, "").contains("${{") {
+    if MATRIX_REFERENCE_PATTERN
+        .replace_all(raw, "")
+        .contains("${{")
+    {
         return ArtifactValue::Dynamic {
             raw: raw.to_string(),
         };
@@ -52,21 +59,45 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
 
     let mut expanded_values = vec![raw.to_string()];
     for axis in &referenced_axes {
-        let expression = Regex::new(&format!(
-            r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
-            regex::escape(axis)
-        ))
-        .expect("well-formed regex");
         let items = &axes[axis];
-        expanded_values = expanded_values
-            .into_iter()
-            .flat_map(|value| {
-                items
-                    .iter()
-                    .map(|item| expression.replace_all(&value, item.as_str()).into_owned())
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        if items.iter().any(|item| item.contains('$')) {
+            // `replace_all` interprets `$0`/`$1`/`$$` in its replacement
+            // string. Retain that behavior for axes whose values need it.
+            let expression = Regex::new(&format!(
+                r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
+                regex::escape(axis)
+            ))
+            .expect("well-formed regex");
+            expanded_values = expanded_values
+                .into_iter()
+                .flat_map(|value| {
+                    items
+                        .iter()
+                        .map(|item| expression.replace_all(&value, item.as_str()).into_owned())
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+        } else {
+            expanded_values = expanded_values
+                .into_iter()
+                .flat_map(|value| {
+                    items
+                        .iter()
+                        .map(|item| {
+                            MATRIX_REFERENCE_PATTERN
+                                .replace_all(&value, |captures: &regex::Captures<'_>| {
+                                    if &captures[1] == axis.as_str() {
+                                        item.clone()
+                                    } else {
+                                        captures[0].to_string()
+                                    }
+                                })
+                                .into_owned()
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+        }
     }
 
     let omitted_axis_multiplier: u32 = axes

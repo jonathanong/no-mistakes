@@ -13,15 +13,34 @@ impl ScopeVisitor<'_> {
         let mut effects = Effects {
             visitor: self,
             found: false,
+            prefixes: None,
         };
         effects.visit_expression(expression);
         effects.found
+    }
+
+    pub(super) fn forget_effectful_sql_prefixes(&mut self, expression: &Expression<'_>) {
+        let mut effects = Effects {
+            visitor: self,
+            found: false,
+            prefixes: Some(Vec::new()),
+        };
+        effects.visit_expression(expression);
+        let prefixes = effects.prefixes.unwrap();
+        for (name, identity, aliases) in prefixes {
+            if aliases {
+                self.apply_builder_effect(name, identity, None, false, true);
+            } else {
+                self.mark_dynamic(&name);
+            }
+        }
     }
 }
 
 struct Effects<'visitor, 'source> {
     visitor: &'visitor ScopeVisitor<'source>,
     found: bool,
+    prefixes: Option<Vec<(String, Option<u32>, bool)>>,
 }
 
 impl Effects<'_, '_> {
@@ -35,7 +54,7 @@ impl Effects<'_, '_> {
                     .is_some_and(|values| values.iter().any(|value| value.value == ValueKind::Sql))
         })
     }
-    fn appends_existing_builder(&self, call: &CallExpression<'_>) -> bool {
+    fn appended_builders(&self, call: &CallExpression<'_>) -> Vec<(String, Option<u32>)> {
         let receiver = match unwrap_ts_wrappers(&call.callee) {
             Expression::StaticMemberExpression(member) if member.property.name == "append" => {
                 &member.object
@@ -43,39 +62,66 @@ impl Effects<'_, '_> {
             Expression::ComputedMemberExpression(member) if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(property) if property.value == "append") => {
                 &member.object
             }
-            _ => return false,
+            _ => return Vec::new(),
         };
         self.visitor
             .builder_result_names(receiver)
-            .iter()
-            .any(|name| self.known_sql_binding(name))
+            .into_iter()
+            .filter(|name| self.known_sql_binding(name))
+            .map(|name| {
+                let identity = self
+                    .visitor
+                    .lookup(&name)
+                    .and_then(|binding| binding.builder_identity);
+                (name, identity)
+            })
+            .collect()
+    }
+    fn collect_binding(&mut self, name: &str) {
+        if self.known_sql_binding(name) {
+            self.found = true;
+            if let Some(prefixes) = &mut self.prefixes {
+                prefixes.push((name.to_string(), None, false));
+            }
+        }
     }
 }
 
 impl<'a> Visit<'a> for Effects<'_, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        self.found |= self
+        let effects = self
             .visitor
             .parameter_helper_effect(call)
-            .is_some_and(|effects| !effects.is_empty())
-            || self.appends_existing_builder(call);
-        if !self.found {
+            .unwrap_or_default();
+        let effects = effects
+            .into_iter()
+            .chain(self.appended_builders(call))
+            .collect::<Vec<_>>();
+        self.found |= !effects.is_empty();
+        if let Some(prefixes) = &mut self.prefixes {
+            prefixes.extend(
+                effects
+                    .into_iter()
+                    .map(|(name, identity)| (name, identity, true)),
+            );
+        }
+        if !self.found || self.prefixes.is_some() {
             walk::walk_call_expression(self, call);
         }
     }
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
         if let AssignmentTarget::AssignmentTargetIdentifier(id) = &assignment.left {
-            self.found |= self.known_sql_binding(id.name.as_str());
+            self.collect_binding(id.name.as_str());
         }
-        if !self.found {
+        if !self.found || self.prefixes.is_some() {
             walk::walk_assignment_expression(self, assignment);
         }
     }
     fn visit_update_expression(&mut self, update: &UpdateExpression<'a>) {
         if let SimpleAssignmentTarget::AssignmentTargetIdentifier(id) = &update.argument {
-            self.found |= self.known_sql_binding(id.name.as_str());
+            self.collect_binding(id.name.as_str());
         }
-        if !self.found {
+        if !self.found || self.prefixes.is_some() {
             walk::walk_update_expression(self, update);
         }
     }

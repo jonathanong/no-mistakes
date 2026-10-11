@@ -49,7 +49,7 @@ export function lockRows(ids: string[]) {
 Fix: add `ORDER BY` so every locker visits rows in the same order, add
 `SKIP LOCKED` when skipping already-locked rows is correct, or put
 `/* deadlock-safe: ... */` or `-- deadlock-safe` in a comment within 200
-characters before the call when a unique key makes the lock single-row.
+bytes before the call when a unique key makes the lock single-row.
 
 ```ts
 query(`SELECT * FROM t WHERE id = ANY($1) ORDER BY id FOR UPDATE`);
@@ -58,6 +58,12 @@ query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE SKIP LOCKED`);
 /* deadlock-safe: single row via unique key */
 query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE`);
 ```
+
+For complete SQL alternatives, a configured `safeDirective` inside branch SQL
+authorizes only versions containing that comment. A marker in a shared SQL
+prefix applies to every version that includes the prefix. An executor-level
+source comment within 200 bytes before the actual invocation covers the whole
+call.
 
 Use `no-mistakes-disable-next-line postgres-lock-ordering` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
@@ -168,7 +174,7 @@ export function lockAny(sql: string, ids: string[]) {
 
 Fix: pass a SQL literal or a configured trusted tagged template so the lock can
 be checked, add the configured safe directive (`/* deadlock-safe: ... */`) within
-200 characters before the call when callers are known to be safe, suppress the
+200 bytes before the call when callers are known to be safe, suppress the
 line with `no-mistakes-disable-next-line postgres-lock-ordering`, or set
 `unanalyzableSql: ignore` to restore the earlier skip.
 

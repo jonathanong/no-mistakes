@@ -56,6 +56,24 @@ pub(super) fn bench_symbol_index_build_and_lookup(c: &mut Criterion) {
             black_box((symbol_importers.len(), file_importers.len()))
         });
     });
+    let missing_source = PathBuf::from("/benchmark/src/missing.ts");
+    assert!(index.importers_of(&source, "missing-symbol").is_none());
+    assert!(index.importers_of(&missing_source, "symbol-0").is_none());
+    // Isolate borrowed table probes from the owned file-importer projection.
+    group.throughput(Throughput::Elements(1));
+    for (label, path, symbol) in [
+        ("lookup_hit", source.as_path(), "symbol-0"),
+        ("lookup_missing_symbol", source.as_path(), "missing-symbol"),
+        (
+            "lookup_missing_source",
+            missing_source.as_path(),
+            "symbol-0",
+        ),
+    ] {
+        group.bench_function(label, |b| {
+            b.iter(|| black_box(index.importers_of(black_box(path), black_box(symbol))));
+        });
+    }
     group.finish();
 }
 
@@ -63,41 +81,53 @@ pub(super) fn bench_symbol_index_distinct_target_build(c: &mut Criterion) {
     if !shard::should_run(shard::QUERY) {
         return;
     }
-    const DISTINCT_TARGETS: usize = 2_048;
-
-    let imports: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = (0..DISTINCT_TARGETS)
-        .map(|target| {
-            (
-                PathBuf::from("/benchmark/src/importer.ts"),
-                vec![(
-                    PathBuf::from(format!("/benchmark/src/target-{target}.ts")),
-                    format!("symbol-{target}"),
-                    format!("local-{target}"),
-                    false,
-                )],
-            )
-        })
-        .fold(HashMap::new(), |mut imports, (importer, mut entries)| {
-            imports.entry(importer).or_default().append(&mut entries);
-            imports
-        });
-    let index = no_mistakes::codebase::dependencies::graph::SymbolIndex::build(&imports);
-    assert_eq!(
-        index
-            .file_importers(&PathBuf::from("/benchmark/src/target-0.ts"))
-            .len(),
-        1
-    );
-
+    const DISTINCT_KEYS: usize = 2_048;
     let mut group = c.benchmark_group("symbol_index");
-    group.throughput(Throughput::Elements(DISTINCT_TARGETS as u64));
-    group.bench_function("distinct_target_build", |b| {
-        b.iter(|| {
-            black_box(
-                no_mistakes::codebase::dependencies::graph::SymbolIndex::build(black_box(&imports)),
-            )
+    group.throughput(Throughput::Elements(DISTINCT_KEYS as u64));
+    // Keep both many-source and one-source/many-symbol construction controls.
+    for distinct_sources in [true, false] {
+        let source = PathBuf::from("/benchmark/src/source.ts");
+        let entries = (0..DISTINCT_KEYS)
+            .map(|key| {
+                (
+                    if distinct_sources {
+                        PathBuf::from(format!("/benchmark/src/target-{key}.ts"))
+                    } else {
+                        source.clone()
+                    },
+                    format!("symbol-{key}"),
+                    format!("local-{key}"),
+                    false,
+                )
+            })
+            .collect::<Vec<_>>();
+        let imports = HashMap::from([(PathBuf::from("/benchmark/src/importer.ts"), entries)]);
+        let index = no_mistakes::codebase::dependencies::graph::SymbolIndex::build(&imports);
+        let first_source = if distinct_sources {
+            PathBuf::from("/benchmark/src/target-0.ts")
+        } else {
+            source
+        };
+        assert_eq!(index.file_importers(&first_source).len(), 1);
+        assert_eq!(
+            index.importers_of(&first_source, "symbol-0").unwrap().len(),
+            1
+        );
+        let label = if distinct_sources {
+            "distinct_target_build"
+        } else {
+            "distinct_symbol_build"
+        };
+        group.bench_function(label, |b| {
+            b.iter(|| {
+                black_box(
+                    no_mistakes::codebase::dependencies::graph::SymbolIndex::build(black_box(
+                        &imports,
+                    )),
+                )
+            });
         });
-    });
+    }
     group.finish();
 }
 

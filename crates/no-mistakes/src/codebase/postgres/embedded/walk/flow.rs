@@ -22,6 +22,7 @@ pub(super) fn returned<'a>(visitor: &mut ScopeVisitor<'a>, statement: &ReturnSta
             crate::codebase::ts_source::byte_offset_to_line(visitor.source, start as usize),
             Some(sql),
             statement.argument.as_ref(),
+            None,
         );
         visitor.suppress_nested_builder_fragments += 1;
         walk::walk_return_statement(visitor, statement);

@@ -7,10 +7,42 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
     visitor: &mut ScopeVisitor<'a>,
     statement: &SwitchStatement<'a>,
 ) {
+    let effectful = visitor.expression_mutates_builder(&statement.discriminant)
+        || statement.cases.iter().any(|case| {
+            case.test
+                .as_ref()
+                .is_some_and(|test| visitor.expression_mutates_builder(test))
+        });
     visitor.visit_expression(&statement.discriminant);
     visitor.push_scope();
     for case in &statement.cases {
         resolve::record_statements(&case.consequent, visitor);
+    }
+    if effectful {
+        // Failed labels execute cumulatively before the selected label. Their
+        // mutations cannot use independent branch-entry SQL snapshots.
+        visitor.forget_effectful_sql_prefixes(&statement.discriminant);
+        for case in &statement.cases {
+            if let Some(test) = &case.test {
+                visitor.forget_effectful_sql_prefixes(test);
+            }
+        }
+        visitor.invalidate_execution_variants();
+        visitor.with_loop(|visitor| {
+            for case in &statement.cases {
+                if let Some(test) = &case.test {
+                    visitor.visit_expression(test);
+                }
+                visitor.with_control_flow(|visitor| {
+                    for statement in &case.consequent {
+                        visitor.visit_statement(statement);
+                    }
+                });
+            }
+        });
+        visitor.pop_scope();
+        visitor.invalidate_execution_variants();
+        return;
     }
     let entry = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();

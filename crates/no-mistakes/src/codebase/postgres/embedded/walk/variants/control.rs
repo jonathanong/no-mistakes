@@ -4,6 +4,7 @@ use crate::fx::FxHashMap;
 use oxc_ast::ast::{ConditionalExpression, IfStatement, LogicalExpression};
 use oxc_ast_visit::Visit;
 mod paths;
+mod truthiness;
 pub(in crate::codebase::postgres::embedded::walk) use paths::branch_paths;
 
 pub(super) type Snapshot = Vec<FxHashMap<String, Option<Vec<Recovered>>>>;
@@ -80,8 +81,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
     visitor.visit_expression(&statement.test);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
-    let yes = branch_paths(&paths, id, truth_arm);
-    let no = branch_paths(&paths, id, 1 - truth_arm);
+    let (yes, no) = truthiness::branches(visitor, &statement.test, &paths, id, truth_arm);
     let taken = paths::taken(&yes, &no).or(taken);
     visitor.restore_variants(&paths::restrict(&original, &yes));
     visitor.variant_paths = yes;
@@ -111,8 +111,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
     visitor.visit_expression(&expression.test);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
-    let yes = branch_paths(&paths, id, truth_arm);
-    let no = branch_paths(&paths, id, 1 - truth_arm);
+    let (yes, no) = truthiness::branches(visitor, &expression.test, &paths, id, truth_arm);
     let taken = paths::taken(&yes, &no).or(taken);
     visitor.restore_variants(&paths::restrict(&original, &yes));
     visitor.variant_paths = yes;
@@ -158,8 +157,8 @@ pub(in crate::codebase::postgres::embedded::walk) fn logical<'a>(
     visitor.visit_expression(&expression.left);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
-    let right_paths = branch_paths(&paths, id, right_arm);
-    let omitted_paths = branch_paths(&paths, id, 1 - right_arm);
+    let (right_paths, omitted_paths) =
+        truthiness::logical_branches(visitor, expression, &paths, id, right_arm);
     let take_right = paths::taken(&right_paths, &omitted_paths).or(take_right);
     visitor.restore_variants(&paths::restrict(&original, &right_paths));
     visitor.variant_paths = right_paths;

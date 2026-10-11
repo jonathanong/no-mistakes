@@ -1,6 +1,8 @@
 use super::super::ScopeVisitor;
 use super::conditions::{choice_id, truth};
-use super::{alternatives, bounded, expression, Recovered};
+use super::limit::binary_alternatives;
+use super::{bounded, expression, Recovered};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ConditionalExpression, Expression};
 
 pub(super) fn recover(
@@ -11,6 +13,17 @@ pub(super) fn recover(
 ) -> Option<Vec<Recovered>> {
     if visitor.expression_mutates_builder(&branch.test) {
         return None;
+    }
+    // Both arms read the same binding. Its existing choices still matter,
+    // but the guard (including recovered boolean paths) adds no SQL choice.
+    if matches!(
+        (
+            unwrap_ts_wrappers(&branch.consequent),
+            unwrap_ts_wrappers(&branch.alternate)
+        ),
+        (Expression::Identifier(left), Expression::Identifier(right)) if left.name == right.name
+    ) {
+        return expression::recover(visitor, &branch.consequent, depth - 1, constraints).map(mark);
     }
     let (id, truth_arm) = choice_id(visitor, &branch.test, branch.span.start);
     let constrained = constraints
@@ -51,7 +64,7 @@ pub(super) fn recover(
                 constraints,
             )?
         };
-        return alternatives(left, right).map(mark);
+        return binary_alternatives(left, right, id).map(mark);
     }
     let mut yes = constraints.to_vec();
     yes.push((id, truth_arm));
@@ -65,7 +78,7 @@ pub(super) fn recover(
     for value in &mut right {
         value.choices.push((id, 1 - truth_arm));
     }
-    alternatives(left, right)
+    binary_alternatives(left, right, id).map(mark)
 }
 fn mark(mut values: Vec<Recovered>) -> Vec<Recovered> {
     for value in &mut values {

@@ -82,7 +82,12 @@ impl ScopeVisitor<'_> {
                 return None;
             }
             let suffix = self.recover_variants(super::super::super::first_call_argument(call)?)?;
-            combine(prefix, suffix)
+            combine(prefix, suffix).map(|mut versions| {
+                for version in &mut versions {
+                    version.append_sites.push(call.span.start);
+                }
+                versions
+            })
         })();
         Some((id.name.to_string(), variants))
     }

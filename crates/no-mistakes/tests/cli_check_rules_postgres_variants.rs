@@ -1,19 +1,30 @@
 use std::path::PathBuf;
 use std::process::Command;
+#[path = "cli_check_rules_postgres_variants/append_contributors.rs"]
+mod append_contributors;
+#[path = "cli_check_rules_postgres_variants/branch_correlation.rs"]
+mod branch_correlation;
 
 fn check(rule: &str, name: &str) -> serde_json::Value {
+    check_with_suppressed(rule, name, false)
+}
+
+fn check_with_suppressed(rule: &str, name: &str, include_suppressed: bool) -> serde_json::Value {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules")
         .join(rule)
         .join("variants")
         .join(name);
-    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
+    command
         .args(["check", "--format", "json", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(root.join(".no-mistakes.yml"))
-        .output()
-        .unwrap();
+        .arg(root.join(".no-mistakes.yml"));
+    if include_suppressed {
+        command.arg("--include-suppressed");
+    }
+    let output = command.output().unwrap();
     serde_json::from_slice(&output.stdout)
         .unwrap_or_else(|error| panic!("{error}: {}", String::from_utf8_lossy(&output.stderr)))
 }
@@ -321,4 +332,116 @@ fn a_complete_but_invalid_alternative_keeps_each_rules_parse_failure_policy() {
         assert_eq!(findings[0]["target"], target, "{rule}: {report}");
         assert_eq!(findings[0]["line"], 2, "{rule}: {report}");
     }
+}
+
+#[test]
+fn shared_sql_tokens_preserve_active_executions_and_suppression_accounting_in_both_orders() {
+    for (name, disabled_line) in [
+        ("mixed-suppression-first", 4),
+        ("mixed-suppression-last", 5),
+    ] {
+        let report = check_with_suppressed("postgres-no-offset", name, true);
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), 1, "{name}: {report}");
+        assert_eq!(findings[0]["line"], 2, "{report}");
+        assert_eq!(findings[0]["target"], "offset", "{report}");
+        let suppressed = report["suppressed"].as_array().unwrap();
+        assert_eq!(suppressed.len(), 1, "{name}: {report}");
+        assert_eq!(suppressed[0]["line"], disabled_line, "{report}");
+        assert_eq!(suppressed[0]["directive"]["kind"], "nextLine", "{report}");
+    }
+}
+
+#[test]
+fn lock_safe_directives_authorize_their_branch_or_the_actual_executor_invocation() {
+    for (name, line) in [
+        ("safe-directive-first", 3),
+        ("safe-directive-last", 2),
+        ("safe-directive-identifier", 3),
+        ("safe-directive-disabled", 2),
+    ] {
+        let report = check("postgres-lock-ordering", name);
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), 1, "{name}: {report}");
+        assert_eq!(findings[0]["line"], line, "{report}");
+        assert_eq!(findings[0]["target"], "lock-ordering", "{report}");
+    }
+    for name in ["safe-directive-call", "safe-directive-prefix"] {
+        let report = check("postgres-lock-ordering", name);
+        assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    }
+}
+
+#[test]
+fn unexecuted_shared_fragments_preserve_active_appends_and_account_for_disabled_hosts() {
+    for (name, disabled_line) in [
+        ("mixed-suppression-first", 6),
+        ("mixed-suppression-last", 7),
+    ] {
+        let report = check_with_suppressed("postgres-sql-shape-policy", name, true);
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), 1, "{name}: {report}");
+        assert_eq!(findings[0]["line"], 2, "{report}");
+        assert_eq!(findings[0]["target"], "banned-function-call", "{report}");
+        let suppressed = report["suppressed"].as_array().unwrap();
+        assert_eq!(suppressed.len(), 1, "{name}: {report}");
+        assert_eq!(suppressed[0]["line"], disabled_line, "{report}");
+    }
+}
+
+#[test]
+fn ordinary_append_alias_mutations_preserve_real_offset_origins_or_fail_closed() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/variants/alias-appends");
+    let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
+    let mut expected = source
+        .lines()
+        .enumerate()
+        .filter_map(|(index, line)| {
+            line.split_once("// findings: ")
+                .map(|(_, target)| (index + 1, target.trim().to_string()))
+        })
+        .collect::<Vec<_>>();
+    expected.sort();
+    let report = check("postgres-no-offset", "alias-appends");
+    let mut actual = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            (
+                finding["line"].as_u64().unwrap() as usize,
+                finding["target"]
+                    .as_str()
+                    .unwrap()
+                    .split('#')
+                    .next()
+                    .unwrap()
+                    .to_string(),
+            )
+        })
+        .collect::<Vec<_>>();
+    actual.sort();
+    assert_eq!(actual, expected, "{report}");
+}
+
+#[test]
+fn effectful_switch_labels_keep_queries_inside_and_after_the_switch_unanalyzable() {
+    let report = check("postgres-lock-ordering", "switch-label-effects");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{report}");
+    assert_eq!(findings[0]["line"], 6, "{report}");
+    assert_eq!(findings[1]["line"], 8, "{report}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding["target"] == "unanalyzable"),
+        "{report}"
+    );
+}
+
+#[test]
+fn equivalent_physical_branches_do_not_exhaust_the_concrete_version_cap() {
+    let report = check("postgres-bounded-statements", "equivalent-branches");
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
 }

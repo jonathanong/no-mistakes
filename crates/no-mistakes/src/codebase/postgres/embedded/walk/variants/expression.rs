@@ -105,6 +105,7 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
             visitor.functions.imported_sql_tags(),
         ),
         choices: Vec::new(),
+        append_sites: Vec::new(),
         enumerated: false,
     }])
 }

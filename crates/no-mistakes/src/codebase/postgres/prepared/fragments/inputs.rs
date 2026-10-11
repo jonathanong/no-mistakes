@@ -4,6 +4,7 @@ use crate::fx::FxHashSet;
 pub(super) struct Input<'a> {
     pub line: u32,
     pub original_line: u32,
+    pub append_site: Option<u32>,
     pub sql: &'a str,
     pub binds: &'a [(u32, u32)],
     pub origins: &'a [u32],
@@ -45,6 +46,7 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<Input<'_>> {
             out.push(Input {
                 line: fragment.line,
                 original_line: fragment.line,
+                append_site: file.fragment_sites.get(index).copied().flatten(),
                 sql,
                 binds: &fragment.recovered_placeholder_positions,
                 origins,
@@ -54,6 +56,7 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<Input<'_>> {
             out.extend(variants.iter().map(|variant| Input {
                 line: variant.line,
                 original_line: fragment.line,
+                append_site: file.fragment_sites.get(index).copied().flatten(),
                 sql: &variant.sql_text,
                 binds: &variant.recovered_placeholder_positions,
                 origins: &variant.sql_source_offsets,

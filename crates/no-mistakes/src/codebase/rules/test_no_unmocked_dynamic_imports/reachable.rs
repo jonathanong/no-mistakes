@@ -16,6 +16,7 @@ mod deferred;
 pub(super) struct CachedFileFacts {
     pub(super) source: String,
     pub(super) dynamic_imports: Vec<ast::DynamicImport>,
+    pub(super) mock_specifiers: Vec<String>,
 }
 
 pub(super) struct ReachableFinding {
@@ -74,7 +75,7 @@ pub(super) struct ReachableContext<'a> {
     pub(super) file_cache: Option<&'a DashMap<PathBuf, Arc<CachedFileFacts>>>,
 }
 
-fn get_or_cache_file(
+pub(super) fn get_or_cache_file(
     file: &PathBuf,
     cache: Option<&DashMap<PathBuf, Arc<CachedFileFacts>>>,
 ) -> Result<Arc<CachedFileFacts>> {
@@ -88,6 +89,7 @@ fn get_or_cache_file(
         let arc = Arc::new(CachedFileFacts {
             source,
             dynamic_imports: facts.dynamic_imports,
+            mock_specifiers: facts.mock_specifiers,
         });
         cache.insert(file.clone(), arc.clone());
         return Ok(arc);
@@ -98,6 +100,7 @@ fn get_or_cache_file(
     Ok(Arc::new(CachedFileFacts {
         source,
         dynamic_imports: facts.dynamic_imports,
+        mock_specifiers: facts.mock_specifiers,
     }))
 }
 

@@ -13,6 +13,8 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod helper_mocks;
+
 pub(super) struct Request<'a> {
     pub(super) root: &'a Path,
     pub(super) config: &'a NoMistakesConfig,
@@ -74,6 +76,15 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         resolver,
         Some(graph_files),
     ));
+    mocks.extend(helper_mocks::collect(helper_mocks::Request {
+        test_file: &file,
+        graph,
+        graph_files,
+        visible_files,
+        resolver,
+        shared,
+        excluded: &mocks,
+    }));
     let mut direct_findings = Vec::new();
     {
         let mut check_context = DynamicCheckContext {

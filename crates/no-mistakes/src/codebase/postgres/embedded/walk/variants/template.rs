@@ -40,6 +40,7 @@ pub(super) fn recover(
             positions: source_positions::piece(raw, decoded, line, quasi.value.cooked.is_none()),
             fragment: true,
             choices: Vec::new(),
+            append_sites: Vec::new(),
             enumerated: false,
         };
         versions = combine(versions, vec![piece])?;
@@ -57,6 +58,7 @@ pub(super) fn recover(
                             value.sql = placeholders::internal_placeholder(1);
                             value.origins = vec![expr.span().start; value.sql.len()];
                             value.positions.clear();
+                            value.append_sites.clear();
                             value.line =
                                 byte_offset_to_line(visitor.source, expr.span().start as usize);
                         }
@@ -107,7 +109,13 @@ pub(super) fn call(
             return combine(
                 prefix,
                 expression::recover(visitor, first_call_argument(call)?, depth, constraints)?,
-            );
+            )
+            .map(|mut versions| {
+                for version in &mut versions {
+                    version.append_sites.push(call.span.start);
+                }
+                versions
+            });
         }
         if trusted(object) && property == "raw" {
             let arg = first_call_argument(call)?;

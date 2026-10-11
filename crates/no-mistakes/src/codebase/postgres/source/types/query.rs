@@ -122,6 +122,9 @@ pub enum PostgresSqlQueryColumnResolution {
 #[serde(rename_all = "camelCase")]
 pub struct PostgresSqlPredicateContext {
     pub mandatory: bool,
+    /// Whether this occurrence is a required conjunct after NOT inverts
+    /// enclosing AND/OR operators. None means an opaque wrapper prevents proof.
+    pub effective_mandatory: Option<bool>,
     pub under_or: bool,
     pub under_not: bool,
     pub under_case: bool,

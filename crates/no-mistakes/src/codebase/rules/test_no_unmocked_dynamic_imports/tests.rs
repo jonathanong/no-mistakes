@@ -12,6 +12,8 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod imported_helpers;
+mod mock_cut;
 mod mock_specifiers;
 mod visibility;
 
@@ -84,7 +86,9 @@ fn fixture_reports_unmocked_transitive_and_nonliteral_dynamic_imports() {
         f.file == "tests/jest-setup-leak.test.mts"
             && f.target.as_deref() == Some("src/jest-setup-target.mts")
     }));
-    assert!(!findings.iter().any(|f| {
+    // A separate test mocks this target, but that cannot cover this test's
+    // unmocked path to the same source import.
+    assert!(findings.iter().any(|f| {
         f.file == "src/next-dynamic-component.mts"
             && f.target.as_deref() == Some("src/dynamic-leaf.mts")
     }));

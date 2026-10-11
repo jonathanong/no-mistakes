@@ -4,7 +4,9 @@ use crate::codebase::postgres::postgres_sql_paths;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
+mod diagnostic;
 mod fragments;
+pub(super) use diagnostic::finding;
 
 pub(super) fn scan(
     root: &Path,
@@ -120,16 +122,17 @@ pub(super) fn scan(
                 &opts.banned_functions,
                 |line| line.max(1),
             ) {
-                dedup.push(
+                fragment_findings.push_complete(
                     &mut findings,
                     file,
                     crate::codebase::postgres::statements::SqlFactSite::Function(index),
                     source.as_deref(),
                     finding,
+                    &mut dedup,
                 );
             }
             if opts.fail_unanalyzable && file.parse_failed {
-                dedup.push(
+                fragment_findings.push_complete(
                     &mut findings,
                     file,
                     crate::codebase::postgres::statements::SqlFactSite::Origin,
@@ -140,6 +143,7 @@ pub(super) fn scan(
                         "SQL could not be analyzed for shape policy",
                         opts.shapes.unanalyzable_target(),
                     ),
+                    &mut dedup,
                 );
                 continue;
             }
@@ -151,7 +155,14 @@ pub(super) fn scan(
                     select_index,
                     |line| line.max(1),
                 ) {
-                    dedup.push(&mut findings, file, site, source.as_deref(), finding);
+                    fragment_findings.push_complete(
+                        &mut findings,
+                        file,
+                        site,
+                        source.as_deref(),
+                        finding,
+                        &mut dedup,
+                    );
                 }
             }
             for (site, finding) in
@@ -159,7 +170,14 @@ pub(super) fn scan(
                     line.max(1)
                 })
             {
-                dedup.push(&mut findings, file, site, source.as_deref(), finding);
+                fragment_findings.push_complete(
+                    &mut findings,
+                    file,
+                    site,
+                    source.as_deref(),
+                    finding,
+                    &mut dedup,
+                );
             }
         }
     }
@@ -174,16 +192,4 @@ pub(super) fn scan(
             && left.target == right.target
     });
     Ok(findings)
-}
-
-pub(super) fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
-    RuleFinding {
-        source_offset: None,
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line,
-        message: format!("{file}:{line}: {message}"),
-        import: None,
-        target: Some(target.to_string()),
-    }
 }

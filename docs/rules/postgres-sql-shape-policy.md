@@ -22,6 +22,11 @@ once. Every complete
 branching call is checked, up to 16 versions. A banned shape in one version,
 such as `NOT IN (SELECT ...)`, is reported even when its sibling version uses
 an allowed shape. Branch-fragment lines retain their suppression locations.
+An executor-line suppression also covers findings from the append occurrences
+that contributed to that execution. Another append occurrence that reuses the
+same SQL constant or fragment remains checked, including when its findings
+point to the same physical SQL token. A directive on that shared SQL token's
+line suppresses the clause wherever it is reused.
 Unparseable SQL or dynamic SQL without complete alternatives, including builder fragments, fails closed
 unless `unanalyzableSql` is `ignore`.
 

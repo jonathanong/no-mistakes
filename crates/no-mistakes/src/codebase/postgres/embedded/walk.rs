@@ -121,6 +121,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         let helper_effect = self.parameter_helper_effect(call);
+        let append_effect = self.append_alias_effect(call);
         if self.suppress_nested_builder_fragments == 0 {
             if let Some(argument) = call.arguments.first() {
                 if let Some(sql_text) = resolve::appended_builder_fragment(call, self) {
@@ -131,6 +132,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
                         ),
                         Some(sql_text),
                         argument.as_expression(),
+                        Some(call.span.start),
                     );
                 } else if resolve::is_builder_append(call, self) {
                     self.push_fragment(
@@ -140,6 +142,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
                         ),
                         None,
                         argument.as_expression(),
+                        Some(call.span.start),
                     );
                 }
             }
@@ -154,6 +157,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         resolve::record_executor_call(self, call);
         walk::walk_call_expression(self, call);
         self.apply_parameter_helper_effect(helper_effect);
+        self.apply_append_alias_effect(append_effect);
     }
 
     fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {

@@ -205,9 +205,12 @@ query(filtered
 ```
 
 Branch choices stay correlated across bindings assigned by the same branch;
-recovery does not invent combinations of mutually exclusive paths. Nested
-fragments contribute their own SQL text and generated placeholders are
-renumbered in composition order. Ordinary value interpolations remain binds.
+later truthy or falsy guards on those values reuse the same paths. Recovery
+does not invent combinations of mutually exclusive paths. Equivalent binary
+arms with the same recovered SQL and physical origins count once toward the
+version limit. Nested fragments contribute their own SQL text and generated
+placeholders are renumbered in composition order. Ordinary value interpolations
+remain binds.
 
 If any possible outcome is opaque, if there are more than 16 versions, or if
 recovery exceeds the depth limit of 8, no partial version set is published.
@@ -221,9 +224,18 @@ aliases remain `Dynamic`, retaining only verified leading SQL. When branch
 assignments lose the exact builder identity, the extractor conservatively
 invalidates the connected group of simple identifier aliases, including
 historical aliases.
+Ordinary `.append()` mutations clear finite-version snapshots cached by other
+tracked aliases to the same mutable builder. Branching calls that depend on a
+cleared snapshot stay `Dynamic`; the directly updated binding can retain
+recoverable alternatives. This fallback preserves the legacy `kind` and
+`sql_text` fields and their existing non-branching alias behavior. Replacing a
+binding with a fresh builder keeps that new builder independent. These alias
+rules do not apply to copied strings changed with `+=`.
 Conditional tests, logical left operands, and earlier template interpolations
 that mutate an existing SQL binding also stay `Dynamic` when recovery would
 otherwise consume its earlier snapshot later in the same expression.
+Switch discriminants or case labels that mutate an existing SQL binding also
+remain opaque because earlier labels can change the state of later cases.
 
 Each `EmbeddedSqlVariant` records `sql_text`, `line`,
 `sql_source_positions`, and `recovered_placeholder_positions`. Its source map
@@ -236,6 +248,14 @@ retains the physical lines and columns of SQL inside branch fragments, so
 findings and `no-mistakes-disable-*` directives apply there. A violation in
 any version is reported; repeated findings at the same physical location for
 the same rule and target are deduplicated and output stays deterministic.
+An executor-line suppression applies only to that invocation. A suppressed
+occurrence does not consume a shared finding's identity: another unsuppressed
+execution of the same SQL still reports the violation once. A directive on a
+shared SQL clause suppresses that physical clause wherever it is reused.
+Shape policies also inspect unexecuted builder fragments. An executor
+suppression covers the exact append occurrences that contributed to that
+execution, including appends in nested fragments and branch-assigned builders.
+Another append occurrence that reuses the same SQL token remains checked.
 Lock-ordering checks each version independently, so ordering on one path
 cannot make another path safe.
 
@@ -314,6 +334,13 @@ Each `EmbeddedSqlCall` records `kind`:
   the complete runtime statement. Without `variants`, consumers must use it
   only for conservative statement classification; with `variants`, each
   version is a complete statement to check.
+
+Fragment detection follows file-wide aliases to convergence, including cycles,
+default parameter values and synchronous helpers that can return trusted
+fragments. This projection deliberately ignores lexical scope collisions so it
+fails closed. Plain string-returning helpers remain bind values, as do calls to
+async functions or generators: their Promise or iterator results are not SQL
+fragments.
 
 Fragment detection follows file-wide aliases to convergence, including cycles,
 default parameter values and synchronous helpers that can return trusted

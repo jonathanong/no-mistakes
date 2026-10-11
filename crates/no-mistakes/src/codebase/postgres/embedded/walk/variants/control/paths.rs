@@ -4,6 +4,12 @@ use super::Snapshot;
 /// Unchanged values gain no new choices, so unrelated branches do not consume
 /// the version budget of a later SQL call.
 pub(super) fn restrict(snapshot: &Snapshot, paths: &[Vec<(u64, u32)>]) -> Snapshot {
+    // Empty execution paths already disable recovery in the arm. Keep its
+    // entry bindings so merely visiting an unreachable arm does not look
+    // like a mutation of every binding; actual writes still change their own.
+    if paths.is_empty() {
+        return snapshot.clone();
+    }
     snapshot
         .iter()
         .map(|scope| {

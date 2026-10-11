@@ -57,6 +57,7 @@ include!("edge_lang_frontends_bench.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy_vitest_setup.rs");
 include!("methods_lazy.rs");
+include!("methods_lazy_exclusions.rs");
 include!("lazy_import_types.rs");
 include!("lazy_import_entrypoints.rs");
 include!("lazy_imports.rs");

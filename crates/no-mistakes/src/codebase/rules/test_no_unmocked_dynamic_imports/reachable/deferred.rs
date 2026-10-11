@@ -1,4 +1,5 @@
 use super::super::checker::{evaluate_dynamic_import, DynamicCheckContext};
+use super::super::runtime::runtime_deps_excluding_mocks;
 use super::super::{runtime_deps, RULE_ID};
 use super::{collect_outcome, get_or_cache_file, is_under_skipped_dir};
 use super::{ReachableContext, ReachableResult};
@@ -16,16 +17,28 @@ pub(super) fn collect(
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     defer_suppression: bool,
 ) -> Result<ReachableResult> {
-    let test_reachable = dependency_cache
-        .entry(test_file.to_path_buf())
-        .or_insert_with(|| {
-            Arc::new(runtime_deps(
-                ctx.graph,
-                test_file.to_path_buf(),
-                ctx.file_universe,
-            ))
-        })
-        .clone();
+    // A mock factory replaces this file's body. The graph cut must happen
+    // during traversal, before descendants enter a cached closure. Closures
+    // with per-test mocks are deliberately not shared by a path-only cache.
+    let test_reachable = if mocks.is_empty() {
+        dependency_cache
+            .entry(test_file.to_path_buf())
+            .or_insert_with(|| {
+                Arc::new(runtime_deps(
+                    ctx.graph,
+                    test_file.to_path_buf(),
+                    ctx.file_universe,
+                ))
+            })
+            .clone()
+    } else {
+        Arc::new(runtime_deps_excluding_mocks(
+            ctx.graph,
+            test_file.to_path_buf(),
+            ctx.file_universe,
+            mocks,
+        ))
+    };
     let mut result = ReachableResult {
         findings: Vec::new(),
         covered: HashSet::new(),

@@ -1,6 +1,6 @@
 use super::{keyword_of, next_non_ws};
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::Token;
+use sqlparser::tokenizer::{Token, TokenWithSpan, Whitespace};
 
 mod column;
 mod members;
@@ -18,14 +18,38 @@ use members::action_list_matches_foreign_key;
 /// `SET DEFAULT (expression)` stay, so invalid SQL is not rewritten into a
 /// constraint PostgreSQL would accept.
 pub(super) fn rewrite_referential_set_column_lists(tokens: &mut Vec<Token>) {
+    for (open, end) in referential_set_column_list_ranges(tokens).into_iter().rev() {
+        tokens.drain(open..end);
+    }
+}
+
+/// Apply the same validated rewrite without shifting source positions used by
+/// the structured procedural parser. The original source and occurrence tokens
+/// remain available for reporting.
+pub(crate) fn rewrite_referential_set_column_lists_located(tokens: &mut [TokenWithSpan]) {
+    let plain = tokens
+        .iter()
+        .map(|token| token.token.clone())
+        .collect::<Vec<_>>();
+    for (open, end) in referential_set_column_list_ranges(&plain) {
+        for token in &mut tokens[open..end] {
+            token.token = Token::Whitespace(Whitespace::Space);
+        }
+    }
+}
+
+fn referential_set_column_list_ranges(tokens: &[Token]) -> Vec<(usize, usize)> {
+    let mut ranges = Vec::new();
     let mut index = 0;
     while index < tokens.len() {
         if let Some((open, end)) = referential_set_column_list_at(tokens, index) {
-            tokens.drain(open..end);
+            ranges.push((open, end));
+            index = end;
             continue;
         }
         index += 1;
     }
+    ranges
 }
 
 fn referential_set_column_list_at(tokens: &[Token], on_at: usize) -> Option<(usize, usize)> {

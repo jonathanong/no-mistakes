@@ -105,9 +105,7 @@ pub(crate) fn executor_call(
             .into_iter()
             .map(|version| version.publish())
             .fold(Vec::new(), |mut unique, variant| {
-                if !unique.contains(&variant) {
-                    unique.push(variant);
-                }
+                super::super::super::EmbeddedSqlVariant::push_unique(&mut unique, variant);
                 unique
             });
     }

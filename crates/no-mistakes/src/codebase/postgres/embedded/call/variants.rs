@@ -13,6 +13,32 @@ pub struct EmbeddedSqlVariant {
     pub line: u32,
     pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
     pub recovered_placeholder_positions: Vec<(u32, u32)>,
+    /// Private append occurrences that contributed SQL to this alternative.
+    pub(crate) append_sites: Vec<u32>,
+}
+
+impl EmbeddedSqlVariant {
+    pub(crate) fn push_unique(values: &mut Vec<Self>, value: Self) {
+        let index = values
+            .iter()
+            .position(|other| {
+                other.sql_text == value.sql_text
+                    && other.sql_source_offsets == value.sql_source_offsets
+                    && other.line == value.line
+                    && other.sql_source_positions == value.sql_source_positions
+                    && other.recovered_placeholder_positions
+                        == value.recovered_placeholder_positions
+            })
+            .unwrap_or_else(|| {
+                values.push(value.clone());
+                values.len() - 1
+            });
+        for site in value.append_sites {
+            if !values[index].append_sites.contains(&site) {
+                values[index].append_sites.push(site);
+            }
+        }
+    }
 }
 
 impl EmbeddedSqlCall {

@@ -8,6 +8,7 @@ mod locations;
 pub(crate) struct PreparedSqlFragment {
     pub line: u32,
     pub original_line: u32,
+    pub append_site: Option<u32>,
     pub statements: Arc<SqlStatementFileFacts>,
     pub enumerated: bool,
     pub physical_sites: FxHashMap<crate::codebase::postgres::statements::SqlFactSite, usize>,
@@ -28,6 +29,7 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<PreparedSqlFragment> {
             PreparedSqlFragment {
                 line: fragment.line,
                 original_line: fragment.original_line,
+                append_site: fragment.append_site,
                 statements: Arc::clone(statements),
                 enumerated: fragment.enumerated,
                 physical_sites: locations::collect(statements, sql, fragment.sql, fragment.origins),

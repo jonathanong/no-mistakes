@@ -1,6 +1,6 @@
 use super::super::{scope, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{CallExpression, Expression};
 
 impl ScopeVisitor<'_> {
@@ -40,33 +40,58 @@ impl ScopeVisitor<'_> {
         effect: Option<Vec<(String, Option<u32>)>>,
     ) {
         for (name, identity) in effect.into_iter().flatten() {
-            self.apply_one_helper_effect(name, identity);
+            self.apply_builder_effect(name, identity, None, false, false);
         }
     }
 
-    fn apply_one_helper_effect(&mut self, name: String, identity: Option<u32>) {
-        if let Some(identity) = identity {
-            for binding in self.scopes.iter_mut().flat_map(|scope| scope.values_mut()) {
-                if binding.builder_identity == Some(identity) {
-                    scope::mark_binding_dynamic_keep_known_statement(binding);
-                }
-            }
-        }
+    pub(in crate::codebase::postgres::embedded::walk) fn apply_builder_effect(
+        &mut self,
+        name: String,
+        identity: Option<u32>,
+        preserved_scope: Option<usize>,
+        variants_only: bool,
+        forget_prefix: bool,
+    ) {
         // Branch reassignments can lose exact identity. Historical alias
         // edges then fail closed for unknown members of this connected group;
         // a known replacement object keeps its independent facts.
-        let mut pending = vec![name];
+        let mut pending = vec![name.clone()];
         let mut seen = FxHashSet::default();
         while let Some(name) = pending.pop() {
             if seen.insert(name.clone()) {
                 if let Some(aliases) = self.builder_aliases.get(&name) {
                     pending.extend(aliases.iter().cloned());
                 }
-                let affected = self.lookup(&name).is_some_and(|binding| {
-                    identity.is_none() || binding.builder_identity.is_none()
-                });
-                if affected {
-                    self.mark_dynamic_keep_known_statement(&name);
+            }
+        }
+        let visible: FxHashMap<_, _> = seen
+            .iter()
+            .filter_map(|name| {
+                self.scopes
+                    .iter()
+                    .enumerate()
+                    .rev()
+                    .find(|(_, scope)| scope.contains_key(name))
+                    .map(|(index, _)| (name.clone(), index))
+            })
+            .collect();
+        for (index, scope) in self.scopes.iter_mut().enumerate() {
+            for (bound_name, binding) in scope {
+                let affected = identity
+                    .is_some_and(|identity| binding.builder_identity == Some(identity))
+                    || seen.contains(bound_name)
+                        && (identity.is_none() || binding.builder_identity.is_none())
+                        && (variants_only || visible.get(bound_name) == Some(&index));
+                let preserved = preserved_scope == Some(index) && *bound_name == name;
+                if affected && !preserved {
+                    if variants_only {
+                        binding.variants = None;
+                    } else {
+                        scope::mark_binding_dynamic_keep_known_statement(binding);
+                        if forget_prefix {
+                            binding.sql = None;
+                        }
+                    }
                 }
             }
         }

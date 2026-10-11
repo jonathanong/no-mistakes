@@ -7,11 +7,13 @@ no-mistakes tests impact src/api.mts --format json
 ```
 
 Use this when an agent already knows the changed files and wants a structured
-test set without parsing a git diff. Impact traversal is file-scoped today;
-`file#symbol` inputs are accepted for compatibility but the symbol suffix does
-not narrow the result.
+test set without parsing a git diff. Impact traversal is file-scoped by default.
+Pass `--symbols` to enable symbol traversal, then use `file#symbol` to start
+from that export and narrow the result. A `file#symbol` entrypoint without
+`--symbols` is an error.
 
-Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
+Key options: `--root`, `--config`, `--tsconfig`, `--symbols`, `--format`, and
+`--json`.
 Supported formats are `json`, `paths`, `commands`, `markdown`, and `md`.
 `explain` is reserved for `tests plan`, whose changed-file provenance gives
 that output its meaning.

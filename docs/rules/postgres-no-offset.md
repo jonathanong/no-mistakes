@@ -237,6 +237,10 @@ appended `OFFSET` is checked normally. Unknown builder arguments and dynamic
 appends retain the strict `unanalyzableSql` behavior. Put line suppression on
 the physical clause being suppressed. Existing directives on an executor call
 also suppress that call's recovered clauses through the common suppression pass.
+A directive on one executor call does not suppress another call that reuses
+the same SQL constant or fragment. Repeated unsuppressed executions report the
+shared OFFSET once; a directive on the shared OFFSET's physical line suppresses
+that clause wherever it is used.
 Prepared source failures retain their I/O kind; dispatch uses that captured
 outcome without checking filesystem state again.
 Source positions mark changes to the source-versus-SQL line offset. Between

@@ -180,6 +180,7 @@ impl Collector<'_, '_> {
     fn predicate_context(mandatory: bool) -> PostgresSqlPredicateContext {
         PostgresSqlPredicateContext {
             mandatory,
+            effective_mandatory: Some(mandatory),
             ..Default::default()
         }
     }
