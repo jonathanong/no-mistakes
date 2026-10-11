@@ -96,6 +96,7 @@ fn collect_projects(
             scope: project_scope(root, &project_path),
             include: project_includes(root, &facts, &configured_project, &project_path),
             exclude: prefix_globs(root, root, &configured_project.exclude),
+            declared_deadlines: Default::default(),
             vitest_setup: Vec::new(),
         });
     }

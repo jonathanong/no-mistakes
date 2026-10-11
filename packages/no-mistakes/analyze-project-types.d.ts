@@ -1,9 +1,5 @@
-import type {
-  CiEnvOptions,
-  CiImpactOptions,
-  CiTopologyOptions,
-  ImpactedChecksOptions,
-} from "./ci-types";
+import type { CiTopologyOptions } from "./workflow-topology-types";
+import type { CiEnvOptions, CiImpactOptions, ImpactedChecksOptions } from "./ci-types";
 import type { FetchesOptions, FlowOptions } from "./flow-types";
 import type { ImportUsagesOptions } from "./import-usage-types";
 import type { MermaidValidationOptions } from "./mermaid-types";
@@ -60,7 +56,10 @@ type BatchedReactUsagesOptions = Pick<
   "root" | "tsconfig" | "config" | "targets" | "include"
 > &
   Required<Pick<ProjectOptions, "target">>;
-type BatchedCheckOptions = Pick<CheckOptions, "root" | "tsconfig" | "config" | "includeSuppressed">;
+type BatchedCheckOptions = Pick<
+  CheckOptions,
+  "root" | "tsconfig" | "config" | "includeSuppressed" | "includeRunnerConfigDeadlines"
+>;
 type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
 type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
 type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;

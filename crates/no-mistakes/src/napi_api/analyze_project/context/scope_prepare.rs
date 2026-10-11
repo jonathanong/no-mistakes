@@ -52,8 +52,11 @@ impl PreparedScopePlan {
             .then(|| {
                 SharedCheckContext::prepare(
                     &root,
-                    traversal.config_path(),
-                    options.tsconfig.as_deref().map(Path::new),
+                    SharedCheckPreparationOptions {
+                        config_path: traversal.config_path(),
+                        tsconfig_path: options.tsconfig.as_deref().map(Path::new),
+                        deadlines: requested_deadline_evidence(options)?,
+                    },
                     traversal.visible_paths_arc(),
                     traversal.config(),
                     traversal.tsconfig(),

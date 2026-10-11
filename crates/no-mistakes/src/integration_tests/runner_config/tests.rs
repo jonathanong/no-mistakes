@@ -292,11 +292,13 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
         scope: Some("tests".to_string()),
         include: vec!["tests/**/*.test.ts".to_string()],
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     };
     let parsed = ParsedRunnerConfigs::with_files(BTreeMap::from([(
         config_path.clone(),
         RunnerConfigFileFacts {
+            unavailable: false,
             results: vec![ProjectResult {
                 framework: Framework::Vitest,
                 raw: "vitest.config.ts".to_string(),
@@ -320,6 +322,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
     ));
     let plan = PreparedIntegrationRunnerConfigs {
         root: root.clone(),
+        deadline_runners: Default::default(),
         specs: vec![RunnerConfigSpec {
             framework: Framework::Vitest,
             raw: "vitest.config.ts".to_string(),
@@ -476,3 +479,7 @@ fn configured_runner_config_dirs_collect_vitest_and_playwright_parents() {
     assert!(dirs.iter().any(|path| path.ends_with("apps/web")));
     assert!(dirs.iter().any(|path| path.ends_with("e2e")));
 }
+
+mod declared_deadlines;
+
+mod public_deadlines;

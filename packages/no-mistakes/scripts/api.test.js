@@ -270,10 +270,21 @@ test("programmatic API proxies object options through async native addon calls",
       /exactly one of file or files is required/,
     );
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
-    assert.deepEqual(await api.check({ tsconfig: "tsconfig.json", includeSuppressed: true }), {
-      command: "check",
-      options: { tsconfig: "tsconfig.json", includeSuppressed: true },
-    });
+    assert.deepEqual(
+      await api.check({
+        tsconfig: "tsconfig.json",
+        includeSuppressed: true,
+        includeRunnerConfigDeadlines: true,
+      }),
+      {
+        command: "check",
+        options: {
+          tsconfig: "tsconfig.json",
+          includeSuppressed: true,
+          includeRunnerConfigDeadlines: true,
+        },
+      },
+    );
     assert.equal((await api.resolveConfig({ root: "." })).command, "resolveConfig");
     assert.deepEqual(
       await api.validateMermaidMarkdown({ content: "diagram source", file: "docs/design.md" }),

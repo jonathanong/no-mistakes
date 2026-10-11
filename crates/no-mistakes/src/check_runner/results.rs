@@ -9,12 +9,16 @@ use no_mistakes::react_traits;
 use std::time::Duration;
 
 mod advisories;
+mod render;
+pub(crate) use render::json_value;
 pub(crate) mod suppression;
 #[cfg(test)]
 mod suppression_tests;
 
 pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,
+    pub(crate) runner_config_deadlines:
+        Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
     pub(crate) filesystem_files: &'a [std::path::PathBuf],
     pub(crate) sources: &'a no_mistakes::codebase::ts_source::SourceStore,
@@ -31,6 +35,8 @@ pub(crate) struct CheckResults {
     pub(crate) queues: Vec<CheckFinding>,
     pub(crate) rules: Vec<RuleFinding>,
     pub(crate) integration: Vec<IntegrationFinding>,
+    pub(crate) runner_config_deadlines:
+        Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
     pub(crate) advisories: Vec<RuleFinding>,
@@ -63,6 +69,7 @@ pub(crate) fn complete_domain_checks(results: DomainResults) -> Result<Completed
 pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
     let FinalizeInput {
         root,
+        runner_config_deadlines,
         config,
         filesystem_files,
         sources,
@@ -137,6 +144,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         queues: queues.findings,
         rules: rules.findings,
         integration: integration.findings,
+        runner_config_deadlines,
         codebase: codebase
             .findings
             .into_iter()
@@ -160,6 +168,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         queues: Vec::new(),
         rules: Vec::new(),
         integration: Vec::new(),
+        runner_config_deadlines: None,
         codebase: Vec::new(),
         warnings,
         advisories: Vec::new(),
@@ -176,38 +185,4 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
             ("filesystem_rules", Duration::ZERO),
         ],
     }
-}
-
-pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
-    let CheckResults {
-        react,
-        queues,
-        rules,
-        integration,
-        codebase,
-        warnings,
-        advisories,
-        suppressed,
-        include_suppressed,
-        timings,
-    } = results;
-    let _ = timings;
-    let mut value = serde_json::json!({
-        "react": react,
-        "queues": queues,
-        "rules": rules,
-        "integration": integration,
-        "codebase": codebase,
-        "warnings": warnings,
-        "advisories": advisories,
-    });
-    if *include_suppressed {
-        value["suppressed"] = serde_json::to_value(suppressed)
-            .expect("suppression accounting serialization never fails");
-    }
-    // Dependency feature unification can switch serde_json maps from sorted
-    // storage to insertion-ordered storage. Keep the public report stable in
-    // either configuration, including keys in nested finding objects.
-    value.sort_all_objects();
-    value
 }

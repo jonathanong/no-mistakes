@@ -69,6 +69,7 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     }];
 
@@ -94,6 +95,7 @@ fn target_metadata_uses_executable_project_name_only() {
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        declared_deadlines: Default::default(),
         vitest_setup: Vec::new(),
     }];
 

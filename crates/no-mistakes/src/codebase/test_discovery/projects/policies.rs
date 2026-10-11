@@ -2,7 +2,7 @@ use super::runner_config;
 use crate::codebase::test_discovery::TestRunner;
 use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 use crate::integration_tests::project_config::prefix_globs;
-use crate::integration_tests::types::{ConfigProject, VitestSetupDependency};
+use crate::integration_tests::types::{ConfigProject, DeclaredDeadlines, VitestSetupDependency};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -19,7 +19,15 @@ pub(in crate::codebase::test_discovery) fn explicit_policy_projects(
         .filter_map(|(name, policy)| {
             let config = single_config(configs);
             let workspace = workspace_config(config.as_deref());
-            configured_project(root, name, policy, config, workspace, Vec::new())
+            configured_project(
+                root,
+                name,
+                policy,
+                config,
+                workspace,
+                Vec::new(),
+                Default::default(),
+            )
         })
         .collect()
 }
@@ -39,6 +47,7 @@ pub(super) fn apply_explicit_policy_projects(
                     candidate.config.clone(),
                     candidate.workspace,
                     candidate.vitest_setup.clone(),
+                    candidate.declared_deadlines.clone(),
                 )
             })
             .collect::<Vec<_>>();
@@ -48,14 +57,15 @@ pub(super) fn apply_explicit_policy_projects(
                 config.clone(),
                 workspace_config(config.as_deref()),
                 Vec::new(),
+                Default::default(),
             )]
         } else {
             matching
         };
         let configured = configs
             .into_iter()
-            .filter_map(|(config, workspace, setups)| {
-                configured_project(root, name, policy, config, workspace, setups)
+            .filter_map(|(config, workspace, setups, deadlines)| {
+                configured_project(root, name, policy, config, workspace, setups, deadlines)
             })
             .collect::<Vec<_>>();
         if !configured.is_empty() {
@@ -72,6 +82,7 @@ fn configured_project(
     config: Option<String>,
     workspace: bool,
     vitest_setup: Vec<VitestSetupDependency>,
+    declared_deadlines: DeclaredDeadlines,
 ) -> Option<ConfigProject> {
     if policy.include.is_empty() {
         return None;
@@ -87,6 +98,7 @@ fn configured_project(
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
         vitest_setup,
+        declared_deadlines,
     })
 }
 

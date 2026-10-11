@@ -313,3 +313,6 @@ fn check_json_reports_both_markdown_rule_ids() {
         assert!(finding["message"].is_string(), "{finding:#?}");
     }
 }
+
+#[path = "check_deadline_evidence.rs"]
+mod check_deadline_evidence;

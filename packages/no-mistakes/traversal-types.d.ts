@@ -205,4 +205,6 @@ export interface ProjectOptions {
 export interface CheckOptions extends ProjectOptions {
   /** Add deterministic accounting for findings hidden by no-mistakes directives. */
   includeSuppressed?: boolean;
+  /** Add declared config evidence; absent slots never imply SDK defaults. */
+  includeRunnerConfigDeadlines?: boolean;
 }

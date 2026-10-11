@@ -4,7 +4,27 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub(super) fn merge_options(root: &Options, project: Options) -> Options {
+    let mut deadlines = project.deadlines.clone();
+    if project.deadline_extends.is_none()
+        || matches!(project.deadline_extends.as_ref(), Some(Extends::True))
+    {
+        let path = root
+            .deadlines
+            .case
+            .as_ref()
+            .or(root.deadlines.hook.as_ref())
+            .map(|declaration| declaration.path.clone())
+            .unwrap_or_default();
+        deadlines.inherit_missing(
+            &root.deadlines,
+            crate::integration_tests::types::DeadlineInheritance {
+                path,
+                project: project.name.clone(),
+            },
+        );
+    }
     Options {
+        deadlines,
         name: project.name.or_else(|| root.name.clone()),
         root: project.root.or_else(|| root.root.clone()),
         include: project.include.or_else(|| root.include.clone()),
@@ -32,6 +52,7 @@ pub(super) fn merge_options(root: &Options, project: Options) -> Options {
         setup_files_cleared: project.setup_files_cleared,
         global_setup_cleared: project.global_setup_cleared,
         extends: project.extends,
+        deadline_extends: project.deadline_extends,
         nested_test_scope: project.nested_test_scope,
         standalone_config: project.standalone_config,
         standalone_config_path: project.standalone_config_path,

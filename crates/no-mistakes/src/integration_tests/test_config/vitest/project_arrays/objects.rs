@@ -1,8 +1,11 @@
 use super::{shared, Ctx, ExprMap, ImportBinding, Options};
+use crate::integration_tests::test_config::deadlines;
 use crate::integration_tests::test_config::vitest::Extends;
+use crate::integration_tests::types::DeadlineUnknownReason;
 use crate::integration_tests::types::VitestSetupField;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
+use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 
 mod calls;
@@ -12,10 +15,15 @@ mod exports;
 mod members;
 mod merge;
 mod object_expressions;
+mod properties;
+mod property_options;
 mod setup_dependencies;
 mod setup_imports;
 mod static_members;
 
+pub(super) use config_extends::merged::{
+    default_options as raw_config_options, raw_failure_reason,
+};
 use config_extends::resolve_config_extends;
 use merge::merge_options;
 pub(super) use object_expressions::expression_object_options;
@@ -43,112 +51,48 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
     // object exists, regardless of declaration order.
     let nested_test = object.properties.iter().any(|property| {
         matches!(property, ObjectPropertyKind::ObjectProperty(property)
-            if !property.computed && !property.method
-                && shared::property_key_name(&property.key).as_deref() == Some("test"))
+            if shared::property_key_name(&property.key).as_deref() == Some("test"))
     });
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                if property.computed || property.method {
-                    continue;
-                }
-                let name = shared::property_key_name(&property.key);
-                if name.as_deref() == Some("test") {
-                    if let Some(mut test_options) = expression_object_options(&property.value, ctx)?
-                    {
-                        options.name = None;
-                        options.include = None;
-                        options.exclude = None;
-                        options.setup_files = None;
-                        options.global_setup = None;
-                        options.setup_files_cleared = false;
-                        options.global_setup_cleared = false;
-                        test_options.nested_test_scope = true;
-                        merge_options(&mut options, test_options);
-                    }
-                    continue;
-                }
-                let nested_test_scope = nested_test || options.nested_test_scope;
-                merge_property(&mut options, name, &property.value, nested_test_scope, ctx)?;
+                property_options::apply_property(&mut options, property, nested_test, ctx)?;
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
                 if let Some(imported) = spread_options(&spread.argument, ctx)? {
                     merge_options(&mut options, imported);
+                } else {
+                    deadlines::obscure(
+                        &mut options.deadlines,
+                        ctx.path,
+                        spread.span(),
+                        DeadlineUnknownReason::OpaqueSpread,
+                        true,
+                    );
+                    options.extends = Some(Extends::Unknown {
+                        path: ctx.path.to_path_buf(),
+                        span: Some((spread.span.start, spread.span.end)),
+                    });
+                    if !ctx.is_test_object {
+                        options.deadline_extends = options.extends.clone();
+                    }
                 }
             }
+        }
+    }
+    if let Some(Extends::Unknown { path, span }) = &options.deadline_extends {
+        let declaration = deadlines::unknown(
+            DeadlineUnknownReason::UnresolvedInheritance,
+            path,
+            span.map(|(start, end)| oxc_span::Span::new(start, end)),
+        );
+        if options.deadlines.case.is_none() {
+            options.deadlines.case = Some(declaration.clone());
+        }
+        if options.deadlines.hook.is_none() {
+            options.deadlines.hook = Some(declaration);
         }
     }
     resolve_config_extends(&mut options, ctx)?;
     Ok(options)
-}
-
-fn merge_property(
-    options: &mut Options,
-    name: Option<String>,
-    value: &Expression<'_>,
-    nested_test: bool,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<()> {
-    let resolved = shared::expression_value(value, &ctx.bindings);
-    match name.as_deref() {
-        Some("name") => options.name = static_project_name(resolved, ctx.source),
-        Some("root") => options.root = shared::optional_string(resolved, ctx.source),
-        Some("extends") => {
-            options.extends = match crate::codebase::ts_source::unwrap_ts_wrappers(resolved) {
-                Expression::BooleanLiteral(boolean) => Some(if boolean.value {
-                    Extends::True
-                } else {
-                    Extends::False
-                }),
-                _ => shared::optional_string(resolved, ctx.source).map(Extends::Config),
-            };
-        }
-        Some("include") => {
-            let include = shared::inferred_string_or_array(resolved, ctx.source, "include")?;
-            if include.is_empty() {
-                anyhow::bail!("expected string literal or string array for include");
-            }
-            options.include = Some(include);
-        }
-        Some("exclude") => {
-            options.exclude = Some(shared::inferred_string_or_array(
-                resolved, ctx.source, "exclude",
-            )?);
-        }
-        Some("setupFiles") if !nested_test => {
-            let setups = setup_dependencies(value, VitestSetupField::SetupFiles, ctx);
-            options.setup_files_cleared = setups.is_empty();
-            options.setup_files = Some(setups);
-        }
-        Some("globalSetup") if !nested_test => {
-            let setups = setup_dependencies(value, VitestSetupField::GlobalSetup, ctx);
-            options.global_setup_cleared = setups.is_empty();
-            options.global_setup = Some(setups);
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-fn static_project_name(value: &Expression<'_>, source: &str) -> Option<String> {
-    shared::optional_string(value, source).or_else(|| {
-        let Expression::ObjectExpression(object) =
-            crate::codebase::ts_source::unwrap_ts_wrappers(value)
-        else {
-            return None;
-        };
-        object
-            .properties
-            .iter()
-            .find_map(|property| match property {
-                ObjectPropertyKind::ObjectProperty(property)
-                    if !property.computed
-                        && !property.method
-                        && shared::property_key_name(&property.key).as_deref() == Some("label") =>
-                {
-                    shared::optional_string(&property.value, source)
-                }
-                _ => None,
-            })
-    })
 }
