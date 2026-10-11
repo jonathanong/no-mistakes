@@ -61,7 +61,7 @@ pub struct CallSitesReport {
     export: String,
     call_sites: Vec<CallSite>,
     #[serde(flatten)]
-    diagnostics: QueryDiagnostics,
+    diagnostics: std::sync::Arc<QueryDiagnostics>,
 }
 
 pub(crate) mod prepared;
@@ -106,6 +106,7 @@ pub(crate) struct PreparedCallSitesProjection<'a> {
     pub(crate) graph: &'a DepGraph,
     pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
     pub(crate) files: &'a [PathBuf],
+    pub(crate) diagnostics: &'a std::sync::Arc<QueryDiagnostics>,
 }
 
 fn project_sites(
@@ -152,6 +153,7 @@ fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
             graph: &analysis.graph,
             facts: &analysis.facts,
             files: analysis.files.indexable(),
+            diagnostics: &analysis.diagnostics,
         },
     )
 }
@@ -178,12 +180,11 @@ pub(crate) fn project_report(
             export_name
         }
     });
-    let call_sites = project_sites(root, file, canonical_export, &projection);
     Ok(CallSitesReport {
         file: rel_str(file, root),
         export: export_name.to_string(),
-        call_sites,
-        diagnostics: QueryDiagnostics::from_prepared(projection.files, projection.facts, root),
+        call_sites: project_sites(root, file, canonical_export, &projection),
+        diagnostics: projection.diagnostics.clone(),
     })
 }
 

@@ -6,6 +6,7 @@ fn partial_call_sites_keep_malformed_sibling_diagnostics_in_their_own_projection
     assert!(standalone["callSites"].as_array().unwrap().is_empty());
     assert_eq!(standalone["partial"], true);
     assert_eq!(standalone["incompleteFiles"].as_array().unwrap().len(), 2);
+    let used = ordinary_call_sites(&root, "target.ts", "used");
     let helper = ordinary_call_sites(&root, "ignored/helper.ts", "helper");
     assert_eq!(helper["incompleteFiles"].as_array().unwrap().len(), 3);
 
@@ -14,17 +15,20 @@ fn partial_call_sites_keep_malformed_sibling_diagnostics_in_their_own_projection
         &root,
         json!([
             {"type": "callSites", "file": "target.ts", "exportName": "unknown"},
+            {"type": "callSites", "file": "target.ts", "exportName": "used"},
             {"type": "callSites", "file": "ignored/helper.ts", "exportName": "helper"},
             {"type": "dependencies", "files": ["ignored/helper.ts"], "relationships": ["call"]}
         ]),
     );
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(results[0], standalone);
-    assert_eq!(results[1], helper);
+    assert_eq!(results[1], used);
+    assert_eq!(results[2], helper);
     assert_eq!(counts.len(), 5, "{counts:#?}");
     assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
     assert_call_batch_work(&observer, 5);
     assert_eq!(observer.snapshot().work.get("symbol_index.builds"), None);
+    assert_eq!(observer.snapshot().work["query_diagnostics.builds"], 2);
 }
 
 #[test]
@@ -57,5 +61,6 @@ fn partial_call_sites_keep_runner_helper_diagnostics_when_mixed_with_runner_repo
         // Runner evaluation parses configs and the recovered setup program
         // before session fact projection; the physical counts above include both.
         assert_call_batch_work(&observer, if mixed { 2 } else { 5 });
+        assert_eq!(observer.snapshot().work["query_diagnostics.builds"], 1);
     }
 }

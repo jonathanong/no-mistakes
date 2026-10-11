@@ -155,7 +155,7 @@ impl PreparedScope {
             stored.legacy_symbols.as_ref()
         }
         .with_context(|| format!("missing symbols for {}", file.display()))?;
-        let (files, graph) = self
+        let projection = self
             .ordinary_calls
             .as_ref()
             .and_then(|calls| calls.projection_for(&file))
@@ -166,9 +166,10 @@ impl PreparedScope {
             &parsed.export_name,
             symbols,
             crate::codebase::queries::call_sites::PreparedCallSitesProjection {
-                graph,
+                graph: &projection.graph,
                 facts: self.traversal.prepared_facts(),
-                files: files.indexable(),
+                files: projection.files.indexable(),
+                diagnostics: &projection.diagnostics,
             },
         )?;
         Ok(RawValue::from_string(crate::cli::json_string(&report))?)

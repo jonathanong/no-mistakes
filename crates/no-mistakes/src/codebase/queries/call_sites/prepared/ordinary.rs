@@ -1,4 +1,4 @@
-use super::{build_graph, ReversePrepared, Target};
+use super::{build_graph, prepare_diagnostics, ReversePrepared, Target};
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::ts_source::facts::TsFactMap;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -14,8 +14,14 @@ pub(crate) struct OrdinaryCallSitesPlan {
 }
 
 pub(crate) struct OrdinaryCallSites {
-    projections: Vec<(GraphFiles, std::sync::Arc<DepGraph>)>,
+    projections: Vec<OrdinaryCallSitesProjection>,
     projection_by_target: FxHashMap<PathBuf, usize>,
+}
+
+pub(crate) struct OrdinaryCallSitesProjection {
+    pub(crate) files: GraphFiles,
+    pub(crate) graph: std::sync::Arc<DepGraph>,
+    pub(crate) diagnostics: std::sync::Arc<super::super::QueryDiagnostics>,
 }
 
 impl OrdinaryCallSitesPlan {
@@ -108,7 +114,11 @@ impl OrdinaryCallSitesPlan {
                         facts,
                     )?)
                 };
-                Ok((files, graph))
+                Ok(OrdinaryCallSitesProjection {
+                    diagnostics: prepare_diagnostics(&self.targets[target], &files, facts),
+                    files,
+                    graph,
+                })
             })
             .collect::<anyhow::Result<_>>()?;
         Ok(OrdinaryCallSites {
@@ -119,9 +129,8 @@ impl OrdinaryCallSitesPlan {
 }
 
 impl OrdinaryCallSites {
-    pub(crate) fn projection_for(&self, file: &Path) -> Option<(&GraphFiles, &DepGraph)> {
+    pub(crate) fn projection_for(&self, file: &Path) -> Option<&OrdinaryCallSitesProjection> {
         let index = self.projection_by_target.get(file)?;
-        let (files, graph) = &self.projections[*index];
-        Some((files, graph))
+        self.projections.get(*index)
     }
 }

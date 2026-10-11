@@ -6,6 +6,7 @@ pub(super) struct CallSitesAnalysis {
     pub(super) facts: crate::codebase::ts_source::facts::TsFactMap,
     pub(super) graph: DepGraph,
     pub(super) files: crate::codebase::dependencies::graph::GraphFiles,
+    pub(super) diagnostics: std::sync::Arc<super::QueryDiagnostics>,
 }
 
 pub(super) fn prepare(target: &Target) -> anyhow::Result<CallSitesAnalysis> {
@@ -27,10 +28,24 @@ pub(super) fn prepare(target: &Target) -> anyhow::Result<CallSitesAnalysis> {
         &facts,
     )?;
     Ok(CallSitesAnalysis {
+        diagnostics: prepare_diagnostics(target, &prepared.graph_files, &facts),
         facts,
         graph,
         files: prepared.graph_files,
     })
+}
+
+fn prepare_diagnostics(
+    target: &Target,
+    files: &crate::codebase::dependencies::graph::GraphFiles,
+    facts: &crate::codebase::ts_source::facts::TsFactMap,
+) -> std::sync::Arc<super::QueryDiagnostics> {
+    target.session.record_work("query_diagnostics.builds", 1);
+    std::sync::Arc::new(super::QueryDiagnostics::from_prepared(
+        files.indexable(),
+        facts,
+        &target.root,
+    ))
 }
 
 fn build_graph(
