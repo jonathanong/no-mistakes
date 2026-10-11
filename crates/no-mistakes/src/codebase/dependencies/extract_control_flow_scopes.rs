@@ -103,6 +103,26 @@ fn visit_while_statement_per_item<'a>(collector: &mut ImportCollector, statement
 fn visit_do_while_statement_per_item<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "do");
     collector.visit_statement(&statement.body);
-    // `break`, `return`, or a thrown exception can skip even the first test.
-    with_conditional_execution(collector, true, |collector| collector.visit_expression(&statement.test));
+    // Only prove simple bodies: explicit exits can skip even the first test.
+    with_conditional_execution(collector, !do_body_reaches_test(&statement.body), |collector| collector.visit_expression(&statement.test));
+}
+
+fn do_body_reaches_test(statement: &Statement<'_>) -> bool {
+    match statement {
+        Statement::EmptyStatement(_)
+        | Statement::ExpressionStatement(_)
+        | Statement::VariableDeclaration(_)
+        | Statement::FunctionDeclaration(_)
+        | Statement::DebuggerStatement(_) => true,
+        Statement::BlockStatement(block) => block.body.iter().all(do_body_reaches_test),
+        Statement::IfStatement(branch) => {
+            do_body_reaches_test(&branch.consequent)
+                && branch.alternate.as_ref().is_none_or(do_body_reaches_test)
+        }
+        // An unlabeled continue in this body proceeds to the do-while test.
+        Statement::ContinueStatement(statement) => statement.label.is_none(),
+        // Nested loops, labels, switches and exception handling need a fuller
+        // completion model. Retain their conservative classification.
+        _ => false,
+    }
 }

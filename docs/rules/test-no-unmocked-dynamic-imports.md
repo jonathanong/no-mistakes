@@ -70,6 +70,10 @@ calls are included. Calls behind skipped or unknown conditions, such as
 `false && require('./mock-helper')`, do not supply mock coverage.
 The same applies to loop binding defaults and assignment targets when the
 loop has no iterations, and to a `do...while` test skipped by an early `break`.
+Tests of `do...while` loops with simple, normally completing bodies execute
+at least once, so their unconditional literal `require()` helpers do supply
+coverage. Unknown nested loop, label, switch, or exception-handling completion
+remains conservative.
 `require.resolve()` does not execute a helper.
 For a test matched by multiple selected projects, the rule checks its dynamic
 imports in each project context. A mock from one project's setup does not

@@ -1,6 +1,35 @@
 use super::*;
 
 #[test]
+fn do_while_tests_are_eager_only_when_the_body_reaches_them() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-executions/conditional-requires/do-while-facts.mts"));
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+    assert_eq!(
+        facts.eager_require_specifiers,
+        [
+            "node:assert",
+            "node:buffer",
+            "node:constants",
+            "node:crypto",
+            "node:dns",
+            "node:domain",
+            "node:events"
+        ]
+    );
+    assert_eq!(
+        facts
+            .imports
+            .iter()
+            .filter(|import| import.kind == ImportKind::Require)
+            .count(),
+        15
+    );
+}
+
+#[test]
 fn require_execution_facts_keep_edges_but_exclude_guarded_helpers() {
     let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-runner-executions/conditional-requires/execution-facts.mts"));
     let allocator = Allocator::default();

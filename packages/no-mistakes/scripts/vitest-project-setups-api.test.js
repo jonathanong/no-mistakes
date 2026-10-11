@@ -101,7 +101,7 @@ test(
 );
 
 test(
-  "compiled checks ignore skipped CommonJS helper mocks",
+  "compiled checks distinguish skipped and guaranteed CommonJS helper mocks",
   { skip: !compiled, timeout: 20_000 },
   async () => {
     const cjs = require("../index.js");
@@ -113,6 +113,10 @@ test(
     const options = { root: fixture, config: join(fixture, ".no-mistakes.yml") };
     const report = await cjs.check(options);
     assert.deepEqual(await esm.check(options), report);
+    const aggregateOptions = { ...options, reports: [{ type: "check" }] };
+    const aggregate = await cjs.analyzeProject(aggregateOptions);
+    assert.deepEqual(aggregate.reports[0].result, report);
+    assert.deepEqual(await esm.analyzeProject(aggregateOptions), aggregate);
     assert.deepEqual(report.warnings, []);
     assert.deepEqual(
       report.rules.map((finding) => [finding.file, finding.target]),
