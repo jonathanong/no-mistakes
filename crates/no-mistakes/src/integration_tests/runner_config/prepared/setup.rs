@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::test_no_unmocked_dynamic_imports::config as dynamic_config;
 
 pub(crate) fn prepare(
     root: &Path,
@@ -60,9 +61,11 @@ fn prepare_inner(
     visible_paths: &[PathBuf],
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
-    force_vitest: bool,
+    force_dynamic: bool,
 ) -> PreparedIntegrationRunnerConfigs {
     let mut specs = Vec::new();
+    let dynamic = force_dynamic
+        || config.rule_configured(crate::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS);
     add_framework_specs(
         &mut specs,
         root,
@@ -70,7 +73,7 @@ fn prepare_inner(
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
         visible_paths,
-        false,
+        dynamic && dynamic_config::needs_playwright_configs(config),
     );
     add_framework_specs(
         &mut specs,
@@ -79,9 +82,8 @@ fn prepare_inner(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         visible_paths,
-        force_vitest
+        (dynamic && dynamic_config::needs_vitest_configs(config))
             || !config.tests.playwright.route_coverage_sources.is_empty()
-            || config.rule_configured(crate::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
             || config
                 .tests
                 .playwright

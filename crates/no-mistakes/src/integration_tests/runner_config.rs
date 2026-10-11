@@ -53,9 +53,16 @@ pub(crate) struct RunnerConfigFileFacts {
 
 impl RunnerConfigFileFacts {
     pub(crate) fn vitest_projects(&self) -> Option<Result<Vec<ConfigProject>, String>> {
+        self.projects_for(Framework::Vitest)
+    }
+
+    pub(crate) fn projects_for(
+        &self,
+        framework: Framework,
+    ) -> Option<Result<Vec<ConfigProject>, String>> {
         self.results
             .iter()
-            .find(|result| result.framework == Framework::Vitest)
+            .find(|result| result.framework == framework)
             .map(|result| result.projects.clone())
     }
 }

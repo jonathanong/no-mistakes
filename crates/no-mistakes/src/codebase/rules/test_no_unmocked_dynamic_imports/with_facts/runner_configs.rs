@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 /// Compatibility entrypoints can receive facts without runner projections.
 /// Supplement only those config facts through the same request parser/store.
-pub(super) fn ensure(
+pub(crate) fn ensure(
     root: &Path,
     config: &NoMistakesConfig,
     catalog: &Arc<TsConfigCatalog>,

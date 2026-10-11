@@ -94,7 +94,7 @@ fn prepared_runner_deduplicates_config_parsing_and_supports_direct_fact_parsing(
     })
     .unwrap()
     .unwrap();
-    assert_eq!(facts.results.len(), 2);
+    assert_eq!(facts.results.len(), 1);
     assert!(facts.results.iter().all(|result| result.projects.is_ok()));
 }
 

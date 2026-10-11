@@ -68,14 +68,27 @@ pub fn run_check_with_facts_and_playwright(
         )?;
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    let prepared_tsconfig_catalog = prepared_tsconfig_catalog(
+    let prepared_tsconfig_catalog = std::sync::Arc::new(prepared_tsconfig_catalog(
         root,
         tsconfig_path,
         &prepared_tsconfig,
         visible,
         &sources,
         Some(&config),
-    );
+    ));
+    let supplemented = rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
+        .then(|| {
+            test_no_unmocked_dynamic_imports::supplement_runner_facts(
+                root,
+                &config,
+                &prepared_tsconfig_catalog,
+                shared,
+                &session,
+                &sources,
+            )
+        })
+        .flatten();
+    let shared = supplemented.as_ref().unwrap_or(shared);
     let visible_snapshot = config
         .rule_configured(FORBIDDEN_CALLS)
         .then(|| crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible));

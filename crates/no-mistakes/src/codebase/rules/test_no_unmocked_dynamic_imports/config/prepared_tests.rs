@@ -109,3 +109,71 @@ fn runner_setup_projection_requires_prepared_vitest_projects() {
         .to_string()
         .contains("missing prepared Vitest config projects"));
 }
+
+#[test]
+fn playwright_targets_reuse_prepared_runner_facts_and_ignore_unselected_vitest() {
+    use crate::codebase::analysis_session::AnalysisSession;
+    use crate::codebase::ts_resolver::TsConfigCatalog;
+    use std::sync::Arc;
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-project-setups",
+        ),
+    );
+    let config = crate::config::v2::load_v2_config(
+        &root,
+        Some(&root.join(".no-mistakes-playwright-config.yml")),
+    )
+    .unwrap();
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let runner = crate::integration_tests::runner_config::prepare_dynamic_configs(
+        &root,
+        &config,
+        &files,
+        Arc::new(TsConfigCatalog::forced(&root, Default::default(), None)),
+        Arc::clone(&sources),
+    );
+    let path = root.join("playwright.target.config.mts");
+    assert_eq!(runner.paths().collect::<Vec<_>>(), vec![&path]);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = AnalysisSession::new(Some(observer));
+    let facts = std::collections::BTreeMap::from([(
+        path.clone(),
+        runner
+            .parse_path_for_facts_with_session(&session, &path)
+            .unwrap(),
+    )]);
+    let reads = sources.physical_read_count();
+    for _ in 0..2 {
+        let prepared = prepare_with_runner_facts(&root, &config, &files, &sources, &facts).unwrap();
+        assert!(prepared.test_filter().is_match("web/covered.test.mts"));
+        assert_eq!(prepared.setup_data().len(), 1);
+        assert_eq!(
+            setup_contexts_for_test_precomputed(
+                "web/covered.test.mts",
+                prepared.setup_data(),
+                SelectedRunners::for_config(&config),
+            ),
+            vec![Vec::<PathBuf>::new()]
+        );
+    }
+    assert_eq!(sources.physical_read_count(), reads);
+    assert_eq!(session.work_snapshot().parse_attempts[&path], 1);
+    let missing = prepare_with_runner_facts(&root, &config, &files, &sources, &Default::default())
+        .err()
+        .expect("the project projection must come from the request owner");
+    assert!(missing
+        .to_string()
+        .contains("missing prepared playwright config projects"));
+    let failures = std::collections::BTreeMap::from([(
+        path.clone(),
+        runner
+            .parse_error(&path, "prepared fixture failure".to_string())
+            .unwrap(),
+    )]);
+    let error = prepare_with_runner_facts(&root, &config, &files, &sources, &failures)
+        .err()
+        .expect("prepared errors must be authoritative over the valid disk config");
+    assert_eq!(error.to_string(), "prepared fixture failure");
+}

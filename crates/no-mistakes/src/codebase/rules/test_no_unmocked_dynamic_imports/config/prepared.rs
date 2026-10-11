@@ -36,7 +36,13 @@ pub(super) fn prepare_inner(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&crate::codebase::check_facts::RunnerConfigFacts>,
 ) -> Result<PreparedConfig> {
-    let config_files = config_files_from_visible(root, config, visible_files);
+    let selected = super::SelectedRunners::for_config(config);
+    let config_files = config_files_from_visible(root, config, visible_files)
+        .into_iter()
+        .filter(|file| selected.includes(file.runner))
+        .collect::<Vec<_>>();
+    let targets =
+        super::rule_targets::prepare(root, config, facts.map(|facts| (visible_files, facts)))?;
     let visible_files = visible_files
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
@@ -53,13 +59,14 @@ pub(super) fn prepare_inner(
         config,
         &visible_files,
     )?);
-    setup_data.extend(super::rule_targets::playwright_setup_data(root, config)?);
+    setup_data.extend(targets.playwright_setup_data()?);
     Ok(PreparedConfig {
-        test_filter: super::filter::test_filter_from_config_files_with_sources(
+        test_filter: super::filter::test_filter_with_targets(
             root,
-            config,
             &config_files,
             Some(sources),
+            targets.includes,
+            targets.excludes,
         )?,
         setup_data,
     })

@@ -115,6 +115,18 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         (".no-mistakes-omitted.yml", vec!["web/covered.test.mts"]),
         (".no-mistakes-cleared.yml", vec!["web/covered.test.mts"]),
         (".no-mistakes-referenced.yml", vec!["web/covered.test.mts"]),
+        (
+            ".no-mistakes-playwright-invalid-vitest.yml",
+            vec!["web/covered.test.mts"],
+        ),
+        (
+            ".no-mistakes-playwright-config.yml",
+            vec!["web/covered.test.mts"],
+        ),
+        (
+            ".no-mistakes-mixed-config-runners.yml",
+            vec!["web/covered.test.mts"],
+        ),
     ] {
         let config =
             crate::config::v2::load_v2_config(&root, Some(&root.join(config_file))).unwrap();
@@ -133,6 +145,16 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
         assert_scoped_findings(&check(&root, &config, None).unwrap(), &expected);
         assert_scoped_findings(
             &check_with_facts(&root, &config, None, &facts).unwrap(),
+            &expected,
+        );
+        assert_scoped_findings(
+            &crate::codebase::rules::run_check_with_facts(
+                &root,
+                Some(&root.join(config_file)),
+                None,
+                &facts,
+            )
+            .unwrap(),
             &expected,
         );
     }

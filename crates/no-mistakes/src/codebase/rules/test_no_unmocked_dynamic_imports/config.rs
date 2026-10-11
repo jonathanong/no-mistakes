@@ -5,7 +5,7 @@ mod project_setups;
 mod rule_targets;
 mod standalone;
 mod vitest_setups;
-pub(super) use standalone::precompute_setup_data;
+pub(super) use standalone::prepare_standalone;
 
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -19,6 +19,8 @@ pub(super) use prepared::prepare_with_runner_facts;
 pub(super) use project_setups::{
     explicit_project_setup_data, setup_contexts_for_test_precomputed, SelectedRunners,
 };
+
+pub(crate) use project_setups::{needs_playwright_configs, needs_vitest_configs};
 
 pub struct ConfigSetupData {
     filter: TestFilter,

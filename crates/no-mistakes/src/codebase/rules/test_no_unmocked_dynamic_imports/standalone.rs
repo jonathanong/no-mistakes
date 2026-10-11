@@ -27,13 +27,14 @@ pub(crate) fn check_inner(
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     let file_cache: DashMap<PathBuf, Arc<reachable::CachedFileFacts>> = DashMap::new();
     let mut findings = Vec::new();
-    let setup_data = config::precompute_setup_data(root, config, &visible_files, tsconfig)?;
-    let test_files = matching_test_files(root, files, config)?;
+    let prepared = config::prepare_standalone(root, config, &visible_files, tsconfig)?;
+    let setup_data = prepared.setup_data();
+    let test_files = matching_test_files_with_filter(root, files, prepared.test_filter());
     let selected_runners = config::SelectedRunners::for_config(config);
     let setup_mock_map = precompute_setup_mock_map(
         root,
         &test_files,
-        &setup_data,
+        setup_data,
         selected_runners,
         &resolver,
         None,
@@ -48,7 +49,7 @@ pub(crate) fn check_inner(
         let facts = ast::extract(&file, &source)?;
         let rel_path = crate::codebase::ts_source::relative_slash_path(root, &file);
         let contexts =
-            config::setup_contexts_for_test_precomputed(&rel_path, &setup_data, selected_runners);
+            config::setup_contexts_for_test_precomputed(&rel_path, setup_data, selected_runners);
         tests.push((file, source, facts, contexts));
     }
     let context_mocks = setup_mocks::precompute_contexts(
@@ -160,15 +161,6 @@ pub(crate) fn remap_resolved_path(graph_files: Option<&GraphFiles>, path: PathBu
     graph_files
         .and_then(|files| files.visible_path(&path).map(Path::to_path_buf))
         .unwrap_or(path)
-}
-
-fn matching_test_files(
-    root: &Path,
-    files: &[PathBuf],
-    config: &NoMistakesConfig,
-) -> Result<Vec<PathBuf>> {
-    let filter = config::test_filter_from_visible(root, config, files)?;
-    Ok(matching_test_files_with_filter(root, files, &filter))
 }
 
 pub(crate) fn matching_test_files_with_filter(

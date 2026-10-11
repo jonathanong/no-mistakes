@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    configs: invalid-vitest.config.mts
+  playwright:
+    configs: playwright.target.config.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      playwright: [e2e]

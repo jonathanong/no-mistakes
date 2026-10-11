@@ -16,6 +16,7 @@ mod graph;
 pub use entrypoints::{check_with_facts, check_with_prepared_facts};
 mod per_test;
 mod runner_configs;
+pub(crate) use runner_configs::ensure as supplement_runner_facts;
 mod setup_contexts;
 mod setup_mocks;
 mod tsconfig_catalog;

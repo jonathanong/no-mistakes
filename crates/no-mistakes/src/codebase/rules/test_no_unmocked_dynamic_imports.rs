@@ -20,7 +20,8 @@ pub(crate) use standalone::{
 use std::path::Path;
 pub use with_facts::{check_with_facts, check_with_prepared_facts};
 pub(crate) use with_facts::{
-    check_with_prepared_facts_graph_and_session_with_suppression, PreparedFactsGraphRequest,
+    check_with_prepared_facts_graph_and_session_with_suppression, supplement_runner_facts,
+    PreparedFactsGraphRequest,
 };
 pub const RULE_ID: &str = "test-no-unmocked-dynamic-imports";
 

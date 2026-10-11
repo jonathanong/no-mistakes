@@ -78,6 +78,8 @@ is checked without Vitest setup mocks. Recovered Vitest setups follow the
 effective project's inheritance: `extends: true` inherits root setups,
 independent project config files and `extends: false` do not, and an explicit
 empty `setupFiles` list clears inherited setups.
+A Playwright-only target leaves unrelated Vitest configs unparsed, so an invalid
+Vitest config does not suppress findings from the selected Playwright project.
 Missing setup paths or a project without an `include` matcher report a
 configuration warning and skip the rule in aggregate checks.
 
