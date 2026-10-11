@@ -140,7 +140,8 @@ helpers. It merges them with setup files recovered from readable runner
 configs, then applies each project's include and exclude matchers independently.
 An explicit setup path must exist in the analysis file inventory, and a
 project with `setup_files` must have a nonempty `include` matcher; invalid or
-missing paths fail the check.
+missing paths report a configuration warning and skip the rule in aggregate
+checks rather than silently dropping the setup mock.
 
 ## Jest
 

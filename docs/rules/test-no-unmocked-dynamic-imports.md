@@ -63,7 +63,8 @@ tests:
 
 Setup paths are repository-root-relative. Setup mocks, including mocks in
 statically imported setup helpers, apply only to the project's matched tests.
-Missing setup paths or a project without an `include` matcher fail the check.
+Missing setup paths or a project without an `include` matcher report a
+configuration warning and skip the rule in aggregate checks.
 
 Caveat: only the bare `import(...)` form is recognized as a type carrier. A
 TS-wrapped specifier, e.g. `vi.mock(import('./dependency.mts') as unknown, factory)`,
