@@ -1,8 +1,6 @@
 //! Extend the prepared parser at ON CONFLICT; every expression is parsed once.
 use sqlparser::{
-    ast::{
-        ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, SetExpr, Statement,
-    },
+    ast::{ConflictTarget, DoUpdate, Expr, OnConflict, OnConflictAction, OnInsert, Statement},
     keywords::Keyword,
     parser::{Parser, ParserError},
     tokenizer::{Location, Token},
@@ -14,6 +12,7 @@ pub(super) mod expressions;
 mod markers;
 mod with;
 pub(in crate::codebase::postgres::source) use markers::prepare;
+pub(in crate::codebase::postgres::source) use with::inner_insert;
 
 pub(in crate::codebase::postgres::source) struct ConflictFacts {
     pub expressions: Vec<arbiter::Arbiter>,
@@ -200,20 +199,4 @@ fn parse_inner(
 
 fn keyword(token: &Token, expected: Keyword) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
-}
-
-pub(in crate::codebase::postgres::source) fn inner_insert(
-    statement: &mut Statement,
-) -> Option<&mut sqlparser::ast::Insert> {
-    match statement {
-        Statement::Insert(insert) => Some(insert),
-        Statement::Query(query) => match query.body.as_mut() {
-            SetExpr::Insert(statement) => inner_insert(statement),
-            _ => None,
-        },
-        Statement::Explain { statement, .. } | Statement::Prepare { statement, .. } => {
-            inner_insert(statement)
-        }
-        _ => None,
-    }
 }
