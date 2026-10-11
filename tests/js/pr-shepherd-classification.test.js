@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const notices = require("../../fixtures/pr-shepherd/bot-notices.json");
+const mixedNotices = require("../../fixtures/pr-shepherd/mixed-notices.json");
 
 const classifiers = [
   ["codex", () => import("../../.pr-shepherd/classification/codex-notices.mts")],
@@ -24,6 +25,14 @@ for (const [family, loadRule] of classifiers) {
         null,
       );
     }
+    // Mutable bot comments can acquire findings after a notice was first seen.
+    for (const notice of mixedNotices.filter((notice) => notice.name.startsWith(`${family}-`))) {
+      assert.equal(
+        rule({ ...notice, kind: "pr-comment", authorType: "Bot", id: notice.name }),
+        null,
+        notice.name,
+      );
+    }
   });
 }
 
@@ -40,7 +49,7 @@ test("notice markers alone do not suppress substantive comments", async () => {
     }),
     null,
   );
-  for (const marker of ["rate limited", "skip review"]) {
+  for (const marker of ["rate limited", "skip review", "review in progress"]) {
     assert.equal(
       coderabbit({
         ...item,
