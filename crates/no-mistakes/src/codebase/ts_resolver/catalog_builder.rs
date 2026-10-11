@@ -1,3 +1,22 @@
+use rayon::prelude::*;
+
+fn visible_real_paths(
+    paths: &[PathBuf],
+    canonicalize: impl Fn(&Path) -> Option<PathBuf> + Sync,
+) -> BTreeSet<PathBuf> {
+    if paths.len() < 128 || rayon::current_num_threads() == 1 {
+        return paths.iter().filter_map(|path| canonicalize(path)).collect();
+    }
+    // Rayon extends BTreeSet with incremental inserts; collect a Vec first so
+    // the standard iterator can sort once and bulk-build the final tree.
+    paths
+        .par_iter()
+        .filter_map(|path| canonicalize(path))
+        .collect::<Vec<_>>()
+        .into_iter()
+        .collect()
+}
+
 struct CatalogBuilder<'a> {
     root: PathBuf,
     root_real: PathBuf,
@@ -58,8 +77,17 @@ impl<'a> CatalogBuilder<'a> {
         Self {
             root,
             root_real,
-            visible: visible_paths.iter().map(|path| normalize_path(path)).collect(),
-            visible_real: visible_paths.iter().filter_map(|path| real_path(path)).collect(),
+            visible: if visible_paths.len() < 128 || rayon::current_num_threads() == 1 {
+                visible_paths.iter().map(|path| normalize_path(path)).collect()
+            } else {
+                visible_paths
+                    .par_iter()
+                    .map(|path| normalize_path(path))
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .collect()
+            },
+            visible_real: visible_real_paths(visible_paths, real_path),
             candidate_roots,
             sources,
             states: BTreeMap::new(),

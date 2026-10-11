@@ -37,3 +37,7 @@ mod import_classification_test_support;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "ts_resolver/tests/parallel_catalog.rs"]
+mod parallel_catalog_tests;
