@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 mod chr;
 mod recover;
-mod rewrite;
+pub(super) mod rewrite;
 mod source;
 pub(super) use chr::{expand_chr_encoded_sql, rewrite_chr_tokens};
 pub(crate) use source::LocatedStatement;

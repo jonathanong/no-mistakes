@@ -126,6 +126,12 @@ pub(super) fn prepare_block<'a>(
         // Occurrence spans are original-source offsets. These tokens are still body-local.
         super::procedural_omit::omit_non_sql(&mut prepared.tokens, &body, &block.occurrences);
     }
+    // sqlparser does not accept PostgreSQL's selective SET NULL/DEFAULT list.
+    // Keep the original occurrence inventory and source spans, while applying
+    // the same bounded foreign-key validation used by lenient DDL parsing.
+    crate::codebase::postgres::parse::rewrite_referential_set_column_lists_located(
+        &mut prepared.tokens,
+    );
     super::conditional::prepare(&mut prepared.tokens);
     // Nested parsing replaces diagnostics, then restores these header notes.
     push_empty_conditions(&mut block, &walked.empty_headers);

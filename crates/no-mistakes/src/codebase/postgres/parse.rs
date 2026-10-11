@@ -14,6 +14,7 @@ mod lock_strength;
 pub(super) mod operator_boundary;
 mod prepared;
 pub(crate) use lenient::parse_postgres_sql_with_function_sources;
+pub(crate) use lenient::rewrite::rewrite_referential_set_column_lists_located;
 pub(crate) use lenient::LocatedStatement;
 pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
