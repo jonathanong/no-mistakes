@@ -351,7 +351,10 @@ fn changed_test_files_require_explicit_execution_instead_of_inventory_presence()
         ["tests/executed.test.mts", "tests/partial.test.mts"]
     );
     for row in &report.selected_observed_tests {
-        assert_eq!(row.matched_files, [row.test_file.clone()]);
+        assert_eq!(
+            row.matched_files.as_slice(),
+            std::slice::from_ref(&row.test_file)
+        );
     }
     assert_eq!(
         report.missed_observed_tests[0].test_file,
