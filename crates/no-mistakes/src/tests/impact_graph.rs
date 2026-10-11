@@ -9,6 +9,7 @@ use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
 use no_mistakes::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use no_mistakes::config::v2::NoMistakesConfig;
+use no_mistakes::integration_tests::configured_runner_config_dirs_from_visible;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -164,8 +165,11 @@ fn build_test_impact_graph_for_request(
         }
     })?;
     let mut catalog_roots = vec![root.to_path_buf()];
-    catalog_roots
-        .extend(no_mistakes::integration_tests::configured_runner_config_dirs(root, config));
+    catalog_roots.extend(configured_runner_config_dirs_from_visible(
+        root,
+        config,
+        &visible_paths,
+    ));
     let preliminary_roots = catalog_roots.clone();
     let preliminary_catalog = catalog(
         root,

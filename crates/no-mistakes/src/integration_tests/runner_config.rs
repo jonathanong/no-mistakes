@@ -11,7 +11,7 @@ mod tests;
 #[cfg(test)]
 mod tests_access;
 pub(in crate::integration_tests) use cache::{read_request_source, with_program};
-pub use prepared::configured_runner_config_dirs;
+pub use prepared::{configured_runner_config_dirs, configured_runner_config_dirs_from_visible};
 pub(crate) use prepared::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};
 pub use prepared::{
     prepare_runner_configs_with_catalog, prepare_runner_configs_with_deadline_evidence,
