@@ -32,6 +32,8 @@ mod final_rebinding;
 mod guard_alias;
 #[path = "tests/helper_effects.rs"]
 mod helper_effects;
+#[path = "tests/helper_provenance.rs"]
+mod helper_provenance;
 #[path = "tests/helpers.rs"]
 mod helpers;
 #[path = "tests/metadata.rs"]

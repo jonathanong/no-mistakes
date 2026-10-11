@@ -10,6 +10,7 @@ impl LocalFunctions {
         if self.parameter_builders.contains_key(name) {
             let (sql, positions, line) = self.call_positions(call, name, visitor)?;
             return Some(super::provenance::RecoveredSql {
+                origins: vec![call.span.start; sql.len()],
                 sql,
                 line,
                 positions,
