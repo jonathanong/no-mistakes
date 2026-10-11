@@ -44,7 +44,23 @@ pub(super) fn from_facts(
                 || (project.policy_name.is_none() && !selected.is_empty())
         })
         .map(|project| {
+            // A recovered config cannot widen an explicitly declared policy's
+            // setup scope, including its excluded test files.
+            let policy_filter = project
+                .policy_name
+                .as_ref()
+                .and_then(|name| config.tests.vitest.projects.get(name))
+                .filter(|policy| !policy.include.is_empty())
+                .map(|policy| {
+                    Ok::<_, anyhow::Error>(TestFilter {
+                        include: build_globset(&policy.include)?,
+                        include_regex: Vec::new(),
+                        exclude: build_globset(&policy.exclude)?,
+                    })
+                })
+                .transpose()?;
             Ok(ConfigSetupData {
+                policy_filter,
                 filter: TestFilter {
                     include: build_globset(&project.include)?,
                     include_regex: Vec::new(),

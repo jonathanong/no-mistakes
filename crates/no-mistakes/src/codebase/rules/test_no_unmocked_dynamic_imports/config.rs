@@ -22,6 +22,7 @@ pub(super) use project_setups::{
 
 pub struct ConfigSetupData {
     filter: TestFilter,
+    policy_filter: Option<TestFilter>,
     pub setup_files: Vec<PathBuf>,
     explicit_project: bool,
     runner: discovery::Runner,
@@ -31,6 +32,10 @@ pub struct ConfigSetupData {
 impl ConfigSetupData {
     pub fn filter_matches(&self, rel_path: &str) -> bool {
         self.filter.is_match(rel_path)
+            && self
+                .policy_filter
+                .as_ref()
+                .is_none_or(|filter| filter.is_match(rel_path))
     }
 }
 
@@ -106,6 +111,7 @@ fn precompute_setup_data_from_config_files_inner(
         let setup_files = setup_files?;
         result.push(ConfigSetupData {
             filter,
+            policy_filter: None,
             setup_files,
             explicit_project: false,
             runner: config_file.runner,

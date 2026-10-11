@@ -29,6 +29,7 @@ pub(super) fn playwright_setup_data(
     .into_iter()
     .map(|project| {
         Ok(super::ConfigSetupData {
+            policy_filter: None,
             filter: super::TestFilter {
                 include: build_globset(&project.include)?,
                 include_regex: Vec::new(),

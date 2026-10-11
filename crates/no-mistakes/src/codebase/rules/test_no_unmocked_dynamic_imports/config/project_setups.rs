@@ -58,6 +58,7 @@ pub(in super::super) fn explicit_project_setup_data(
         setup_files.retain(|path| seen.insert(path.clone()));
         data.push(ConfigSetupData {
             filter,
+            policy_filter: None,
             setup_files,
             explicit_project: true,
             runner: super::discovery::Runner::Vitest,
