@@ -210,6 +210,10 @@ Increment, decrement, and arithmetic compound assignments preserve that source
 only when the copied property is proven numeric or null. Coercing a shared object
 can run `valueOf` or `Symbol.toPrimitive`, so its source stays unknown under
 `unknownValues: "finding"`. Logical assignment does not coerce the previous value.
+For a copy created directly by an object literal, a replacement after its scalar
+update in separate top-level module statements does not invalidate that earlier
+update. Prior replacements, aliases, branches, loops, function bodies, nested
+blocks, and combined expressions retain the conservative ordering proof.
 Type assertions and non-null assertions around the whole copied member preserve
 these checks, including rejection after the copied scalar is replaced by an object.
 Coercing a property through a wrapped copy receiver stays conservative when its
