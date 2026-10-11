@@ -91,6 +91,12 @@ copy unless explicitly declared there. An inherited or existing setter for
 For a property named `__proto__`, concise methods, computed names, and shorthand
 properties are own data properties. The non-computed colon form changes the
 object's prototype, so it does not establish an own data property proof.
+Deleting a field on one independent shallow
+copy does not invalidate that field on the original or another independent
+copy. A copied wrapper can still share a nested receiver: deleting
+`other.copy.deadline` can expose a setter on the shared `copy`. Such deletions
+retain unknown values, including through aliases and array spreads.
+
 
 Object and array spreads make shallow copies. Replacing, updating, or deleting a
 copy's own property does not make the source's timeout unknown; the copy's own

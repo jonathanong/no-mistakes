@@ -95,3 +95,22 @@ boxedDeleted.timeout = false;
 const cycleA = cycleB;
 const cycleB = cycleA;
 cycleA.timeout = false;
+
+// Shared child deletion invalidates an array spread's projected initializer.
+const deletedChildArray = [{ deadline: 0 }];
+const deletedChildCopy = [...deletedChildArray];
+delete deletedChildCopy[0].deadline;
+const projectedChildCopy = [...deletedChildArray];
+projectedChildCopy[0] = false;
+// Cyclic receiver aliases cannot establish a nested descriptor proof.
+const cyclicReceiver = cyclicReceiver;
+cyclicReceiver.field.child = false;
+const absentReceiver = {};
+absentReceiver.missing.child = false;
+// Losing a shared child's value proof preserves the containing own data slot.
+const sharedSlot = { copy: { deadline: 0 } };
+const sharedSlotCopy = { ...sharedSlot };
+delete sharedSlotCopy.copy.deadline;
+sharedSlot.copy = true;
+// A non-canonical numeric key cannot address the first array element.
+array['01'].timeout = false;

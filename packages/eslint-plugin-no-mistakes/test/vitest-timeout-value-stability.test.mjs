@@ -323,6 +323,36 @@ describe("vitest-timeout-cap value stability", () => {
     assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
     assert.deepEqual(findings("shallow-copy-alias-mutations"), []);
   });
+  it("keeps independent copy deletions separate from shared receiver deletions", () => {
+    const actual = findings("independent-copy-deletions", { unknownValues: "finding" });
+    assert.deepEqual(
+      actual
+        .filter(({ messageId }) => messageId !== "unknown")
+        .map(({ line, messageId }) => [line, messageId]),
+      [
+        [9, "timeout"],
+        [24, "timeout"],
+        [70, "timeout"],
+      ],
+    );
+    assert.deepEqual(
+      [
+        ...new Set(
+          actual.filter(({ messageId }) => messageId === "unknown").map(({ line }) => line),
+        ),
+      ],
+      [26, 34, 42, 50, 62, 77, 79, 87, 95, 103],
+    );
+    assert.equal(actual.filter(({ messageId }) => messageId === "unknown").length, 26);
+    assert.deepEqual(
+      findings("independent-copy-deletions").map(({ line, messageId }) => [line, messageId]),
+      [
+        [9, "timeout"],
+        [24, "timeout"],
+        [70, "timeout"],
+      ],
+    );
+  });
   it("retains unknown deadlines after member writes, aliases, deletion and helper escape", () => {
     const strict = { unknownValues: "finding", defaultMax: 30000 };
     const actual = findings("mutable-values", strict);
