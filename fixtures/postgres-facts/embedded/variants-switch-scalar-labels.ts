@@ -1,4 +1,4 @@
-import { query } from "@example/db";
+import { query, sql } from "@example/db";
 
 /* A failed earlier label changes the guard before the matching case runs. */
 let assigned = false;
@@ -91,4 +91,67 @@ switch (2) {
     query("SELECT 16 OFFSET 1"); // inline: SELECT 16 OFFSET 1
     query(plain); // unchanged: SELECT 15
     break;
+}
+
+/* A failed case body must not seed SQL for a later direct entry. */
+let replaced = "SELECT 20 OFFSET 1";
+let replacedGuard = false;
+switch (2) {
+  case (replacedGuard = true, 1): replaced = "SELECT 20";
+  case 2: query(replaced); break; // opaque
+}
+query(replaced); // opaque
+
+/* The boundary covers terminal breaks and unsafe fallthrough from safe entry. */
+let broken = "SELECT 21 OFFSET 1";
+let brokenGuard = false;
+switch (2) {
+  case (brokenGuard = true, 1): broken = "SELECT 21"; break;
+  case 2: query(broken); break; // opaque
+}
+const appended = sql`SELECT 22`;
+let appendedGuard = false;
+switch (choice) {
+  case (appendedGuard = true, 1): appended.append(" OFFSET 1");
+  case 2: query(appended); break; // opaque
+}
+
+/* A previous DML prefix cannot exclude a later possible SELECT. */
+let dml = "DELETE FROM users";
+let dmlGuard = false;
+switch (choice) {
+  case (dmlGuard = true, 1): dml = "SELECT 23 OFFSET 1";
+  case 2: query(dml); break; // opaque
+}
+
+/* Original aliases stay opaque, while genuinely fresh literals are checked. */
+const original = sql`SELECT 24`;
+const alias = original;
+let aliasGuard = false;
+switch (choice) {
+  case (aliasGuard = true, 1): alias.append(" OFFSET 1");
+  case 2:
+    query(original); // opaque
+    const fresh = "SELECT 25";
+    query(fresh); // unchanged: SELECT 25
+    query("SELECT 26 OFFSET 1"); // inline: SELECT 26 OFFSET 1
+    break;
+}
+
+/* A captured escape creates opaque local state without mutating outer facts. */
+const captured = sql`SELECT 27`;
+function capturedSwitch() {
+  let capturedGuard = false;
+  switch (2) {
+    case (capturedGuard = true, 1): external(captured);
+    case 2: query(captured); break; // opaque
+  }
+}
+query(captured); // unchanged: SELECT 27
+
+/* Hoisted var initialization remains uncertain across direct-entry cases. */
+let initializedGuard = false;
+switch (choice) {
+  case (initializedGuard = true, 1): var initialized = sql`SELECT 28`;
+  case 2: query(initialized); break; // opaque
 }

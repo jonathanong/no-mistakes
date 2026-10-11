@@ -3,6 +3,7 @@ use super::control::{branch_paths, Snapshot};
 use oxc_ast::ast::{Statement, SwitchStatement};
 use oxc_ast_visit::Visit;
 mod labels;
+mod opaque;
 mod state;
 use state::join;
 
@@ -31,18 +32,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
             }
         }
         visitor.invalidate_execution_variants();
-        visitor.with_loop(|visitor| {
-            for case in &statement.cases {
-                if let Some(test) = &case.test {
-                    visitor.visit_expression(test);
-                }
-                visitor.with_control_flow(|visitor| {
-                    for statement in &case.consequent {
-                        visitor.visit_statement(statement);
-                    }
-                });
-            }
-        });
+        opaque::visit_cases(visitor, statement);
         visitor.pop_scope();
         visitor.invalidate_execution_variants();
         return;

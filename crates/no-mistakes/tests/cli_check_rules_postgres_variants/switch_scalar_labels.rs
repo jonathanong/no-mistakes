@@ -4,12 +4,17 @@ use super::*;
 fn scalar_switch_label_effects_follow_fail_ignore_and_physical_suppression() {
     let report = check_with_suppressed("postgres-no-offset", "switch-scalar-labels-fail", true);
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 3, "{report}");
-    for (finding, (line, target)) in
-        findings
-            .iter()
-            .zip([(5, "unanalyzable"), (10, "unanalyzable"), (16, "offset")])
-    {
+    assert_eq!(findings.len(), 8, "{report}");
+    for (finding, (line, target)) in findings.iter().zip([
+        (5, "unanalyzable"),
+        (10, "unanalyzable"),
+        (16, "offset"),
+        (32, "unanalyzable"),
+        (40, "unanalyzable"),
+        (46, "unanalyzable"),
+        (54, "offset#2"),
+        (56, "offset#3"),
+    ]) {
         assert_eq!(finding["line"], line, "{report}");
         assert_eq!(finding["target"], target, "{report}");
     }
@@ -19,9 +24,15 @@ fn scalar_switch_label_effects_follow_fail_ignore_and_physical_suppression() {
 
     let ignored = check("postgres-no-offset", "switch-scalar-labels-ignore");
     let findings = ignored["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 1, "{ignored}");
-    assert_eq!(findings[0]["line"], 16, "{ignored}");
-    assert_eq!(findings[0]["target"], "offset", "{ignored}");
+    assert_eq!(findings.len(), 3, "{ignored}");
+    for (finding, (line, target)) in
+        findings
+            .iter()
+            .zip([(16, "offset"), (54, "offset#2"), (56, "offset#3")])
+    {
+        assert_eq!(finding["line"], line, "{ignored}");
+        assert_eq!(finding["target"], target, "{ignored}");
+    }
 }
 
 #[test]

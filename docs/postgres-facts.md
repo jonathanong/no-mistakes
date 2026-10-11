@@ -270,6 +270,10 @@ invoked arrow/function body, also disables finite recovery inside that switch.
 Failed labels can change scalar guards before a later case runs; a default in
 the middle runs only after later labels fail. This fallback scans each label and
 body once without enumerating or replaying writes along fallthrough paths.
+Each case starts from conservative entry state, so a failed case body cannot
+supply complete SQL to a later direct-entry case. Bindings changed by an earlier
+body lose their recovered prefix as well as their finite versions: direct entry
+and fallthrough can see different statements, including different DML kinds.
 Merely creating or passing a callback does not execute its body. Literal SQL
 arguments and unchanged legacy constants retain their existing checks, while
 branching calls use the rule's `unanalyzableSql` policy.

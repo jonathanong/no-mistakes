@@ -39,6 +39,9 @@ disable finite recovery inside a switch because failed labels can change later
 scalar guards. CLI and async Node checks apply the same `unanalyzableSql` policy;
 literal SQL remains analyzable and callbacks that are only created or passed do
 not execute.
+The conservative traversal isolates each case's entry state. A preceding body
+cannot supply a later case's complete SQL; bindings it changes lose recovered
+prefixes and finite versions, including when the leading DML kind can change.
 Existing Rust `EmbeddedSqlCall` struct literals must initialize the new field
 with `variants: Vec::new()` or use `..EmbeddedSqlCall::default()` for unspecified
 fields. Derived equality and `Debug` include versions; legacy `kind` and
