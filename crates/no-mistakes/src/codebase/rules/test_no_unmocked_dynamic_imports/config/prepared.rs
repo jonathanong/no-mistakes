@@ -67,6 +67,7 @@ pub(super) fn prepare_inner(
     let adds_candidates = |data: &&ConfigSetupData| {
         data.workspace
             || data.explicit_project
+            || data.runner == super::discovery::Runner::Vitest
             || data.runner == super::discovery::Runner::Playwright
     };
     if !targeted && setup_data.iter().any(|data| adds_candidates(&data)) {
