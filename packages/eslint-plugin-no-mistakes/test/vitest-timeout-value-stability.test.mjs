@@ -235,6 +235,23 @@ describe("vitest-timeout-cap value stability", () => {
     assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
     assert.deepEqual(findings("wrapped-shallow-copy-mutations"), []);
   });
+  it("uses known array prefix lengths while rejecting uncertain iterator identities", () => {
+    const actual = findings("known-array-spread-offsets", { unknownValues: "finding" });
+    assert.deepEqual(
+      actual.map(({ line, messageId }) => [line, messageId]),
+      [
+        [28, "timeout"],
+        ...[33, 37, 43, 49, 55, 60, 65, 70, 76, 81, 86, 92, 99, 104].map((line) => [
+          line,
+          "unknown",
+        ]),
+      ],
+    );
+    assert.deepEqual(
+      findings("known-array-spread-offsets").map(({ line, messageId }) => [line, messageId]),
+      [[28, "timeout"]],
+    );
+  });
   it("keeps shallow copy writes independent while checking each copy's own stability", () => {
     assert.deepEqual(
       findings("shallow-copy-writes", { unknownValues: "finding" }).map(({ line, messageId }) => [

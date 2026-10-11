@@ -112,6 +112,9 @@ through those wrappers still invalidate descriptor proofs before assignments
 that might expose an inherited setter.
 Unknown computed wrapper keys, array offsets after opaque spreads, and custom
 iterables retain conservative handling.
+Statically sized array spreads, including sparse arrays and immutable array
+aliases, preserve known wrapper offsets; custom or mutated iterables remain
+conservative.
 
 Public Vitest 5 fixture tuples carry `auto`, `injected`, and `scope` options, not a
 fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
