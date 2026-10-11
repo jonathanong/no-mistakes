@@ -163,8 +163,9 @@ console.log(JSON.stringify(report, null, 2));
 ```
 
 The recipe audits files. Symbol audits additionally require a trace adapter that
-emits exact canonical symbol identities and declares tracing complete for those
-symbols. Do not mark statement-only coverage complete for a symbol audit.
+emits the exact symbol identities agreed by the planner input and trace adapter,
+and declares tracing complete for those symbols. Do not mark statement-only
+coverage complete for a symbol audit.
 
 ## Reading results
 
