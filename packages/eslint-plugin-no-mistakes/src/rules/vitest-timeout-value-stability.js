@@ -5,7 +5,7 @@ const { configCall, overrideCall, invocationArguments } = require("./vitest-time
 const { memberName, pathStartsWith, wrappedCopyPath } = require("./vitest-timeout-copy-paths");
 
 // Borrow ESLint's existing variable references; do not build another binding graph.
-function createValueStability(context, primitiveMemberRead) {
+function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
   // Values, copies, and callbacks need independent consumer proofs and cycle guards.
   const memo = { value: new WeakMap(), shallow: new WeakMap(), callback: new WeakMap() };
   const active = { value: new Set(), shallow: new Set(), callback: new Set() };
@@ -94,11 +94,15 @@ function createValueStability(context, primitiveMemberRead) {
       (parent?.type === "UnaryExpression" && parent.operator === "delete")
     )
       // The copied value may be inside a wrapper. Only its own property writes
-      // are independent; following a child below that boundary stays shared.
+      // are independent; coercion of a shared object can still mutate its source.
       return (
         mode === "shallow" &&
         members.length === copyPath.length + 1 &&
-        pathStartsWith(copyPath, members.slice(0, -1))
+        pathStartsWith(copyPath, members.slice(0, -1)) &&
+        (parent.type === "UnaryExpression" ||
+          (parent.type === "AssignmentExpression" &&
+            ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
+          scalarCopyWrite(node))
       );
     // A proven scalar read cannot expose the receiver, but writes above still
     // invalidate it. Object-valued and unresolved properties remain conservative.

@@ -196,6 +196,16 @@ remains unknown. Bitwise operators remain unresolved rather than duration arithm
 Unresolved expressions still follow `unknownValues`; use `"finding"` to report
 them. This source rule does not inspect shell or Vitest CLI timeout flags.
 
+Replacing or deleting a shallow copy's own data property preserves its source.
+Increment, decrement, and arithmetic compound assignments preserve that source
+only when the copied property is proven numeric or null. Coercing a shared object
+can run `valueOf` or `Symbol.toPrimitive`, so its source stays unknown under
+`unknownValues: "finding"`. Logical assignment does not coerce the previous value.
+Type assertions and non-null assertions around the whole copied member preserve
+these checks, including rejection after the copied scalar is replaced by an object.
+Coercing a property through a wrapped copy receiver stays conservative when its
+scalar initializer cannot be proven; noncoercing writes retain their copied path proof.
+
 Object exports (including exported declarations and aliases) and unproved consumer
 contexts such as yield, await, tagged templates, and computed property keys retain
 unknown values. Exported numeric scalar budgets remain supported. Object stability
@@ -226,3 +236,8 @@ Erased TypeScript `typeof` type queries, including qualified property queries,
 do not participate in the runtime stability proof. A callback or config binding
 can retain a known timeout when it also appears in a type alias. Runtime
 consumers still require the same confinement proof.
+
+Function-valued properties and callable aliases remain object references even when
+the configuration evaluator can resolve their return values. Passing such a member
+to an unproved consumer retains unknown diagnostics; supported `defineConfig`
+callbacks still use their returned configuration.
