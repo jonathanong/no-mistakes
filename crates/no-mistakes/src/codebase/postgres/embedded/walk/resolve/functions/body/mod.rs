@@ -9,6 +9,12 @@ use oxc_ast::ast::{
     BindingPattern, Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 
+struct BodySource<'a, 's> {
+    resolvable: &'s Resolvable<'a>,
+    source: &'s str,
+    imported_sql_tags: &'s SqlTagNames,
+}
+
 /// Straight-line same-file helper bodies: `const`/`let` SQL inits, `.append`
 /// mutations, and a final `return`. Control flow, assignment, and parameter
 /// identifiers fail closed rather than guessing SQL.
@@ -20,6 +26,11 @@ pub(super) fn resolve(
     is_shadowed: &mut impl FnMut(&str) -> bool,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<RecoveredSql> {
+    let context = BodySource {
+        resolvable,
+        source,
+        imported_sql_tags,
+    };
     let mut locals = FxHashMap::default();
     let mut statements = resolvable.body.statements.iter().peekable();
     while let Some(statement) = statements.next() {
@@ -28,24 +39,20 @@ pub(super) fn resolve(
             Statement::VariableDeclaration(declaration) => {
                 bind_declaration(
                     declaration,
-                    resolvable,
-                    source,
+                    &context,
                     depth,
                     lookup,
                     is_shadowed,
-                    imported_sql_tags,
                     &mut locals,
                 )?;
             }
             Statement::ExpressionStatement(statement) => {
                 apply_append_statement(
                     statement,
-                    resolvable,
-                    source,
+                    &context,
                     depth,
                     lookup,
                     is_shadowed,
-                    imported_sql_tags,
                     &mut locals,
                 )?;
             }
@@ -55,12 +62,10 @@ pub(super) fn resolve(
                 }
                 return resolve_fragment(
                     ret.argument.as_ref()?,
-                    resolvable,
-                    source,
+                    &context,
                     depth,
                     lookup,
                     is_shadowed,
-                    imported_sql_tags,
                     &locals,
                 );
             }
@@ -72,12 +77,10 @@ pub(super) fn resolve(
 
 fn bind_declaration(
     declaration: &VariableDeclaration<'_>,
-    resolvable: &Resolvable<'_>,
-    source: &str,
+    context: &BodySource<'_, '_>,
     depth: u8,
     lookup: &mut impl FnMut(&oxc_ast::ast::CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &SqlTagNames,
     locals: &mut FxHashMap<String, RecoveredSql>,
 ) -> Option<()> {
     if !matches!(
@@ -87,45 +90,32 @@ fn bind_declaration(
         return None;
     }
     for declarator in &declaration.declarations {
-        bind_declarator(
-            declarator,
-            resolvable,
-            source,
-            depth,
-            lookup,
-            is_shadowed,
-            imported_sql_tags,
-            locals,
-        )?;
+        bind_declarator(declarator, context, depth, lookup, is_shadowed, locals)?;
     }
     Some(())
 }
 
 fn bind_declarator(
     declarator: &VariableDeclarator<'_>,
-    resolvable: &Resolvable<'_>,
-    source: &str,
+    context: &BodySource<'_, '_>,
     depth: u8,
     lookup: &mut impl FnMut(&oxc_ast::ast::CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
-    imported_sql_tags: &SqlTagNames,
     locals: &mut FxHashMap<String, RecoveredSql>,
 ) -> Option<()> {
     let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
         return None;
     };
     let name = ident.name.as_str();
-    if shadows_param(resolvable, name) || locals.contains_key(name) {
+    if shadows_param(context.resolvable, name) || locals.contains_key(name) {
         return None;
     }
     let text = resolve_fragment(
         declarator.init.as_ref()?,
-        resolvable,
-        source,
+        context,
         depth,
         lookup,
         is_shadowed,
-        imported_sql_tags,
         locals,
     )?;
     locals.insert(name.to_string(), text);

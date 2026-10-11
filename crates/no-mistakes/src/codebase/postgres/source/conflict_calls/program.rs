@@ -7,9 +7,11 @@ use sqlparser::{
     tokenizer::{Token, TokenWithSpan},
 };
 
+type ParsedPolicyProgram = (Vec<Statement>, Vec<SqlFunctionCallFact>, Vec<PolicyArbiter>);
+
 pub(in crate::codebase::postgres) fn parse(
     mut tokens: Vec<TokenWithSpan>,
-) -> Result<(Vec<Statement>, Vec<SqlFunctionCallFact>, Vec<PolicyArbiter>), ParserError> {
+) -> Result<ParsedPolicyProgram, ParserError> {
     let markers = parsing::prepare(&mut tokens);
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
