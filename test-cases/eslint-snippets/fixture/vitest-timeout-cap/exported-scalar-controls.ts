@@ -1,0 +1,10 @@
+import { test } from "vitest";
+export const lower = 1;
+const upper = 30000;
+export { upper };
+const alias = upper;
+export default alias;
+test("lower exported scalar", { timeout: lower }, () => {});
+test("upper exported scalar", { timeout: alias }, () => {});
+export const oversized = 30001;
+test("oversized exported scalar", { timeout: oversized }, () => {});

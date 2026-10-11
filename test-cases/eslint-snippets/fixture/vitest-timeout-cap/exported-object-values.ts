@@ -1,0 +1,10 @@
+import { test } from "vitest";
+export const direct = { timeout: 1 };
+test("direct export", direct, () => {});
+const named = { timeout: 1 };
+const alias = named;
+export { alias };
+test("named alias export", named, () => {});
+const defaultOptions = { timeout: 1 };
+export default defaultOptions;
+test("default export", defaultOptions, () => {});

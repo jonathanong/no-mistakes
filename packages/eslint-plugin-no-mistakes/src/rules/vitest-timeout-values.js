@@ -1,6 +1,7 @@
 "use strict";
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { unwrapExpression } = require("./async-ast");
+const { createValueStability } = require("./vitest-timeout-value-stability");
 const { configCall, staticPropertyName } = require("./vitest-timeout-bindings");
 const UNKNOWN = { kind: "unknown" };
 function taint(value) {
@@ -43,6 +44,7 @@ function merge(left, right) {
 function createEvaluator(context, consumed) {
   const evaluating = new Set();
   const memo = new WeakMap();
+  const stableValue = createValueStability(context);
   function evaluate(node) {
     if (!node) return UNKNOWN;
     node = unwrapExpression(node);
@@ -98,11 +100,17 @@ function createEvaluator(context, consumed) {
       const variable = resolveVariable(node, context);
       const def = variable?.defs[0];
       // Only module constants: function-local assignments must not become config defaults.
-      return def?.type === "Variable" &&
-        def.parent.kind === "const" &&
-        variable.scope.type === "module"
-        ? evaluate(def.node.init)
-        : UNKNOWN;
+      if (
+        def?.type !== "Variable" ||
+        def.parent.kind !== "const" ||
+        variable.scope.type !== "module" ||
+        variable.references.some((reference) => reference.isWrite() && !reference.init)
+      )
+        return UNKNOWN;
+      const value = evaluate(def.node.init);
+      return (value.kind === "object" || value.kind === "array") && !stableValue(variable)
+        ? taint(value)
+        : value;
     }
     if (node.type === "ObjectExpression") {
       const properties = new Map();
