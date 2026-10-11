@@ -49,6 +49,38 @@ fn canonical_visible_paths_use_multiple_workers_without_changing_membership() {
 }
 
 #[test]
+fn canonical_visible_paths_keep_small_and_single_worker_inputs_serial() {
+    let root = fixture("symlink-workspace");
+    let inputs = [root.join("real/tsconfig.json"), root.join("missing.ts")];
+    for (threads, repeats) in [(1, 64), (4, 1)] {
+        let paths = inputs
+            .iter()
+            .cycle()
+            .take(inputs.len() * repeats)
+            .cloned()
+            .collect::<Vec<_>>();
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+        pool.install(|| {
+            let caller = std::thread::current().id();
+            let calls = AtomicUsize::new(0);
+            let actual = visible_real_paths(&paths, |path| {
+                assert_eq!(std::thread::current().id(), caller);
+                calls.fetch_add(1, Ordering::Relaxed);
+                real_path(path)
+            });
+            assert_eq!(
+                actual,
+                paths.iter().filter_map(|path| real_path(path)).collect()
+            );
+            assert_eq!(calls.load(Ordering::Relaxed), paths.len());
+        });
+    }
+}
+
+#[test]
 fn parallel_catalog_preserves_symlink_extends_and_visible_universe() {
     let root = normalize_path(&fixture("symlink-workspace/link"));
     let paths = [
@@ -72,13 +104,19 @@ fn parallel_catalog_preserves_symlink_extends_and_visible_universe() {
         .filter_map(|path| real_path(path))
         .collect::<BTreeSet<_>>();
     let mut snapshots = Vec::new();
-    for threads in [1, 4] {
+    for (threads, repeats) in [(1, 1), (4, 1), (1, 16), (4, 16)] {
+        let visible_paths = paths
+            .iter()
+            .cycle()
+            .take(paths.len() * repeats)
+            .cloned()
+            .collect::<Vec<_>>();
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build()
             .unwrap();
         snapshots.push(pool.install(|| {
-            let builder = CatalogBuilder::new(&root, &candidate_roots, &paths, None, None);
+            let builder = CatalogBuilder::new(&root, &candidate_roots, &visible_paths, None, None);
             assert_eq!(builder.visible, expected_visible);
             assert_eq!(builder.visible_real, expected_real);
             let catalog = builder.build();
@@ -103,7 +141,7 @@ fn parallel_catalog_preserves_symlink_extends_and_visible_universe() {
             )
         }));
     }
-    assert_eq!(snapshots[0], snapshots[1]);
+    assert!(snapshots.windows(2).all(|pair| pair[0] == pair[1]));
     assert_eq!(snapshots[0].0[2].config, Some(root.join("tsconfig.json")));
     assert_eq!(
         snapshots[0].0[5].config,
