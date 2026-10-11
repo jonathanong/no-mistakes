@@ -12,7 +12,7 @@ Opaque roots retain a failure diagnostic, while aliases without mutation proof
 retain uncertainty. Ordinary findings and errors are unchanged. Node callers
 use `check({ includeRunnerConfigDeadlines: true })` or the same option on an
 `analyzeProject()` check report. See the
-[evidence contract](../../../docs/cli/check.md#declared-runner-config-evidence).
+[evidence contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/check.md#declared-runner-config-evidence).
 This does not enforce runtime registrations or a universal timeout cap.
 
 Use `tests plan` for all test selection — it is the preferred replacement for
