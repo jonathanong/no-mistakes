@@ -217,6 +217,15 @@ fragments contribute their own SQL text and generated
 placeholders are renumbered in composition order. Ordinary value interpolations
 remain binds.
 
+Object and array destructuring assignments discard the earlier SQL snapshot
+of every identifier they write, including nested, renamed, computed, rest and
+default targets and TypeScript target wrappers. Subsequent calls remain
+`Dynamic` until a fresh recoverable assignment supplies SQL. Member targets
+write properties without discarding their receiver's binding; unrelated
+bindings and aliases holding the old value retain their facts. Queries in
+right-hand expressions, computed keys and defaults use the state at their
+evaluation point, before the corresponding target is overwritten.
+
 If any possible outcome is opaque, if there are more than 16 versions, or if
 recovery exceeds the depth limit of 8, no partial version set is published.
 Loops, untagged `${...}` SQL-text interpolation, cross-file calls,
@@ -272,6 +281,18 @@ conditional replacement of the original binding stay `Dynamic`. Passing a
 callback without invoking it does not execute its body.
 Switch discriminants or case labels that mutate an existing SQL binding also
 remain opaque because earlier labels can change the state of later cases.
+Any assignment or update in a case label, including destructuring or a directly
+invoked arrow/function body, also disables finite recovery inside that switch.
+Failed labels can change scalar guards before a later case runs; a default in
+the middle runs only after later labels fail. This fallback scans each label and
+body once without enumerating or replaying writes along fallthrough paths.
+Each case starts from conservative entry state, so a failed case body cannot
+supply complete SQL to a later direct-entry case. Bindings changed by an earlier
+body lose their recovered prefix as well as their finite versions: direct entry
+and fallthrough can see different statements, including different DML kinds.
+Merely creating or passing a callback does not execute its body. Literal SQL
+arguments and unchanged legacy constants retain their existing checks, while
+branching calls use the rule's `unanalyzableSql` policy.
 `try`, `catch`, and `finally` phases are inspected once, but exception paths are
 not enumerated. Finite execution snapshots are discarded before handlers and
 after each phase because an earlier operation may have thrown before completing.
