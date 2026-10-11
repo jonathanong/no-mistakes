@@ -12,6 +12,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod callback_aliases;
 mod callback_setups;
 mod callback_syntax;
 mod conditional_requires;

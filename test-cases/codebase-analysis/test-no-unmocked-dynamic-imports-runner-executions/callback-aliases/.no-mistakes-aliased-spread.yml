@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: [aliased-spread.config.mts]
+    projects:
+      aliased-spread:
+        include: [tests/aliased-spread.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [aliased-spread]
