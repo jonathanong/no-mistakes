@@ -14,6 +14,25 @@ function createScalarCopyWrite(context, evaluate) {
     const value = evaluate(expression);
     return !value.runtimeFunction && (value.kind === "number" || value.kind === "null");
   }
+  function knownNull(node, active = new Set()) {
+    node = unwrapExpression(node);
+    if (node?.type === "Literal" && node.value === null) return true;
+    if (node?.type !== "Identifier") return false;
+    const variable = resolveVariable(node, context);
+    const def = variable?.defs[0];
+    if (
+      active.has(variable) ||
+      def?.type !== "Variable" ||
+      def.parent.kind !== "const" ||
+      def.node.id.type !== "Identifier" ||
+      variable.references.some((reference) => reference.isWrite() && !reference.init)
+    )
+      return false;
+    active.add(variable);
+    const result = knownNull(def.node.init, active);
+    active.delete(variable);
+    return result;
+  }
   function property(node, name, active) {
     node = unwrapExpression(node);
     if (node.type === "Identifier") {
@@ -36,6 +55,7 @@ function createScalarCopyWrite(context, evaluate) {
     for (let index = node.properties.length - 1; index >= 0; index--) {
       const entry = node.properties[index];
       if (entry.type === "SpreadElement") {
+        if (knownNull(entry.argument)) continue;
         const result = property(entry.argument, name, active);
         if (result !== undefined) return result;
       } else {
