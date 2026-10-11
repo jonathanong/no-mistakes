@@ -72,13 +72,15 @@ fn precompute_setup_data_from_config_files_inner(
     for config_file in config_files {
         if config_file.runner == discovery::Runner::Vitest {
             if let Some((config, facts)) = runner_facts {
-                result.extend(vitest_setups::from_facts(
+                if let Some(setups) = vitest_setups::from_facts(
                     config,
                     &config_file.path,
                     visible_files.expect("prepared Vitest configs require an inventory"),
                     facts,
-                )?);
-                continue;
+                )? {
+                    result.extend(setups);
+                    continue;
+                }
             }
         }
         let source = match sources {

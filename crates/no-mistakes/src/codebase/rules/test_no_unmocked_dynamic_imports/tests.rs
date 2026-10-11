@@ -12,6 +12,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod callback_setups;
 mod imported_helpers;
 mod legacy_errors;
 mod mock_cut;
