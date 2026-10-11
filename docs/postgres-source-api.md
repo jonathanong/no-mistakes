@@ -293,7 +293,7 @@ never promoted to mandatory predicates. Consumers must interpret these facts
 for their own policies; the parser does not prove authorization or tenant
 isolation.
 
-`context.effectiveMandatory` is a separate, nullable conjunctiveness fact.
+`context.effectiveMandatory` is a separate, nullable required-conjunct fact.
 It starts from the clause's mandatory status and accounts for wrapping `NOT`
 when descending through `AND` and `OR`: an `AND` under odd NOT is effectively
 disjunctive, while an `OR` under odd NOT is effectively conjunctive. Once an
