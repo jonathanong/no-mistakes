@@ -92,6 +92,23 @@ fn wrapped_expression_arbiter_keeps_policy_fact() {
 }
 
 #[test]
+fn lenient_recovery_preserves_expression_arbiter_policy() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiter-recovered/sql/malformed-neighbor.sql"
+    ));
+    let facts = extract_sql_statement_facts(sql);
+    assert!(facts.parse_failed);
+    assert_eq!(facts.inserts.len(), 1);
+    let found = judge_file(&facts, &catalog(&[], &[], &[], &[]));
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(
+        found[0].1.contains("expression arbiter depends on email"),
+        "{found:?}"
+    );
+}
+
+#[test]
 fn insert_without_conflict_is_unsafe() {
     let found = messages("INSERT INTO items (id) VALUES (1);");
     assert_eq!(found.len(), 1);

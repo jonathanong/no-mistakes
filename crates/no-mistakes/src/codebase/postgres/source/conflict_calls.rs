@@ -9,6 +9,7 @@ use sqlparser::{
 };
 
 /// Expression targets retained by the policy projection of the canonical parse.
+#[derive(Debug)]
 pub(crate) struct PolicyArbiter {
     pub insert_start: Location,
     pub expressions: Vec<Expr>,
@@ -17,7 +18,7 @@ pub(crate) struct PolicyArbiter {
 
 pub(in crate::codebase::postgres) fn recover(
     tokens: &[TokenWithSpan],
-) -> Option<(Statement, Vec<SqlFunctionCallFact>)> {
+) -> Option<(Statement, Vec<SqlFunctionCallFact>, Option<PolicyArbiter>)> {
     let mut tokens = tokens.to_vec();
     let markers = parsing::prepare(&mut tokens);
     if markers.is_empty() {
@@ -25,8 +26,8 @@ pub(in crate::codebase::postgres) fn recover(
     }
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
-    let (statement, functions, _) = parse_statement(&mut parser, &markers).ok()?;
-    (parser.peek_token().token == Token::EOF).then_some((statement, functions))
+    let (statement, functions, arbiter) = parse_statement(&mut parser, &markers).ok()?;
+    (parser.peek_token().token == Token::EOF).then_some((statement, functions, arbiter))
 }
 
 pub(super) fn parse_statement(

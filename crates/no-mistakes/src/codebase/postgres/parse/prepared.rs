@@ -84,6 +84,15 @@ impl<'a> PreparedSql<'a> {
         self.policy_arbiters.borrow()
     }
 
+    /// Move recovered conflict facts into the same request-owned policy sidecar.
+    pub(crate) fn adopt_recovered_arbiters(&self, located: &mut [super::LocatedStatement]) {
+        self.policy_arbiters.borrow_mut().extend(
+            located
+                .iter_mut()
+                .filter_map(|statement| statement.policy_arbiter.take()),
+        );
+    }
+
     fn located(&self) -> Result<&Vec<TokenWithSpan>, &PostgresParseError> {
         self.tokens
             .get_or_init(|| {

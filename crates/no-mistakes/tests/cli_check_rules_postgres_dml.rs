@@ -265,3 +265,22 @@ fn postgres_idempotent_insert_expression_safe_updates_pass() {
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
     assert_eq!(report["rules"], serde_json::json!([]), "{report}");
 }
+
+#[test]
+fn postgres_idempotent_insert_recovered_expression_still_fails() {
+    let root = fixture("postgres-idempotent-insert", "expression-arbiter-recovered");
+    let out = check_json(&root);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert!(
+        findings.iter().any(|finding| finding["file"]
+            .as_str()
+            .is_some_and(|path| path.ends_with("malformed-neighbor.sql"))
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("expression arbiter depends on email"))),
+        "{report}"
+    );
+}

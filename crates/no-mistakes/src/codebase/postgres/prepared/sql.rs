@@ -39,10 +39,11 @@ pub(super) fn collect(
                 let (statements, functions) = match parsed {
                     Ok(statements) => (statements, Vec::new()),
                     Err(_) => {
-                        let (located, functions) = crate::codebase::postgres::parse::partition_function_sources(crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
+                        let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
                             source,
                             prepared.normalized(),
                         ));
+                        prepared.adopt_recovered_arbiters(&mut located);
                         (located.into_iter().map(|located| located.statement).collect(), functions)
                     }
                 };

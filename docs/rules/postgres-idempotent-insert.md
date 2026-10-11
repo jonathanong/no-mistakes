@@ -7,7 +7,9 @@ generated-arbiter sources) default on and can be disabled.
 
 The rule consumes dual-source statement facts plus schema facts for generated
 columns and `CREATE TRIGGER`. Unparseable fragments with more than one
-`INSERT` fail closed. Each complete
+`INSERT` fail closed. A recovered `INSERT` keeps expression conflict-key
+dependencies when a malformed neighboring statement forces SQL recovery.
+Each complete
 [SQL alternative](../postgres-facts.md#finite-sql-alternatives) of a branching
 executor call is checked independently, up to 16 versions. Choosing between
 `ON CONFLICT DO NOTHING` and a bare INSERT still reports the bare INSERT; a
