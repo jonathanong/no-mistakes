@@ -9,9 +9,7 @@ impl CallableFileIndex {
         let (binding, member) = callee
             .split_once('.')
             .map_or((callee, None), |(binding, member)| (binding, Some(member)));
-        let scope = self
-            .class_bindings
-            .get(&(binding_scope, binding.to_string()))?;
+        let scope = scoped_name(&self.class_bindings, binding_scope, binding)?;
         let (target_scope, callable_id) = match member {
             Some(member) => {
                 let (owner, member_id) =
@@ -52,7 +50,7 @@ impl CallableFileIndex {
             let mut lexical_scope = Some(binding_scope);
             let base_scope = loop {
                 let candidate_scope = lexical_scope?;
-                if let Some(base_scope) = self.class_bindings.get(&(candidate_scope, base.clone())) {
+                if let Some(base_scope) = scoped_name(&self.class_bindings, candidate_scope, base) {
                     break base_scope;
                 }
                 lexical_scope = self

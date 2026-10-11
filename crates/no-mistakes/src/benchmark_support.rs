@@ -18,6 +18,7 @@ pub use postgres_bounds::evaluate_postgres_bounds;
 mod react_traits;
 mod relationships;
 mod resolve_check;
+mod scoped_callable;
 mod scoped_resolver;
 pub use bench_shard::{
     parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH_CORE,
@@ -52,6 +53,10 @@ pub use relationships::{
 pub use resolve_check::{
     prepared_resolve_check_fixture, run_prepared_resolve_check, PreparedResolveCheckFixture,
     LARGE_ROUTE_BATCH_FILE_COUNT,
+};
+pub use scoped_callable::{
+    construct_scoped_callable_index, prepare_scoped_callable_index, scoped_callable_fixture,
+    BenchmarkCallableIndex, ScopedCallableFixture,
 };
 pub use scoped_resolver::{
     build_repeated_scoped_resolvers, resolve_repeated_scoped_imports,

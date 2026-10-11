@@ -144,10 +144,7 @@ fn callable_id_for_scope(
 ) -> Option<crate::codebase::dependencies::extract::CallableId> {
     if let Some(id) = binding_scope.and_then(|scope_id| {
         let name = scope.rsplit('/').next().unwrap_or(scope);
-        index
-            .callable_bindings
-            .get(&(scope_id, name.to_string()))
-            .copied()
+        scoped_name(&index.callable_bindings, scope_id, name).copied()
     }) {
         return Some(id);
     }

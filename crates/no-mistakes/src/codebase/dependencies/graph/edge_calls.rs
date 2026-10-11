@@ -17,18 +17,18 @@ struct CallableFileIndex {
     known_scopes: FxHashSet<String>,
     exported_scopes: FxHashSet<String>,
     class_scopes: FxHashSet<String>,
-    callable_bindings: FxHashMap<(usize, String), crate::codebase::dependencies::extract::CallableId>,
+    callable_bindings: ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
     imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported: FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
-    aliases: FxHashMap<(usize, String), IndexedAlias>,
-    binding_declared_at: FxHashMap<(usize, String), u32>,
-    invocation_offsets:
-        FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
+    aliases: ScopedNameMap<IndexedAlias>,
+    binding_declared_at: ScopedNameMap<u32>,
+    invocation_offsets: FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
     /// Class bindings resolve to their internal class scope and exact parser
     /// identity. A display scope can repeat in sibling blocks.
-    class_bindings: FxHashMap<(usize, String), ClassBindingTarget>,
+    class_bindings: ScopedNameMap<ClassBindingTarget>,
     lexical_scope_parents: FxHashMap<usize, Option<usize>>,
-    scope_ids_by_display: FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>>,
+    scope_ids_by_display:
+        FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>>,
     stars: Vec<String>,
     namespaces: NamespaceTable,
 }
@@ -44,12 +44,9 @@ struct IndexedAlias {
 struct ClassBindingTarget {
     scope: String,
     class_id: crate::codebase::dependencies::extract::CallableId,
-    static_member_ids:
-        FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
-    static_getter_ids:
-        FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
-    static_setter_ids:
-        FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    static_member_ids: FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    static_getter_ids: FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    static_setter_ids: FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
     /// A simple local `extends Base` relationship. Imported, computed, and
     /// expression bases intentionally stay unresolved here.
     local_base: Option<String>,
@@ -62,6 +59,7 @@ struct ResolvedLocalCallee {
 }
 
 include!("edge_calls/index_build.rs");
+include!("edge_calls/scoped_names.rs");
 include!("edge_calls/namespace_table.rs");
 
 impl CallableFileIndex {
@@ -77,11 +75,11 @@ impl CallableFileIndex {
         let getters_by_class = index_class_members_by_id(&file.static_getter_callable_ids);
         let setters_by_class = index_class_members_by_id(&file.static_setter_callable_ids);
         let local_bases = index_local_construct_bases(&file.function_calls);
-        let callable_bindings = file
-            .callable_bindings
-            .iter()
-            .map(|(scope, binding, id)| ((*scope, binding.clone()), *id))
-            .collect::<FxHashMap<_, _>>();
+        let callable_bindings = index_scoped_names(
+            file.callable_bindings
+                .iter()
+                .map(|(scope, binding, id)| ((*scope, binding.clone()), *id)),
+        );
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
@@ -103,10 +101,8 @@ impl CallableFileIndex {
             aliases: index_callable_aliases(&file.callable_aliases),
             binding_declared_at: index_binding_declared_at(&file.callable_binding_declared_at),
             invocation_offsets,
-            class_bindings: file
-                .callable_bindings
-                .iter()
-                .filter_map(|(scope, binding, id)| {
+            class_bindings: index_scoped_names(file.callable_bindings.iter().filter_map(
+                |(scope, binding, id)| {
                     class_scope_by_id.get(id).map(|class_scope| {
                         (
                             (*scope, binding.clone()),
@@ -129,8 +125,8 @@ impl CallableFileIndex {
                             },
                         )
                     })
-                })
-                .collect(),
+                },
+            )),
             lexical_scope_parents: file.lexical_scope_parents.iter().copied().collect(),
             scope_ids_by_display: index_scope_ids_by_display(&file.callable_scope_ids),
             stars: file.star_reexport_specifiers.clone(),

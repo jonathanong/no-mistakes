@@ -119,14 +119,8 @@ fn callable_file_index_looks_up_preindexed_class_members() {
             .collect(),
         "the class membership index must retain every class and exclude ordinary callables"
     );
-    let alpha = index
-        .class_bindings
-        .get(&(0, "Alpha".to_string()))
-        .expect("Alpha is a class binding");
-    let beta = index
-        .class_bindings
-        .get(&(0, "Beta".to_string()))
-        .expect("Beta is a class binding");
+    let alpha = scoped_name(&index.class_bindings, 0, "Alpha").expect("Alpha is a class binding");
+    let beta = scoped_name(&index.class_bindings, 0, "Beta").expect("Beta is a class binding");
 
     assert_eq!(alpha.static_member_ids.get("run"), Some(&CallableId(11)));
     assert_eq!(alpha.static_member_ids.get("init"), Some(&CallableId(12)));
@@ -137,9 +131,7 @@ fn callable_file_index_looks_up_preindexed_class_members() {
     assert_eq!(alpha.local_base.as_deref(), Some("Base"));
     assert!(beta.local_base.is_none());
     assert!(
-        !index
-            .class_bindings
-            .contains_key(&(0, "Gamma".to_string())),
+        scoped_name(&index.class_bindings, 0, "Gamma").is_none(),
         "non-class bindings must not enter the class member index"
     );
 }

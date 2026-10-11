@@ -47,16 +47,14 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
         callable_bindings: fx_map(),
         imported: fx_map(),
         exported: fx_map(),
-        aliases: [(
+        aliases: index_scoped_names([(
             (0, "alias".to_string()),
             IndexedAlias {
                 target: "target".to_string(),
                 declared_at: 0,
                 invalidated_at: None,
             },
-        )]
-        .into_iter()
-        .collect(),
+        )]),
         binding_declared_at: fx_map(),
         invocation_offsets: fx_map(),
         class_bindings: fx_map(),
@@ -166,10 +164,8 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
             .map(|resolved| resolved.callee),
         Some("target".to_string()),
     );
-    assert!(
-        reachable_function_scopes(&facts)
-            .contains(&crate::codebase::dependencies::extract::CallableId(2))
-    );
+    assert!(reachable_function_scopes(&facts)
+        .contains(&crate::codebase::dependencies::extract::CallableId(2)));
 }
 
 #[test]

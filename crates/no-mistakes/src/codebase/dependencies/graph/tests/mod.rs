@@ -123,6 +123,7 @@ include!("call_traversal_decorators.rs");
 include!("call_traversal_tagged_templates.rs");
 include!("call_policy_coverage.rs");
 include!("callable_index_construction.rs");
+include!("scoped_callable_lookups.rs");
 include!("accessor_kind_index.rs");
 include!("class_resolution_index.rs");
 include!("symbol_runtime_edges.rs");
