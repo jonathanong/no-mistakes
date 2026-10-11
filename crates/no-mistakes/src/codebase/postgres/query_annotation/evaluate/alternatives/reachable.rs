@@ -27,7 +27,10 @@ impl Reachable {
             | Value::Object(values)
             | Value::Joined(values)
             | Value::Possible(values)
-                if self.visited_values.insert(values.identity()) =>
+                // Functions carry environments without being builder/argument
+                // references. Both immutable summaries must be empty to skip.
+                if (values.contains_reference() || values.contains_environment())
+                    && self.visited_values.insert(values.identity()) =>
             {
                 for value in values {
                     self.value(value);
@@ -64,6 +67,9 @@ pub(super) fn collect_from_roots(
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.annotation.reachability_walks", 1);
+    }
     let mut found = Reachable::default();
     found.pending_env.extend(roots.iter().copied());
     for value in returned {

@@ -1,5 +1,5 @@
 use super::super::Evaluator;
-use super::{arena, frames, reachable};
+use super::{arena, frames};
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -19,6 +19,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         );
         self.remap_active_callbacks(0, &indices);
         self.rebuild_binding_indexes();
+        // Compaction retained only module-reachable frames, so heap mutations
+        // and builder updates can use one walk over the remaining scopes.
         frames::prune_state(
             &self.scopes,
             &[],
@@ -27,6 +29,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 definite: &mut self.definite_deleted_argument_slots,
                 disconnected: &mut self.disconnected_argument_slots,
                 invalidated: &mut self.invalidated_builders,
+                updates: &mut self.builder_updates,
             },
             &self.mapped_arguments,
             arena::ArenaMut {
@@ -35,19 +38,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             },
             &self.captured_bindings,
         );
-        let live = reachable::collect_from_roots(
-            &self.scopes,
-            &self.modules.values().copied().collect::<Vec<_>>(),
-            &[],
-            arena::Arena {
-                objects: &self.argument_objects,
-                extras: &self.argument_extra_slots,
-            },
-            &self.mapped_arguments,
-            &self.captured_bindings,
-        );
-        self.builder_updates
-            .retain(|id, _| live.identities.contains(id));
     }
     pub(super) fn prune_alternative_state(&mut self, returned: &[super::super::Value]) {
         frames::prune_state(
@@ -58,6 +48,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 definite: &mut self.definite_deleted_argument_slots,
                 disconnected: &mut self.disconnected_argument_slots,
                 invalidated: &mut self.invalidated_builders,
+                updates: &mut self.builder_updates,
             },
             &self.mapped_arguments,
             arena::ArenaMut {
@@ -66,19 +57,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             },
             &self.captured_bindings,
         );
-        let live = reachable::collect(
-            &self.scopes,
-            self.scopes.len(),
-            returned,
-            arena::Arena {
-                objects: &self.argument_objects,
-                extras: &self.argument_extra_slots,
-            },
-            &self.mapped_arguments,
-            &self.captured_bindings,
-        );
-        self.builder_updates
-            .retain(|id, _| live.identities.contains(id));
     }
     pub(super) fn install_disconnected_slots(
         &mut self,
@@ -122,3 +100,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         );
     }
 }
+
+#[cfg(test)]
+mod tests;

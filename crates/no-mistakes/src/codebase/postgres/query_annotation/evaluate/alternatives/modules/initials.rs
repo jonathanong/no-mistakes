@@ -138,6 +138,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             );
         }
     }
+    // The arm runner rebuilds derived binding indexes after this restoration.
     pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn restore_alternative_modules(
         &mut self,
     ) {
@@ -170,7 +171,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .extend(snapshot.definite.iter().copied());
         self.disconnected_argument_slots
             .extend(snapshot.disconnected.iter().copied());
-        self.rebuild_fresh_mapped_argument_bindings();
     }
 }
 

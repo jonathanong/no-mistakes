@@ -77,8 +77,11 @@ pub(super) fn project_relative_executor_scopes(
             }
         };
         let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);
-        crate::codebase::postgres::query_annotation::project::project(files, |specifier, from| {
-            resolver.resolve(specifier, from)
+        crate::perf_trace::trace("postgres.annotation.project", || {
+            crate::codebase::postgres::query_annotation::project::project(
+                files,
+                |specifier, from| resolver.resolve(specifier, from),
+            );
         });
     }
 }

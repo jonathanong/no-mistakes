@@ -34,6 +34,11 @@ graphs additionally report `graph.playwright_selector_merge`. These labels
 identify deterministic finalization work; they do not change graph output or
 canonical edge order.
 
+PostgreSQL annotation checks report `postgres.annotation.project` separately
+from parsing, with `postgres.annotation.reachability_walks` counting the
+branch-state liveness traversals. This helps distinguish source extraction
+from helper and callback evaluation.
+
 Instrumentation is invocation-scoped and disabled by default. A disabled run
 does not construct an observer, start clocks, or retain work ledgers. Enabled
 runs memoize successful and failed discovery/read/parse operations in memory

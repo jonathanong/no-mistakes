@@ -56,7 +56,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.captured_bindings
                 .retain(|frame, _| *frame >= scopes.len());
             self.captured_bindings.extend(captured.clone());
-            self.rebuild_binding_indexes();
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
@@ -67,6 +66,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 self.argument_objects.insert(*id, slots.clone());
             }
             self.restore_alternative_modules();
+            // Restore all primary state before rebuilding these derived indexes.
             self.rebuild_binding_indexes();
             returned.push(self.expr(arm, path, env, depth, generic));
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());

@@ -14,6 +14,8 @@ mod graph_gates;
 mod language_frontends;
 #[path = "core_analysis/observer.rs"]
 mod observer;
+#[path = "core_analysis/postgres_annotations.rs"]
+mod postgres_annotations;
 #[path = "core_analysis/postgres_bounds.rs"]
 mod postgres_bounds;
 #[path = "core_analysis/postgres_scopes.rs"]
@@ -87,6 +89,7 @@ criterion_group!(
     bench_sql_source_positions,
     bench_lazy_traversal,
     postgres_bounds::bench_postgres_bounds,
+    postgres_annotations::bench_postgres_annotations,
     bench_import_only_vs_workspace_relationships,
     bench_callable_file_index_construction,
     bench_call_site_membership,
