@@ -32,7 +32,9 @@ pub fn precompute_setup_data(
     root: &Path,
     config: &NoMistakesConfig,
 ) -> Result<Vec<ConfigSetupData>> {
-    precompute_setup_data_from_config_files(root, &config_files(root, config))
+    let mut data = precompute_setup_data_from_config_files(root, &config_files(root, config))?;
+    data.extend(explicit_project_setup_data(root, config, None)?);
+    Ok(data)
 }
 
 fn precompute_setup_data_from_config_files(
@@ -98,6 +100,51 @@ fn precompute_setup_data_from_config_files_inner(
         });
     }
     Ok(result)
+}
+
+fn explicit_project_setup_data(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_files: Option<&crate::fx::PathSet>,
+) -> Result<Vec<ConfigSetupData>> {
+    let mut data = Vec::new();
+    for (name, project) in &config.tests.vitest.projects {
+        if project.setup_files.is_empty() {
+            continue;
+        }
+        anyhow::ensure!(
+            !project.include.is_empty(),
+            "tests.vitest.projects.{name}.setup_files requires a nonempty include matcher"
+        );
+        let filter = TestFilter {
+            include: build_globset(&project.include)?,
+            include_regex: Vec::new(),
+            exclude: build_globset(&project.exclude)?,
+        };
+        let mut setup_files = Vec::new();
+        for setup in &project.setup_files {
+            let relative = Path::new(setup);
+            anyhow::ensure!(
+                !setup.is_empty()
+                    && !relative.is_absolute()
+                    && relative.components().all(|part| matches!(part, std::path::Component::Normal(_) | std::path::Component::CurDir)),
+                "tests.vitest.projects.{name}.setup_files contains invalid repository-relative path {setup:?}"
+            );
+            let path = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
+            anyhow::ensure!(
+                visible_files.map_or_else(|| path.is_file(), |visible| visible.contains(&path)),
+                "tests.vitest.projects.{name}.setup_files path {setup:?} is missing from the analysis file inventory"
+            );
+            setup_files.push(path);
+        }
+        setup_files.sort();
+        setup_files.dedup();
+        data.push(ConfigSetupData {
+            filter,
+            setup_files,
+        });
+    }
+    Ok(data)
 }
 
 pub fn setup_files_for_test_precomputed(

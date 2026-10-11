@@ -5,17 +5,17 @@ use crate::codebase::ts_resolver::ScopedImportResolver;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(super) struct Request<'a> {
-    pub(super) test_file: &'a Path,
-    pub(super) graph: &'a DepGraph,
-    pub(super) graph_files: &'a GraphFiles,
-    pub(super) visible_files: &'a crate::fx::PathSet,
-    pub(super) resolver: &'a ScopedImportResolver<'a>,
-    pub(super) shared: &'a CheckFactMap,
-    pub(super) excluded: &'a HashSet<PathBuf>,
+pub(in super::super) struct Request<'a> {
+    pub(in super::super) test_file: &'a Path,
+    pub(in super::super) graph: &'a DepGraph,
+    pub(in super::super) graph_files: &'a GraphFiles,
+    pub(in super::super) visible_files: &'a crate::fx::PathSet,
+    pub(in super::super) resolver: &'a ScopedImportResolver<'a>,
+    pub(in super::super) shared: &'a CheckFactMap,
+    pub(in super::super) excluded: &'a HashSet<PathBuf>,
 }
 
-pub(super) fn collect(request: Request<'_>) -> HashSet<PathBuf> {
+pub(in super::super) fn collect(request: Request<'_>) -> HashSet<PathBuf> {
     let Request {
         test_file,
         graph,

@@ -48,6 +48,23 @@ the test never imports, imports only as a type, or loads lazily does not
 register its mock for that test. Mock coverage stays scoped to each test;
 dynamic imports inside an imported helper's mock factory remain checked.
 
+For a Vitest project defined through an imported config module, declare its
+setup modules explicitly under `tests.vitest.projects.<name>.setup_files`:
+
+```yaml
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/**/*.test.tsx]
+        exclude: [web/**/*.integration.test.tsx]
+        setup_files: [web/test-helpers/vitest.setup.web.mts]
+```
+
+Setup paths are repository-root-relative. Setup mocks, including mocks in
+statically imported setup helpers, apply only to the project's matched tests.
+Missing setup paths or a project without an `include` matcher fail the check.
+
 Caveat: only the bare `import(...)` form is recognized as a type carrier. A
 TS-wrapped specifier, e.g. `vi.mock(import('./dependency.mts') as unknown, factory)`,
 is not recognized and is still treated as an unmocked dynamic import.

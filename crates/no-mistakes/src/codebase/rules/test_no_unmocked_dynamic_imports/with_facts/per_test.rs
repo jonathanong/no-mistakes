@@ -13,7 +13,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-mod helper_mocks;
+pub(super) mod helper_mocks;
 
 pub(super) struct Request<'a> {
     pub(super) root: &'a Path,
@@ -67,7 +67,9 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         setup_data,
         &file,
         resolver,
+        graph,
         graph_files,
+        visible_files,
         shared,
     )?);
     mocks.extend(resolve_mock_specifiers(

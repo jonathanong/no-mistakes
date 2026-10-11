@@ -30,6 +30,17 @@ pub(in super::super) fn prepare_from_visible(
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<crate::fx::PathSet>();
+    let mut setup_data = super::precompute_setup_data_from_config_files_from_visible(
+        root,
+        &config_files,
+        &visible_files,
+        sources,
+    )?;
+    setup_data.extend(super::explicit_project_setup_data(
+        root,
+        config,
+        Some(&visible_files),
+    )?);
     Ok(PreparedConfig {
         test_filter: super::filter::test_filter_from_config_files_with_sources(
             root,
@@ -37,11 +48,6 @@ pub(in super::super) fn prepare_from_visible(
             &config_files,
             Some(sources),
         )?,
-        setup_data: super::precompute_setup_data_from_config_files_from_visible(
-            root,
-            &config_files,
-            &visible_files,
-            sources,
-        )?,
+        setup_data,
     })
 }
