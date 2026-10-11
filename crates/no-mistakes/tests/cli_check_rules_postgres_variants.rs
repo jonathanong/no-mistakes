@@ -20,6 +20,8 @@ mod guard_alias;
 mod helper_guards;
 #[path = "cli_check_rules_postgres_variants/switch_labels.rs"]
 mod switch_labels;
+#[path = "cli_check_rules_postgres_variants/switch_member_invocations.rs"]
+mod switch_member_invocations;
 #[path = "cli_check_rules_postgres_variants/switch_scalar_labels.rs"]
 mod switch_scalar_labels;
 #[path = "cli_check_rules_postgres_variants/unaffected_switch.rs"]

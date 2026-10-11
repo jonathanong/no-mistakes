@@ -283,6 +283,10 @@ Switch discriminants or case labels that mutate an existing SQL binding also
 remain opaque because earlier labels can change the state of later cases.
 Any assignment or update in a case label, including destructuring or a directly
 invoked arrow/function body, also disables finite recovery inside that switch.
+Literal closures invoked through `.call(...)` or `.apply(...)`, including
+literal computed properties and TypeScript wrappers, follow the same boundary.
+The detector inspects callee and argument writes before the invoked body;
+callback arguments and closures merely referenced or bound are not invoked.
 Failed labels can change scalar guards before a later case runs; a default in
 the middle runs only after later labels fail. This fallback scans each label and
 body once without enumerating or replaying writes along fallthrough paths.
