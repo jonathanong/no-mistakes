@@ -10,7 +10,7 @@ const root = join(
 
 test(
   "compiled CJS and ESM checks scope declared Vitest setup mocks per project",
-  { skip: !compiled },
+  { skip: !compiled, timeout: 20_000 },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
@@ -61,6 +61,16 @@ test(
       [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
       [".no-mistakes-stale-app.yml", ["web/covered.test.mts"]],
       [".no-mistakes-cjs-helper.yml", []],
+      [".no-mistakes-mixed-runners.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-disjoint-runners.yml", ["other/uncovered.test.mts"]],
+      [".no-mistakes-inherit.yml", []],
+      [".no-mistakes-independent.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-omitted.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-cleared.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-referenced.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-playwright-invalid-vitest.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-playwright-config.yml", ["web/covered.test.mts"]],
+      [".no-mistakes-mixed-config-runners.yml", ["web/covered.test.mts"]],
     ]) {
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);
