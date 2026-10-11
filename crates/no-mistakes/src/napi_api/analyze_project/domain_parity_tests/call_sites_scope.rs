@@ -242,7 +242,7 @@ fn partial_call_sites_keep_runner_helper_diagnostics_when_mixed_with_runner_repo
             // The runner catalog parses setup before the shared union fact pass.
             reports.push(json!({
                 "type": "dependents", "files": [file],
-                "relationships": ["call", "test"], "tests": ["vitest"]
+                "relationships": ["call", "import"], "tests": ["vitest"]
             }));
         }
         crate::ast::begin_parse_count(&root);
