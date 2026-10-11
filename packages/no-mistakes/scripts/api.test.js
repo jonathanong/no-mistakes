@@ -1113,6 +1113,7 @@ test("SELECT scope facts expose named public contracts", () => {
   assert.match(query, /correlations: PostgresSqlQueryColumn\[\];/);
   assert.match(query, /notDepth: number;/);
   assert.match(query, /effectiveNegated: boolean \| null;/);
+  assert.match(query, /effectiveMandatory: boolean \| null;/);
 });
 
 test("INSERT facts expose named exported declaration contracts", () => {

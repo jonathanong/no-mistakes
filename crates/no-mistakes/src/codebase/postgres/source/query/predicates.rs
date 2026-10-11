@@ -1,6 +1,9 @@
 use super::*;
 use sqlparser::ast::{BinaryOperator, Expr, UnaryOperator};
+mod context;
 mod functions;
+use context::{binary_context, opaque_context};
+
 impl Collector<'_, '_> {
     pub(super) fn expr(
         &mut self,
@@ -30,18 +33,7 @@ impl Collector<'_, '_> {
                         span: self.locations.span(expr.span()),
                     });
                 }
-                let mut child = context;
-                match op {
-                    BinaryOperator::And => {}
-                    BinaryOperator::Or => {
-                        child.mandatory = false;
-                        child.under_or = true;
-                    }
-                    _ => {
-                        child.mandatory = false;
-                        child.under_other = true;
-                    }
-                }
+                let child = binary_context(context, op, self.not_depth);
                 self.expr(left, scope, clause, join, child.clone(), env);
                 self.expr(right, scope, clause, join, child, env);
             }
@@ -54,6 +46,7 @@ impl Collector<'_, '_> {
                     self.not_depth += 1;
                 } else {
                     child.under_other = true;
+                    child.effective_mandatory = None;
                 }
                 self.expr(expr, scope, clause, join, child, env);
                 self.not_depth -= u32::from(not);
@@ -67,6 +60,7 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_case = true;
+                child.effective_mandatory = None;
                 for expr in operand
                     .iter()
                     .map(|x| x.as_ref())
@@ -85,12 +79,11 @@ impl Collector<'_, '_> {
                 let mut child = context;
                 child.mandatory = false;
                 child.under_boolean_test = true;
+                child.effective_mandatory = None;
                 self.expr(inner, scope, clause, join, child, env);
             }
             Expr::IsNull(inner) | Expr::IsNotNull(inner) | Expr::Cast { expr: inner, .. } => {
-                let mut child = context;
-                child.mandatory = false;
-                child.under_other = true;
+                let child = opaque_context(context);
                 self.expr(inner, scope, clause, join, child, env);
             }
             Expr::Exists { subquery, negated } => {
@@ -143,9 +136,7 @@ impl Collector<'_, '_> {
                 );
             }
             Expr::InSubquery { expr, subquery, .. } => {
-                let mut child = context;
-                child.mandatory = false;
-                child.under_other = true;
+                let child = opaque_context(context);
                 self.expr(expr, scope, clause, None, child, env);
                 self.query(
                     subquery,
@@ -160,17 +151,13 @@ impl Collector<'_, '_> {
                 self.function_expressions(function, scope, clause, join, context, env)
             }
             Expr::Tuple(exprs) | Expr::Array(sqlparser::ast::Array { elem: exprs, .. }) => {
-                let mut child = context;
-                child.mandatory = false;
-                child.under_other = true;
+                let child = opaque_context(context);
                 for expr in exprs {
                     self.expr(expr, scope, clause, None, child.clone(), env);
                 }
             }
             Expr::InList { expr, list, .. } => {
-                let mut child = context;
-                child.mandatory = false;
-                child.under_other = true;
+                let child = opaque_context(context);
                 self.expr(expr, scope, clause, None, child.clone(), env);
                 for expr in list {
                     self.expr(expr, scope, clause, None, child.clone(), env);
@@ -179,9 +166,7 @@ impl Collector<'_, '_> {
             Expr::Between {
                 expr, low, high, ..
             } => {
-                let mut child = context;
-                child.mandatory = false;
-                child.under_other = true;
+                let child = opaque_context(context);
                 for expr in [expr, low, high] {
                     self.expr(expr, scope, clause, None, child.clone(), env);
                 }
