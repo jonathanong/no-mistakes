@@ -112,7 +112,7 @@ pub(super) fn collect(
             dependency_cache,
             findings: &mut local_findings,
         };
-        for import in &cached.dynamic_imports {
+        for import in &cached.facts.dynamic_imports {
             if !defer_suppression
                 && has_disable_comment(&cached.source, import.line as u32, RULE_ID)
             {

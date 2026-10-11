@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    configs: shared-runner.config.mts
+  playwright:
+    configs: shared-runner.config.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      playwright: [e2e]

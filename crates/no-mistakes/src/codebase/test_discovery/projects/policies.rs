@@ -81,12 +81,22 @@ fn configured_project(
     policy: &TestProjectPolicy,
     config: Option<String>,
     workspace: bool,
-    vitest_setup: Vec<VitestSetupDependency>,
+    mut vitest_setup: Vec<VitestSetupDependency>,
     declared_deadlines: DeclaredDeadlines,
 ) -> Option<ConfigProject> {
     if policy.include.is_empty() {
         return None;
     }
+    vitest_setup
+        .extend(crate::integration_tests::project_config::policy_setup_dependencies(root, policy));
+    let mut seen = std::collections::HashSet::new();
+    vitest_setup.retain(|setup| {
+        seen.insert((
+            setup.field,
+            setup.resolved_path.clone(),
+            setup.specifier.clone(),
+        ))
+    });
     Some(ConfigProject {
         config,
         workspace,

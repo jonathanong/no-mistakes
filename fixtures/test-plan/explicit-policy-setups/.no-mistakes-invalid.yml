@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/*.test.ts]
+        setup_files: [../shared/setup.ts]

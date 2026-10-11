@@ -66,7 +66,7 @@ pub(super) fn build(
         no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
     );
     plan.postgres_schema_catalog_paths = schema_catalog_paths?;
-    if integration_enabled || deadlines {
+    if integration_enabled || dynamic_import_rules || deadlines {
         plan.integration_runner_configs = Some(std::sync::Arc::new((if deadlines {
             no_mistakes::integration_tests::prepare_runner_configs_with_deadline_evidence
         } else {

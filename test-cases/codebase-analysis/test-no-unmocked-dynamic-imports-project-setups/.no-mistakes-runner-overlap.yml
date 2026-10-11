@@ -1,0 +1,11 @@
+tests:
+  jest:
+    configs: dual-runner.config.mjs
+  vitest:
+    projects:
+      web:
+        include: [web/covered.test.mts]
+        setup_files: [test-helpers/web.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

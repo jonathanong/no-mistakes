@@ -69,7 +69,7 @@ impl SharedCheckContext {
         let prepare_runner_configs = if deadlines {
             crate::integration_tests::prepare_runner_configs_with_deadline_evidence
         } else { crate::integration_tests::prepare_runner_configs_with_catalog };
-        if integration_enabled || deadlines {
+        if integration_enabled || enabled.dynamic_import_rules || deadlines {
             plan.integration_runner_configs = Some(std::sync::Arc::new(
                 prepare_runner_configs(
                     &root,

@@ -2,7 +2,7 @@ use super::RuleFinding;
 use super::{config, manual_mocks, matching_test_files_with_filter, reachable};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig};
+use crate::codebase::ts_resolver::ScopedImportResolver;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use dashmap::DashMap;
@@ -11,8 +11,15 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod entrypoints;
 mod graph;
+pub use entrypoints::{check_with_facts, check_with_prepared_facts};
 mod per_test;
+mod request;
+mod runner_configs;
+pub(super) use request::check as check_standalone;
+pub(crate) use runner_configs::ensure as supplement_runner_facts;
+mod setup_contexts;
 mod setup_mocks;
 mod tsconfig_catalog;
 
@@ -29,51 +36,6 @@ struct PerTestResult {
 pub(crate) struct PreparedDynamicFindings {
     pub(crate) findings: Vec<RuleFinding>,
     pub(crate) suppression_sources: Vec<Option<String>>,
-}
-
-pub fn check_with_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig_path: Option<&Path>,
-    shared: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    session.insert_visible_paths(
-        root,
-        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
-            root,
-            shared.files(),
-        )),
-    );
-    let sources = session.visible_paths(root).source_store_for(root);
-    let (tsconfig, catalog) = tsconfig_catalog::for_request(root, tsconfig_path, shared, &sources)?;
-    check_with_prepared_facts_and_session(
-        root, config, &tsconfig, &catalog, shared, &session, &sources,
-    )
-}
-
-#[doc(hidden)]
-pub fn check_with_prepared_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
-    shared: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let catalog = tsconfig_catalog::forced(root, tsconfig);
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    session.insert_visible_paths(
-        root,
-        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
-            root,
-            shared.files(),
-        )),
-    );
-    let sources = session.visible_paths(root).source_store_for(root);
-    check_with_prepared_facts_and_session(
-        root, config, tsconfig, &catalog, shared, &session, &sources,
-    )
 }
 
 pub(crate) struct PreparedFactsGraphRequest<'a> {
@@ -118,41 +80,72 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         });
     let prepared =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
-            config::prepare_from_visible(root, config, &files, sources)
+            config::prepare_with_runner_facts(
+                root,
+                config,
+                &files,
+                sources,
+                &shared.integration_runner_configs,
+            )
         })?;
-    let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
-    let setup_data = prepared.setup_data();
+    let prepared_contexts = setup_contexts::prepare(setup_contexts::Request {
+        root,
+        test_files: matching_test_files_with_filter(root, &files, prepared.test_filter()),
+        setup_data: prepared.setup_data(),
+        selected: config::SelectedRunners::for_config(config),
+        resolver: &resolver,
+        graph,
+        graph_files: &graph_files,
+        visible_files: &visible_files,
+        shared,
+        defer_suppression,
+    })?;
+    let empty_mocks = HashSet::new();
 
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
 
     let per_test =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.per_test_analysis", || {
-            test_files
+            prepared_contexts
+                .tests
                 .into_par_iter()
-                .map(|file| {
-                    per_test::analyze(
-                        per_test::Request {
-                            root,
-                            config,
-                            resolver: &resolver,
-                            graph,
-                            graph_files: &graph_files,
-                            visible_files: &visible_files,
-                            manual_mocks: &manual_mocks,
-                            setup_data,
-                            shared,
-                            dependency_cache: &dependency_cache,
-                            defer_suppression,
-                        },
-                        file,
-                    )
+                .map(|test| {
+                    test.contexts
+                        .into_iter()
+                        .map(|setup_files| {
+                            let setup_mocks = if test.setup_needed {
+                                prepared_contexts
+                                    .mocks
+                                    .get(&setup_files)
+                                    .expect("setup mocks were precomputed")
+                            } else {
+                                &empty_mocks
+                            };
+                            per_test::analyze(
+                                per_test::Request {
+                                    root,
+                                    config,
+                                    resolver: &resolver,
+                                    graph,
+                                    graph_files: &graph_files,
+                                    visible_files: &visible_files,
+                                    manual_mocks: &manual_mocks,
+                                    setup_mocks,
+                                    shared,
+                                    dependency_cache: &dependency_cache,
+                                    defer_suppression,
+                                },
+                                test.file.clone(),
+                            )
+                        })
+                        .collect::<Result<Vec<_>>>()
                 })
                 .collect::<Result<Vec<_>>>()
         })?;
 
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
-    for result in per_test {
+    for result in per_test.into_iter().flatten() {
         let reachable_suppression_file = result.reachable_suppression_file;
         for finding in result.direct_findings {
             findings.push(finding);
@@ -173,8 +166,13 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         .into_iter()
         .zip(suppression_sources)
         .collect::<Vec<_>>();
-    paired
-        .sort_by(|(a, _), (b, _)| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
+    paired.sort_by(|(a, source_a), (b, source_b)| {
+        (&a.file, a.line, &a.target)
+            .cmp(&(&b.file, b.line, &b.target))
+            .then_with(|| a.cmp(b))
+            .then_with(|| source_a.cmp(source_b))
+    });
+    paired.dedup();
     let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
     Ok(PreparedDynamicFindings {
         findings,

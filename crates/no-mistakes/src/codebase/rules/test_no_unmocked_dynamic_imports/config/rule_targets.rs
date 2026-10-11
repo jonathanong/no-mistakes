@@ -1,18 +1,56 @@
-use crate::config::v2::schema::{StringOrList, TestProjectPolicy};
 use crate::config::v2::NoMistakesConfig;
-use crate::integration_tests::project_config::load_projects;
 use crate::integration_tests::types::{ConfigProject, Framework};
 use anyhow::Result;
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod path_patterns;
+mod projects;
+use super::build_globset;
 use path_patterns::{append_project_globs, append_rule_globs};
+
+pub(super) struct PreparedTargets {
+    pub(super) includes: Vec<String>,
+    pub(super) excludes: Vec<String>,
+    playwright: Vec<ConfigProject>,
+}
+
+impl PreparedTargets {
+    pub(super) fn playwright_setup_data(&self) -> Result<Vec<super::ConfigSetupData>> {
+        self.playwright
+            .iter()
+            .cloned()
+            .map(|project| {
+                Ok(super::ConfigSetupData {
+                    workspace: false,
+                    filter: super::TestFilter {
+                        alternatives: Vec::new(),
+                        include: build_globset(&project.include)?,
+                        include_regex: Vec::new(),
+                        exclude: build_globset(&project.exclude)?,
+                    },
+                    setup_files: Vec::new(),
+                    explicit_project: false,
+                    runner: super::discovery::Runner::Playwright,
+                    project_name: project.policy_name,
+                })
+            })
+            .collect()
+    }
+}
 
 pub(super) fn rule_test_project_globs(
     root: &Path,
     config: &NoMistakesConfig,
 ) -> Result<(Vec<String>, Vec<String>)> {
+    let targets = prepare(root, config, None)?;
+    Ok((targets.includes, targets.excludes))
+}
+
+pub(super) fn prepare(
+    root: &Path,
+    config: &NoMistakesConfig,
+    prepared: Option<(&[PathBuf], &crate::codebase::check_facts::RunnerConfigFacts)>,
+) -> Result<PreparedTargets> {
     let mut includes = Vec::new();
     let mut excludes = Vec::new();
     let rules = config.rule_applications(super::super::RULE_ID);
@@ -24,21 +62,34 @@ pub(super) fn rule_test_project_globs(
         .iter()
         .flat_map(|rule| rule.tests.playwright.iter())
         .collect::<Vec<_>>();
-    let vitest_projects = load_target_projects(
+    let vitest_projects = projects::load(
         root,
         Framework::Vitest,
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         &vitest_project_names,
+        prepared,
     );
     let vitest_projects = vitest_projects?;
-    let playwright_projects = load_target_projects(
-        root,
-        Framework::Playwright,
-        config.tests.playwright.configs.as_ref(),
-        &config.tests.playwright.projects,
-        &playwright_project_names,
-    );
+    let playwright_projects =
+        if prepared.is_some() && super::SelectedRunners::for_config(config).includes_all() {
+            projects::load_all(
+                root,
+                Framework::Playwright,
+                config.tests.playwright.configs.as_ref(),
+                &config.tests.playwright.projects,
+                prepared,
+            )
+        } else {
+            projects::load(
+                root,
+                Framework::Playwright,
+                config.tests.playwright.configs.as_ref(),
+                &config.tests.playwright.projects,
+                &playwright_project_names,
+                prepared,
+            )
+        };
     let playwright_projects = playwright_projects?;
     for rule in rules {
         append_rule_globs(config, rule, &mut includes, &mut excludes);
@@ -68,48 +119,11 @@ pub(super) fn rule_test_project_globs(
     includes.dedup();
     excludes.sort();
     excludes.dedup();
-    Ok((includes, excludes))
-}
-
-fn load_target_projects(
-    root: &Path,
-    framework: Framework,
-    configs: Option<&StringOrList>,
-    policies: &BTreeMap<String, TestProjectPolicy>,
-    project_names: &[&String],
-) -> Result<Vec<ConfigProject>> {
-    if project_names.is_empty() {
-        return Ok(Vec::new());
-    }
-    let mut unresolved = Vec::new();
-    let mut projects = Vec::new();
-    for project_name in project_names {
-        if let Some(project) = policies.get(*project_name).and_then(|policy| {
-            crate::integration_tests::config::configured_project(root, project_name, policy)
-        }) {
-            projects.push(project);
-        } else {
-            unresolved.push(*project_name);
-        }
-    }
-    if !unresolved.is_empty() {
-        let unresolved_names = unresolved
-            .iter()
-            .map(|name| name.as_str())
-            .collect::<BTreeSet<_>>();
-        projects.extend(
-            load_projects(root, framework, configs)?
-                .into_iter()
-                .filter(|project| {
-                    project
-                        .policy_name
-                        .as_deref()
-                        .is_some_and(|name| unresolved_names.contains(name))
-                        || (project.policy_name.is_none() && unresolved_names.contains("default"))
-                }),
-        );
-    }
-    Ok(projects)
+    Ok(PreparedTargets {
+        includes,
+        excludes,
+        playwright: playwright_projects,
+    })
 }
 
 fn append_test_project_globs(

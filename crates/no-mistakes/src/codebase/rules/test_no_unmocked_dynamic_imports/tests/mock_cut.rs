@@ -49,7 +49,7 @@ fn reachable_dependency_cache_does_not_cross_mock_sets() {
     for order in [[&mocked, &unmocked], [&unmocked, &mocked]] {
         let dependency_cache = DashMap::new();
         for mocks in order {
-            let result = reachable::collect(
+            let result = reachable::test_api::collect(
                 reachable::ReachableContext {
                     root: &root,
                     config: &config,

@@ -1,3 +1,4 @@
+use super::discovery::config_files;
 use super::*;
 
 fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
@@ -42,6 +43,7 @@ fn setup_files_for_test(
             extract_test_property_strings(&source, "exclude"),
         );
         let filter = TestFilter {
+            alternatives: Vec::new(),
             include: build_globset(&includes)?,
             include_regex: build_regexes(&extract_test_regexes(&source))?,
             exclude: build_globset(&excludes)?,

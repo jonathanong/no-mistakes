@@ -186,6 +186,15 @@ pub struct StorybookConfig {
 pub struct TestProjectPolicy {
     pub include: Vec<String>,
     pub exclude: Vec<String>,
+    /// Repository-root-relative Vitest setup modules for this project's tests.
+    #[serde(rename = "setup_files", skip_serializing_if = "Vec::is_empty")]
+    pub setup_files: Vec<String>,
+    /// Configuration-loading provenance; never part of the serialized policy.
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub declaration_path: Option<std::path::PathBuf>,
     #[serde(rename = "integration_suites")]
     pub integration_suites: BTreeMap<String, Vec<String>>,
 }
+
+mod vitest_setup_files;

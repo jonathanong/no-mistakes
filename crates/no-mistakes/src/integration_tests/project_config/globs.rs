@@ -37,7 +37,7 @@ fn glob_escape_literal(value: &str) -> String {
         .collect()
 }
 
-pub(in crate::integration_tests) fn expand_explicit_config_values(
+pub(crate) fn expand_explicit_config_values(
     root: &Path,
     patterns: &[String],
     visible_files: &crate::fx::PathSet,

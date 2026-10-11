@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/*.test.ts]
+        exclude: [web/excluded.test.ts]
+        setup_files: [setup/web.ts]
+      node:
+        include: [node/*.test.ts]

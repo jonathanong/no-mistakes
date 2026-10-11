@@ -8,9 +8,11 @@ pub(crate) mod deadline_evidence;
 mod prepared;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_access;
 pub(in crate::integration_tests) use cache::{read_request_source, with_program};
 pub use prepared::configured_runner_config_dirs;
-pub(crate) use prepared::{prepare, prepare_with_catalog_and_sources};
+pub(crate) use prepared::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};
 pub use prepared::{
     prepare_runner_configs_with_catalog, prepare_runner_configs_with_deadline_evidence,
 };
@@ -58,6 +60,39 @@ pub(crate) struct RunnerConfigFileFacts {
     analyses: BTreeMap<PathBuf, FileAnalysis>,
 }
 
+impl RunnerConfigFileFacts {
+    pub(crate) fn covers_spec(&self, framework: Framework, raw: &str) -> bool {
+        self.results
+            .iter()
+            .any(|result| result.framework == framework && result.raw == raw)
+    }
+
+    pub(crate) fn merge(&mut self, other: Self) {
+        for result in other.results {
+            if !self.covers_spec(result.framework, &result.raw) {
+                self.results.push(result);
+            }
+        }
+        for (path, analysis) in other.analyses {
+            self.analyses.entry(path).or_insert(analysis);
+        }
+    }
+
+    pub(crate) fn vitest_projects(&self) -> Option<Result<Vec<ConfigProject>, String>> {
+        self.projects_for(Framework::Vitest)
+    }
+
+    pub(crate) fn projects_for(
+        &self,
+        framework: Framework,
+    ) -> Option<Result<Vec<ConfigProject>, String>> {
+        self.results
+            .iter()
+            .find(|result| result.framework == framework)
+            .map(|result| result.projects.clone())
+    }
+}
+
 #[derive(Clone, Default)]
 pub(crate) struct ParsedRunnerConfigs {
     files: BTreeMap<PathBuf, RunnerConfigFileFacts>,
@@ -78,10 +113,7 @@ impl ParsedRunnerConfigs {
         plan.specs.iter().all(|spec| {
             !plan.visible_files.contains(&spec.path)
                 || self.files.get(&spec.path).is_some_and(|facts| {
-                    !facts.unavailable
-                        && facts.results.iter().any(|result| {
-                            result.framework == spec.framework && result.raw == spec.raw
-                        })
+                    !facts.unavailable && facts.covers_spec(spec.framework, &spec.raw)
                 })
         })
     }

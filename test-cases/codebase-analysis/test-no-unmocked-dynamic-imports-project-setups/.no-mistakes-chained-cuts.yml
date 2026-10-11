@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    projects:
+      chain:
+        include: [chain/covered.case.mts]
+        setup_files: [chain/setup.mts]
+      ordinary:
+        include: [chain/ordinary.case.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [chain, ordinary]

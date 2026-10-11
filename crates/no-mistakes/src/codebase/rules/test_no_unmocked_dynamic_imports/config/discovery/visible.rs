@@ -58,6 +58,21 @@ fn discovered_configs_from_visible(root: &Path, visible_files: &[PathBuf]) -> Ve
     )
 }
 
+pub(in super::super) fn runner_config_files_from_visible(
+    root: &Path,
+    configs: Option<Vec<String>>,
+    runner: Runner,
+    visible: &[PathBuf],
+) -> Vec<ConfigFile> {
+    match configs {
+        Some(patterns) => expand_config_patterns_from_visible(root, patterns, runner, visible),
+        None => discovered_configs_from_visible(root, visible)
+            .into_iter()
+            .filter(|file| file.runner == runner)
+            .collect(),
+    }
+}
+
 fn jest_config_names() -> [&'static str; 7] {
     [
         "jest.config.ts",

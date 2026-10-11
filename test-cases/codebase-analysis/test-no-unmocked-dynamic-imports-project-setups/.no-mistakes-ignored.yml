@@ -1,0 +1,11 @@
+filesystem:
+  skipDirectories: [ignored]
+tests:
+  vitest:
+    projects:
+      web:
+        include: [web/**/*.test.mts]
+        setup_files: [ignored/visible-on-disk.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

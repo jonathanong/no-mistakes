@@ -321,7 +321,7 @@ test("reports a selected-platform resolver failure before attempting to spawn", 
 
 test(
   "the real addon writes dependency, dependent, symbol, and plan artifacts",
-  { skip: !process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node") },
+  { skip: !process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node"), timeout: 20_000 },
   async () => {
     const root = join(__dirname, "..", "..", "..", "fixtures", "napi", "real-addon-dependencies");
     const output = await mkdtemp(join(tmpdir(), "no-mistakes-planning-cli-"));

@@ -1,6 +1,6 @@
 use super::super::checker::{check_dynamic_import, DynamicCheckContext};
 use super::super::RULE_ID;
-use super::super::{config, reachable, resolve_mock_specifiers};
+use super::super::{reachable, resolve_mock_specifiers};
 use super::PerTestResult;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
@@ -13,7 +13,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-mod helper_mocks;
+pub(super) mod helper_mocks;
 
 pub(super) struct Request<'a> {
     pub(super) root: &'a Path,
@@ -23,7 +23,7 @@ pub(super) struct Request<'a> {
     pub(super) graph_files: &'a GraphFiles,
     pub(super) visible_files: &'a crate::fx::PathSet,
     pub(super) manual_mocks: &'a HashSet<PathBuf>,
-    pub(super) setup_data: &'a [config::ConfigSetupData],
+    pub(super) setup_mocks: &'a HashSet<PathBuf>,
     pub(super) shared: &'a CheckFactMap,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     pub(super) defer_suppression: bool,
@@ -38,7 +38,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         graph_files,
         visible_files,
         manual_mocks,
-        setup_data,
+        setup_mocks,
         shared,
         dependency_cache,
         defer_suppression,
@@ -62,14 +62,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         anyhow::bail!("missing dynamic import facts for {}", file.display());
     };
     let mut mocks = manual_mocks.clone();
-    mocks.extend(super::setup_mocks::with_facts(
-        root,
-        setup_data,
-        &file,
-        resolver,
-        graph_files,
-        shared,
-    )?);
+    mocks.extend(setup_mocks.iter().cloned());
     mocks.extend(resolve_mock_specifiers(
         &facts.mock_specifiers,
         &file,
@@ -84,7 +77,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         resolver,
         shared,
         excluded: &mocks,
-    }));
+    })?);
     let mut direct_findings = Vec::new();
     {
         let mut check_context = DynamicCheckContext {

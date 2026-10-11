@@ -1,7 +1,7 @@
 use super::*;
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::dependencies::graph::test_support::from_raw_maps;
-use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfigCatalog};
+use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig, TsConfigCatalog};
 use std::collections::HashMap;
 
 mod helper_mocks;
@@ -57,7 +57,7 @@ fn per_test_requires_a_prepared_test_fact_entry() {
             graph_files: &graph_files,
             visible_files: &visible,
             manual_mocks: &HashSet::new(),
-            setup_data: &[],
+            setup_mocks: &HashSet::new(),
             shared: &shared,
             dependency_cache: &dependency_cache,
             defer_suppression: false,
@@ -100,7 +100,7 @@ fn per_test_analyzes_empty_prepared_dynamic_facts() {
             graph_files: &graph_files,
             visible_files: &visible,
             manual_mocks: &HashSet::new(),
-            setup_data: &[],
+            setup_mocks: &HashSet::new(),
             shared: &shared,
             dependency_cache: &dependency_cache,
             defer_suppression: false,
@@ -171,7 +171,7 @@ fn prepared_reachability_skips_unavailable_facts_and_keeps_disabled_origin() {
                 graph_files: &graph_files,
                 visible_files: &visible,
                 manual_mocks: &HashSet::new(),
-                setup_data: &[],
+                setup_mocks: &HashSet::new(),
                 shared: &shared,
                 dependency_cache: &dependency_cache,
                 defer_suppression: true,

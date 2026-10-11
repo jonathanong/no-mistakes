@@ -253,6 +253,7 @@ jobs:
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
           pnpm exec vitest run
           packages/no-mistakes/scripts/real-napi-api.test.js
+          packages/no-mistakes/scripts/vitest-project-setups-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           packages/no-mistakes/scripts/postgres-source-api.test.js
           packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js

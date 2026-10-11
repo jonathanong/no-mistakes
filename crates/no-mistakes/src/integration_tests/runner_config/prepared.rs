@@ -13,10 +13,11 @@ use std::path::{Path, PathBuf};
 mod deadline_root;
 mod errors;
 mod json;
+mod missing;
 mod setup;
 
 pub use setup::prepare_runner_configs_with_deadline_evidence;
-pub(crate) use setup::{prepare, prepare_with_catalog_and_sources};
+pub(crate) use setup::{prepare, prepare_dynamic_configs, prepare_with_catalog_and_sources};
 
 /// Prepare configured runner files with the request's importer-scoped
 /// TypeScript catalog and source store.

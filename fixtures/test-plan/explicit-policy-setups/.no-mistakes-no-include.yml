@@ -1,0 +1,5 @@
+tests:
+  vitest:
+    projects:
+      web:
+        setup_files: [setup/web.ts]

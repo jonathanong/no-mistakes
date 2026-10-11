@@ -9,11 +9,14 @@ mod discovery;
 mod globs;
 mod json;
 mod parse;
+mod policy_setups;
+pub(crate) use discovery::config_values_from_visible;
 pub(crate) use discovery::discovered_config_paths;
 pub(in crate::integration_tests) use globs::expand_explicit_config_values;
 pub(crate) use globs::{build_globset, prefix_globs};
 pub(super) use json::load_vitest_json_projects;
 pub(in crate::integration_tests) use parse::load_config_projects_from_program;
+pub(crate) use policy_setups::dependencies as policy_setup_dependencies;
 
 pub(crate) fn load_projects(
     root: &Path,

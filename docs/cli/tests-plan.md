@@ -187,7 +187,9 @@ plans do not follow Vitest `setupFiles` / `globalSetup` edges.
 Vitest `setupFiles` and `globalSetup` are included in the test dependency
 graph automatically. A change to either configured module, or to a static
 import/re-export reachable from one, selects only the tests owned by that
-Vitest project. Inline projects inherit root setup fields only with
+Vitest project. Explicit `tests.vitest.projects.<name>.setup_files` declarations
+also add setup dependencies from repository-relative paths, scoped to the
+policy's include/exclude patterns. Inline projects inherit root setup fields only with
 `extends: true`; otherwise (including the default and `extends: false`) their
 own value applies, and `[]` clears it. A static string `extends` value on an
 inline project (for example `extends: './vite.config.js'`) inherits that

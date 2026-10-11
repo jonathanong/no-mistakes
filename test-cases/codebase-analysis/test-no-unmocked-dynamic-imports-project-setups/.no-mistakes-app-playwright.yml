@@ -1,0 +1,14 @@
+projects:
+  app:
+    root: web
+    include: [covered.test.mts]
+tests:
+  vitest:
+    configs: repository-vitest.config.mts
+  playwright:
+    projects:
+      e2e:
+        include: [web/covered.test.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [app]

@@ -1,0 +1,14 @@
+projects:
+  app:
+    root: web
+    include: [covered.test.mts]
+tests:
+  vitest:
+    configs: partial-projects.config.mts
+    projects:
+      web:
+        include: [web/covered.test.mts]
+        setup_files: [test-helpers/web.setup.mts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [app]

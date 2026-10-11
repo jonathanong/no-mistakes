@@ -1,4 +1,11 @@
 use super::*;
+use crate::codebase::rules::test_no_unmocked_dynamic_imports::config as dynamic_config;
+
+#[derive(Default)]
+struct RunnerDemand {
+    dynamic: bool,
+    deadlines: bool,
+}
 
 pub(crate) fn prepare(
     root: &Path,
@@ -16,7 +23,7 @@ pub(crate) fn prepare(
             None,
         )),
         None,
-        false,
+        RunnerDemand::default(),
     )
 }
 
@@ -33,7 +40,27 @@ pub(crate) fn prepare_with_catalog_and_sources(
         visible_paths,
         tsconfig_catalog,
         Some(sources),
-        false,
+        RunnerDemand::default(),
+    )
+}
+
+pub(crate) fn prepare_dynamic_configs(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> PreparedIntegrationRunnerConfigs {
+    prepare_inner(
+        root,
+        config,
+        visible_paths,
+        tsconfig_catalog,
+        Some(sources),
+        RunnerDemand {
+            dynamic: true,
+            deadlines: false,
+        },
     )
 }
 
@@ -43,13 +70,19 @@ fn prepare_inner(
     visible_paths: &[PathBuf],
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
-    deadlines: bool,
+    demand: RunnerDemand,
 ) -> PreparedIntegrationRunnerConfigs {
+    let RunnerDemand {
+        dynamic: force_dynamic,
+        deadlines,
+    } = demand;
     let mut specs = Vec::new();
     let mut visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<crate::fx::PathSet>();
+    let dynamic = force_dynamic
+        || config.rule_configured(crate::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS);
     add_framework_specs(
         &mut specs,
         root,
@@ -57,7 +90,8 @@ fn prepare_inner(
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
         &visible_files,
-        deadlines && config.tests.playwright.configs.is_some(),
+        (dynamic && dynamic_config::needs_playwright_configs(config))
+            || (deadlines && config.tests.playwright.configs.is_some()),
     );
     add_framework_specs(
         &mut specs,
@@ -66,7 +100,8 @@ fn prepare_inner(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         &visible_files,
-        (deadlines && config.tests.vitest.configs.is_some())
+        (dynamic && dynamic_config::needs_vitest_configs(config))
+            || (deadlines && config.tests.vitest.configs.is_some())
             || !config.tests.playwright.route_coverage_sources.is_empty()
             || config
                 .tests
@@ -148,5 +183,15 @@ pub fn prepare_runner_configs_with_deadline_evidence(
     catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> PreparedIntegrationRunnerConfigs {
-    prepare_inner(root, config, visible_paths, catalog, Some(sources), true)
+    prepare_inner(
+        root,
+        config,
+        visible_paths,
+        catalog,
+        Some(sources),
+        RunnerDemand {
+            dynamic: false,
+            deadlines: true,
+        },
+    )
 }
