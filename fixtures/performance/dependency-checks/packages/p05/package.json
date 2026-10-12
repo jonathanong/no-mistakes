@@ -1,0 +1,10 @@
+{
+  "name": "@perf/p05",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": "./index.ts",
+  "dependencies": {
+    "@perf/p06": "workspace:*",
+    "fixture-runtime": "1.0.0"
+  }
+}
