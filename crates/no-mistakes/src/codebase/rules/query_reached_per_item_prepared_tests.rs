@@ -9,7 +9,9 @@ fn per_item_graph_projection_reuses_each_source_and_parse() {
 }
 
 fn assert_prepared_per_item_projection(fixture: &str) {
-    use crate::codebase::dependencies::graph::{DepGraph, PreparedCheckFactGraphBuildRequest};
+    use crate::codebase::dependencies::graph::{
+        DepGraph, PreparedCheckFactGraphBuildRequest, TsFactLookup,
+    };
     let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/query-reached-per-item")
         .join(fixture);
