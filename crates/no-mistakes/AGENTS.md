@@ -99,6 +99,11 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - Work-count tests prove sharing, construction/copy/traversal reductions, and
   ownership invariants; equal reports alone do not prove the fast path. Fewer
   operations or a profile's CPU share do not establish measured speedup.
+- Before adding scope-summary caches, measure cold construction and shared-DAG
+  traversal against the reuse benefit. Mutations, captured frames, and remaps
+  constrain reuse; invalidate summaries explicitly, and keep builder-only
+  membership checks from eagerly collecting unrelated roots. A lower work
+  count alone is not a performance gain.
 - CodSpeed comparisons require the same `ubuntu-24.04-arm` runner and expected
   base commit. Never change code for architecture/fallback mismatches. Inspect
   system call limitations and rerun unexpected unrelated outliers before assigning
