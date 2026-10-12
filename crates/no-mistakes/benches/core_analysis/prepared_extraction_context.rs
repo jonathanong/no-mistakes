@@ -29,7 +29,7 @@ pub(super) fn bench_prepared_extraction_context(c: &mut Criterion) {
         .cloned()
         .collect::<Vec<_>>();
     assert_eq!(primary_files.len(), 3);
-    let mut plan = CheckFactPlan {
+    let plan = CheckFactPlan {
         queue: true,
         queue_factory_names: vec!["createQueue".to_string()],
         graph: TsFactPlan::imports_and_symbols(),
