@@ -321,7 +321,11 @@ jobs:
 
       - name: Install Chromium for timeout-policy browser tests
         timeout-minutes: 5
-        run: pnpm exec playwright install --with-deps chromium
+        # A resumed tag that predates the browser tests has no Playwright CLI.
+        run: |
+          if [ -x node_modules/.bin/playwright ]; then
+            pnpm exec playwright install --with-deps chromium
+          fi
 
       - name: Run JavaScript tests
         timeout-minutes: 5
