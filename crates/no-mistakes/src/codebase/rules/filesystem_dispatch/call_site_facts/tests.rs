@@ -39,9 +39,14 @@ fn invalid_fact_demands_fail_before_collection() {
             ..RuleDef::default()
         });
         let sources = snapshot.source_store_for(&root);
-        let error = prepare_call_site_facts(&root, &config, &sources)
-            .err()
-            .expect("invalid demand must not produce partial facts");
+        let error = prepare_call_site_facts(
+            &root,
+            &config,
+            &sources.inventory().target_file_paths(),
+            &sources,
+        )
+        .err()
+        .expect("invalid demand must not produce partial facts");
         assert!(error.to_string().contains(expected), "{rule}: {error}");
         assert_eq!(sources.physical_read_count(), 0);
     }
@@ -63,9 +68,14 @@ fn schema_catalog_rules_prepare_a_catalog_without_call_sites() {
         &[root.join("schema.json")],
     );
     let sources = snapshot.source_store_for(&root);
-    let facts = prepare_call_site_facts(&root, &config, &sources)
-        .unwrap()
-        .expect("catalog demand");
+    let facts = prepare_call_site_facts(
+        &root,
+        &config,
+        &sources.inventory().target_file_paths(),
+        &sources,
+    )
+    .unwrap()
+    .expect("catalog demand");
     assert!(facts.postgres_schema_catalog("schema.json").is_ok());
 }
 
@@ -78,9 +88,14 @@ fn standalone_schema_and_catalog_rules_share_complete_fact_demand() {
     let files = vec![root.join("schema.sql"), root.join("schema.json")];
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
     let sources = snapshot.source_store_for(&root);
-    let facts = prepare_call_site_facts(&root, &config, &sources)
-        .unwrap()
-        .unwrap();
+    let facts = prepare_call_site_facts(
+        &root,
+        &config,
+        &sources.inventory().target_file_paths(),
+        &sources,
+    )
+    .unwrap()
+    .unwrap();
     assert!(facts.postgres_schema_catalog("schema.json").is_ok());
     assert!(facts.postgres_schema_file(&files[0]).is_ok());
     assert_eq!(sources.physical_read_count(), 2);

@@ -56,6 +56,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         &plan.postgres_schema_catalog_paths,
     );
     let mut map = CheckFactMap {
+        companion_import_plans: Arc::clone(&plan.companion_import_plans),
         postgres: Default::default(),
         integration_route_links,
         files,

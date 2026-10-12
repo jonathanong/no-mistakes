@@ -4,14 +4,21 @@ use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
 pub(crate) struct PreparedFactDemand {
+    companion_import_files: Vec<PathBuf>,
+    has_companion_plan: bool,
     call_site_files: Vec<PathBuf>,
     runner_config_files: Vec<PathBuf>,
     needs_other_facts: bool,
 }
 
 impl PreparedFactDemand {
+    pub(crate) fn include_companion_plan(&mut self, plan: &CheckFactPlan) {
+        self.has_companion_plan = !plan.companion_import_plans.is_empty();
+        self.companion_import_files = plan.production_import_paths.iter().cloned().collect();
+    }
     pub(crate) fn needs_shared_facts(&self) -> bool {
         self.needs_other_facts
+            || self.has_companion_plan
             || !self.call_site_files.is_empty()
             || !self.runner_config_files.is_empty()
     }
@@ -26,6 +33,7 @@ impl PreparedFactDemand {
             return discovered;
         }
         let mut requested = self.call_site_files.clone();
+        requested.extend(self.companion_import_files.iter().cloned());
         requested.extend(self.runner_config_files.iter().cloned());
         no_mistakes::codebase::check_facts::ordered_path_intersection(&requested, &discovered)
     }
@@ -65,6 +73,8 @@ pub(crate) fn prepare(
         plan.graph.call_sites = true;
     }
     Ok(PreparedFactDemand {
+        companion_import_files: plan.production_import_paths.iter().cloned().collect(),
+        has_companion_plan: !plan.companion_import_plans.is_empty(),
         call_site_files: files,
         runner_config_files: plan
             .integration_runner_configs

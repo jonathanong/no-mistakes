@@ -1,0 +1,15 @@
+version: 2
+projects:
+  app:
+    root: .
+  outside:
+    root: ../outside
+rules:
+  - rule: required-companion-imports
+    projects: [app, outside]
+    include: ['src/*.tsx']
+    options:
+      sourceDirs: [src]
+      sourceExtensions: [.tsx]
+      companionGlobs: ['stories/*.stories.mts']
+      specifierTemplate: '@/{sourceStem}'

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: required-companion-imports
+    scope: repository
+    options:
+      sourceDirs: [src]
+      sourceExtensions: [.tsx]
+      companionGlobs: ['[']
+      specifierTemplate: '@/{sourceStem}'
+  - rule: nextjs-no-api-routes
+    scope: repository

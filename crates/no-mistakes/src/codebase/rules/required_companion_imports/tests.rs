@@ -1,3 +1,4 @@
+use super::helpers::source_extensions;
 use super::helpers::{source_dir_matches, source_info, split_dir_base};
 use super::*;
 use crate::config::v2::{
@@ -6,6 +7,8 @@ use crate::config::v2::{
 };
 use std::collections::HashSet;
 use std::path::Path;
+
+mod prepared;
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -17,7 +20,26 @@ fn fixture_root(name: &str) -> PathBuf {
 
 fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> bool {
     let sources = crate::codebase::rules::source_store_for_files(&[root.join(rel)]);
-    super::helpers::file_imports_with_sources(root, rel, expected_specifier, &sources)
+    let facts =
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+            root,
+            Vec::new(),
+            Vec::new(),
+            crate::codebase::check_facts::CheckFactPlan {
+                production_import_paths: std::sync::Arc::new(
+                    [root.join(rel)].into_iter().collect(),
+                ),
+                ..Default::default()
+            },
+            None,
+            sources,
+        );
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    facts
+        .get_production_imports(&root.join(rel))
+        .unwrap()
+        .iter()
+        .any(|import| !import.computed && import.specifier == expected_specifier)
 }
 
 fn config(yaml: &str) -> NoMistakesConfig {

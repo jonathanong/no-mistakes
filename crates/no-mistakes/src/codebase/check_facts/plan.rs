@@ -8,6 +8,10 @@ pub struct CheckFactPlan {
     /// Their import projection preserves the historical TypeScript/TSX parse mode.
     #[doc(hidden)]
     pub production_import_paths: Arc<std::collections::BTreeSet<std::path::PathBuf>>,
+    #[doc(hidden)]
+    pub companion_import_plans: Arc<
+        Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
+    >,
     pub symbols: bool,
     #[doc(hidden)]
     pub legacy_symbol_paths: HashSet<PathBuf>,
@@ -69,6 +73,11 @@ impl CheckFactPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
+        self.companion_import_plans =
+            crate::codebase::rules::required_companion_imports::merge_plans(
+                &self.companion_import_plans,
+                &other.companion_import_plans,
+            );
         if !other.production_import_paths.is_empty() {
             if self.production_import_paths.is_empty() {
                 self.production_import_paths = other.production_import_paths;

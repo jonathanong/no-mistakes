@@ -55,6 +55,7 @@ include!("domain_parity_tests/call_sites_scope.rs");
 include!("domain_parity_tests/query_diagnostics.rs");
 include!("domain_parity_tests/check_per_item.rs");
 include!("domain_parity_tests/production_dependencies.rs");
+include!("domain_parity_tests/companion_imports.rs");
 include!("domain_parity_tests/finite_set_consistency.rs");
 include!("domain_parity_tests/declared_payload.rs");
 include!("domain_parity_tests/check_isolation.rs");

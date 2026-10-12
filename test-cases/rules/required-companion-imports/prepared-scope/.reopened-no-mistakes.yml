@@ -1,0 +1,15 @@
+version: 2
+filesystem:
+  skipDirectories: [hidden]
+projects:
+  app:
+    root: hidden/app
+rules:
+  - rule: required-companion-imports
+    projects: [app]
+    include: ['src/*.tsx']
+    options:
+      sourceDirs: [src]
+      sourceExtensions: [.tsx]
+      companionGlobs: ['{sourceDir}/*.stories.tsx']
+      specifierTemplate: '@/{sourceStem}'
