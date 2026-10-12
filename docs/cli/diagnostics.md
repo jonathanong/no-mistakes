@@ -22,12 +22,13 @@ no-mistakes check --profile ci --progress --progress-interval 1000 --format json
 `--progress` implies `--timings` and tracks fine-grained active spans without
 collecting verbose work ledgers. The interval is a positive integer in
 milliseconds and defaults to 1000; `--progress-interval` requires `--progress`.
-Each heartbeat attempts to flush one `[progress]` JSON line to stderr. A final snapshot
-is also attempted on normal completion or a returned error. Output is bounded
+Each heartbeat attempts to flush one `[progress]` JSON line to stderr. A final
+snapshot is also attempted on normal completion or a returned error. Output is bounded
 and best-effort: a full or unread stderr pipe can drop diagnostics, but cannot
-hold cleanup, a command timeout, or signal termination indefinitely. On Unix, the existing
-child process-group signal forwarder, installed before lock waiting, attempts a snapshot before preserving the
-default SIGINT/SIGTERM exit behavior, including with `--timeout 0`. SIGKILL
+hold cleanup, a command timeout, or signal termination indefinitely. On Unix,
+the existing child process-group signal forwarder, installed before lock
+waiting, attempts a snapshot before preserving the default SIGINT/SIGTERM
+exit behavior, including with `--timeout 0`. SIGKILL
 cannot be handled; previously flushed heartbeats remain available in job logs.
 
 A snapshot contains `elapsedMs`, traced `startedSpans` and `completedSpans`,
