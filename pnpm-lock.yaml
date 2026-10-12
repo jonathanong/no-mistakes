@@ -44,6 +44,9 @@ importers:
       oxlint:
         specifier: ^1.86.0
         version: 1.86.0
+      playwright:
+        specifier: 1.64.0
+        version: 1.64.0
       pr-shepherd:
         specifier: ^0.55.2
         version: 0.55.2(supports-color@7.2.0)
