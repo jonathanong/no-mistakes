@@ -195,6 +195,6 @@ once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 ### Pre-compute BFS before per-entity loops
 
 Cache shared BFS results up front in one `par_iter()` before per-entity work.
-For path reports, enqueue node IDs and first predecessors; reconstruct only
+For path reports, enqueue node IDs and record first predecessors; reconstruct only
 matching findings. Preserve first shortest paths in adjacency order across diamonds/cycles,
 and assert reconstruction counts to prevent per-edge path copies.
