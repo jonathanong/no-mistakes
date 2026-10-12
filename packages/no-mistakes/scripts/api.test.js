@@ -1514,34 +1514,43 @@ test("timeout policy declarations retain their complete public signatures", () =
   }
 });
 
-test("timeout policy public type contracts compile without losing option fields", () => {
-  const { createRequire } = require("node:module");
-  // Resolve the compiler through an existing direct dependency, without adding a test dependency.
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
-  const program = ts.createProgram(
-    [join(repositoryRoot, "fixtures", "test-timeout-policy", "type-contracts", "public.mts")],
-    {
-      noEmit: true,
-      strict: true,
-      skipLibCheck: true,
-      types: [],
-      target: ts.ScriptTarget.ESNext,
-      module: ts.ModuleKind.NodeNext,
-      moduleResolution: ts.ModuleResolutionKind.NodeNext,
-      baseUrl: repositoryRoot,
-      paths: {
-        "no-mistakes/test-timeout-policy": ["packages/no-mistakes/test-timeout-policy/index.d.mts"],
-        "no-mistakes/test-timeout-policy/plugin": [
-          "packages/no-mistakes/test-timeout-policy/plugin.d.mts",
-        ],
+// The consumer compiles the Vitest dependency graph; bound compiler work separately from policy deadlines.
+test(
+  "timeout policy public type contracts compile without losing option fields",
+  { timeout: 20_000 },
+  () => {
+    const { createRequire } = require("node:module");
+    // Resolve the compiler through an existing direct dependency, without adding a test dependency.
+    const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+    const ts = dependencyRequire("typescript");
+    const program = ts.createProgram(
+      [join(repositoryRoot, "fixtures", "test-timeout-policy", "type-contracts", "public.mts")],
+      {
+        noEmit: true,
+        strict: true,
+        skipLibCheck: true,
+        types: [],
+        target: ts.ScriptTarget.ESNext,
+        module: ts.ModuleKind.NodeNext,
+        moduleResolution: ts.ModuleResolutionKind.NodeNext,
+        baseUrl: repositoryRoot,
+        paths: {
+          "no-mistakes/test-timeout-policy": [
+            "packages/no-mistakes/test-timeout-policy/index.d.mts",
+          ],
+          "no-mistakes/test-timeout-policy/plugin": [
+            "packages/no-mistakes/test-timeout-policy/plugin.d.mts",
+          ],
+        },
+        ignoreDeprecations: "6.0",
       },
-      ignoreDeprecations: "6.0",
-    },
-  );
-  const diagnostics = ts.getPreEmitDiagnostics(program);
-  assert.deepEqual(
-    diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-    [],
-  );
-});
+    );
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    assert.deepEqual(
+      diagnostics.map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
+      ),
+      [],
+    );
+  },
+);
