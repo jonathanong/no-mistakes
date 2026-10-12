@@ -61,7 +61,10 @@ fn source_expression_with_arrays(
 ) -> PostgresSqlExpression {
     let mut projected =
         expression_prepared_with_arrays(expr, expr.span(), delimiters, locations, arrays);
-    if projected.children_complete && projected.children.iter().all(|child| child.span.is_some()) {
+    if !arrays
+        && projected.children_complete
+        && projected.children.iter().all(|child| child.span.is_some())
+    {
         projected.span =
             super::super::expression_children::exact_ast_span(expr, locations, delimiters);
     }

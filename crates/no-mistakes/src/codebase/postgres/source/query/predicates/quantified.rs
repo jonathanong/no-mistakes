@@ -26,6 +26,20 @@ impl Collector<'_, '_> {
             && operand(right, true, 0)
             && left_facts.children_complete
             && right_facts.children_complete;
+        let span = left_facts.span.as_ref().and_then(|left_span| {
+            let right_span = self.locations.span(right.span())?;
+            // The outer ANY/ALL parentheses come from the statement's prepared
+            // tokens. Cast display normalization must not erase this boundary.
+            let delimiter = self.expression_delimiters.iter().find(|delimiter| {
+                delimiter.start.offset >= left_span.end.offset
+                    && delimiter.start.offset <= right_span.start.offset
+                    && delimiter.end.offset >= right_span.end.offset
+            })?;
+            Some(PostgresSqlSpan {
+                start: left_span.start.clone(),
+                end: delimiter.end.clone(),
+            })
+        });
         self.facts
             .quantified_comparisons
             .push(PostgresSqlQueryQuantifiedComparison {
@@ -41,12 +55,7 @@ impl Collector<'_, '_> {
                 left: left_facts,
                 right: right_facts,
                 context: context.clone(),
-                span: source_quantified_expression(
-                    expr,
-                    &self.expression_delimiters,
-                    self.locations,
-                )
-                .span,
+                span,
                 complete,
             });
         if !complete {
