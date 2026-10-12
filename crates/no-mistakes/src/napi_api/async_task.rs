@@ -120,7 +120,7 @@ fn utf8_json(options_json: &Buffer) -> napi::Result<&str> {
         .map_err(|error| napi::Error::from_reason(format!("options JSON must be UTF-8: {error}")))
 }
 
-pub(super) fn to_napi_error(error: anyhow::Error) -> napi::Error {
+pub(super) fn to_napi_error(error: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{error:#}"))
 }
 

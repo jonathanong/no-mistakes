@@ -16,10 +16,10 @@ pub(crate) fn diagnostics_snapshot_impl(options: serde_json::Value) -> napi::Res
     struct Options {
         id: String,
     }
-    let options: Options = serde_json::from_value(options)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))?;
+    let options: Options =
+        serde_json::from_value(options).map_err(super::async_task::to_napi_error)?;
     serde_json::to_string(&crate::diagnostics::progress_for_request(&options.id))
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+        .map_err(super::async_task::to_napi_error)
 }
 
 #[cfg(test)]

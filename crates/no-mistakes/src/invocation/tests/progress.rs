@@ -298,3 +298,68 @@ fn sigterm_while_waiting_for_lock_flushes_before_first_heartbeat() {
         serde_json::json!(["invocation.prepare"])
     );
 }
+
+#[test]
+fn readable_stderr_deadline_subprocess_helper() {
+    let Ok(mode) = std::env::var("NO_MISTAKES_READABLE_DEADLINE_MODE") else {
+        return;
+    };
+    use crate::diagnostics::{InvocationObserver, ProgressGuard, TimingKind};
+    let observer = InvocationObserver::with_progress(false, mode == "progress");
+    let _scope = crate::diagnostics::InvocationGuard::install(std::sync::Arc::clone(&observer));
+    let _heartbeat = (mode == "progress").then(|| {
+        ProgressGuard::install(std::sync::Arc::clone(&observer), Duration::from_secs(3600))
+    });
+    let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
+        timeout: Some(Duration::from_millis(150)),
+        ..InvocationOptions::default()
+    })
+    .unwrap();
+    observer.trace("analysis.waiting", TimingKind::Parallel, || {
+        std::thread::sleep(Duration::from_secs(10));
+        panic!("watchdog failed to terminate");
+    });
+}
+
+#[test]
+fn readable_watchdog_output_preserves_timeout_with_progress_or_ordinary_timings() {
+    use std::process::Stdio;
+    for mode in ["timings", "progress"] {
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "invocation::tests::progress::readable_stderr_deadline_subprocess_helper",
+                "--nocapture",
+            ])
+            .env("NO_MISTAKES_READABLE_DEADLINE_MODE", mode)
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let status = child
+            .wait_timeout(Duration::from_secs(4))
+            .unwrap()
+            .unwrap_or_else(|| {
+                let _ = child.kill();
+                let _ = child.wait();
+                panic!("watchdog hung: {mode}");
+            });
+        let output = child.wait_with_output().unwrap();
+        assert_eq!(status.code(), Some(124));
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(stderr.contains("command timed out"), "{stderr}");
+        let snapshot = stderr
+            .lines()
+            .find_map(|line| line.strip_prefix("[progress] "));
+        if mode == "progress" {
+            let snapshot: serde_json::Value = serde_json::from_str(snapshot.unwrap()).unwrap();
+            assert!(snapshot["active"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"])));
+        } else {
+            assert!(snapshot.is_none(), "{stderr}");
+        }
+    }
+}

@@ -109,9 +109,15 @@ impl InvocationObserver {
         let Some(snapshot) = self.progress_snapshot() else {
             return;
         };
-        if let Ok(json) = serde_json::to_string(&snapshot) {
-            self.emit_progress_output(format!("[progress] {json}\n"));
-        }
+        render_snapshot(&snapshot, |line| {
+            self.emit_progress_output(line);
+        });
+    }
+}
+
+fn render_snapshot(snapshot: &impl Serialize, emit: impl FnOnce(String)) {
+    if let Ok(json) = serde_json::to_string(snapshot) {
+        emit(format!("[progress] {json}\n"));
     }
 }
 
@@ -150,9 +156,8 @@ impl ProgressGuard {
 impl Drop for ProgressGuard {
     fn drop(&mut self) {
         let _ = self.stop.send(());
-        if let Some(worker) = self.worker.take() {
-            let _ = worker.join();
-        }
+        let worker = self.worker.take().expect("heartbeat guard owns its worker");
+        let _ = worker.join();
     }
 }
 

@@ -99,6 +99,8 @@ fn ordinary_timing_observers_have_no_progress_state() {
     assert!(observer.progress.is_none());
     assert!(observer.progress_snapshot().is_none());
     observer.render_progress_stderr();
+    // Installing a heartbeat does not turn an ordinary observer into progress.
+    drop(ProgressGuard::install(observer, Duration::from_secs(3600)));
 }
 
 #[test]
@@ -146,4 +148,15 @@ fn parallel_workers_share_the_live_dispatch_ancestor() {
     assert!(snapshot.active.is_empty());
     assert_eq!(snapshot.completed_spans, 2);
     assert!(!observer.emit_progress_output("no CLI writer".to_string()));
+}
+
+#[test]
+fn failed_snapshot_serialization_does_not_emit_a_partial_progress_line() {
+    struct Unsupported;
+    impl serde::Serialize for Unsupported {
+        fn serialize<S: serde::Serializer>(&self, _: S) -> Result<S::Ok, S::Error> {
+            Err(serde::ser::Error::custom("unsupported diagnostic value"))
+        }
+    }
+    render_snapshot(&Unsupported, |_| panic!("failed snapshot must not emit"));
 }

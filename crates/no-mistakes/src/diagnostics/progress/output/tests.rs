@@ -86,3 +86,44 @@ fn installed_heartbeat_flushes_snapshots_timings_and_warnings_through_its_writer
         );
     });
 }
+
+#[cfg(unix)]
+#[test]
+fn closed_stderr_subprocess_helper() {
+    if std::env::var_os("NO_MISTAKES_CLOSED_PROGRESS_STDERR").is_none() {
+        return;
+    }
+    // Closing stderr is confined to a child; the parent harness keeps its fd.
+    unsafe {
+        nix::libc::close(2);
+    }
+    let output = ProgressOutput::stderr();
+    output.emit("best effort with closed stderr".to_string());
+}
+
+#[cfg(unix)]
+#[test]
+fn unavailable_stderr_descriptor_does_not_block_progress_shutdown() {
+    use std::process::{Command, Stdio};
+    use wait_timeout::ChildExt;
+    let mut child = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "diagnostics::progress::output::tests::closed_stderr_subprocess_helper",
+            "--nocapture",
+        ])
+        .env("NO_MISTAKES_CLOSED_PROGRESS_STDERR", "1")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    let status = child
+        .wait_timeout(Duration::from_secs(3))
+        .unwrap()
+        .unwrap_or_else(|| {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("closed-stderr progress hung");
+        });
+    assert!(status.success());
+}
