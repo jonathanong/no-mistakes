@@ -78,7 +78,7 @@ fn project_inner(
                 let facts = super::query::project(query, locations, tokens);
                 complete &= facts.complete;
                 PostgresSqlInsertSource::Select {
-                    query: facts,
+                    query: Box::new(facts),
                     span: locations.span(source_span.unwrap_or_else(|| query.span())),
                 }
             }
