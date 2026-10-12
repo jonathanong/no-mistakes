@@ -1,5 +1,93 @@
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
+use std::path::PathBuf;
+use std::sync::Arc;
+
+type CompanionFixtureInputs = (
+    PathBuf,
+    NoMistakesConfig,
+    Vec<PathBuf>,
+    Arc<no_mistakes::codebase::ts_source::SourceStore>,
+);
+
+fn companion_fixture() -> CompanionFixtureInputs {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/performance/required-companion-imports"),
+    );
+    let config = no_mistakes::config::v2::load_v2_config(&root, None).unwrap();
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let files = snapshot.paths_for(&root).as_ref().clone();
+    let sources = snapshot.source_store_for(&root);
+    (root, config, files, sources)
+}
+
+#[test]
+fn production_only_demand_never_copies_companion_membership() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/dependency-checks");
+    let config = no_mistakes::config::v2::load_v2_config(&root, None).unwrap();
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let files = snapshot.paths_for(&root).as_ref().clone();
+    let paths = no_mistakes::codebase::rules::production_dependency_declarations::required_import_fact_files(
+        &root, &config, &files,
+    ).unwrap();
+    assert!(!paths.is_empty());
+    let mut plan = CheckFactPlan {
+        production_import_paths: Arc::clone(&paths),
+        ..Default::default()
+    };
+    let mut demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    assert!(demand.needs_shared_facts());
+    assert!(demand.companion_import_files.is_empty());
+    demand.include_companion_plan(&plan);
+    assert!(demand.companion_import_files.is_empty());
+    assert_eq!(demand.primary_files(files.clone()), files);
+    assert!(Arc::ptr_eq(&paths, &plan.production_import_paths));
+}
+
+#[test]
+fn companion_demand_does_not_copy_membership_for_a_complete_primary_scope() {
+    let (root, config, files, sources) = companion_fixture();
+    let mut plan = CheckFactPlan {
+        symbols: true,
+        ..Default::default()
+    };
+    let mut demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    no_mistakes::codebase::rules::required_companion_imports::configure_fact_plan(
+        &root, &config, &files, &sources, &mut plan,
+    )
+    .unwrap();
+    assert_eq!(plan.production_import_paths.len(), 4);
+    demand.include_companion_plan(&plan);
+    assert!(demand.has_companion_plan);
+    assert!(demand.companion_import_files.is_empty());
+    assert_eq!(demand.primary_files(files.clone()), files);
+    // Preparing an already-unioned plan has the same complete-scope behavior.
+    let demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    assert!(demand.has_companion_plan);
+    assert!(demand.companion_import_files.is_empty());
+}
+
+#[test]
+fn companion_only_demand_retains_its_selected_primary_scope() {
+    let (root, config, files, sources) = companion_fixture();
+    let mut plan = CheckFactPlan::default();
+    let mut demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    assert!(!demand.needs_shared_facts());
+    no_mistakes::codebase::rules::required_companion_imports::configure_fact_plan(
+        &root, &config, &files, &sources, &mut plan,
+    )
+    .unwrap();
+    demand.include_companion_plan(&plan);
+    assert!(demand.needs_shared_facts());
+    assert_eq!(demand.companion_import_files.len(), 4);
+    let expected = (0..4)
+        .map(|index| root.join(format!("stories/group{index}.stories.ts")))
+        .collect::<Vec<_>>();
+    assert_eq!(demand.primary_files(files), expected);
+    assert_eq!(plan.production_import_paths.len(), 4);
+}
 
 #[test]
 fn prepare_surfaces_invalid_finite_set_options() {

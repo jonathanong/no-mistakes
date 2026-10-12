@@ -51,6 +51,11 @@ historical TypeScript/TSX import projections prepared for sources whose ordinary
 parser mode differs. Those projections share the request's parser cache; their
 count does not imply an additional physical parse for every projection.
 
+Companion import checks report `companion_imports.candidate_universes`,
+`companion_imports.selections`, `companion_imports.literal_projections`, and
+`companion_imports.literal_unions` for shared candidate selection and literal
+import membership preparation.
+
 Forbidden workspace closure checks report
 `forbidden_workspace_closure.lockfile_importer_constructions` for distinct
 lockfile importer projections initialized during the request. The count

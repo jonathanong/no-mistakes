@@ -2,6 +2,8 @@
 mod aggregate;
 #[path = "core_analysis/call_index.rs"]
 mod call_index;
+#[path = "core_analysis/companion_imports.rs"]
+mod companion_imports;
 #[path = "core_analysis/dependency_checks.rs"]
 mod dependency_checks;
 #[path = "core_analysis/extract.rs"]
@@ -91,6 +93,7 @@ criterion_group!(
     bench_sql_source_positions,
     bench_lazy_traversal,
     dependency_checks::bench_dependency_checks,
+    companion_imports::bench_companion_imports,
     postgres_bounds::bench_postgres_bounds,
     postgres_annotations::bench_postgres_annotations,
     bench_import_only_vs_workspace_relationships,

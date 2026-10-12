@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: required-companion-imports
+    scope: repository
+    include: ['src/*.tsx']
+    options:
+      sourceDirs: [src]
+      sourceExtensions: [.tsx]
+      companionGlobs: ['stories/*.stories.*']
+      specifierTemplate: '@/{sourceStem}'

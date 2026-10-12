@@ -9,7 +9,11 @@ pub(crate) fn ts_facts(
     program: &oxc_ast::ast::Program<'_>,
     parse_error: String,
 ) -> TsFileFacts {
-    if !(plan.imports || plan.graph.imports || plan.graph.function_calls) {
+    if !(plan.imports
+        || plan.graph.imports
+        || plan.graph.function_calls
+        || !plan.production_import_paths.is_empty())
+    {
         return TsFileFacts {
             parse_error: Some(parse_error),
             source,

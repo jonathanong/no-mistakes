@@ -106,6 +106,7 @@ fn collect_check_facts_inner(
         &plan.postgres_schema_catalog_paths,
     );
     let mut map = CheckFactMap {
+        companion_import_plans: Arc::clone(&plan.companion_import_plans),
         postgres: Default::default(),
         integration_route_links: Default::default(),
         files,

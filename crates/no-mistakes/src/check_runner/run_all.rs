@@ -40,9 +40,9 @@ pub(crate) fn run_all_with_evidence(
         playwright_fact_plan,
         integration_enabled,
         react_enabled,
-        plan,
+        mut plan,
         prepared_graph,
-        fact_demand,
+        mut fact_demand,
     } = setup::build(&root, &prepared, include_runner_config_deadlines)?;
     let runner_deadline_plan = include_runner_config_deadlines
         .then(|| plan.integration_runner_configs.clone())
@@ -76,6 +76,16 @@ pub(crate) fn run_all_with_evidence(
             )
         },
     );
+    let sources = prepared.visible_paths.source_store_for(&root);
+    no_mistakes::codebase::rules::required_companion_imports::configure_fact_plan(
+        &root,
+        config,
+        &views.filesystem,
+        &sources,
+        &mut plan,
+    )?;
+    fact_demand.include_companion_plan(&plan);
+    let needs_shared_facts = fact_demand.needs_shared_facts();
     let (discovered, graph_files) = crate::check_discovery::select_graph_files(
         views,
         needs_shared_facts,
@@ -83,7 +93,6 @@ pub(crate) fn run_all_with_evidence(
         playwright_fact_plan.is_some(),
         dynamic_import_rules,
     );
-    let sources = prepared.visible_paths.source_store_for(&root);
     // Parse and analysis are the CPU-bound check phases. The deadline names
     // whichever of them is active; it does not drop files from the result.
     no_mistakes::invocation::set_timeout_phase("check.parse");

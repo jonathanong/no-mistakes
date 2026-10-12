@@ -46,7 +46,13 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             forbidden_workspace_closure::check_with_files_and_sources(root, config, files, sources)
         }
         REQUIRED_COMPANION_IMPORTS => {
-            required_companion_imports::check_with_files_and_sources(root, config, files, sources)
+            required_companion_imports::check_with_files_sources_and_facts(
+                root,
+                config,
+                files,
+                sources,
+                facts.map(|facts| facts as &dyn crate::codebase::dependencies::graph::TsFactLookup),
+            )
         }
         REQUIRED_DOC_SECTION => {
             required_local_docs::check_required_doc_section_with_files_and_sources(

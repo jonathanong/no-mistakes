@@ -1,3 +1,6 @@
+#[path = "map_views.rs"]
+mod views;
+
 mod fragments;
 mod postgres_catalog;
 mod postgres_readable;
@@ -37,6 +40,9 @@ type RouteReachableFilesCache = Arc<
 
 #[derive(Default)]
 pub struct CheckFactMap {
+    pub(crate) companion_import_plans: Arc<
+        Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
+    >,
     pub(crate) postgres: crate::codebase::postgres::prepared::PreparedPostgresFacts,
     pub(crate) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
     pub(crate) files: Vec<PathBuf>,
@@ -186,32 +192,5 @@ impl CheckFactMap {
 
     pub(crate) fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
         self.view_with_supplemental(&Self::default(), graph_files)
-    }
-
-    fn view_with_supplemental(&self, supplemental: &Self, graph_files: Vec<PathBuf>) -> Self {
-        let mut ts = self.ts.clone();
-        for (path, facts) in supplemental.ts.iter() {
-            ts.insert(path.clone(), Arc::clone(facts));
-        }
-        let mut graph_plan = self.graph_plan;
-        graph_plan.include(supplemental.graph_plan);
-        Self {
-            postgres: self.postgres.clone(),
-            files: self.files.clone(),
-            integration_route_links: self.integration_route_links.clone(),
-            graph_files,
-            graph_files_complete: self.graph_files_complete,
-            ts,
-            graph_plan,
-            integration_runner_configs: self.integration_runner_configs.clone(),
-            playwright_source_files: Arc::clone(&self.playwright_source_files),
-            playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),
-            app_selector_occurrences_cache: Arc::clone(&self.app_selector_occurrences_cache),
-            playwright_routes_cache: Arc::clone(&self.playwright_routes_cache),
-            app_text_targets_cache: Arc::clone(&self.app_text_targets_cache),
-            route_reachable_files_cache: Arc::clone(&self.route_reachable_files_cache),
-            postgres_schema_catalogs: self.postgres_schema_catalogs.clone(),
-            stats: self.stats,
-        }
     }
 }

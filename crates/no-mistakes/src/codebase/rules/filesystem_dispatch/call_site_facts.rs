@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use super::finite_set_consistency;
@@ -13,6 +13,7 @@ use crate::config::v2::NoMistakesConfig;
 pub(super) fn prepare_call_site_facts(
     root: &Path,
     config: &NoMistakesConfig,
+    files: &[PathBuf],
     sources: &Arc<SourceStore>,
 ) -> Result<Option<CheckFactMap>> {
     let call_site_files = finite_set_consistency::try_required_call_site_fact_files(root, config)?;
@@ -35,6 +36,9 @@ pub(super) fn prepare_call_site_facts(
         postgres_schema_catalog_paths: catalog_paths,
         ..Default::default()
     };
+    super::required_companion_imports::configure_fact_plan(
+        root, config, files, sources, &mut plan,
+    )?;
     if !plan.production_import_paths.is_empty() {
         plan.graph.imports = true;
     }
@@ -45,6 +49,7 @@ pub(super) fn prepare_call_site_facts(
     )?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if !needs_call_sites
+        && plan.companion_import_plans.is_empty()
         && plan.production_import_paths.is_empty()
         && plan.postgres_schema_catalog_paths.is_empty()
         && !plan.postgres_schema

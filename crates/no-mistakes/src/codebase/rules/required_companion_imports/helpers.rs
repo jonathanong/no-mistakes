@@ -1,10 +1,8 @@
 use super::Options;
-use crate::codebase::dependencies::extract::ImportExtractor;
 use crate::codebase::ts_source::TS_JS_EXTENSIONS;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::collections::HashSet;
-use std::path::Path;
 
 mod normalize;
 use normalize::{
@@ -137,12 +135,17 @@ pub(super) fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
     Ok(Some(builder.build()?))
 }
 
-pub(super) fn build_companion_globset(opts: &Options, source: &SourceInfo) -> Result<GlobSet> {
+pub(super) fn companion_patterns(opts: &Options, source: &SourceInfo) -> Vec<String> {
+    opts.companion_globs
+        .iter()
+        .map(|pattern| normalize_glob_template(&render_glob_template(pattern, source)))
+        .collect()
+}
+
+pub(super) fn build_pattern_globset(patterns: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
-    for pattern in &opts.companion_globs {
-        builder.add(Glob::new(&normalize_glob_template(&render_glob_template(
-            pattern, source,
-        )))?);
+    for pattern in patterns {
+        builder.add(Glob::new(pattern)?);
     }
     Ok(builder.build()?)
 }
@@ -163,26 +166,4 @@ pub(super) fn render_template(template: &str, source: &SourceInfo) -> String {
         .replace("{sourceDir}", &source.dir)
         .replace("{sourceStem}", &source.stem)
         .replace("{sourceBase}", &source.base)
-}
-
-pub(super) fn file_imports_with_sources(
-    root: &Path,
-    rel: &str,
-    expected_specifier: &str,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> bool {
-    let Some(source) = crate::codebase::rules::read_source(sources, &root.join(rel)) else {
-        return false;
-    };
-    let extractor = if rel.ends_with(".tsx") || rel.ends_with(".jsx") {
-        ImportExtractor::for_tsx()
-    } else {
-        ImportExtractor::for_typescript()
-    };
-    let imports = extractor
-        .and_then(|extractor| extractor.extract(&source))
-        .unwrap_or_default();
-    imports
-        .iter()
-        .any(|import| !import.computed && import.specifier == expected_specifier)
 }

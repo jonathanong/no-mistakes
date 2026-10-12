@@ -136,7 +136,7 @@ impl SharedCheckContext {
         }
         plan.graph.per_item_calls |=
             config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM);
-        let fact_demand = crate::check_runner::finite_set_plan::prepare(
+        let mut fact_demand = crate::check_runner::finite_set_plan::prepare(
             &root,
             config,
             &mut plan,
@@ -151,6 +151,14 @@ impl SharedCheckContext {
             unique_exports_enabled,
             prepared.visible_paths.as_ref(),
         );
+        crate::codebase::rules::required_companion_imports::configure_fact_plan(
+            &root,
+            config,
+            &views.filesystem,
+            &prepared.visible_paths.source_store_for(&root),
+            &mut plan,
+        )?;
+        fact_demand.include_companion_plan(&plan);
         let needs_shared_facts = fact_demand.needs_shared_facts();
         let (discovered, graph_files) = crate::check_discovery::select_graph_files(
             views,
