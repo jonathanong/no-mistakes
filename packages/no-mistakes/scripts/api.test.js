@@ -20,6 +20,7 @@ const planningFixturePath = join(
 
 const RUST_NAPI_BINDING_FILES = [
   "crates/no-mistakes/src/napi_api.rs",
+  "crates/no-mistakes/src/napi_api/diagnostics.rs",
   "crates/no-mistakes/src/napi_api/postgres_source.rs",
   "crates/no-mistakes/src/napi_api/typescript_modules.rs",
   "crates/no-mistakes/src/napi_api/codebase_bindings.rs",

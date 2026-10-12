@@ -65,7 +65,7 @@ fn replaced_deadline_lets_the_watchdog_return() {
         .expect("past instant");
     // The expired instant is not the active deadline, so the watcher must return
     // instead of exiting the process.
-    super::watch_deadline(
+    super::watch::watch_deadline(
         std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         expires_at,
         Duration::from_secs(1),

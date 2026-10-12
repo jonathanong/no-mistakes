@@ -55,6 +55,10 @@ pub(crate) use analyze_project::analyze_project_json_impl;
 mod async_task;
 mod cli_parity;
 mod codebase;
+mod diagnostics;
+pub(crate) use diagnostics::diagnostics_snapshot_impl;
+#[cfg(not(coverage))]
+pub use diagnostics::diagnostics_snapshot_json;
 mod filesystem;
 pub(crate) mod infra_swift;
 mod lockfile_diff;
@@ -207,41 +211,3 @@ json_binding!(
     "generatePostgresCatalogJson",
     generate_postgres_catalog_json_impl
 );
-
-json_binding!(
-    diagnostics_snapshot_json,
-    "diagnosticsSnapshotJson",
-    diagnostics_snapshot_impl,
-    independent
-);
-
-fn diagnostics_snapshot_impl(options: serde_json::Value) -> napi::Result<String> {
-    #[derive(serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
-    struct Options {
-        id: String,
-    }
-    let options: Options = serde_json::from_value(options)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))?;
-    serde_json::to_string(&crate::diagnostics::progress_for_request(&options.id))
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
-}
-
-#[cfg(test)]
-mod diagnostics_snapshot_tests {
-    use super::*;
-    #[test]
-    fn polling_controls_are_strict_and_unknown_live_ids_return_null() {
-        assert_eq!(
-            diagnostics_snapshot_impl(serde_json::json!({"id":"unknown-control-test"})).unwrap(),
-            "null"
-        );
-        for options in [
-            serde_json::json!({}),
-            serde_json::json!({"id":123}),
-            serde_json::json!({"id":"unknown-control-test","extra":true}),
-        ] {
-            assert!(diagnostics_snapshot_impl(options).is_err());
-        }
-    }
-}
