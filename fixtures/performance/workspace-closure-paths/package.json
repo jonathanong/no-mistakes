@@ -1,0 +1,7 @@
+{
+  "name": "workspace-closure-paths-performance-fixture",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}

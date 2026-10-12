@@ -1,0 +1,7 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/left": "workspace:*",
+    "@acme/right": "workspace:*"
+  }
+}

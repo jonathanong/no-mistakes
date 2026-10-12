@@ -22,6 +22,41 @@ fn observed_sources(
     (sources, observer)
 }
 
+#[test]
+fn layered_workspace_reconstructs_only_the_reported_chain() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/performance/workspace-closure-paths"),
+    );
+    let mut files = vec![root.join("package.json")];
+    for layer in 0..32 {
+        for side in ['a', 'b'] {
+            files.push(root.join(format!("packages/p{layer:02}{side}/package.json")));
+        }
+    }
+    files.push(root.join("packages/app/package.json"));
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(application(
+        "packages: ['@perf/app']\nforbidden: [fixture-denied]\n",
+    ));
+    let (sources, observer) = observed_sources(&files);
+
+    let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    let expected_chain = std::iter::once("@perf/app".to_string())
+        .chain((0..32).map(|layer| format!("@perf/p{layer:02}a")))
+        .chain(std::iter::once("fixture-denied".to_string()))
+        .collect::<Vec<_>>()
+        .join(" -> ");
+    assert_eq!(findings[0].import.as_deref(), Some(expected_chain.as_str()));
+    assert_eq!(
+        observer.snapshot().work["forbidden_workspace_closure.path_reconstructions"],
+        1,
+        "the traversal should materialize a path only for the single emitted finding"
+    );
+}
+
 fn application(options: &str) -> RuleDef {
     RuleDef {
         rule: RULE_ID.to_string(),

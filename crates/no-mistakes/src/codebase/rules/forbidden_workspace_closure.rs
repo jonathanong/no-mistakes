@@ -147,6 +147,14 @@ fn scan_with_sources(
 
     let workspace_names: BTreeSet<String> = nodes.keys().cloned().collect();
     let mut findings = Vec::new();
+    let traversal = traversal::Traversal::new(
+        root,
+        nodes,
+        &workspace_names,
+        &forbidden,
+        source_filter,
+        sources.observer().map(std::convert::AsRef::as_ref),
+    );
     for package in &opts.packages {
         if !nodes.contains_key(package) {
             findings.push(config_finding(&format!(
@@ -154,15 +162,7 @@ fn scan_with_sources(
             )));
             continue;
         }
-        traversal::collect_findings_for_package(
-            root,
-            package,
-            nodes,
-            &workspace_names,
-            &forbidden,
-            source_filter,
-            &mut findings,
-        );
+        traversal.collect_findings_for_package(package, &mut findings);
     }
     findings.sort();
     findings.dedup();

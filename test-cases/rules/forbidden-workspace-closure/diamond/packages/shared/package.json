@@ -1,0 +1,6 @@
+{
+  "name": "@acme/shared",
+  "dependencies": {
+    "@acme/secret": "^1.0.0"
+  }
+}

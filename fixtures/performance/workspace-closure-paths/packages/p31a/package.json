@@ -1,0 +1,6 @@
+{
+  "name": "@perf/p31a",
+  "dependencies": {
+    "fixture-denied": "^1.0.0"
+  }
+}
