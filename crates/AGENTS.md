@@ -1,4 +1,7 @@
+<!-- cspell:ignore rustc -->
 ## Performance Guidelines
+
+Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
 
 ### Core architecture invariants
 
@@ -44,21 +47,9 @@ keep results deterministic as well as avoiding repeated work.
 Keep facts in final ownership form: `Arc` is for retained sharing, never an owned
 value recovered with `as_deref().cloned()` by its sole consumer, copying nested data.
 
-When merging incoming dense argument slots across branches, borrow unchanged
-slots; clone only new objects or differing incoming slots. Frame compaction
-must remap returned values directly, with initial argument IDs as separate
-roots instead of a copied return slice plus synthetic values. Assert copy
-counts and fixture behavior for callbacks, cycles, and sparse mutations.
-
 Cache immutable selection work at the coarsest stable request key. A scoped
 resolver selects once per importing file, including negative results; assert
 the selection-computation count in tests.
-
-Restore derived capture indexes only when ownership inputs agree. Branch-entry
-frames keep their capture origins; update arm-created readers, including module
-initials, and fully rebuild when compaction moves or drops ownership. Verify
-exact reverse-index equality, nested closure behavior, and rebuild work counts;
-never infer a speedup from fewer rebuilds without matched timing evidence.
 
 Reverse symbol queries consume the owner's symbol catalog/reverse projection.
 `importers`, `exports-of`, `dead-exports`, and `call-sites` must not rediscover
@@ -195,6 +186,3 @@ once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 ### Pre-compute BFS before per-entity loops
 
 Cache shared BFS results up front in one `par_iter()` before per-entity work.
-For path reports, enqueue node IDs and record first predecessors; reconstruct only
-matching findings. Preserve first shortest paths in adjacency order across diamonds/cycles,
-and assert reconstruction counts to prevent per-edge path copies.

@@ -118,12 +118,11 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   measurements under `target/`. Do not keep build artifacts in throwaway
   worktrees afterward. Never delete the main workspace `target/` unless this
   worktree is the main workspace.
-- Local Criterion is the source of truth for performance before/after only
-  when both runs use the same machine, toolchain, benchmark mode, thread
-  count, and fixture. Benchmark jobs run on `ubuntu-24.04-arm`. Treat a
-  CodSpeed delta as a code regression only when the report compares that
-  runner with the expected base commit. A comparison against an x86_64 base,
-  or a fallback base, is noise and must not change code.
+- Local Criterion is the source of truth only with matching machine, toolchain,
+  build flags, mode, threads, and fixtures. CI uses `ubuntu-24.04-arm`; CodSpeed
+  comparisons require that runner and the expected base. x86_64/fallback bases
+  are noise and must not change code. Follow the measurement/reporting rules in
+  [core performance guidance](crates/no-mistakes/AGENTS.md).
 
 ### Public surface checklist
 
