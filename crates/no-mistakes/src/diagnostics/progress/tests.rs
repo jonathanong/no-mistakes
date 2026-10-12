@@ -98,9 +98,61 @@ fn ordinary_timing_observers_have_no_progress_state() {
     observer.trace("closed", TimingKind::Serial, || ());
     assert!(observer.progress.is_none());
     assert!(observer.progress_snapshot().is_none());
+    assert!(observer
+        .progress_snapshot_with_timings(|| panic!("disabled progress aggregated timings"))
+        .is_none());
     observer.render_progress_stderr();
     // Installing a heartbeat does not turn an ordinary observer into progress.
     drop(ProgressGuard::install(observer, Duration::from_secs(3600)));
+}
+
+#[test]
+fn stalled_completed_aggregation_does_not_stop_rayon_span_lifecycles() {
+    let observer = InvocationObserver::with_progress(false, true);
+    observer.trace("before", TimingKind::Serial, || ());
+    let (entered, aggregating) = mpsc::channel();
+    let (release, wait) = mpsc::channel();
+    let reader = std::thread::spawn({
+        let observer = Arc::clone(&observer);
+        move || {
+            observer.progress_snapshot_with_timings(|| {
+                entered.send(()).unwrap();
+                wait.recv().unwrap();
+                observer.snapshot().timings
+            })
+        }
+    });
+    aggregating.recv_timeout(Duration::from_secs(2)).unwrap();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let (completed, finished) = mpsc::channel();
+    pool.spawn({
+        let observer = Arc::clone(&observer);
+        move || {
+            observer.trace("worker", TimingKind::Parallel, || {
+                observer.trace("worker.inner", TimingKind::Parallel, || ());
+            });
+            completed.send(()).unwrap();
+        }
+    });
+    let progressed = finished.recv_timeout(Duration::from_secs(2));
+    // Always release the reader before asserting, including regressions: Rayon
+    // pool cleanup must not wait forever on a worker blocked by the active lock.
+    release.send(()).unwrap();
+    let captured = reader.join().unwrap().unwrap();
+    assert!(
+        progressed.is_ok(),
+        "Rayon span start/drop waited for aggregation"
+    );
+    assert_eq!(captured.started_spans, 1);
+    assert_eq!(captured.completed_spans, 1);
+    assert!(captured.active.is_empty());
+    let current = observer.progress_snapshot().unwrap();
+    assert_eq!(current.started_spans, 3);
+    assert_eq!(current.completed_spans, 3);
+    assert!(current.active.is_empty());
 }
 
 #[test]

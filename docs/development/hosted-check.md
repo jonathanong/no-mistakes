@@ -53,6 +53,11 @@ presented as completed-check time. Raw stdout/stderr, time output, binary hashes
 source/compiler/build provenance, image version, CPU model, available CPUs, and
 automatic Rayon job policy are uploaded even after candidate failure.
 
+Resource maxima exclude timeout exits 124/137, signaled samples, and missing
+wrapper statuses because descendant accounting may be incomplete. The resource
+sample count includes completed nonzero exits; an empty resource sample reports
+null JSON maxima and `n/a` in Markdown. Raw counters and deadline outcomes remain.
+
 Each pair shares a runner and filesystem cache; binary order alternates across
 jobs to reduce order bias. The report includes failed baseline measurements and
 reports maximum and nearest-rank empirical p95 with the sample count. At six

@@ -21,6 +21,7 @@ const {
   parseTime,
   successful,
   aggregate,
+  formatSummary,
 } = require("./hosted-check-metrics.cjs");
 
 function measure(fixture, artifact, output, sampleNumber, expectedTree) {
@@ -142,16 +143,7 @@ function summarize(directory) {
     groups.get(key).push(sample);
   }
   const rows = [...groups].sort().map(([key, values]) => ({ key, ...aggregate(values) }));
-  const table = [
-    "| Consumer commit / binary | n | Passed | Timeouts | Max s | p95 s | Max user s | Max system s | Max RSS KiB |",
-    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-    ...rows.map(
-      (row) =>
-        `| ${row.key} | ${row.n} | ${row.passed} | ${row.timeouts} | ${row.max} | ${row.p95} | ${row.userMax} | ${row.systemMax} | ${row.rssMaxKiB} |`,
-    ),
-    "",
-    "p95 is the nearest-rank empirical percentile. With six fresh hosted pairs per tree it equals the observed maximum; this sample cannot guarantee the slow tail. Pairs share one runner and filesystem cache; binary order alternates. Timeout measurements include up to five seconds of termination cleanup and are failures, not completed checks. The npm baseline and current source build may use different compilers; inspect environment.json and provenance.json. Build, install, and tool preparation are outside the command deadline.",
-  ].join("\n");
+  const table = formatSummary(rows);
   writeFileSync(join(directory, "summary.json"), JSON.stringify(rows, null, 2));
   writeFileSync(join(directory, "summary.md"), table);
   if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, table);

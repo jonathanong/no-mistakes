@@ -15,3 +15,5 @@
   Killed-wrapper CPU/RSS can omit descendants it has not waited for; exclude those
   values from completed-run resource comparisons. For six samples, nearest-rank
   empirical p95 is the observed maximum, subject to the tail-bound limitation above.
+- Resource maxima exclude exits 124/137, signals, and missing wrapper statuses;
+  report eligible counts and unavailable maxima, retaining completed nonzero exits.

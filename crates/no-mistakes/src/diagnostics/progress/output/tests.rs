@@ -1,6 +1,7 @@
 use super::*;
 #[test]
 fn blocked_writer_and_full_queue_never_block_emission_or_cleanup() {
+    use crate::diagnostics::{InvocationGuard, InvocationObserver};
     struct BlockedWriter {
         ready: mpsc::Sender<()>,
         release: mpsc::Receiver<()>,
@@ -21,11 +22,17 @@ fn blocked_writer_and_full_queue_never_block_emission_or_cleanup() {
         ready,
         release: blocked,
     }));
+    let observer = InvocationObserver::with_progress(false, true);
+    observer.progress.as_ref().unwrap().lock().unwrap().output = Some(Arc::clone(&output));
+    let scope = InvocationGuard::install(Arc::clone(&observer));
     let now = std::time::Instant::now();
-    output.emit("first".to_string());
+    assert!(observer.emit_progress_output("first".to_string()));
     started.recv_timeout(Duration::from_secs(2)).unwrap();
-    output.emit("queued".to_string());
-    output.emit("dropped".to_string());
+    assert!(observer.emit_progress_output("queued".to_string()));
+    assert!(observer.emit_progress_output("dropped".to_string()));
+    warning_is_formatted_once_without_blocking_fallback();
+    drop(scope);
+    drop(observer);
     drop(output);
     assert!(now.elapsed() < Duration::from_secs(1));
     release.send(()).unwrap();
@@ -35,8 +42,29 @@ fn blocked_writer_and_full_queue_never_block_emission_or_cleanup() {
 
 #[test]
 fn failed_writer_is_best_effort() {
+    use crate::diagnostics::{InvocationGuard, InvocationObserver};
     let output = ProgressOutput::start(Err::<io::Sink, _>(io::Error::other("closed stderr")));
-    output.emit("ignored".to_string());
+    let observer = InvocationObserver::with_progress(false, true);
+    observer.progress.as_ref().unwrap().lock().unwrap().output = Some(output);
+    let _scope = InvocationGuard::install(Arc::clone(&observer));
+    assert!(observer.emit_progress_output("ignored".to_string()));
+    warning_is_formatted_once_without_blocking_fallback();
+}
+
+fn warning_is_formatted_once_without_blocking_fallback() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    struct Warning(AtomicUsize);
+    impl std::fmt::Display for Warning {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            self.0.fetch_add(1, Ordering::SeqCst);
+            formatter.write_str("optional warning")
+        }
+    }
+    let warning = Warning(AtomicUsize::new(0));
+    crate::diagnostics::print_stderr(format_args!("{warning}"));
+    // The routed warning is formatted once. A delivery-failure fallback would
+    // format it again for ordinary stderr, which could block the deadline path.
+    assert_eq!(warning.0.load(Ordering::SeqCst), 1);
 }
 
 #[test]

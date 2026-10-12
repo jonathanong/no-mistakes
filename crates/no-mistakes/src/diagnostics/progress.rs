@@ -1,6 +1,6 @@
 mod output;
 mod spans;
-use super::{InvocationObserver, TimingKind};
+use super::{InvocationObserver, TimingDiagnostic, TimingKind};
 use output::ProgressOutput;
 use serde::Serialize;
 pub(super) use spans::ActiveSpanGuard;
@@ -52,42 +52,55 @@ pub(super) struct ProgressState {
 
 impl InvocationObserver {
     pub fn progress_snapshot(&self) -> Option<ProgressSnapshot> {
-        let progress = self.progress.as_ref()?;
-        let state = progress
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let (now, elapsed) = self.snapshot_clock();
-        Some(ProgressSnapshot {
-            elapsed_ms: elapsed.as_secs_f64() * 1000.0,
-            completed: self
-                .snapshot()
-                .timings
-                .into_iter()
-                .map(|timing| CompletedSpanSnapshot {
-                    label: timing.label,
-                    duration_ms: timing.duration.as_secs_f64() * 1000.0,
-                    parallel: timing.kind == TimingKind::Parallel,
-                })
-                .collect(),
-            started_spans: state.started,
-            completed_spans: state.completed,
-            active: state
-                .active
-                .iter()
-                .map(|(id, span)| ActiveSpanSnapshot {
-                    id: *id,
-                    phase: span.phase.clone(),
-                    started_ms: elapsed
-                        .saturating_sub(now.duration_since(span.started))
-                        .as_secs_f64()
-                        * 1000.0,
-                    elapsed_ms: now.duration_since(span.started).as_secs_f64() * 1000.0,
-                    parallel: span.parallel,
-                })
-                .collect(),
-        })
+        self.progress_snapshot_with_timings(|| self.snapshot().timings)
     }
 
+    fn progress_snapshot_with_timings(
+        &self,
+        timings: impl FnOnce() -> Vec<TimingDiagnostic>,
+    ) -> Option<ProgressSnapshot> {
+        let mut snapshot = {
+            let progress = self.progress.as_ref()?;
+            let state = progress
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            let (now, elapsed) = self.snapshot_clock();
+            ProgressSnapshot {
+                elapsed_ms: elapsed.as_secs_f64() * 1000.0,
+                completed: Vec::new(),
+                started_spans: state.started,
+                completed_spans: state.completed,
+                active: state
+                    .active
+                    .iter()
+                    .map(|(id, span)| ActiveSpanSnapshot {
+                        id: *id,
+                        phase: span.phase.clone(),
+                        started_ms: elapsed
+                            .saturating_sub(now.duration_since(span.started))
+                            .as_secs_f64()
+                            * 1000.0,
+                        elapsed_ms: now.duration_since(span.started).as_secs_f64() * 1000.0,
+                        parallel: span.parallel,
+                    })
+                    .collect(),
+            }
+        };
+        snapshot.completed = timings()
+            .into_iter()
+            .map(|timing| CompletedSpanSnapshot {
+                label: timing.label,
+                duration_ms: timing.duration.as_secs_f64() * 1000.0,
+                parallel: timing.kind == TimingKind::Parallel,
+            })
+            .collect();
+        Some(snapshot)
+    }
+
+    /// Returns whether an installed CLI progress writer handles this message.
+    /// This does not report queue acceptance or successful delivery: a full or
+    /// disconnected writer remains handled. Deadline and warning callers must
+    /// not fall back to potentially blocking stderr when diagnostics are dropped.
     pub fn emit_progress_output(&self, text: String) -> bool {
         let output = self.progress.as_ref().and_then(|progress| {
             progress

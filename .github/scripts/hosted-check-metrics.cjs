@@ -51,16 +51,40 @@ function successful(sample) {
 function aggregate(samples) {
   if (!samples.length) throw new Error("Cannot summarize an empty sample");
   const sorted = samples.map((sample) => sample.elapsed).sort((a, b) => a - b);
+  // Timeout/signal accounting can omit descendants the wrapper never waited for.
+  // A completed nonzero check still has valid resources, despite being a failure.
+  const resources = samples.filter(
+    (sample) =>
+      Number.isInteger(sample.exit) &&
+      sample.exit >= 0 &&
+      sample.exit !== 124 &&
+      sample.exit !== 137 &&
+      !sample.signal,
+  );
   return {
     n: samples.length,
     passed: samples.filter(successful).length,
     timeouts: samples.filter((sample) => sample.exit === 124 || sample.exit === 137).length,
     max: sorted.at(-1),
     p95: sorted[Math.ceil(sorted.length * 0.95) - 1],
-    userMax: Math.max(...samples.map((sample) => sample.user)),
-    systemMax: Math.max(...samples.map((sample) => sample.system)),
-    rssMaxKiB: Math.max(...samples.map((sample) => sample.rss_kib)),
+    resourceCount: resources.length,
+    userMax: resources.length ? Math.max(...resources.map((sample) => sample.user)) : null,
+    systemMax: resources.length ? Math.max(...resources.map((sample) => sample.system)) : null,
+    rssMaxKiB: resources.length ? Math.max(...resources.map((sample) => sample.rss_kib)) : null,
   };
+}
+
+function formatSummary(rows) {
+  return [
+    "| Consumer commit / binary | n | Passed | Timeouts | Max s | p95 s | Resource n | Max user s | Max system s | Max RSS KiB |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ...rows.map(
+      (row) =>
+        `| ${row.key} | ${row.n} | ${row.passed} | ${row.timeouts} | ${row.max} | ${row.p95} | ${row.resourceCount} | ${row.userMax ?? "n/a"} | ${row.systemMax ?? "n/a"} | ${row.rssMaxKiB ?? "n/a"} |`,
+    ),
+    "",
+    "p95 is the nearest-rank empirical percentile. With six fresh hosted pairs per tree it equals the observed maximum; this sample cannot guarantee the slow tail. Pairs share one runner and filesystem cache; binary order alternates. Timeout measurements include up to five seconds of termination cleanup and are failures, not completed checks. Resource maxima exclude exits 124/137, signals, and missing wrapper statuses because their descendant accounting may be incomplete; Resource n counts eligible samples, including completed nonzero exits. Raw measurements and deadline outcomes remain intact; n/a means no eligible resource samples. The npm baseline and current source build may use different compilers; inspect environment.json and provenance.json. Build, install, and tool preparation are outside the command deadline.",
+  ].join("\n");
 }
 
 function sampleFiles(directory) {
@@ -84,4 +108,5 @@ module.exports = {
   parseTime,
   successful,
   aggregate,
+  formatSummary,
 };

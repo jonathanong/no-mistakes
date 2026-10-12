@@ -126,6 +126,10 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   identified live spans, including parallel siblings. Start before the closure;
   remove with a guard on success, returned error, and unwinding. Disabled requests
   must not create clocks, IDs, active maps, heartbeat threads, or registry entries.
+- Capture active spans, counters, and their clock under a short lock; release it
+  before aggregating timing history. Stalled aggregation must not stop Rayon
+  span entry and cleanup. Keep optional telemetry routing distinct from delivery:
+  dropped progress must not trigger blocking warning or watchdog fallbacks.
 - Rayon workers do not inherit the caller's thread-local observer. Capture it
   before scheduling and install/restore it per task so counters and spans are
   retained by the owning request. Guard concurrent requests against dropped
