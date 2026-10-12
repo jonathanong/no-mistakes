@@ -131,14 +131,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .filter(|(frame, _)| **frame >= base)
         {
             for (name, origin) in bindings {
-                let Some(names) = self.captured_binding_readers.get_mut(origin) else {
-                    continue;
-                };
-                if let Some(readers) = names.get_mut(name) {
-                    readers.remove(&frame);
-                    if readers.is_empty() {
-                        names.remove(name);
-                    }
+                // Registration and ownership-changing compaction keep this
+                // reverse index exact before each alternative restoration.
+                let names = self
+                    .captured_binding_readers
+                    .get_mut(origin)
+                    .expect("registered capture origin has reverse readers");
+                let readers = names
+                    .get_mut(name)
+                    .expect("registered capture has a reverse reader");
+                readers.remove(&frame);
+                if readers.is_empty() {
+                    names.remove(name);
                 }
                 if names.is_empty() {
                     self.captured_binding_readers.remove(origin);

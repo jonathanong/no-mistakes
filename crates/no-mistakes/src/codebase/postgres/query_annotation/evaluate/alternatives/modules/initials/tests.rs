@@ -82,30 +82,32 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     assert!(!initial.deleted.is_empty());
     assert!(!initial.definite.is_empty());
     assert!(!initial.disconnected.is_empty());
+    let base = evaluator.scopes.len();
+    let original_readers = evaluator.captured_binding_readers.clone();
+    assert!(!original_readers.is_empty());
+    let offset = base + 5;
     let indices = initial
         .roots()
-        .map(|env| (env, env + 5))
+        .map(|env| (env, env + offset))
         .collect::<FxHashMap<_, _>>();
     initial.remap(&indices);
-    assert!(initial.roots().all(|env| env >= 5));
+    assert!(initial.roots().all(|env| env >= offset));
     assert!(initial
         .captured
         .values()
         .flat_map(|names| names.values())
-        .all(|env| *env >= 5));
+        .all(|env| *env >= offset));
     assert!(initial
         .extras
         .values()
         .flat_map(|slots| slots.values())
-        .any(|value| matches!(value, Value::Function(_,_,env) if *env >= 5)));
+        .any(|value| matches!(value, Value::Function(_,_,env) if *env >= offset)));
     evaluator
         .scopes
-        .resize(evaluator.scopes.len() + 5, Default::default());
-    evaluator.remove_alternative_captured_readers(0);
+        .resize(evaluator.scopes.len() + offset, Default::default());
     evaluator.argument_objects.clear();
     evaluator.argument_extra_slots.clear();
     evaluator.mapped_arguments.clear();
-    evaluator.captured_bindings.clear();
     evaluator.fresh_mapped_parameters.clear();
     evaluator.invalidated_builders.clear();
     evaluator.builder_updates.clear();
@@ -114,8 +116,15 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     evaluator.disconnected_argument_slots.clear();
     evaluator.active_module_initials.push(initial);
     evaluator.restore_alternative_modules();
-    evaluator.add_alternative_captured_readers(0);
+    evaluator.add_alternative_captured_readers(base);
     let readers = evaluator.captured_binding_readers.clone();
+    assert!(readers.keys().any(|origin| *origin >= offset));
+    // Removing the restored arm empties its private origins without losing
+    // readers on the original frames. Reinstalling must recover the exact index.
+    evaluator.remove_alternative_captured_readers(base);
+    assert_eq!(evaluator.captured_binding_readers, original_readers);
+    evaluator.add_alternative_captured_readers(base);
+    assert_eq!(evaluator.captured_binding_readers, readers);
     evaluator.rebuild_captured_readers();
     assert_eq!(evaluator.captured_binding_readers, readers);
     assert!(evaluator
