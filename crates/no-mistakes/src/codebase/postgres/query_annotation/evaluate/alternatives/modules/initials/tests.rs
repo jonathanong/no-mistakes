@@ -101,6 +101,7 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     evaluator
         .scopes
         .resize(evaluator.scopes.len() + 5, Default::default());
+    evaluator.remove_alternative_captured_readers(0);
     evaluator.argument_objects.clear();
     evaluator.argument_extra_slots.clear();
     evaluator.mapped_arguments.clear();
@@ -113,6 +114,10 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     evaluator.disconnected_argument_slots.clear();
     evaluator.active_module_initials.push(initial);
     evaluator.restore_alternative_modules();
+    evaluator.add_alternative_captured_readers(0);
+    let readers = evaluator.captured_binding_readers.clone();
+    evaluator.rebuild_captured_readers();
+    assert_eq!(evaluator.captured_binding_readers, readers);
     assert!(evaluator
         .fresh_mapped_parameters
         .values()

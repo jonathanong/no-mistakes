@@ -57,11 +57,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             self.index_mapped_freshness(env);
         }
     }
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_binding_indexes(
-        &mut self,
-    ) {
-        self.rebuild_compacted_binding_indexes(true);
-    }
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_compacted_binding_indexes(
         &mut self,
         captured_changed: bool,

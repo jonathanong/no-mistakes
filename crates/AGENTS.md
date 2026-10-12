@@ -53,9 +53,9 @@ Keep extracted facts in their final ownership form. Do not wrap an owned value
 in `Arc` only to recover it with `as_deref().cloned()` for its sole consumer;
 that deep-copies nested data. Use `Arc` only for retained shared ownership.
 
-Cache immutable selection work at the coarsest stable request key. A scoped
-resolver selects once per importing file, including negative results; assert
-the selection-computation count in tests.
+Cache immutable selection work at the coarsest stable request key. A scoped resolver selects once per importing file, including negative results; assert the selection-computation count in tests.
+Restore a derived reverse index from its exact primary state: alternatives can retain earlier-arm frames and restore module-initial frames, so the entry snapshot alone is incomplete.
+Incremental restoration must account for unchanged frames, additions, removals, and remapped origins; rebuild after compaction changes ownership. Fixture-backed tests must assert index contents and rebuild work counts.
 
 For reverse symbol queries, the prepared analysis owner supplies the symbol
 catalog/reverse projection. `importers`, `exports-of`, `dead-exports`, and
