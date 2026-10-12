@@ -13,9 +13,10 @@ pub(super) fn collect(
     playwright: Option<&crate::codebase::check_facts::PlaywrightFactPlan>,
     source: Arc<str>,
     retain_parse: bool,
+    context: &crate::codebase::ts_source::facts::TsFactContext,
 ) -> Option<CheckFileFacts> {
     let result = crate::ast::with_request_parse_cache(|| {
-        super::collect_file_fact_variants_from_source_with_session(
+        super::collect_file_fact_variants_from_source_with_session_and_contexts(
             session,
             path,
             source,
@@ -24,6 +25,7 @@ pub(super) fn collect(
                 plan,
                 playwright,
             }],
+            &[context],
         )
         .into_iter()
         .next()

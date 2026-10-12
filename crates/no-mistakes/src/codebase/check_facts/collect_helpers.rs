@@ -76,14 +76,18 @@ pub(crate) fn collect_fact_map_with_sources(
                 || plan.production_import_paths.contains(*path)
                 || (plan.storybook && super::is_mdx_file(path))
         }));
+    if files.is_empty() {
+        return FileIdMap::with_inventory(Arc::clone(sources.inventory()));
+    }
+    let context = super::file::prepared_ts_extract_context(session, root, plan);
     let observer = crate::diagnostics::current();
     let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .par_iter()
         .map(|path| {
             crate::diagnostics::with_observer(observer.clone(), || {
                 crate::invocation::check_timeout().ok().map(|()| {
-                    super::collect_file_facts_with_session_and_sources(
-                        session, root, path, plan, playwright, sources, false,
+                    super::file::collect_file_facts_with_session_and_sources_and_context(
+                        session, root, path, plan, playwright, sources, false, &context,
                     )
                     .map(|facts| (path.clone(), facts))
                 })
@@ -109,12 +113,16 @@ pub(super) fn collect_fact_map_sequential_with_sources(
                 || plan.production_import_paths.contains(*path)
                 || (plan.storybook && super::is_mdx_file(path))
         }));
+    if files.is_empty() {
+        return FileIdMap::with_inventory(Arc::clone(sources.inventory()));
+    }
+    let context = super::file::prepared_ts_extract_context(session, root, plan);
     let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
-            super::collect_file_facts_with_session_and_sources(
-                session, root, path, plan, playwright, sources, true,
+            super::file::collect_file_facts_with_session_and_sources_and_context(
+                session, root, path, plan, playwright, sources, true, &context,
             )
             .map(|facts| (path.clone(), facts))
         })

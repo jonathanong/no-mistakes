@@ -4,6 +4,10 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+mod collect;
+mod contexts;
+use collect::collect_demand;
+
 pub(crate) struct BatchCheckFactRequest {
     pub(crate) root: PathBuf,
     pub(crate) files: Vec<PathBuf>,
@@ -16,6 +20,7 @@ pub(crate) struct BatchCheckFactRequest {
 struct FactDemand {
     request: usize,
     plan: CheckFactPlan,
+    context: usize,
 }
 
 type CollectedDemand = (PathBuf, Vec<FactDemand>, Vec<Option<super::CheckFileFacts>>);
@@ -37,6 +42,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
         }
     }
     let demands = demands_by_path(&requests);
+    let contexts = contexts::prepare_contexts(session, &requests, &demands);
     let cache = crate::ast::current_request_parse_cache();
     let mut collected = Vec::new();
     let demands = demands
@@ -48,7 +54,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
             {
                 // OXC programs cannot cross threads. Project every demanded variant
                 // while the preparing thread still owns its config/helper AST.
-                collected.extend(collect_demand(session, &requests, path, demands));
+                collected.extend(collect_demand(session, &requests, &contexts, path, demands));
                 None
             } else {
                 Some((path, demands))
@@ -61,7 +67,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
             .into_par_iter()
             .map(|(path, demands)| {
                 crate::diagnostics::with_observer(observer.clone(), || {
-                    collect_demand(session, &requests, path, demands)
+                    collect_demand(session, &requests, &contexts, path, demands)
                 })
             })
             .while_some()
@@ -101,32 +107,6 @@ pub(crate) fn collect_check_fact_batch_with_session(
         .collect()
 }
 
-fn collect_demand(
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    requests: &[BatchCheckFactRequest],
-    path: PathBuf,
-    demands: Vec<FactDemand>,
-) -> Option<CollectedDemand> {
-    crate::invocation::check_timeout().ok().map(|()| {
-        crate::ast::with_request_parse_cache(|| {
-            let variants = demands
-                .iter()
-                .map(|demand| {
-                    let request = &requests[demand.request];
-                    super::file::CheckFactVariant {
-                        root: &request.root,
-                        plan: &demand.plan,
-                        playwright: request.playwright.as_ref(),
-                    }
-                })
-                .collect::<Vec<_>>();
-            let facts =
-                super::file::collect_file_fact_variants_with_session(session, &path, &variants);
-            (path, demands, facts)
-        })
-    })
-}
-
 fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<FactDemand>> {
     let mut demands = BTreeMap::<PathBuf, Vec<FactDemand>>::new();
     for (request_id, request) in requests
@@ -143,12 +123,12 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
         };
         let mut plans = BTreeMap::new();
         for path in &request.files {
-            plans.insert(normalize(path), request.plan.clone());
+            plans.insert(normalize(path), (request.plan.clone(), 0));
         }
         for path in request.plan.production_import_paths.iter() {
             plans
                 .entry(normalize(path))
-                .or_insert_with(|| request.plan.clone());
+                .or_insert_with(|| (request.plan.clone(), 0));
         }
         for path in graph_only {
             let path = normalize(&path);
@@ -159,14 +139,18 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
                 plan.symbols = request.plan.symbols;
                 plan.legacy_symbol_paths.insert(path.clone());
             }
-            plans.entry(path).or_insert(plan);
+            plans.entry(path).or_insert((plan, 1));
         }
         if let Some(playwright) = &request.playwright {
             for path in playwright.paths() {
-                plans.entry(normalize(path)).or_insert(graph_plan.clone());
+                plans
+                    .entry(normalize(path))
+                    .or_insert((graph_plan.clone(), 1));
             }
             for path in playwright.source_files().iter() {
-                let plan = plans.entry(normalize(path)).or_insert(graph_plan.clone());
+                let (plan, _) = plans
+                    .entry(normalize(path))
+                    .or_insert((graph_plan.clone(), 1));
                 // Staged Playwright decides whether source imports are needed
                 // after test facts exist. Collect that request-local superset
                 // in the same parse; map assembly retains the exact graph plan.
@@ -187,7 +171,7 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
                 plans.remove(&normalize(path));
             }
         }
-        for (path, plan) in plans {
+        for (path, (plan, context)) in plans {
             if crate::codebase::dependencies::extract::is_indexable(&path)
                 || plan.production_import_paths.contains(&path)
                 || plan.storybook && super::is_mdx_file(&path)
@@ -195,6 +179,7 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
                 demands.entry(path).or_default().push(FactDemand {
                     request: request_id,
                     plan,
+                    context,
                 });
             }
         }

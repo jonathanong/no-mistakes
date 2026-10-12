@@ -8,17 +8,28 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
         if !request.helper_fact_paths.insert(path.clone()) {
             return None;
         }
-        request.fact_plan.clone()
+        request.fact_plan.as_ref().and_then(|plan| {
+            let context_index = if plan.primary_files.contains(&path) {
+                0
+            } else if plan.graph_files.contains(&path) {
+                1
+            } else {
+                return None;
+            };
+            Some((
+                plan.clone(),
+                std::sync::Arc::clone(&request.fact_contexts.as_ref()?[context_index]),
+                context_index,
+            ))
+        })
     });
-    let Some(request) = request else {
+    let Some((request, context, context_index)) = request else {
         return;
     };
-    let (plan, playwright) = if request.primary_files.contains(&path) {
+    let (plan, playwright) = if context_index == 0 {
         (&request.primary_plan, request.playwright.as_ref())
-    } else if request.graph_files.contains(&path) {
-        (&request.graph_plan, request.playwright.as_ref())
     } else {
-        return;
+        (&request.graph_plan, request.playwright.as_ref())
     };
     let graph_only_plan = plan
         .integration_runner_configs
@@ -33,7 +44,7 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
             graph_only
         });
     let plan = graph_only_plan.as_ref().unwrap_or(plan);
-    let facts = crate::codebase::check_facts::collect_file_facts_from_program(
+    let facts = crate::codebase::check_facts::collect_file_facts_from_program_with_context(
         &request.root,
         &path,
         plan,
@@ -41,6 +52,7 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
         source,
         program,
         None,
+        &context,
     );
     REQUEST_CACHES.with(|caches| {
         if let Some(cache) = caches.borrow_mut().last_mut() {

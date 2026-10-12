@@ -150,6 +150,10 @@ Never read from disk, spawn processes, or parse files inside a loop that runs
 once per test file (or per any other O(N) entity). Instead, compute the
 invariant data once before the loop and pass it in.
 
+Prepare `TsFactContext` once per stable `(root, plan/variant)` collection
+scope and borrow it through per-file work. Keep semantically distinct graph and
+runner variants on their own contexts, and assert context construction counts.
+
 Common violations to watch for:
 - Calling `discover_files` (which runs `git ls-files`) per test file
 - Reading and parsing config files per test file

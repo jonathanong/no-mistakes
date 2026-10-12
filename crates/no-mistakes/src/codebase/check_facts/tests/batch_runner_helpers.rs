@@ -88,6 +88,10 @@ fn requested_runner_helpers_keep_union_recovered_facts_and_parse_once() {
     assert!(facts[1].ts[&helper].source.is_none());
     let work = observer.snapshot().work;
     assert_eq!(work["discovery.roots"], 1, "{work:#?}");
+    assert_eq!(
+        work["check_facts.ts_extract_context_builds"], 2,
+        "{work:#?}"
+    );
     assert_eq!(work["parse.files"], 4, "{work:#?}");
     assert!(session
         .work_snapshot()

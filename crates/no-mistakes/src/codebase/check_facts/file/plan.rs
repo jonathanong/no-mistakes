@@ -26,13 +26,22 @@ pub(super) fn ts_extract_plan(
 
 /// Context for the shared TS extract. Check-only queue factory names override
 /// the graph context so `ts.queue_project` stays aligned with the check plan.
-pub(super) fn ts_extract_context(root: &Path, plan: &CheckFactPlan) -> TsFactContext {
+pub(crate) fn ts_extract_context(root: &Path, plan: &CheckFactPlan) -> TsFactContext {
     let mut context = plan.graph_context.clone();
     context.root = root.to_path_buf();
     if plan.queue || plan.graph.queue_project {
         context.queue_project_factory_names = plan.queue_factory_names.clone();
     }
     context
+}
+
+pub(crate) fn prepared_ts_extract_context(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    root: &Path,
+    plan: &CheckFactPlan,
+) -> TsFactContext {
+    session.record_work("check_facts.ts_extract_context_builds", 1);
+    ts_extract_context(root, plan)
 }
 
 pub(super) fn ts_source(source: Option<std::sync::Arc<str>>) -> TsFileFacts {

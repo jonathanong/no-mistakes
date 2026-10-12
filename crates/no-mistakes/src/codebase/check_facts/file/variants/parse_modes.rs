@@ -42,6 +42,7 @@ pub(super) fn collect_standard_variants(
     source: &Arc<str>,
     variants: &[(usize, &CheckFactVariant<'_>)],
     modes: &[VariantParseModes],
+    contexts: &[&crate::codebase::ts_source::facts::TsFactContext],
     results: &mut [Option<CheckFileFacts>],
 ) {
     let requested = selected(variants, modes, |mode| mode.standard);
@@ -68,6 +69,7 @@ pub(super) fn collect_standard_variants(
                             symbols: false,
                             fatal_parse_error,
                         },
+                        &contexts[*index],
                     ),
                 )
             })
@@ -95,6 +97,7 @@ pub(super) fn collect_legacy_variants(
     source: &Arc<str>,
     variants: Vec<(usize, &CheckFactVariant<'_>)>,
     modes: &[VariantParseModes],
+    contexts: &[&crate::codebase::ts_source::facts::TsFactContext],
     results: &mut [Option<CheckFileFacts>],
 ) {
     let requested = selected(&variants, modes, |mode| mode.legacy_symbols);
@@ -122,6 +125,7 @@ pub(super) fn collect_legacy_variants(
                             symbols: true,
                             fatal_parse_error: false,
                         },
+                        &contexts[*index],
                     );
                     (*index, Some(facts), None)
                 }

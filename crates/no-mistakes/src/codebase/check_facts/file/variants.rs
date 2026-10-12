@@ -1,13 +1,12 @@
-use super::{
-    collect_file_facts_from_program, collect_file_facts_from_source, is_mdx_file, requires_parse,
-    should_store_source,
-};
+use super::{collect_file_facts_from_source, is_mdx_file, requires_parse, should_store_source};
 use crate::codebase::check_facts::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use std::path::Path;
 use std::sync::Arc;
 
 mod errors;
 use errors::{fill_parse_errors, read_errors};
+mod contexts;
+pub(crate) use contexts::collect_file_fact_variants_from_source_with_session;
 mod parse_modes;
 use parse_modes::{collect_legacy_variants, collect_standard_variants, VariantParseModes};
 
@@ -32,15 +31,17 @@ pub(crate) fn collect_file_fact_variants_with_session(
     collect_file_fact_variants_from_source_with_session(session, path, source, variants)
 }
 
-pub(crate) fn collect_file_fact_variants_from_source_with_session(
+pub(crate) fn collect_file_fact_variants_from_source_with_session_and_contexts(
     session: &crate::codebase::analysis_session::AnalysisSession,
     path: &Path,
     source: Arc<str>,
     variants: &[CheckFactVariant<'_>],
+    contexts: &[&crate::codebase::ts_source::facts::TsFactContext],
 ) -> Vec<Option<CheckFileFacts>> {
+    assert_eq!(variants.len(), contexts.len());
     let mut results = (0..variants.len()).map(|_| None).collect::<Vec<_>>();
     let mut parse_variants = Vec::new();
-    for (index, variant) in variants.iter().enumerate() {
+    for (index, (variant, context)) in variants.iter().zip(contexts).enumerate() {
         if variant.plan.production_import_paths.contains(path)
             && !crate::codebase::dependencies::extract::is_indexable(path)
             && !(variant.plan.storybook && is_mdx_file(path))
@@ -64,6 +65,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
                 variant.playwright,
                 Arc::clone(&source),
                 false,
+                context,
             );
         } else {
             parse_variants.push((index, variant));
@@ -90,9 +92,18 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
         &source,
         &parse_variants,
         &modes,
+        contexts,
         &mut results,
     );
-    collect_legacy_variants(session, path, &source, parse_variants, &modes, &mut results);
+    collect_legacy_variants(
+        session,
+        path,
+        &source,
+        parse_variants,
+        &modes,
+        contexts,
+        &mut results,
+    );
     super::production_imports::project(session, path, &source, variants, &mut results);
     results
 }
@@ -111,6 +122,7 @@ fn collect_variant(
     parsed_source: &str,
     parse_error: Option<String>,
     recovery: VariantRecovery,
+    context: &crate::codebase::ts_source::facts::TsFactContext,
 ) -> CheckFileFacts {
     if let Some(parse_error) = parse_error {
         return recovered_error_facts(
@@ -124,7 +136,7 @@ fn collect_variant(
         );
     }
     // Fatal parser results always carry a diagnostic and return above.
-    let mut facts = collect_file_facts_from_program(
+    let mut facts = super::program::collect_file_facts_from_program_with_context(
         variant.root,
         path,
         variant.plan,
@@ -132,6 +144,7 @@ fn collect_variant(
         parsed_source,
         program,
         should_store_source(variant.plan).then(|| Arc::clone(source)),
+        context,
     );
     if recovery.symbols {
         facts.legacy_symbols = facts.symbols.clone();

@@ -1,11 +1,11 @@
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use super::plan::{ts_extract_context, ts_extract_plan};
+use super::plan::ts_extract_plan;
 use super::should_store_source;
 use crate::codebase::ts_source::facts;
 use std::path::Path;
 use std::sync::Arc;
 
-pub(crate) fn collect_file_facts_from_program(
+pub(crate) fn collect_file_facts_from_program_with_context(
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
@@ -13,13 +13,14 @@ pub(crate) fn collect_file_facts_from_program(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
+    context: &crate::codebase::ts_source::facts::TsFactContext,
 ) -> CheckFileFacts {
     let stored_source =
         owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
     let ts = facts::collect_file_facts_from_program(
         path,
         ts_extract_plan(plan, path, playwright),
-        &ts_extract_context(root, plan),
+        context,
         source,
         program,
         None,

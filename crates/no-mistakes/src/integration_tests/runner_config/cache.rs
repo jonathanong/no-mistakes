@@ -12,6 +12,7 @@ struct AnalysisCollector {
 struct RequestCache {
     programs: ParsedProgramCache,
     fact_plan: Option<RunnerConfigFactPlan>,
+    fact_contexts: Option<[std::sync::Arc<crate::codebase::ts_source::facts::TsFactContext>; 2]>,
     helper_fact_paths: HashSet<PathBuf>,
     helper_facts: HashMap<PathBuf, crate::codebase::check_facts::CheckFileFacts>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
@@ -22,9 +23,11 @@ impl RequestCache {
         fact_plan: Option<RunnerConfigFactPlan>,
         sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
     ) -> Self {
+        let fact_contexts = fact_plan.as_ref().map(contexts::prepare);
         Self {
             programs: crate::ast::current_request_parse_cache().unwrap_or_default(),
             fact_plan,
+            fact_contexts,
             helper_fact_paths: HashSet::new(),
             helper_facts: HashMap::new(),
             sources,
@@ -76,6 +79,7 @@ thread_local! {
     static REQUEST_CACHES: RefCell<Vec<RequestCache>> = const { RefCell::new(Vec::new()) };
 }
 
+mod contexts;
 mod source;
 pub(in crate::integration_tests) use source::read_request_source;
 pub(super) use source::read_request_source_with_session;

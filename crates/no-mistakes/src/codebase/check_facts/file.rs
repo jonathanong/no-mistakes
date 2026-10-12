@@ -3,6 +3,7 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 use std::sync::Arc;
 
+mod collect;
 mod plan;
 mod playwright_source;
 pub(crate) mod production_imports;
@@ -10,56 +11,21 @@ mod program;
 mod program_walk;
 mod variants;
 
+pub(crate) use collect::{
+    collect_file_facts_with_session_and_sources,
+    collect_file_facts_with_session_and_sources_and_context,
+};
+pub(crate) use plan::prepared_ts_extract_context;
+pub(crate) use plan::ts_extract_context;
 use plan::{requires_parse, should_store_source, ts_source};
-pub(crate) use program::collect_file_facts_from_program;
+pub(crate) use program::collect_file_facts_from_program_with_context;
 pub(crate) use variants::{
-    collect_file_fact_variants_from_source_with_session, collect_file_fact_variants_with_session,
-    CheckFactVariant,
+    collect_file_fact_variants_from_source_with_session_and_contexts,
+    collect_file_fact_variants_with_session, CheckFactVariant,
 };
 
 pub(crate) fn is_mdx_file(path: &Path) -> bool {
     path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
-}
-
-pub(crate) fn collect_file_facts_with_session_and_sources(
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
-    path: &Path,
-    plan: &CheckFactPlan,
-    playwright: Option<&PlaywrightFactPlan>,
-    sources: &crate::codebase::ts_source::SourceStore,
-    retain_parse: bool,
-) -> Option<CheckFileFacts> {
-    let source = match sources.read_path(path) {
-        Ok(source) => source,
-        Err(err) => {
-            let parse_error = format!("failed to read {}: {err}", path.display());
-            return Some(CheckFileFacts {
-                ts: Arc::new(TsFileFacts {
-                    operational_error: Some(parse_error.clone()),
-                    parse_error: Some(parse_error.clone()),
-                    ..TsFileFacts::default()
-                }),
-                parse_error: Some(parse_error),
-                server_route_client_boundary: plan
-                    .server_route_client_boundary
-                    .then(Default::default),
-                ..CheckFileFacts::default()
-            });
-        }
-    };
-    if plan.production_import_paths.contains(path) {
-        return production_imports::collect(
-            session,
-            root,
-            path,
-            plan,
-            playwright,
-            source,
-            retain_parse,
-        );
-    }
-    collect_file_facts_from_source(session, root, path, plan, playwright, source, retain_parse)
 }
 
 fn collect_file_facts_from_source(
@@ -70,6 +36,7 @@ fn collect_file_facts_from_source(
     playwright: Option<&PlaywrightFactPlan>,
     source: Arc<str>,
     retain_parse: bool,
+    context: &crate::codebase::ts_source::facts::TsFactContext,
 ) -> Option<CheckFileFacts> {
     if plan.storybook && is_mdx_file(path) {
         let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
@@ -142,7 +109,7 @@ fn collect_file_facts_from_source(
             };
         }
         // Fatal parser results always carry a diagnostic and return above.
-        collect_file_facts_from_program(
+        program::collect_file_facts_from_program_with_context(
             root,
             path,
             plan,
@@ -150,6 +117,7 @@ fn collect_file_facts_from_source(
             parsed_source,
             program,
             should_store_source(plan).then(|| Arc::clone(&source)),
+            context,
         )
     };
     let collected = if legacy_symbols {

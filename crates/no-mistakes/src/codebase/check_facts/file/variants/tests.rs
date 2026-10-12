@@ -135,3 +135,72 @@ fn batch_legacy_failures_preserve_requested_boundary_facts() {
     );
     assert_boundary_is_variant_specific(&facts);
 }
+
+#[test]
+fn variants_keep_distinct_queue_factory_contexts_and_match_single_plan_facts() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/custom-factory/fixture");
+    let path = root.join("queues/notifications.ts");
+    let plans = [
+        CheckFactPlan {
+            queue: true,
+            queue_factory_names: vec!["createQueue".to_string()],
+            ..Default::default()
+        },
+        CheckFactPlan {
+            queue: true,
+            queue_factory_names: vec!["otherQueue".to_string()],
+            ..Default::default()
+        },
+    ];
+    let variants = plans
+        .iter()
+        .map(|plan| CheckFactVariant {
+            root: &root,
+            plan,
+            playwright: None,
+        })
+        .collect::<Vec<_>>();
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = collect_file_fact_variants_with_session(&session, &path, &variants);
+
+    for (plan, variant_facts) in plans.iter().zip(&facts) {
+        let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+            std::slice::from_ref(&path),
+        ));
+        let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+        let single = crate::codebase::check_facts::collect_file_facts_with_session_and_sources(
+            &session, &root, &path, plan, None, &sources, false,
+        )
+        .expect("single-plan facts");
+        assert_eq!(
+            variant_facts
+                .as_ref()
+                .unwrap()
+                .ts
+                .queue_project
+                .as_ref()
+                .unwrap()
+                .queue_exports,
+            single.ts.queue_project.as_ref().unwrap().queue_exports,
+        );
+    }
+    assert!(facts[0]
+        .as_ref()
+        .unwrap()
+        .ts
+        .queue_project
+        .as_ref()
+        .unwrap()
+        .queue_exports
+        .contains_key("notificationsQueue"));
+    assert!(!facts[1]
+        .as_ref()
+        .unwrap()
+        .ts
+        .queue_project
+        .as_ref()
+        .unwrap()
+        .queue_exports
+        .contains_key("notificationsQueue"));
+}

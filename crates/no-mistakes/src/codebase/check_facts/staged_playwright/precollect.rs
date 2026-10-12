@@ -17,24 +17,34 @@ pub(super) fn cached_config_file_facts(
         return FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory()));
     }
     let universe = files.iter().chain(graph_files).collect::<HashSet<_>>();
-    let collected = playwright
+    let paths = playwright
         .config_files()
         .iter()
         .filter(|path| universe.contains(path) || plan.legacy_symbol_paths.contains(*path))
-        .filter_map(|path| {
-            let source = sources.read_path(path).ok()?;
-            let variants = [super::super::file::CheckFactVariant {
-                root,
-                plan,
-                playwright: Some(playwright),
-            }];
-            let facts = super::super::file::collect_file_fact_variants_from_source_with_session(
-                session, path, source, &variants,
+        .collect::<Vec<_>>();
+    if paths.is_empty() {
+        return FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory()));
+    }
+    let context = super::super::file::prepared_ts_extract_context(session, root, plan);
+    let collected = paths.into_iter().filter_map(|path| {
+        let source = sources.read_path(path).ok()?;
+        let variants = [super::super::file::CheckFactVariant {
+            root,
+            plan,
+            playwright: Some(playwright),
+        }];
+        let facts =
+            super::super::file::collect_file_fact_variants_from_source_with_session_and_contexts(
+                session,
+                path,
+                source,
+                &variants,
+                &[&context],
             )
             .into_iter()
             .next()
             .flatten()?;
-            Some((path.clone(), facts))
-        });
+        Some((path.clone(), facts))
+    });
     FileIdMap::from_iter_with_inventory(collected, std::sync::Arc::clone(sources.inventory()))
 }
