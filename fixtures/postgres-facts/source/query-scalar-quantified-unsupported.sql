@@ -11,3 +11,5 @@ SELECT 1 FROM t WHERE x = ANY(true);
 SELECT 1 FROM t WHERE x = ANY($1::integer);
 SELECT 1 FROM t WHERE x::integer[] = ANY($1);
 SELECT 1 FROM t WHERE x = ALL(ARRAY[1 + 2]);
+SELECT 1 FROM t WHERE x = ANY(DATE 'today');
+SELECT 1 FROM t WHERE x = ANY(ARRAY[ARRAY[1]]);
