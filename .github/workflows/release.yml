@@ -319,6 +319,10 @@ jobs:
         timeout-minutes: 15
         run: cargo test --all-features
 
+      - name: Install Chromium for timeout-policy browser tests
+        timeout-minutes: 5
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Run JavaScript tests
         timeout-minutes: 5
         run: pnpm test
