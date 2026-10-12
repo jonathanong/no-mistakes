@@ -470,3 +470,7 @@ fn message_includes_file_line_reason_and_match() {
 
 #[path = "tests/prepared.rs"]
 mod prepared;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "tests/benchmark.rs"]
+mod benchmark;

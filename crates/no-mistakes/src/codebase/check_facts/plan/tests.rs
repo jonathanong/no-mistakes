@@ -2,6 +2,31 @@ use super::CheckFactPlan;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 
 #[test]
+fn selected_jsx_demand_unions_without_mutating_shared_plans() {
+    use std::{path::PathBuf, sync::Arc};
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/test-no-dependency-pins/prepared-jsx/src");
+    let paths = Arc::new([root.join("pins.test.tsx")].into_iter().collect());
+    let mut plan = CheckFactPlan {
+        jsx_text_paths: Arc::clone(&paths),
+        ..Default::default()
+    };
+    let cloned = plan.clone();
+    plan.include(cloned);
+    plan.include(CheckFactPlan::default());
+    assert!(Arc::ptr_eq(&plan.jsx_text_paths, &paths));
+    plan.include(CheckFactPlan {
+        jsx_text_paths: Arc::new([root.join("pins.test.jsx")].into_iter().collect()),
+        ..Default::default()
+    });
+    assert_eq!(plan.jsx_text_paths.len(), 2);
+    assert_eq!(paths.len(), 1, "another request keeps its selected scope");
+    let mut empty = CheckFactPlan::default();
+    empty.include(plan.clone());
+    assert_eq!(empty.jsx_text_paths, plan.jsx_text_paths);
+}
+
+#[test]
 fn production_path_demand_is_shared_across_plan_clones_and_unioned_once() {
     use std::sync::Arc;
     let paths = Arc::new(

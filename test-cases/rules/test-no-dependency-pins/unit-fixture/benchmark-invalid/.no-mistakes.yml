@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: test-no-dependency-pins
+    scope: repository
+    options:
+      patterns:
+        - reason: invalid
+          regex: '['
