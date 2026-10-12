@@ -15,54 +15,55 @@
 
 ### Prepared analysis, source-session ownership, and relationship projection
 
-The public check, query, N-API, or integration-runner boundary owns one
-`AnalysisSession`/prepared analysis for the invocation. That owner declares the
-complete `TsFactPlan` and graph demand, then prepares the visible-file inventory,
-`SourceStore`, resolver/catalog, fact map, workspace data, and canonical graph
-once. Lower layers receive the prepared facts and session-owned stores by
-reference; they must not open an independent source/read/parse/resolution or
-graph-building pipeline.
+The public check, query, N-API, or integration runner owns one request-scoped
+`AnalysisSession`. Declare the complete `TsFactPlan` and graph demand, then
+prepare the visible-file inventory, `SourceStore`, resolver/catalog, fact map,
+workspace data, and canonical graph once. Lower layers borrow those inputs;
+never open an independent source/read/parse/resolution or graph pipeline.
 
-`SourceStore` is specifically a *session-owned* physical-I/O boundary. A
-source consumer must use the store supplied by its prepared request, including
-for a supplemental normalized path. This memoizes both source text and read
-failures and makes read accounting meaningful. Do not compensate for a missing
-prepared source parameter by calling `std::fs::read_to_string`; thread the
-prepared store down instead.
+`SourceStore` owns physical I/O for the request. Every source consumer uses
+the supplied store, including supplemental normalized paths, memoizing source
+text and read failures under one identity and accounting path. Thread prepared
+sources to helpers; never replace a missing store with `std::fs::read_to_string`.
 
-Each layer has a deliberately narrow, declarative responsibility:
+Keep layer responsibilities declarative:
 
-1. Fact extraction records syntactic facts (imports, exports, routes,
-   selectors, queues, HTTP calls, and similar per-file occurrences) for the
-   declared plan. It does not decide a report-specific traversal.
-2. The prepared resolver/catalog and workspace layer resolves those facts with
-   the request's visible-file universe. It owns path/config variation rather
-   than commands rebuilding their own resolver or index.
-3. Graph builders project the resolved facts into the one typed `DepGraph`/
-   `EdgeIndex`. Query and rule layers filter or traverse that prepared
-   relationship projection; they do not create parallel forward/reverse maps.
-4. Renderers only shape already-computed results. A renderer/CLI leaf that
-   discovers files, reads sources, parses programs, or calls an extractor has
-   crossed the boundary in the wrong direction.
+1. Extract syntactic imports, exports, routes, selectors, queues, HTTP calls,
+   and other per-file facts for the plan; do not choose report traversals.
+2. Resolve facts through the prepared resolver/catalog and workspace using the
+   request's file universe. This layer owns path/config variation; commands
+   must not rebuild resolvers or indexes.
+3. Project relationships into one typed `DepGraph`/`EdgeIndex`. Queries and
+   rules filter/traverse it; never create parallel forward/reverse maps.
+4. Renderers shape computed results. Renderer/CLI leaves must not discover
+   files, read sources, parse programs, or call extractors.
 
-This split is important for determinism as well as speed: a fact plan makes
-what is collected explicit, the source session gives every input one identity,
-and a canonical relationship projection gives every consumer the same answer.
+Explicit fact plans, shared input identities, and canonical relationships
+keep results deterministic as well as avoiding repeated work.
 
-Keep extracted facts in their final ownership form. Do not wrap an owned value
-in `Arc` only to recover it with `as_deref().cloned()` for its sole consumer;
-that deep-copies nested data. Use `Arc` only for retained shared ownership.
+Keep facts in final ownership form: `Arc` is for retained sharing, never an owned
+value recovered with `as_deref().cloned()` by its sole consumer, copying nested data.
+
+When merging incoming dense argument slots across branches, borrow unchanged
+slots; clone only new objects or differing incoming slots. Frame compaction
+must remap returned values directly, with initial argument IDs as separate
+roots instead of a copied return slice plus synthetic values. Assert copy
+counts and fixture behavior for callbacks, cycles, and sparse mutations.
 
 Cache immutable selection work at the coarsest stable request key. A scoped
 resolver selects once per importing file, including negative results; assert
 the selection-computation count in tests.
 
-For reverse symbol queries, the prepared analysis owner supplies the symbol
-catalog/reverse projection. `importers`, `exports-of`, `dead-exports`, and
-`call-sites` may project it differently, but none may discover graph files,
-collect TS facts, or build a `SymbolIndex` ad hoc. Similarly, a domain edge
-producer requests its domain facts through the plan and projects typed edges;
-it never invokes `collect_domain_facts` itself.
+Restore derived capture indexes only when ownership inputs agree. Branch-entry
+frames keep their capture origins; update arm-created readers, including module
+initials, and fully rebuild when compaction moves or drops ownership. Verify
+exact reverse-index equality, nested closure behavior, and rebuild work counts;
+never infer a speedup from fewer rebuilds without matched timing evidence.
+
+Reverse symbol queries consume the owner's symbol catalog/reverse projection.
+`importers`, `exports-of`, `dead-exports`, and `call-sites` must not rediscover
+graph files, collect TS facts, or build `SymbolIndex` ad hoc. Domain edge
+producers request facts through the plan and never call `collect_domain_facts`.
 
 Do not add a blanket ast-grep guard for a future `PreparedSymbolCatalog` yet:
 this branch has no stable post-refactor module/type/call shape to scope without
@@ -73,18 +74,15 @@ owner and public API are stable.
 
 N-API JSON bindings must use `json_binding!`, never a handwritten
 `AsyncTask::new(JsonTask::new(...))`. JS facades must use `callJson`/
-`createJsonApis`. ast-grep covers that boilerplate; parity tests still
-guard aliases and re-exports.
+`createJsonApis`. ast-grep guards boilerplate; parity tests guard aliases/re-exports.
 
 ### Canonical edge finalization
 
-When relationship producers have already normalized each source adjacency,
-flatten the forward map in deterministic source order and assign ordinals in
-that pass. Do **not** rebuild one repository-wide `Vec<CanonicalEdge>`, sort
-it, and deduplicate it again: that adds a global O(E log E) pass after local
-normalization and can become the graph's dominant allocation/sort cost. New
-edge batches should use `EdgeIndex`'s keyed/per-source deduplication, then sort
-only the affected adjacency lists when their public order requires it.
+Flatten already-normalized forward adjacency in deterministic source order,
+assigning ordinals in that pass. Never rebuild, sort, or deduplicate a global
+`Vec<CanonicalEdge>`: that repeats local normalization with O(E log E) work.
+New batches use `EdgeIndex` keyed/per-source deduplication; sort only affected
+adjacency lists when public order requires it.
 
 ### Diagnosing a performance regression
 
@@ -170,9 +168,8 @@ Common violations to watch for:
 
 ### Guard expensive discovery behind an early return
 
-`discover_files` runs `git ls-files` (two child processes). Only call it when
-you actually need the file list. Guard with an early return for the empty-input
-case so pattern expansion does not spawn Git when there is nothing to expand.
+Call `discover_files` only when its file list is needed. Early-return on empty
+inputs so pattern expansion never spawns Git when there is nothing to expand.
 
 ### Never walk the tree without `.gitignore` awareness
 
@@ -196,4 +193,8 @@ once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 `.gitignore`-blind walk and a git-aware one disagree (gitignored nested match).
 
 ### Pre-compute BFS before per-entity loops
-Run shared graph traversals up front with `par_iter()`; for path reports, enqueue node IDs, record first predecessors, reconstruct only findings, preserve adjacency-order winners in diamonds/cycles, and assert reconstruction counts.
+
+Cache shared BFS results up front in one `par_iter()` before per-entity work.
+For path reports, enqueue node IDs and first predecessors; reconstruct only
+matching findings. Preserve first shortest paths in adjacency order across diamonds/cycles,
+and assert reconstruction counts to prevent per-edge path copies.
