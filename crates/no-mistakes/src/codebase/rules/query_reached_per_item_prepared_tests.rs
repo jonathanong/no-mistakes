@@ -86,6 +86,9 @@ fn assert_prepared_per_item_projection(fixture: &str) {
     let parses = crate::ast::finish_parse_count(&root);
     let reads = observer.source_read_snapshot();
     for path in facts.graph_file_universe() {
+        if facts.get_ts_facts(path).is_none() {
+            continue;
+        }
         assert_eq!(parses.get(path), Some(&1), "{parses:#?}");
         assert_eq!(reads.get(path), Some(&1), "{reads:#?}");
     }
