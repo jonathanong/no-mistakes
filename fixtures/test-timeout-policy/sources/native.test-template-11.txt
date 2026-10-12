@@ -1,0 +1,7 @@
+test('runtime', () => {
+        const { setConfig } = vi
+        const options = JSON.parse('{"testTimeout":1}')
+        options.testTimeout = {{0}}
+        setConfig(options)
+        continued()
+      })

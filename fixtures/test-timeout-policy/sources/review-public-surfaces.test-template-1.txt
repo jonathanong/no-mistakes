@@ -1,0 +1,19 @@
+
+      class StaticRunner extends TestRunner {
+        static #marker = 'SDK static brand'
+        static get marker() { return this.#marker }
+        static read() { return this.#marker }
+        static owner() { return this }
+      }
+      const Final = guardVitestExports({ TestRunner: StaticRunner }).TestRunner
+      if (Final.marker !== 'SDK static brand' || Final.read() !== 'SDK static brand' ||
+          Final.owner() !== StaticRunner) throw new Error('SDK_STATIC_RECEIVER_CHANGED')
+      class Derived extends Final {
+        static #marker = 'derived SDK static brand'
+        static get marker() { return this.#marker }
+        static read() { return this.#marker }
+      }
+      if (Derived.marker !== 'derived SDK static brand' ||
+          Derived.read() !== 'derived SDK static brand' || Derived.owner() !== Derived)
+        throw new Error('DERIVED_SDK_STATIC_RECEIVER_CHANGED')
+    

@@ -1,0 +1,3 @@
+import { beforeAll as register } from 'vitest';
+      register(() => { globalThis.annotationHookRan = true }, {{0}});
+      export const registered = true

@@ -1,0 +1,1 @@
+Object.create({ get timeout() { throw new Error('IGNORED_GETTER_READ') } })

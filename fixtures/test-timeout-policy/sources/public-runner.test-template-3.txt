@@ -1,0 +1,20 @@
+
+      class Derived extends TestRunner {
+        #marker = 'derived ready'
+        config = { ...this.config, testTimeout: 25, hookTimeout: 25 }
+        extendTaskContext = (context) => {
+          const extended = super.extendTaskContext(context)
+          extended.marker = this.#marker
+          return extended
+        }
+      }
+      const Final = guardVitestExports({ TestRunner: Derived }).TestRunner
+      const runner = new Final({ ...this.config })
+      const finalizedContext = runner.extendTaskContext({ task: { timeout: 25 } })
+      if (finalizedContext.marker !== 'derived ready' || !(runner instanceof Derived))
+        throw new Error('own-field public SDK receiver lost')
+      try { runner.extendTaskContext({ task: { timeout: 30001 } }); throw new Error('task accepted') }
+      catch (error) { if (!(error instanceof RangeError)) throw error }
+      try { runner.config.hookTimeout = 30001; throw new Error('hook accepted') }
+      catch (error) { if (!(error instanceof RangeError)) throw error }
+    

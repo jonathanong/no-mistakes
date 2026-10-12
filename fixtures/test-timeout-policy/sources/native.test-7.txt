@@ -1,0 +1,5 @@
+test('context hook', context => {
+      const finish = context.onTestFinished
+      finish(() => {}, 30001)
+      continued()
+    })

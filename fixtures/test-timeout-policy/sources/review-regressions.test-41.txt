@@ -1,0 +1,7 @@
+
+      const collector = describe('owned suite', () => beforeAll(() => {}))
+      collector.test('removed', () => { throw new Error('CLEARED_TEST_EXECUTED') })
+      collector.clear()
+      collector.test('retained', continued)
+      collector.task('retained task', { handler: continued })
+    

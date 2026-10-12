@@ -1,0 +1,1 @@
+const child = test.extend({ sample: 1 }).scoped({ sample: 2 }); child('invalid scoped', continued, 30001)

@@ -1,0 +1,2 @@
+const child = test.extend({ sample: [1, { scope: 'suite' }] });
+      child('invalid native scope', continued, 25)

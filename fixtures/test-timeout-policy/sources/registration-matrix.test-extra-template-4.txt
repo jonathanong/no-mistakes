@@ -1,0 +1,1 @@
+const child = test.extend({ sample: 1 }).override({ sample: 2 }); child('invalid override', continued, 30001)

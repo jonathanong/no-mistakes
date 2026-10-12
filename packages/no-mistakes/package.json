@@ -29,7 +29,10 @@
     "workflow-topology-index-helpers.js",
     "scripts/native-package.js",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "test-timeout-policy/*.mjs",
+    "test-timeout-policy/*.d.mts",
+    "!test-timeout-policy/*.test.mjs"
   ],
   "main": "index.js",
   "types": "index.d.ts",
@@ -40,10 +43,26 @@
       "require": "./index.js"
     },
     "./planning.js": "./planning.js",
-    "./workflow-topology-index.js": "./workflow-topology-index.js"
+    "./workflow-topology-index.js": "./workflow-topology-index.js",
+    "./test-timeout-policy": {
+      "types": "./test-timeout-policy/index.d.mts",
+      "import": "./test-timeout-policy/index.mjs"
+    },
+    "./test-timeout-policy/plugin": {
+      "types": "./test-timeout-policy/plugin.d.mts",
+      "import": "./test-timeout-policy/plugin.mjs"
+    }
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "vitest": "^5.0.3"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
   },
   "optionalDependencies": {
     "no-mistakes-darwin-arm64": "0.86.4",

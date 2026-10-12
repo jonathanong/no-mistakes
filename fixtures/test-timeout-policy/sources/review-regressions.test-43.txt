@@ -1,0 +1,5 @@
+describe('owned suite', () => {
+      beforeAll(() => {})
+      afterAll(() => {})
+      test('body', continued)
+    })

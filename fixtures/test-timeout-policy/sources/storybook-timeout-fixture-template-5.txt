@@ -1,0 +1,13 @@
+
+    import React from 'react'
+    import { expect } from 'vitest'
+    export default { title: 'TimeoutClosure', render: () => React.createElement('button', {}, 'actual story') }
+    export const RealGeneratedStory = {
+      play: ({ canvasElement }) => {
+        expect(globalThis.annotationHookRan).toBe(true)
+        expect(globalThis.projectAnnotationsRan).toBe(true)
+        expect(canvasElement.textContent).toContain('actual story')
+        console.log('ACTUAL_STORY_PLAY_COMPLETED')
+      },
+    }
+  

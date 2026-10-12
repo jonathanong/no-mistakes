@@ -1,0 +1,8 @@
+
+      aroundAll(async run => { await run() }, 30000)
+      aroundEach(async run => { await run() }, 30000)
+      test('context', context => {
+        if (context.ownedRunnerMarker !== 'preserved') throw new Error('context lost')
+        continued()
+      })
+    

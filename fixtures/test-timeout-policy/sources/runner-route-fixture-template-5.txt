@@ -1,0 +1,5 @@
+
+    plugins: [testTimeoutPolicyPlugin(30000, []{{0}})
+      {{1}}],
+    test: { ...{{2}}, {{3}} }
+  

@@ -1,0 +1,2 @@
+{{0}}(async () => { await new Promise(() => {}) }, 25);
+      test('unreachable', continued)

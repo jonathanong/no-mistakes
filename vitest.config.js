@@ -10,6 +10,7 @@ module.exports = defineConfig({
       "packages/*/scripts/*.test.js",
       "packages/eslint-plugin-no-mistakes/test/**/*.test.mjs",
       "tests/js/**/*.test.js",
+      "packages/no-mistakes/test-timeout-policy/*.test.mjs",
     ],
     coverage: {
       provider: "v8",
@@ -23,6 +24,7 @@ module.exports = defineConfig({
         "packages/no-mistakes/scripts/wait-npm-tarball.js",
         "packages/no-mistakes/scripts/smoke-published-native.js",
         "packages/eslint-plugin-no-mistakes/src/**/*.js",
+        "packages/no-mistakes/test-timeout-policy/*.mjs",
       ],
       reporter: ["text", "lcov"],
       thresholds: {

@@ -1,0 +1,52 @@
+
+      const Guarded = guardVitestExports({ TestRunner }).TestRunner
+      if (Guarded !== guardVitestExports({ TestRunner }).TestRunner)
+        throw new Error('constructor cache identity lost')
+      if (Guarded.prototype !== TestRunner.prototype) throw new Error('public prototype changed')
+      const guardedStatics = new Set(['getCurrentSuite', 'createTaskCollector', 'getSuiteHooks', 'setSuiteHooks'])
+      for (const key of Reflect.ownKeys(TestRunner)) {
+        if (guardedStatics.has(key)) {
+          const wrapped = Reflect.get(Guarded, key)
+          if (typeof wrapped !== 'function' || wrapped === Reflect.get(TestRunner, key) ||
+              wrapped !== Reflect.get(Guarded, key))
+            throw new Error('public static policy wrapper identity lost: ' + key)
+          continue
+        }
+        if (Reflect.get(Guarded, key) !== Reflect.get(TestRunner, key))
+          throw new Error('public static property changed')
+      }
+      class Derived extends Guarded {
+        static marker = 'static preserved'
+        constructor(config) { super(config); this.marker = 'instance preserved' }
+        importFile(path) { return path }
+        extendTaskContext(context) {
+          const extended = super.extendTaskContext(context)
+          extended.derivedMarker = this.marker
+          return extended
+        }
+      }
+      if (Object.getPrototypeOf(Derived) !== Guarded)
+        throw new Error('static constructor inheritance changed')
+      const runner = new Derived({ ...this.config })
+      runner.onBeforeCollect([])
+      for (const name of ['onCollectStart', 'onAfterRunSuite', 'onBeforeRunTask',
+          'onBeforeTryTask', 'onAfterTryTask', 'cancel', 'injectValue',
+          'getImportDurations', 'getModuleFetchDuration']) {
+        if (Reflect.get(runner, name) !== Reflect.get(TestRunner.prototype, name))
+          throw new Error('public SDK lifecycle method replaced: ' + name)
+      }
+      if (!(runner instanceof Derived) || !(runner instanceof TestRunner) ||
+          Object.getPrototypeOf(runner) !== Derived.prototype ||
+          Derived.marker !== 'static preserved' || runner.importFile('owned') !== 'owned')
+        throw new Error('most-derived public API changed')
+      const Lower = guardVitestExports({ TestRunner }, 100).TestRunner
+      if (Lower === Guarded) throw new Error('configured maximum cache isolation lost')
+      const lower = new Lower({ ...this.config, testTimeout: 25, hookTimeout: 25 })
+      lower.config.testTimeout = 100
+      try { lower.config.testTimeout = 101; throw new Error('lower ceiling lost') }
+      catch (error) { if (!(error instanceof RangeError)) throw error }
+      const extended = runner.extendTaskContext({ task: { timeout: 25 } })
+      if (extended.derivedMarker !== 'instance preserved') throw new Error('context lifecycle lost')
+      try { runner.config.testTimeout = 30001; throw new Error('invalid write accepted') }
+      catch (error) { if (!(error instanceof RangeError)) throw error }
+    

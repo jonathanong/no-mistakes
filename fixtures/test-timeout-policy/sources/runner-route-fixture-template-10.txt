@@ -1,0 +1,22 @@
+
+    import { TestRunner } from 'vitest'
+    import { writeFileSync } from 'node:fs'
+    export default class FinalRunner extends TestRunner {
+      #marker = 'own field initialized'
+      config = { ...this.config, {{0}} }
+      extendTaskContext = (context) => {
+        {{1}}
+        const extended = super.extendTaskContext(context)
+        extended.finalMarker = this.#marker
+        writeFileSync('extension.marker', this.#marker)
+        return extended
+      }
+      constructor(config) {
+        super(config)
+        {{2}}
+        if (Object.getPrototypeOf(FinalRunner.prototype) !== TestRunner.prototype)
+          throw new Error('public TestRunner base identity changed')
+        writeFileSync('lifecycle.marker', 'final constructor initialized')
+      }
+    }
+  

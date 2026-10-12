@@ -1,0 +1,1 @@
+import { beforeAll as hook } from 'vitest'; hook(() => {}, 30001)

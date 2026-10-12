@@ -1,0 +1,4 @@
+describe('owned suite', () => {
+      beforeAll(async () => { await new Promise(resolve => setTimeout(resolve, 150)) })
+      test('body', continued)
+    })

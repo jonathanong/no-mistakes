@@ -1,0 +1,13 @@
+
+      const row = () => 'owned row'
+      describe.each([row])('row', (value) => {
+        if (value !== row) throw new Error('ROW_IDENTITY_CHANGED')
+        test('row body', continued)
+      })
+      suite('injected', { timeout: 250 }, async (injected) => {
+        await Promise.resolve()
+        injected.beforeAll(() => {}, 20)
+        injected.afterAll(() => {}, 20)
+        injected('injected body', continued)
+      })
+    

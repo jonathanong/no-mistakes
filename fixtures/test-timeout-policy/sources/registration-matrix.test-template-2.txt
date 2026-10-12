@@ -1,0 +1,2 @@
+import { beforeAll, test } from 'vitest';
+          export function register(body) { beforeAll(() => {}, 30001); test('legal child', body, 25) }

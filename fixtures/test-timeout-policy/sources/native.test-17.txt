@@ -1,0 +1,4 @@
+test('blocked loop', () => {
+      continued()
+      while (true) {}
+    }, 25)

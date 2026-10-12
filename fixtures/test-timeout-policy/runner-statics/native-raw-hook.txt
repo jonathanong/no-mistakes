@@ -1,0 +1,7 @@
+// Native static access is the before-fix control: no public hook timeout is captured.
+native.TestRunner.getCurrentSuite().on('beforeAll', async () => {
+  writeFileSync('extension.marker', 'raw callback entered')
+  // The configured hook deadline is 250ms; native .on never captures that timer.
+  await new Promise(resolve => setTimeout(resolve, 400))
+})
+test('body runs after the uncapped raw hook', continued)

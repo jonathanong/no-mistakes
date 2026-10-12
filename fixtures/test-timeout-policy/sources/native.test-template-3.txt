@@ -1,0 +1,4 @@
+
+          import { aroundAll } from 'vitest'
+          export function register(body) { aroundAll(async run => run(), Number('30001')) }
+        

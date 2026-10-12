@@ -1,0 +1,8 @@
+
+      const collector = describe('owned', () => {})
+      collector.test.beforeAll(() => {}, 20)
+      collector.test.afterAll(() => {}, 20)
+      try { collector.test('invalid', () => {}, 30001); throw new Error('OVERCAP_ACCEPTED') }
+      catch (error) { if (!(error instanceof RangeError)) throw error }
+      collector.test('valid', continued, 250)
+    

@@ -1,0 +1,1 @@
+guards returned collector.test.%s before native registration

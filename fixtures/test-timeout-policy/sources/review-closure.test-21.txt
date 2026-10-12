@@ -1,0 +1,6 @@
+
+      import { vitest } from 'vitest'
+      if (test !== it || describe !== suite || vi !== vitest || vi.setConfig !== vitest.setConfig)
+        throw new Error('NATIVE_ALIAS_IDENTITY_CHANGED')
+      test('body', continued)
+    

@@ -1,0 +1,1 @@
+test('short hang', async () => { continued(); await new Promise(() => {}) }, 25)

@@ -243,6 +243,10 @@ jobs:
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
           cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
 
+      - name: Install Chromium for timeout-policy browser tests
+        timeout-minutes: 5
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Run JavaScript tests
         timeout-minutes: 5
         run: pnpm run test:ci

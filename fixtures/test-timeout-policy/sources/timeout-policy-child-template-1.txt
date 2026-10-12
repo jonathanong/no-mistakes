@@ -1,0 +1,7 @@
+
+      import { test, it, describe, suite, beforeAll, afterAll, aroundAll, aroundEach, vi } from 'vitest'
+      import * as native from {{0}}
+      import { writeFileSync } from 'node:fs'
+      const continued = () => writeFileSync('continued.marker', 'continued')
+      {{1}}
+    

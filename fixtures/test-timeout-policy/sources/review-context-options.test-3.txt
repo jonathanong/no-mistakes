@@ -1,0 +1,12 @@
+
+      for (const [nested, direct] of [[test.describe, describe], [test.suite, suite],
+          [test.beforeAll, beforeAll], [test.afterAll, afterAll]]) {
+        if (nested !== direct) throw new Error('NESTED_ALIAS_IDENTITY_CHANGED')
+      }
+      const metadata = new WeakMap([[describe, 'suite metadata']])
+      if (metadata.get(test.describe) !== 'suite metadata') throw new Error('ALIAS_METADATA_LOST')
+      test.beforeAll(() => {}, 20)
+      try { test.afterAll(() => {}, 30001); throw new Error('OVERCAP_ACCEPTED') }
+      catch (error) { if (!(error instanceof RangeError)) throw error }
+      test.describe('nested suite', () => test('body', continued))
+    

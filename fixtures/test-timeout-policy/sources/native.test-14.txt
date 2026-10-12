@@ -1,0 +1,12 @@
+
+      beforeAll(() => {}, 30000)
+      describe('legal inherited', { timeout: 30000 }, () => {
+        const register = it
+        register('legal', context => {
+          if (context.ownedRunnerMarker !== 'preserved') throw new Error('custom runner context lost')
+          const { setConfig } = vi
+          setConfig({ hookTimeout: 30000 })
+          continued()
+        })
+      })
+    

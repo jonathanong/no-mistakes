@@ -1,0 +1,4 @@
+suite.shuffle.{{0}}([7])('legal %s', { timeout: 30000 }, value => {
+      if (value !== 7) throw new Error('suite table value changed')
+      test('legal child', continued, 25)
+    })

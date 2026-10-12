@@ -193,6 +193,8 @@ npx no-mistakes rust-no-inline-tests crates/*/src
 npx no-mistakes rust-max-lines-per-file crates/*/src crates/*/tests
 ```
 
+The optional [Vitest timeout policy](../../docs/test-timeout-policy.md) provides public configuration and registration guards.
+
 See the full documentation in [docs/](../../docs/README.md), the
 [CLI command index](../../docs/cli/README.md), and the
 [Node/N-API guide](../../docs/node-api.md). Agents can use the compact

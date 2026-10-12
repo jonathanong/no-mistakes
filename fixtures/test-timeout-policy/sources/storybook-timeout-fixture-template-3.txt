@@ -1,0 +1,2 @@
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
+      import { replaceStorybookAnnotationSetup } from {{0}}

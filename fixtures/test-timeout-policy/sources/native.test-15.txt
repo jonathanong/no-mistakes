@@ -1,0 +1,5 @@
+
+      let reads = 0
+      const options = { get timeout() { return ++reads === 1 ? 25 : 30001 } }
+      test('getter hang', options, async () => { continued(); await new Promise(() => {}) })
+    

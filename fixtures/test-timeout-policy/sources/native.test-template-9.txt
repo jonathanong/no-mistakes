@@ -1,0 +1,1 @@
+native.describe('raw inherited suite', { timeout: 30001 }, () => native.test('child', continued))

@@ -1,0 +1,1 @@
+import { register } from '{{0}}'; register(continued)

@@ -1,0 +1,9 @@
+
+        const options = {{0}}
+        native.test('native control', options, () => {})
+        test('guarded default', options, () => {})
+        describe('guarded suite default', options, () => test('body', continued))
+        const ignored = {{1}}
+        native.test('native ignored getter', ignored, () => {})
+        test('guarded ignored getter', ignored, () => {})
+      

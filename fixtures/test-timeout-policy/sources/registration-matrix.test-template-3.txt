@@ -1,0 +1,14 @@
+
+      import { appendFileSync } from 'node:fs'
+      const child = test.extend({ sample: [async ({}, use) => {
+        appendFileSync('lifecycle.marker', 'setup;')
+        await use({ timeout: 60000 })
+        appendFileSync('lifecycle.marker', 'teardown;')
+      }, { scope: '{{0}}' }] })
+      child.for([1, 2])('scoped %s', { timeout: 30000 }, (value, { sample, ownedRunnerMarker }) => {
+        if (sample.timeout !== 60000 || ownedRunnerMarker !== 'preserved')
+          throw new Error('scoped fixture/context changed')
+        appendFileSync('lifecycle.marker', 'body;')
+        continued()
+      })
+    
