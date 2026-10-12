@@ -53,6 +53,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.argument_extra_slots.extend(extra_slots.clone());
             self.builder_updates.retain(|id, _| *id >= original_ids);
             self.builder_updates.extend(updates.clone());
+            self.remove_alternative_captured_readers(scopes.len());
             self.captured_bindings
                 .retain(|frame, _| *frame >= scopes.len());
             self.captured_bindings.extend(captured.clone());
@@ -66,8 +67,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 self.argument_objects.insert(*id, slots.clone());
             }
             self.restore_alternative_modules();
-            // Restore all primary state before rebuilding these derived indexes.
-            self.rebuild_binding_indexes();
+            // Existing frames retain their capture origins. Only frames made by
+            // an arm (including restored module initials) need reader updates.
+            self.add_alternative_captured_readers(scopes.len());
+            self.rebuild_compacted_binding_indexes(false);
             returned.push(self.expr(arm, path, env, depth, generic));
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
@@ -151,10 +154,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
         self.builder_updates.retain(|id, _| *id >= original_ids);
         self.builder_updates.extend(updates);
+        self.remove_alternative_captured_readers(scopes.len());
         self.captured_bindings
             .retain(|frame, _| *frame >= scopes.len());
         self.captured_bindings.extend(captured);
-        self.rebuild_captured_readers();
+        self.add_alternative_captured_readers(scopes.len());
         self.rebuild_mapped_argument_owners();
         if let Some(joined) = joined_scopes {
             self.scopes[..scopes.len()].clone_from_slice(&joined);

@@ -139,7 +139,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             );
         }
     }
-    // The arm runner rebuilds derived binding indexes after this restoration.
+    // The arm runner updates captured readers and rebuilds mapped indexes
+    // after this restoration.
     pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn restore_alternative_modules(
         &mut self,
     ) {

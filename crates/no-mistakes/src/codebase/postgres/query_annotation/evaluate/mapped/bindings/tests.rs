@@ -80,7 +80,7 @@ fn compacted_binding_indexes_rebuild_readers_only_when_ownership_changes() {
     evaluator
         .captured_bindings
         .insert(1, FxHashMap::from_iter([("builder".into(), 0)]));
-    evaluator.rebuild_binding_indexes();
+    evaluator.rebuild_compacted_binding_indexes(true);
     let readers = evaluator.captured_binding_readers.clone();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
@@ -101,12 +101,62 @@ fn compacted_binding_indexes_rebuild_readers_only_when_ownership_changes() {
     let mut targets = evaluator.captured_write_targets(0, "builder");
     targets.sort_unstable();
     assert_eq!(targets, vec![0, 1]);
-    // Full restoration must rebuild even after a previous no-change compaction.
+    // Removing capture ownership requires a rebuild after a no-change compaction.
     evaluator.captured_bindings.clear();
-    evaluator.rebuild_binding_indexes();
+    evaluator.rebuild_compacted_binding_indexes(true);
     assert!(evaluator.captured_binding_readers.is_empty());
     assert_eq!(
         observer.snapshot().work["postgres.annotation.captured_reader_rebuilds"],
         2
     );
+}
+
+#[test]
+fn alternative_capture_restore_keeps_original_readers_and_replaces_arm_readers() {
+    let files = FxHashMap::default();
+    let mut evaluator = evaluator(&files);
+    evaluator.scopes = vec![Scope::default(); 4];
+    evaluator.captured_bindings = FxHashMap::from_iter([
+        (1, FxHashMap::from_iter([("value".into(), 0)])),
+        (2, FxHashMap::from_iter([("value".into(), 0)])),
+        (3, FxHashMap::from_iter([("value".into(), 2)])),
+    ]);
+    evaluator.rebuild_captured_readers();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+
+    // Simulate a prior arm's disposable frame, followed by a module-initial
+    // frame restored with a different capture origin in the next arm.
+    evaluator.remove_alternative_captured_readers(2);
+    evaluator.captured_bindings.remove(&2);
+    evaluator.captured_bindings.remove(&3);
+    evaluator
+        .captured_bindings
+        .insert(2, FxHashMap::from_iter([("value".into(), 1)]));
+    evaluator
+        .captured_bindings
+        .insert(3, FxHashMap::from_iter([("value".into(), 2)]));
+    evaluator.add_alternative_captured_readers(2);
+
+    assert_eq!(
+        evaluator.captured_binding_readers,
+        FxHashMap::from_iter([
+            (
+                0,
+                FxHashMap::from_iter([("value".into(), FxHashSet::from_iter([1]))]),
+            ),
+            (
+                1,
+                FxHashMap::from_iter([("value".into(), FxHashSet::from_iter([2]))]),
+            ),
+            (
+                2,
+                FxHashMap::from_iter([("value".into(), FxHashSet::from_iter([3]))]),
+            ),
+        ])
+    );
+    assert!(!observer
+        .snapshot()
+        .work
+        .contains_key("postgres.annotation.captured_reader_rebuilds"));
 }
