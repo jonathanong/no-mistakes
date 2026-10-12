@@ -1,5 +1,8 @@
 #[cfg(not(coverage))]
 use super::{async_task, AsyncTask};
+use crate::codebase::postgres::{
+    extract_executed_postgres_sql, EmbeddedSqlOptions, ExecutedPostgresSource, TrustedSqlTag,
+};
 use crate::codebase::postgres::{parse_postgres_source, parse_postgres_sources, PostgresSqlSource};
 #[cfg(all(not(test), not(coverage)))]
 use napi_derive::napi;
@@ -26,6 +29,43 @@ json_binding!(
     parse_postgres_sql_json,
     "parsePostgresSqlJson",
     parse_postgres_sql_json_impl,
+    pure
+);
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ExecutedSqlRequest {
+    sources: Vec<ExecutedPostgresSource>,
+    import_specifier: String,
+    #[serde(default)]
+    executor_names: Vec<String>,
+    #[serde(default)]
+    executor_factory_names: Vec<String>,
+    #[serde(default)]
+    executor_type_names: Vec<String>,
+    #[serde(default)]
+    trusted_sql_tags: Vec<TrustedSqlTag>,
+}
+
+pub(crate) fn extract_executed_postgres_sql_json_impl(
+    value: serde_json::Value,
+) -> napi::Result<String> {
+    let request = super::options::parse_options_value::<ExecutedSqlRequest>(value)?;
+    let options =
+        EmbeddedSqlOptions::configured(&request.import_specifier, &request.executor_names)
+            .with_scoped_executors(
+                &request.executor_factory_names,
+                &request.executor_type_names,
+            )
+            .with_trusted_sql_tags(&request.trusted_sql_tags);
+    serde_json::to_string(&extract_executed_postgres_sql(&request.sources, &options))
+        .map_err(|error| napi::Error::from_reason(error.to_string()))
+}
+
+json_binding!(
+    extract_executed_postgres_sql_json,
+    "extractExecutedPostgresSqlJson",
+    extract_executed_postgres_sql_json_impl,
     pure
 );
 

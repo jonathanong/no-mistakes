@@ -171,6 +171,8 @@ test("programmatic API proxies object options through async native addon calls",
       JSON.stringify({ command: "infraResourceRefs", options: JSON.parse(json) }),
     parsePostgresSqlJson: async (json) =>
       JSON.stringify({ command: "parsePostgresSql", options: JSON.parse(json) }),
+    extractExecutedPostgresSqlJson: async (json) =>
+      JSON.stringify({ command: "extractExecutedPostgresSql", options: JSON.parse(json) }),
     generatePostgresCatalogJson: async (json) =>
       JSON.stringify({ command: "generatePostgresCatalog", options: JSON.parse(json) }),
     infraOutputsJson: async (json) =>
@@ -353,6 +355,10 @@ test("programmatic API proxies object options through async native addon calls",
     assert.deepEqual((await api.parsePostgresSql([{ sql: "SELECT 1" }])).options, [
       { sql: "SELECT 1" },
     ]);
+    assert.deepEqual(
+      (await api.extractExecutedPostgresSql({ sources: [], importSpecifier: "@db" })).options,
+      { sources: [], importSpecifier: "@db" },
+    );
     assert.equal((await api.serverContracts({ root: "." })).command, "serverContracts");
     assert.equal((await api.flow({ target: "src/api.ts#handler" })).command, "flow");
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
@@ -943,6 +949,20 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   );
 });
 
+test("executed PostgreSQL source extraction exposes its named async contract", () => {
+  const declarations = readFileSync(join(packageRoot, "executed-postgres-sql-types.d.ts"), "utf8");
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.match(declarations, /export interface ExecutedPostgresSource \{/);
+  assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
+  assert.match(declarations, /export interface ExecutedPostgresSql \{/);
+  assert.match(declarations, /complete: boolean;/);
+  assert.match(
+    index,
+    /extractExecutedPostgresSql\(\s*options: ExecutedPostgresSqlOptions,\s*\): Promise<ExecutedPostgresSql\[\]>;/,
+  );
+  assert.match(index, /export type \* from "\.\/executed-postgres-sql-types";/);
+});
+
 test("PostgreSQL metadata facts export routine signatures and typed index operations", () => {
   const declarations = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
   const metadata = readFileSync(join(packageRoot, "postgres-metadata-types.d.ts"), "utf8");
@@ -1130,7 +1150,11 @@ test("declarations expose invocation controls on every analysis", () => {
     /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
   );
   for (const [declaration, name] of declarations) {
-    if (name === "version" || name === "parsePostgresSql") {
+    if (
+      name === "version" ||
+      name === "parsePostgresSql" ||
+      name === "extractExecutedPostgresSql"
+    ) {
       assert.doesNotMatch(declaration, /WithInvocationOptions/);
     } else {
       assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);

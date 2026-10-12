@@ -1,4 +1,32 @@
+use super::extract_executed_postgres_sql_json_impl;
 use super::parse_postgres_sql_json_impl;
+
+#[test]
+fn executed_source_binding_keeps_annotation_text_and_source_location() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/reads.ts"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": [{ "fileName": "reads.ts", "source": source }],
+            "importSpecifier": "@example/db"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(result.as_array().unwrap().len(), 2);
+    assert_eq!(result[0]["fileName"], "reads.ts");
+    assert_eq!(result[0]["line"], 4);
+    assert_eq!(result[0]["annotation"], "posts/by-id");
+    assert_eq!(result[0]["complete"], false);
+    assert_eq!(result[0]["kind"], "dynamic");
+    assert_eq!(result[1]["kind"], "inline");
+    assert!(result[0]["sqlText"]
+        .as_str()
+        .unwrap()
+        .contains("sql_placeholder_1"));
+}
 #[test]
 fn standalone_and_batch_bindings_keep_structured_source_facts() {
     let sql = include_str!(concat!(
