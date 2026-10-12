@@ -59,7 +59,6 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session_and_contexts(
         {
             results[index] = collect_file_facts_from_source(
                 session,
-                variant.root,
                 path,
                 variant.plan,
                 variant.playwright,
@@ -108,10 +107,26 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session_and_contexts(
     results
 }
 
-#[derive(Clone, Copy)]
 struct VariantRecovery {
     symbols: bool,
     fatal_parse_error: bool,
+}
+
+struct VariantParseStatus {
+    recovery: VariantRecovery,
+    parse_error: Option<String>,
+}
+
+impl VariantParseStatus {
+    fn new(symbols: bool, fatal_parse_error: bool, parse_error: Option<String>) -> Self {
+        Self {
+            recovery: VariantRecovery {
+                symbols,
+                fatal_parse_error,
+            },
+            parse_error,
+        }
+    }
 }
 
 fn collect_variant(
@@ -120,11 +135,10 @@ fn collect_variant(
     source: &Arc<str>,
     program: &oxc_ast::ast::Program<'_>,
     parsed_source: &str,
-    parse_error: Option<String>,
-    recovery: VariantRecovery,
+    status: VariantParseStatus,
     context: &crate::codebase::ts_source::facts::TsFactContext,
 ) -> CheckFileFacts {
-    if let Some(parse_error) = parse_error {
+    if let Some(parse_error) = status.parse_error {
         return recovered_error_facts(
             path,
             variant.plan,
@@ -132,12 +146,11 @@ fn collect_variant(
             program,
             parsed_source,
             parse_error,
-            recovery,
+            status.recovery,
         );
     }
     // Fatal parser results always carry a diagnostic and return above.
     let mut facts = super::program::collect_file_facts_from_program_with_context(
-        variant.root,
         path,
         variant.plan,
         variant.playwright,
@@ -146,7 +159,7 @@ fn collect_variant(
         should_store_source(variant.plan).then(|| Arc::clone(source)),
         context,
     );
-    if recovery.symbols {
+    if status.recovery.symbols {
         facts.legacy_symbols = facts.symbols.clone();
     }
     facts

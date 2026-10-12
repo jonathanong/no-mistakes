@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 pub(super) fn collect(
     session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
     path: &Path,
     plan: &crate::codebase::check_facts::CheckFactPlan,
     playwright: Option<&crate::codebase::check_facts::PlaywrightFactPlan>,
@@ -21,7 +20,7 @@ pub(super) fn collect(
             path,
             source,
             &[CheckFactVariant {
-                root,
+                root: &context.root,
                 plan,
                 playwright,
             }],

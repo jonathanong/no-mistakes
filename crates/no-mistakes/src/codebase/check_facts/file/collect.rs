@@ -15,7 +15,6 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
     let context = super::prepared_ts_extract_context(session, root, plan);
     super::collect_file_facts_with_session_and_sources_and_context(
         session,
-        root,
         path,
         plan,
         playwright,
@@ -27,7 +26,6 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
 
 pub(crate) fn collect_file_facts_with_session_and_sources_and_context(
     session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
@@ -56,7 +54,6 @@ pub(crate) fn collect_file_facts_with_session_and_sources_and_context(
     if plan.production_import_paths.contains(path) {
         return super::production_imports::collect(
             session,
-            root,
             path,
             plan,
             playwright,
@@ -67,7 +64,6 @@ pub(crate) fn collect_file_facts_with_session_and_sources_and_context(
     }
     super::collect_file_facts_from_source(
         session,
-        root,
         path,
         plan,
         playwright,

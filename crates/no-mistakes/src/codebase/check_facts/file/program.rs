@@ -6,7 +6,6 @@ use std::path::Path;
 use std::sync::Arc;
 
 pub(crate) fn collect_file_facts_from_program_with_context(
-    root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
@@ -56,7 +55,7 @@ pub(crate) fn collect_file_facts_from_program_with_context(
             let mut import_cache = std::collections::HashMap::new();
             crate::fetch::file_facts::ParsedFileFacts::from_program(
                 path,
-                root,
+                &context.root,
                 source,
                 program,
                 &mut import_cache,
@@ -64,7 +63,7 @@ pub(crate) fn collect_file_facts_from_program_with_context(
             )
         });
     let playwright_source = super::playwright_source::collect(
-        root,
+        &context.root,
         path,
         source,
         program,

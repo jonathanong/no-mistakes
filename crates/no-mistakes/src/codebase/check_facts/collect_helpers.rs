@@ -87,7 +87,7 @@ pub(crate) fn collect_fact_map_with_sources(
             crate::diagnostics::with_observer(observer.clone(), || {
                 crate::invocation::check_timeout().ok().map(|()| {
                     super::file::collect_file_facts_with_session_and_sources_and_context(
-                        session, root, path, plan, playwright, sources, false, &context,
+                        session, path, plan, playwright, sources, false, &context,
                     )
                     .map(|facts| (path.clone(), facts))
                 })
@@ -122,7 +122,7 @@ pub(super) fn collect_fact_map_sequential_with_sources(
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
             super::file::collect_file_facts_with_session_and_sources_and_context(
-                session, root, path, plan, playwright, sources, true, &context,
+                session, path, plan, playwright, sources, true, &context,
             )
             .map(|facts| (path.clone(), facts))
         })

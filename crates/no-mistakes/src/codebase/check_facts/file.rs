@@ -29,7 +29,6 @@ pub(crate) fn is_mdx_file(path: &Path) -> bool {
 
 fn collect_file_facts_from_source(
     session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
@@ -109,7 +108,6 @@ fn collect_file_facts_from_source(
         }
         // Fatal parser results always carry a diagnostic and return above.
         program::collect_file_facts_from_program_with_context(
-            root,
             path,
             plan,
             playwright,

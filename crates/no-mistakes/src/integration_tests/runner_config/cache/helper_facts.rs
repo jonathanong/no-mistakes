@@ -45,14 +45,7 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
         });
     let plan = graph_only_plan.as_ref().unwrap_or(plan);
     let facts = crate::codebase::check_facts::collect_file_facts_from_program_with_context(
-        &request.root,
-        &path,
-        plan,
-        playwright,
-        source,
-        program,
-        None,
-        &context,
+        &path, plan, playwright, source, program, None, &context,
     );
     REQUEST_CACHES.with(|caches| {
         if let Some(cache) = caches.borrow_mut().last_mut() {
