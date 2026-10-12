@@ -304,6 +304,15 @@ fn readable_stderr_deadline_subprocess_helper() {
     let Ok(mode) = std::env::var("NO_MISTAKES_READABLE_DEADLINE_MODE") else {
         return;
     };
+    if mode == "plain" {
+        let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
+            timeout: Some(Duration::from_millis(150)),
+            ..InvocationOptions::default()
+        })
+        .unwrap();
+        std::thread::sleep(Duration::from_secs(10));
+        panic!("watchdog failed to terminate without diagnostics");
+    }
     use crate::diagnostics::{InvocationObserver, ProgressGuard, TimingKind};
     let observer = InvocationObserver::with_progress(false, mode == "progress");
     let _scope = crate::diagnostics::InvocationGuard::install(std::sync::Arc::clone(&observer));
@@ -322,9 +331,9 @@ fn readable_stderr_deadline_subprocess_helper() {
 }
 
 #[test]
-fn readable_watchdog_output_preserves_timeout_with_progress_or_ordinary_timings() {
+fn readable_watchdog_output_preserves_timeout_with_and_without_diagnostics() {
     use std::process::Stdio;
-    for mode in ["timings", "progress"] {
+    for mode in ["plain", "timings", "progress"] {
         let mut child = Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
