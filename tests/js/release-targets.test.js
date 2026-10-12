@@ -40,11 +40,18 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   assert.ok(job, "release workflow must define build-native");
   const body = job[0];
   assert.match(body, /^ {4}needs:\n {6}- prepare$/m, "native builds must start after prepare");
-  assert.match(body, /^ {4}timeout-minutes: 80$/m, "native builds keep an 80-minute job envelope");
-  assert.match(
-    body,
-    /^ {6}- name: Build CLI and N-API addon\n {8}timeout-minutes: 45$/m,
-    "combined compile keeps a 45-minute cold-build budget",
+  // Windows MSVC is the slowest, most variable, lowest-priority target, so it
+  // alone gets extra headroom; every other target keeps 80/45 minutes.
+  const windows = "matrix.target == 'x86_64-pc-windows-msvc'";
+  assert.ok(
+    body.includes(`\n    timeout-minutes: \${{ ${windows} && 100 || 80 }}\n`),
+    "native builds keep an 80-minute job envelope (100 for Windows)",
+  );
+  assert.ok(
+    body.includes(
+      `\n      - name: Build CLI and N-API addon\n        timeout-minutes: \${{ ${windows} && 75 || 45 }}\n`,
+    ),
+    "combined compile keeps a 45-minute cold-build budget (75 for Windows)",
   );
   const stepTimeouts = [...body.matchAll(/^ {8}timeout-minutes: (\d+)$/gm)].map((timeout) =>
     Number(timeout[1]),
