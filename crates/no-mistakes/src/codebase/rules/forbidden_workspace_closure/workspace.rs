@@ -9,6 +9,9 @@ pub(super) fn load_workspace_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<workspaces::WorkspaceMap> {
+    if let Some(observer) = sources.observer() {
+        observer.increment("forbidden_workspace_closure.workspace_selections", 1);
+    }
     let mut roots: Vec<&Path> = Vec::new();
     roots.push(root);
     for target_root in target_roots {

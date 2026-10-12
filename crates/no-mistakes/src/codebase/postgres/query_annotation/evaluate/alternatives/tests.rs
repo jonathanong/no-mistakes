@@ -404,7 +404,15 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     let root = evaluator.module_environment(&path);
+    // Four two-arm alternatives restore twice and finalize once each. Their
+    // compactions never change capture ownership, so they add no rebuilds.
+    assert_eq!(
+        observer.snapshot().work["postgres.annotation.captured_reader_rebuilds"],
+        12
+    );
     for (name, references) in [("scalar", false), ("callback", true)] {
         let original =
             vec![

@@ -2,6 +2,7 @@ use super::AnalysisSession;
 use crate::codebase::ts_resolver::normalize_path;
 use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
+use rustc_hash::FxBuildHasher;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -12,8 +13,8 @@ use std::sync::Arc;
 /// persisted.
 #[derive(Default)]
 pub struct PathInterner {
-    paths: DashMap<Arc<Path>, ()>,
-    strings: DashMap<Arc<str>, ()>,
+    paths: DashMap<Arc<Path>, (), FxBuildHasher>,
+    strings: DashMap<Arc<str>, (), FxBuildHasher>,
 }
 
 impl PathInterner {

@@ -91,10 +91,12 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         || format!("application #{index}"),
         |name| format!("{name}, application #{index}"),
     );
-    let findings = candidate_sites(graph, &roots, options)
+    let findings = candidate_sites(graph, &roots, options, &path_filter)
         .into_iter()
         .filter(|site| invocations.contains(&site.invocation))
-        .filter(|site| path_filter.is_match(&site.file))
+        .filter(|site| {
+            matches!(options.traversal, Traversal::File) || matches_path(&path_filter, &site.file)
+        })
         .filter(|site| source_nodes.contains(&site_source_node(site)))
         .filter_map(|site| {
             finding_for_site(root, application, &label, options, site)
@@ -131,15 +133,24 @@ fn candidate_sites<'a>(
     graph: &'a DepGraph,
     roots: &[NodeId],
     options: &Options,
+    path_filter: &super::super::path_filter::RulePathFilter,
 ) -> Vec<&'a ResolvedCallSite> {
     if matches!(options.traversal, Traversal::File) {
         root_files(roots)
             .into_iter()
+            .filter(|file| matches_path(path_filter, file))
             .flat_map(|file| graph.call_sites_in_file(&file))
             .collect()
     } else {
         graph.resolved_call_sites().iter().collect()
     }
+}
+
+fn matches_path(filter: &super::super::path_filter::RulePathFilter, file: &Path) -> bool {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("forbidden_calls.path_filter_checks", 1);
+    }
+    filter.is_match(file)
 }
 
 fn root_files(roots: &[NodeId]) -> Vec<PathBuf> {

@@ -1,4 +1,6 @@
 use super::*;
+#[path = "tests_selection.rs"]
+mod tests_selection;
 use crate::config::v2::{
     schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,

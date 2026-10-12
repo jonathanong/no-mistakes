@@ -64,7 +64,7 @@ impl<'a> ImportResolver<'a> {
             alias_order,
             policy: ImportResolutionPolicy::Standard,
             cache_enabled: true,
-            cache: std::sync::Arc::new(DashMap::new()),
+            cache: std::sync::Arc::new(DashMap::with_hasher(rustc_hash::FxBuildHasher)),
             shared_cache: None,
             session_scoped: false,
             observer,
@@ -211,8 +211,7 @@ impl<'a> ImportResolver<'a> {
             .iter()
             .filter_map(move |idx| {
                 let (pattern, replacements) = &self.tsconfig().paths[*idx];
-                match_alias(pattern, specifier)
-                    .map(|capture| (capture, replacements.as_slice()))
+                match_alias(pattern, specifier).map(|capture| (capture, replacements.as_slice()))
             })
             .take(match_limit)
     }

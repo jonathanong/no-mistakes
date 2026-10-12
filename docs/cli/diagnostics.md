@@ -37,7 +37,12 @@ canonical edge order.
 PostgreSQL annotation checks report `postgres.annotation.project` separately
 from parsing, with `postgres.annotation.reachability_walks` counting the
 branch-state liveness traversals. This helps distinguish source extraction
-from helper and callback evaluation.
+from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
+counts reverse capture-index reconstruction; unchanged compaction retains the
+existing index.
+
+File-scoped forbidden call checks report `forbidden_calls.path_filter_checks`
+once per selected file instead of once per call occurrence.
 
 Production dependency checks report `production_dependencies.resolutions` for
 distinct source/specifier pairs resolved within each rule application, including
@@ -51,6 +56,9 @@ Forbidden workspace closure checks report
 lockfile importer projections initialized during the request. The count
 includes cached read and parse failures, so repeated rule applications using
 the same lockfile still contribute one construction.
+`forbidden_workspace_closure.workspace_selections` and
+`forbidden_workspace_closure.manifest_projections` count immutable workspace and
+dependency-field projections shared by equivalent applications.
 
 Instrumentation is invocation-scoped and disabled by default. A disabled run
 does not construct an observer, start clocks, or retain work ledgers. Enabled

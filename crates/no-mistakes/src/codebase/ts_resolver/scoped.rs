@@ -1,8 +1,8 @@
-use dashmap::mapref::entry::Entry as ScopedEntry;
 use dashmap::DashMap as ScopedDashMap;
+use dashmap::mapref::entry::Entry as ScopedEntry;
 use std::path::{Path as ScopedPath, PathBuf as ScopedPathBuf};
-use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 use std::sync::Arc as ScopedArc;
+use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 
 #[path = "scoped_facade.rs"]
 mod facade;
@@ -72,7 +72,7 @@ impl<'a> ScopedImportResolver<'a> {
             // session's standard-policy cache. Queue compatibility has
             // different relative/bare semantics, so detach before its
             // policy setter clears the cache.
-            resolver.cache = ScopedArc::new(DashMap::new());
+            resolver.cache = ScopedArc::new(DashMap::with_hasher(rustc_hash::FxBuildHasher));
             resolver.shared_cache = None;
             resolver.with_queue_compatibility(root)
         });
@@ -169,7 +169,8 @@ impl<'a> ScopedImportResolver<'a> {
                     _ => match self.caches.entry(key) {
                         ScopedEntry::Occupied(entry) => ScopedArc::clone(entry.get()),
                         ScopedEntry::Vacant(entry) => {
-                            let cache = ScopedArc::new(DashMap::new());
+                            let cache =
+                                ScopedArc::new(DashMap::with_hasher(rustc_hash::FxBuildHasher));
                             entry.insert(ScopedArc::clone(&cache));
                             cache
                         }

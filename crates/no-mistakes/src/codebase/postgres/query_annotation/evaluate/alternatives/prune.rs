@@ -17,13 +17,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &mut self.fresh_mapped_parameters,
             &mut self.captured_bindings,
         );
-        self.remap_active_callbacks(0, &indices);
-        self.rebuild_binding_indexes();
-        // Compaction retained only module-reachable frames, so heap mutations
-        // and builder updates can use one walk over the remaining scopes.
-        frames::prune_state(
-            &self.scopes,
-            &[],
+        self.remap_active_callbacks(0, &indices.indices);
+        self.rebuild_compacted_binding_indexes(indices.captured_changed);
+        // Callback remapping and derived indexes do not change live argument
+        // or builder IDs. Reuse the module-root walk, including captured cycles.
+        frames::prune_mutations(
             frames::MutationState {
                 deleted: &mut self.deleted_argument_slots,
                 definite: &mut self.definite_deleted_argument_slots,
@@ -31,12 +29,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 invalidated: &mut self.invalidated_builders,
                 updates: &mut self.builder_updates,
             },
-            &self.mapped_arguments,
-            arena::ArenaMut {
-                objects: &mut self.argument_objects,
-                extras: &mut self.argument_extra_slots,
-            },
-            &self.captured_bindings,
+            &indices.arguments,
+            &indices.identities,
         );
     }
     pub(super) fn prune_alternative_state(&mut self, returned: &[super::super::Value]) {

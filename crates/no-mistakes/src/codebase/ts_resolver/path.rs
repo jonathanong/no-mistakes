@@ -1,21 +1,24 @@
 /// Resolve `.` and `..` components without touching the filesystem.
 pub fn normalize_path(path: &Path) -> PathBuf {
     use std::path::Component;
-    let mut parts: Vec<Component> = Vec::new();
+    let mut normalized = PathBuf::with_capacity(path.as_os_str().len());
     for c in path.components() {
         match c {
             Component::CurDir => {}
             Component::ParentDir => {
-                if matches!(parts.last(), Some(Component::Normal(_))) {
-                    parts.pop();
+                if matches!(
+                    normalized.components().next_back(),
+                    Some(Component::Normal(_))
+                ) {
+                    normalized.pop();
                 } else {
-                    parts.push(c);
+                    normalized.push(c.as_os_str());
                 }
             }
-            other => parts.push(other),
+            other => normalized.push(other.as_os_str()),
         }
     }
-    parts.iter().collect()
+    normalized
 }
 
 /// Try to match `specifier` against `pattern` (which may contain a single `*`).
@@ -36,4 +39,3 @@ fn match_alias(pattern: &str, specifier: &str) -> Option<String> {
         None
     }
 }
-

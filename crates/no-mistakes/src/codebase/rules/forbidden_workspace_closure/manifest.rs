@@ -7,6 +7,9 @@ pub(super) fn manifest_nodes_with_sources(
     dependency_types: &[&str],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> BTreeMap<String, PackageNode> {
+    if let Some(observer) = sources.observer() {
+        observer.increment("forbidden_workspace_closure.manifest_projections", 1);
+    }
     workspace
         .packages
         .iter()
