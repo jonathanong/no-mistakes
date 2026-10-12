@@ -103,6 +103,18 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - Work-count tests prove sharing, construction/copy/traversal reductions, and
   ownership invariants; equal reports alone do not prove the fast path. Fewer
   operations or a profile's CPU share do not establish measured speedup.
+- Describe representative fixtures by source size and lines, JSX density, and
+  configured payloads, not file count alone. Default fixtures can omit configured
+  include/filter payloads; measure those paths explicitly.
+- Separate fixed invocation startup from focused, baseline-compatible fresh
+  analysis. Keep fixture inputs identical and reset analysis state per sample.
+- Immutable context hoists must demonstrate workload benefit and quantify their
+  memory tradeoff; amortized initialization alone does not prove runtime gain.
+- Before adding scope-summary caches, measure cold construction and shared-DAG
+  traversal against the reuse benefit. Mutations, captured frames, and remaps
+  constrain reuse; invalidate summaries explicitly, and keep builder-only
+  membership checks from eagerly collecting unrelated roots. A lower work
+  count alone is not a performance gain.
 - CodSpeed comparisons require the same `ubuntu-24.04-arm` runner and expected
   base commit. Never change code for architecture/fallback mismatches. Inspect
   system call limitations and rerun unexpected unrelated outliers before assigning
