@@ -314,13 +314,15 @@ details.
 | `guardRegistration` | `guardRegistration<T extends Registration>(original: T, kind: Kind, maximum?): T` | `no-mistakes/test-timeout-policy` |
 | `guardRuntimeConfig` | `guardRuntimeConfig<T extends object>(api: T, maximum?): T` | `no-mistakes/test-timeout-policy` |
 | `guardVitestExports` | `guardVitestExports<T extends object>(api: T, maximum?): T` | `no-mistakes/test-timeout-policy` |
-| `guardPublicRunner` | `guardPublicRunner<T extends RunnerConstructor>(original: T, maximum: number, protect: Protector): T` | `no-mistakes/test-timeout-policy` |
+| `guardPublicRunner` | `guardPublicRunner<T extends RunnerConstructor>(original: T, maximum: number, protect: Protector<InstanceType<T>>): T` | `no-mistakes/test-timeout-policy` |
 | `protectRunnerTimeouts` | `protectRunnerTimeouts(runner: { config: object }, maximum?): void` | `no-mistakes/test-timeout-policy` |
 | `testTimeoutPolicyPlugin` | `testTimeoutPolicyPlugin(maximum?, registrationPackages?, nodeRunner?: NodeRunnerPolicy)` | `no-mistakes/test-timeout-policy/plugin` |
 | `browserTestTimeoutPolicyPlugin` | `browserTestTimeoutPolicyPlugin(maximum?, registrationPackages?)` | `no-mistakes/test-timeout-policy/plugin` |
 
 The policy entry also exports the types `Registration`, `Kind`,
-`RunnerConstructor` and `Protector`. `Kind` is the union `"test" | "suite" |
+`RunnerConstructor` and `Protector<T extends { config: object } = { config: object }>`. `guardPublicRunner`
+ties the protector argument to the constructed instance with
+`Protector<InstanceType<T>>`. `Kind` is the union `"test" | "suite" |
 "hook"`. The plugin entry exports `NodeRunnerPolicy`; its `runner` field names
 the absolute resolved module for the final custom Node runner, or `null` to use
 Vitest's native runner. These named types are part of the entrypoint contract.

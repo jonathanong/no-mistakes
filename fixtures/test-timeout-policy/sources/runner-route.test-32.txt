@@ -1,6 +1,9 @@
 test('native import/body', async ({ expect }) => {
       expect(1 + 1).toBe(2)
-      if ((await import('vitest')).TestRunner !== native.TestRunner)
-        throw new Error('Node facade changed native TestRunner identity')
+      const facadeRunner = (await import('vitest')).TestRunner
+      if (facadeRunner === native.TestRunner)
+        throw new Error('Node facade lost static policy adapter')
+      if (facadeRunner.prototype !== native.TestRunner.prototype)
+        throw new Error('Node facade changed native TestRunner prototype')
       continued()
     })

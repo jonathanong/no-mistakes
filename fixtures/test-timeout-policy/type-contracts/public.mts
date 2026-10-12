@@ -30,6 +30,7 @@ const kind: Kind = "hook";
 const guardedRegistration: typeof registration = guardRegistration(registration, kind);
 class Runner {
   config = {};
+  custom = "runner-specific";
 }
 const constructor: RunnerConstructor = Runner;
 const protector: Protector = protectRunnerTimeouts;
@@ -54,3 +55,23 @@ void [
   facade,
   timeout,
 ];
+
+// A protector may require fields on the constructor's concrete instance type.
+const specificProtector: Protector<Runner> = (runner, maximum) => {
+  const custom: string = runner.custom;
+  void [custom, maximum];
+};
+guardPublicRunner(Runner, 300, specificProtector);
+guardPublicRunner(Runner, 300, (runner: Runner) => {
+  void runner.custom;
+});
+class UnrelatedRunner {
+  config = {};
+  unrelated = 1;
+}
+const unrelatedProtector: Protector<UnrelatedRunner> = (runner) => {
+  void runner.unrelated;
+};
+// An unrelated callback must not be accepted for this runner's constructor.
+// @ts-expect-error UnrelatedRunner requires fields absent from Runner.
+guardPublicRunner(Runner, 300, unrelatedProtector);

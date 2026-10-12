@@ -99,7 +99,7 @@ function protectSuiteFactory(factory, maximum) {
 }
 const collectors = new WeakMap();
 /** Native collector.on stores raw callbacks, bypassing Vitest's public hook timeout capture. */
-function protectSuiteCollector(original, maximum) {
+export function protectSuiteCollector(original, maximum) {
   const deadlines = collectors.get(original) ?? new Map();
   const existing = deadlines.get(maximum);
   if (existing) return existing;

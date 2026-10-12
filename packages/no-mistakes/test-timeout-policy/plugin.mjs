@@ -63,9 +63,15 @@ function createPolicyPlugin(maximum, registrationPackages, nodeRunner) {
       return `
         import * as native from 'vitest'
         import { guardVitestExports } from ${JSON.stringify(policy)}
+        ${
+          nodeRunner
+            ? `import { guardRunnerStatics } from ${JSON.stringify(fileURLToPath(new URL("./public-runner.mjs", import.meta.url)))}
+        import { protectRunnerTimeouts } from ${JSON.stringify(policy)}`
+            : ""
+        }
         export * from 'vitest'
         const guarded = guardVitestExports(native, ${JSON.stringify(maximum)})
-        ${nodeRunner ? "export { TestRunner } from 'vitest'" : "export const TestRunner = guarded.TestRunner"}
+        ${nodeRunner ? `export const TestRunner = guardRunnerStatics(native.TestRunner, ${JSON.stringify(maximum)}, protectRunnerTimeouts)` : "export const TestRunner = guarded.TestRunner"}
         export const { test, it, describe, suite, beforeAll, beforeEach, afterAll, afterEach,
           aroundAll, aroundEach, onTestFailed, onTestFinished, vi, vitest } = guarded
       `;

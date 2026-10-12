@@ -3,7 +3,15 @@
       if (Guarded !== guardVitestExports({ TestRunner }).TestRunner)
         throw new Error('constructor cache identity lost')
       if (Guarded.prototype !== TestRunner.prototype) throw new Error('public prototype changed')
+      const guardedStatics = new Set(['getCurrentSuite', 'createTaskCollector', 'getSuiteHooks', 'setSuiteHooks'])
       for (const key of Reflect.ownKeys(TestRunner)) {
+        if (guardedStatics.has(key)) {
+          const wrapped = Reflect.get(Guarded, key)
+          if (typeof wrapped !== 'function' || wrapped === Reflect.get(TestRunner, key) ||
+              wrapped !== Reflect.get(Guarded, key))
+            throw new Error('public static policy wrapper identity lost: ' + key)
+          continue
+        }
         if (Reflect.get(Guarded, key) !== Reflect.get(TestRunner, key))
           throw new Error('public static property changed')
       }

@@ -1,0 +1,28 @@
+import { TestRunner } from 'vitest'
+let rawCallbackCalled = false
+const raw = () => { rawCallbackCalled = true; return new Promise(() => {}) }
+describe('public static registration', () => {
+  const collector = TestRunner.getCurrentSuite()
+  native.expect(() => collector.on('beforeAll', raw)).toThrow('SuiteCollector.on bypasses native hook deadlines')
+  for (const name of ['getSuiteHooks', 'setSuiteHooks']) {
+    native.expect(() => TestRunner[name](collector.suite)).toThrow('raw suite hooks bypass native hook deadlines')
+  }
+  native.expect(() => collector.test('invalid collected test', {timeout: 30001}, () => {})).toThrow(RangeError)
+  const custom = TestRunner.createTaskCollector((...args) => test(...args))
+  native.expect(() => custom('invalid custom test', {timeout: 30001}, () => {})).toThrow(RangeError)
+  let validHook = false
+  custom.beforeAll(() => { validHook = true }, 250)
+  custom('guarded custom test', () => {
+    native.expect(validHook).toBe(true)
+    native.expect(rawCallbackCalled).toBe(false)
+    continued()
+  })
+})
+test('unsupported sequential matches native SDK', () => {
+  for (const name of ['test', 'describe']) {
+    native.expect(native[name].sequential).toBeUndefined()
+    const guarded = name === 'test' ? test : describe
+    native.expect(guarded.sequential).toBeUndefined()
+    native.expect(() => guarded.sequential('unsupported', () => {}, 30001)).toThrow(TypeError)
+  }
+})

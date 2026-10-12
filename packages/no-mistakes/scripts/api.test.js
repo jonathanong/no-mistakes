@@ -1501,7 +1501,7 @@ test("timeout policy declarations retain their complete public signatures", () =
     "registration.d.mts":
       'export type Registration = (...args: never[]) => unknown; export type Kind = "test" | "suite" | "hook"; export declare function guardRegistration<T extends Registration>( original: T, kind: Kind, maximum?: number, ): T;',
     "public-runner.d.mts":
-      "export type Protector = ( runner: { config: object; }, maximum: number, ) => void; export type RunnerConstructor = new (...args: never[]) => { config: object; }; export declare function guardPublicRunner<T extends RunnerConstructor>( original: T, maximum: number, protect: Protector, ): T;",
+      "export type Protector<T extends { config: object } = { config: object }> = ( runner: T, maximum: number, ) => void; export type RunnerConstructor = new (...args: never[]) => { config: object; }; export declare function guardPublicRunner<T extends RunnerConstructor>( original: T, maximum: number, protect: Protector<InstanceType<T>>, ): T;",
     "plugin.d.mts":
       'import type { Plugin } from "vitest/config"; export interface NodeRunnerPolicy { runner: string | null; } export declare function testTimeoutPolicyPlugin( maximum?: number, registrationPackages?: readonly string[], nodeRunner?: NodeRunnerPolicy, ): Plugin; export declare function browserTestTimeoutPolicyPlugin( maximum?: number, registrationPackages?: readonly string[], ): Plugin;',
   };

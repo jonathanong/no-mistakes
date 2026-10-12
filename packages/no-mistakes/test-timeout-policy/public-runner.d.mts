@@ -1,7 +1,5 @@
-export type Protector = (
-  runner: {
-    config: object;
-  },
+export type Protector<T extends { config: object } = { config: object }> = (
+  runner: T,
   maximum: number,
 ) => void;
 export type RunnerConstructor = new (...args: never[]) => {
@@ -11,5 +9,5 @@ export type RunnerConstructor = new (...args: never[]) => {
 export declare function guardPublicRunner<T extends RunnerConstructor>(
   original: T,
   maximum: number,
-  protect: Protector,
+  protect: Protector<InstanceType<T>>,
 ): T;

@@ -1,3 +1,4 @@
+import { guardRegistration, protectSuiteCollector } from "./registration.mjs";
 const constructors = new WeakMap();
 /** Compose a final public constructor while retaining direct and derived new.target contracts. */
 export function guardPublicRunner(original, maximum, protect) {
@@ -7,6 +8,11 @@ export function guardPublicRunner(original, maximum, protect) {
 /** Internal adapter for the native SDK browser subclass, whose collection lifecycle is public. */
 export function guardCollectionRunner(original, maximum, protect) {
   return guardRunner(original, maximum, protect, true);
+}
+
+/** Node final-runner composition owns instance protection; public statics still need guards. */
+export function guardRunnerStatics(original, maximum, protect) {
+  return guardRunner(original, maximum, protect, null);
 }
 
 function guardRunner(original, maximum, protect, defer) {
@@ -28,10 +34,34 @@ function guardRunner(original, maximum, protect, defer) {
   const existing = adapters.get(defer);
   if (existing) return existing;
   const methods = new WeakMap();
+  const statics = new Map();
   const guarded = new Proxy(original, {
     get(target, key, receiver) {
       const direct = receiver === guarded;
       const value = Reflect.get(target, key, direct ? target : receiver);
+      if (
+        typeof value === "function" &&
+        ["getCurrentSuite", "createTaskCollector", "getSuiteHooks", "setSuiteHooks"].includes(key)
+      ) {
+        if (!statics.has(value)) {
+          statics.set(
+            value,
+            new Proxy(value, {
+              apply(callable, owner, args) {
+                if (key === "getSuiteHooks" || key === "setSuiteHooks")
+                  throw new Error(
+                    "TestRunner raw suite hooks bypass native hook deadlines; register guarded public hooks instead",
+                  );
+                const result = Reflect.apply(callable, owner === guarded ? target : owner, args);
+                return key === "getCurrentSuite"
+                  ? protectSuiteCollector(result, maximum)
+                  : guardRegistration(result, "test", maximum);
+              },
+            }),
+          );
+        }
+        return statics.get(value);
+      }
       if (!direct || typeof value !== "function") return value;
       const descriptor = staticDescriptor(target, key);
       // Callable-valued fields are public values, including Vitest's exported static aliases.
@@ -54,7 +84,7 @@ function guardRunner(original, maximum, protect, defer) {
     },
     construct(target, args, newTarget) {
       const runner = Reflect.construct(target, args, newTarget === guarded ? target : newTarget);
-      if (newTarget === guarded) protect(runner, maximum);
+      if (newTarget === guarded && defer !== null) protect(runner, maximum);
       else if (defer) {
         // super() returns before derived fields initialize. Vitest's public
         // collection lifecycle runs after construction, before registration.

@@ -55,3 +55,10 @@ context when collection begins; replacing that hook fails closed. This route
 supports the native browser runner and its extension fields. A custom browser
 runner with its own `onBeforeCollect` field needs an explicit final-constructor
 route and is not supported by this native browser adapter.
+
+For a custom Node runner, the generated public `TestRunner` facade guards its
+static APIs while the configured final constructor protects runner instances.
+`getCurrentSuite()` returns a collector with guarded test and public-hook
+registration; `createTaskCollector()` returns a guarded test registration
+function. Raw `getSuiteHooks()` and `setSuiteHooks()` calls throw because they
+bypass hook deadline wrapping. Register hooks through the guarded public API.

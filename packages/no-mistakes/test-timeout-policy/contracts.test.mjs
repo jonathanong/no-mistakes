@@ -231,8 +231,7 @@ describe("public deadline policy contract boundaries", () => {
         : testTimeoutPolicyPlugin(30000, [], { runner: null });
       const id = plugin.resolveId("vitest", "/owned/case.mts");
       await withGeneratedFacade(plugin.load(id), async (facade) => {
-        if (browser) expect(facade.TestRunner).not.toBe(TestRunner);
-        else expect(facade.TestRunner).toBe(TestRunner);
+        expect(facade.TestRunner).not.toBe(TestRunner);
         expect(facade.TestRunner.prototype).toBe(TestRunner.prototype);
         class Custom extends facade.TestRunner {}
         expect(Object.getPrototypeOf(Custom.prototype)).toBe(TestRunner.prototype);
