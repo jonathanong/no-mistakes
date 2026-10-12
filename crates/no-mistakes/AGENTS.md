@@ -75,6 +75,22 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   benchmark preflight checks must prove the intended starts and unique findings;
   use supported exact package selectors instead of assuming glob semantics.
 
+### Required regression gates
+
+- Reject reproduced slowdowns in representative consuming or non-consuming
+  configurations; a focused win does not excuse a slower control path.
+- Retaining extra ranges, contexts, or caches for speed must earn measured benefit.
+  Include cold construction and peak RSS; reject flat work with higher memory.
+- Save controls with realistic source/JSX density and configured include/filter
+  payloads. Add fast-path count or concurrency tests that fail on the old code.
+- Measure diagnostics off/on separately, including CPU and RSS. Use raw elapsed
+  time: never pause clocks or subtract reporting overhead to improve results.
+- Keep expensive diagnostics opt-in; with diagnostics disabled, add no clocks,
+  spans, maps, heartbeat/registry work, source reads, or AST walks.
+- Active-span locks capture owned metadata/counters briefly; aggregate
+  history, sort, format, and write after release. Test stalled aggregation while
+  real workers enter and finish spans. Keep legitimate compute-once ownership.
+
 ### Measurement and PR reporting
 
 - Every performance PR reports before/after results, exact baseline/candidate

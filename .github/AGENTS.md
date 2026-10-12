@@ -17,3 +17,7 @@
   empirical p95 is the observed maximum, subject to the tail-bound limitation above.
 - Resource maxima exclude exits 124/137, signals, and missing wrapper statuses;
   report eligible counts and unavailable maxima, retaining completed nonzero exits.
+- Verify candidateRef against the built artifact's source and hash before using
+  a workflow as performance proof; automatic triggers may pin a historical build.
+- Before changing a deadline, profile the exact consumer and measure viable
+  fixes. Report observed tail/resources and censored failures with sample limits.

@@ -121,8 +121,8 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Local Criterion is the source of truth only with matching machine, toolchain,
   build flags, mode, threads, and fixtures. CI uses `ubuntu-24.04-arm`; CodSpeed
   comparisons require that runner and the expected base. x86_64/fallback bases
-  are noise and must not change code. Follow the measurement/reporting rules in
-  [core performance guidance](crates/no-mistakes/AGENTS.md).
+  are noise and must not change code. Meet the regression gates and measurement
+  rules in [core performance guidance](crates/no-mistakes/AGENTS.md).
 
 ### Public surface checklist
 
