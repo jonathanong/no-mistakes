@@ -33,7 +33,8 @@ pub(crate) use statements::project_bounds as project_sql_bounds;
 pub mod statements;
 mod types;
 
-pub use annotation::sql_requires_query_annotation;
+pub use annotation::{leading_query_annotation, sql_requires_query_annotation};
+mod executed_source;
 pub(crate) use catalog::canonical_order_keys;
 pub(crate) use catalog::decoded_parts;
 pub(crate) use catalog::normalize_catalog_path as normalize_schema_catalog_path;
@@ -72,6 +73,10 @@ pub(crate) use embedded::{
 };
 pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
+};
+pub(crate) use executed_source::extract_executed_postgres_sql_with_session;
+pub use executed_source::{
+    extract_executed_postgres_sql, ExecutedPostgresSource, ExecutedPostgresSql,
 };
 pub use locking::{
     extract_locking_select_metadata, extract_locking_select_metadata_with_placeholders,

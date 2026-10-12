@@ -1,4 +1,5 @@
 import type { PostgresSqlTrigger } from "./postgres-trigger-types";
+export * from "./executed-postgres-sql-types";
 export type * from "./postgres-trigger-types";
 import type { PostgresSqlWrapper } from "./postgres-wrapper-types";
 export type * from "./postgres-wrapper-types";

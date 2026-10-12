@@ -11,6 +11,7 @@ export function assertClientOptimizerClosure(raw, owners, module) {
         expect(record.phase).toBe('client-transform');
         for (const optimizer of [record.client, record.clientDeclared, record.activeEnvironment]) {
             expect(optimizer).toBeDefined();
+            expect(optimizer.noDiscovery).toBe(true);
             expect(optimizer.include).toContain('vitest-extra');
             for (const owner of owners)
                 expect(optimizer.exclude).toContain(owner);

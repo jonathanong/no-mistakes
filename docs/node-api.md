@@ -93,6 +93,24 @@ Its `unanalyzableSql` option defaults to `"report"`; choose
 from the package. Findings retain the executor's source location. See the
 [annotation rule](rules/postgres-require-query-annotation.md).
 
+`extractExecutedPostgresSql({ sources, importSpecifier })` analyzes supplied
+TypeScript/JavaScript text through the same executor and embedded SQL extractor.
+Each source is `{ fileName, source }`; optional `executorNames`,
+`executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` select the same
+bindings as the annotation rule. It returns one record per executor call or
+recoverable conditional alternative, in source order. Records include `fileName`,
+the one-based executor `line`, `annotation`, `sqlText`, `kind`, and `complete`.
+Recovered conditional alternatives have `kind: "composed"`. The named
+`ExecutedPostgresTrustedSqlTag` type describes each `trustedSqlTags` entry.
+Template interpolations appear as `sql_placeholder_N` markers and remain
+`complete: false` because their runtime content is unknown. Dynamic SQL can
+expose only a leading prefix or `null`; require `complete` for checks that need
+the entire SQL statement. `annotation` is `null` for unannotated or unrecoverable SQL.
+An invalid TS/JS source or unknown option rejects the whole request, so a
+recovered parse cannot silently report incomplete input as complete SQL.
+This source-only API reads no files and does not resolve helpers imported from
+other files; use `check()` for project-wide annotation enforcement.
+
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
 `shapeOptions.bannedFunctionCall.functions` list through the same YAML rule
 configuration. Entries may be strings for an unrestricted ban or objects with
@@ -201,6 +219,7 @@ database's name.
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
 | `postgres catalog` | `generatePostgresCatalog(options)` |
 | Source-only library capability | `parsePostgresSql(sourceOrSources)` |
+| Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier })` |
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
@@ -347,6 +366,7 @@ Vitest's native runner. These named types are part of the entrypoint contract.
 | `exportsOf` | `exportsOf(options)` |
 | `generatePostgresCatalog` | `generatePostgresCatalog(options)` |
 | `parsePostgresSql` | `parsePostgresSql(sourceOrSources)` |
+| `extractExecutedPostgresSql` | `extractExecutedPostgresSql({ sources, importSpecifier })` |
 | `analyzeTypeScriptModules` | `analyzeTypeScriptModules({ root, files })` |
 | `fetches` | `fetches(options)` |
 | `flow` | `flow(options)` |

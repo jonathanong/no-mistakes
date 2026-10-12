@@ -26,6 +26,7 @@ function createJsonApis(descriptors) {
 const jsonApis = createJsonApis({
   analyzeTypeScriptModules: "analyzeTypeScriptModulesJson",
   parsePostgresSql: "parsePostgresSqlJson",
+  extractExecutedPostgresSql: "extractExecutedPostgresSqlJson",
   generatePostgresCatalog: "generatePostgresCatalogJson",
   analyzeProject: "analyzeProjectJson",
   callSites: "callSitesJson",
@@ -120,6 +121,7 @@ module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
 module.exports.version = version;
 module.exports.analyzeProject = analyzeProject;
 module.exports.analyzeTypeScriptModules = jsonApis.analyzeTypeScriptModules;
+module.exports.extractExecutedPostgresSql = jsonApis.extractExecutedPostgresSql;
 module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;

@@ -21,7 +21,8 @@ pub struct EmbeddedSqlCall {
 }
 
 /// How executed SQL was recovered from TypeScript.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub enum EmbeddedSqlKind {
     #[default]
     Inline,

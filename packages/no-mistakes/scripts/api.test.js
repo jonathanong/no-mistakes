@@ -57,7 +57,7 @@ function nativeExportNames() {
 }
 
 function declarationExportNames() {
-  const declarations = ["index.d.ts", "index-ci-infra.d.ts"]
+  const declarations = ["index.d.ts", "index-ci-infra.d.ts", "executed-postgres-sql-types.d.ts"]
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");
   return [
@@ -171,6 +171,8 @@ test("programmatic API proxies object options through async native addon calls",
       JSON.stringify({ command: "infraResourceRefs", options: JSON.parse(json) }),
     parsePostgresSqlJson: async (json) =>
       JSON.stringify({ command: "parsePostgresSql", options: JSON.parse(json) }),
+    extractExecutedPostgresSqlJson: async (json) =>
+      JSON.stringify({ command: "extractExecutedPostgresSql", options: JSON.parse(json) }),
     generatePostgresCatalogJson: async (json) =>
       JSON.stringify({ command: "generatePostgresCatalog", options: JSON.parse(json) }),
     infraOutputsJson: async (json) =>
@@ -353,6 +355,10 @@ test("programmatic API proxies object options through async native addon calls",
     assert.deepEqual((await api.parsePostgresSql([{ sql: "SELECT 1" }])).options, [
       { sql: "SELECT 1" },
     ]);
+    assert.deepEqual(
+      (await api.extractExecutedPostgresSql({ sources: [], importSpecifier: "@db" })).options,
+      { sources: [], importSpecifier: "@db" },
+    );
     assert.equal((await api.serverContracts({ root: "." })).command, "serverContracts");
     assert.equal((await api.flow({ target: "src/api.ts#handler" })).command, "flow");
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
@@ -941,6 +947,26 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
     procedural,
     /export type PostgresSqlProceduralOccurrenceKind =\n {2}\| "utility"\n {2}\| "controlFlow"\n {2}\| "dml"\n {2}\| "dynamicExecute"\n {2}\| "unknown";/,
   );
+});
+
+test("executed PostgreSQL source extraction exposes its named async contract", () => {
+  const declarations = readFileSync(join(packageRoot, "executed-postgres-sql-types.d.ts"), "utf8");
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  const postgresSource = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface ExecutedPostgresSource \{/);
+  assert.match(declarations, /export interface ExecutedPostgresTrustedSqlTag \{/);
+  assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
+  assert.match(declarations, /trustedSqlTags\?: ExecutedPostgresTrustedSqlTag\[\];/);
+  assert.match(declarations, /export interface ExecutedPostgresSql \{/);
+  assert.match(declarations, /export type ExecutedPostgresSqlKind =/);
+  assert.match(declarations, /kind: ExecutedPostgresSqlKind;/);
+  assert.match(declarations, /complete: boolean;/);
+  assert.match(
+    declarations,
+    /extractExecutedPostgresSql\(\s*options: ExecutedPostgresSqlOptions,\s*\): Promise<ExecutedPostgresSql\[\]>;/,
+  );
+  assert.match(index, /export \* from "\.\/postgres-source-types";/);
+  assert.match(postgresSource, /export \* from "\.\/executed-postgres-sql-types";/);
 });
 
 test("PostgreSQL metadata facts export routine signatures and typed index operations", () => {

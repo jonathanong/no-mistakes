@@ -14,6 +14,12 @@ pub(crate) fn has_leading_query_annotation(sql: &str) -> bool {
     annotation_re().is_match(sql)
 }
 
+/// Name from the same leading comment recognized by the annotation rule.
+pub fn leading_query_annotation(sql: &str) -> Option<&str> {
+    let comment = annotation_re().find(sql)?.as_str().trim();
+    Some(comment[2..comment.len() - 2].trim())
+}
+
 fn is_transaction_command(sql: &str) -> bool {
     transaction_re().is_match(sql)
 }

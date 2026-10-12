@@ -54,6 +54,8 @@ pub(crate) mod options;
 mod postgres_source;
 mod typescript_modules;
 #[cfg(not(coverage))]
+pub use postgres_source::extract_executed_postgres_sql_json;
+#[cfg(not(coverage))]
 pub use postgres_source::parse_postgres_sql_json;
 #[cfg(not(coverage))]
 pub use typescript_modules::analyze_typescript_modules_json;

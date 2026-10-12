@@ -6,6 +6,7 @@ const cjs = require("./index.js");
 export const {
   analyzeProject,
   analyzeTypeScriptModules,
+  extractExecutedPostgresSql,
   callSites,
   check,
   ciEnv,
