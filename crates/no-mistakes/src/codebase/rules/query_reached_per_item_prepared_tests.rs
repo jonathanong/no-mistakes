@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 #[test]
 fn per_item_graph_projection_reuses_each_source_and_parse() {
-    for fixture in ["fixture", "targets-fixture"] {
+    for fixture in ["fixture", "targets-fixture", "callbacks-fixture"] {
         assert_prepared_per_item_projection(fixture);
     }
 }

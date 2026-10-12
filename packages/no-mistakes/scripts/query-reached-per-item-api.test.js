@@ -5,6 +5,41 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled callback findings keep each lexical binding and occurrence distinct",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/callbacks-fixture",
+    );
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.warnings, []);
+    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
+    assert.deepEqual(
+      findings.map((finding) => [finding.file, finding.line, finding.import]),
+      [
+        [6, "read"],
+        [13, "cache.get"],
+        [20, "lookup"],
+        [27, "read"],
+        [27, "read"],
+        [29, "read"],
+      ].map(([line, callee]) => ["src/entry.mts", line, callee]),
+      "a resolved import must never supply the sink for a same-caller shadowed callback",
+    );
+    const repeated = findings.filter((finding) => finding.line === 27);
+    assert.ok(repeated[0].message.endsWith("(occurrence 1)"));
+    assert.ok(repeated[1].message.endsWith("(occurrence 2)"));
+    assert.ok(findings.find((finding) => finding.line === 29).message.includes("map callback"));
+    assert.deepEqual(await esm.check({ root }), report);
+    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+    assert.deepEqual(batch.reports[0].result, report);
+  },
+);
+
+test(
   "compiled checks honor exact effect bindings through aliases and helper traces",
   { skip: !compiled },
   async () => {

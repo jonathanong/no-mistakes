@@ -1,0 +1,12 @@
+effects:
+  postgres:
+    targets:
+      - { module: '@data-stores/psql', export: read }
+  valkey:
+    targets:
+      - { module: '@data-stores/valkey', export: valkey.get }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres, valkey]

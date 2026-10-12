@@ -299,3 +299,38 @@ fn adding_binding_targets_retains_legacy_lists_without_duplicate_occurrences() {
         [11, 14, 16, 19, 20, 26, 28, 38]
     );
 }
+
+#[test]
+fn callback_occurrences_keep_their_own_bindings_within_one_caller() {
+    let root = root().with_file_name("callbacks-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == "src/entry.mts"));
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.import.as_deref().unwrap()))
+            .collect::<Vec<_>>(),
+        [
+            (6, "read"),
+            (13, "cache.get"),
+            (20, "lookup"),
+            (27, "read"),
+            (27, "read"),
+            (29, "read"),
+        ]
+    );
+    let repeated = findings
+        .iter()
+        .filter(|finding| finding.line == 27)
+        .collect::<Vec<_>>();
+    assert!(repeated[0].message.ends_with("(occurrence 1)"));
+    assert!(repeated[1].message.ends_with("(occurrence 2)"));
+    assert!(findings
+        .iter()
+        .find(|finding| finding.line == 29)
+        .unwrap()
+        .message
+        .contains("map callback"));
+}
