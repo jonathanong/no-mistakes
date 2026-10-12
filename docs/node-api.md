@@ -298,6 +298,14 @@ The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
 does not have a one-to-one CLI command:
 
+The package also exposes the optional Vitest integration through
+`no-mistakes/test-timeout-policy` and
+`no-mistakes/test-timeout-policy/plugin`. The first provides timeout validation,
+registration guards and runner composition; the `/plugin` entry provides
+`testTimeoutPolicyPlugin` and `browserTestTimeoutPolicyPlugin` and requires the
+optional Vitest peer. See the [timeout policy guide](test-timeout-policy.md) for
+configuration and adoption details.
+
 | Runtime export | API |
 | --- | --- |
 | `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |

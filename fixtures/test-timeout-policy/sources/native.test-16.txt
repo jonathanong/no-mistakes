@@ -1,0 +1,7 @@
+
+      const child = test.extend({ sample: { timeout: 60000 } })
+      child('default deadline', { timeout: undefined }, ({ sample }) => {
+        if (sample.timeout !== 60000) throw new Error('fixture data changed')
+        continued()
+      })
+    

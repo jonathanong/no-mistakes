@@ -1,0 +1,1 @@
+import 'browser-registrar'; test('body', () => { throw new Error('BODY_EXECUTED') })

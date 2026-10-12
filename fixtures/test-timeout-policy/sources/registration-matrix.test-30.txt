@@ -1,0 +1,1 @@
+test('natural completion', continued)

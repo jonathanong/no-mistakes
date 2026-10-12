@@ -1,0 +1,1 @@
+test('must not execute', () => { throw new Error('BODY_EXECUTED') })

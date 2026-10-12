@@ -1,0 +1,1 @@
+native.test('valid initial deadline', continued, 250)

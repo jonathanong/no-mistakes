@@ -1,0 +1,5 @@
+test('runtime', () => {
+      const setter = vi.setConfig.bind(vi)
+      setter({ testTimeout: 30001 })
+      throw new Error('BODY_CONTINUED')
+    })

@@ -1,0 +1,4 @@
+test('body', ({ finalMarker }) => {
+      if (finalMarker !== 'own field initialized') throw new Error('final extension absent')
+      continued()
+    })

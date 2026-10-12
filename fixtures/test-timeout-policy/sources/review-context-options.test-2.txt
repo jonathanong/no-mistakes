@@ -1,0 +1,7 @@
+test('replacement context', context => {
+        if (!context.replacement) throw new Error('REPLACEMENT_CONTEXT_LOST')
+        try { context.onTestFinished(() => {}, 150); throw new Error('OVERCAP_ACCEPTED') }
+        catch (error) { if (!(error instanceof RangeError)) throw error }
+        context.onTestFinished(() => writeFileSync('extension.marker', 'finished'), 20)
+        continued()
+      })

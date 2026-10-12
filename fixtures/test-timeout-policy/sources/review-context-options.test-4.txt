@@ -1,0 +1,13 @@
+
+      let previous, alias
+      test('first', context => {
+        previous = context
+        alias = context.onTestFinished
+        context.onTestFinished(() => {}, 20)
+        context.onTestFinished(() => {}, 20)
+      })
+      test('after native restoration', () => {
+        if (previous.onTestFinished !== alias) throw new Error('RESTORED_METHOD_IDENTITY_CHANGED')
+        continued()
+      })
+    
