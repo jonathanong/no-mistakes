@@ -69,5 +69,6 @@ fn replaced_deadline_lets_the_watchdog_return() {
         std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         expires_at,
         Duration::from_secs(1),
+        None,
     );
 }

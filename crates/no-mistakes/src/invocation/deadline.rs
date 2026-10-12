@@ -65,9 +65,10 @@ impl DeadlineGuard {
             .expires_at;
         let cancel = Arc::new(AtomicBool::new(false));
         let watcher = Arc::clone(&cancel);
+        let observer = crate::diagnostics::current();
         std::thread::Builder::new()
             .name("no-mistakes-timeout".to_string())
-            .spawn(move || watch_deadline(watcher, expires_at, timeout))
+            .spawn(move || watch_deadline(watcher, expires_at, timeout, observer))
             .context("starting command timeout watchdog")?;
         guard.cancel_watch = Some(cancel);
         Ok(guard)
@@ -107,7 +108,12 @@ pub(super) fn timeout_diagnostic(seconds: u64, phase: &str) -> String {
     format!("command timed out after {seconds} seconds during {phase}")
 }
 
-fn watch_deadline(cancel: Arc<AtomicBool>, expires_at: Instant, timeout: Duration) {
+fn watch_deadline(
+    cancel: Arc<AtomicBool>,
+    expires_at: Instant,
+    timeout: Duration,
+    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+) {
     loop {
         if cancel.load(Ordering::Acquire) {
             return;
@@ -118,7 +124,15 @@ fn watch_deadline(cancel: Arc<AtomicBool>, expires_at: Instant, timeout: Duratio
                 return;
             }
             let message = timeout_diagnostic(timeout.as_secs(), current_phase());
-            eprintln!("error: {message}");
+            if !observer.as_ref().is_some_and(|observer| {
+                observer.progress_enabled()
+                    && observer.emit_progress_output(format!("error: {message}\n"))
+            }) {
+                eprintln!("error: {message}");
+            }
+            if let Some(observer) = &observer {
+                observer.render_progress_stderr();
+            }
             super::child::process_tree::terminate_registered_groups();
             std::process::exit(124);
         }

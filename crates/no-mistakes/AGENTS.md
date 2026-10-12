@@ -112,9 +112,13 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   must not create clocks, IDs, active maps, heartbeat threads, or registry entries.
 - CLI progress is opt-in and flushes stderr only. Keep stdout and signal exit
   behavior intact; use the existing child-group forwarding listener for Unix
-  termination snapshots, including when the deadline is disabled. SIGKILL
+  termination snapshots, including lock waiting and disabled deadlines. Progress
+  output uses a bounded best-effort queue and a detached writer with its own
+  stderr descriptor; cleanup and signal/timeout exits must never join blocked I/O. SIGKILL
   diagnostics rely on already-flushed heartbeats.
 - N-API progress polling stays asynchronous and skips the invocation file lock.
-  Use declarative pure JSON bindings and a live-only Weak request registry; reject
+  Use a declarative independent deferred-promise JSON binding with a bounded
+  polling worker outside the libuv analysis pool, and a live-only Weak request
+  registry; reject
   duplicate active IDs and remove entries on every completion/failure path. Never
   install CLI heartbeat/signal behavior or retain completed request payloads.

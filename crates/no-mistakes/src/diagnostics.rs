@@ -67,3 +67,12 @@ impl Default for DiagnosticsArgs {
 
 #[cfg(test)]
 mod tests;
+
+/// Preserve ordinary stderr messages while CLI progress uses bounded output.
+pub fn print_stderr(message: std::fmt::Arguments<'_>) {
+    if !current().is_some_and(|observer| {
+        observer.progress_enabled() && observer.emit_progress_output(format!("{message}\n"))
+    }) {
+        eprintln!("{message}");
+    }
+}

@@ -1068,8 +1068,9 @@ The exported `DiagnosticsProgressSnapshot`, `ActiveTimingSpan`, and
 `CompletedTimingSpan` types describe the snapshot. `elapsedMs` is request wall
 time; `startedSpans` and `completedSpans` count instrumented trace spans.
 Parallel and nested durations overlap. Snapshot polling uses the native async
-worker without waiting for the filesystem invocation lock, so it can observe
-analysis and lock waiting. A snapshot can be `null` before the worker registers
+worker separate from the libuv analysis pool, without waiting for the filesystem
+invocation lock. Polling works with `UV_THREADPOOL_SIZE=1` and with all analysis
+workers waiting on the lock. Its bounded queue rejects overload as a promise. A snapshot can be `null` before the worker registers
 the request. Active IDs must be unique; completion, rejection, and unwinding
 remove the registry entry. No completed payload is retained across requests.
 

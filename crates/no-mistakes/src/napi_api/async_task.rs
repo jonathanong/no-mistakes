@@ -1,5 +1,6 @@
 use napi::bindgen_prelude::Buffer;
 use napi::{Env, Task};
+pub(crate) mod independent;
 mod pure;
 #[cfg(not(coverage))]
 pub use pure::PureJsonTask;

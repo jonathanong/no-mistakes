@@ -168,19 +168,27 @@ impl InvocationGuard {
         path: &Path,
         forward_parent_signals: bool,
     ) -> Result<Self> {
+        // Progress must capture termination during lock waiting, before the
+        // first heartbeat. Retaining this guard also cleans up acquisition errors.
+        let early_signals = if forward_parent_signals
+            && crate::diagnostics::current().is_some_and(|observer| observer.progress_enabled())
+        {
+            Some(child::ParentSignalForwardingGuard::install(true)?)
+        } else {
+            None
+        };
         let lock = acquire_lock(path, options.lock_timeout, options.fail_on_lock)?;
         let deadline = if forward_parent_signals {
             DeadlineGuard::install_for_cli(options.timeout)?
         } else {
             DeadlineGuard::install_for_invocation(options.timeout, None)?
         };
-        let parent_signals = child::ParentSignalForwardingGuard::install(
-            forward_parent_signals
-                && (options.timeout.is_some()
-                    || crate::diagnostics::current()
-                        .is_some_and(|observer| observer.progress_enabled())),
-        );
-        let parent_signals = parent_signals?;
+        let parent_signals = match early_signals {
+            Some(guard) => guard,
+            None => child::ParentSignalForwardingGuard::install(
+                forward_parent_signals && options.timeout.is_some(),
+            )?,
+        };
         Ok(Self {
             _deadline: deadline,
             _parent_signals: parent_signals,

@@ -455,34 +455,46 @@ test(
   },
 );
 
-test(
-  "compiled N-API live progress polling runs while analysis holds the invocation lock",
-  { skip: !compiledAddonPath || process.platform !== "linux", timeout: 10_000 },
-  async () => {
-    const directory = await mkdtemp(join(tmpdir(), "no-mistakes-live-progress-"));
-    const child = fork(
-      join(repositoryRoot, "fixtures", "napi", "diagnostics-progress", "poll.js"),
-      [
-        directory,
-        join(repositoryRoot, "test-cases", "codebase-analysis", "check-configured-only", "fixture"),
-      ],
-      {
-        env: { ...process.env, NO_MISTAKES_TEST_NAPI_ADDON_PATH: addonPath },
-        stdio: ["ignore", "pipe", "pipe", "ipc"],
-      },
-    );
-    let stderr = "";
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk;
-    });
-    try {
-      const [code, signal] = await once(child, "exit");
-      assert.equal(signal, null, stderr);
-      assert.equal(code, 0, stderr);
-      assert.doesNotMatch(stderr, /\[progress\]|\[timing\]/);
-    } finally {
-      child.kill();
-      await rm(directory, { recursive: true, force: true });
-    }
-  },
-);
+for (const workers of [1, 3]) {
+  test(
+    `compiled N-API live progress polling works with all ${workers} libuv workers occupied`,
+    { skip: !compiledAddonPath || process.platform !== "linux", timeout: 10_000 },
+    async () => {
+      const directory = await mkdtemp(join(tmpdir(), "no-mistakes-live-progress-"));
+      const child = fork(
+        join(repositoryRoot, "fixtures", "napi", "diagnostics-progress", "poll.js"),
+        [
+          directory,
+          join(
+            repositoryRoot,
+            "test-cases",
+            "codebase-analysis",
+            "check-configured-only",
+            "fixture",
+          ),
+        ],
+        {
+          env: {
+            ...process.env,
+            NO_MISTAKES_TEST_NAPI_ADDON_PATH: addonPath,
+            UV_THREADPOOL_SIZE: String(workers),
+          },
+          stdio: ["ignore", "pipe", "pipe", "ipc"],
+        },
+      );
+      let stderr = "";
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
+      try {
+        const [code, signal] = await once(child, "exit");
+        assert.equal(signal, null, stderr);
+        assert.equal(code, 0, stderr);
+        assert.doesNotMatch(stderr, /\[progress\]|\[timing\]/);
+      } finally {
+        child.kill();
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+}

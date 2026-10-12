@@ -1,8 +1,9 @@
+mod output;
 use super::{InvocationObserver, TimingKind};
+use output::ProgressOutput;
 use serde::Serialize;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::io::Write;
 use std::sync::{mpsc, Arc};
 use std::time::{Duration, Instant};
 
@@ -50,6 +51,7 @@ pub(super) struct ProgressState {
     started: u64,
     completed: u64,
     active: BTreeMap<u64, ActiveSpan>,
+    output: Option<Arc<ProgressOutput>>,
 }
 
 pub(super) struct ActiveSpanGuard<'a> {
@@ -167,15 +169,29 @@ impl InvocationObserver {
         })
     }
 
+    pub fn emit_progress_output(&self, text: String) -> bool {
+        let output = self.progress.as_ref().and_then(|progress| {
+            progress
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .output
+                .clone()
+        });
+        if let Some(output) = output {
+            output.emit(text);
+            true
+        } else {
+            false
+        }
+    }
+
     /// Called on ordinary listener threads, never from a raw signal handler.
     pub fn render_progress_stderr(&self) {
         let Some(snapshot) = self.progress_snapshot() else {
             return;
         };
-        let mut stderr = std::io::stderr().lock();
         if let Ok(json) = serde_json::to_string(&snapshot) {
-            let _ = writeln!(stderr, "[progress] {json}");
-            let _ = stderr.flush();
+            self.emit_progress_output(format!("[progress] {json}\n"));
         }
     }
 }
@@ -189,6 +205,12 @@ pub struct ProgressGuard {
 
 impl ProgressGuard {
     pub fn install(observer: Arc<InvocationObserver>, interval: Duration) -> Self {
+        if let Some(progress) = &observer.progress {
+            progress
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .output = Some(ProgressOutput::stderr());
+        }
         Self::start(interval, move || observer.render_progress_stderr())
     }
 

@@ -127,7 +127,9 @@ fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Opt
         Some(pid) => format!("pid {pid}"),
         None => "another no-mistakes invocation".to_string(),
     };
-    eprintln!("waiting for lock held by {holder} for {secs}s");
+    crate::diagnostics::print_stderr(format_args!(
+        "waiting for lock held by {holder} for {secs}s"
+    ));
 }
 
 fn read_holder_pid(path: &Path) -> Option<u32> {

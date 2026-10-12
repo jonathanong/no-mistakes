@@ -231,8 +231,9 @@ fn concurrent_progress_polling_does_not_wait_for_the_invocation_lock_and_cleans_
                 }
             });
             started.recv_timeout(Duration::from_secs(3)).unwrap();
-            // PureJsonTask uses the same libuv task implementation as the new
-            // public binding, and must not try to reacquire the held file lock.
+            // Exercise the snapshot implementation off the held analysis thread.
+            // The public binding uses a separate deferred-promise worker,
+            // also covering libuv starvation in the real-addon tests.
             let input =
                 napi::bindgen_prelude::Buffer::from(br#"{"id":"task-concurrency-test"}"#.to_vec());
             let output =

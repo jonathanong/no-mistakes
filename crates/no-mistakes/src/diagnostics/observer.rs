@@ -6,6 +6,7 @@ use super::progress::{ActiveSpanGuard, ProgressState};
 use dashmap::DashMap;
 use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
+use std::fmt::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -185,22 +186,42 @@ impl InvocationObserver {
             duration: self.started.elapsed(),
             kind: TimingKind::Serial,
         });
+        let mut output = self.progress_enabled().then(String::new);
         for entry in snapshot.timings {
             let suffix = match entry.kind {
                 TimingKind::Serial => "",
                 TimingKind::Parallel => " (parallel; non-additive)",
             };
-            eprintln!(
-                "[timing] {}: {:.3}ms{}",
-                entry.label,
-                entry.duration.as_secs_f64() * 1000.0,
-                suffix
-            );
+            match &mut output {
+                Some(output) => {
+                    let _ = writeln!(
+                        output,
+                        "[timing] {}: {:.3}ms{}",
+                        entry.label,
+                        entry.duration.as_secs_f64() * 1000.0,
+                        suffix
+                    );
+                }
+                None => eprintln!(
+                    "[timing] {}: {:.3}ms{}",
+                    entry.label,
+                    entry.duration.as_secs_f64() * 1000.0,
+                    suffix
+                ),
+            }
         }
         if self.verbose {
             for (metric, count) in snapshot.work {
-                eprintln!("[work] {metric}: {count}");
+                match &mut output {
+                    Some(output) => {
+                        let _ = writeln!(output, "[work] {metric}: {count}");
+                    }
+                    None => eprintln!("[work] {metric}: {count}"),
+                }
             }
+        }
+        if let Some(output) = output {
+            self.emit_progress_output(output);
         }
     }
 }

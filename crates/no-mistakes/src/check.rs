@@ -67,7 +67,7 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     record_missing_check_timings(&results);
     no_mistakes::invocation::commit_timeout()?;
     for warning in &results.warnings {
-        eprintln!("{warning}");
+        no_mistakes::diagnostics::print_stderr(format_args!("{warning}"));
     }
 
     let has_failures = has_failures(&results);

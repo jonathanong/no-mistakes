@@ -9,6 +9,16 @@ use napi_derive::napi;
 // JavaScript names explicit at the registration site. Defined before the
 // child modules so their registrations use the same declarative boundary.
 macro_rules! json_binding {
+    ($rust_name:ident, $js_name:literal, $implementation:path, independent) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(
+            env: napi::Env,
+            options_json: napi::bindgen_prelude::Buffer,
+        ) -> napi::Result<napi::bindgen_prelude::Object<'static>> {
+            async_task::independent::json(env, options_json, $implementation)
+        }
+    };
     ($rust_name:ident, $js_name:literal, $implementation:path, pure) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]
@@ -202,7 +212,7 @@ json_binding!(
     diagnostics_snapshot_json,
     "diagnosticsSnapshotJson",
     diagnostics_snapshot_impl,
-    pure
+    independent
 );
 
 fn diagnostics_snapshot_impl(options: serde_json::Value) -> napi::Result<String> {
