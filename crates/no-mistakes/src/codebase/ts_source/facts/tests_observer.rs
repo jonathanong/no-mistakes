@@ -71,3 +71,27 @@ fn parallel_collection_deduplicates_successful_and_failed_parse_work() {
     assert_eq!(diagnostics["parse.files"], 2);
     assert_eq!(diagnostics["parse.errors"], 1);
 }
+
+// Rayon workers do not inherit the caller's thread-local observer. Without
+// explicit propagation these walks are dropped, and a worker blocked inside a
+// concurrent request's scope can steal the task and count the walk there.
+#[test]
+fn parallel_collection_counts_ast_walks_in_the_calling_request() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/analysis-dataset/source-store");
+    let files = [root.join("alpha.ts"), root.join("beta.ts")];
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        collect_ts_facts_with_context(
+            &files,
+            TsFactPlan {
+                call_sites: true,
+                ..TsFactPlan::default()
+            },
+            &TsFactContext::new(&root),
+        )
+    });
+
+    assert_eq!(facts.len(), 2);
+    assert_eq!(observer.snapshot().work.get("ast.walks"), Some(&2));
+}

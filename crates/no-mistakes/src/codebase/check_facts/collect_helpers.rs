@@ -76,14 +76,17 @@ pub(crate) fn collect_fact_map_with_sources(
                 || plan.production_import_paths.contains(*path)
                 || (plan.storybook && super::is_mdx_file(path))
         }));
+    let observer = crate::diagnostics::current();
     let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .par_iter()
         .map(|path| {
-            crate::invocation::check_timeout().ok().map(|()| {
-                super::collect_file_facts_with_session_and_sources(
-                    session, root, path, plan, playwright, sources, false,
-                )
-                .map(|facts| (path.clone(), facts))
+            crate::diagnostics::with_observer(observer.clone(), || {
+                crate::invocation::check_timeout().ok().map(|()| {
+                    super::collect_file_facts_with_session_and_sources(
+                        session, root, path, plan, playwright, sources, false,
+                    )
+                    .map(|facts| (path.clone(), facts))
+                })
             })
         })
         .while_some()

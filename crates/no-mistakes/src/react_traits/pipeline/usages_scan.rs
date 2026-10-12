@@ -25,18 +25,21 @@ fn run_usages_from_visible(
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<crate::fx::PathSet>();
     let files = discover_react_files_from_visible(&root, file_config, scan_targets, visible_paths)?;
+    let observer = crate::diagnostics::current();
     let hits: Vec<FileHit> = files
         .par_iter()
         .filter_map(|file| {
-            analyze_one(
-                file,
-                &root,
-                &target_abs,
-                symbol.as_deref(),
-                &visible_files,
-                sources,
-            )
-            .ok()
+            crate::diagnostics::with_observer(observer.clone(), || {
+                analyze_one(
+                    file,
+                    &root,
+                    &target_abs,
+                    symbol.as_deref(),
+                    &visible_files,
+                    sources,
+                )
+                .ok()
+            })
         })
         .collect();
 
