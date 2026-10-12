@@ -127,6 +127,12 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     assert_eq!(evaluator.captured_binding_readers, readers);
     evaluator.rebuild_captured_readers();
     assert_eq!(evaluator.captured_binding_readers, readers);
+    // If every captured frame belongs to the arm, restoring it can clear
+    // the whole reverse index, including the remapped module-initial readers.
+    evaluator.remove_alternative_captured_readers(0);
+    assert!(evaluator.captured_binding_readers.is_empty());
+    evaluator.add_alternative_captured_readers(0);
+    assert_eq!(evaluator.captured_binding_readers, readers);
     assert!(evaluator
         .fresh_mapped_parameters
         .values()

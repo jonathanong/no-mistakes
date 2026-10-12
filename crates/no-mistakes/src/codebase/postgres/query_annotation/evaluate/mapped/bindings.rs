@@ -125,6 +125,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
         base: Environment,
     ) {
+        if self.captured_bindings.keys().all(|frame| *frame >= base) {
+            self.captured_binding_readers.clear();
+            return;
+        }
         for (&frame, bindings) in self
             .captured_bindings
             .iter()
