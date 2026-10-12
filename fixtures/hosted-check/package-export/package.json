@@ -1,0 +1,6 @@
+{
+  "name": "hosted-check-fixture",
+  "exports": {
+    ".": "./index.js"
+  }
+}
