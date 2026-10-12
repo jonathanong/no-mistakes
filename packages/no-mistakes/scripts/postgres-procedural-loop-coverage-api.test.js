@@ -66,7 +66,10 @@ test(
     }
     assert.equal(blocks[0].statements.length, 0);
     assert.match(slice(blocks[0].diagnostics[0].span), /^CREATE TABLE bad /);
-    assert.deepEqual(blocks[6].statements.map(({ kind }) => kind), ["createTable", "createTable"]);
+    assert.deepEqual(
+      blocks[6].statements.map(({ kind }) => kind),
+      ["createTable", "createTable"],
+    );
     assert.match(blocks[6].statements[0].sql, /^CREATE TABLE before_loop/);
     assert.match(blocks[6].statements[1].sql, /^CREATE TABLE after_loop/);
 
