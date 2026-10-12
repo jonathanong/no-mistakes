@@ -1,6 +1,51 @@
 //! Unsupported source occurrences remain explicit within their body owner.
 use super::types::*;
 
+pub(super) fn unprojected_utilities(
+    occurrences: &[PostgresSqlProceduralOccurrence],
+    statements: &[PostgresSqlStatement],
+) -> Vec<PostgresSqlDiagnostic> {
+    let mut projected = super::completeness::UtilitySpans::new();
+    collect_projected_spans(statements, &mut projected);
+    let mut diagnostics = Vec::new();
+    collect_unprojected(occurrences, &projected, &mut diagnostics);
+    diagnostics
+}
+
+fn collect_projected_spans(
+    statements: &[PostgresSqlStatement],
+    projected: &mut super::completeness::UtilitySpans,
+) {
+    for statement in statements {
+        projected.insert((statement.span.start.offset, statement.span.end.offset));
+        if let PostgresSqlStatementKind::Conditional { branches } = &statement.facts {
+            for branch in branches {
+                collect_projected_spans(&branch.statements, projected);
+            }
+        }
+        // DO and literal EXECUTE own their child coverage. EXECUTE's children
+        // use decoded command coordinates, not this block's source offsets.
+    }
+}
+
+fn collect_unprojected(
+    occurrences: &[PostgresSqlProceduralOccurrence],
+    projected: &super::completeness::UtilitySpans,
+    diagnostics: &mut Vec<PostgresSqlDiagnostic>,
+) {
+    for occurrence in occurrences {
+        if occurrence.kind == PostgresSqlProceduralOccurrenceKind::Utility
+            && !projected.contains(&(occurrence.span.start.offset, occurrence.span.end.offset))
+        {
+            diagnostics.push(PostgresSqlDiagnostic {
+                message: "Static procedural utility has no typed statement projection; inspect occurrences for source classification".into(),
+                span: Some(occurrence.span.clone()),
+            });
+        }
+        collect_unprojected(&occurrence.occurrences, projected, diagnostics);
+    }
+}
+
 pub(super) fn utility_spans(
     occurrences: &[PostgresSqlProceduralOccurrence],
 ) -> super::completeness::UtilitySpans {

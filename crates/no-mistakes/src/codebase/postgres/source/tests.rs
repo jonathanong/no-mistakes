@@ -28,6 +28,7 @@ mod procedural_execute_into;
 mod procedural_execute_select;
 mod procedural_for_execute;
 mod procedural_label;
+mod procedural_loop_coverage;
 mod procedural_occurrences;
 mod procedural_omit;
 mod procedural_omit_label;

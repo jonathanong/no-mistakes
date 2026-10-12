@@ -207,6 +207,13 @@ placeholders remain typed parameters. Dynamic operands, `format` calls, and
 unsupported EXECUTE modifiers remain incomplete `other` occurrences. An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
+Procedural `block.complete` requires supported static SQL to be reachable through
+typed statements and conditional branches. Utilities inside `FOR`, `WHILE`,
+`FOREACH`, and bare `LOOP` currently remain only in additive `occurrences`:
+each unprojected utility produces a diagnostic and keeps the block incomplete,
+including nested loops and loops combined with `IF`/`ELSE`. Recognized utilities
+represented as typed `other` statements retain coverage.
+
 Expression roots distinguish `nullTest` (`negated` for IS NOT NULL),
 `distinctness` (`negated` for IS NOT DISTINCT FROM), `parameter` (`placeholder`,
 including `$1`), and `typedLiteral` (`dataType`, decoded string `value`, rendered

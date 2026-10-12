@@ -878,6 +878,12 @@ diagnostics alongside recovered facts. See [nested constraint source facts](post
 
 `parsePostgresSql()` also returns `block.occurrences` for PL/pgSQL `DO` bodies.
 Kinds are `utility`, `controlFlow`, `dml`, `dynamicExecute`, and `unknown`.
+`block.complete` requires supported static SQL to be reachable through typed
+statements, including conditional branches. Utilities inside `FOR`, `WHILE`,
+`FOREACH`, or bare `LOOP` currently have no typed projection and keep the block
+incomplete with diagnostics at their original spans. This includes nested loops
+and combinations with `IF`/`ELSE`. Occurrence classification remains additive;
+recognized utilities represented as typed `other` statements retain coverage.
 `CREATE TYPE` is `utility`. `IF`/`RAISE` with no DML is `controlFlow`. A loop
 containing `INSERT`, `UPDATE`, `DELETE`, or `MERGE` nests a `dml` occurrence
 and does not claim that statement executes. Dynamic `EXECUTE` stays
