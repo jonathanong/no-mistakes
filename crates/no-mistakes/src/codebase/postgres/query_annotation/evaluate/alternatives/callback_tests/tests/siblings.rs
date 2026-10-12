@@ -1,4 +1,5 @@
 use super::super::super::{Evaluator, File};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
@@ -25,10 +26,8 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {

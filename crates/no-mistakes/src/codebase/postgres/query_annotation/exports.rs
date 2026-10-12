@@ -27,12 +27,12 @@ pub(super) fn default_steps(export: &ExportDefaultDeclaration<'_>, source: &str)
 }
 
 // ESM ambiguity depends on the originating binding, not the number of paths.
-struct ResolvedExport {
-    identity: Option<(PathBuf, String)>,
+struct ResolvedExport<'a> {
+    identity: Option<(&'a Path, &'a str)>,
     value: Value,
 }
 
-impl ResolvedExport {
+impl ResolvedExport<'_> {
     fn unknown() -> Self {
         Self {
             identity: None,
@@ -41,7 +41,7 @@ impl ResolvedExport {
     }
 }
 
-impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+impl<'a, F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'a, F> {
     pub(super) fn lookup_export(
         &mut self,
         path: &Path,
@@ -53,19 +53,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .map(|provider| provider.value)
     }
 
-    fn lookup_export_inner(
+    fn lookup_export_inner<'b>(
         &mut self,
-        path: &Path,
-        name: &str,
+        path: &'b Path,
+        name: &'b str,
         depth: u8,
         generic: bool,
-        visiting: &mut FxHashSet<(PathBuf, String)>,
-    ) -> Option<ResolvedExport> {
+        visiting: &mut FxHashSet<(&'b Path, &'b str)>,
+    ) -> Option<ResolvedExport<'a>>
+    where
+        'a: 'b,
+    {
         let Some(depth) = depth.checked_sub(1) else {
             return Some(ResolvedExport::unknown());
         };
-        let key = (path.to_path_buf(), name.to_string());
-        if !visiting.insert(key.clone()) {
+        let key = (path, name);
+        if !visiting.insert(key) {
             return Some(ResolvedExport::unknown());
         }
         let value = self.lookup_export_provider(path, name, depth, generic, visiting);
@@ -73,41 +76,49 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         value
     }
 
-    fn lookup_export_provider(
+    fn lookup_export_provider<'b>(
         &mut self,
-        path: &Path,
-        name: &str,
+        path: &'b Path,
+        name: &'b str,
         depth: u8,
         generic: bool,
-        visiting: &mut FxHashSet<(PathBuf, String)>,
-    ) -> Option<ResolvedExport> {
-        let Some(file) = self.files.get(path) else {
+        visiting: &mut FxHashSet<(&'b Path, &'b str)>,
+    ) -> Option<ResolvedExport<'a>>
+    where
+        'a: 'b,
+    {
+        let files = self.files;
+        let Some((origin, file)) = files.get_key_value(path) else {
             return Some(ResolvedExport::unknown());
         };
         let binding = file
+            .module
             .exports
             .get(name)
-            .map(|index| file.ts.exported_bindings[*index].clone());
-        let stars = file.ts.star_reexport_specifiers.clone();
+            .map(|index| &file.module.ts.exported_bindings[*index]);
+        let stars = &file.module.ts.star_reexport_specifiers;
         if let Some(binding) = binding {
             let import = (!file.facts.globals.contains_key(&binding.local))
-                .then(|| file.imports.get(&binding.local))
+                .then(|| file.module.imports.get(binding.local.as_str()))
                 .flatten()
-                .map(|index| file.ts.imported_bindings[*index].clone());
+                .map(|index| &file.module.ts.imported_bindings[*index]);
             let forwarded = binding
                 .specifier
-                .map(|specifier| (specifier, binding.local.clone()))
-                .or_else(|| import.map(|binding| (binding.specifier, binding.imported)));
+                .as_deref()
+                .map(|specifier| (specifier, binding.local.as_str()))
+                .or_else(|| {
+                    import.map(|binding| (binding.specifier.as_str(), binding.imported.as_str()))
+                });
             if let Some((specifier, name)) = forwarded {
-                return Some(match (self.resolve)(&specifier, path) {
+                return Some(match file.module.target(specifier, path, &self.resolve) {
                     Some(target) => self
-                        .lookup_export_inner(&target, &name, depth, generic, visiting)
+                        .lookup_export_inner(target, name, depth, generic, visiting)
                         .unwrap_or_else(ResolvedExport::unknown),
                     None => ResolvedExport::unknown(),
                 });
             }
             return Some(ResolvedExport {
-                identity: Some((path.to_path_buf(), binding.local.clone())),
+                identity: Some((origin.as_path(), binding.local.as_str())),
                 value: self.name(path, &binding.local, depth, generic),
             });
         }
@@ -115,10 +126,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if name == "default" {
             return None;
         }
-        let mut provider: Option<ResolvedExport> = None;
+        let mut provider: Option<ResolvedExport<'a>> = None;
         for specifier in stars {
-            let value = match (self.resolve)(&specifier, path) {
-                Some(target) => self.lookup_export_inner(&target, name, depth, generic, visiting),
+            let value = match file.module.target(specifier, path, &self.resolve) {
+                Some(target) => self.lookup_export_inner(target, name, depth, generic, visiting),
                 None => Some(ResolvedExport::unknown()),
             };
             if let Some(value) = value {

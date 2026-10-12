@@ -1,5 +1,7 @@
 #[path = "core_analysis/aggregate.rs"]
 mod aggregate;
+#[path = "core_analysis/annotation_modules.rs"]
+mod annotation_modules;
 #[path = "core_analysis/call_index.rs"]
 mod call_index;
 #[path = "core_analysis/companion_imports.rs"]
@@ -96,6 +98,7 @@ criterion_group!(
     companion_imports::bench_companion_imports,
     postgres_bounds::bench_postgres_bounds,
     postgres_annotations::bench_postgres_annotations,
+    annotation_modules::bench_annotation_module_indexes,
     bench_import_only_vs_workspace_relationships,
     bench_callable_file_index_construction,
     bench_call_site_membership,

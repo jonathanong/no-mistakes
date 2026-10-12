@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File, Value};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
@@ -96,10 +97,8 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let original = Value::Prefix("/* annotated */ SELECT 1".into(), true, Some(9));
@@ -213,10 +212,8 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
@@ -312,10 +309,8 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
@@ -386,10 +381,8 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {

@@ -1,4 +1,5 @@
 use super::super::super::{Evaluator, File, Value};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
@@ -22,10 +23,8 @@ fn recreated_deleted_slot_callback_runs_only_after_the_arguments_object_escapes(
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
@@ -103,10 +102,8 @@ fn sloppy_formal_callback_writes_are_seen_after_escape_and_by_a_later_consumer()
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {

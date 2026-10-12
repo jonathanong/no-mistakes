@@ -5,6 +5,7 @@ mod evaluate;
 mod exports;
 mod expressions;
 mod mapped_arguments;
+pub(crate) mod modules;
 pub(crate) mod project;
 mod statements;
 mod trust;

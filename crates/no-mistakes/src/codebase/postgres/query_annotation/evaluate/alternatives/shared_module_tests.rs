@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
@@ -20,10 +21,8 @@ fn lazy_module_argument_ids_use_shared_definite_intersections() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {

@@ -1,4 +1,5 @@
 use super::evaluate::{Evaluator, File, Value};
+use super::modules::Module;
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::ts_resolver::normalize_path;
@@ -7,6 +8,7 @@ use crate::fx::FxHashMap;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 /// Resolve owned syntax against the request's canonical module facts and
 /// resolver. No source reads or parsing occur in this projection.
@@ -28,6 +30,11 @@ pub(crate) fn project(
         .collect::<Vec<_>>();
     profiles.sort();
     profiles.dedup();
+    let modules = files
+        .into_iter()
+        .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
+        .map(|(path, file)| (path.clone(), Arc::new(Module::new(Arc::clone(&file.ts)))))
+        .collect::<FxHashMap<_, _>>();
     for options in profiles {
         let collected = files
             .into_iter()
@@ -47,23 +54,8 @@ pub(crate) fn project(
                 Some((
                     normalize_path(path),
                     File {
-                        imports: binding_index(
-                            file.ts
-                                .imported_bindings
-                                .iter()
-                                .enumerate()
-                                .filter(|(_, binding)| !binding.is_type_only)
-                                .map(|(index, binding)| (binding.local.clone(), index)),
-                        ),
-                        exports: binding_index(
-                            file.ts
-                                .exported_bindings
-                                .iter()
-                                .enumerate()
-                                .map(|(index, binding)| (binding.exported.clone(), index)),
-                        ),
+                        module: Arc::clone(&modules[path]),
                         facts,
-                        ts: &file.ts,
                         executors: embedded.call_spans.iter().copied().collect(),
                     },
                 ))
@@ -191,10 +183,5 @@ fn could_be_transaction(prefix: &str) -> bool {
         .any(|statement| statement.starts_with(&prefix))
 }
 
-fn binding_index(bindings: impl Iterator<Item = (String, usize)>) -> FxHashMap<String, usize> {
-    let mut index = crate::fx::fx_map();
-    for (name, position) in bindings {
-        index.entry(name).or_insert(position);
-    }
-    index
-}
+#[cfg(test)]
+mod tests;

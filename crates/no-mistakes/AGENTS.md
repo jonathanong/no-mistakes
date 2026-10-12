@@ -36,6 +36,11 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   clean/dot/parent/root/prefix behavior; use FxHash for interned resolver keys
   under the parent guide's public/untrusted-key distinction.
 
+- Share annotation import/export indexes and lazy resolved targets across
+  evaluators and executor profiles only within one resolver/catalog projection.
+  Memoize unresolved targets too; borrow hot bindings and paths, and guard
+  construction/resolution counts plus ESM and mutable-module semantics.
+
 ### Evaluator snapshots, joins, and derived indexes
 
 - Pruning heap mutations and builder updates shares one liveness walk; skip

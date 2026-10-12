@@ -12,7 +12,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
-        let file = &self.files[path];
+        let files = self.files;
+        let file = &files[path];
         if file.facts.globals.contains_key(name) {
             if matches!(file.facts.globals.get(name), Some(Expr::Unknown)) {
                 return Value::Unknown;
@@ -24,20 +25,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 .unwrap_or(Value::Unknown);
         }
         let import = file
+            .module
             .imports
             .get(name)
-            .map(|index| file.ts.imported_bindings[*index].clone());
+            .map(|index| &file.module.ts.imported_bindings[*index]);
         let Some(import) = import else {
             return Value::Unknown;
         };
-        let Some(target) = (self.resolve)(&import.specifier, path) else {
+        let Some(target) = file.module.target(&import.specifier, path, &self.resolve) else {
             return Value::Unknown;
         };
-        self.export(&target, &import.imported, depth, generic)
-    }
-
-    fn export(&mut self, path: &Path, name: &str, depth: u8, generic: bool) -> Value {
-        self.lookup_export(path, name, depth, generic)
+        self.lookup_export(target, &import.imported, depth, generic)
             .unwrap_or(Value::Unknown)
     }
 
