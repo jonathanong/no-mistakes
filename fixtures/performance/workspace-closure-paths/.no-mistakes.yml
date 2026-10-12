@@ -2,5 +2,5 @@ rules:
   - rule: forbidden-workspace-closure
     scope: repository
     options:
-      packages: ['@perf/app']
+      packages: ['@perf/*']
       forbidden: [fixture-denied]
