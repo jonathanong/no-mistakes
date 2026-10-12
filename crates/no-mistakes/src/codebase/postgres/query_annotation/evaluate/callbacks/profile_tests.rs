@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File, Value};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
@@ -25,10 +26,8 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {

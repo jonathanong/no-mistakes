@@ -19,8 +19,8 @@ mod slots;
 mod statements;
 mod tagged;
 mod value;
+use super::modules::Module;
 use super::{Expr, Function, QueryAnnotationFileFacts};
-use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::{collections::BTreeMap, sync::Arc};
@@ -31,10 +31,8 @@ pub(super) type CallSpan = (u32, u32);
 pub(super) type ExecutionEvents = BTreeMap<(PathBuf, CallSpan), Vec<(bool, Value)>>;
 pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
-    pub ts: &'a TsFileFacts,
+    pub module: Arc<Module>,
     pub executors: FxHashSet<CallSpan>,
-    pub imports: FxHashMap<String, usize>,
-    pub exports: FxHashMap<String, usize>,
 }
 pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,

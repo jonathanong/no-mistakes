@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File, Value};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
@@ -48,20 +49,8 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
                 path.clone(),
                 File {
                     facts,
-                    ts,
+                    module: std::sync::Arc::new(Module::new(ts.clone().into())),
                     executors: embedded.call_spans.iter().copied().collect(),
-                    imports: ts
-                        .imported_bindings
-                        .iter()
-                        .enumerate()
-                        .map(|(index, binding)| (binding.local.clone(), index))
-                        .collect(),
-                    exports: ts
-                        .exported_bindings
-                        .iter()
-                        .enumerate()
-                        .map(|(index, binding)| (binding.exported.clone(), index))
-                        .collect(),
                 },
             )
         })

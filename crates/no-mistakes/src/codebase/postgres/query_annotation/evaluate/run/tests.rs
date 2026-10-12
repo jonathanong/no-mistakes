@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
@@ -20,10 +21,8 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
         path.clone(),
         File {
             facts: &facts,
-            ts: &ts,
+            module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
-            imports: Default::default(),
-            exports: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
@@ -104,20 +103,16 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
             root.clone(),
             File {
                 facts: &root_facts,
-                ts: &root_ts,
+                module: std::sync::Arc::new(Module::new(root_ts.clone().into())),
                 executors: Default::default(),
-                imports: FxHashMap::from_iter([("initialize".into(), 0)]),
-                exports: Default::default(),
             },
         ),
         (
             later.clone(),
             File {
                 facts: &later_facts,
-                ts: &later_ts,
+                module: std::sync::Arc::new(Module::new(later_ts.clone().into())),
                 executors: Default::default(),
-                imports: Default::default(),
-                exports: FxHashMap::from_iter([("initialize".into(), 0)]),
             },
         ),
     ]);

@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File, Value};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
@@ -30,10 +31,8 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             path.clone(),
             File {
                 facts: &facts,
-                ts: &ts,
+                module: std::sync::Arc::new(Module::new(ts.clone().into())),
                 executors: Default::default(),
-                imports: Default::default(),
-                exports: Default::default(),
             },
         )]);
         let mut evaluator = Evaluator {

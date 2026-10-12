@@ -8,11 +8,13 @@ use crate::fx::{fx_map_with_capacity, FxHashMap};
 use anyhow::Result;
 use std::path::Path;
 
+mod annotation_modules;
 mod bench_shard;
 mod call_index;
 mod language_frontends;
 mod native_frontends;
 mod postgres_bounds;
+pub use annotation_modules::{construct_annotation_module_indexes, AnnotationModuleIndexes};
 mod production_graph;
 pub use postgres_bounds::evaluate_postgres_bounds;
 mod react_traits;

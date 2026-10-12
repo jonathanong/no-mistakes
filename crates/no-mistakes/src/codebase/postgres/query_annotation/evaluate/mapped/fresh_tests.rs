@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File, Value};
+use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
@@ -43,10 +44,8 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             path.clone(),
             File {
                 facts: &facts,
-                ts: &ts,
+                module: std::sync::Arc::new(Module::new(ts.clone().into())),
                 executors: Default::default(),
-                imports: Default::default(),
-                exports: Default::default(),
             },
         )]);
         let mut evaluator = Evaluator {
