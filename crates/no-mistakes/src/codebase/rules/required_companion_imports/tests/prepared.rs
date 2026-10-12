@@ -221,7 +221,12 @@ fn prepared_companions_reuse_existing_legacy_demand_across_rule_applications() {
         ),
         ..Default::default()
     };
+    let existing_import_paths = Arc::clone(&plan.production_import_paths);
     configure_fact_plan(&root, &config, &files, &sources, &mut plan).unwrap();
+    assert!(Arc::ptr_eq(
+        &existing_import_paths,
+        &plan.production_import_paths
+    ));
     let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
         &session,
         &root,
@@ -230,11 +235,20 @@ fn prepared_companions_reuse_existing_legacy_demand_across_rule_applications() {
         None,
         Arc::clone(&sources),
     );
+    let findings =
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, Some(&facts)).unwrap();
+    // Named applications still report the same rule ID, so identical findings
+    // retain the historical sort_findings deduplication.
     assert_eq!(
-        check_with_files_sources_and_facts(&root, &config, &files, &sources, Some(&facts))
-            .unwrap()
-            .len(),
-        4
+        findings
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<Vec<_>>(),
+        ["src/C.tsx", "src/D.tsx"]
+    );
+    assert_eq!(
+        serde_json::to_vec(&findings).unwrap(),
+        serde_json::to_vec(&check_with_files(&root, &config, &files).unwrap()).unwrap()
     );
     let work = observer.snapshot().work;
     assert_eq!(work.get("companion_imports.candidate_universes"), Some(&1));
@@ -286,6 +300,17 @@ fn prepared_companions_use_discovered_external_project_companions() {
     config.projects.get_mut("outside").unwrap().root =
         Some(external.to_string_lossy().into_owned());
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let companion = external.join("stories/A.stories.mts");
+    let mut unopened = config.clone();
+    unopened.rules[0].include = vec!["src/*.tsx".to_string()];
+    let unopened_views = crate::check_discovery::discover_check_file_views_from_snapshot(
+        &root,
+        &unopened,
+        &[],
+        false,
+        &snapshot,
+    );
+    assert!(!unopened_views.filesystem.contains(&companion));
     let views = crate::check_discovery::discover_check_file_views_from_snapshot(
         &root,
         &config,
@@ -293,7 +318,6 @@ fn prepared_companions_use_discovered_external_project_companions() {
         false,
         &snapshot,
     );
-    let companion = external.join("stories/A.stories.mts");
     assert!(views.filesystem.contains(&companion));
     assert!(!snapshot.paths_for(&root).contains(&companion));
     let sources = snapshot.source_store_for(&root);

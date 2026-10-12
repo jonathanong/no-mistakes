@@ -7,7 +7,7 @@ projects:
 rules:
   - rule: required-companion-imports
     projects: [app, outside]
-    include: ['src/*.tsx']
+    include: ['src/*.tsx', 'stories/*.stories.mts']
     options:
       sourceDirs: [src]
       sourceExtensions: [.tsx]

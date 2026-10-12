@@ -35,6 +35,8 @@ struct Candidate {
     glob_rels: Vec<String>,
 }
 
+type CompanionSelections = FxHashMap<(Vec<PathBuf>, Vec<String>), Arc<Vec<PathBuf>>>;
+
 #[doc(hidden)]
 pub fn configure_fact_plan(
     root: &Path,
@@ -48,7 +50,14 @@ pub fn configure_fact_plan(
         return Ok(());
     }
     let prepared = prepare(root, config, files, sources, &rules)?;
-    Arc::make_mut(&mut plan.production_import_paths).extend(prepared.import_paths.iter().cloned());
+    if prepared
+        .import_paths
+        .iter()
+        .any(|path| !plan.production_import_paths.contains(path))
+    {
+        Arc::make_mut(&mut plan.production_import_paths)
+            .extend(prepared.import_paths.iter().cloned());
+    }
     Arc::make_mut(&mut plan.companion_import_plans).push(Arc::new(prepared));
     Ok(())
 }
@@ -69,8 +78,7 @@ fn prepare(
     let root = normalize_path(root);
     let skip = super::super::skip_dir_set(config);
     let mut universes: FxHashMap<Vec<PathBuf>, Vec<Candidate>> = FxHashMap::default();
-    let mut selections: FxHashMap<(Vec<PathBuf>, Vec<String>), Arc<Vec<PathBuf>>> =
-        FxHashMap::default();
+    let mut selections = CompanionSelections::default();
     let mut checks = Vec::new();
     for rule in rules {
         let opts: Options = rule.try_rule_options()?;
