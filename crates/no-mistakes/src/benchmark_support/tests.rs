@@ -30,9 +30,16 @@ fn dense_branch_fixture_keeps_query_findings_and_tracks_copied_slots() {
     assert!(findings.iter().all(|finding| {
         finding["rule"] == "postgres-require-query-annotation"
             && finding["line"].as_u64() == Some(unsafe_line)
+            && finding["message"].as_str().is_some_and(|message| {
+                message.ends_with("query execution must start with a /* name */ annotation")
+            })
     }));
     assert_eq!(diagnostics.work["parse.files"], 14);
-    assert!(diagnostics.work["postgres.annotation.incoming_dense_slots_copied"] > 0);
+    assert_eq!(
+        diagnostics.work["postgres.annotation.incoming_dense_slots_copied"],
+        883,
+        "twelve dense argument joins plus the saved callback probe copy only incoming changed slots"
+    );
 }
 
 #[test]

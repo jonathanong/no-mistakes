@@ -1,10 +1,8 @@
 import { query } from "@bench/db";
 import { densePayload } from "./dense.mjs";
 
-declare function opaqueConsumer(value: unknown): unknown;
-
 export async function loadRoute(flag: boolean) {
-  opaqueConsumer(densePayload(flag,
+  const statement = densePayload(flag,
     "value-00 with enough text to make string copies observable",
     "value-01 with enough text to make string copies observable",
     "value-02 with enough text to make string copies observable",
@@ -68,9 +66,9 @@ export async function loadRoute(flag: boolean) {
     "value-60 with enough text to make string copies observable",
     "value-61 with enough text to make string copies observable",
     "value-62 with enough text to make string copies observable",
-    "value-63 with enough text to make string copies observable"));
+    "value-63 with enough text to make string copies observable");
   return [
     query("/* loadRoute */ SELECT id FROM orders"), // safe-query
-    query("SELECT status FROM orders"), // unsafe-query
+    query(statement()), // unsafe-query
   ];
 }

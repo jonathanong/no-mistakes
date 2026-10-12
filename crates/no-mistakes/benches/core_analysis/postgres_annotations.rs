@@ -88,6 +88,9 @@ pub(super) fn bench_postgres_annotations(c: &mut Criterion) {
     assert!(dense_findings.iter().all(|finding| {
         finding["line"].as_u64() == Some(dense_unsafe_line)
             && finding["rule"] == "postgres-require-query-annotation"
+            && finding["message"].as_str().is_some_and(|message| {
+                message.ends_with("query execution must start with a /* name */ annotation")
+            })
     }));
     assert!(dense_findings
         .iter()

@@ -67,11 +67,12 @@ export function densePayload(
 ) {
   // The cycle and callbacks require argument and frame roots after both joins.
   const cycle = (arguments[1000] = arguments);
-  const selected = flag
-    ? () => arguments[1]
-    : () => arguments[2];
-  return [selected, cycle];
+  const selected = () => arguments[1];
+  flag
+    ? (arguments[1] = "SELECT id FROM orders")
+    : (arguments[1] = "SELECT status FROM orders");
+  return selected;
 }
 
-// A saved state probe lets the Rust test inspect roots that query findings do not expose.
+// The saved state probe lets the Rust test inspect callback and cyclic argument roots.
 export const retained = densePayload(true, "left", "right");

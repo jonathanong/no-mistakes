@@ -81,15 +81,25 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
         "the selected callback remains reachable"
     );
     assert!(callbacks.iter().all(|env| *env < evaluator.scopes.len()));
+    for env in &callbacks {
+        if let Some(captured) = evaluator.scopes[*env].get("arguments") {
+            references(captured, &mut Vec::new(), &mut arguments);
+        }
+    }
     assert!(
         !arguments.is_empty(),
-        "the arguments cycle remains reachable"
+        "the callback's argument object remains reachable"
     );
     assert!(arguments.iter().any(|id| {
         evaluator
             .argument_objects
             .get(id)
-            .is_some_and(|slots| slots.len() == 3)
+            .is_some_and(|slots| {
+                slots.len() == 3
+                    && matches!(&slots[1], Value::Possible(values)
+                        if values.contains(&Value::Prefix("SELECT id FROM orders".into(), true, None))
+                            && values.contains(&Value::Prefix("SELECT status FROM orders".into(), true, None)))
+            })
             && evaluator
                 .argument_extra_slots
                 .get(id)
