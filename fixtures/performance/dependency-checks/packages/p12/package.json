@@ -1,0 +1,12 @@
+{
+  "name": "@perf/p12",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": "./index.ts",
+  "dependencies": {
+    "@perf/p13": "workspace:*"
+  },
+  "devDependencies": {
+    "fixture-runtime": "1.0.0"
+  }
+}

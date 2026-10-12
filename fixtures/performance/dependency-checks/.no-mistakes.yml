@@ -1,0 +1,26 @@
+rules:
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: [packages]
+  - name: first entrypoint closure
+    rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ['@perf/p00']
+      forbidden: [fixture-denied]
+      lockfile: pnpm-lock.yaml
+  - name: second entrypoint closure
+    rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ['@perf/p08']
+      forbidden: [fixture-denied]
+      lockfile: pnpm-lock.yaml
+  - name: third entrypoint closure
+    rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ['@perf/p16']
+      forbidden: [fixture-denied]
+      lockfile: pnpm-lock.yaml
