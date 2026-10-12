@@ -155,11 +155,12 @@ fn validate_job_starts_isolated_catalog_postgres_after_disk_reclamation_before_t
 }
 
 #[test]
-fn macos_release_uses_parallel_codegen_and_thin_lto_before_cache_restore() {
+fn macos_and_windows_releases_use_parallel_codegen_and_thin_lto_before_cache_restore() {
     let workflow = release_workflow();
     let native = job_body(&workflow, "build-native");
-    // A cold macOS release exceeded 45 minutes with fat LTO and one codegen unit.
-    // Keep the overrides job-wide so cache identity and compilation agree.
+    // Cold macOS and Windows MSVC releases exceeded 45 minutes with fat LTO and
+    // one codegen unit; Linux stays on full LTO. Keep the overrides job-wide so
+    // cache identity and compilation agree.
     let (job_settings, steps) = native.split_once("\n    steps:\n").unwrap();
     let (_, job_env) = job_settings.split_once("\n    env:\n").unwrap();
     let env_lines: Vec<_> = job_env
@@ -167,8 +168,8 @@ fn macos_release_uses_parallel_codegen_and_thin_lto_before_cache_restore() {
         .take_while(|line| !line.starts_with("    ") || line.starts_with("      "))
         .collect();
     for setting in [
-        "CARGO_PROFILE_RELEASE_LTO: ${{ matrix.target == 'aarch64-apple-darwin' && 'thin' || 'fat' }}",
-        "CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.target == 'aarch64-apple-darwin' && '16' || '1' }}",
+        "CARGO_PROFILE_RELEASE_LTO: ${{ (matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc') && 'thin' || 'fat' }}",
+        "CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ (matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc') && '16' || '1' }}",
     ] {
         assert!(
             env_lines.contains(&format!("      {setting}").as_str()),
@@ -177,5 +178,10 @@ fn macos_release_uses_parallel_codegen_and_thin_lto_before_cache_restore() {
     }
     assert!(steps.contains("Swatinem/rust-cache"));
     assert!(steps.contains("NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked"));
-    assert!(native.contains("timeout-minutes: 45"));
+    // Windows is the slowest, most variable target: it alone gets extra headroom.
+    assert!(native.contains(
+        "timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 100 || 80 }}"
+    ));
+    assert!(native
+        .contains("timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 75 || 45 }}"));
 }
