@@ -1,6 +1,6 @@
 import { read as load, write as save, query as execute } from '@data-stores/psql';
 import * as postgres from '@data-stores/psql';
-import { valkey as cache } from '@data-stores/valkey';
+import { valkey as cache } from '@vendor/cache';
 import defaultDb from '@vendor/default-db';
 import { lookup, cachedLookup, unrelated } from './helpers.mjs';
 import { forwarded } from './external-barrel.mjs';

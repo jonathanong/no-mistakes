@@ -10,8 +10,8 @@ effects:
       - { module: './repository.mjs', export: read }
   valkey:
     targets:
-      - { module: '@data-stores/valkey', export: valkey.hget, category: cache }
-      - { module: '@data-stores/valkey', export: valkey.get, category: cache }
+      - { module: '@vendor/cache', export: valkey.hget, category: cache }
+      - { module: '@vendor/cache', export: valkey.get, category: cache }
 rules:
   - rule: query-reached-per-item
     scope: repository

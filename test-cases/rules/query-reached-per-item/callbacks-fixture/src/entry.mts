@@ -1,5 +1,5 @@
 import { read } from '@data-stores/psql';
-import { valkey as cache } from '@data-stores/valkey';
+import { valkey as cache } from '@vendor/cache';
 import { lookup } from './helpers.mjs';
 const items = [1, 2];
 export function importedAndLocal() {

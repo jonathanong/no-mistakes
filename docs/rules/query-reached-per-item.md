@@ -42,7 +42,7 @@ effects:
     batchFunctions: [readMany]
   valkey:
     targets:
-      - { module: '@data-stores/valkey', export: valkey.hget, category: cache }
+      - { module: '@vendor/cache', export: valkey.hget, category: cache }
 rules:
   - rule: query-reached-per-item
     scope: repository
@@ -59,7 +59,7 @@ rules:
 Effect `targets` match resolved module/export bindings, including aliased
 imports, namespace members, static lexical aliases, and named callbacks. The
 rule selects every target in a selected family, regardless of its category.
-For example, `import { valkey as cache } from '@data-stores/valkey'` followed by
+For example, `import { valkey as cache } from '@vendor/cache'` followed by
 `items.map(item => cache.hget(item))` matches `valkey.hget`; a local parameter
 named `cache` does not. Calls such as `console.write()` and stream methods do
 not match a PostgreSQL target. Transitive helper paths use the same selectors.

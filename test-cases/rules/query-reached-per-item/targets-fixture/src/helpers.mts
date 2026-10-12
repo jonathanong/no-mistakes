@@ -1,5 +1,5 @@
 import { read as load } from '@data-stores/psql';
-import { valkey } from '@data-stores/valkey';
+import { valkey } from '@vendor/cache';
 export function lookup(item: unknown) { return inner(item); }
 function inner(item: unknown) { return load(item); }
 export function cachedLookup(item: unknown) { return valkey.hget(item); }
