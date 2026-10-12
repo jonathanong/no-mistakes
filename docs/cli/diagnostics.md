@@ -64,6 +64,9 @@ the same lockfile still contribute one construction.
 `forbidden_workspace_closure.workspace_selections` and
 `forbidden_workspace_closure.manifest_projections` count immutable workspace and
 dependency-field projections shared by equivalent applications.
+`forbidden_workspace_closure.path_reconstructions` counts dependency paths
+materialized for matching forbidden-package dependencies before final finding
+deduplication.
 
 Instrumentation is invocation-scoped and disabled by default. A disabled run
 does not construct an observer, start clocks, or retain work ledgers. Enabled

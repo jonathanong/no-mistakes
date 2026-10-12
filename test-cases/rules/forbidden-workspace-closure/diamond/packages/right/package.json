@@ -1,0 +1,6 @@
+{
+  "name": "@acme/right",
+  "dependencies": {
+    "@acme/shared": "workspace:*"
+  }
+}

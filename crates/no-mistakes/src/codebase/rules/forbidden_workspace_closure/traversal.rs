@@ -5,81 +5,122 @@ use globset::GlobSet;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::Path;
 
-pub(super) fn collect_findings_for_package(
-    root: &Path,
-    start: &str,
-    nodes: &BTreeMap<String, PackageNode>,
-    workspace_names: &BTreeSet<String>,
-    forbidden: &GlobSet,
-    source_filter: &crate::codebase::rules::path_filter::RulePathFilter,
-    findings: &mut Vec<RuleFinding>,
-) {
-    let Some(start_node) = nodes.get(start) else {
-        return;
-    };
-    let mut sink = FindingSink {
-        root,
-        start,
-        source_filter,
-        findings,
-    };
-    let mut seen = BTreeSet::new();
-    let mut queue = VecDeque::from([(start.to_string(), vec![start.to_string()])]);
-    while let Some((package, chain)) = queue.pop_front() {
-        if !seen.insert(package.clone()) {
-            continue;
+pub(super) struct Traversal<'a> {
+    root: &'a Path,
+    nodes: &'a BTreeMap<String, PackageNode>,
+    workspace_names: &'a BTreeSet<String>,
+    forbidden: &'a GlobSet,
+    source_filter: &'a crate::codebase::rules::path_filter::RulePathFilter,
+    observer: Option<&'a crate::diagnostics::InvocationObserver>,
+}
+
+impl<'a> Traversal<'a> {
+    pub(super) fn new(
+        root: &'a Path,
+        nodes: &'a BTreeMap<String, PackageNode>,
+        workspace_names: &'a BTreeSet<String>,
+        forbidden: &'a GlobSet,
+        source_filter: &'a crate::codebase::rules::path_filter::RulePathFilter,
+        observer: Option<&'a crate::diagnostics::InvocationObserver>,
+    ) -> Self {
+        Self {
+            root,
+            nodes,
+            workspace_names,
+            forbidden,
+            source_filter,
+            observer,
         }
-        let Some(node) = nodes.get(&package) else {
-            continue;
+    }
+
+    pub(super) fn collect_findings_for_package<'b>(
+        &'b self,
+        start: &'b str,
+        findings: &mut Vec<RuleFinding>,
+    ) {
+        let Some(start_node) = self.nodes.get(start) else {
+            return;
         };
-        for dep in &node.deps {
-            if let Some(target) = matched_forbidden_name(dep, forbidden) {
-                if target != start {
-                    let mut dep_chain = chain.clone();
-                    dep_chain.push(target.clone());
-                    sink.push(&dep_chain, &target, start_node, node);
-                }
-            }
-            let Some(workspace_dep) = dep.workspace_name.as_ref() else {
+        if !self.source_filter.is_match(&start_node.manifest) {
+            return;
+        }
+        let mut sink = FindingSink {
+            root: self.root,
+            start,
+            findings,
+        };
+        // Claim nodes when enqueued so the first breadth-first route remains the
+        // winning route while merged/duplicate routes never carry their own path.
+        let mut predecessors: BTreeMap<&'b str, Option<&'b str>> = BTreeMap::from([(start, None)]);
+        let mut queue = VecDeque::from([start]);
+        while let Some(package) = queue.pop_front() {
+            let Some(node) = self.nodes.get(package) else {
                 continue;
             };
-            if workspace_names.contains(workspace_dep) && !seen.contains(workspace_dep) {
-                let mut next_chain = chain.clone();
-                next_chain.push(workspace_dep.clone());
-                queue.push_back((workspace_dep.clone(), next_chain));
+            for dep in &node.deps {
+                if let Some(target) = matched_forbidden_name(dep, self.forbidden) {
+                    if target != start {
+                        let mut chain = reconstruct_chain(start, package, &predecessors);
+                        if let Some(observer) = self.observer {
+                            observer
+                                .increment("forbidden_workspace_closure.path_reconstructions", 1);
+                        }
+                        chain.push(target);
+                        sink.push(&chain, target, node);
+                    }
+                }
+                let Some(workspace_dep) = dep.workspace_name.as_deref() else {
+                    continue;
+                };
+                if self.workspace_names.contains(workspace_dep)
+                    && !predecessors.contains_key(workspace_dep)
+                {
+                    predecessors.insert(workspace_dep, Some(package));
+                    queue.push_back(workspace_dep);
+                }
             }
         }
     }
 }
 
-fn matched_forbidden_name(dep: &Dependency, forbidden: &GlobSet) -> Option<String> {
+fn reconstruct_chain<'a>(
+    start: &'a str,
+    package: &'a str,
+    predecessors: &BTreeMap<&'a str, Option<&'a str>>,
+) -> Vec<&'a str> {
+    let mut chain = vec![package];
+    let mut current = package;
+    while current != start {
+        let previous = predecessors
+            .get(current)
+            .copied()
+            .flatten()
+            .expect("every queued workspace package has a predecessor");
+        chain.push(previous);
+        current = previous;
+    }
+    chain.reverse();
+    chain
+}
+
+fn matched_forbidden_name<'a>(dep: &'a Dependency, forbidden: &GlobSet) -> Option<&'a str> {
     if forbidden.is_match(&dep.name) {
-        return Some(dep.name.clone());
+        return Some(dep.name.as_str());
     }
     dep.resolved_name
         .as_ref()
         .filter(|name| forbidden.is_match(name.as_str()))
-        .cloned()
+        .map(String::as_str)
 }
 
 struct FindingSink<'a> {
     root: &'a Path,
     start: &'a str,
-    source_filter: &'a crate::codebase::rules::path_filter::RulePathFilter,
     findings: &'a mut Vec<RuleFinding>,
 }
 
 impl FindingSink<'_> {
-    fn push(
-        &mut self,
-        chain: &[String],
-        target: &str,
-        start_node: &PackageNode,
-        node: &PackageNode,
-    ) {
-        if !self.source_filter.is_match(&start_node.manifest) {
-            return;
-        }
+    fn push(&mut self, chain: &[&str], target: &str, node: &PackageNode) {
         let file = relative_slash_path(self.root, &node.manifest);
         let chain_text = chain.join(" -> ");
         self.findings.push(RuleFinding {

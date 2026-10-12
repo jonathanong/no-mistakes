@@ -195,6 +195,5 @@ once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 **Regression guard:** prove the fast path is taken. Construct a case where a
 `.gitignore`-blind walk and a git-aware one disagree (gitignored nested match).
 
-### Pre-compute BFS traversals in parallel before the per-entity loop
-When every parallel work item needs a BFS of the same graph, run those
-traversals up front in one `par_iter()` so results are cached first.
+### Pre-compute BFS before per-entity loops
+Run shared graph traversals up front with `par_iter()`; for path reports, enqueue node IDs, record first predecessors, reconstruct only findings, preserve adjacency-order winners in diamonds/cycles, and assert reconstruction counts.

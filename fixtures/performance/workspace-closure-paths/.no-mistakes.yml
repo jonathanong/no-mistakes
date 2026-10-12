@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ['@perf/app']
+      forbidden: [fixture-denied]

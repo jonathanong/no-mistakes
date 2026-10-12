@@ -198,6 +198,35 @@ fn cycle_does_not_prevent_finding() {
 }
 
 #[test]
+fn diamond_keeps_the_first_breadth_first_dependency_chain() {
+    let root = fixture_root("diamond");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/left/package.json",
+            "packages/right/package.json",
+            "packages/shared/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/shared/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/left -> @acme/shared -> @acme/secret")
+    );
+}
+
+#[test]
 fn manifest_alias_workspace_dependency_extends_closure() {
     let root = fixture_root("manifest-alias-workspace");
     let files = package_files(
@@ -387,15 +416,15 @@ fn traversal_tolerates_duplicate_and_missing_workspace_nodes() {
             .unwrap();
     let mut findings = Vec::new();
 
-    traversal::collect_findings_for_package(
+    let traversal = traversal::Traversal::new(
         &root,
-        "@acme/app",
         &nodes,
         &workspace_names,
         &forbidden,
         &source_filter,
-        &mut findings,
+        None,
     );
+    traversal.collect_findings_for_package("@acme/app", &mut findings);
 
     assert!(findings.is_empty(), "{findings:?}");
 }
@@ -412,15 +441,15 @@ fn traversal_tolerates_missing_start_node() {
             .unwrap();
     let mut findings = Vec::new();
 
-    traversal::collect_findings_for_package(
+    let traversal = traversal::Traversal::new(
         &root,
-        "@acme/app",
         &nodes,
         &workspace_names,
         &forbidden,
         &source_filter,
-        &mut findings,
+        None,
     );
+    traversal.collect_findings_for_package("@acme/app", &mut findings);
 
     assert!(findings.is_empty(), "{findings:?}");
 }

@@ -1,0 +1,7 @@
+{
+  "name": "@perf/p14b",
+  "dependencies": {
+    "@perf/p15a": "workspace:*",
+    "@perf/p15b": "workspace:*"
+  }
+}

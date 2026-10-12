@@ -40,4 +40,26 @@ pub(super) fn bench_dependency_checks(c: &mut Criterion) {
         });
     });
     group.finish();
+
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/workspace-closure-paths")
+        .canonicalize()
+        .expect("workspace closure performance fixture should exist");
+    let preflight = check_json(&root).expect("workspace closure preflight should succeed");
+    let report: serde_json::Value =
+        serde_json::from_str(&preflight).expect("workspace closure report should be JSON");
+    let findings = report["rules"].as_array().expect("rule findings array");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0]["rule"], "forbidden-workspace-closure");
+    assert_eq!(findings[0]["target"], "fixture-denied");
+    let (observed, _) =
+        check_json_observed(&root, true).expect("observed workspace closure check should succeed");
+    assert_eq!(observed, preflight);
+
+    let mut group = c.benchmark_group("workspace_closure_paths");
+    group.throughput(Throughput::Elements(64));
+    group.bench_function("32_layer_two_way_diamond", |b| {
+        b.iter(|| black_box(check_json(black_box(&root)).expect("workspace check should succeed")));
+    });
+    group.finish();
 }
