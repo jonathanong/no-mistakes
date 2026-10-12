@@ -1,4 +1,4 @@
-export { guardRegistration } from "./registration.mjs";
+export { guardRegistration, type Registration, type Kind } from "./registration.mjs";
 export { guardPublicRunner, type RunnerConstructor, type Protector } from "./public-runner.mjs";
 export {
   assertTestTimeout,

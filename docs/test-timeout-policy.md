@@ -19,7 +19,7 @@ export default {
 
 The plugin routes public `vitest` imports through guarded exports and configures
 listed packages for inlining. It cannot discover omitted registrar packages, and
-global APIs bypass import routing. Use the dedicated `/plugin` entry only in
+globals must be disabled because global APIs bypass import routing. Use the dedicated `/plugin` entry only in
 Vite/Vitest configuration; it imports the optional Vitest peer. The policy entry
 itself remains available without Vitest.
 
