@@ -84,11 +84,14 @@ pub(crate) fn run_analyze_inner_from_visible(
     let files = discover_react_files_from_visible(&root, file_config, targets, visible_paths)?;
 
     let mut file_cache: HashMap<PathBuf, Vec<ComponentFacts>> = HashMap::new();
+    let observer = crate::diagnostics::current();
     let analyses = files
         .par_iter()
         .map(|file| {
-            analyze_file_from_visible(file, &root, &visible_files, sources)
-                .map(|analysis| (file.clone(), analysis.components))
+            crate::diagnostics::with_observer(observer.clone(), || {
+                analyze_file_from_visible(file, &root, &visible_files, sources)
+                    .map(|analysis| (file.clone(), analysis.components))
+            })
         })
         .collect::<Result<Vec<_>>>()?;
 

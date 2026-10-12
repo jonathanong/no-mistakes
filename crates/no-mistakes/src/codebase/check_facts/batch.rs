@@ -55,10 +55,15 @@ pub(crate) fn collect_check_fact_batch_with_session(
             }
         })
         .collect::<Vec<_>>();
+    let observer = crate::diagnostics::current();
     collected.extend(
         demands
             .into_par_iter()
-            .map(|(path, demands)| collect_demand(session, &requests, path, demands))
+            .map(|(path, demands)| {
+                crate::diagnostics::with_observer(observer.clone(), || {
+                    collect_demand(session, &requests, path, demands)
+                })
+            })
             .while_some()
             .collect::<Vec<_>>(),
     );
