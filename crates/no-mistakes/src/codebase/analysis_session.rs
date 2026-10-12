@@ -92,7 +92,7 @@ impl AnalysisSession {
         match self.resolver_caches.entry(scope) {
             Entry::Occupied(entry) => Arc::clone(entry.get()),
             Entry::Vacant(entry) => {
-                let cache = Arc::new(DashMap::new());
+                let cache = Arc::new(ResolverResultCache::default());
                 entry.insert(Arc::clone(&cache));
                 cache
             }
