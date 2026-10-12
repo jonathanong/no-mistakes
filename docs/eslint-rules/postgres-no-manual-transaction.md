@@ -20,6 +20,16 @@ await withTransaction(async (tx) => {
 });
 ```
 
+`SAVEPOINT`, `RELEASE SAVEPOINT`, and complete `ROLLBACK [WORK|TRANSACTION]
+TO [SAVEPOINT] name` statements keep the existing transaction open and are not
+whole-transaction control. A later `BEGIN`, `COMMIT`, or whole `ROLLBACK` in the
+same call is still rejected. Quoted identifiers, doubled quotes, escape strings, dollar-quoted bodies (including non-ASCII identifier tags) and
+nested block comments preserve statement boundaries. Malformed or ambiguous
+quoting containing transaction commands fails closed; plain-string backslash
+semantics depend on the server setting and cannot safely grant an exemption.
+This distinction does not certify that a client's
+query wrapper supports recovery; the owner must preserve that wrapper's contract.
+
 ## Options
 
 - `importSpecifier` identifies the database module and defaults to
