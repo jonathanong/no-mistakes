@@ -26,7 +26,8 @@
       let server
       export default {
         server: { fs: { allow: {{3}} } },
-        optimizeDeps: { include: {{4}} },
+        // The fixture lists every prebundled dependency; late discovery can reload the test.
+        optimizeDeps: { include: {{4}}, noDiscovery: true },
         resolve: { alias: {{5}} },
         plugins: [policy, {{6}} {
           name: 'public-browser-routing-receipt', enforce: 'post',
@@ -50,4 +51,3 @@
           browser: { enabled: true, provider: playwright(), headless: true,
             instances: [{ browser: 'chromium' }] } },
       }
-    
