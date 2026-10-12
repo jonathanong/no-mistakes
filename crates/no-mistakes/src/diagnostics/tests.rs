@@ -6,7 +6,13 @@ use std::time::Duration;
 
 #[test]
 fn disabled_measure_never_reads_the_clock() {
-    let (value, duration) = measure_optional(None, || panic!("clock was read"), || 42);
+    let (value, duration) = measure_optional(
+        None,
+        "disabled",
+        TimingKind::Serial,
+        || panic!("clock was read"),
+        || 42,
+    );
     assert_eq!(value, 42);
     assert_eq!(duration, Duration::ZERO);
 }

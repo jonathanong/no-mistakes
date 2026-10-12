@@ -1,8 +1,8 @@
 mod timing_order;
 mod work;
 
-use super::context::with_timing_kind;
-use super::progress::{ActiveSpanGuard, ProgressState};
+use super::context::measure_optional;
+use super::progress::ProgressState;
 use dashmap::DashMap;
 use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
@@ -77,11 +77,7 @@ impl InvocationObserver {
     }
 
     pub fn trace<T>(&self, label: &str, kind: TimingKind, operation: impl FnOnce() -> T) -> T {
-        let started = Instant::now();
-        let _span = ActiveSpanGuard::start(self, label, kind, started);
-        let result = with_timing_kind(kind, operation);
-        self.record_duration(label, started.elapsed(), kind);
-        result
+        measure_optional(Some(self), label, kind, Instant::now, operation).0
     }
 
     pub fn measure<T>(
@@ -90,12 +86,7 @@ impl InvocationObserver {
         kind: TimingKind,
         operation: impl FnOnce() -> T,
     ) -> (T, Duration) {
-        let started = Instant::now();
-        let _span = ActiveSpanGuard::start(self, label, kind, started);
-        let result = with_timing_kind(kind, operation);
-        let duration = started.elapsed();
-        self.record_duration(label, duration, kind);
-        (result, duration)
+        measure_optional(Some(self), label, kind, Instant::now, operation)
     }
 
     pub fn record_duration(&self, label: &str, duration: Duration, kind: TimingKind) {
