@@ -11,3 +11,7 @@
   Report sample count with max/p95; a small hosted sample cannot establish a
   guaranteed tail bound. Disclose wrapper/compiler/build differences and cache
   warming/order effects. Never substitute an older local consumer fixture.
+- Timed-out samples are censored; do not infer completed-runtime percentages.
+  Killed-wrapper CPU/RSS can omit descendants it has not waited for; exclude those
+  values from completed-run resource comparisons. For six samples, nearest-rank
+  empirical p95 is the observed maximum, subject to the tail-bound limitation above.
