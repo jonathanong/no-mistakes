@@ -178,5 +178,10 @@ fn macos_and_windows_releases_use_parallel_codegen_and_thin_lto_before_cache_res
     }
     assert!(steps.contains("Swatinem/rust-cache"));
     assert!(steps.contains("NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked"));
-    assert!(native.contains("timeout-minutes: 45"));
+    // Windows is the slowest, most variable target: it alone gets extra headroom.
+    assert!(native.contains(
+        "timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 100 || 80 }}"
+    ));
+    assert!(native
+        .contains("timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 75 || 45 }}"));
 }
