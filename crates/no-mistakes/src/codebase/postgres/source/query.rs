@@ -35,6 +35,7 @@ struct Collector<'a, 's> {
     not_depth: u32,
     insert_source: bool,
     span_bounds: QuerySpanBounds,
+    expression_delimiters: Vec<PostgresSqlSpan>,
 }
 
 pub(super) fn project(
@@ -54,6 +55,10 @@ pub(super) fn project(
         not_depth: 0,
         insert_source: false,
         span_bounds: QuerySpanBounds::new(tokens, locations),
+        expression_delimiters: super::insert::spans::locate_delimiters(
+            &super::insert::spans::delimiters(tokens),
+            locations,
+        ),
     };
     collector.query(
         query,

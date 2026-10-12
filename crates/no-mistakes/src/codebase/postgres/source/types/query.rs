@@ -9,6 +9,7 @@ pub struct PostgresSqlQuery {
     pub columns: Vec<PostgresSqlQueryColumn>,
     pub equalities: Vec<PostgresSqlQueryEquality>,
     pub exists: Vec<PostgresSqlQueryExists>,
+    pub quantified_comparisons: Vec<PostgresSqlQueryQuantifiedComparison>,
     pub ctes: Vec<PostgresSqlQueryCte>,
     pub nested_statements: Vec<PostgresSqlQueryStatement>,
     pub unsupported: Vec<PostgresSqlQueryUnsupported>,
@@ -186,4 +187,27 @@ pub struct PostgresSqlQueryUnsupported {
     pub clause: PostgresSqlQueryClause,
     pub reason: String,
     pub span: Option<PostgresSqlSpan>,
+}
+
+/// Scalar comparison against an array; no evaluation or row/subquery inference.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostgresSqlQueryQuantifiedComparison {
+    pub scope_id: usize,
+    pub clause: PostgresSqlQueryClause,
+    pub join_id: Option<usize>,
+    pub operator: String,
+    pub quantifier: PostgresSqlQuantifier,
+    pub left: PostgresSqlExpression,
+    pub right: PostgresSqlExpression,
+    pub context: PostgresSqlPredicateContext,
+    pub span: Option<PostgresSqlSpan>,
+    pub complete: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PostgresSqlQuantifier {
+    Any,
+    All,
 }

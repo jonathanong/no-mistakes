@@ -87,7 +87,7 @@ pub enum PostgresSqlInsertSource {
         span: Option<PostgresSqlSpan>,
     },
     Select {
-        query: PostgresSqlQuery,
+        query: Box<PostgresSqlQuery>,
         span: Option<PostgresSqlSpan>,
     },
     DefaultValues,

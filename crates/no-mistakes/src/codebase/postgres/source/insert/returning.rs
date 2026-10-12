@@ -64,7 +64,7 @@ pub(in crate::codebase::postgres::source) fn cte_column_sources(
             span: span.clone(),
         },
         PostgresSqlCteInsertSource::Select { span, .. } => PostgresSqlInsertSource::Select {
-            query: PostgresSqlQuery::default(),
+            query: Box::default(),
             span: span.clone(),
         },
         PostgresSqlCteInsertSource::DefaultValues => PostgresSqlInsertSource::DefaultValues,

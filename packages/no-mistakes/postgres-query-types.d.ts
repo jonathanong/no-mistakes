@@ -1,6 +1,7 @@
 import type { PostgresSqlQueryStatement } from "./postgres-query-statement-types";
 export type * from "./postgres-query-statement-types";
 import type {
+  PostgresSqlExpression,
   PostgresSqlIdentifier,
   PostgresSqlName,
   PostgresSqlSpan,
@@ -13,6 +14,7 @@ export interface PostgresSqlQuery {
   columns: PostgresSqlQueryColumn[];
   equalities: PostgresSqlQueryEquality[];
   exists: PostgresSqlQueryExists[];
+  quantifiedComparisons: PostgresSqlQueryQuantifiedComparison[];
   ctes: PostgresSqlQueryCte[];
   /** Data-modifying query bodies in original source order; SELECT CTEs are excluded. */
   nestedStatements: PostgresSqlQueryStatement[];
@@ -144,4 +146,19 @@ export interface PostgresSqlQueryUnsupported {
   clause: PostgresSqlQueryClause;
   reason: string;
   span: PostgresSqlSpan | null;
+}
+
+export type PostgresSqlQuantifier = "any" | "all";
+/** Scalar array comparisons in traversal order; unsupported operands remain incomplete. */
+export interface PostgresSqlQueryQuantifiedComparison {
+  scopeId: number;
+  clause: PostgresSqlQueryClause;
+  joinId: number | null;
+  operator: string;
+  quantifier: PostgresSqlQuantifier;
+  left: PostgresSqlExpression;
+  right: PostgresSqlExpression;
+  context: PostgresSqlPredicateContext;
+  span: PostgresSqlSpan | null;
+  complete: boolean;
 }

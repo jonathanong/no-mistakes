@@ -14,7 +14,7 @@ mod provenance;
 mod returning;
 pub(super) mod source_projection;
 pub(in crate::codebase::postgres::source) use returning::cte_column_sources;
-mod spans;
+pub(super) mod spans;
 mod targets;
 mod values;
 use provenance::{provenance, supported_modifiers, syntax_complete};
@@ -78,7 +78,7 @@ fn project_inner(
                 let facts = super::query::project(query, locations, tokens);
                 complete &= facts.complete;
                 PostgresSqlInsertSource::Select {
-                    query: facts,
+                    query: Box::new(facts),
                     span: locations.span(source_span.unwrap_or_else(|| query.span())),
                 }
             }

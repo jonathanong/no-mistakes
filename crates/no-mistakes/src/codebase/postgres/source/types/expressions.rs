@@ -5,6 +5,7 @@ use super::*;
 #[serde(rename_all = "camelCase")]
 pub enum PostgresSqlExpressionChildRole {
     Argument,
+    ArrayElement,
     BinaryLeft,
     BinaryRight,
     CaseOperand,
@@ -69,6 +70,7 @@ pub enum PostgresSqlExpressionChildRoot {
     Unary {
         operator: String,
     },
+    Array,
     Case,
     Subquery,
     Other,
@@ -127,6 +129,7 @@ pub enum PostgresSqlExpressionRoot {
         operator: String,
         expression: Box<PostgresSqlExpressionRoot>,
     },
+    Array,
     Case,
     Subquery,
     Other,

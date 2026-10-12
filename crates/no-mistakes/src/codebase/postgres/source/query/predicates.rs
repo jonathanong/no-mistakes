@@ -2,6 +2,7 @@ use super::*;
 use sqlparser::ast::{BinaryOperator, Expr, UnaryOperator};
 mod context;
 mod functions;
+mod quantified;
 use context::{binary_context, opaque_context};
 
 impl Collector<'_, '_> {
@@ -36,6 +37,25 @@ impl Collector<'_, '_> {
                 let child = binary_context(context, op, self.not_depth);
                 self.expr(left, scope, clause, join, child.clone(), env);
                 self.expr(right, scope, clause, join, child, env);
+            }
+            Expr::AnyOp {
+                left,
+                compare_op,
+                right,
+                is_some: false,
+            }
+            | Expr::AllOp {
+                left,
+                compare_op,
+                right,
+            } => {
+                self.quantified(
+                    expr,
+                    (left, compare_op, right),
+                    (scope, clause, join),
+                    context,
+                    env,
+                );
             }
             Expr::UnaryOp { op, expr } => {
                 let mut child = context;

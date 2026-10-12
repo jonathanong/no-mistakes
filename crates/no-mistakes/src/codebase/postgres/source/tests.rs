@@ -93,3 +93,5 @@ mod wrapper_bare_end_alias;
 mod conflict_expressions;
 
 mod conflict_indirection;
+
+mod query_quantified;

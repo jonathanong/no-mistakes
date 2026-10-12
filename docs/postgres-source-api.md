@@ -834,3 +834,17 @@ quoted identifiers: `"schema.with.dot".date` has two parts, not four. Builtin
 forms use the existing `builtin` field, with modifiers and array dimensions
 retained. Callers can inspect this structure without parsing display strings.
 This describes source syntax and makes no volatility or replay-safety decision.
+
+### Scalar array quantified comparisons
+
+Scalar array `ANY`/`ALL` comparisons appear in `query.quantifiedComparisons`,
+in traversal order, with `scopeId`, `clause`, `joinId`, operator, `quantifier`
+(`any` or `all`), predicate context, nullable source span, and typed `left`/`right`
+expressions. `complete` requires a supported scalar comparison operator
+(`=`, `<>`, `<`, `<=`, `>`, `>=`) and completely represented operands. Columns,
+literals (including signed numbers), bind parameters, parentheses, casts, and array literals are supported;
+array expressions expose ordered `arrayElement` children. Row operands, subqueries,
+arithmetic or unknown function operands, `SOME`, and unsupported operators remain incomplete
+with query diagnostics. Quantified equality does not add an ordinary equality
+fact or evaluate array contents. An otherwise supported `INSERT ... SELECT`
+with `x = ANY(t.aliases)` can therefore be complete.

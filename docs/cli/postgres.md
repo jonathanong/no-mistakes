@@ -227,3 +227,15 @@ Unclassified values expose `other` with SQL rather than guessed semantics.
 The source-fact API also retains structured trigger `eventFacts` (including
 ordered UPDATE OF identifiers), cast `dataTypeFacts`, and EXECUTE `using` syntax.
 See [structured source facts](../postgres-source-api.md#structured-trigger-events-and-cast-types).
+
+Scalar array `ANY`/`ALL` comparisons appear in `query.quantifiedComparisons`,
+in traversal order, with `scopeId`, `clause`, `joinId`, operator, `quantifier`
+(`any` or `all`), predicate context, nullable source span, and typed `left`/`right`
+expressions. `complete` requires a supported scalar comparison operator
+(`=`, `<>`, `<`, `<=`, `>`, `>=`) and completely represented operands. Columns,
+literals (including signed numbers), bind parameters, parentheses, casts, and array literals are supported;
+array expressions expose ordered `arrayElement` children. Row operands, subqueries,
+arithmetic or unknown function operands, `SOME`, and unsupported operators remain incomplete
+with query diagnostics. Quantified equality does not add an ordinary equality
+fact or evaluate array contents. An otherwise supported `INSERT ... SELECT`
+with `x = ANY(t.aliases)` can therefore be complete.

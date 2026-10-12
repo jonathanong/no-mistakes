@@ -1466,3 +1466,20 @@ test("audit declarations export named artifacts, evidence and async report contr
   const aggregate = readFileSync(join(packageRoot, "analyze-project-types.d.ts"), "utf8");
   assert.match(aggregate, /type: "testsAudit"; id\?: string \} & TestsAuditOptions/);
 });
+
+test("scalar quantified query facts export typed operands and quantifier contracts", () => {
+  const query = readFileSync(join(packageRoot, "postgres-query-types.d.ts"), "utf8");
+  const expression = readFileSync(join(packageRoot, "postgres-expression-types.d.ts"), "utf8");
+  assert.match(query, /quantifiedComparisons: PostgresSqlQueryQuantifiedComparison\[\];/);
+  assert.match(query, /export type PostgresSqlQuantifier = "any" \| "all";/);
+  assert.match(query, /export interface PostgresSqlQueryQuantifiedComparison \{/);
+  for (const field of [
+    "left: PostgresSqlExpression;",
+    "right: PostgresSqlExpression;",
+    "quantifier: PostgresSqlQuantifier;",
+    "complete: boolean;",
+  ])
+    assert.ok(query.includes(field));
+  assert.match(expression, /"arrayElement"/);
+  assert.match(expression, /"array" \| "case"/);
+});
