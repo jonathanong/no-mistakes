@@ -88,6 +88,10 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - Verify distinct baseline/candidate binaries and their source provenance.
   Isolate Cargo targets or freeze verified artifacts: shared targets can reuse
   the wrong worktree executable. Discard comparisons that ran the same binary.
+- Label test, documentation, and version-only rebases with the exact measured
+  revisions and versions. Carry measurements forward only after proving analyzer
+  source and third-party dependency versions unchanged; never describe an
+  unmeasured version as measured. Runtime changes require rebuilds and new samples.
 - Use balanced baseline/candidate/candidate/baseline order and adjacent reverse
   rechecks for surprising deltas. Compare report hashes, findings, warnings,
   advisories, and exit status; existing findings may legitimately exit 1.
