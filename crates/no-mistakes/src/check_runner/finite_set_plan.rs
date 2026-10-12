@@ -14,7 +14,14 @@ pub(crate) struct PreparedFactDemand {
 impl PreparedFactDemand {
     pub(crate) fn include_companion_plan(&mut self, plan: &CheckFactPlan) {
         self.has_companion_plan = !plan.companion_import_plans.is_empty();
-        self.companion_import_files = plan.production_import_paths.iter().cloned().collect();
+        self.companion_import_files.clear();
+        // Only a companion-only primary scope consumes this membership list.
+        // Other consumers already retain the complete discovered scope, while
+        // explicit historical import demand remains on the shared fact plan.
+        if self.has_companion_plan && !self.needs_other_facts {
+            self.companion_import_files
+                .extend(plan.production_import_paths.iter().cloned());
+        }
     }
     pub(crate) fn needs_shared_facts(&self) -> bool {
         self.needs_other_facts
@@ -72,9 +79,9 @@ pub(crate) fn prepare(
     if !files.is_empty() {
         plan.graph.call_sites = true;
     }
-    Ok(PreparedFactDemand {
-        companion_import_files: plan.production_import_paths.iter().cloned().collect(),
-        has_companion_plan: !plan.companion_import_plans.is_empty(),
+    let mut demand = PreparedFactDemand {
+        companion_import_files: Vec::new(),
+        has_companion_plan: false,
         call_site_files: files,
         runner_config_files: plan
             .integration_runner_configs
@@ -82,8 +89,14 @@ pub(crate) fn prepare(
             .map(|plan| plan.paths().cloned().collect())
             .unwrap_or_default(),
         needs_other_facts,
-    })
+    };
+    demand.include_companion_plan(plan);
+    Ok(demand)
 }
+
+#[cfg(test)]
+#[path = "tests/finite_set_plan.rs"]
+mod tests;
 
 pub(crate) fn no_analysis_requested(
     needs_shared_facts: bool,
