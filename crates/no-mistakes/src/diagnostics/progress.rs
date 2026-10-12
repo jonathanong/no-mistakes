@@ -56,8 +56,7 @@ impl InvocationObserver {
         let state = progress
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let now = Instant::now();
-        let elapsed = self.elapsed();
+        let (now, elapsed) = self.snapshot_clock();
         Some(ProgressSnapshot {
             elapsed_ms: elapsed.as_secs_f64() * 1000.0,
             completed: self

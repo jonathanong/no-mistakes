@@ -17,3 +17,11 @@ fn executor_runs_independently_and_returns_overload_without_waiting() {
     drop(worker);
     release.send(()).unwrap();
 }
+
+#[test]
+fn disconnected_executor_returns_the_job_without_waiting() {
+    let (sender, receiver) = mpsc::sync_channel(1);
+    drop(receiver);
+    let worker = Executor { sender };
+    assert_eq!(worker.submit(7), Err(7));
+}

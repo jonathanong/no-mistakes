@@ -1050,6 +1050,8 @@ The exported `RunnerConfigDeadlineEvidence`, `ConfigDeadlineEvidence`, `ProjectD
 through `query.quantifiedComparisons`; operand coverage contributes to query and
 INSERT source completeness. See [PostgreSQL source facts](postgres-source-api.md).
 
+<!-- cspell:ignore THREADPOOL -->
+
 ## Live phase progress
 
 Repository-analysis APIs accept a nonempty `diagnosticsId` to opt into live,

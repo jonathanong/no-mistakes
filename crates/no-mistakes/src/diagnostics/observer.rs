@@ -72,8 +72,9 @@ impl InvocationObserver {
         self.verbose || self.progress.is_some()
     }
 
-    pub(super) fn elapsed(&self) -> Duration {
-        self.started.elapsed()
+    pub(super) fn snapshot_clock(&self) -> (Instant, Duration) {
+        let now = Instant::now();
+        (now, now.duration_since(self.started))
     }
 
     pub fn trace<T>(&self, label: &str, kind: TimingKind, operation: impl FnOnce() -> T) -> T {

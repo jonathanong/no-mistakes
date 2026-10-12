@@ -48,3 +48,8 @@ export interface DiagnosticsProgressSnapshot {
   active: ActiveTimingSpan[];
   completed: CompletedTimingSpan[];
 }
+
+/** Poll a live diagnosticsId without waiting for the filesystem invocation lock. Returns null before registration and after completion or failure. */
+export function diagnosticsSnapshot(options: {
+  id: string;
+}): Promise<DiagnosticsProgressSnapshot | null>;

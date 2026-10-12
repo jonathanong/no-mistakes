@@ -5,7 +5,7 @@ use napi::bindgen_prelude::AsyncTask;
 #[cfg(all(not(test), not(coverage)))]
 use napi_derive::napi;
 
-// Keep every JSON N-API entrypoint on libuv while making its Rust and
+// Keep JSON N-API entrypoints asynchronous while making their Rust and
 // JavaScript names explicit at the registration site. Defined before the
 // child modules so their registrations use the same declarative boundary.
 macro_rules! json_binding {

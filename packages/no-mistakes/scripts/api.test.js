@@ -58,7 +58,12 @@ function nativeExportNames() {
 }
 
 function declarationExportNames() {
-  const declarations = ["index.d.ts", "index-ci-infra.d.ts", "executed-postgres-sql-types.d.ts"]
+  const declarations = [
+    "index.d.ts",
+    "index-ci-infra.d.ts",
+    "invocation-types.d.ts",
+    "executed-postgres-sql-types.d.ts",
+  ]
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");
   return [
@@ -1594,6 +1599,11 @@ test("active progress exposes named public snapshot contracts and a live-only po
   assert.match(declarations, /active: ActiveTimingSpan\[\]/);
   assert.match(declarations, /completed: CompletedTimingSpan\[\]/);
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
-  assert.match(index, /export function diagnosticsSnapshot\(/);
-  assert.match(index, /DiagnosticsProgressSnapshot \| null/);
+  assert.match(index, /export \* from "\.\/types"/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/invocation-types"/,
+  );
+  assert.match(declarations, /export function diagnosticsSnapshot\(/);
+  assert.match(declarations, /DiagnosticsProgressSnapshot \| null/);
 });
