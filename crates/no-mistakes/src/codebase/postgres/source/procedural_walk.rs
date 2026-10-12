@@ -36,6 +36,7 @@ pub(super) fn walk(tokens: &[TokenWithSpan], body: &Body<'_>, locations: &Locati
 pub(super) fn finish_unparsed(block: &mut PostgresSqlProceduralBlock, span: &PostgresSqlSpan) {
     push_walk_diagnostics(block, span);
     block.complete = recognized(&block.occurrences);
+    require_typed_utilities(block);
 }
 
 pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock, retain_walker: bool) {
@@ -65,6 +66,21 @@ pub(super) fn finish_parsed(block: &mut PostgresSqlProceduralBlock, retain_walke
     // Omitted walker syntax is not executed. A parsed sibling must not hide it.
     if retain_walker {
         note_omitted(block);
+    }
+    require_typed_utilities(block);
+}
+
+fn require_typed_utilities(block: &mut PostgresSqlProceduralBlock) {
+    // Existing parse/coverage diagnostics already explain why this block is
+    // incomplete. Preserve them rather than adding a second note for rejected SQL.
+    if !block.diagnostics.is_empty() {
+        return;
+    }
+    let diagnostics =
+        super::procedural_occurrences::unprojected_utilities(&block.occurrences, &block.statements);
+    if !diagnostics.is_empty() {
+        block.complete = false;
+        block.diagnostics.extend(diagnostics);
     }
 }
 

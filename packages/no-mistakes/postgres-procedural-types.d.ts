@@ -17,6 +17,10 @@ export interface PostgresSqlProceduralBlock {
   /** Classified source occurrences in source order. Visibility is not execution. */
   occurrences: PostgresSqlProceduralOccurrence[];
   diagnostics: PostgresSqlDiagnostic[];
+  /** True only when supported static SQL is reachable through typed statements.
+   * Unprojected loop utilities produce diagnostics and keep this false.
+   * Recognized utilities represented as `other` statements retain coverage.
+   * Occurrence classification is additive and never proves typed coverage. */
   complete: boolean;
 }
 

@@ -753,8 +753,14 @@ provenance. Dynamic expressions remain explicitly unsupported; see the
 
 Procedural `DO` occurrence kinds (`utility`, `controlFlow`, `dml`,
 `dynamicExecute`, `unknown`) have the same Rust/native and asynchronous Node
-ESM/CJS projection. Nested `dml` is source text, not execution. Dynamic
-`EXECUTE` stays fail-closed. Nested literal `EXECUTE` commands share that
+ESM/CJS projection. Nested `dml` is source text, not execution.
+Procedural completeness requires supported static SQL to be reachable through
+typed statements. Unprojected utilities inside `FOR`, `WHILE`, `FOREACH`, and
+bare `LOOP`, including nested loops and `IF`/`ELSE` combinations, produce
+diagnostics and keep the block incomplete. Typed conditional branches and
+recognized utilities represented as typed `other` statements retain coverage.
+Occurrence classification is additive, with original spans and source order.
+Dynamic `EXECUTE` stays fail-closed. Nested literal `EXECUTE` commands share that
 walker's 64-level budget and fail closed when it is exhausted. A wholly literal
 `FOR ... IN EXECUTE` operand is classified as `dml` or `utility`, including a
 parsed `SELECT`. A qualified name such as `public.execute(...)` stays

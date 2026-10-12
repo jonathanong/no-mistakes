@@ -163,8 +163,16 @@ a nonempty source range, the block returns a diagnostic and remains incomplete;
 valid top-level statements before and after it are preserved.
 When structural classification recognizes a nested static utility such as
 `CREATE TYPE ... AS ENUM` or `LOCK TABLE ... IN ... MODE`, the enclosing block
-can remain complete even when the general SQL parser has no typed statement
-variant for that utility. Static DML, dynamic `EXECUTE`, and unknown procedural
+can remain complete when that utility is represented by a typed `other`
+statement, even without a dedicated SQL statement variant. A complete block
+exposes supported static SQL through `block.statements` and typed conditional
+branches. Utilities inside `FOR`, `WHILE`, `FOREACH`, or bare `LOOP` currently
+have no typed loop projection: they remain visible in `occurrences`, produce
+a diagnostic at each unprojected utility, and keep the block incomplete. Existing
+parse or coverage diagnostics already keep rejected SQL incomplete and are preserved.
+This also applies to nested loops, loops combined with `IF`/`ELSE`, and literal
+`EXECUTE` utilities inside loops. Parsed siblings retain their typed facts
+without hiding omitted utilities. Static DML, dynamic `EXECUTE`, and unknown procedural
 syntax retain their existing source facts and diagnostics; static DML remains a
 source occurrence rather than an execution claim. Utility classification does
 not evaluate conditions or imply that a command executes.
@@ -201,7 +209,9 @@ Quoted strings, quoted identifiers, and comments are not keywords, so
 occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
 condition keeps the block incomplete. That empty header reports that the procedural
 condition is missing, at the header. A block classified only by this walker is complete
-only when every occurrence is recognized `utility` or `controlFlow`. An opening
+only when every occurrence is recognized `controlFlow`; an unprojected SQL
+utility requires an incomplete diagnostic. Classification is additive and
+never substitutes for typed SQL coverage. An opening
 label is one identifier; an unquoted PL/pgSQL reserved word such as `BEGIN` is
 not a label, while `"BEGIN"` and unquoted `SELECT` are. Opening and closing
 labels compare after unquoted case folding and PostgreSQL's 63-byte UTF-8

@@ -133,6 +133,7 @@ words:
   - ungated
   - urlpatterns
   - unmodeled
+  - unprojected
   - valkey
   - varchar
   - viewmodel

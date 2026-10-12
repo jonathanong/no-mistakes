@@ -928,6 +928,13 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(declarations, /kind: "conditional";\s+branches: PostgresSqlConditionalBranch\[\]/);
   assert.match(procedural, /statements: PostgresSqlStatement\[\];/);
   assert.match(procedural, /complete: boolean;/);
+  assert.match(procedural, /supported static SQL is reachable through typed statements/);
+  assert.match(procedural, /Unprojected loop utilities produce diagnostics and keep this false/);
+  assert.match(
+    procedural,
+    /Recognized utilities represented as `other` statements retain coverage/,
+  );
+  assert.match(procedural, /Occurrence classification is additive and never proves typed coverage/);
   assert.match(procedural, /occurrences: PostgresSqlProceduralOccurrence\[\];/);
   assert.match(procedural, /export interface PostgresSqlProceduralOccurrence/);
   assert.match(
