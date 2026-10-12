@@ -16,7 +16,6 @@ import type {
   PostgresCompleteCatalog,
   PostgresOrderingCatalog,
 } from "./postgres-catalog-types";
-export type * from "./postgres-catalog-types";
 import type {
   CheckReport,
   AnalyzeProjectOptions,
