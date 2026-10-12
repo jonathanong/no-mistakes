@@ -1,3 +1,4 @@
+-- cspell:ignore uuidv
 -- Loop utilities are classified but have no typed loop projection.
 DO $$ BEGIN
   FOR i IN 1..2 LOOP
