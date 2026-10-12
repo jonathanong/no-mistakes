@@ -119,6 +119,8 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - N-API progress polling stays asynchronous and skips the invocation file lock.
   Use a declarative independent deferred-promise JSON binding with a bounded
   polling worker outside the libuv analysis pool, and a live-only Weak request
-  registry; reject
-  duplicate active IDs and remove entries on every completion/failure path. Never
+  registry; copy the small polling input into owned Rust bytes on the JS thread
+  before queueing, and cover UTF-8/JSON/run/overload logic outside native-only
+  coverage gates. Reject duplicate active IDs and remove entries on every
+  completion/failure path. Never
   install CLI heartbeat/signal behavior or retain completed request payloads.
