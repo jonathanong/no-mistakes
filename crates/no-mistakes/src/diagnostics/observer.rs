@@ -1,10 +1,12 @@
 mod timing_order;
 mod work;
 
-use super::context::{measure_optional, with_timing_kind};
+use super::context::measure_optional;
+use super::progress::ProgressState;
 use dashmap::DashMap;
 use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
+use std::fmt::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -38,16 +40,22 @@ pub struct InvocationObserver {
     timings: Mutex<Vec<TimingDiagnostic>>,
     work: Option<Box<WorkCounters>>,
     source_reads: Option<DashMap<PathBuf, AtomicU64, FxBuildHasher>>,
+    pub(super) progress: Option<Mutex<ProgressState>>,
 }
 
 impl InvocationObserver {
     pub fn new(verbose: bool) -> Arc<Self> {
+        Self::with_progress(verbose, false)
+    }
+
+    pub fn with_progress(verbose: bool, progress: bool) -> Arc<Self> {
         Arc::new(Self {
             verbose,
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
             work: verbose.then(|| Box::new(WorkCounters::new())),
             source_reads: verbose.then(|| DashMap::with_hasher(FxBuildHasher)),
+            progress: progress.then(|| Mutex::new(ProgressState::default())),
         })
     }
 
@@ -55,11 +63,22 @@ impl InvocationObserver {
         self.verbose
     }
 
+    pub fn progress_enabled(&self) -> bool {
+        self.progress.is_some()
+    }
+
+    /// Fine-grained traces are needed for active progress without work ledgers.
+    pub fn detailed(&self) -> bool {
+        self.verbose || self.progress.is_some()
+    }
+
+    pub(super) fn snapshot_clock(&self) -> (Instant, Duration) {
+        let now = Instant::now();
+        (now, now.duration_since(self.started))
+    }
+
     pub fn trace<T>(&self, label: &str, kind: TimingKind, operation: impl FnOnce() -> T) -> T {
-        let started = Instant::now();
-        let result = with_timing_kind(kind, operation);
-        self.record_duration(label, started.elapsed(), kind);
-        result
+        measure_optional(Some(self), label, kind, Instant::now, operation).0
     }
 
     pub fn measure<T>(
@@ -68,11 +87,7 @@ impl InvocationObserver {
         kind: TimingKind,
         operation: impl FnOnce() -> T,
     ) -> (T, Duration) {
-        let (result, duration) = measure_optional(Some(self), Instant::now, || {
-            with_timing_kind(kind, operation)
-        });
-        self.record_duration(label, duration, kind);
-        (result, duration)
+        measure_optional(Some(self), label, kind, Instant::now, operation)
     }
 
     pub fn record_duration(&self, label: &str, duration: Duration, kind: TimingKind) {
@@ -163,22 +178,42 @@ impl InvocationObserver {
             duration: self.started.elapsed(),
             kind: TimingKind::Serial,
         });
+        let mut output = self.progress_enabled().then(String::new);
         for entry in snapshot.timings {
             let suffix = match entry.kind {
                 TimingKind::Serial => "",
                 TimingKind::Parallel => " (parallel; non-additive)",
             };
-            eprintln!(
-                "[timing] {}: {:.3}ms{}",
-                entry.label,
-                entry.duration.as_secs_f64() * 1000.0,
-                suffix
-            );
+            match &mut output {
+                Some(output) => {
+                    let _ = writeln!(
+                        output,
+                        "[timing] {}: {:.3}ms{}",
+                        entry.label,
+                        entry.duration.as_secs_f64() * 1000.0,
+                        suffix
+                    );
+                }
+                None => eprintln!(
+                    "[timing] {}: {:.3}ms{}",
+                    entry.label,
+                    entry.duration.as_secs_f64() * 1000.0,
+                    suffix
+                ),
+            }
         }
         if self.verbose {
             for (metric, count) in snapshot.work {
-                eprintln!("[work] {metric}: {count}");
+                match &mut output {
+                    Some(output) => {
+                        let _ = writeln!(output, "[work] {metric}: {count}");
+                    }
+                    None => eprintln!("[work] {metric}: {count}"),
+                }
             }
+        }
+        if let Some(output) = output {
+            self.emit_progress_output(output);
         }
     }
 }

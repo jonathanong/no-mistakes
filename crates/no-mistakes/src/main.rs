@@ -9,6 +9,8 @@ mod effects;
 mod fetches;
 mod flow;
 mod infra;
+#[path = "main/invocation.rs"]
+mod invocation;
 mod lockfile;
 mod postgres;
 mod queues;
@@ -23,17 +25,16 @@ mod test_support;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use no_mistakes::cli::{init_rayon_threads, JobsArg};
+use no_mistakes::cli::JobsArg;
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
 use no_mistakes::codebase::import_usages::{self, ImportUsagesArgs};
 use no_mistakes::codebase::queries;
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
-use no_mistakes::diagnostics::{DiagnosticsArgs, InvocationGuard};
-use no_mistakes::invocation::{InvocationArgs, InvocationGuard as ExecutionGuard};
+use no_mistakes::diagnostics::DiagnosticsArgs;
+use no_mistakes::invocation::InvocationArgs;
 use no_mistakes::playwright;
 use no_mistakes::{ci_run, impacted_checks_run, tests_run, CiArgs, ImpactedChecksArgs, TestsArgs};
 use std::process::ExitCode;
-use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -115,31 +116,15 @@ fn main() -> ExitCode {
     match run() {
         Ok(code) => code,
         Err(error) => {
-            eprintln!("error: {error:#}");
+            let message = format!("error: {error:#}\n");
+            eprint!("{message}");
             ExitCode::from(no_mistakes::invocation::timeout_exit_code(&error).unwrap_or(2))
         }
     }
 }
 
 fn run() -> Result<ExitCode> {
-    let cli = Cli::parse();
-    let observer = cli.diagnostics.observer();
-    let _diagnostics_guard = observer
-        .as_ref()
-        .map(|observer| InvocationGuard::install(Arc::clone(observer)));
-    let _execution_guard = ExecutionGuard::acquire_for_cli(cli.invocation.options())?;
-    init_rayon_threads(cli.jobs);
-    no_mistakes::invocation::check_timeout()?;
-    let result = no_mistakes::ast::with_request_parse_cache(|| run_command(cli.command));
-    no_mistakes::invocation::check_timeout()?;
-    if let Some(observer) = observer {
-        match &result {
-            Ok(_) => observer.increment("output.renders", 1),
-            Err(_) => observer.increment("output.errors", 1),
-        }
-        observer.render_stderr();
-    }
-    result
+    invocation::run(Cli::parse())
 }
 
 enum CommandDispatch {

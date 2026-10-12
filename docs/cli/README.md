@@ -42,9 +42,11 @@ contention and lock setup errors exit with status `2`. Errors are written to
 stderr; successful structured output keeps its existing schema.
 
 Global `--timings` prints invocation phase durations to stderr.
-`--verbose-timings` implies timings and adds deterministic work counters. Both
-flags are inherited by every nested command and may appear before or after the
-command name. See [Performance diagnostics](diagnostics.md).
+`--verbose-timings` implies timings and adds deterministic work counters.
+`--progress` implies timings and periodically emits the set of active phases;
+`--progress-interval <milliseconds>` defaults to 1000 and requires `--progress`.
+These flags are inherited by every nested command and may appear before or
+after the command name. See [Performance diagnostics](diagnostics.md).
 
 ## Command Index
 

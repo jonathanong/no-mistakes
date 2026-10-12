@@ -1,3 +1,4 @@
+mod watch;
 use super::{clock, InvocationError, InvocationErrorKind};
 use anyhow::{Context, Result};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -65,9 +66,10 @@ impl DeadlineGuard {
             .expires_at;
         let cancel = Arc::new(AtomicBool::new(false));
         let watcher = Arc::clone(&cancel);
+        let observer = crate::diagnostics::current();
         std::thread::Builder::new()
             .name("no-mistakes-timeout".to_string())
-            .spawn(move || watch_deadline(watcher, expires_at, timeout))
+            .spawn(move || watch::watch_deadline(watcher, expires_at, timeout, observer))
             .context("starting command timeout watchdog")?;
         guard.cancel_watch = Some(cancel);
         Ok(guard)
@@ -105,36 +107,6 @@ fn current_phase() -> &'static str {
 
 pub(super) fn timeout_diagnostic(seconds: u64, phase: &str) -> String {
     format!("command timed out after {seconds} seconds during {phase}")
-}
-
-fn watch_deadline(cancel: Arc<AtomicBool>, expires_at: Instant, timeout: Duration) {
-    loop {
-        if cancel.load(Ordering::Acquire) {
-            return;
-        }
-        let now = clock::now();
-        if now >= expires_at {
-            if cancel.load(Ordering::Acquire) || !deadline_still_active(expires_at) {
-                return;
-            }
-            let message = timeout_diagnostic(timeout.as_secs(), current_phase());
-            eprintln!("error: {message}");
-            super::child::process_tree::terminate_registered_groups();
-            std::process::exit(124);
-        }
-        std::thread::sleep(
-            expires_at
-                .saturating_duration_since(now)
-                .min(Duration::from_millis(200)),
-        );
-    }
-}
-
-fn deadline_still_active(expires_at: Instant) -> bool {
-    active_deadline()
-        .read()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .is_some_and(|deadline| !deadline.committed && deadline.expires_at == expires_at)
 }
 
 /// Return an error once the active invocation deadline has elapsed.

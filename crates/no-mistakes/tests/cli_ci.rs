@@ -264,6 +264,8 @@ fn impacted_checks_timings_preserve_json_and_report_ordered_phases() {
             "select.playwright",
             "select.swift",
             "generic-checks",
+            "invocation.dispatch",
+            "invocation.prepare",
             "total",
         ],
         "completed phases should stay deterministic: {err}"

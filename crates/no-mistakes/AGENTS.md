@@ -75,6 +75,22 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   benchmark preflight checks must prove the intended starts and unique findings;
   use supported exact package selectors instead of assuming glob semantics.
 
+### Required regression gates
+
+- Reject reproduced slowdowns in representative consuming or non-consuming
+  configurations; a focused win does not excuse a slower control path.
+- Retaining extra ranges, contexts, or caches for speed must earn measured benefit.
+  Include cold construction and peak RSS; reject flat work with higher memory.
+- Save controls with realistic source/JSX density and configured include/filter
+  payloads. Add fast-path count or concurrency tests that fail on the old code.
+- Measure diagnostics off/on separately, including CPU and RSS. Use raw elapsed
+  time: never pause clocks or subtract reporting overhead to improve results.
+- Keep expensive diagnostics opt-in; with diagnostics disabled, add no clocks,
+  spans, maps, heartbeat/registry work, source reads, or AST walks.
+- Active-span locks capture owned metadata/counters briefly; aggregate
+  history, sort, format, and write after release. Test stalled aggregation while
+  real workers enter and finish spans. Keep legitimate compute-once ownership.
+
 ### Measurement and PR reporting
 
 - Every performance PR reports before/after results, exact baseline/candidate
@@ -88,6 +104,10 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - Verify distinct baseline/candidate binaries and their source provenance.
   Isolate Cargo targets or freeze verified artifacts: shared targets can reuse
   the wrong worktree executable. Discard comparisons that ran the same binary.
+- Label test, documentation, and version-only rebases with the exact measured
+  revisions and versions. Carry measurements forward only after proving analyzer
+  source and third-party dependency versions unchanged; never describe an
+  unmeasured version as measured. Runtime changes require rebuilds and new samples.
 - Use balanced baseline/candidate/candidate/baseline order and adjacent reverse
   rechecks for surprising deltas. Compare report hashes, findings, warnings,
   advisories, and exit status; existing findings may legitimately exit 1.
@@ -99,7 +119,56 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - Work-count tests prove sharing, construction/copy/traversal reductions, and
   ownership invariants; equal reports alone do not prove the fast path. Fewer
   operations or a profile's CPU share do not establish measured speedup.
+- Describe representative fixtures by source size and lines, JSX density, and
+  configured payloads, not file count alone. Default fixtures can omit configured
+  include/filter payloads; measure those paths explicitly.
+- Separate fixed invocation startup from focused, baseline-compatible fresh
+  analysis. Keep fixture inputs identical and reset analysis state per sample.
+- Immutable context hoists must demonstrate workload benefit and quantify their
+  memory tradeoff; amortized initialization alone does not prove runtime gain.
+- Before adding scope-summary caches, measure cold construction and shared-DAG
+  traversal against the reuse benefit. Mutations, captured frames, and remaps
+  constrain reuse; invalidate summaries explicitly, and keep builder-only
+  membership checks from eagerly collecting unrelated roots. A lower work
+  count alone is not a performance gain.
 - CodSpeed comparisons require the same `ubuntu-24.04-arm` runner and expected
   base commit. Never change code for architecture/fallback mismatches. Inspect
   system call limitations and rerun unexpected unrelated outliers before assigning
   a cause; preserve coverage floors and semantic guards throughout.
+
+### Active diagnostics ownership
+
+- Active progress belongs to the request observer and tracks a set of uniquely
+  identified live spans, including parallel siblings. Start before the closure;
+  remove with a guard on success, returned error, and unwinding. Disabled requests
+  must not create clocks, IDs, active maps, heartbeat threads, or registry entries.
+- Capture active spans, counters, and their clock under a short lock; release it
+  before aggregating timing history. Stalled aggregation must not stop Rayon
+  span entry and cleanup. Keep optional telemetry routing distinct from delivery:
+  dropped progress must not trigger blocking warning or watchdog fallbacks.
+- Rayon workers do not inherit the caller's thread-local observer. Capture it
+  before scheduling and install/restore it per task so counters and spans are
+  retained by the owning request. Guard concurrent requests against dropped
+  observations and cross-request contamination.
+- CLI progress is opt-in and flushes stderr only. Keep stdout and signal exit
+  behavior intact; use the existing child-group forwarding listener for Unix
+  termination snapshots, including lock waiting and disabled deadlines. Progress
+  output uses a bounded best-effort queue and a detached writer with its own
+  stderr descriptor; cleanup and signal/timeout exits must never join blocked I/O. SIGKILL
+  diagnostics rely on already-flushed heartbeats.
+- Preserve returned command errors through the normal CLI stderr boundary;
+  best-effort progress delivery must never consume an authoritative error or
+  convert it to `Ok`. Queue acceptance does not prove bytes were flushed.
+  Preformat complete error lines before writing to avoid interleaving formatter
+  fragments with independent diagnostic output; long writes need not be atomic.
+- Verify actual CommonJS/ESM export parity and forward every declared invocation
+  option through wrapper whitelists; new diagnostic fields must reach the native
+  boundary, including artifact-writing helpers.
+- N-API progress polling stays asynchronous and skips the invocation file lock.
+  Use a declarative independent deferred-promise JSON binding with a bounded
+  polling worker outside the libuv analysis pool, and a live-only Weak request
+  registry; copy the small polling input into owned Rust bytes on the JS thread
+  before queueing, and cover UTF-8/JSON/run/overload logic outside native-only
+  coverage gates. Reject duplicate active IDs and remove entries on every
+  completion/failure path. Never
+  install CLI heartbeat/signal behavior or retain completed request payloads.

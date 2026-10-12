@@ -9,6 +9,8 @@ use std::time::Instant;
 use wait_timeout::ChildExt;
 
 mod napi_options;
+#[cfg(unix)]
+mod progress;
 
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -164,7 +166,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
 
 #[test]
 fn cli_and_napi_entrypoints_select_distinct_parent_signal_policies() {
-    let cli = include_str!("../main.rs");
+    let cli = include_str!("../main/invocation.rs");
     let napi = include_str!("../napi_api/async_task.rs");
 
     assert!(cli.contains("ExecutionGuard::acquire_for_cli"));

@@ -222,6 +222,7 @@ database's name.
 | Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier })` |
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
+| Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
 | `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -350,6 +351,7 @@ Vitest's native runner. These named types are part of the entrypoint contract.
 | --- | --- |
 | `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
 | `version` | `version()` |
+| `diagnosticsSnapshot` | `diagnosticsSnapshot({ id })` |
 | `analyzeProject` | `analyzeProject(options)` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
@@ -694,6 +696,7 @@ Every async analysis function except `version()` accepts these common options:
 
 ```ts
 interface InvocationOptions {
+  diagnosticsId?: string;
   timeout?: number | null;
   lockTimeout?: number | null;
   failOnLock?: boolean;
@@ -1046,3 +1049,34 @@ The exported `RunnerConfigDeadlineEvidence`, `ConfigDeadlineEvidence`, `ProjectD
 `parsePostgresSql()` SELECT facts expose typed scalar array `ANY`/`ALL` comparisons
 through `query.quantifiedComparisons`; operand coverage contributes to query and
 INSERT source completeness. See [PostgreSQL source facts](postgres-source-api.md).
+
+<!-- cspell:ignore THREADPOOL -->
+
+## Live phase progress
+
+Repository-analysis APIs accept a nonempty `diagnosticsId` to opt into live,
+request-scoped phase progress. Poll asynchronously while that promise is pending:
+
+```js
+const pending = check({ root: ".", diagnosticsId: "repo-check" });
+const snapshot = await diagnosticsSnapshot({ id: "repo-check" });
+// snapshot?.active: [{ id, phase, startedMs, elapsedMs, parallel }]
+// snapshot?.completed: [{ label, durationMs, parallel }]
+await pending;
+// diagnosticsSnapshot({ id: "repo-check" }) now returns null.
+```
+
+The exported `DiagnosticsProgressSnapshot`, `ActiveTimingSpan`, and
+`CompletedTimingSpan` types describe the snapshot. `elapsedMs` is request wall
+time; `startedSpans` and `completedSpans` count instrumented trace spans.
+Parallel and nested durations overlap. Snapshot polling uses the native async
+worker separate from the libuv analysis pool, without waiting for the filesystem
+invocation lock. Polling works with `UV_THREADPOOL_SIZE=1` and with all analysis
+workers waiting on the lock. Its bounded queue rejects overload as a promise.
+A snapshot can be `null` before the worker registers the request. Active IDs must be unique; completion, rejection, and unwinding
+remove the registry entry. No completed payload is retained across requests.
+
+Polling does not cancel analysis, write stderr, or install process signal
+handlers. Callers choose their polling interval and cancellation policy. The
+CLI counterpart is [`--progress`](cli/diagnostics.md), with an opt-in flushed
+heartbeat and a Unix termination snapshot.

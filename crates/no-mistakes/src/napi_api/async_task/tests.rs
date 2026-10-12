@@ -190,3 +190,66 @@ fn sql_source_batch_does_not_pin_repository_analysis_worker_count() {
         }
     }
 }
+
+#[test]
+fn concurrent_progress_polling_does_not_wait_for_the_invocation_lock_and_cleans_up_errors() {
+    use napi::Task;
+    use std::sync::{mpsc, Mutex, OnceLock};
+    use std::time::Duration;
+    type Controls = (mpsc::Sender<()>, mpsc::Receiver<()>);
+    static CONTROLS: OnceLock<Mutex<Option<Controls>>> = OnceLock::new();
+    fn operation(options: serde_json::Value) -> napi::Result<String> {
+        let (ready, release) = CONTROLS.get().unwrap().lock().unwrap().take().unwrap();
+        assert!(options.get("diagnosticsId").is_none());
+        crate::perf_trace::trace("analysis.held", || {
+            ready.send(()).unwrap();
+            release.recv_timeout(Duration::from_secs(3)).unwrap();
+            if options["fail"] == true {
+                Err(napi::Error::from_reason("analysis error"))
+            } else {
+                Ok("{}".to_string())
+            }
+        })
+    }
+    fn string_operation(options: String) -> napi::Result<String> {
+        operation(serde_json::from_str(&options).unwrap())
+    }
+    for string in [false, true] {
+        for fail in [false, true] {
+            let (ready, started) = mpsc::channel();
+            let (release, resume) = mpsc::channel();
+            *CONTROLS.get_or_init(|| Mutex::new(None)).lock().unwrap() = Some((ready, resume));
+            let worker = std::thread::spawn(move || {
+                let options =
+                    serde_json::json!({"diagnosticsId":"task-concurrency-test", "fail":fail});
+                let buffer =
+                    napi::bindgen_prelude::Buffer::from(serde_json::to_vec(&options).unwrap());
+                if string {
+                    super::JsonTask::new(buffer, string_operation).compute()
+                } else {
+                    super::JsonValueTask::new(buffer, operation).compute()
+                }
+            });
+            started.recv_timeout(Duration::from_secs(3)).unwrap();
+            // Exercise the snapshot implementation off the held analysis thread.
+            // The public binding uses a separate deferred-promise worker,
+            // also covering libuv starvation in the real-addon tests.
+            let input =
+                napi::bindgen_prelude::Buffer::from(br#"{"id":"task-concurrency-test"}"#.to_vec());
+            let output =
+                super::pure::PureJsonTask::new(input, crate::napi_api::diagnostics_snapshot_impl)
+                    .compute()
+                    .unwrap();
+            let snapshot: serde_json::Value = serde_json::from_slice(&output).unwrap();
+            assert!(snapshot["active"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|span| span["phase"]
+                    == serde_json::json!(["invocation.dispatch", "analysis.held"])));
+            release.send(()).unwrap();
+            assert_eq!(worker.join().unwrap().is_err(), fail);
+            assert!(crate::diagnostics::progress_for_request("task-concurrency-test").is_none());
+        }
+    }
+}

@@ -1,3 +1,4 @@
+use super::progress::ActiveSpanGuard;
 use super::{InvocationObserver, TimingKind};
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -137,21 +138,24 @@ pub fn measure_if_enabled<T>(
     kind: TimingKind,
     operation: impl FnOnce() -> T,
 ) -> (T, Duration) {
-    match current() {
-        Some(observer) => observer.measure(label, kind, operation),
-        None => (operation(), Duration::ZERO),
-    }
+    let observer = current();
+    measure_optional(observer.as_deref(), label, kind, Instant::now, operation)
 }
 
 pub(super) fn measure_optional<T>(
     observer: Option<&InvocationObserver>,
+    label: &str,
+    kind: TimingKind,
     now: impl Fn() -> Instant,
     operation: impl FnOnce() -> T,
 ) -> (T, Duration) {
-    let Some(_observer) = observer else {
+    let Some(observer) = observer else {
         return (operation(), Duration::ZERO);
     };
     let started = now();
-    let result = operation();
-    (result, now().duration_since(started))
+    let _span = ActiveSpanGuard::start(observer, label, kind, started);
+    let result = with_timing_kind(kind, operation);
+    let duration = now().duration_since(started);
+    observer.record_duration(label, duration, kind);
+    (result, duration)
 }

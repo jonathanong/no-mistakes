@@ -11,3 +11,13 @@
   Report sample count with max/p95; a small hosted sample cannot establish a
   guaranteed tail bound. Disclose wrapper/compiler/build differences and cache
   warming/order effects. Never substitute an older local consumer fixture.
+- Timed-out samples are censored; do not infer completed-runtime percentages.
+  Killed-wrapper CPU/RSS can omit descendants it has not waited for; exclude those
+  values from completed-run resource comparisons. For six samples, nearest-rank
+  empirical p95 is the observed maximum, subject to the tail-bound limitation above.
+- Resource maxima exclude exits 124/137, signals, and missing wrapper statuses;
+  report eligible counts and unavailable maxima, retaining completed nonzero exits.
+- Verify candidateRef against the built artifact's source and hash before using
+  a workflow as performance proof; automatic triggers may pin a historical build.
+- Before changing a deadline, profile the exact consumer and measure viable
+  fixes. Report observed tail/resources and censored failures with sample limits.

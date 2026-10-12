@@ -26,7 +26,7 @@ fn every_cli_leaf_accepts_root_diagnostics_flags_at_every_command_boundary() {
     assert_eq!(leaves.len(), 51, "update the documented CLI leaf matrix");
 
     for leaf in leaves {
-        for flag in ["--timings", "--verbose-timings"] {
+        for flag in ["--timings", "--verbose-timings", "--progress"] {
             for insertion in 0..=leaf.len() {
                 let mut argv = vec!["no-mistakes".to_string()];
                 argv.extend(leaf.iter().cloned());
@@ -58,7 +58,7 @@ fn test_alias_accepts_root_diagnostics_flags_at_every_command_boundary() {
     assert_eq!(aliases.len(), 7, "update the tests/test alias leaf matrix");
 
     for leaf in aliases {
-        for flag in ["--timings", "--verbose-timings"] {
+        for flag in ["--timings", "--verbose-timings", "--progress"] {
             for insertion in 0..=leaf.len() {
                 let mut argv = vec!["no-mistakes".to_string()];
                 argv.extend(leaf.iter().cloned());
@@ -85,4 +85,28 @@ fn diagnostics_flags_combine_at_every_cli_leaf() {
         };
         assert_eq!(error.kind(), ErrorKind::DisplayHelp, "{argv:?}: {error}");
     }
+}
+
+#[test]
+fn progress_interval_is_positive_and_requires_progress() {
+    for args in [
+        vec!["no-mistakes", "check", "--progress-interval", "0"],
+        vec!["no-mistakes", "check", "--progress-interval", "10"],
+    ] {
+        assert!(Cli::try_parse_from(args).is_err());
+    }
+    let cli = Cli::try_parse_from([
+        "no-mistakes",
+        "check",
+        "--progress",
+        "--progress-interval",
+        "10",
+    ])
+    .unwrap();
+    assert_eq!(
+        cli.diagnostics.progress_interval(),
+        Some(std::time::Duration::from_millis(10))
+    );
+    let cli = Cli::try_parse_from(["no-mistakes", "check", "--timings"]).unwrap();
+    assert!(cli.diagnostics.progress_interval().is_none());
 }

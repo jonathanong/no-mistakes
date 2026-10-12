@@ -6,7 +6,13 @@ use std::time::Duration;
 
 #[test]
 fn disabled_measure_never_reads_the_clock() {
-    let (value, duration) = measure_optional(None, || panic!("clock was read"), || 42);
+    let (value, duration) = measure_optional(
+        None,
+        "disabled",
+        TimingKind::Serial,
+        || panic!("clock was read"),
+        || 42,
+    );
     assert_eq!(value, 42);
     assert_eq!(duration, Duration::ZERO);
 }
@@ -33,15 +39,25 @@ fn snapshot_sorts_timings_and_work() {
 #[test]
 fn observer_modes_installation_and_legacy_adapter_are_covered() {
     assert!(DiagnosticsArgs::default().observer().is_none());
+    assert!(DiagnosticsArgs::default().progress_interval().is_none());
+    let progress = DiagnosticsArgs {
+        progress: true,
+        progress_interval: 5,
+        ..DiagnosticsArgs::default()
+    };
+    assert_eq!(progress.progress_interval(), Some(Duration::from_millis(5)));
+    assert!(progress.observer().unwrap().progress_enabled());
     assert!(DiagnosticsArgs {
         timings: true,
         verbose_timings: false,
+        ..DiagnosticsArgs::default()
     }
     .observer()
     .is_some());
     let verbose = DiagnosticsArgs {
         timings: false,
         verbose_timings: true,
+        ..DiagnosticsArgs::default()
     }
     .observer()
     .expect("verbose timings imply an observer");

@@ -40,6 +40,7 @@ const jsonApis = createJsonApis({
   deadExports: "deadExportsJson",
   dependencies: "dependenciesJson",
   dependents: "dependentsJson",
+  diagnosticsSnapshot: "diagnosticsSnapshotJson",
   effects: "effectsJson",
   exportsOf: "exportsOfJson",
   fetches: "fetchesJson",
@@ -134,6 +135,7 @@ module.exports.dataPw = jsonApis.dataPw;
 module.exports.deadExports = jsonApis.deadExports;
 module.exports.dependencies = jsonApis.dependencies;
 module.exports.dependents = jsonApis.dependents;
+module.exports.diagnosticsSnapshot = jsonApis.diagnosticsSnapshot;
 module.exports.effects = jsonApis.effects;
 module.exports.exportsOf = jsonApis.exportsOf;
 module.exports.fetches = jsonApis.fetches;

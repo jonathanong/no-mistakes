@@ -18,6 +18,7 @@ export const {
   deadExports,
   dependencies,
   dependents,
+  diagnosticsSnapshot,
   effects,
   exportsOf,
   fetches,

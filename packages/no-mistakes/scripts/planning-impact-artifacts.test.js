@@ -103,6 +103,7 @@ test("writes the compatible four-report contract from one prepared analysis", as
         failOnLock: true,
         jobs: 2,
         profile: "ci",
+        diagnosticsId: "planning-contract",
       },
       async (options) => {
         calls.push(options);
@@ -118,6 +119,7 @@ test("writes the compatible four-report contract from one prepared analysis", as
         failOnLock: true,
         jobs: 2,
         profile: "ci",
+        diagnosticsId: "planning-contract",
         reports: [
           {
             id: "dependencies",
@@ -2269,7 +2271,10 @@ test("exports the artifact writer through the public async Node API", async () =
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(addonPath)];
   globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
-    analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+    analyzeProjectJson: async (json) => {
+      assert.equal(JSON.parse(json).diagnosticsId, "public-planning-request");
+      return JSON.stringify(aggregateResult);
+    },
     acquirePlanningArtifactLock: async () => 1,
     releasePlanningArtifactLock: async () => {},
     renameNoReplace: async (from, to) => {
@@ -2284,6 +2289,7 @@ test("exports the artifact writer through the public async Node API", async () =
       root: "/repo",
       changedFilesManifest: manifest,
       outputDirectory: directory,
+      diagnosticsId: "public-planning-request",
     });
     assert.deepEqual(result.dependencies, { files: ["a.mts"] });
   } finally {
@@ -2377,7 +2383,10 @@ test("exports the artifact writer through the real ESM entrypoint", async () => 
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(addonPath)];
   globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
-    analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+    analyzeProjectJson: async (json) => {
+      assert.equal(JSON.parse(json).diagnosticsId, "esm-planning-request");
+      return JSON.stringify(aggregateResult);
+    },
     acquirePlanningArtifactLock: async () => 1,
     releasePlanningArtifactLock: async () => {},
     renameNoReplace: async (from, to) => {
@@ -2392,6 +2401,7 @@ test("exports the artifact writer through the real ESM entrypoint", async () => 
       root: "/repo",
       changedFilesManifest: manifest,
       outputDirectory: directory,
+      diagnosticsId: "esm-planning-request",
     });
     assert.deepEqual(result.dependents, { files: [] });
   } finally {

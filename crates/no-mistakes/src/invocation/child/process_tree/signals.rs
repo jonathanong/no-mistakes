@@ -78,11 +78,13 @@ impl ParentSignalForwardingGuard {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::downgrade(&registry));
         let listener_registry = Arc::clone(&registry);
-        let signal_thread = spawn_signal_listener(
-            signals,
-            listener_registry,
-            signal_hook::low_level::emulate_default_handler,
-        );
+        let observer = crate::diagnostics::current();
+        let signal_thread = spawn_signal_listener(signals, listener_registry, move |signal| {
+            if let Some(observer) = observer {
+                observer.render_progress_stderr();
+            }
+            signal_hook::low_level::emulate_default_handler(signal)
+        });
         Ok(Self {
             registry: Some(registry),
             signal_handle: Some(signal_handle),

@@ -118,7 +118,8 @@ fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
     String::from_utf8_lossy(stderr)
         .lines()
         .filter(|line| {
-            !line.starts_with("[timing] ")
+            !line.starts_with("[progress] ")
+                && !line.starts_with("[timing] ")
                 && !line.starts_with("[work] ")
                 && !line.starts_with("waiting for lock held by ")
         })
@@ -253,4 +254,96 @@ fn global_check_shares_app_selector_scan_between_playwright_rule_and_forbidden_d
             "expected both the playwright rule and the forbidden-dependencies graph build to run: {err}"
         );
     }
+}
+
+#[test]
+fn progress_preserves_json_success_findings_and_errors_and_closes_spans() {
+    for root in [
+        repository_fixture("diagnostics", "public-output-parity"),
+        fixture("codebase-analysis", "check-configured-only"),
+        fixture("react-traits-config", "invalid"),
+    ] {
+        let base = ["check", "--root", root.to_str().unwrap(), "--json"];
+        let plain = run(&base);
+        let mut args = base.to_vec();
+        args.extend(["--progress", "--progress-interval", "1"]);
+        let progress = run(&args);
+        assert_eq!(progress.status.code(), plain.status.code());
+        assert_eq!(progress.stdout, plain.stdout);
+        assert_eq!(
+            without_diagnostics(&progress.stderr),
+            without_diagnostics(&plain.stderr)
+        );
+        let error = stderr(&progress);
+        let snapshots = error
+            .lines()
+            .filter_map(|line| line.strip_prefix("[progress] "))
+            .map(|json| serde_json::from_str::<serde_json::Value>(json).unwrap())
+            .collect::<Vec<_>>();
+        assert!(!snapshots.is_empty(), "{error}");
+        let last = snapshots.last().unwrap();
+        assert_eq!(last["active"], serde_json::json!([]));
+        assert_eq!(last["startedSpans"], last["completedSpans"]);
+        assert_eq!(error.matches("[timing] total:").count(), 1);
+    }
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn progress_command_error_reaches_normal_stderr_when_the_progress_queue_is_occupied() {
+    use std::io::Read;
+    use std::os::unix::process::CommandExt;
+    use std::process::Stdio;
+    use std::time::Duration;
+    use wait_timeout::ChildExt;
+    let root = fixture("react-traits-config", "invalid");
+    let base = ["check", "--root", root.to_str().unwrap(), "--json"];
+    let plain = run(&base);
+    let expected = stderr(&plain);
+    let mut command = Command::new(bin());
+    command
+        .args(base)
+        .args(["--progress", "--progress-interval", "3600000"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    // Fill only this child's pipe before exec. The returned command error must
+    // survive blocked snapshots and a full progress queue, then reach stderr
+    // when the parent starts draining it.
+    unsafe {
+        command.pre_exec(|| {
+            if nix::libc::fcntl(2, nix::libc::F_SETPIPE_SZ, 4096) == -1 {
+                return Err(std::io::Error::last_os_error());
+            }
+            let filler = [b'x'; 4096];
+            if nix::libc::write(2, filler.as_ptr().cast(), filler.len()) != 4096 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+    let mut child = command.spawn().unwrap();
+    // Bounded progress emission alone would have returned already. An ordinary
+    // error waits for readable stderr rather than being converted to success.
+    assert!(child
+        .wait_timeout(Duration::from_millis(250))
+        .unwrap()
+        .is_none());
+    let mut pipe = child.stderr.take().unwrap();
+    let reader = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        pipe.read_to_end(&mut bytes).unwrap();
+        bytes
+    });
+    let status = child
+        .wait_timeout(Duration::from_secs(5))
+        .unwrap()
+        .unwrap_or_else(|| {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("command error failed to finish after stderr was drained");
+        });
+    assert_eq!(status.code(), plain.status.code());
+    let error = String::from_utf8(reader.join().unwrap()).unwrap();
+    assert!(error.contains(expected.trim()), "{error}");
+    assert!(child.wait_with_output().unwrap().stdout.is_empty());
 }

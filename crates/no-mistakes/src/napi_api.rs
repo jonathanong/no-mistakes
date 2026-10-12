@@ -5,10 +5,20 @@ use napi::bindgen_prelude::AsyncTask;
 #[cfg(all(not(test), not(coverage)))]
 use napi_derive::napi;
 
-// Keep every JSON N-API entrypoint on libuv while making its Rust and
+// Keep JSON N-API entrypoints asynchronous while making their Rust and
 // JavaScript names explicit at the registration site. Defined before the
 // child modules so their registrations use the same declarative boundary.
 macro_rules! json_binding {
+    ($rust_name:ident, $js_name:literal, $implementation:path, independent) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(
+            env: napi::Env,
+            options_json: napi::bindgen_prelude::Buffer,
+        ) -> napi::Result<napi::bindgen_prelude::Object<'static>> {
+            async_task::independent::json(env, options_json, $implementation)
+        }
+    };
     ($rust_name:ident, $js_name:literal, $implementation:path, pure) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]
@@ -45,6 +55,10 @@ pub(crate) use analyze_project::analyze_project_json_impl;
 mod async_task;
 mod cli_parity;
 mod codebase;
+mod diagnostics;
+pub(crate) use diagnostics::diagnostics_snapshot_impl;
+#[cfg(not(coverage))]
+pub use diagnostics::diagnostics_snapshot_json;
 mod filesystem;
 pub(crate) mod infra_swift;
 mod lockfile_diff;

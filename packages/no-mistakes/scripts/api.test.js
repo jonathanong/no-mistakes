@@ -20,6 +20,7 @@ const planningFixturePath = join(
 
 const RUST_NAPI_BINDING_FILES = [
   "crates/no-mistakes/src/napi_api.rs",
+  "crates/no-mistakes/src/napi_api/diagnostics.rs",
   "crates/no-mistakes/src/napi_api/postgres_source.rs",
   "crates/no-mistakes/src/napi_api/typescript_modules.rs",
   "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
@@ -57,7 +58,12 @@ function nativeExportNames() {
 }
 
 function declarationExportNames() {
-  const declarations = ["index.d.ts", "index-ci-infra.d.ts", "executed-postgres-sql-types.d.ts"]
+  const declarations = [
+    "index.d.ts",
+    "index-ci-infra.d.ts",
+    "invocation-types.d.ts",
+    "executed-postgres-sql-types.d.ts",
+  ]
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");
   return [
@@ -665,11 +671,23 @@ test("native ESM imports expose every declared root API", async () => {
   globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = { version: async () => "1.2.3" };
 
   try {
-    const esm = await import(pathToFileURL(indexPath).href);
+    const api = require(indexPath);
+    // Import the package's actual ESM wrapper, rather than Node's CJS namespace.
+    const esm = await import(
+      `${pathToFileURL(join(packageRoot, "index.mjs")).href}?exports=${Date.now()}`
+    );
     const declaredExports = declarationExportNames();
+    assert.deepEqual(
+      Object.keys(esm)
+        .filter((name) => name !== "default")
+        .sort(),
+      declaredExports,
+    );
+    assert.equal(esm.default, api);
 
     for (const name of declaredExports) {
       assert.equal(typeof esm[name], "function", `${name} must support native ESM named imports`);
+      assert.equal(esm[name], api[name], `${name} must match the CommonJS export`);
     }
 
     assert.equal(typeof esm.ciTopology, "function");
@@ -1156,7 +1174,7 @@ test("declarations expose invocation controls on every analysis", () => {
     /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
   );
   for (const [declaration, name] of declarations) {
-    if (name === "version" || name === "parsePostgresSql") {
+    if (name === "version" || name === "parsePostgresSql" || name === "diagnosticsSnapshot") {
       assert.doesNotMatch(declaration, /WithInvocationOptions/);
     } else {
       assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);
@@ -1580,3 +1598,24 @@ test(
     );
   },
 );
+
+test("active progress exposes named public snapshot contracts and a live-only polling API", () => {
+  const declarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
+  assert.match(declarations, /diagnosticsId\?: string/);
+  for (const name of ["ActiveTimingSpan", "CompletedTimingSpan", "DiagnosticsProgressSnapshot"]) {
+    assert.match(declarations, new RegExp(`export interface ${name}`));
+  }
+  for (const field of ["startedMs", "elapsedMs", "startedSpans", "completedSpans"]) {
+    assert.match(declarations, new RegExp(`${field}: number`));
+  }
+  assert.match(declarations, /active: ActiveTimingSpan\[\]/);
+  assert.match(declarations, /completed: CompletedTimingSpan\[\]/);
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.match(index, /export \* from "\.\/types"/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/invocation-types"/,
+  );
+  assert.match(declarations, /export function diagnosticsSnapshot\(/);
+  assert.match(declarations, /DiagnosticsProgressSnapshot \| null/);
+});

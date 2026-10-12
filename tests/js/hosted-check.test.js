@@ -2,7 +2,10 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { createRequire } = require("node:module");
-const { packageManifest } = require("../../.github/scripts/hosted-check-metrics.cjs");
+const {
+  packageManifest,
+  formatSummary,
+} = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
   DEADLINE_SECONDS,
@@ -56,14 +59,24 @@ test("includes censored timeouts in the observed tail instead of dropping them",
   const sample = parseTime(
     readFileSync(join(__dirname, "../../fixtures/hosted-check/deadline.time"), "utf8"),
   );
-  const values = [100, 110, 120, 130, 140].map((elapsed) => ({ ...sample, elapsed, exit: 0 }));
+  const values = [100, 110, 120, 130, 140].map((elapsed) => ({
+    ...sample,
+    elapsed,
+    exit: 0,
+    user: 200,
+    system: 4,
+    rss_kib: 409600,
+  }));
   const result = aggregate([...values, sample]);
   assert.equal(result.n, 6);
   assert.equal(result.passed, 5);
   assert.equal(result.timeouts, 1);
   assert.equal(result.max, 180.12);
   assert.equal(result.p95, 180.12);
-  assert.equal(result.rssMaxKiB, 819200);
+  assert.equal(result.resourceCount, 5);
+  assert.equal(result.userMax, 200);
+  assert.equal(result.systemMax, 4);
+  assert.equal(result.rssMaxKiB, 409600);
   assert.throws(() => aggregate([]), /empty sample/);
 });
 
@@ -74,6 +87,74 @@ test("preserves a SIGKILL timeout even when GNU time reports zero exit", () => {
   assert.equal(sample.exit, 137);
   assert.equal(successful(sample), false);
   assert.equal(aggregate([sample]).timeouts, 1);
+});
+
+test("resource maxima retain completed failures and exclude both timeout statuses", () => {
+  const deadline = parseTime(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/deadline.time"), "utf8"),
+  );
+  const killed = parseTime(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/killed.time"), "utf8"),
+    137,
+  );
+  const completed = { ...deadline, elapsed: 100, exit: 0, user: 10, system: 1, rss_kib: 100 };
+  const findings = { ...completed, elapsed: 150, exit: 1, user: 20, system: 2, rss_kib: 200 };
+  const result = aggregate([completed, findings, deadline, killed]);
+  assert.equal(result.n, 4);
+  assert.equal(result.passed, 1);
+  assert.equal(result.timeouts, 2);
+  assert.equal(result.max, Math.max(deadline.elapsed, killed.elapsed));
+  assert.equal(result.p95, result.max);
+  assert.equal(result.resourceCount, 2);
+  assert.equal(result.userMax, 20);
+  assert.equal(result.systemMax, 2);
+  assert.equal(result.rssMaxKiB, 200);
+  assert.match(formatSummary([{ key: "mixed", ...result }]), /\| 2 \| 20 \| 2 \| 200 \|/);
+});
+
+test("all-censored samples retain outcomes with null resources and n/a rendering", () => {
+  const deadline = parseTime(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/deadline.time"), "utf8"),
+  );
+  const killed = parseTime(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/killed.time"), "utf8"),
+    137,
+  );
+  const result = aggregate([deadline, killed]);
+  assert.equal(result.n, 2);
+  assert.equal(result.passed, 0);
+  assert.equal(result.timeouts, 2);
+  assert.equal(result.resourceCount, 0);
+  assert.equal(result.userMax, null);
+  assert.equal(result.systemMax, null);
+  assert.equal(result.rssMaxKiB, null);
+  const markdown = formatSummary([{ key: "censored", ...result }]);
+  assert.match(markdown, /\| Resource n \|/);
+  assert.match(markdown, /\| 0 \| n\/a \| n\/a \| n\/a \|/);
+  assert.doesNotMatch(markdown, /Infinity|\| null \|/);
+});
+
+test("signals and missing numeric wrapper statuses never supply resource maxima", () => {
+  const measured = parseTime(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/killed.time"), "utf8"),
+  );
+  const signaled = aggregate([
+    { ...measured, exit: 0, signal: "SIGKILL" },
+    { ...measured, exit: 1, signal: "SIGTERM" },
+  ]);
+  assert.equal(signaled.resourceCount, 0);
+  assert.equal(signaled.passed, 0);
+  assert.equal(signaled.userMax, null);
+  const missing = aggregate([
+    parseTime(
+      readFileSync(join(__dirname, "../../fixtures/hosted-check/killed.time"), "utf8"),
+      null,
+    ),
+    { ...measured, exit: undefined },
+    { ...measured, exit: "0" },
+  ]);
+  assert.equal(missing.resourceCount, 0);
+  assert.equal(missing.rssMaxKiB, null);
 });
 
 test("uses fresh hosted pairs on both distinct issue trees and production defaults", () => {
