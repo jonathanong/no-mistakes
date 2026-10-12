@@ -7,7 +7,7 @@ up to that surface.
 
 TS/JS `call-sites` resolves exported callable identities through namespace calls,
 static lexical aliases, and barrels, excluding shadowed bindings. The `effects`
-query supports opt-in module/export selectors with the same prepared call
+query and `query-reached-per-item` rule support opt-in module/export selectors with the same prepared call
 resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
 
