@@ -1,7 +1,7 @@
 use no_mistakes::codebase::postgres::{
     extract_executed_postgres_sql, EmbeddedSqlOptions, ExecutedPostgresSource, TrustedSqlTag,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn source(name: &str) -> ExecutedPostgresSource {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -73,4 +73,35 @@ fn source_api_rejects_recovered_parse_diagnostics_for_the_whole_batch() {
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let error = extract_executed_postgres_sql(&sources, &options).unwrap_err();
     assert!(error.to_string().contains("broken.ts"), "{error}");
+}
+
+#[test]
+fn source_api_reports_the_first_malformed_source_in_input_order() {
+    let mut first = source("broken.ts");
+    first.file_name = "first.ts".into();
+    let mut second = source("broken.ts");
+    second.file_name = "second.ts".into();
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let error = extract_executed_postgres_sql(&[first, second], &options).unwrap_err();
+    assert!(error.to_string().contains("first.ts"), "{error}");
+}
+
+#[test]
+fn source_api_ignores_a_worker_inherited_cache_for_the_same_file_name() {
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(1)
+        .build()
+        .unwrap();
+    pool.install(|| {
+        no_mistakes::ast::with_request_parse_cache(|| {
+            let cached = source("reads.ts");
+            no_mistakes::ast::with_program(Path::new("reads.ts"), &cached.source, |_, _| ())
+                .unwrap();
+            let mut supplied = source("writes.ts");
+            supplied.file_name = "reads.ts".into();
+            let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+            let statements = extract_executed_postgres_sql(&[supplied], &options).unwrap();
+            assert_eq!(statements[0].annotation.as_deref(), Some("posts/update"));
+        });
+    });
 }

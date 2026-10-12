@@ -45,11 +45,17 @@ pub(crate) fn extract_executed_postgres_sql_with_session(
     options: &EmbeddedSqlOptions,
     session: &AnalysisSession,
 ) -> Result<Vec<ExecutedPostgresSql>> {
-    let batches = sources
+    let batches: Vec<_> = sources
         .par_iter()
-        .map(|source| extract_source(source, options, session))
-        .collect::<Result<Vec<_>>>()?;
-    Ok(batches.into_iter().flatten().collect())
+        .map(|source| {
+            crate::ast::with_owned_request_parse_cache(|| extract_source(source, options, session))
+        })
+        .collect();
+    let mut statements = Vec::new();
+    for batch in batches {
+        statements.extend(batch?);
+    }
+    Ok(statements)
 }
 
 fn extract_source(
