@@ -90,6 +90,12 @@ test(
     assert.equal(queries[3].quantifiedComparisons[0].right.root.kind, "cast");
     assert.equal(queries[4].quantifiedComparisons[0].right.children[0].root.placeholder, "$1");
     assert.equal(queries[5].quantifiedComparisons[0].left.root.placeholder, "$1");
+    const literals = queries[5].quantifiedComparisons;
+    assert.equal(literals[4].left.root.kind, "typedLiteral");
+    assert.equal(literals[4].left.root.dataType, "DATE");
+    assert.equal(literals[4].complete, true);
+    assert.equal(literals[5].right.root.value.kind, "null");
+    assert.equal(literals[6].right.root.value.value, "{1,2}");
     const contexts = queries[7].quantifiedComparisons;
     assert.equal(contexts[0].joinId, 0);
     assert.equal(contexts[1].context.underNot, true);

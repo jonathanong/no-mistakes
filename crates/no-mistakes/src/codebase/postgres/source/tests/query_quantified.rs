@@ -49,6 +49,13 @@ fn scalar_quantified_comparisons_are_typed_and_complete() {
     assert_eq!(array["root"]["kind"], "array");
     assert_eq!(array["children"][0]["role"], "arrayElement");
     assert_eq!(array["children"][1]["index"], 1);
+    let literals = &statements[5]["query"]["quantifiedComparisons"];
+    assert_eq!(literals[4]["left"]["root"]["kind"], "typedLiteral");
+    assert_eq!(literals[4]["left"]["root"]["dataType"], "DATE");
+    assert_eq!(literals[4]["complete"], true);
+    // PostgreSQL contextually coerces unknown NULL/string literals to the array type.
+    assert_eq!(literals[5]["right"]["root"]["value"]["kind"], "null");
+    assert_eq!(literals[6]["right"]["root"]["value"]["value"], "{1,2}");
     let contexts = &statements[7]["query"]["quantifiedComparisons"];
     assert_eq!(contexts[0]["joinId"], 0);
     assert_eq!(contexts[1]["context"]["underNot"], true);
@@ -61,7 +68,11 @@ fn scalar_quantified_comparisons_are_typed_and_complete() {
 fn unsupported_quantified_operands_and_malformed_syntax_fail_closed() {
     let facts = facts("query-scalar-quantified-unsupported.sql");
     assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
-    assert_eq!(facts.statements.len(), 13);
+    assert_eq!(facts.statements.len(), 15);
+    let nested = serde_json::to_value(&facts.statements[14]).unwrap();
+    let comparison = &nested["query"]["quantifiedComparisons"][0];
+    assert_eq!(comparison["right"]["children"][0]["root"]["kind"], "array");
+    assert_eq!(comparison["complete"], false);
     for statement in facts.statements {
         let PostgresSqlStatementKind::Select { query } = statement.facts else {
             panic!()
