@@ -122,3 +122,28 @@ fn heartbeat_is_periodic_and_stops_promptly_without_waiting_for_interval() {
     drop(guard);
     assert!(started.elapsed() < Duration::from_secs(2));
 }
+
+#[test]
+fn parallel_workers_share_the_live_dispatch_ancestor() {
+    let observer = InvocationObserver::with_progress(false, true);
+    observer.trace("invocation.dispatch", TimingKind::Serial, || {
+        std::thread::spawn({
+            let observer = Arc::clone(&observer);
+            move || {
+                observer.trace("worker", TimingKind::Parallel, || {
+                    let snapshot = observer.progress_snapshot().unwrap();
+                    assert_eq!(snapshot.active.len(), 2);
+                    assert!(snapshot.active.iter().any(|span| {
+                        span.phase == ["invocation.dispatch", "worker"] && span.parallel
+                    }));
+                })
+            }
+        })
+        .join()
+        .unwrap();
+    });
+    let snapshot = observer.progress_snapshot().unwrap();
+    assert!(snapshot.active.is_empty());
+    assert_eq!(snapshot.completed_spans, 2);
+    assert!(!observer.emit_progress_output("no CLI writer".to_string()));
+}

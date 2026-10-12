@@ -39,6 +39,14 @@ fn snapshot_sorts_timings_and_work() {
 #[test]
 fn observer_modes_installation_and_legacy_adapter_are_covered() {
     assert!(DiagnosticsArgs::default().observer().is_none());
+    assert!(DiagnosticsArgs::default().progress_interval().is_none());
+    let progress = DiagnosticsArgs {
+        progress: true,
+        progress_interval: 5,
+        ..DiagnosticsArgs::default()
+    };
+    assert_eq!(progress.progress_interval(), Some(Duration::from_millis(5)));
+    assert!(progress.observer().unwrap().progress_enabled());
     assert!(DiagnosticsArgs {
         timings: true,
         verbose_timings: false,
