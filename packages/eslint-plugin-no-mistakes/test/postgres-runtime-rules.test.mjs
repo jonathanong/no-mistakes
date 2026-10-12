@@ -842,6 +842,130 @@ describe("postgres runtime helpers", () => {
 });
 
 describe("postgres-no-manual-transaction", () => {
+  it("recognizes PostgreSQL non-ASCII dollar tags and contiguous escape-string prefixes", () => {
+    const allowed = [
+      "SELECT $é$'abc$é$; ROLLBACK TO owned; SELECT $é$def'$é$",
+      "SELECT $タグ$COMMIT; -- /* '$タグ$; ROLLBACK TO owned",
+      "ROLLBACK TO é_owned",
+      "SELECT /* before */ E'x\\'; COMMIT --'; ROLLBACK TO owned",
+      "SELECT e'x\\'; ROLLBACK --'; RELEASE SAVEPOINT owned",
+    ];
+    const rejected = [
+      "SELECT $é$'abc$é$; ROLLBACK; SELECT $é$def'$é$",
+      "SELECT $タグ$'ignored$タグ$; COMMIT",
+      "ROLLBACK TO owned; SELECT $é$unterminated",
+      "SELECT E/* separation */'x\\'; COMMIT --'; ROLLBACK TO owned",
+      "SELECT éE'x\\'; COMMIT --'; ROLLBACK TO owned",
+      "SELECT /* before */ E'x\\'; COMMIT --'; ROLLBACK",
+    ];
+    for (const sql of allowed) {
+      assert.equal(isManualTransactionText(sql), false, sql);
+      assert.deepEqual(
+        ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+        [],
+        sql,
+      );
+    }
+    for (const sql of rejected) {
+      assert.equal(isManualTransactionText(sql), true, sql);
+      assert.deepEqual(
+        ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+        ["manualTransaction"],
+        sql,
+      );
+    }
+  });
+
+  it("preserves quote/comment boundaries and fails closed on malformed transaction text", () => {
+    const allowed = [
+      'ROLLBACK TO "x--"',
+      'ROLLBACK TO "x/* block */"',
+      'ROLLBACK TO "a; ROLLBACK"',
+      "ROLLBACK /* outer /* inner */ end */ TRANSACTION TO SAVEPOINT owned",
+      "SELECT $$-- ; ROLLBACK /* */$$; ROLLBACK TO owned",
+      "SELECT $tag$COMMIT; -- ' /* $tag$; ROLLBACK WORK TO owned",
+      "SELECT E'x\\'; COMMIT --'; ROLLBACK TO owned",
+      "SELECT 'it''s; ROLLBACK'; RELEASE SAVEPOINT owned",
+    ];
+    const rejected = [
+      'SAVEPOINT "x--"; ROLLBACK',
+      'SAVEPOINT "x/* block */"; COMMIT',
+      'ROLLBACK TO "x--"; ROLLBACK TRANSACTION AND NO CHAIN',
+      'ROLLBACK TO "x/* */"; BEGIN',
+      "ROLLBACK /* outer /* inner */ end */ WORK AND CHAIN",
+      "ROLLBACK TO owned; SELECT $$ROLLBACK;$$; COMMIT",
+      "ROLLBACK TO owned; SELECT $tag$-- ; ' /*$tag$; ROLLBACK",
+      "SELECT E'x\\'; COMMIT --'; ROLLBACK",
+      'ROLLBACK TO "unterminated',
+      "ROLLBACK TO owned /* unterminated",
+      "ROLLBACK TO owned; SELECT $tag$unterminated",
+      "ROLLBACK TO owned; SELECT 'ambiguous\\'; COMMIT",
+    ];
+    for (const sql of allowed) {
+      assert.equal(isManualTransactionText(sql), false, sql);
+      assert.deepEqual(
+        ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+        [],
+        sql,
+      );
+    }
+    for (const sql of rejected) {
+      assert.equal(isManualTransactionText(sql), true, sql);
+      assert.deepEqual(
+        ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+        ["manualTransaction"],
+        sql,
+      );
+    }
+  });
+
+  it("allows complete savepoint recovery while retaining transaction ownership guards", () => {
+    const allowed = [
+      "SAVEPOINT owned",
+      "RELEASE SAVEPOINT owned",
+      "ROLLBACK TO owned",
+      "ROLLBACK TO SAVEPOINT owned",
+      "ROLLBACK WORK TO owned",
+      "ROLLBACK TRANSACTION TO SAVEPOINT owned",
+      "/* recover */ ROLLBACK /* scope */ TO -- owned\n SAVEPOINT owned",
+      'ROLLBACK TO SAVEPOINT "owned row"',
+      'ROLLBACK TO SAVEPOINT "owned; COMMIT"',
+      "SAVEPOINT owned; ROLLBACK TO owned; RELEASE SAVEPOINT owned",
+    ];
+    for (const sql of allowed) {
+      assert.equal(isManualTransactionText(sql), false, sql);
+      assert.deepEqual(
+        ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+        [],
+        sql,
+      );
+    }
+    const rejected = [
+      "BEGIN",
+      "COMMIT",
+      "ROLLBACK",
+      "ROLLBACK WORK",
+      "ROLLBACK TRANSACTION",
+      "ROLLBACK AND CHAIN",
+      "ROLLBACK WORK AND NO CHAIN",
+      "ROLLBACK TO",
+      "ROLLBACK TO SAVEPOINT",
+      "ROLLBACK TO owned AND CHAIN",
+      "ROLLBACK TO owned; ROLLBACK",
+      "ROLLBACK TO owned; /* end */ COMMIT",
+      "SAVEPOINT owned; BEGIN",
+      "SELECT 1; ROLLBACK TRANSACTION AND CHAIN",
+    ];
+    for (const sql of rejected) {
+      assert.equal(isManualTransactionText(sql), true, sql);
+      assert.deepEqual(
+        ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+        ["manualTransaction"],
+        sql,
+      );
+    }
+  });
+
   it("flags BEGIN, COMMIT, and ROLLBACK through resolved executor text", () => {
     const code = `
       ${IMPORT}

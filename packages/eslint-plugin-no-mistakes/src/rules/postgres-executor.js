@@ -126,13 +126,7 @@ function firstCallArgument(call) {
   return argument;
 }
 
-function stripSqlComments(text) {
-  return text.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
-}
-
-function isManualTransactionText(text) {
-  return typeof text === "string" && TRANSACTION_COMMAND.test(stripSqlComments(text));
-}
+const { isManualTransactionText } = require("./postgres-transaction-statements");
 
 module.exports = {
   DEFAULT_CHUNK_FUNCTION_NAMES,
