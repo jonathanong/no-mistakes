@@ -23,20 +23,22 @@ pub(super) fn objects(
     joined: &mut FxHashMap<u64, Vec<Value>>,
     current: &FxHashMap<u64, Vec<Value>>,
 ) {
+    let mut copied_slots = 0;
     for (id, after) in current {
         // Canonical module objects created in an arm can survive into later arms.
         // Current live IDs are joined; pruned objects are never resurrected.
-        let after = after.clone();
         match joined.entry(*id) {
             std::collections::hash_map::Entry::Vacant(entry) => {
-                entry.insert(after);
+                entry.insert(after.clone());
+                copied_slots += after.len();
             }
             std::collections::hash_map::Entry::Occupied(mut entry) => {
                 for (before, after) in entry.get_mut().iter_mut().zip(after) {
-                    if *before != after {
+                    if &*before != after {
                         let mut values = Vec::new();
                         alternatives(before.clone(), &mut values);
-                        alternatives(after, &mut values);
+                        alternatives(after.clone(), &mut values);
+                        copied_slots += 1;
                         // Differing dense slots are candidates, not an opaque
                         // aggregate. prefix() inspects Possible, so an
                         // unannotated arm stays a violation under ignore mode.
@@ -45,6 +47,12 @@ pub(super) fn objects(
                 }
             }
         }
+    }
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment(
+            "postgres.annotation.incoming_dense_slots_copied",
+            copied_slots as u64,
+        );
     }
 }
 
@@ -93,3 +101,6 @@ pub(super) fn shared_ids(
     shared.extend(initial.arguments());
     shared
 }
+
+#[cfg(test)]
+mod tests;

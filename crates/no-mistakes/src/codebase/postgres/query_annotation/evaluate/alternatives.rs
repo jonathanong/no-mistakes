@@ -27,3 +27,6 @@ mod shared_module_tests;
 
 #[cfg(test)]
 mod callback_tests;
+
+#[cfg(test)]
+mod dense_fixture_tests;

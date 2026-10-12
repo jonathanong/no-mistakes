@@ -6,6 +6,7 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 struct Roots<'a> {
     environments: &'a [Environment],
+    arguments: &'a [u64],
     preserved: Environment,
 }
 
@@ -49,25 +50,24 @@ pub(super) fn compact(
     let original = cache.original;
     let mut roots = (0..original).collect::<Vec<_>>();
     roots.extend(cache.modules.values().copied());
-    let count = returned.len();
-    let mut rooted_values = returned.to_vec();
+    let mut argument_roots = Vec::new();
     for initial in cache.initials.iter() {
         roots.extend(initial.roots());
-        rooted_values.extend(initial.arguments().map(Value::Arguments));
+        argument_roots.extend(initial.arguments());
     }
     let indices = compact_from_roots(
         scopes,
         Roots {
             environments: &roots,
+            arguments: &argument_roots,
             preserved: original,
         },
-        &mut rooted_values,
+        returned,
         mapped,
         arena,
         fresh,
         captured,
     );
-    returned.clone_from_slice(&rooted_values[..count]);
     for initial in cache.initials.iter_mut() {
         initial.remap(&indices.indices);
     }
@@ -91,6 +91,7 @@ fn compact_from_roots(
     let reachable = reachable::collect_from_roots(
         scopes,
         roots.environments,
+        roots.arguments,
         returned,
         arena.read(),
         mapped,

@@ -1,0 +1,78 @@
+export function densePayload(
+  flag: boolean,
+  value00?: string,
+  value01?: string,
+  value02?: string,
+  value03?: string,
+  value04?: string,
+  value05?: string,
+  value06?: string,
+  value07?: string,
+  value08?: string,
+  value09?: string,
+  value10?: string,
+  value11?: string,
+  value12?: string,
+  value13?: string,
+  value14?: string,
+  value15?: string,
+  value16?: string,
+  value17?: string,
+  value18?: string,
+  value19?: string,
+  value20?: string,
+  value21?: string,
+  value22?: string,
+  value23?: string,
+  value24?: string,
+  value25?: string,
+  value26?: string,
+  value27?: string,
+  value28?: string,
+  value29?: string,
+  value30?: string,
+  value31?: string,
+  value32?: string,
+  value33?: string,
+  value34?: string,
+  value35?: string,
+  value36?: string,
+  value37?: string,
+  value38?: string,
+  value39?: string,
+  value40?: string,
+  value41?: string,
+  value42?: string,
+  value43?: string,
+  value44?: string,
+  value45?: string,
+  value46?: string,
+  value47?: string,
+  value48?: string,
+  value49?: string,
+  value50?: string,
+  value51?: string,
+  value52?: string,
+  value53?: string,
+  value54?: string,
+  value55?: string,
+  value56?: string,
+  value57?: string,
+  value58?: string,
+  value59?: string,
+  value60?: string,
+  value61?: string,
+  value62?: string,
+  value63?: string
+) {
+  // The cycle and callbacks require argument and frame roots after both joins.
+  const cycle = (arguments[1000] = arguments);
+  const selected = () => arguments[1];
+  flag
+    ? (arguments[1] = "SELECT id FROM orders")
+    : (arguments[1] = "SELECT status FROM orders");
+  return selected;
+}
+
+// The saved state probe lets the Rust test inspect callback and cyclic argument roots.
+export const retained = densePayload(true, "left", "right");
