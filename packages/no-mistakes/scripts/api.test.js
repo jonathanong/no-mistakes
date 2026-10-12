@@ -671,11 +671,23 @@ test("native ESM imports expose every declared root API", async () => {
   globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = { version: async () => "1.2.3" };
 
   try {
-    const esm = await import(pathToFileURL(indexPath).href);
+    const api = require(indexPath);
+    // Import the package's actual ESM wrapper, rather than Node's CJS namespace.
+    const esm = await import(
+      `${pathToFileURL(join(packageRoot, "index.mjs")).href}?exports=${Date.now()}`
+    );
     const declaredExports = declarationExportNames();
+    assert.deepEqual(
+      Object.keys(esm)
+        .filter((name) => name !== "default")
+        .sort(),
+      declaredExports,
+    );
+    assert.equal(esm.default, api);
 
     for (const name of declaredExports) {
       assert.equal(typeof esm[name], "function", `${name} must support native ESM named imports`);
+      assert.equal(esm[name], api[name], `${name} must match the CommonJS export`);
     }
 
     assert.equal(typeof esm.ciTopology, "function");

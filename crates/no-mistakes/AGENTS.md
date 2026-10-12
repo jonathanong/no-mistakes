@@ -136,6 +136,14 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   output uses a bounded best-effort queue and a detached writer with its own
   stderr descriptor; cleanup and signal/timeout exits must never join blocked I/O. SIGKILL
   diagnostics rely on already-flushed heartbeats.
+- Preserve returned command errors through the normal CLI stderr boundary;
+  best-effort progress delivery must never consume an authoritative error or
+  convert it to `Ok`. Queue acceptance does not prove bytes were flushed.
+  Preformat complete error lines before writing to avoid interleaving formatter
+  fragments with independent diagnostic output; long writes need not be atomic.
+- Verify actual CommonJS/ESM export parity and forward every declared invocation
+  option through wrapper whitelists; new diagnostic fields must reach the native
+  boundary, including artifact-writing helpers.
 - N-API progress polling stays asynchronous and skips the invocation file lock.
   Use a declarative independent deferred-promise JSON binding with a bounded
   polling worker outside the libuv analysis pool, and a live-only Weak request

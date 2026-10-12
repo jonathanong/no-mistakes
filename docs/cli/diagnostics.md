@@ -31,6 +31,12 @@ waiting, attempts a snapshot before preserving the default SIGINT/SIGTERM
 exit behavior, including with `--timeout 0`. SIGKILL
 cannot be handled; previously flushed heartbeats remain available in job logs.
 
+Returned command errors stay authoritative and use the ordinary CLI stderr
+boundary, independently of the progress queue. They retain the same error text
+and exit status. As with a command without progress, reporting an ordinary error
+can wait for a full stderr pipe to be read; progress diagnostics never suppress
+that command error.
+
 A snapshot contains `elapsedMs`, traced `startedSpans` and `completedSpans`,
 an `active` set, and grouped `completed` timing durations. Each live span has
 an invocation-local `id`, hierarchical `phase` labels, `startedMs` measured

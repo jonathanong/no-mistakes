@@ -117,7 +117,7 @@ function decodeManifest(contents) {
 }
 function invocationOptions(options) {
   return Object.fromEntries(
-    ["timeout", "lockTimeout", "failOnLock", "jobs", "profile"]
+    ["timeout", "lockTimeout", "failOnLock", "jobs", "profile", "diagnosticsId"]
       .filter((name) => Object.hasOwn(options, name))
       .map((name) => [name, options[name]]),
   );

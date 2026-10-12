@@ -116,7 +116,8 @@ fn main() -> ExitCode {
     match run() {
         Ok(code) => code,
         Err(error) => {
-            eprintln!("error: {error:#}");
+            let message = format!("error: {error:#}\n");
+            eprint!("{message}");
             ExitCode::from(no_mistakes::invocation::timeout_exit_code(&error).unwrap_or(2))
         }
     }

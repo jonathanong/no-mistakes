@@ -15,7 +15,7 @@ pub(super) fn run(cli: Cli) -> Result<ExitCode> {
         .zip(cli.diagnostics.progress_interval())
         .map(|(observer, interval)| ProgressGuard::install(Arc::clone(observer), interval));
     let mut execution_guard = None;
-    let mut result = (|| {
+    let result = (|| {
         let prepare = || ExecutionGuard::acquire_for_cli(cli.invocation.options());
         execution_guard = Some(match &observer {
             Some(observer) => observer.trace("invocation.prepare", TimingKind::Serial, prepare),
@@ -39,15 +39,11 @@ pub(super) fn run(cli: Cli) -> Result<ExitCode> {
         }
         observer.render_progress_stderr();
         observer.render_stderr();
-        if observer.progress_enabled() {
-            if let Err(error) = &result {
-                observer.emit_progress_output(format!("error: {error:#}\n"));
-                result = Ok(ExitCode::from(
-                    no_mistakes::invocation::timeout_exit_code(error).unwrap_or(2),
-                ));
-            }
-        }
     }
     drop(execution_guard);
     result
 }
+
+#[cfg(all(test, unix))]
+#[path = "invocation/tests.rs"]
+mod tests;
