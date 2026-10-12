@@ -1,0 +1,1 @@
+if (new.target !== FinalRunner) throw new Error('FINAL_NEW_TARGET_CHANGED')

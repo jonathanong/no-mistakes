@@ -24,15 +24,23 @@ test("timeout policy public entrypoints are included in the npm package contract
 test("timeout policy imports expose their declared runtime API", async () => {
   const policy = await import("no-mistakes/test-timeout-policy");
   const plugin = await import("no-mistakes/test-timeout-policy/plugin");
-  for (const name of [
+  const coreNames = [
     "assertTestTimeout",
     "assertTimeoutConfig",
+    "snapshotTimeoutOptions",
+    "protectTimeoutConfig",
     "guardRegistration",
     "guardPublicRunner",
     "guardRuntimeConfig",
     "guardVitestExports",
     "protectRunnerTimeouts",
-  ]) {
+  ];
+  assert.deepEqual(Object.keys(policy).sort(), coreNames.toSorted());
+  assert.deepEqual(Object.keys(plugin).sort(), [
+    "browserTestTimeoutPolicyPlugin",
+    "testTimeoutPolicyPlugin",
+  ]);
+  for (const name of coreNames) {
     assert.equal(typeof policy[name], "function", `${name} runtime export`);
     assert.match(
       readFileSync(

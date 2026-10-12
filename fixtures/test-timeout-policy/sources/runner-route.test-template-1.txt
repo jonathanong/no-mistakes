@@ -1,0 +1,1 @@
+{ testTimeout: 30001, hookTimeout: 250 }

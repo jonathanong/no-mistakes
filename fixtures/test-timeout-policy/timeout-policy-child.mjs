@@ -1,3 +1,4 @@
+import { fixtureTemplate } from "./fixture-source.mjs";
 import { prepareRunnerRoute } from './runner-route-fixture.mjs';
 import { spawn } from 'node:child_process';
 import { appendFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
@@ -11,7 +12,7 @@ const cli = join(dirname(require.resolve('vitest/package.json')), 'vitest.mjs');
 const vitest = fileURLToPath(import.meta.resolve('vitest'));
 const policy = fileURLToPath(new URL('../../packages/no-mistakes/test-timeout-policy/index.mjs', import.meta.url));
 const plugin = fileURLToPath(new URL('../../packages/no-mistakes/test-timeout-policy/plugin.mjs', import.meta.url));
-export async function fixture(source, config = '{ testTimeout: 250, hookTimeout: 250 }', extension = '', helper, observation = {}, route) {
+export async function fixture(source, config = fixtureTemplate("timeout-policy-child-template-4.txt"), extension = '', helper, observation = {}, route) {
     if (process.platform !== 'linux')
         throw new Error('SDK process ownership qualification requires Linux');
     const directory = await mkdtemp(join(tmpdir(), 'test-timeout-policy-'));
@@ -22,60 +23,23 @@ export async function fixture(source, config = '{ testTimeout: 250, hookTimeout:
         await symlink(dirname(require.resolve('vitest/package.json')), join(directory, 'node_modules/vitest'), 'dir');
         if (helper) {
             await mkdir(join(directory, 'workspace-helper'));
-            await writeFile(join(directory, 'workspace-helper/package.json'), JSON.stringify({
-                name: 'deadline-helper',
-                type: 'module',
-                exports: './index.mjs',
-            }));
+            await writeFile(join(directory, 'workspace-helper/package.json'), fixtureTemplate("package-manifest.txt", [JSON.stringify('deadline-helper')]));
             await writeFile(join(directory, 'workspace-helper/index.mjs'), helper.source);
             await symlink(join(directory, 'workspace-helper'), join(directory, 'node_modules/deadline-helper'), 'dir');
             if (helper.transitiveSource) {
                 const registrar = join(directory, 'workspace-registrar');
                 await mkdir(registrar);
-                await writeFile(join(registrar, 'package.json'), JSON.stringify({
-                    name: 'deadline-registrar',
-                    type: 'module',
-                    exports: './index.mjs',
-                }));
+                await writeFile(join(registrar, 'package.json'), fixtureTemplate("package-manifest.txt", [JSON.stringify('deadline-registrar')]));
                 await writeFile(join(registrar, 'index.mjs'), helper.transitiveSource);
                 await symlink(registrar, join(directory, 'node_modules/deadline-registrar'), 'dir');
             }
         }
-        await writeFile(join(directory, 'vitest.config.mts'), `
-      import { testTimeoutPolicyPlugin } from ${JSON.stringify(plugin)}
-      const test = ${config}
-      export default { plugins: [testTimeoutPolicyPlugin(${maximum}, ${JSON.stringify([
+        await writeFile(join(directory, 'vitest.config.mts'), fixtureTemplate("timeout-policy-child-template-3.txt", [JSON.stringify(plugin), config, maximum, JSON.stringify([
             'deadline-helper',
             ...(helper?.inlineTransitive ? ['deadline-registrar'] : []),
-        ])} , { runner: ${JSON.stringify(join(directory, 'runner.mts'))} })],
-        resolve: { preserveSymlinks: ${helper?.preserveSymlinks ?? false},
-          alias: { 'registration-alias': ${JSON.stringify(join(directory, 'node_modules/deadline-helper/index.mjs'))} } },
-        test: { ...test, runner: ${JSON.stringify(join(directory, 'runner.mts'))} } }
-    `);
-        await writeFile(join(directory, 'runner.mts'), `
-      import { TestRunner } from ${JSON.stringify(vitest)}
-      import { protectRunnerTimeouts, guardVitestExports } from ${JSON.stringify(policy)}
-      import { writeFileSync } from 'node:fs'
-      class ExistingRunner extends TestRunner {
-        constructor(config) { super(config); protectRunnerTimeouts(this, ${maximum}) }
-        extendTaskContext(context) {
-          const result = super.extendTaskContext(context)
-          result.ownedRunnerMarker = 'preserved'
-          ${extension}
-          return result
-        }
-      }
-      export default class PolicyRunner extends ExistingRunner {
-        constructor(config) { super(config); protectRunnerTimeouts(this, ${maximum}) }
-      }
-    `);
-        await writeFile(join(directory, 'case.test.mts'), `
-      import { test, it, describe, suite, beforeAll, afterAll, aroundAll, aroundEach, vi } from 'vitest'
-      import * as native from ${JSON.stringify(vitest)}
-      import { writeFileSync } from 'node:fs'
-      const continued = () => writeFileSync('continued.marker', 'continued')
-      ${source}
-    `);
+        ]), JSON.stringify(join(directory, 'runner.mts')), helper?.preserveSymlinks ?? false, JSON.stringify(join(directory, 'node_modules/deadline-helper/index.mjs')), JSON.stringify(join(directory, 'runner.mts'))]));
+        await writeFile(join(directory, 'runner.mts'), fixtureTemplate("timeout-policy-child-template-2.txt", [JSON.stringify(vitest), JSON.stringify(policy), maximum, extension, maximum]));
+        await writeFile(join(directory, 'case.test.mts'), fixtureTemplate("timeout-policy-child-template-1.txt", [JSON.stringify(vitest), source]));
         const routeArgs = route ? await prepareRunnerRoute(directory, plugin, route, config) : [];
         const child = spawn(process.execPath, [cli, 'run', '--root', directory, '--maxWorkers=1', ...routeArgs], {
             cwd: directory,

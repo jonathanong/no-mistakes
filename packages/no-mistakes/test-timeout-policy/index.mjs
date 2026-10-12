@@ -12,12 +12,12 @@ export {
 const installedRunners = new WeakMap();
 const installedContexts = new WeakMap();
 function protectContextHooks(context, maximum) {
-  const existing = installedContexts.get(context);
-  if (existing !== undefined) {
-    if (existing !== maximum) throw new Error("Context timeout policy maximum cannot change");
-    return;
-  }
+  const installed = installedContexts.get(context) ?? { maximum, methods: new Set() };
+  if (installed.maximum !== maximum)
+    throw new Error("Context timeout policy maximum cannot change");
   for (const name of ["onTestFailed", "onTestFinished"]) {
+    // Extensions may add a missing hook to the same context between scans.
+    if (installed.methods.has(name)) continue;
     const original = Reflect.get(context, name);
     if (typeof original === "function") {
       let guarded = guardRegistration(original, "hook", maximum);
@@ -30,9 +30,10 @@ function protectContextHooks(context, maximum) {
         },
         configurable: false,
       });
+      installed.methods.add(name);
     }
   }
-  installedContexts.set(context, maximum);
+  installedContexts.set(context, installed);
 }
 /** Aliased/destructured setters retain validation because the returned method is guarded. */
 export function guardRuntimeConfig(api, maximum = 30_000) {

@@ -1,0 +1,7 @@
+
+        const collector = describe('owned suite', () => test('body', continued))
+        collector.on('{{0}}', async () => {
+          await new Promise(resolve => setTimeout(resolve, 150))
+          console.log('RAW_HOOK_EXECUTED')
+        })
+      

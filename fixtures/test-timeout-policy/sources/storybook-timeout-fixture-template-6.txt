@@ -1,0 +1,4 @@
+
+    import { registered } from 'annotation-alias'
+    export const beforeAll = () => { globalThis.projectAnnotationsRan = registered }
+  

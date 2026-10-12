@@ -1,0 +1,1 @@
+const timeout = Number('30001'); describe('inherited', { timeout }, () => test('child', continued))

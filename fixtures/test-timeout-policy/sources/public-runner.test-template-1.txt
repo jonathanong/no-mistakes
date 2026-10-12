@@ -1,0 +1,4 @@
+
+        const Guarded = guardVitestExports({ TestRunner }).TestRunner
+        new Guarded({ ...this.config, testTimeout: {{0}} })
+      

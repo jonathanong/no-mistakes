@@ -1,0 +1,7 @@
+
+        import { test, aroundAll } from 'vitest'
+        export function register(body) {
+          aroundAll(async run => run(), 30000)
+          test('helper body', body, 30000)
+        }
+      

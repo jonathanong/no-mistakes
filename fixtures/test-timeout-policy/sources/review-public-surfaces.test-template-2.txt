@@ -1,0 +1,9 @@
+
+      const row = Object.assign(() => 'row', { beforeAll() {} })
+      const metadata = new WeakMap([[row, 'owned metadata']])
+      {{0}}([row])('row suite', (value) => {
+        if (value !== row || metadata.get(value) !== 'owned metadata')
+          throw new Error('CALLABLE_ROW_IDENTITY_CHANGED')
+        test('body', continued)
+      })
+    

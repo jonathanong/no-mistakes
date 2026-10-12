@@ -1,0 +1,1 @@
+test.each([1])('curried %s', { timeout: 30001 }, continued)

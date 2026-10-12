@@ -1,0 +1,1 @@
+const register = native.test.concurrent; register('raw alias', continued, 0)

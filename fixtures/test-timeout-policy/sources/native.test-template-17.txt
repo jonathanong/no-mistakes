@@ -1,0 +1,1 @@
+const register = test.concurrent; register('alias', continued, 30001)

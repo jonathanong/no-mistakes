@@ -1,0 +1,53 @@
+
+      import { browserTestTimeoutPolicyPlugin } from {{0}}
+      {{1}}
+      import { playwright } from '@vitest/browser-playwright'
+      import { configDefaults } from 'vitest/config'
+      import { appendFileSync } from 'node:fs'
+      const policy = browserTestTimeoutPolicyPlugin(30000, {{2}})
+      const route = policy.resolveId
+      const configure = policy.config
+      policy.config = (...args) => {
+        const configured = configure(...args)
+        const lifecycle = configured.test.reporters.at(-1)
+        lifecycle.onInit = (ctx) => appendFileSync('reporters.json', JSON.stringify({
+          defaults: configDefaults.reporters,
+          resolved: ctx.config.reporters.map(value => Array.isArray(value) ? value[0] :
+            typeof value === 'string' ? value : 'lifecycle'),
+        }))
+        lifecycle.onUserConsoleLog = (log) => appendFileSync('browser-console.log', log.content)
+        return configured
+      }
+      policy.resolveId = (source, importer) => {
+        const id = route(source, importer)
+        if (source === 'vitest') appendFileSync('routing.jsonl', JSON.stringify({ source, importer, id }) + '\n')
+        return id
+      }
+      let server
+      export default {
+        server: { fs: { allow: {{3}} } },
+        optimizeDeps: { include: {{4}} },
+        resolve: { alias: {{5}} },
+        plugins: [policy, {{6}} {
+          name: 'public-browser-routing-receipt', enforce: 'post',
+          configureServer(value) { server = value },
+          transform(code, id) {
+            if (id.includes('storybook-registrar')) appendFileSync('registrar-source.jsonl', JSON.stringify({ id, code }) + '\n')
+            if (server && this.environment.name === 'client' &&
+                (id.includes('case.test.mts') || id.includes('example.stories.mjs') || id.includes('tester-'))) {
+              appendFileSync('optimizer.jsonl', JSON.stringify({
+                phase: 'client-transform', moduleId: id,
+                server: server.config.optimizeDeps,
+                clientDeclared: server.config.environments?.client?.optimizeDeps,
+                client: server.environments.client.config.optimizeDeps,
+                activeEnvironment: this.environment.config.optimizeDeps,
+                setupFiles: server.config.test?.setupFiles,
+              }) + '\n')
+            }
+          },
+        }],
+        test: { testTimeout: {{7}}, hookTimeout: 5000,
+          browser: { enabled: true, provider: playwright(), headless: true,
+            instances: [{ browser: 'chromium' }] } },
+      }
+    

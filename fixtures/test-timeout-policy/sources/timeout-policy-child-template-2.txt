@@ -1,0 +1,17 @@
+
+      import { TestRunner } from {{0}}
+      import { protectRunnerTimeouts, guardVitestExports } from {{1}}
+      import { writeFileSync } from 'node:fs'
+      class ExistingRunner extends TestRunner {
+        constructor(config) { super(config); protectRunnerTimeouts(this, {{2}}) }
+        extendTaskContext(context) {
+          const result = super.extendTaskContext(context)
+          result.ownedRunnerMarker = 'preserved'
+          {{3}}
+          return result
+        }
+      }
+      export default class PolicyRunner extends ExistingRunner {
+        constructor(config) { super(config); protectRunnerTimeouts(this, {{4}}) }
+      }
+    

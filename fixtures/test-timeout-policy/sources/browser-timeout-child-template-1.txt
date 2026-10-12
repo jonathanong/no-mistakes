@@ -1,0 +1,4 @@
+
+      import { test, expect, beforeAll, vi } from 'vitest'
+      {{0}}
+    

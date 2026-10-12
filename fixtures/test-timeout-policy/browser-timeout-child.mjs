@@ -1,3 +1,4 @@
+import { fixtureTemplate } from "./fixture-source.mjs";
 import { prepareStorybookFixture, resolveStorybookFixturePackages, } from './storybook-timeout-fixture.mjs';
 import { spawn } from 'node:child_process';
 import { appendFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
@@ -10,6 +11,7 @@ import { readBrowserOutputs } from './browser-output-receipt.mjs';
 const require = createRequire(import.meta.url);
 /** Actual public Browser Mode CLI; requires approved normal provider and browser setup. */
 export async function browserFixture(source, configTimeout = 5000, registrar, storybook, environment = {}) {
+    if (process.platform !== 'linux') throw new Error('SDK process ownership qualification requires Linux');
     const directory = await mkdtemp(join(tmpdir(), 'browser-timeout-policy-'));
     let removable = true;
     const run = async () => {
@@ -26,73 +28,18 @@ export async function browserFixture(source, configTimeout = 5000, registrar, st
         if (registrar) {
             const helper = join(directory, 'node_modules/browser-registrar');
             await mkdir(helper);
-            await writeFile(join(helper, 'package.json'), JSON.stringify({ name: 'browser-registrar', type: 'module', exports: './index.mjs' }));
+            await writeFile(join(helper, 'package.json'), fixtureTemplate("package-manifest.txt", [JSON.stringify('browser-registrar')]));
             await writeFile(join(helper, 'index.mjs'), registrar);
         }
         const nearPrefix = join(directory, 'node_modules/vitest-extra');
         await mkdir(nearPrefix);
-        await writeFile(join(nearPrefix, 'package.json'), JSON.stringify({ name: 'vitest-extra', type: 'module', exports: './index.mjs' }));
-        await writeFile(join(nearPrefix, 'index.mjs'), 'export const retained = true');
+        await writeFile(join(nearPrefix, 'package.json'), fixtureTemplate("package-manifest.txt", [JSON.stringify('vitest-extra')]));
+        await writeFile(join(nearPrefix, 'index.mjs'), fixtureTemplate("browser-timeout-child-template-3.txt"));
         const story = storybook ? await prepareStorybookFixture(directory, storybook) : undefined;
         const plugin = fileURLToPath(new URL('../../packages/no-mistakes/test-timeout-policy/plugin.mjs', import.meta.url));
-        await writeFile(join(directory, 'vitest.config.mts'), `
-      import { browserTestTimeoutPolicyPlugin } from ${JSON.stringify(plugin)}
-      ${story?.imports ?? ''}
-      import { playwright } from '@vitest/browser-playwright'
-      import { configDefaults } from 'vitest/config'
-      import { appendFileSync } from 'node:fs'
-      const policy = browserTestTimeoutPolicyPlugin(30000, ${JSON.stringify([...(registrar ? ['browser-registrar'] : []), ...(story?.registrations ?? [])])})
-      const route = policy.resolveId
-      const configure = policy.config
-      policy.config = (...args) => {
-        const configured = configure(...args)
-        const lifecycle = configured.test.reporters.at(-1)
-        lifecycle.onInit = (ctx) => appendFileSync('reporters.json', JSON.stringify({
-          defaults: configDefaults.reporters,
-          resolved: ctx.config.reporters.map(value => Array.isArray(value) ? value[0] :
-            typeof value === 'string' ? value : 'lifecycle'),
-        }))
-        lifecycle.onUserConsoleLog = (log) => appendFileSync('browser-console.log', log.content)
-        return configured
-      }
-      policy.resolveId = (source, importer) => {
-        const id = route(source, importer)
-        if (source === 'vitest') appendFileSync('routing.jsonl', JSON.stringify({ source, importer, id }) + '\\n')
-        return id
-      }
-      let server
-      export default {
-        server: { fs: { allow: ${JSON.stringify([directory, fileURLToPath(new URL('../../../', import.meta.url))])} } },
-        optimizeDeps: { include: ${JSON.stringify(['vitest-extra', ...(story ? ['react', 'react-dom', ...story.optimizeIncludes] : [])])} },
-        resolve: { alias: ${JSON.stringify(story?.alias ?? {})} },
-        plugins: [policy, ${story?.plugins ?? ''} {
-          name: 'public-browser-routing-receipt', enforce: 'post',
-          configureServer(value) { server = value },
-          transform(code, id) {
-            if (id.includes('storybook-registrar')) appendFileSync('registrar-source.jsonl', JSON.stringify({ id, code }) + '\\n')
-            if (server && this.environment.name === 'client' &&
-                (id.includes('case.test.mts') || id.includes('example.stories.mjs') || id.includes('tester-'))) {
-              appendFileSync('optimizer.jsonl', JSON.stringify({
-                phase: 'client-transform', moduleId: id,
-                server: server.config.optimizeDeps,
-                clientDeclared: server.config.environments?.client?.optimizeDeps,
-                client: server.environments.client.config.optimizeDeps,
-                activeEnvironment: this.environment.config.optimizeDeps,
-                setupFiles: server.config.test?.setupFiles,
-              }) + '\\n')
-            }
-          },
-        }],
-        test: { testTimeout: ${configTimeout}, hookTimeout: 5000,
-          browser: { enabled: true, provider: playwright(), headless: true,
-            instances: [{ browser: 'chromium' }] } },
-      }
-    `);
+        await writeFile(join(directory, 'vitest.config.mts'), fixtureTemplate("browser-timeout-child-template-2.txt", [JSON.stringify(plugin), story?.imports ?? '', JSON.stringify([...(registrar ? ['browser-registrar'] : []), ...(story?.registrations ?? [])]), JSON.stringify([directory, fileURLToPath(new URL('../../../', import.meta.url))]), JSON.stringify(['vitest-extra', ...(story ? ['react', 'react-dom', ...story.optimizeIncludes] : [])]), JSON.stringify(story?.alias ?? {}), story?.plugins ?? '', configTimeout]));
         if (!storybook)
-            await writeFile(join(directory, 'case.test.mts'), `
-      import { test, expect, beforeAll, vi } from 'vitest'
-      ${source}
-    `);
+            await writeFile(join(directory, 'case.test.mts'), fixtureTemplate("browser-timeout-child-template-1.txt", [source]));
         const cli = join(dirname(require.resolve('vitest/package.json')), 'vitest.mjs');
         const child = spawn(process.execPath, [cli, 'run', '--root', directory, '--maxWorkers=1'], {
             cwd: directory,

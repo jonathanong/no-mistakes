@@ -1,0 +1,1 @@
+describe.shuffle('invalid suite', { timeout: 30001 }, () => test('legal child', continued, 25))

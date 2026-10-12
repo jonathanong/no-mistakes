@@ -1,18 +1,21 @@
+import { fixtureTemplate } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
 import { fixtureSource } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
 import { describe, expect, it } from "vitest";
 import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-child.mjs";
-describe("public SDK policy closure regressions", () => {
+describe.skipIf(process.platform !== "linux")("public SDK policy closure regressions", () => {
   it.each(["testTimeout", "hookTimeout"])("guards default two-argument Node %s", async (field) => {
     const result = await fixture(
       fixtureSource("review-closure.test-20.txt"),
-      `{ testTimeout: 250, hookTimeout: 250, ${field}: 30001 }`,
+      fixtureTemplate("review-closure.test-extra-template-4.txt", [field]),
       "",
       undefined,
       {},
       { nativeDefault: true, implicitNative: true },
     );
     expect(result.code, result.output).toBe(1);
-    expect(result.output).toContain(`${field} must be positive, finite`);
+    expect(result.output).toContain(
+      fixtureTemplate("review-closure.test-extra-template-3.txt", [field]),
+    );
     expect(result.marker).toBeUndefined();
     expect(result.forcedCleanup).toBe(false);
   });
@@ -32,10 +35,14 @@ describe("public SDK policy closure regressions", () => {
   it.each(["beforeAll", "afterAll", "beforeEach", "afterEach", "aroundAll", "aroundEach"])(
     "guards suite-factory injected %s registration before collection",
     async (hook) => {
-      const result = await fixture(`describe('owned', (injected) => {
-        injected.${hook}(${hook.startsWith("around") ? "async run => run()" : "async () => {}"}, 30001)
-        injected('body', continued)
-      })`);
+      const result = await fixture(
+        fixtureTemplate("review-closure.test-template-1.txt", [
+          hook,
+          hook.startsWith("around")
+            ? fixtureTemplate("review-closure.test-extra-template-2.txt")
+            : fixtureTemplate("review-closure.test-extra-template-1.txt"),
+        ]),
+      );
       expect(result.code, result.output).toBe(1);
       expect(result.output).toContain("hook timeout must be positive, finite");
       expect(result.marker).toBeUndefined();

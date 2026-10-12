@@ -1,0 +1,10 @@
+
+      const child = test.extend({ sample: { timeout: 60000 } })
+        .{{0}}({ sample: { timeout: 60000, owned: true } })
+      child.for([7])('legal %s', { timeout: 30000 }, (value, { sample, ownedRunnerMarker }) => {
+        if (value !== 7 || !sample.owned || sample.timeout !== 60000)
+          throw new Error('fixture override changed')
+        if (ownedRunnerMarker !== 'preserved') throw new Error('context lost')
+        continued()
+      })
+    

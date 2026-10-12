@@ -1,0 +1,1 @@
+test.extend('sample', {}, () => 1)('fixture', continued, 30001)

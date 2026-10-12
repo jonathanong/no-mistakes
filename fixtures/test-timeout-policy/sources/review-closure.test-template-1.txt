@@ -1,0 +1,4 @@
+describe('owned', (injected) => {
+        injected.{{0}}({{1}}, 30001)
+        injected('body', continued)
+      })

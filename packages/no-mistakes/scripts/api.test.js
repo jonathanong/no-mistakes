@@ -1490,3 +1490,58 @@ test("scalar quantified query facts export typed operands and quantifier contrac
   assert.match(expression, /"arrayElement"/);
   assert.match(expression, /"array" \| "case"/);
 });
+
+// Lock each public subpath declaration, including named types and re-exports.
+test("timeout policy declarations retain their complete public signatures", () => {
+  const contracts = {
+    "index.d.mts":
+      'export { guardRegistration, type Registration, type Kind } from "./registration.mjs"; export { guardPublicRunner, type RunnerConstructor, type Protector } from "./public-runner.mjs"; export { assertTestTimeout, assertTimeoutConfig, snapshotTimeoutOptions, protectTimeoutConfig, } from "./config.mjs"; export declare function guardRuntimeConfig<T extends object>(api: T, maximum?: number): T; export declare function guardVitestExports<T extends object>(api: T, maximum?: number): T; export declare function protectRunnerTimeouts( runner: { config: object; }, maximum?: number, ): void;',
+    "config.d.mts":
+      "export declare function assertTestTimeout(value: unknown, label: string, maximum?: number): number; export declare function assertTimeoutConfig(config: object, maximum?: number): void; export declare function snapshotTimeoutOptions<T extends object>( options: T, label: string, maximum?: number, nullInherits?: boolean, ): T; export declare function protectTimeoutConfig(config: object, maximum?: number): void;",
+    "registration.d.mts":
+      'export type Registration = (...args: never[]) => unknown; export type Kind = "test" | "suite" | "hook"; export declare function guardRegistration<T extends Registration>( original: T, kind: Kind, maximum?: number, ): T;',
+    "public-runner.d.mts":
+      "export type Protector = ( runner: { config: object; }, maximum: number, ) => void; export type RunnerConstructor = new (...args: never[]) => { config: object; }; export declare function guardPublicRunner<T extends RunnerConstructor>( original: T, maximum: number, protect: Protector, ): T;",
+    "plugin.d.mts":
+      'import type { Plugin } from "vitest/config"; export interface NodeRunnerPolicy { runner: string | null; } export declare function testTimeoutPolicyPlugin( maximum?: number, registrationPackages?: readonly string[], nodeRunner?: NodeRunnerPolicy, ): Plugin; export declare function browserTestTimeoutPolicyPlugin( maximum?: number, registrationPackages?: readonly string[], ): Plugin;',
+  };
+  for (const [file, expected] of Object.entries(contracts)) {
+    const actual = readFileSync(join(packageRoot, "test-timeout-policy", file), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    assert.equal(actual, expected, file);
+  }
+});
+
+test("timeout policy public type contracts compile without losing option fields", () => {
+  const { createRequire } = require("node:module");
+  // Resolve the compiler through an existing direct dependency, without adding a test dependency.
+  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+  const ts = dependencyRequire("typescript");
+  const program = ts.createProgram(
+    [join(repositoryRoot, "fixtures", "test-timeout-policy", "type-contracts", "public.mts")],
+    {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      baseUrl: repositoryRoot,
+      paths: {
+        "no-mistakes/test-timeout-policy": ["packages/no-mistakes/test-timeout-policy/index.d.mts"],
+        "no-mistakes/test-timeout-policy/plugin": [
+          "packages/no-mistakes/test-timeout-policy/plugin.d.mts",
+        ],
+      },
+      ignoreDeprecations: "6.0",
+    },
+  );
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  assert.deepEqual(
+    diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+  );
+});

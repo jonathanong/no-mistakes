@@ -1,0 +1,1 @@
+rejects the raw collector.%s hook path before an unbounded hook can start

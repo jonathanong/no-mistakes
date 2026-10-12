@@ -1,0 +1,6 @@
+{
+      name: 'stable-annotation-setup', enforce: 'post',
+      config(config) {
+        replaceStorybookAnnotationSetup(config, {{0}})
+      },
+    },

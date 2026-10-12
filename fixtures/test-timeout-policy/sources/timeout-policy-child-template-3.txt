@@ -1,0 +1,8 @@
+
+      import { testTimeoutPolicyPlugin } from {{0}}
+      const test = {{1}}
+      export default { plugins: [testTimeoutPolicyPlugin({{2}}, {{3}} , { runner: {{4}} })],
+        resolve: { preserveSymlinks: {{5}},
+          alias: { 'registration-alias': {{6}} } },
+        test: { ...test, runner: {{7}} } }
+    

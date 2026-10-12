@@ -298,13 +298,32 @@ The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
 does not have a one-to-one CLI command:
 
-The package also exposes the optional Vitest integration through
+The package also exposes its optional Vitest integration through
 `no-mistakes/test-timeout-policy` and
-`no-mistakes/test-timeout-policy/plugin`. The first provides timeout validation,
-registration guards and runner composition; the `/plugin` entry provides
-`testTimeoutPolicyPlugin` and `browserTestTimeoutPolicyPlugin` and requires the
-optional Vitest peer. See the [timeout policy guide](test-timeout-policy.md) for
-configuration and adoption details.
+`no-mistakes/test-timeout-policy/plugin`. The `/plugin` entry provides Vite
+plugins and imports the optional Vitest peer. See the
+[timeout policy guide](test-timeout-policy.md) for configuration and adoption
+details.
+
+| Runtime export | API | Import |
+| --- | --- | --- |
+| `assertTestTimeout` | `assertTestTimeout(value, label, maximum?)` | `no-mistakes/test-timeout-policy` |
+| `assertTimeoutConfig` | `assertTimeoutConfig(config, maximum?)` | `no-mistakes/test-timeout-policy` |
+| `snapshotTimeoutOptions` | `snapshotTimeoutOptions<T extends object>(options: T, label, maximum?, nullInherits?): T` | `no-mistakes/test-timeout-policy` |
+| `protectTimeoutConfig` | `protectTimeoutConfig(config, maximum?)` | `no-mistakes/test-timeout-policy` |
+| `guardRegistration` | `guardRegistration<T extends Registration>(original: T, kind: Kind, maximum?): T` | `no-mistakes/test-timeout-policy` |
+| `guardRuntimeConfig` | `guardRuntimeConfig<T extends object>(api: T, maximum?): T` | `no-mistakes/test-timeout-policy` |
+| `guardVitestExports` | `guardVitestExports<T extends object>(api: T, maximum?): T` | `no-mistakes/test-timeout-policy` |
+| `guardPublicRunner` | `guardPublicRunner<T extends RunnerConstructor>(original: T, maximum: number, protect: Protector): T` | `no-mistakes/test-timeout-policy` |
+| `protectRunnerTimeouts` | `protectRunnerTimeouts(runner: { config: object }, maximum?): void` | `no-mistakes/test-timeout-policy` |
+| `testTimeoutPolicyPlugin` | `testTimeoutPolicyPlugin(maximum?, registrationPackages?, nodeRunner?: NodeRunnerPolicy)` | `no-mistakes/test-timeout-policy/plugin` |
+| `browserTestTimeoutPolicyPlugin` | `browserTestTimeoutPolicyPlugin(maximum?, registrationPackages?)` | `no-mistakes/test-timeout-policy/plugin` |
+
+The policy entry also exports the types `Registration`, `Kind`,
+`RunnerConstructor` and `Protector`. `Kind` is the union `"test" | "suite" |
+"hook"`. The plugin entry exports `NodeRunnerPolicy`; its `runner` field names
+the absolute resolved module for the final custom Node runner, or `null` to use
+Vitest's native runner. These named types are part of the entrypoint contract.
 
 | Runtime export | API |
 | --- | --- |
