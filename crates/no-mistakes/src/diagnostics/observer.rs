@@ -1,7 +1,8 @@
 mod timing_order;
 mod work;
 
-use super::context::{measure_optional, with_timing_kind};
+use super::context::with_timing_kind;
+use super::progress::{ActiveSpanGuard, ProgressState};
 use dashmap::DashMap;
 use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
@@ -38,16 +39,22 @@ pub struct InvocationObserver {
     timings: Mutex<Vec<TimingDiagnostic>>,
     work: Option<Box<WorkCounters>>,
     source_reads: Option<DashMap<PathBuf, AtomicU64, FxBuildHasher>>,
+    pub(super) progress: Option<Mutex<ProgressState>>,
 }
 
 impl InvocationObserver {
     pub fn new(verbose: bool) -> Arc<Self> {
+        Self::with_progress(verbose, false)
+    }
+
+    pub fn with_progress(verbose: bool, progress: bool) -> Arc<Self> {
         Arc::new(Self {
             verbose,
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
             work: verbose.then(|| Box::new(WorkCounters::new())),
             source_reads: verbose.then(|| DashMap::with_hasher(FxBuildHasher)),
+            progress: progress.then(|| Mutex::new(ProgressState::default())),
         })
     }
 
@@ -55,8 +62,22 @@ impl InvocationObserver {
         self.verbose
     }
 
+    pub fn progress_enabled(&self) -> bool {
+        self.progress.is_some()
+    }
+
+    /// Fine-grained traces are needed for active progress without work ledgers.
+    pub fn detailed(&self) -> bool {
+        self.verbose || self.progress.is_some()
+    }
+
+    pub(super) fn elapsed(&self) -> Duration {
+        self.started.elapsed()
+    }
+
     pub fn trace<T>(&self, label: &str, kind: TimingKind, operation: impl FnOnce() -> T) -> T {
         let started = Instant::now();
+        let _span = ActiveSpanGuard::start(self, label, kind, started);
         let result = with_timing_kind(kind, operation);
         self.record_duration(label, started.elapsed(), kind);
         result
@@ -68,9 +89,10 @@ impl InvocationObserver {
         kind: TimingKind,
         operation: impl FnOnce() -> T,
     ) -> (T, Duration) {
-        let (result, duration) = measure_optional(Some(self), Instant::now, || {
-            with_timing_kind(kind, operation)
-        });
+        let started = Instant::now();
+        let _span = ActiveSpanGuard::start(self, label, kind, started);
+        let result = with_timing_kind(kind, operation);
+        let duration = started.elapsed();
         self.record_duration(label, duration, kind);
         (result, duration)
     }

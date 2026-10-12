@@ -118,7 +118,8 @@ fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
     String::from_utf8_lossy(stderr)
         .lines()
         .filter(|line| {
-            !line.starts_with("[timing] ")
+            !line.starts_with("[progress] ")
+                && !line.starts_with("[timing] ")
                 && !line.starts_with("[work] ")
                 && !line.starts_with("waiting for lock held by ")
         })
@@ -252,5 +253,37 @@ fn global_check_shares_app_selector_scan_between_playwright_rule_and_forbidden_d
             err.contains(label),
             "expected both the playwright rule and the forbidden-dependencies graph build to run: {err}"
         );
+    }
+}
+
+#[test]
+fn progress_preserves_json_success_findings_and_errors_and_closes_spans() {
+    for root in [
+        repository_fixture("diagnostics", "public-output-parity"),
+        fixture("codebase-analysis", "check-configured-only"),
+        fixture("react-traits-config", "invalid"),
+    ] {
+        let base = ["check", "--root", root.to_str().unwrap(), "--json"];
+        let plain = run(&base);
+        let mut args = base.to_vec();
+        args.extend(["--progress", "--progress-interval", "1"]);
+        let progress = run(&args);
+        assert_eq!(progress.status.code(), plain.status.code());
+        assert_eq!(progress.stdout, plain.stdout);
+        assert_eq!(
+            without_diagnostics(&progress.stderr),
+            without_diagnostics(&plain.stderr)
+        );
+        let error = stderr(&progress);
+        let snapshots = error
+            .lines()
+            .filter_map(|line| line.strip_prefix("[progress] "))
+            .map(|json| serde_json::from_str::<serde_json::Value>(json).unwrap())
+            .collect::<Vec<_>>();
+        assert!(!snapshots.is_empty(), "{error}");
+        let last = snapshots.last().unwrap();
+        assert_eq!(last["active"], serde_json::json!([]));
+        assert_eq!(last["startedSpans"], last["completedSpans"]);
+        assert_eq!(error.matches("[timing] total:").count(), 1);
     }
 }

@@ -175,7 +175,10 @@ impl InvocationGuard {
             DeadlineGuard::install_for_invocation(options.timeout, None)?
         };
         let parent_signals = child::ParentSignalForwardingGuard::install(
-            forward_parent_signals && options.timeout.is_some(),
+            forward_parent_signals
+                && (options.timeout.is_some()
+                    || crate::diagnostics::current()
+                        .is_some_and(|observer| observer.progress_enabled())),
         );
         let parent_signals = parent_signals?;
         Ok(Self {

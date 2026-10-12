@@ -1156,7 +1156,7 @@ test("declarations expose invocation controls on every analysis", () => {
     /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
   );
   for (const [declaration, name] of declarations) {
-    if (name === "version" || name === "parsePostgresSql") {
+    if (name === "version" || name === "parsePostgresSql" || name === "diagnosticsSnapshot") {
       assert.doesNotMatch(declaration, /WithInvocationOptions/);
     } else {
       assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);
@@ -1580,3 +1580,19 @@ test(
     );
   },
 );
+
+test("active progress exposes named public snapshot contracts and a live-only polling API", () => {
+  const declarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
+  assert.match(declarations, /diagnosticsId\?: string/);
+  for (const name of ["ActiveTimingSpan", "CompletedTimingSpan", "DiagnosticsProgressSnapshot"]) {
+    assert.match(declarations, new RegExp(`export interface ${name}`));
+  }
+  for (const field of ["startedMs", "elapsedMs", "startedSpans", "completedSpans"]) {
+    assert.match(declarations, new RegExp(`${field}: number`));
+  }
+  assert.match(declarations, /active: ActiveTimingSpan\[\]/);
+  assert.match(declarations, /completed: CompletedTimingSpan\[\]/);
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.match(index, /export function diagnosticsSnapshot\(/);
+  assert.match(index, /DiagnosticsProgressSnapshot \| null/);
+});

@@ -19,6 +19,32 @@ export interface InvocationOptions {
   jobs?: number | null;
   /** `ci` sets unbounded command and lock timeouts. CLI `--profile ci` does the same. */
   profile?: "ci";
+  /** Register live, stderr-free phase progress under a unique ID. Use diagnosticsSnapshot({ id }) while the request runs; completion or failure removes the ID. */
+  diagnosticsId?: string;
 }
 
 export type WithInvocationOptions<T> = T & InvocationOptions;
+
+/** One live span; siblings may overlap and labels form the enclosing phase path. */
+export interface ActiveTimingSpan {
+  id: number;
+  phase: string[];
+  startedMs: number;
+  elapsedMs: number;
+  parallel: boolean;
+}
+
+/** Completed durations grouped by label and parallel status within the live request. */
+export interface CompletedTimingSpan {
+  label: string;
+  durationMs: number;
+  parallel: boolean;
+}
+
+export interface DiagnosticsProgressSnapshot {
+  elapsedMs: number;
+  startedSpans: number;
+  completedSpans: number;
+  active: ActiveTimingSpan[];
+  completed: CompletedTimingSpan[];
+}

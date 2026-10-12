@@ -54,7 +54,10 @@ context, option propagation, and safe command execution.
   JSON `command` arrays to execute configured validation commands; do not
   `eval` command text from an untrusted source.
 - `--timings` and `--verbose-timings` write diagnostics to stderr, leaving
-  successful stdout machine-readable.
+  successful stdout machine-readable. Add `--progress` for flushed live phase
+  snapshots in long or externally killed jobs; `--progress-interval <ms>`
+  defaults to 1000 and requires `--progress`. Node callers use `diagnosticsId`
+  and async `diagnosticsSnapshot({ id })` for stderr-free live progress.
 - Pass `--root <workspace>` explicitly. In normal monorepos omit `--tsconfig`
   so each importing file uses its owning config; pass a package tsconfig only
   to force one resolver for debugging or a deliberately scoped request.

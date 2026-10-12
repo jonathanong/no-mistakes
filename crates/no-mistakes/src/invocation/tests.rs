@@ -510,3 +510,121 @@ fn production_test_planning_subprocesses_use_deadline_aware_output() {
 
     assert!(sources.iter().all(|source| !source.contains(".output()")));
 }
+
+#[cfg(unix)]
+#[test]
+fn active_progress_signal_subprocess_helper() {
+    let Ok(mode) = std::env::var("NO_MISTAKES_PROGRESS_SIGNAL_MODE") else {
+        return;
+    };
+    use crate::diagnostics::{InvocationObserver, ProgressGuard, TimingKind};
+    let observer = (mode != "plain").then(|| InvocationObserver::with_progress(false, true));
+    let _scope = observer.as_ref().map(|observer| {
+        crate::diagnostics::InvocationGuard::install(std::sync::Arc::clone(observer))
+    });
+    // The CLI profile deliberately disables deadlines; progress still needs
+    // the shared signal listener so a killed hosted step can emit a snapshot.
+    let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
+        timeout: None,
+        ..InvocationOptions::default()
+    })
+    .unwrap();
+    let stop = || {
+        if mode != "kill" {
+            unsafe {
+                nix::libc::raise(signal_hook::consts::SIGTERM);
+            }
+        }
+        // The parent sends SIGKILL only after reading a flushed heartbeat.
+        std::thread::sleep(Duration::from_secs(10));
+        panic!("signal did not terminate subprocess");
+    };
+    if let Some(observer) = observer {
+        let _heartbeat =
+            ProgressGuard::install(std::sync::Arc::clone(&observer), Duration::from_millis(5));
+        observer.trace("analysis.waiting", TimingKind::Parallel, stop);
+    } else {
+        stop();
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn progress_survives_sigkill_and_sigterm_preserves_default_signal_exit_status() {
+    use std::os::unix::process::ExitStatusExt;
+    use std::process::Stdio;
+    for mode in ["plain", "term", "kill"] {
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "invocation::tests::active_progress_signal_subprocess_helper",
+                "--nocapture",
+            ])
+            .env("NO_MISTAKES_PROGRESS_SIGNAL_MODE", mode)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut captured_stderr = None;
+        if mode == "kill" {
+            use std::io::BufRead;
+            let stderr = child.stderr.take().unwrap();
+            let (ready, heartbeat) = std::sync::mpsc::channel();
+            captured_stderr = Some(std::thread::spawn(move || {
+                let mut captured = String::new();
+                for line in std::io::BufReader::new(stderr).lines() {
+                    let line = line.unwrap();
+                    if line.starts_with("[progress] ") {
+                        let _ = ready.send(());
+                    }
+                    captured.push_str(&line);
+                    captured.push('\n');
+                }
+                captured
+            }));
+            if heartbeat.recv_timeout(Duration::from_secs(4)).is_err() {
+                let _ = child.kill();
+                let _ = child.wait();
+                panic!("no bounded heartbeat before SIGKILL");
+            }
+            unsafe {
+                nix::libc::kill(child.id() as i32, signal_hook::consts::SIGKILL);
+            }
+        }
+        let status = child
+            .wait_timeout(Duration::from_secs(4))
+            .unwrap()
+            .unwrap_or_else(|| {
+                let _ = child.kill();
+                let _ = child.wait();
+                panic!("progress signal subprocess hung: {mode}");
+            });
+        let output = child.wait_with_output().unwrap();
+        assert_eq!(
+            status.signal(),
+            Some(if mode == "kill" {
+                signal_hook::consts::SIGKILL
+            } else {
+                signal_hook::consts::SIGTERM
+            })
+        );
+        let stderr = captured_stderr
+            .map(|reader| reader.join().unwrap())
+            .unwrap_or_else(|| String::from_utf8(output.stderr).unwrap());
+        let snapshots = stderr
+            .lines()
+            .filter_map(|line| line.strip_prefix("[progress] "))
+            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+            .collect::<Vec<_>>();
+        if mode == "plain" {
+            assert!(snapshots.is_empty(), "{stderr}");
+        } else {
+            assert!(!snapshots.is_empty(), "{stderr}");
+            assert!(snapshots.iter().any(|snapshot| snapshot["active"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"]))));
+        }
+    }
+}

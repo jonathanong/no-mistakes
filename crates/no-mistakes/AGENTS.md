@@ -103,3 +103,18 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   base commit. Never change code for architecture/fallback mismatches. Inspect
   system call limitations and rerun unexpected unrelated outliers before assigning
   a cause; preserve coverage floors and semantic guards throughout.
+
+### Active diagnostics ownership
+
+- Active progress belongs to the request observer and tracks a set of uniquely
+  identified live spans, including parallel siblings. Start before the closure;
+  remove with a guard on success, returned error, and unwinding. Disabled requests
+  must not create clocks, IDs, active maps, heartbeat threads, or registry entries.
+- CLI progress is opt-in and flushes stderr only. Keep stdout and signal exit
+  behavior intact; use the existing child-group forwarding listener for Unix
+  termination snapshots, including when the deadline is disabled. SIGKILL
+  diagnostics rely on already-flushed heartbeats.
+- N-API progress polling stays asynchronous and skips the invocation file lock.
+  Use declarative pure JSON bindings and a live-only Weak request registry; reject
+  duplicate active IDs and remove entries on every completion/failure path. Never
+  install CLI heartbeat/signal behavior or retain completed request payloads.

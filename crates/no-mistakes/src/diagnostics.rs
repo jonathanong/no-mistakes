@@ -6,6 +6,8 @@
 
 mod context;
 mod observer;
+mod progress;
+mod request;
 
 use std::sync::Arc;
 
@@ -14,6 +16,8 @@ pub use context::{
     InvocationGuard, LegacyDiagnosticsGuard,
 };
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
+pub use progress::{ActiveSpanSnapshot, CompletedSpanSnapshot, ProgressGuard, ProgressSnapshot};
+pub use request::{progress_for_request, DiagnosticRequestGuard};
 
 /// Count one AST visitor walk when verbose timings are enabled.
 pub fn record_ast_walk() {
@@ -22,7 +26,7 @@ pub fn record_ast_walk() {
     }
 }
 
-#[derive(clap::Args, Debug, Clone, Copy, Default)]
+#[derive(clap::Args, Debug, Clone, Copy)]
 pub struct DiagnosticsArgs {
     /// Print invocation phase timings to stderr.
     #[arg(long, global = true)]
@@ -31,12 +35,33 @@ pub struct DiagnosticsArgs {
     /// This implies `--timings`.
     #[arg(long, global = true)]
     verbose_timings: bool,
+    /// Flush active phase snapshots to stderr periodically. Implies `--timings`.
+    #[arg(long, global = true)]
+    progress: bool,
+    /// Active phase snapshot interval in milliseconds. Requires `--progress`.
+    #[arg(long, global = true, value_name = "MILLISECONDS", default_value_t = 1000, value_parser = clap::value_parser!(u64).range(1..), requires = "progress")]
+    progress_interval: u64,
 }
 
 impl DiagnosticsArgs {
     pub fn observer(self) -> Option<Arc<InvocationObserver>> {
-        (self.timings || self.verbose_timings)
-            .then(|| InvocationObserver::new(self.verbose_timings))
+        (self.timings || self.verbose_timings || self.progress)
+            .then(|| InvocationObserver::with_progress(self.verbose_timings, self.progress))
+    }
+    pub fn progress_interval(self) -> Option<std::time::Duration> {
+        self.progress
+            .then(|| std::time::Duration::from_millis(self.progress_interval))
+    }
+}
+
+impl Default for DiagnosticsArgs {
+    fn default() -> Self {
+        Self {
+            timings: false,
+            verbose_timings: false,
+            progress: false,
+            progress_interval: 1000,
+        }
     }
 }
 

@@ -36,12 +36,14 @@ fn observer_modes_installation_and_legacy_adapter_are_covered() {
     assert!(DiagnosticsArgs {
         timings: true,
         verbose_timings: false,
+        ..DiagnosticsArgs::default()
     }
     .observer()
     .is_some());
     let verbose = DiagnosticsArgs {
         timings: false,
         verbose_timings: true,
+        ..DiagnosticsArgs::default()
     }
     .observer()
     .expect("verbose timings imply an observer");

@@ -207,3 +207,8 @@ export function generatePostgresCatalog(
 export function generatePostgresCatalog(
   options: WithInvocationOptions<PostgresCatalogOptions>,
 ): Promise<PostgresCatalog>;
+
+/** Poll a live diagnosticsId without waiting for the filesystem invocation lock. Returns null before registration and after completion or failure. */
+export function diagnosticsSnapshot(options: {
+  id: string;
+}): Promise<import("./invocation-types").DiagnosticsProgressSnapshot | null>;

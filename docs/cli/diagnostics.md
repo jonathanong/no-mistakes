@@ -1,6 +1,6 @@
 # Performance diagnostics
 
-Every CLI leaf inherits two opt-in diagnostics flags:
+Every CLI leaf inherits opt-in diagnostics flags:
 
 ```sh
 no-mistakes --timings dependencies src/app.ts --format json
@@ -12,6 +12,32 @@ also emits deterministic work counts for discovery, source reads, parsing,
 resolution, graph construction, traversal, and output. Diagnostics go only to
 stderr; stdout, structured output order, exit status, and actionable error text
 are unchanged.
+
+For a command that may be killed before it returns, add `--progress`:
+
+```sh
+no-mistakes check --profile ci --progress --progress-interval 1000 --format json
+```
+
+`--progress` implies `--timings` and tracks fine-grained active spans without
+collecting verbose work ledgers. The interval is a positive integer in
+milliseconds and defaults to 1000; `--progress-interval` requires `--progress`.
+Each heartbeat flushes one `[progress]` JSON line to stderr. A final snapshot
+is also flushed on normal completion or a returned error. On Unix, the existing
+child process-group signal forwarder attempts a snapshot before preserving the
+default SIGINT/SIGTERM exit behavior, including with `--timeout 0`. SIGKILL
+cannot be handled; previously flushed heartbeats remain available in job logs.
+
+A snapshot contains `elapsedMs`, traced `startedSpans` and `completedSpans`,
+an `active` set, and grouped `completed` timing durations. Each live span has
+an invocation-local `id`, hierarchical `phase` labels, `startedMs` measured
+from invocation start, `elapsedMs`, and `parallel`. Siblings and nested phases
+can overlap; the set reports all live spans instead of replacing one phase with
+another. Rayon branches share the dispatch ancestor and retain their own
+thread-local nested phases. Completed timings are grouped by label and parallel
+status; their durations are non-additive when `parallel` is true. Progress only
+covers instrumented spans; `invocation.prepare` and `invocation.dispatch` also
+identify lock waiting and gaps between deeper phases.
 
 ```text
 [timing] graph: 12.411ms
@@ -78,4 +104,8 @@ for the duration of that invocation only.
 
 The async Node API remains stderr-free. `impactedChecks({ timings: true })`
 retains its structured `{ phase, duration_ms }[]` response; other Node methods
-do not add timing fields.
+do not add timing fields. Repository-analysis calls accept `diagnosticsId` to
+register live progress and `diagnosticsSnapshot({ id })` polls the same structured
+snapshot without acquiring the invocation lock. IDs must be unique while active;
+completion and failure remove them, and polling then returns `null`. Node calls
+install no process signal handler or stderr heartbeat. See [Node API](../node-api.md).

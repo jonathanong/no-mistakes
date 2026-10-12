@@ -28,7 +28,7 @@ use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
 use no_mistakes::codebase::import_usages::{self, ImportUsagesArgs};
 use no_mistakes::codebase::queries;
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
-use no_mistakes::diagnostics::{DiagnosticsArgs, InvocationGuard};
+use no_mistakes::diagnostics::{DiagnosticsArgs, InvocationGuard, ProgressGuard, TimingKind};
 use no_mistakes::invocation::{InvocationArgs, InvocationGuard as ExecutionGuard};
 use no_mistakes::playwright;
 use no_mistakes::{ci_run, impacted_checks_run, tests_run, CiArgs, ImpactedChecksArgs, TestsArgs};
@@ -127,18 +127,37 @@ fn run() -> Result<ExitCode> {
     let _diagnostics_guard = observer
         .as_ref()
         .map(|observer| InvocationGuard::install(Arc::clone(observer)));
-    let _execution_guard = ExecutionGuard::acquire_for_cli(cli.invocation.options())?;
-    init_rayon_threads(cli.jobs);
-    no_mistakes::invocation::check_timeout()?;
-    let result = no_mistakes::ast::with_request_parse_cache(|| run_command(cli.command));
-    no_mistakes::invocation::check_timeout()?;
+    let progress_guard = observer
+        .as_ref()
+        .zip(cli.diagnostics.progress_interval())
+        .map(|(observer, interval)| ProgressGuard::install(Arc::clone(observer), interval));
+    let mut execution_guard = None;
+    let result = (|| {
+        let prepare = || ExecutionGuard::acquire_for_cli(cli.invocation.options());
+        execution_guard = Some(match &observer {
+            Some(observer) => observer.trace("invocation.prepare", TimingKind::Serial, prepare),
+            None => prepare(),
+        }?);
+        init_rayon_threads(cli.jobs);
+        no_mistakes::invocation::check_timeout()?;
+        let dispatch = || no_mistakes::ast::with_request_parse_cache(|| run_command(cli.command));
+        let result = match &observer {
+            Some(observer) => observer.trace("invocation.dispatch", TimingKind::Serial, dispatch),
+            None => dispatch(),
+        };
+        no_mistakes::invocation::check_timeout()?;
+        result
+    })();
+    drop(progress_guard);
     if let Some(observer) = observer {
         match &result {
             Ok(_) => observer.increment("output.renders", 1),
             Err(_) => observer.increment("output.errors", 1),
         }
+        observer.render_progress_stderr();
         observer.render_stderr();
     }
+    drop(execution_guard);
     result
 }
 
