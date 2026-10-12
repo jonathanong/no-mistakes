@@ -1,3 +1,4 @@
+use super::config::sink;
 use super::traces::{node_label, shortest};
 use super::*;
 use crate::config::v2::schema::EffectKindConfig;
@@ -231,4 +232,105 @@ fn named_const_alias_callbacks_keep_their_actual_binding_use_offset() {
             "{findings:#?}"
         );
     }
+}
+
+#[test]
+fn binding_targets_match_imports_callbacks_and_transitive_sinks_without_name_collisions() {
+    let root = root().with_file_name("targets-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29]
+            .map(|line| ("src/entry.mts", line))
+    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 28 && finding.message.contains("lookup → inner → load")));
+    assert!(findings.iter().any(
+        |finding| finding.line == 29 && finding.message.contains("cachedLookup → valkey.hget")
+    ));
+    assert!(findings.iter().any(|finding| finding.line == 24
+        && finding.message.contains("forEach callback")
+        && finding
+            .target
+            .as_deref()
+            .is_some_and(|target| target.starts_with("valkey:"))));
+}
+
+#[test]
+fn binding_targets_require_nonempty_module_and_export_selectors() {
+    let root = root().with_file_name("targets-fixture");
+    for name in ["invalid-module.yml", "invalid-export.yml"] {
+        let error =
+            crate::codebase::rules::run_check(&root, Some(&root.join(name)), None).unwrap_err();
+        assert!(error.to_string().contains("non-empty module and export"));
+    }
+}
+
+#[test]
+fn legacy_transaction_spellings_take_precedence_over_binding_targets() {
+    let root = root().with_file_name("targets-fixture");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("transaction.yml")), None)
+            .unwrap();
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 13 && finding.message.contains("transaction client only")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 18 && !finding.message.contains("transaction client only")));
+}
+
+#[test]
+fn adding_binding_targets_retains_legacy_lists_without_duplicate_occurrences() {
+    let root = root().with_file_name("targets-fixture");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("mixed.yml")), None).unwrap();
+    // Legacy spellings intentionally still select the shadowed parameter at 38.
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [11, 14, 16, 19, 20, 26, 28, 38]
+    );
+}
+
+#[test]
+fn callback_occurrences_keep_their_own_bindings_within_one_caller() {
+    let root = root().with_file_name("callbacks-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == "src/entry.mts"));
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.import.as_deref().unwrap()))
+            .collect::<Vec<_>>(),
+        [
+            (6, "read"),
+            (13, "cache.get"),
+            (20, "lookup"),
+            (27, "read"),
+            (27, "read"),
+            (29, "read"),
+        ]
+    );
+    let repeated = findings
+        .iter()
+        .filter(|finding| finding.line == 27)
+        .collect::<Vec<_>>();
+    assert!(repeated[0].message.ends_with("(occurrence 1)"));
+    assert!(repeated[1].message.ends_with("(occurrence 2)"));
+    assert!(findings
+        .iter()
+        .find(|finding| finding.line == 29)
+        .unwrap()
+        .message
+        .contains("map callback"));
 }

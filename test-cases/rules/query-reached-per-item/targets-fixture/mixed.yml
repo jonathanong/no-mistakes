@@ -1,0 +1,10 @@
+effects:
+  postgres:
+    functions: [load]
+    targets:
+      - { module: '@data-stores/psql', export: read }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

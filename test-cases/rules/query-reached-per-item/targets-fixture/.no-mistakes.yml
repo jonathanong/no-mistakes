@@ -1,0 +1,19 @@
+effects:
+  postgres:
+    targets:
+      - { module: '@data-stores/psql', export: read, category: query }
+      - { module: '@data-stores/psql', export: write, category: query }
+      - { module: '@data-stores/psql', export: query, category: query }
+      # Duplicate selectors must keep one physical finding.
+      - { module: '@data-stores/psql', export: read }
+      - { module: '@vendor/default-db', export: default.query }
+      - { module: './repository.mjs', export: read }
+  valkey:
+    targets:
+      - { module: '@vendor/cache', export: valkey.hget, category: cache }
+      - { module: '@vendor/cache', export: valkey.get, category: cache }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres, valkey]

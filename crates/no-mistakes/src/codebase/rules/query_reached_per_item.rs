@@ -11,7 +11,7 @@ use std::path::Path;
 mod config;
 mod traces;
 pub(crate) use config::graph_plan;
-use config::{exempt, sink, Options};
+use config::{exempt, Options, Sinks};
 use traces::{source_node, Reach};
 
 pub const RULE_ID: &str = "query-reached-per-item";
@@ -26,7 +26,6 @@ pub(crate) fn check_with_graph(
     let root = root.as_path();
     // Occurrences have exact offsets, including multiple calls on one line.
     let mut positions = BTreeMap::new();
-    let mut callbacks = BTreeMap::new();
     for file in facts.graph_file_universe() {
         let Some(ts) = facts.get_ts_facts(file) else {
             continue;
@@ -35,17 +34,15 @@ pub(crate) fn check_with_graph(
             continue;
         }
         for position in &ts.per_item_calls {
-            if position.is_callback {
-                callbacks
-                    .entry((file.clone(), position.caller_id, position.callee.clone()))
-                    .or_insert_with(Vec::new)
-                    .push(position);
-            } else {
-                positions.insert(
-                    (file.clone(), position.offset, position.caller_id),
-                    position,
-                );
-            }
+            positions.insert(
+                (
+                    file.clone(),
+                    position.offset,
+                    position.caller_id,
+                    position.is_callback,
+                ),
+                position,
+            );
         }
     }
     let mut findings = Vec::new();
@@ -55,6 +52,7 @@ pub(crate) fn check_with_graph(
         let filter = super::path_filter::RulePathFilter::new(root, config, application)?;
         for kind in &options.effects {
             let effect = &config.effects[kind];
+            let configured_sinks = Sinks::new(effect);
             let mut sinks: BTreeMap<NodeId, Vec<(&ResolvedCallSite, bool)>> = BTreeMap::new();
             let mut excluded = Vec::new();
             for site in graph.resolved_call_sites() {
@@ -69,7 +67,7 @@ pub(crate) fn check_with_graph(
                     if let Some(node) = &site.target_node {
                         excluded.push(node.clone());
                     }
-                } else if let Some(transaction) = sink(effect, &site.source_callee) {
+                } else if let Some(transaction) = configured_sinks.match_site(site) {
                     sinks
                         .entry(source_node(site))
                         .or_default()
@@ -82,22 +80,17 @@ pub(crate) fn check_with_graph(
                 .resolved_call_sites()
                 .iter()
                 .filter_map(|site| {
-                    let position = if site.invocation
-                        == crate::codebase::dependencies::extract::InvocationKind::Callback
-                    {
-                        callbacks
-                            .get(&(
-                                site.file.clone(),
-                                site.caller_id,
-                                site.source_callee.clone(),
-                            ))
-                            .map(Vec::as_slice)
-                    } else {
-                        positions
-                            .get(&(site.file.clone(), site.offset, site.caller_id))
-                            .map(std::slice::from_ref)
-                    };
-                    position.map(|positions| (site, positions))
+                    // A source name can refer to different lexical bindings in
+                    // one caller. Correlate each resolved callback by its use offset.
+                    positions
+                        .get(&(
+                            site.file.clone(),
+                            site.offset,
+                            site.caller_id,
+                            site.invocation
+                                == crate::codebase::dependencies::extract::InvocationKind::Callback,
+                        ))
+                        .map(|position| (site, *position))
                 })
                 .collect::<Vec<_>>();
             let mut roots = candidates
@@ -108,7 +101,7 @@ pub(crate) fn check_with_graph(
             roots.dedup();
             roots.retain(|node| excluded.binary_search(node).is_err());
             let reachable = traces::reachable(graph, &roots, &sinks, &excluded);
-            for (site, positions) in candidates {
+            for (site, position) in candidates {
                 if !filter.is_match(&site.file)
                     || exempt(effect, &site.source_callee)
                     || excluded.binary_search(&source_node(site)).is_ok()
@@ -119,7 +112,7 @@ pub(crate) fn check_with_graph(
                 {
                     continue;
                 }
-                let direct = sink(effect, &site.source_callee).map(|transaction| Reach {
+                let direct = configured_sinks.match_site(site).map(|transaction| Reach {
                     path: vec![site.source_callee.clone()],
                     transaction,
                 });
@@ -133,44 +126,42 @@ pub(crate) fn check_with_graph(
                 let Some(reach) = reach else {
                     continue;
                 };
-                for position in positions {
-                    let file = relative_slash_path(root, &site.file);
-                    if options.allow.iter().any(|allow| {
-                        allow.file == file
-                            && allow
-                                .callee
-                                .as_ref()
-                                .is_none_or(|callee| callee == &site.source_callee)
-                            && allow.line.is_none_or(|line| line == position.line)
-                    }) {
-                        continue;
-                    }
-                    let mut path = reach.path.clone();
-                    if let Some(caller) = &site.caller {
-                        path.insert(0, caller.clone());
-                    }
-                    let path = path.join(" → ");
-                    let transaction = if reach.transaction {
-                        " (transaction client only; merge statements instead of parallelizing)"
-                    } else {
-                        ""
-                    };
-                    let message = application.message.as_deref().unwrap_or("per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression");
-                    findings.push((
-                        position.offset,
-                        RuleFinding {
-                            rule: RULE_ID.to_string(),
-                            file,
-                            line: position.line as usize,
-                            message: format!(
-                                "{message}: {} `{}` reaches `{kind}` via {path}{transaction}",
-                                position.construct, site.source_callee
-                            ),
-                            import: Some(site.source_callee.clone()),
-                            target: Some(format!("{kind}: {path}")),
-                        },
-                    ));
+                let file = relative_slash_path(root, &site.file);
+                if options.allow.iter().any(|allow| {
+                    allow.file == file
+                        && allow
+                            .callee
+                            .as_ref()
+                            .is_none_or(|callee| callee == &site.source_callee)
+                        && allow.line.is_none_or(|line| line == position.line)
+                }) {
+                    continue;
                 }
+                let mut path = reach.path.clone();
+                if let Some(caller) = &site.caller {
+                    path.insert(0, caller.clone());
+                }
+                let path = path.join(" → ");
+                let transaction = if reach.transaction {
+                    " (transaction client only; merge statements instead of parallelizing)"
+                } else {
+                    ""
+                };
+                let message = application.message.as_deref().unwrap_or("per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression");
+                findings.push((
+                    position.offset,
+                    RuleFinding {
+                        rule: RULE_ID.to_string(),
+                        file,
+                        line: position.line as usize,
+                        message: format!(
+                            "{message}: {} `{}` reaches `{kind}` via {path}{transaction}",
+                            position.construct, site.source_callee
+                        ),
+                        import: Some(site.source_callee.clone()),
+                        target: Some(format!("{kind}: {path}")),
+                    },
+                ));
             }
         }
     }

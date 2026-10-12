@@ -5,6 +5,74 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled callback findings keep each lexical binding and occurrence distinct",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/callbacks-fixture",
+    );
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.warnings, []);
+    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
+    assert.deepEqual(
+      findings.map((finding) => [finding.file, finding.line, finding.import]),
+      [
+        [6, "read"],
+        [13, "cache.get"],
+        [20, "lookup"],
+        [27, "read"],
+        [27, "read"],
+        [29, "read"],
+      ].map(([line, callee]) => ["src/entry.mts", line, callee]),
+      "a resolved import must never supply the sink for a same-caller shadowed callback",
+    );
+    const repeated = findings.filter((finding) => finding.line === 27);
+    assert.ok(repeated[0].message.endsWith("(occurrence 1)"));
+    assert.ok(repeated[1].message.endsWith("(occurrence 2)"));
+    assert.ok(findings.find((finding) => finding.line === 29).message.includes("map callback"));
+    assert.deepEqual(await esm.check({ root }), report);
+    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+    assert.deepEqual(batch.reports[0].result, report);
+  },
+);
+
+test(
+  "compiled checks honor exact effect bindings through aliases and helper traces",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/targets-fixture",
+    );
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.warnings, []);
+    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
+    assert.deepEqual(
+      findings.map((finding) => finding.line).sort((a, b) => a - b),
+      [11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29],
+      "only configured module bindings should report; streams, shadows and local parameters stay quiet",
+    );
+    assert.ok(findings.every((finding) => finding.file === "src/entry.mts"));
+    assert.ok(findings.some((finding) => finding.message.includes("lookup → inner → load")));
+    assert.ok(
+      findings.some(
+        (finding) =>
+          finding.message.includes("cachedLookup → valkey.hget") &&
+          finding.message.includes("reaches `valkey`"),
+      ),
+    );
+    assert.deepEqual(await esm.check({ root }), report);
+    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+    assert.deepEqual(batch.reports[0].result, report);
+  },
+);
+
+test(
   "compiled CJS, ESM and batched checks share per-item effect diagnostics",
   { skip: !compiled },
   async () => {
