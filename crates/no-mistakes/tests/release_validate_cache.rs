@@ -72,6 +72,39 @@ fn validate_job_drops_cargo_package_tree_before_rust_cache_save() {
 }
 
 #[test]
+fn validate_job_drops_test_executables_after_tests_before_package_verification() {
+    // The v0.87.1 release ran every test, then `cargo publish --dry-run` hit
+    // `No space left on device`: debug test executables fill the runner disk.
+    let workflow = release_workflow();
+    let validate = job_body(&workflow, "validate");
+    let rust_tests = validate.find("run: cargo test --all-features\n").unwrap();
+    let js_tests = validate.find("run: pnpm test\n").unwrap();
+    let cleanup_heading = validate
+        .find("name: Drop Rust test executables")
+        .expect("Validate must free test executables before package verification");
+    let publish = validate
+        .find("cargo publish --dry-run --locked -p no-mistakes")
+        .unwrap();
+    assert!(
+        rust_tests < cleanup_heading && js_tests < cleanup_heading && cleanup_heading < publish,
+        "test executables must be dropped after every test step and before cargo publish"
+    );
+    let step = &validate[cleanup_heading..publish];
+    // Only extensionless executables in deps/: keep .rlib/.rmeta/.so/.d so the
+    // verification build and rust-cache still see the dependency artifacts.
+    assert!(
+        step.contains(
+            "find target/debug/deps -maxdepth 1 -type f -perm -u+x ! -name '*.*' -delete"
+        ),
+        "cleanup must delete only extensionless executables directly under target/debug/deps"
+    );
+    assert!(
+        !step.contains("rm -rf target"),
+        "cleanup must not wipe whole target directories"
+    );
+}
+
+#[test]
 fn job_body_stops_at_the_next_two_space_job_heading() {
     let workflow = concat!(
         "jobs:\n",
