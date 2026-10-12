@@ -5,6 +5,7 @@ export function analyzeTypeScriptModules(
   options: WithInvocationOptions<TypeScriptModulesOptions>,
 ): Promise<TypeScriptModulesReport>;
 import type { PostgresSqlSource, PostgresSqlFacts } from "./postgres-source-types";
+export { extractExecutedPostgresSql } from "./executed-postgres-sql-types";
 export * from "./postgres-source-types";
 /** Parse SQL on the native async worker without repository I/O or a database. */
 export function parsePostgresSql(source: PostgresSqlSource): Promise<PostgresSqlFacts>;
