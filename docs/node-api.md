@@ -601,7 +601,10 @@ visible file outside configured check candidates and a file with no exports.
 `effects` also supports binding-aware
 `effects.<kind>.targets` config
 selectors by exact import specifier and export path; its string lists retain
-spelling-based matching. `resolveCheck` import rows include `computed: true` for non-literal
+spelling-based matching. The `query-reached-per-item` rule in `check()` and
+`analyzeProject()` check reports honors those same binding-aware selectors,
+including transitive helper calls, without matching unrelated same-named bindings.
+`resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
 same visible `exports`/`main` resolver as dependency `workspace` edges; missing or

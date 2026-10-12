@@ -3,9 +3,16 @@ use std::sync::Arc;
 
 #[test]
 fn per_item_graph_projection_reuses_each_source_and_parse() {
+    for fixture in ["fixture", "targets-fixture"] {
+        assert_prepared_per_item_projection(fixture);
+    }
+}
+
+fn assert_prepared_per_item_projection(fixture: &str) {
     use crate::codebase::dependencies::graph::{DepGraph, PreparedCheckFactGraphBuildRequest};
     let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/query-reached-per-item/fixture");
+        .join("../../test-cases/rules/query-reached-per-item")
+        .join(fixture);
     let materialized = crate::test_support::materialize_saved_fixture(&saved);
     let root = crate::codebase::ts_resolver::normalize_path(materialized.path());
     let observer = crate::diagnostics::InvocationObserver::new(true);
@@ -78,9 +85,8 @@ fn per_item_graph_projection_reuses_each_source_and_parse() {
     );
     let parses = crate::ast::finish_parse_count(&root);
     let reads = observer.source_read_snapshot();
-    for name in ["src/entry.mts", "src/helpers.mts", "src/disabled.mts"] {
-        let path = root.join(name);
-        assert_eq!(parses.get(&path), Some(&1), "{parses:#?}");
-        assert_eq!(reads.get(&path), Some(&1), "{reads:#?}");
+    for path in facts.graph_file_universe() {
+        assert_eq!(parses.get(path), Some(&1), "{parses:#?}");
+        assert_eq!(reads.get(path), Some(&1), "{reads:#?}");
     }
 }

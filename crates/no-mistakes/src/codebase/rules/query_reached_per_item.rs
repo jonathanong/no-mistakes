@@ -11,7 +11,7 @@ use std::path::Path;
 mod config;
 mod traces;
 pub(crate) use config::graph_plan;
-use config::{exempt, sink, Options};
+use config::{exempt, Options, Sinks};
 use traces::{source_node, Reach};
 
 pub const RULE_ID: &str = "query-reached-per-item";
@@ -55,6 +55,7 @@ pub(crate) fn check_with_graph(
         let filter = super::path_filter::RulePathFilter::new(root, config, application)?;
         for kind in &options.effects {
             let effect = &config.effects[kind];
+            let configured_sinks = Sinks::new(effect);
             let mut sinks: BTreeMap<NodeId, Vec<(&ResolvedCallSite, bool)>> = BTreeMap::new();
             let mut excluded = Vec::new();
             for site in graph.resolved_call_sites() {
@@ -69,7 +70,7 @@ pub(crate) fn check_with_graph(
                     if let Some(node) = &site.target_node {
                         excluded.push(node.clone());
                     }
-                } else if let Some(transaction) = sink(effect, &site.source_callee) {
+                } else if let Some(transaction) = configured_sinks.match_site(site) {
                     sinks
                         .entry(source_node(site))
                         .or_default()
@@ -119,7 +120,7 @@ pub(crate) fn check_with_graph(
                 {
                     continue;
                 }
-                let direct = sink(effect, &site.source_callee).map(|transaction| Reach {
+                let direct = configured_sinks.match_site(site).map(|transaction| Reach {
                     path: vec![site.source_callee.clone()],
                     transaction,
                 });

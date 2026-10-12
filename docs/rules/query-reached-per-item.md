@@ -1,3 +1,4 @@
+<!-- cspell:ignore hget -->
 # `query-reached-per-item`
 
 Flag per-item calls that transitively reach an explicitly configured effect sink.
@@ -34,14 +35,19 @@ names are inferred. Unknown effect kinds are configuration errors.
 ```yaml
 effects:
   postgres:
-    functions: [read, write]
+    targets:
+      - { module: '@data-stores/psql', export: read, category: query }
+      - { module: '@data-stores/psql', export: write, category: query }
     transactionFunctions: [tx.query]
     batchFunctions: [readMany]
+  valkey:
+    targets:
+      - { module: '@data-stores/valkey', export: valkey.hget, category: cache }
 rules:
   - rule: query-reached-per-item
     scope: repository
     options:
-      effects: [postgres]
+      effects: [postgres, valkey]
       allow: []
 ```
 
@@ -50,8 +56,18 @@ rules:
 | `effects` | Empty   | Required non-empty list of configured effect family names.                                                    |
 | `allow`   | Empty   | Existing callsites to exempt by repository-relative `file`, optional `callee`, and optional one-based `line`. |
 
-Effect `functions` and `categories` reuse the spelling matching documented for
-[`effects`](../cli/effects.md). `transactionFunctions` names additional sinks
+Effect `targets` match resolved module/export bindings, including aliased
+imports, namespace members, static lexical aliases, and named callbacks. The
+rule selects every target in a selected family, regardless of its category.
+For example, `import { valkey as cache } from '@data-stores/valkey'` followed by
+`items.map(item => cache.hget(item))` matches `valkey.hget`; a local parameter
+named `cache` does not. Calls such as `console.write()` and stream methods do
+not match a PostgreSQL target. Transitive helper paths use the same selectors.
+
+Effect `functions` and `categories` retain the spelling matching documented for
+[`effects`](../cli/effects.md), including unrelated bindings with matching names.
+Use targets instead of broad spelling lists to avoid those collisions. Adding
+targets does not restrict existing lists. `transactionFunctions` names additional sinks
 which carry the transaction marker. `batchFunctions` exempts paths through
 configured batch/pipeline builders; another path to a sink remains reportable. Eager query calls in builder
 arguments, such as `batch(items.map(item => lookup(item)))`, still report
@@ -74,6 +90,8 @@ own internal batching path.
 ## Counterexample
 
 ```ts
+import { read } from '@data-stores/psql';
+
 async function getUser(id: string) {
   return read(id);
 }
