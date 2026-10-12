@@ -2,28 +2,6 @@ use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use std::path::Path;
 use std::sync::Arc;
 
-#[cfg(test)]
-pub(crate) fn collect_file_facts_with_session_and_sources(
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
-    path: &Path,
-    plan: &CheckFactPlan,
-    playwright: Option<&PlaywrightFactPlan>,
-    sources: &crate::codebase::ts_source::SourceStore,
-    retain_parse: bool,
-) -> Option<CheckFileFacts> {
-    let context = super::prepared_ts_extract_context(session, root, plan);
-    super::collect_file_facts_with_session_and_sources_and_context(
-        session,
-        path,
-        plan,
-        playwright,
-        sources,
-        retain_parse,
-        &context,
-    )
-}
-
 pub(crate) fn collect_file_facts_with_session_and_sources_and_context(
     session: &crate::codebase::analysis_session::AnalysisSession,
     path: &Path,

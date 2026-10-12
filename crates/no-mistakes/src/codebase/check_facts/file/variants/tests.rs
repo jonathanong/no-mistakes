@@ -169,10 +169,11 @@ fn variants_keep_distinct_queue_factory_contexts_and_match_single_plan_facts() {
             std::slice::from_ref(&path),
         ));
         let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-        let single = crate::codebase::check_facts::collect_file_facts_with_session_and_sources(
-            &session, &root, &path, plan, None, &sources, false,
-        )
-        .expect("single-plan facts");
+        let single =
+            crate::codebase::check_facts::tests::collect_file_facts_with_session_and_sources(
+                &session, &root, &path, plan, None, &sources, false,
+            )
+            .expect("single-plan facts");
         assert_eq!(
             variant_facts
                 .as_ref()

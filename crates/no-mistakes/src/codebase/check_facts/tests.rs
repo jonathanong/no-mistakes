@@ -5,6 +5,27 @@ use super::{
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+pub(crate) fn collect_file_facts_with_session_and_sources(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    retain_parse: bool,
+) -> Option<super::CheckFileFacts> {
+    let context = super::file::prepared_ts_extract_context(session, root, plan);
+    super::file::collect_file_facts_with_session_and_sources_and_context(
+        session,
+        path,
+        plan,
+        playwright,
+        sources,
+        retain_parse,
+        &context,
+    )
+}
+
 pub(crate) fn collect_file_facts(
     root: &Path,
     path: &Path,
@@ -16,7 +37,7 @@ pub(crate) fn collect_file_facts(
         path.to_path_buf(),
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    super::collect_file_facts_with_session_and_sources(
+    collect_file_facts_with_session_and_sources(
         &session, root, path, plan, playwright, &sources, false,
     )
 }
