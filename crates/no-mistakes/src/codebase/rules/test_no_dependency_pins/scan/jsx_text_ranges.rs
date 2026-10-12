@@ -14,24 +14,25 @@ impl<'a> Visit<'a> for Collector {
     }
 }
 
-pub(super) fn collect(file: &str, content: &str) -> Vec<(usize, usize)> {
-    if !matches!(
-        Path::new(file).extension().and_then(|ext| ext.to_str()),
-        Some("tsx" | "jsx")
-    ) {
+pub(crate) fn collect_from_program(program: &oxc_ast::ast::Program<'_>) -> Vec<(usize, usize)> {
+    let mut collector = Collector::default();
+    collector.visit_program(program);
+    collector.ranges
+}
+
+pub(crate) fn collect(
+    path: &Path,
+    content: &Arc<str>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> Vec<(usize, usize)> {
+    if !super::super::is_jsx_file(path) {
         return Vec::new();
     }
-    crate::ast::with_recovered_program_status_observed(
-        Path::new(file),
-        Arc::from(content),
-        || {},
-        |program, _, _, _| {
-            let mut collector = Collector::default();
-            collector.visit_program(program);
-            collector.ranges
-        },
-    )
-    .unwrap_or_default()
+    session
+        .with_recovered_program_status(path, content, |program, _, _, _| {
+            collect_from_program(program)
+        })
+        .unwrap_or_default()
 }
 
 pub(super) fn mask(content: &str, ranges: &[(usize, usize)]) -> String {

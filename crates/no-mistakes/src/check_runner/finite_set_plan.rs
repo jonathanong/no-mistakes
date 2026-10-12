@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct PreparedFactDemand {
     companion_import_files: Vec<PathBuf>,
+    jsx_text_files: Vec<PathBuf>,
     has_companion_plan: bool,
     call_site_files: Vec<PathBuf>,
     runner_config_files: Vec<PathBuf>,
@@ -13,6 +14,7 @@ pub(crate) struct PreparedFactDemand {
 
 impl PreparedFactDemand {
     pub(crate) fn include_companion_plan(&mut self, plan: &CheckFactPlan) {
+        self.jsx_text_files = plan.jsx_text_paths.iter().cloned().collect();
         self.has_companion_plan = !plan.companion_import_plans.is_empty();
         self.companion_import_files.clear();
         // Only a companion-only primary scope consumes this membership list.
@@ -25,6 +27,7 @@ impl PreparedFactDemand {
     }
     pub(crate) fn needs_shared_facts(&self) -> bool {
         self.needs_other_facts
+            || !self.jsx_text_files.is_empty()
             || self.has_companion_plan
             || !self.call_site_files.is_empty()
             || !self.runner_config_files.is_empty()
@@ -41,6 +44,7 @@ impl PreparedFactDemand {
         }
         let mut requested = self.call_site_files.clone();
         requested.extend(self.companion_import_files.iter().cloned());
+        requested.extend(self.jsx_text_files.iter().cloned());
         requested.extend(self.runner_config_files.iter().cloned());
         no_mistakes::codebase::check_facts::ordered_path_intersection(&requested, &discovered)
     }
@@ -81,6 +85,7 @@ pub(crate) fn prepare(
     }
     let mut demand = PreparedFactDemand {
         companion_import_files: Vec::new(),
+        jsx_text_files: Vec::new(),
         has_companion_plan: false,
         call_site_files: files,
         runner_config_files: plan

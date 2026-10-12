@@ -84,6 +84,12 @@ pub(crate) fn run_all_with_evidence(
         &sources,
         &mut plan,
     )?;
+    no_mistakes::codebase::rules::test_no_dependency_pins::configure_fact_plan(
+        &root,
+        config,
+        &views.filesystem,
+        &mut plan,
+    )?;
     fact_demand.include_companion_plan(&plan);
     let needs_shared_facts = fact_demand.needs_shared_facts();
     let (discovered, graph_files) = crate::check_discovery::select_graph_files(

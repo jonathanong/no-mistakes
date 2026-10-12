@@ -157,6 +157,9 @@ fn recovered_error_facts(
         parse_error.clone(),
     );
     ts.fatal_parse_error = recovery.fatal_parse_error;
+    ts.jsx_text_ranges = crate::codebase::rules::test_no_dependency_pins::prepared_jsx_text_ranges(
+        plan, path, program,
+    );
     let symbols = (recovery.symbols && (plan.symbols || plan.graph.symbols)).then(|| {
         Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
             program,

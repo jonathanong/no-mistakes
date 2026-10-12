@@ -4,6 +4,9 @@ use std::{collections::HashSet, path::PathBuf};
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
+    /// Exact rule-selected JSX source paths needing text ranges in the union parse.
+    #[doc(hidden)]
+    pub jsx_text_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Explicit production-rule sources, including metadata and unknown extensions.
     /// Their import projection preserves the historical TypeScript/TSX parse mode.
     #[doc(hidden)]
@@ -73,6 +76,11 @@ impl CheckFactPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
+        if !other.jsx_text_paths.is_empty()
+            && !Arc::ptr_eq(&self.jsx_text_paths, &other.jsx_text_paths)
+        {
+            Arc::make_mut(&mut self.jsx_text_paths).extend(other.jsx_text_paths.iter().cloned());
+        }
         self.companion_import_plans =
             crate::codebase::rules::required_companion_imports::merge_plans(
                 &self.companion_import_plans,

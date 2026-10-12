@@ -16,7 +16,7 @@ pub(crate) fn collect_file_facts_from_program(
 ) -> CheckFileFacts {
     let stored_source =
         owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
-    let ts = facts::collect_file_facts_from_program(
+    let mut ts = facts::collect_file_facts_from_program(
         path,
         ts_extract_plan(plan, path, playwright),
         &ts_extract_context(root, plan),
@@ -24,6 +24,9 @@ pub(crate) fn collect_file_facts_from_program(
         program,
         None,
         stored_source.clone(),
+    );
+    ts.jsx_text_ranges = crate::codebase::rules::test_no_dependency_pins::prepared_jsx_text_ranges(
+        plan, path, program,
     );
     let react = (plan.react || plan.graph.react).then(|| {
         Arc::new(crate::react_traits::analyze::file::FileAnalysis {

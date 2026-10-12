@@ -20,8 +20,7 @@ impl SharedCheckContext {
             deadlines,
         } = options;
 
-        // Borrow the aggregate root identity; canonicalizing here would split shared keys.
-        let root = root.to_path_buf();
+        let root = root.to_path_buf(); // Borrow the aggregate root identity.
         let prepared = crate::check_runner::prepared::prepare_from_shared(
             &root,
             config_path,
@@ -151,7 +150,7 @@ impl SharedCheckContext {
             unique_exports_enabled,
             prepared.visible_paths.as_ref(),
         );
-        crate::codebase::rules::required_companion_imports::configure_fact_plan(
+        configure_check_filesystem_facts(
             &root,
             config,
             &views.filesystem,

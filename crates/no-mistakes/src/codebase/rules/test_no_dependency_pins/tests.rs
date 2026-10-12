@@ -465,3 +465,6 @@ fn message_includes_file_line_reason_and_match() {
         "src/app.test.ts:4: tests must not pin exact dependency versions (exact action ref): `actions/checkout@v4`"
     );
 }
+
+#[path = "tests/prepared.rs"]
+mod prepared;

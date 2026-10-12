@@ -8,6 +8,8 @@ mod call_index;
 mod companion_imports;
 #[path = "core_analysis/dependency_checks.rs"]
 mod dependency_checks;
+#[path = "core_analysis/dependency_pin_jsx.rs"]
+mod dependency_pin_jsx;
 #[path = "core_analysis/extract.rs"]
 mod extract;
 #[path = "core_analysis/fixtures.rs"]
@@ -96,6 +98,7 @@ criterion_group!(
     bench_lazy_traversal,
     dependency_checks::bench_dependency_checks,
     companion_imports::bench_companion_imports,
+    dependency_pin_jsx::bench_dependency_pin_jsx,
     postgres_bounds::bench_postgres_bounds,
     postgres_annotations::bench_postgres_annotations,
     annotation_modules::bench_annotation_module_indexes,

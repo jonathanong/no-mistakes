@@ -126,9 +126,13 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         TEST_EMAIL_DOMAIN_POLICY => {
             test_email_domain_policy::check_with_files_and_sources(root, config, files, sources)
         }
-        TEST_NO_DEPENDENCY_PINS => {
-            test_no_dependency_pins::check_with_files_and_sources(root, config, files, sources)
-        }
+        TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files_sources_and_facts(
+            root,
+            config,
+            files,
+            sources,
+            facts.map(|facts| facts as &dyn crate::codebase::dependencies::graph::TsFactLookup),
+        ),
         _ => super::run_rule_engines::run(RunRuleRequest {
             rule_id,
             fallback,

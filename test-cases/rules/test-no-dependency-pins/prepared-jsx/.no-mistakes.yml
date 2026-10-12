@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: test-no-dependency-pins
+    scope: repository
+    include: ['src/**']
+    exclude: ['src/excluded.test.tsx']
+    options:
+      include: ['src/*.test.tsx', 'src/*.test.jsx']

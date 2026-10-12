@@ -51,6 +51,7 @@ pub(super) fn requires_parse(
     playwright: Option<&PlaywrightFactPlan>,
 ) -> bool {
     plan.imports
+        || plan.jsx_text_paths.contains(path)
         || plan.production_import_paths.contains(path)
         || plan.query_annotation
         || plan.symbols

@@ -25,3 +25,15 @@ struct SharedCheckContext {
     graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
 }
 
+fn configure_check_filesystem_facts(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) -> Result<()> {
+    crate::codebase::rules::required_companion_imports::configure_fact_plan(
+        root, config, files, sources, plan,
+    )?;
+    crate::codebase::rules::test_no_dependency_pins::configure_fact_plan(root, config, files, plan)
+}

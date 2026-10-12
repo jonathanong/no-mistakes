@@ -10,7 +10,7 @@ use std::sync::LazyLock;
 mod assertion_ranges;
 mod delimiters;
 mod flow_scope;
-mod jsx_text_ranges;
+pub(crate) mod jsx_text_ranges;
 mod line_scan;
 mod raw_literal_arg;
 mod received_prefix;
@@ -19,11 +19,26 @@ mod synthetic;
 use line_scan::{into_findings, scan_lines, Found};
 use synthetic::only_zero_versions;
 
+#[cfg(test)]
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let ranges = jsx_text_ranges::collect(
+        std::path::Path::new(file),
+        &std::sync::Arc::from(content),
+        &session,
+    );
+    check_source_with_ranges(file, content, opts, &ranges)
+}
+
+pub(super) fn check_source_with_ranges(
+    file: &str,
+    content: &str,
+    opts: &CompiledOptions,
+    jsx_text_ranges: &[(usize, usize)],
+) -> Vec<RuleFinding> {
     let mut found = Vec::new();
     let ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
-        let jsx_text_ranges = jsx_text_ranges::collect(file, content);
-        let lexical_source = jsx_text_ranges::mask(content, &jsx_text_ranges);
+        let lexical_source = jsx_text_ranges::mask(content, jsx_text_ranges);
         let mut ranges = source_ranges_for_file(file, &lexical_source);
         ranges.non_code.extend(jsx_text_ranges.iter().copied());
         merge_ranges(&mut ranges.non_code);

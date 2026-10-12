@@ -5,15 +5,9 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
 use std::sync::Arc;
-
-pub(super) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) -> TsFileFacts {
-    match result {
-        Ok(facts) => facts,
-        // Indexable extensions are expected to have an OXC source type.
-        // Reaching this branch means that allowlist and OXC support drifted.
-        Err(error) => failure_facts(error.to_string()),
-    }
-}
+mod errors;
+pub(super) use errors::facts_from_collection_result;
+use errors::failure_facts;
 
 pub(super) fn collect_file_facts_with_sources_and_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -77,15 +71,6 @@ pub(super) fn collect_file_facts_with_sources_and_session(
         crate::ast::evict_request_parse_cache_path(path);
     }
     facts
-}
-
-fn failure_facts(error: String) -> TsFileFacts {
-    // Preserve request-level failures and the legacy parser diagnostic channel.
-    TsFileFacts {
-        operational_error: Some(error.clone()),
-        parse_error: Some(error),
-        ..TsFileFacts::default()
-    }
 }
 
 pub(crate) fn collect_file_facts_from_program(
@@ -153,6 +138,7 @@ pub(crate) fn collect_file_facts_from_program(
         module_bindings: plan
             .module_bindings
             .then(|| Arc::new(crate::codebase::ts_source::module_facts::extract(program))),
+        jsx_text_ranges: None,
         operational_error: None,
         parse_error,
         fatal_parse_error: false,

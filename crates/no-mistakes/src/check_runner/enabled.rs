@@ -56,6 +56,7 @@ pub(crate) struct EnabledChecks {
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
         imports: enabled.dynamic_import_rules,
+        jsx_text_paths: Default::default(),
         production_import_paths: Default::default(),
         companion_import_plans: Default::default(),
         symbols: enabled.unique_exports || enabled.storybook_stories,
@@ -102,7 +103,8 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
 }
 
 pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
-    !plan.production_import_paths.is_empty()
+    !plan.jsx_text_paths.is_empty()
+        || !plan.production_import_paths.is_empty()
         || plan.postgres_dml
         || plan.postgres_variants
         || plan.postgres_fragments

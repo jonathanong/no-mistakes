@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: test-no-dependency-pins
+    scope: repository
+  # Shared AST consumer makes duplicate pin-rule parses observable in the baseline.
+  - rule: nextjs-no-caching
+    scope: repository

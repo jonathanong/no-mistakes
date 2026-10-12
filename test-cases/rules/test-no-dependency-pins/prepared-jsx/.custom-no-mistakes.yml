@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: test-no-dependency-pins
+    scope: repository
+    options:
+      include: ['src/*.test.*']
+      patterns:
+        - reason: custom pin
+          regex: 'CUSTOM_PIN'

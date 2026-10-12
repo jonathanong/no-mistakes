@@ -39,6 +39,7 @@ pub(super) fn prepare_call_site_facts(
     super::required_companion_imports::configure_fact_plan(
         root, config, files, sources, &mut plan,
     )?;
+    super::test_no_dependency_pins::configure_fact_plan(root, config, files, &mut plan)?;
     if !plan.production_import_paths.is_empty() {
         plan.graph.imports = true;
     }
@@ -49,6 +50,7 @@ pub(super) fn prepare_call_site_facts(
     )?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if !needs_call_sites
+        && plan.jsx_text_paths.is_empty()
         && plan.companion_import_plans.is_empty()
         && plan.production_import_paths.is_empty()
         && plan.postgres_schema_catalog_paths.is_empty()
@@ -60,6 +62,7 @@ pub(super) fn prepare_call_site_facts(
     }
     let mut files = call_site_files;
     files.extend(plan.production_import_paths.iter().cloned());
+    files.extend(plan.jsx_text_paths.iter().cloned());
     if plan.postgres_schema || plan.postgres_dml {
         files.extend(crate::codebase::postgres::postgres_sql_paths(
             root,
