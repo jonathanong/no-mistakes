@@ -27,31 +27,34 @@ fn mixed_legacy_failure_preserves_standard_diagnostic_and_rejects_symbols() {
         ..CheckFileFacts::default()
     })];
 
-    set_legacy_errors(
-        &mut results,
-        vec![(
-            0,
-            &variant,
-            VariantParseModes {
-                standard: true,
-                legacy_symbols: true,
-            },
-        )],
-        &path,
-        &Arc::from("export interface Shape {}"),
-        anyhow::anyhow!("legacy parser panic"),
-    );
+    for existing_base in [false, true] {
+        set_legacy_errors(
+            &mut results,
+            vec![(
+                0,
+                &variant,
+                VariantParseModes {
+                    standard: !existing_base,
+                    legacy_symbols: true,
+                    existing_base,
+                },
+            )],
+            &path,
+            &Arc::from("export interface Shape {}"),
+            anyhow::anyhow!("legacy parser panic"),
+        );
 
-    let facts = results[0].as_ref().unwrap();
-    assert_eq!(facts.parse_error.as_deref(), Some("standard diagnostic"));
-    assert_eq!(facts.ts.parse_error.as_deref(), Some("standard diagnostic"));
-    assert!(facts.symbols.is_some());
-    assert!(facts.ts.symbols.is_some());
-    assert!(facts.legacy_symbols.is_none());
-    assert_eq!(
-        facts.legacy_symbol_parse_error.as_deref(),
-        Some("legacy parser panic")
-    );
+        let facts = results[0].as_ref().unwrap();
+        assert_eq!(facts.parse_error.as_deref(), Some("standard diagnostic"));
+        assert_eq!(facts.ts.parse_error.as_deref(), Some("standard diagnostic"));
+        assert!(facts.symbols.is_some());
+        assert!(facts.ts.symbols.is_some());
+        assert!(facts.legacy_symbols.is_none());
+        assert_eq!(
+            facts.legacy_symbol_parse_error.as_deref(),
+            Some("legacy parser panic")
+        );
+    }
 }
 
 #[test]

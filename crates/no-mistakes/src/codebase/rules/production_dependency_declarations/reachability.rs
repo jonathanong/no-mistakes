@@ -5,9 +5,9 @@
 //! relative and self-reference imports that stay inside the package.
 
 use super::specifier;
-use crate::codebase::dependencies::extract::{is_tsx_file, ImportExtractor, ImportKind};
+use crate::codebase::dependencies::extract::ImportKind;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces::WorkspaceMap;
 use globset::GlobSet;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -31,35 +31,30 @@ pub(super) struct FileImport {
     pub(super) kind: ImportKind,
 }
 
-/// Extract every literal import specifier from `file`, tagged with its syntax
-/// kind and line number. Computed `import()`/`require()` facts stay in
-/// `resolve-check`; treating their identifier/`<computed>` stand-ins as package
-/// names would emit spurious undeclared-dependency findings. Returns an empty
-/// list for unreadable or unparsable sources, matching every other consumer of
-/// `ImportExtractor`.
+mod prepared;
+pub(super) use prepared::PreparedReachability;
+
+/// Borrow literal import facts, including recovered syntax and failure entries.
+/// Missing demand is an ownership error, never permission to parse again.
 pub(super) fn file_imports(
     file: &Path,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<FileImport> {
-    let Some(source) = crate::codebase::rules::read_source(sources, file) else {
-        return Vec::new();
-    };
-    let extractor = if is_tsx_file(file) {
-        ImportExtractor::for_tsx()
-    } else {
-        ImportExtractor::for_typescript()
-    };
-    extractor
-        .and_then(|extractor| extractor.extract(&source))
-        .unwrap_or_default()
-        .into_iter()
+    facts: &dyn TsFactLookup,
+) -> anyhow::Result<Vec<FileImport>> {
+    let imports = facts.get_production_imports(file).ok_or_else(|| {
+        anyhow::anyhow!(
+            "missing prepared production import facts for {}",
+            file.display()
+        )
+    })?;
+    Ok(imports
+        .iter()
         .filter(|import| !import.computed)
         .map(|import| FileImport {
             line: import.line,
-            specifier: import.specifier,
+            specifier: import.specifier.clone(),
             kind: import.kind,
         })
-        .collect()
+        .collect())
 }
 
 /// Inputs shared across every package's reachability walk within one rule
@@ -76,55 +71,30 @@ pub(super) struct ReachabilityContext<'a> {
 /// Files of the package rooted at `package_dir` that are reachable from
 /// production entry points.
 pub(super) fn production_reachable_files(
-    ctx: &ReachabilityContext,
+    relationships: &PreparedReachability,
     package_dir: &Path,
     package_files: &HashSet<PathBuf>,
 ) -> HashSet<PathBuf> {
     let mut reachable = HashSet::new();
     let mut queue = VecDeque::new();
-
-    for (file, imports) in ctx.imports_by_file {
-        if ctx.owners.get(file).map(PathBuf::as_path) == Some(package_dir) {
-            continue; // an importer inside the package is not an external seed
-        }
-        if ctx
-            .test_globset
-            .is_match(relative_slash_path(ctx.root, file))
-        {
-            continue; // test-only importers never make a file production-reachable
-        }
-        for target in resolved_targets(ctx.workspace, file, imports, ctx.visible) {
-            if package_files.contains(&target) && reachable.insert(target.clone()) {
-                queue.push_back(target);
+    if let Some(seeds) = relationships.external_seeds.get(package_dir) {
+        for target in seeds {
+            if package_files.contains(target) && reachable.insert(target.clone()) {
+                queue.push_back(target.clone());
             }
         }
     }
-
     while let Some(file) = queue.pop_front() {
-        let Some(imports) = ctx.imports_by_file.get(&file) else {
+        let Some(adjacent) = relationships.edges.forward().get(&file) else {
             continue;
         };
-        for target in resolved_targets(ctx.workspace, &file, imports, ctx.visible) {
-            if package_files.contains(&target) && reachable.insert(target.clone()) {
-                queue.push_back(target);
+        for (target, _) in adjacent {
+            if package_files.contains(target) && reachable.insert(target.clone()) {
+                queue.push_back(target.clone());
             }
         }
     }
-
     reachable
-}
-
-fn resolved_targets(
-    workspace: &WorkspaceMap,
-    file: &Path,
-    imports: &[FileImport],
-    visible: &crate::fx::PathSet,
-) -> Vec<PathBuf> {
-    imports
-        .iter()
-        .filter(|import| import.kind != ImportKind::Type)
-        .filter_map(|import| resolve_target(workspace, file, &import.specifier, visible))
-        .collect()
 }
 
 fn resolve_target(

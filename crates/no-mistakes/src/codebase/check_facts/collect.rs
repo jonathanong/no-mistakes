@@ -61,10 +61,10 @@ fn collect_check_facts_inner(
             session,
             root,
             (&files, &graph_only_files),
-            &plan,
-            &graph_plan,
+            (&plan, &graph_plan),
             playwright,
             Arc::clone(&sources),
+            &ts,
         );
     ts.extend(collected);
     let helper_paths = helper_facts.keys().cloned().collect::<HashSet<_>>();

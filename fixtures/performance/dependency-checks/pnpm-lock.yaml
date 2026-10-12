@@ -1,0 +1,200 @@
+lockfileVersion: '9.0'
+importers:
+  packages/p00:
+    dependencies:
+      '@perf/p01':
+        specifier: workspace:*
+        version: link:../p01
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p01:
+    dependencies:
+      '@perf/p02':
+        specifier: workspace:*
+        version: link:../p02
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p02:
+    dependencies:
+      '@perf/p03':
+        specifier: workspace:*
+        version: link:../p03
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p03:
+    dependencies:
+      '@perf/p04':
+        specifier: workspace:*
+        version: link:../p04
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p04:
+    dependencies:
+      '@perf/p05':
+        specifier: workspace:*
+        version: link:../p05
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p05:
+    dependencies:
+      '@perf/p06':
+        specifier: workspace:*
+        version: link:../p06
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p06:
+    dependencies:
+      '@perf/p07':
+        specifier: workspace:*
+        version: link:../p07
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p07:
+    dependencies:
+      '@perf/p08':
+        specifier: workspace:*
+        version: link:../p08
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p08:
+    dependencies:
+      '@perf/p09':
+        specifier: workspace:*
+        version: link:../p09
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p09:
+    dependencies:
+      '@perf/p10':
+        specifier: workspace:*
+        version: link:../p10
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p10:
+    dependencies:
+      '@perf/p11':
+        specifier: workspace:*
+        version: link:../p11
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p11:
+    dependencies:
+      '@perf/p12':
+        specifier: workspace:*
+        version: link:../p12
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p12:
+    dependencies:
+      '@perf/p13':
+        specifier: workspace:*
+        version: link:../p13
+    devDependencies:
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p13:
+    dependencies:
+      '@perf/p14':
+        specifier: workspace:*
+        version: link:../p14
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p14:
+    dependencies:
+      '@perf/p15':
+        specifier: workspace:*
+        version: link:../p15
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p15:
+    dependencies:
+      '@perf/p16':
+        specifier: workspace:*
+        version: link:../p16
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p16:
+    dependencies:
+      '@perf/p17':
+        specifier: workspace:*
+        version: link:../p17
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p17:
+    dependencies:
+      '@perf/p18':
+        specifier: workspace:*
+        version: link:../p18
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p18:
+    dependencies:
+      '@perf/p19':
+        specifier: workspace:*
+        version: link:../p19
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p19:
+    dependencies:
+      '@perf/p20':
+        specifier: workspace:*
+        version: link:../p20
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p20:
+    dependencies:
+      '@perf/p21':
+        specifier: workspace:*
+        version: link:../p21
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p21:
+    dependencies:
+      '@perf/p22':
+        specifier: workspace:*
+        version: link:../p22
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p22:
+    dependencies:
+      '@perf/p23':
+        specifier: workspace:*
+        version: link:../p23
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+  packages/p23:
+    dependencies:
+      '@perf/p00':
+        specifier: workspace:*
+        version: link:../p00
+      fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+packages:
+  fixture-runtime@1.0.0:
+    resolution: {integrity: fixture}
+snapshots:
+  fixture-runtime@1.0.0: {}

@@ -39,6 +39,19 @@ from parsing, with `postgres.annotation.reachability_walks` counting the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation.
 
+Production dependency checks report `production_dependencies.resolutions` for
+distinct source/specifier pairs resolved within each rule application, including
+unresolved targets. `production_dependencies.legacy_import_projections` counts
+historical TypeScript/TSX import projections prepared for sources whose ordinary
+parser mode differs. Those projections share the request's parser cache; their
+count does not imply an additional physical parse for every projection.
+
+Forbidden workspace closure checks report
+`forbidden_workspace_closure.lockfile_importer_constructions` for distinct
+lockfile importer projections initialized during the request. The count
+includes cached read and parse failures, so repeated rule applications using
+the same lockfile still contribute one construction.
+
 Instrumentation is invocation-scoped and disabled by default. A disabled run
 does not construct an observer, start clocks, or retain work ledgers. Enabled
 runs memoize successful and failed discovery/read/parse operations in memory

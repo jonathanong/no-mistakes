@@ -23,7 +23,8 @@ fn file_imports_extracts_specifier_kind_and_line() {
     let file = root.join("packages/lib/index.mts");
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
 
-    let imports = file_imports(&file, &sources);
+    let facts = prepared_import_facts(&file, &sources);
+    let imports = file_imports(&file, &facts).unwrap();
 
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].specifier, "@acme/tool");
@@ -35,7 +36,9 @@ fn file_imports_extracts_specifier_kind_and_line() {
 fn file_imports_returns_empty_for_a_file_absent_from_sources() {
     let sources = crate::codebase::rules::source_store_for_files(&[]);
 
-    let imports = file_imports(Path::new("/does/not/exist.mts"), &sources);
+    let file = Path::new("/does/not/exist.mts");
+    let facts = prepared_import_facts(file, &sources);
+    let imports = file_imports(file, &facts).unwrap();
 
     assert!(imports.is_empty());
 }
@@ -46,7 +49,8 @@ fn file_imports_uses_the_tsx_extractor_for_a_tsx_file() {
     let file = root.join("packages/lib/widget.tsx");
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
 
-    let imports = file_imports(&file, &sources);
+    let facts = prepared_import_facts(&file, &sources);
+    let imports = file_imports(&file, &facts).unwrap();
 
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].specifier, "@acme/tool");
@@ -59,7 +63,8 @@ fn file_imports_omits_computed_specifiers() {
     let file = root.join("packages/lib/index.mts");
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
 
-    let imports = file_imports(&file, &sources);
+    let facts = prepared_import_facts(&file, &sources);
+    let imports = file_imports(&file, &facts).unwrap();
 
     assert!(imports.is_empty());
 }
@@ -239,7 +244,9 @@ fn production_reachable_files_seeds_from_an_external_importer_and_follows_relati
         visible: &visible,
     };
 
-    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let relationships = PreparedReachability::new(&ctx, &sources);
+    let reachable = production_reachable_files(&relationships, &package_dir, &package_files);
 
     assert_eq!(
         reachable,
@@ -274,6 +281,7 @@ fn production_reachable_files_excludes_test_only_importers_from_seeding() {
     );
     let mut owners = HashMap::new();
     owners.insert(test_file.clone(), app_dir);
+    owners.insert(lib_entry.clone(), package_dir.clone());
     let visible: crate::fx::PathSet = [lib_entry, test_file].into_iter().collect();
     let test_globset = globset(&["**/__tests__/**"]);
     let ctx = ReachabilityContext {
@@ -285,7 +293,9 @@ fn production_reachable_files_excludes_test_only_importers_from_seeding() {
         visible: &visible,
     };
 
-    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let relationships = PreparedReachability::new(&ctx, &sources);
+    let reachable = production_reachable_files(&relationships, &package_dir, &package_files);
 
     assert!(reachable.is_empty());
 }
@@ -319,6 +329,7 @@ fn production_reachable_files_treats_a_missing_imports_entry_as_a_leaf() {
     // gracefully when a reachable file was never fed through `file_imports`.
     let mut owners = HashMap::new();
     owners.insert(app_entry.clone(), app_dir);
+    owners.insert(lib_entry.clone(), package_dir.clone());
     let visible: crate::fx::PathSet = [app_entry, lib_entry.clone()].into_iter().collect();
     let test_globset = globset(&["**/__tests__/**"]);
     let ctx = ReachabilityContext {
@@ -330,7 +341,9 @@ fn production_reachable_files_treats_a_missing_imports_entry_as_a_leaf() {
         visible: &visible,
     };
 
-    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let relationships = PreparedReachability::new(&ctx, &sources);
+    let reachable = production_reachable_files(&relationships, &package_dir, &package_files);
 
     assert_eq!(reachable, [lib_entry].into_iter().collect::<HashSet<_>>());
 }
@@ -363,6 +376,7 @@ fn production_reachable_files_does_not_seed_from_files_owned_by_the_same_package
     );
     let mut owners = HashMap::new();
     owners.insert(lib_helper.clone(), package_dir.clone());
+    owners.insert(lib_entry.clone(), package_dir.clone());
     let visible: crate::fx::PathSet = [lib_entry, lib_helper].into_iter().collect();
     let test_globset = globset(&["**/__tests__/**"]);
     let ctx = ReachabilityContext {
@@ -374,7 +388,53 @@ fn production_reachable_files_does_not_seed_from_files_owned_by_the_same_package
         visible: &visible,
     };
 
-    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let relationships = PreparedReachability::new(&ctx, &sources);
+    let reachable = production_reachable_files(&relationships, &package_dir, &package_files);
 
     assert!(reachable.is_empty());
+}
+
+fn prepared_import_facts(
+    file: &Path,
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> crate::codebase::check_facts::CheckFactMap {
+    crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+        file.parent().unwrap_or(Path::new("/")),
+        vec![file.to_path_buf()],
+        Vec::new(),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: super::super::import_fact_plan(),
+            production_import_paths: std::sync::Arc::new(
+                [file.to_path_buf()].into_iter().collect(),
+            ),
+            ..Default::default()
+        },
+        None,
+        std::sync::Arc::clone(sources),
+    )
+}
+
+fn resolved_targets(
+    workspace: &WorkspaceMap,
+    file: &Path,
+    imports: &[FileImport],
+    visible: &crate::fx::PathSet,
+) -> Vec<PathBuf> {
+    imports
+        .iter()
+        .filter(|import| import.kind != ImportKind::Type)
+        .filter_map(|import| resolve_target(workspace, file, &import.specifier, visible))
+        .collect()
+}
+
+#[test]
+fn missing_prepared_imports_are_an_error_without_source_fallback() {
+    let facts = crate::codebase::ts_source::facts::TsFactMap::default();
+    let error = file_imports(Path::new("/missing.ts"), &facts)
+        .err()
+        .unwrap();
+    assert!(error
+        .to_string()
+        .contains("missing prepared production import facts"));
 }

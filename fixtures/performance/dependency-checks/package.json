@@ -1,0 +1,7 @@
+{
+  "name": "dependency-checks-performance-fixture",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}

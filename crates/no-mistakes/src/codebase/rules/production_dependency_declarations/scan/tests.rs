@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::dependencies::extract::ImportKind;
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -99,7 +100,7 @@ fn run_reports_a_config_finding_for_an_unsupported_allowed_field() {
     };
     let sources = crate::codebase::rules::source_store_for_files(&[]);
 
-    let findings = run(&root, &[], &opts, &[], &sources).unwrap();
+    let findings = run(&root, &[], &opts, &[], &sources, None).unwrap();
 
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("unsupported field"));
@@ -114,7 +115,7 @@ fn run_reports_a_config_finding_for_an_invalid_test_file_pattern() {
     };
     let sources = crate::codebase::rules::source_store_for_files(&[]);
 
-    let findings = run(&root, &[], &opts, &[], &sources).unwrap();
+    let findings = run(&root, &[], &opts, &[], &sources, None).unwrap();
 
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("invalid glob pattern"));
@@ -125,7 +126,7 @@ fn run_returns_no_findings_when_no_packages_are_discovered() {
     let root = fixture_root("dependencies-declared");
     let sources = crate::codebase::rules::source_store_for_files(&[]);
 
-    let findings = run(&root, &[], &Options::default(), &[], &sources).unwrap();
+    let findings = run(&root, &[], &Options::default(), &[], &sources, None).unwrap();
 
     assert!(findings.is_empty());
 }

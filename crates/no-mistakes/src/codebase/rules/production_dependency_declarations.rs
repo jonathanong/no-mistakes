@@ -16,6 +16,10 @@ mod scan;
 mod specifier;
 
 use super::RuleFinding;
+use crate::codebase::check_facts::{
+    collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactPlan,
+};
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -39,14 +43,61 @@ pub(crate) fn check_with_files(
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let paths = required_import_fact_files(root, config, all_files)?;
+    let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
+        &session,
+        root,
+        (all_files.to_vec(), Vec::new()),
+        CheckFactPlan {
+            graph: import_fact_plan(),
+            production_import_paths: paths,
+            ..Default::default()
+        },
+        None,
+        std::sync::Arc::clone(&sources),
+    );
+    check_with_files_sources_and_facts(root, config, all_files, &sources, Some(&facts))
 }
 
-pub(crate) fn check_with_files_and_sources(
+/// Explicit union-fact demand; metadata and unsupported source extensions are
+/// retained because the historical rule parsed every in-scope visible path.
+#[doc(hidden)]
+pub fn required_import_fact_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> Result<std::sync::Arc<std::collections::BTreeSet<PathBuf>>> {
+    let skip = super::skip_dir_set(config);
+    let mut paths = std::collections::BTreeSet::new();
+    for rule in config.rule_applications(RULE_ID) {
+        let opts: Options = rule.try_rule_options()?;
+        if let Ok(roots) = workspace_roots(root, &opts) {
+            paths.extend(
+                all_files
+                    .iter()
+                    .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &roots))
+                    .map(|path| normalize_path(path)),
+            );
+        }
+    }
+    Ok(std::sync::Arc::new(paths))
+}
+
+pub(crate) fn import_fact_plan() -> crate::codebase::ts_source::facts::TsFactPlan {
+    crate::codebase::ts_source::facts::TsFactPlan {
+        imports: true,
+        ..Default::default()
+    }
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&dyn TsFactLookup>,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -63,7 +114,7 @@ pub(crate) fn check_with_files_and_sources(
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &workspace_roots))
                 .cloned()
                 .collect();
-            scan::run(root, &workspace_roots, &opts, &files, sources)
+            scan::run(root, &workspace_roots, &opts, &files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

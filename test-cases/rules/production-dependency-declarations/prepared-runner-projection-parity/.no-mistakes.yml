@@ -1,0 +1,13 @@
+version: 2
+tests:
+  vitest:
+    configs: packages/app/vitest.config.mts
+    projects:
+      unit:
+        integration_suites:
+          unit: [aws]
+rules:
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: [packages]

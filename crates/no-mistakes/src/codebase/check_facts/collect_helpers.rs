@@ -13,6 +13,7 @@ pub(super) fn request_sources(
     playwright: Option<&PlaywrightFactPlan>,
 ) -> Arc<crate::codebase::ts_source::SourceStore> {
     let mut paths = files.to_vec();
+    paths.extend(plan.production_import_paths.iter().cloned());
     paths.extend(graph_files.iter().cloned());
     paths.extend(
         plan.graph_context
@@ -69,11 +70,12 @@ pub(crate) fn collect_fact_map_with_sources(
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> FileIdMap<CheckFileFacts> {
-    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
-        files
-            .iter()
-            .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
-    );
+    let files =
+        crate::codebase::ts_source::deduplicate_analysis_paths(files.iter().filter(|path| {
+            is_indexable(path)
+                || plan.production_import_paths.contains(*path)
+                || (plan.storybook && super::is_mdx_file(path))
+        }));
     let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .par_iter()
         .map(|path| {
@@ -98,11 +100,12 @@ pub(super) fn collect_fact_map_sequential_with_sources(
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> FileIdMap<CheckFileFacts> {
-    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
-        files
-            .iter()
-            .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
-    );
+    let files =
+        crate::codebase::ts_source::deduplicate_analysis_paths(files.iter().filter(|path| {
+            is_indexable(path)
+                || plan.production_import_paths.contains(*path)
+                || (plan.storybook && super::is_mdx_file(path))
+        }));
     let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())

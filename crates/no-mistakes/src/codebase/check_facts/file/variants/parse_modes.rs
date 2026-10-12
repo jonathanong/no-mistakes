@@ -10,6 +10,7 @@ mod tests;
 pub(super) struct VariantParseModes {
     standard: bool,
     legacy_symbols: bool,
+    existing_base: bool,
 }
 
 impl VariantParseModes {
@@ -23,11 +24,14 @@ impl VariantParseModes {
         // Disable the generic parse fallback so only an actual non-legacy fact
         // demand makes the Standard semantic mode necessary.
         standard_plan.raw_source = true;
-        let standard =
-            !legacy_symbols || super::requires_parse(&standard_plan, path, variant.playwright);
+        let existing_base = variant.plan.production_import_paths.contains(&normalized)
+            && !crate::codebase::dependencies::extract::is_indexable(path);
+        let standard = !existing_base
+            && (!legacy_symbols || super::requires_parse(&standard_plan, path, variant.playwright));
         Self {
             standard,
             legacy_symbols,
+            existing_base,
         }
     }
 }
@@ -101,7 +105,7 @@ pub(super) fn collect_legacy_variants(
         requested
             .iter()
             .map(|(index, variant, mode)| {
-                if mode.standard {
+                if mode.standard || mode.existing_base {
                     let symbols = Arc::new(
                         crate::codebase::ts_symbols::extract_symbols_from_program(program, parsed),
                     );
@@ -153,7 +157,7 @@ fn set_legacy_errors(
     let message = error.to_string();
     let mut legacy_only = Vec::new();
     for (index, variant, mode) in requested {
-        if !mode.standard {
+        if !mode.standard && !mode.existing_base {
             legacy_only.push((index, variant));
             continue;
         }

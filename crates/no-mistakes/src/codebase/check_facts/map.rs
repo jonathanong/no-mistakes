@@ -64,6 +64,8 @@ pub struct CheckFactMap {
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
     pub ts: Arc<TsFileFacts>,
+    pub(crate) production_imports:
+        Option<Arc<Vec<crate::codebase::dependencies::extract::ExtractedImport>>>,
     pub source: Option<Arc<str>>,
     pub symbols: Option<Arc<FileSymbols>>,
     pub(crate) legacy_symbols: Option<Arc<FileSymbols>>,

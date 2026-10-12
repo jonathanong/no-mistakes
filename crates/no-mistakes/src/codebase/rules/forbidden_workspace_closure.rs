@@ -4,26 +4,18 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
-use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod alias;
 mod lockfile;
 mod manifest;
+mod options;
 mod traversal;
 mod workspace;
+use options::Options;
 
 pub const RULE_ID: &str = "forbidden-workspace-closure";
-
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct Options {
-    pub(crate) packages: Vec<String>,
-    pub(crate) forbidden: Vec<String>,
-    pub(crate) dependency_types: Vec<String>,
-    pub(crate) lockfile: Option<PathBuf>,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Dependency {
@@ -54,6 +46,8 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    let lockfile_importers =
+        lockfile::LockfileImporterCache::with_observer(sources.observer().cloned());
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -71,7 +65,15 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            scan_with_sources(root, &target_roots, &opts, &files, &source_filter, sources)
+            scan_with_sources(
+                root,
+                &target_roots,
+                &opts,
+                &files,
+                &source_filter,
+                sources,
+                &lockfile_importers,
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -86,6 +88,7 @@ fn scan_with_sources(
     files: &[PathBuf],
     source_filter: &super::path_filter::RulePathFilter,
     sources: &crate::codebase::ts_source::SourceStore,
+    lockfile_importers: &lockfile::LockfileImporterCache,
 ) -> Result<Vec<RuleFinding>> {
     let workspace = workspace::load_workspace_with_sources(root, target_roots, files, sources)?;
     if workspace.packages.is_empty() {
@@ -104,7 +107,7 @@ fn scan_with_sources(
             ))]);
         }
     };
-    let dependency_types = match dependency_types(opts) {
+    let dependency_types = match options::dependency_types(opts) {
         Ok(dependency_types) => dependency_types,
         Err(message) => return Ok(vec![config_finding(&message)]),
     };
@@ -122,6 +125,7 @@ fn scan_with_sources(
             lockfile,
             &workspace,
             &lockfile_manifest_nodes,
+            lockfile_importers,
             (&dependency_types, &opts.packages, sources),
         ) {
             Ok(lockfile_backed) => nodes = lockfile_backed,
@@ -151,22 +155,6 @@ fn scan_with_sources(
     findings.sort();
     findings.dedup();
     Ok(findings)
-}
-
-fn dependency_types(opts: &Options) -> std::result::Result<Vec<&str>, String> {
-    if opts.dependency_types.is_empty() {
-        return Ok(package_deps::PRODUCTION_DEPENDENCY_FIELDS.to_vec());
-    }
-    let mut validated = Vec::new();
-    for field in &opts.dependency_types {
-        if !package_deps::ALL_DEPENDENCY_FIELDS.contains(&field.as_str()) {
-            return Err(format!(
-                "dependencyTypes supports dependencies, devDependencies, peerDependencies, and optionalDependencies only; unsupported dependency type '{field}'"
-            ));
-        }
-        validated.push(field.as_str());
-    }
-    Ok(validated)
 }
 
 fn build_globset(patterns: &[String]) -> std::result::Result<GlobSet, globset::Error> {

@@ -1,0 +1,15 @@
+import "./priority";
+require("./priority");
+import "./folder";
+import "./rewritten.js";
+import "@source/alias";
+import "./extensionless";
+import "./plain.md";
+import "./broken.mts";
+import "./fatal.mts";
+import "./typed.js";
+import "@acme/lib/sub";
+import type { Only } from "./type-only";
+const target = "./computed";
+import(target);
+import "./helper.test.mts";

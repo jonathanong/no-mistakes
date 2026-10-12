@@ -75,6 +75,13 @@ pub(super) fn run_check(
         fact_plan.graph_context = graph_context;
     }
     fact_plan.graph.per_item_calls |= config.rule_configured(super::QUERY_REACHED_PER_ITEM);
+    fact_plan.production_import_paths =
+        super::super::production_dependency_declarations::required_import_fact_files(
+            root,
+            &config,
+            &visible_paths,
+        )?;
+    fact_plan.graph.imports |= !fact_plan.production_import_paths.is_empty();
     let files = crate::codebase::ts_source::discover_files_from_visible(
         root,
         &config.filesystem.skip_directories,

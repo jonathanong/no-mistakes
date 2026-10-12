@@ -1,5 +1,13 @@
 use super::*;
 
+impl Scope {
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn builder_index_initialized(
+        &self,
+    ) -> bool {
+        self.0.builders.get().is_some()
+    }
+}
+
 #[test]
 fn builder_index_reuses_snapshots_and_follows_every_write() {
     let prefix = |id| Value::Prefix("SELECT 1".into(), true, Some(id));

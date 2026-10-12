@@ -3,17 +3,20 @@
 //! application.
 
 use super::discovery;
-use super::manifest::{Classification, PackageManifest};
+use super::manifest::PackageManifest;
 use super::reachability::{self, FileImport};
-use super::specifier;
 use super::Options;
-use crate::codebase::dependencies::extract::ImportKind;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use globset::{Glob, GlobSet, GlobSetBuilder};
+use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
+
+mod findings;
+use findings::emit_finding;
 
 const DEFAULT_ALLOWED_FIELDS: &[&str] =
     &["dependencies", "optionalDependencies", "peerDependencies"];
@@ -25,6 +28,7 @@ pub(super) fn run(
     opts: &Options,
     files: &[PathBuf],
     sources: &SourceStore,
+    facts: Option<&dyn TsFactLookup>,
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let allowed_fields = match allowed_fields(opts) {
         Ok(fields) => fields,
@@ -43,17 +47,21 @@ pub(super) fn run(
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
+    let facts = facts.ok_or_else(|| {
+        anyhow::anyhow!("production-dependency-declarations requires prepared import facts")
+    })?;
+    anyhow::ensure!(
+        facts.covers_ts_fact_plan(super::import_fact_plan()),
+        "production-dependency-declarations requires a complete prepared import plan"
+    );
 
     let visible: crate::fx::PathSet = files.iter().map(|path| normalize_path(path)).collect();
     let imports_by_file: HashMap<PathBuf, Vec<FileImport>> = files
-        .iter()
+        .par_iter()
         .map(|file| {
-            (
-                normalize_path(file),
-                reachability::file_imports(file, sources),
-            )
+            reachability::file_imports(file, facts).map(|imports| (normalize_path(file), imports))
         })
-        .collect();
+        .collect::<anyhow::Result<_>>()?;
     let owners = discovery::compute_owners(&workspace, files);
     let package_files = discovery::group_by_package(&owners);
     let reachability_ctx = reachability::ReachabilityContext {
@@ -64,6 +72,7 @@ pub(super) fn run(
         test_globset: &test_globset,
         visible: &visible,
     };
+    let relationships = reachability::PreparedReachability::new(&reachability_ctx, sources);
 
     let mut findings = Vec::new();
     for package in &workspace.packages {
@@ -73,7 +82,7 @@ pub(super) fn run(
         };
         let manifest = PackageManifest::load(&package.dir.join("package.json"), sources);
         let reachable = reachability::production_reachable_files(
-            &reachability_ctx,
+            &relationships,
             &package_dir,
             files_in_package,
         );
@@ -100,51 +109,6 @@ pub(super) fn run(
     findings.sort();
     findings.dedup();
     Ok(findings)
-}
-
-fn emit_finding(
-    root: &Path,
-    file: &Path,
-    import: &FileImport,
-    owning_package: &str,
-    manifest: &PackageManifest,
-    allowed_fields: &BTreeSet<String>,
-    findings: &mut Vec<RuleFinding>,
-) {
-    if import.kind == ImportKind::Type {
-        return; // erased by verbatimModuleSyntax; cannot fail at runtime
-    }
-    if specifier::is_relative(&import.specifier)
-        || import.specifier.starts_with('#')
-        || specifier::is_scheme_prefixed(&import.specifier)
-    {
-        return; // not a package.json dependency question
-    }
-    let Some(package_name) = specifier::package_name(&import.specifier) else {
-        return;
-    };
-    if package_name == owning_package || specifier::is_node_builtin(&package_name) {
-        return; // self-reference and Node builtins never need a declaration
-    }
-    match manifest.classify(&package_name, allowed_fields) {
-        Classification::Allowed => {}
-        Classification::DevOnly => findings.push(super::findings::dev_only(
-            root,
-            file,
-            import.line,
-            owning_package,
-            &package_name,
-            &import.specifier,
-        )),
-        Classification::Undeclared => findings.push(super::findings::undeclared(
-            root,
-            file,
-            import.line,
-            owning_package,
-            &package_name,
-            &import.specifier,
-        )),
-    }
 }
 
 fn allowed_fields(opts: &Options) -> Result<BTreeSet<String>, String> {

@@ -140,6 +140,11 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
         for path in &request.files {
             plans.insert(normalize(path), request.plan.clone());
         }
+        for path in request.plan.production_import_paths.iter() {
+            plans
+                .entry(normalize(path))
+                .or_insert_with(|| request.plan.clone());
+        }
         for path in graph_only {
             let path = normalize(&path);
             let mut plan = graph_plan.clone();
@@ -179,6 +184,7 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
         }
         for (path, plan) in plans {
             if crate::codebase::dependencies::extract::is_indexable(&path)
+                || plan.production_import_paths.contains(&path)
                 || plan.storybook && super::is_mdx_file(&path)
             {
                 demands.entry(path).or_default().push(FactDemand {

@@ -22,6 +22,12 @@ pub(super) fn prepare_call_site_facts(
     )?;
     let needs_call_sites = !call_site_files.is_empty();
     let mut plan = CheckFactPlan {
+        production_import_paths:
+            super::production_dependency_declarations::required_import_fact_files(
+                root,
+                config,
+                &sources.inventory().target_file_paths(),
+            )?,
         graph: TsFactPlan {
             call_sites: needs_call_sites,
             ..Default::default()
@@ -29,6 +35,9 @@ pub(super) fn prepare_call_site_facts(
         postgres_schema_catalog_paths: catalog_paths,
         ..Default::default()
     };
+    if !plan.production_import_paths.is_empty() {
+        plan.graph.imports = true;
+    }
     crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
     plan.embedded_sql_options = crate::codebase::postgres::configured_embedded_sql_options(
         config,
@@ -36,6 +45,7 @@ pub(super) fn prepare_call_site_facts(
     )?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if !needs_call_sites
+        && plan.production_import_paths.is_empty()
         && plan.postgres_schema_catalog_paths.is_empty()
         && !plan.postgres_schema
         && !plan.postgres_dml
@@ -44,6 +54,7 @@ pub(super) fn prepare_call_site_facts(
         return Ok(None);
     }
     let mut files = call_site_files;
+    files.extend(plan.production_import_paths.iter().cloned());
     if plan.postgres_schema || plan.postgres_dml {
         files.extend(crate::codebase::postgres::postgres_sql_paths(
             root,

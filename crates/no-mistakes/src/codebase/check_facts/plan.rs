@@ -4,6 +4,10 @@ use std::{collections::HashSet, path::PathBuf};
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
+    /// Explicit production-rule sources, including metadata and unknown extensions.
+    /// Their import projection preserves the historical TypeScript/TSX parse mode.
+    #[doc(hidden)]
+    pub production_import_paths: Arc<std::collections::BTreeSet<std::path::PathBuf>>,
     pub symbols: bool,
     #[doc(hidden)]
     pub legacy_symbol_paths: HashSet<PathBuf>,
@@ -51,8 +55,31 @@ pub struct CheckFactPlan {
 }
 
 impl CheckFactPlan {
+    pub(super) fn with_production_files(
+        &self,
+        mut files: Vec<std::path::PathBuf>,
+    ) -> Vec<std::path::PathBuf> {
+        if !self.production_import_paths.is_empty() {
+            files.extend(self.production_import_paths.iter().cloned());
+            files.sort();
+            files.dedup();
+        }
+        files
+    }
+
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
+        if !other.production_import_paths.is_empty() {
+            if self.production_import_paths.is_empty() {
+                self.production_import_paths = other.production_import_paths;
+            } else if !Arc::ptr_eq(
+                &self.production_import_paths,
+                &other.production_import_paths,
+            ) {
+                Arc::make_mut(&mut self.production_import_paths)
+                    .extend(other.production_import_paths.iter().cloned());
+            }
+        }
         if other.query_annotation {
             if self.query_annotation {
                 self.query_annotation_options = match (

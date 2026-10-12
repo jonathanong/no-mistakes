@@ -176,6 +176,7 @@ fn collect_with_scope(
     precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
 ) -> CheckFactMap {
     let (files, graph_files, graph_files_complete) = file_scope;
+    let files = plan.with_production_files(files);
     if plan.graph_context.visible_files.is_none() {
         let mut visible_files = files.clone();
         visible_files.extend(graph_files.iter().cloned());

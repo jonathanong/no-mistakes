@@ -4,6 +4,8 @@ use crate::config::v2::{
     NoMistakesConfig,
 };
 
+mod prepared;
+
 fn fixture_root(name: &str) -> PathBuf {
     normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))

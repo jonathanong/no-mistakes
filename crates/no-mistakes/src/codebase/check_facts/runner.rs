@@ -11,14 +11,15 @@ pub(crate) fn collect_prepared_runner_facts(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     file_scope: (&[PathBuf], &[PathBuf]),
-    plan: &CheckFactPlan,
-    graph_plan: &CheckFactPlan,
+    plans: (&CheckFactPlan, &CheckFactPlan),
     playwright: Option<&PlaywrightFactPlan>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+    precollected: &FileIdMap<CheckFileFacts>,
 ) -> (
     (FileIdMap<CheckFileFacts>, RunnerConfigFacts),
     FileIdMap<CheckFileFacts>,
 ) {
+    let (plan, graph_plan) = plans;
     let (files, graph_only_files) = file_scope;
     let (runner_files, _) = split_runner_config_files(files, plan);
     let (runner_graph_files, _) = split_runner_config_files(graph_only_files, plan);
@@ -62,21 +63,42 @@ pub(crate) fn collect_prepared_runner_facts(
         root: root.to_path_buf(),
         primary_files: files
             .iter()
+            .filter(|path| !precollected.contains_key(path))
             .map(|path| crate::codebase::ts_resolver::normalize_path(path))
             .collect(),
         graph_files: graph_only_files
             .iter()
+            .filter(|path| !precollected.contains_key(path))
             .map(|path| crate::codebase::ts_resolver::normalize_path(path))
             .collect(),
         primary_plan: plan.clone(),
         graph_plan: graph_plan.clone(),
         playwright: playwright.cloned(),
     };
-    let (collected, helper_facts) = runner_plan.with_request_cache_and_sources(
+    let (collected, mut helper_facts) = runner_plan.with_request_cache_and_sources(
         Some(fact_plan),
         Some(std::sync::Arc::clone(&sources)),
         collect,
     );
+    for (path, helper) in &mut helper_facts {
+        if plan.production_import_paths.contains(path) && helper.production_imports.is_none() {
+            if let Ok(source) = sources.read_path(path) {
+                let mut results = [Some(std::mem::take(helper))];
+                super::file::production_imports::project(
+                    session,
+                    path,
+                    &source,
+                    &[super::file::CheckFactVariant {
+                        root,
+                        plan,
+                        playwright,
+                    }],
+                    &mut results,
+                );
+                *helper = results.into_iter().next().flatten().unwrap_or_default();
+            }
+        }
+    }
     (
         collected,
         FileIdMap::from_iter_with_inventory(
