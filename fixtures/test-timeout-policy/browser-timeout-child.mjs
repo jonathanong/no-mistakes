@@ -1,3 +1,4 @@
+import { browserChildContainment } from './browser-child-containment.mjs';
 import { fixtureTemplate } from "./fixture-source.mjs";
 import { prepareStorybookFixture, resolveStorybookFixturePackages, } from './storybook-timeout-fixture.mjs';
 import { spawn } from 'node:child_process';
@@ -48,7 +49,7 @@ export async function browserFixture(source, configTimeout = 5000, registrar, st
             env: { ...process.env, ...environment },
         });
         removable = false;
-        const outcome = await observeSdkChild(child);
+        const outcome = await observeSdkChild(child, browserChildContainment(storybook));
         removable = outcome.drained;
         if (process.env.SDK_CHILD_RECEIPT_FILE)
             await appendFile(process.env.SDK_CHILD_RECEIPT_FILE, JSON.stringify({

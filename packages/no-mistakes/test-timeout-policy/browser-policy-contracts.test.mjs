@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { browserChildContainment } from "../../../fixtures/test-timeout-policy/browser-child-containment.mjs";
+import { containmentChildProbe } from "../../../fixtures/test-timeout-policy/containment-child-probe.mjs";
+import { observeSdkChild } from "../../../fixtures/test-timeout-policy/owned-sdk-child.mjs";
+import { describe, expect, it, vi } from "vitest";
 import { configDefaults, mergeConfig } from "vitest/config";
 import { browserTestTimeoutPolicyPlugin, testTimeoutPolicyPlugin } from "./plugin.mjs";
 import { replaceStorybookAnnotationSetup } from "../../../fixtures/test-timeout-policy/storybook-timeout-fixture.mjs";
@@ -163,4 +166,36 @@ describe("browser routing policy contracts", () => {
     replaceStorybookAnnotationSetup(single, "/stable.mts");
     expect(single.test.setupFiles).toEqual(["/stable.mts"]);
   });
+  it.each([false, true])(
+    "bounds SDK startup independently of native deadlines; storybook=%s",
+    async (storybook) => {
+      vi.useFakeTimers();
+      try {
+        const child = containmentChildProbe();
+        const terminate = vi.fn(() => {
+          child.emit("close", null, "SIGKILL");
+          return true;
+        });
+        const containment = browserChildContainment(storybook);
+        const observed = observeSdkChild(child, { ...containment, capture: () => terminate });
+        await vi.advanceTimersByTimeAsync(4999);
+        expect(terminate).not.toHaveBeenCalled();
+        if (storybook) {
+          await vi.advanceTimersByTimeAsync(15000);
+          expect(terminate).not.toHaveBeenCalled();
+        }
+        await vi.advanceTimersByTimeAsync(1);
+        const outcome = await observed;
+        expect(terminate).toHaveBeenCalledOnce();
+        expect(outcome.result).toEqual({ code: null, signal: "SIGKILL" });
+        expect(outcome.forcedCleanup).toBe(true);
+        expect(outcome.drained).toBe(true);
+        expect(outcome.errors).toEqual([]);
+        // Leave room for both close and group-drain barriers under the parent suite.
+        expect(containment.watchdogMs + 2000).toBeLessThan(30000);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
 });
