@@ -48,16 +48,14 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
             });
         }
     };
-    if plan.production_import_paths.contains(path) {
-        return production_imports::collect(
-            session,
-            root,
-            path,
-            plan,
-            playwright,
-            source,
-            retain_parse,
-        );
+    if plan.production_import_paths.contains(path)
+        || (plan.jsx_text_paths.contains(path)
+            && plan
+                .legacy_symbol_paths
+                .contains(&crate::codebase::ts_resolver::normalize_path(path))
+            && !crate::ast::legacy_symbols_share_standard_parse(path))
+    {
+        return variants::collect(session, root, path, plan, playwright, source, retain_parse);
     }
     collect_file_facts_from_source(session, root, path, plan, playwright, source, retain_parse)
 }

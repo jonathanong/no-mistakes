@@ -6,6 +6,8 @@ use crate::codebase::check_facts::{CheckFactPlan, CheckFileFacts, PlaywrightFact
 use std::path::Path;
 use std::sync::Arc;
 
+mod single;
+pub(super) use single::collect;
 mod errors;
 use errors::{fill_parse_errors, read_errors};
 mod parse_modes;

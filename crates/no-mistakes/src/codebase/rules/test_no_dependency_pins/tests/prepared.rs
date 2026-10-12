@@ -132,6 +132,15 @@ fn standalone_filesystem_dispatch_prepares_jsx_ranges_once() {
 
 #[test]
 fn prepared_jsx_mixed_legacy_symbols_and_production_imports_preserve_standard_masking() {
+    assert_mixed_masking(true);
+}
+
+#[test]
+fn prepared_jsx_legacy_symbols_without_production_imports_preserve_standard_masking() {
+    assert_mixed_masking(false);
+}
+
+fn assert_mixed_masking(production_imports: bool) {
     let fixture = saved();
     let root = fixture.path().canonicalize().unwrap();
     let config = config_with_options("include: ['src/*.tsx', 'src/*.jsx']");
@@ -146,7 +155,11 @@ fn prepared_jsx_mixed_legacy_symbols_and_production_imports_preserve_standard_ma
     let mut plan = CheckFactPlan {
         symbols: true,
         legacy_symbol_paths: files.iter().cloned().collect(),
-        production_import_paths: Arc::new(files.iter().cloned().collect()),
+        production_import_paths: if production_imports {
+            Arc::new(files.iter().cloned().collect())
+        } else {
+            Default::default()
+        },
         ..Default::default()
     };
     configure_fact_plan(&root, &config, &files, &mut plan).unwrap();
@@ -184,8 +197,11 @@ fn prepared_jsx_mixed_legacy_symbols_and_production_imports_preserve_standard_ma
             .as_ref()
             .is_some_and(|ranges| !ranges.is_empty()));
     }
-    assert!(facts.ts[&files[0]].legacy_symbols.is_some());
-    assert!(facts.ts[&files[1]].production_imports.is_some());
+    assert!(facts.ts[&files[0]].symbols.is_some());
+    assert_eq!(
+        facts.ts[&files[1]].production_imports.is_some(),
+        production_imports
+    );
     let standalone = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
     assert_eq!(
         serde_json::to_value(prepared).unwrap(),

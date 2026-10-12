@@ -34,7 +34,8 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   duplicate findings, and configuration errors.
 - Declare JSX text-range demand only for rule-selected TSX/JSX with multiline
   dependency-pin patterns. Retain recovered ranges in the shared fact pass;
-  prepared checks must not reopen an evicted AST. Standalone scans borrow the
+  prepared checks must not reopen an evicted AST. Preserve standard JSX masks
+  when historical symbol/import demand needs a distinct parser mode. Standalone scans borrow the
   SourceStore Arc and use observed parsing. Assert physical parser counts.
 - Normalize paths without building an intermediate component vector. Preserve
   clean/dot/parent/root/prefix behavior; use FxHash for interned resolver keys
