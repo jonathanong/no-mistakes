@@ -1,5 +1,6 @@
-use super::super::super::{check_source, compile_options, Options};
+use super::super::super::{compile_options, Options};
 use super::pins;
+use crate::codebase::rules::test_no_dependency_pins::tests::check_source;
 
 #[test]
 fn homebrew_formulae_need_homebrew_context() {

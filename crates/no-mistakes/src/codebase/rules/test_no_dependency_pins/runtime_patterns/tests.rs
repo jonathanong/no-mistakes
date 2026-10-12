@@ -1,6 +1,7 @@
 use super::super::patterns::DEFAULT_PATTERNS;
-use super::super::{check_source, compile_options, Options};
+use super::super::{compile_options, Options};
 use super::RUNTIME_PATTERNS;
+use crate::codebase::rules::test_no_dependency_pins::tests::check_source;
 use regex::Regex;
 
 mod homebrew_tests;

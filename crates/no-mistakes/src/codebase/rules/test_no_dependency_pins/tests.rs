@@ -1,8 +1,10 @@
 use super::*;
+mod helpers;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+pub(super) use helpers::{check_source, scan_with_sources};
 use std::path::{Path, PathBuf};
 
 fn fixture_root() -> PathBuf {

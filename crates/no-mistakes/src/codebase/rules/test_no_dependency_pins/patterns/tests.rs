@@ -1,5 +1,6 @@
-use super::super::{check_source, compile_options, Options};
+use super::super::{compile_options, Options};
 use super::DEFAULT_PATTERNS;
+use crate::codebase::rules::test_no_dependency_pins::tests::check_source;
 use std::path::PathBuf;
 
 fn refs(line: &str) -> Vec<String> {

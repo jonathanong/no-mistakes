@@ -6,8 +6,6 @@ mod prepared;
 mod projection;
 pub use prepared::configure_fact_plan;
 pub(crate) use prepared::{is_jsx_file, prepared_jsx_text_ranges};
-#[cfg(test)]
-use projection::scan_with_sources;
 pub(crate) use projection::{check_with_files_and_sources, check_with_files_sources_and_facts};
 mod runtime_patterns;
 pub(crate) mod scan;
@@ -22,8 +20,6 @@ use patterns::DEFAULT_PATTERNS;
 use rayon::prelude::*;
 use regex::Regex;
 use runtime_patterns::RUNTIME_PATTERNS;
-#[cfg(test)]
-use scan::check_source;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 

@@ -2,7 +2,8 @@
 //! reported under (`exact action ref` or `versioned Homebrew formula`), never
 //! whether it is reported, so these tests compare reasons and not text.
 
-use super::super::super::{check_source, compile_options, Options};
+use super::super::super::{compile_options, Options};
+use crate::codebase::rules::test_no_dependency_pins::tests::check_source;
 
 const ACTION_REF: &str = "exact action ref";
 const FORMULA: &str = "versioned Homebrew formula";

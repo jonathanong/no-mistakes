@@ -42,19 +42,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings)
 }
 
-#[cfg(test)]
-pub(super) fn scan_with_sources(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(sources.observer().cloned());
-    scan_with_sources_and_facts(root, opts, files, sources, None, Some(&session))
-}
-
-fn scan_with_sources_and_facts(
+pub(super) fn scan_with_sources_and_facts(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],

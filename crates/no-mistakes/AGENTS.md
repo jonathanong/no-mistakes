@@ -37,6 +37,8 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   prepared checks must not reopen an evicted AST. Preserve standard JSX masks
   when historical symbol/import demand needs a distinct parser mode. Standalone scans borrow the
   SourceStore Arc and use observed parsing. Assert physical parser counts.
+  Test-only wrappers and imports belong in sibling test modules, never as
+  inline cfg(test) functions/imports in production modules.
 - Normalize paths without building an intermediate component vector. Preserve
   clean/dot/parent/root/prefix behavior; use FxHash for interned resolver keys
   under the parent guide's public/untrusted-key distinction.

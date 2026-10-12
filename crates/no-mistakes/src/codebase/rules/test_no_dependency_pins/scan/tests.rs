@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::test_no_dependency_pins::tests::check_source;
 
 fn source_ranges(content: &str) -> SourceRanges {
     super::assertion_ranges::source_ranges_for_file("scanner.test.ts", content)
