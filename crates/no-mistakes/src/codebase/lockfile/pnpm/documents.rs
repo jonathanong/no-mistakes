@@ -16,6 +16,12 @@ impl PnpmDocuments {
         self.documents.last()
     }
 
+    /// Workspace importers from the project document, without reparsing the
+    /// lockfile content that produced these documents.
+    pub(crate) fn importers(&self) -> Vec<super::PnpmImporter> {
+        super::importers::parse_importers_from_documents(self)
+    }
+
     /// Installation fields such as `settings` live on the project document.
     /// Comparing document 0 across a one-document and a two-document file
     /// would treat that project block as removed.

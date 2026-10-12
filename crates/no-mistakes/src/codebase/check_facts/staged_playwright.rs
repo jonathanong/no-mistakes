@@ -133,10 +133,10 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
             session,
             root,
             (&uncollected_files, &uncollected_graph_only_files),
-            &runner_plan,
-            &graph_fact_plan,
+            (&runner_plan, &graph_fact_plan),
             Some(&playwright),
             std::sync::Arc::clone(&sources),
+            &ts,
         );
     ts.extend(collected);
     super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);

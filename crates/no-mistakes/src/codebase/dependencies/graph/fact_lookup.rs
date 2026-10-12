@@ -5,10 +5,19 @@
 /// analyze the whole app). See `crates/AGENTS.md`'s "Duplicate full-repo work
 /// across independent call paths" section for the pattern this backs.
 pub(crate) trait TsFactLookup: Sync {
-    fn integration_route_links(&self, _source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+    fn integration_route_links(
+        &self,
+        _source: &crate::config::v2::schema::RouteCoverageSource,
+    ) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
         None
     }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;
+
+    /// Production declaration checks use a distinct historical parser projection
+    /// for files whose standard source type differs from TypeScript/TSX.
+    fn get_production_imports(&self, path: &Path) -> Option<&[ExtractedImport]> {
+        fact_lookup_production::from_ts(self.get_ts_facts(path)?, path)
+    }
 
     /// Whether every returned TS fact was collected with at least this plan.
     /// A false result makes graph construction fill from source instead of
@@ -120,22 +129,20 @@ pub(crate) type RouteReachableFiles =
     std::collections::BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>;
 
 mod fact_lookup_fallback;
+mod fact_lookup_production;
 pub(crate) use fact_lookup_fallback::*;
+use fact_lookup_production::check_file_facts_for_path;
 
 include!("fact_lookup_ts_map.rs");
 
-fn check_file_facts_for_path<'a>(
-    facts: &'a crate::codebase::check_facts::CheckFactMap,
-    path: &Path,
-) -> Option<&'a std::sync::Arc<crate::codebase::check_facts::CheckFileFacts>> {
-    facts.ts.get(path).or_else(|| {
-        let normalized = crate::codebase::ts_resolver::normalize_path(path);
-        facts.ts.get(&normalized)
-    })
-}
-
 impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
-    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+    fn get_production_imports(&self, path: &Path) -> Option<&[ExtractedImport]> {
+        fact_lookup_production::from_check(self, path)
+    }
+    fn integration_route_links(
+        &self,
+        source: &crate::config::v2::schema::RouteCoverageSource,
+    ) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
         self.integration_route_links.get(source)
     }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {

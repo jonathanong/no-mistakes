@@ -45,6 +45,8 @@ fn single_document_project_keeps_v9_shape() {
     let content = v12("single-doc-project");
     assert!(validate_for_planning(&content).is_ok());
     let importers = parse_importers(&content);
+    let documents = super::super::load_documents(&content).unwrap();
+    assert_eq!(documents.importers(), importers);
     assert_eq!(importers.len(), 1);
     assert_eq!(importers[0].path, ".");
     assert_eq!(importers[0].dependencies[0].alias, "react");
@@ -66,6 +68,8 @@ fn two_document_lockfile_unions_packages_and_reads_project_importers() {
         BTreeSet::from(["pnpm".to_string(), "react".to_string()])
     );
     let importers = parse_importers(&content);
+    let documents = super::super::load_documents(&content).unwrap();
+    assert_eq!(documents.importers(), importers);
     assert_eq!(importers.len(), 1);
     assert_eq!(importers[0].dependencies.len(), 1);
     assert_eq!(importers[0].dependencies[0].alias, "react");

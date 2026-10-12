@@ -94,8 +94,12 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             pnpm_release_age_policy::check_with_files_and_sources(root, config, files, sources)
         }
         PRODUCTION_DEPENDENCY_DECLARATIONS => {
-            production_dependency_declarations::check_with_files_and_sources(
-                root, config, files, sources,
+            production_dependency_declarations::check_with_files_sources_and_facts(
+                root,
+                config,
+                files,
+                sources,
+                facts.map(|facts| facts as &dyn crate::codebase::dependencies::graph::TsFactLookup),
             )
         }
         NO_GIT_IDENTITY_MUTATION => {

@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 mod plan;
 mod playwright_source;
+pub(crate) mod production_imports;
 mod program;
 mod program_walk;
 mod variants;
@@ -47,6 +48,17 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
             });
         }
     };
+    if plan.production_import_paths.contains(path) {
+        return production_imports::collect(
+            session,
+            root,
+            path,
+            plan,
+            playwright,
+            source,
+            retain_parse,
+        );
+    }
     collect_file_facts_from_source(session, root, path, plan, playwright, source, retain_parse)
 }
 

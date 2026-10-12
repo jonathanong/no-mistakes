@@ -55,6 +55,40 @@ fn lockfile_missing_unrelated_workspace_importer_is_ignored() {
 }
 
 #[test]
+fn shared_lockfile_importers_keep_rule_application_dependency_types_separate() {
+    let root = fixture_root("lockfile-partial-workspace");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+            "packages/tools/package.json",
+        ],
+    );
+    let mut config = NoMistakesConfig::default();
+    for dependency_type in ["dependencies", "devDependencies"] {
+        config.rules.push(RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(&format!(
+                "packages: ['@acme/app']\nforbidden: ['@acme/secret']\ndependencyTypes: [{dependency_type}]\nlockfile: pnpm-lock.yaml\n"
+            ))
+            .unwrap(),
+            ..Default::default()
+        });
+    }
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/domain/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
+    );
+}
+
+#[test]
 fn nested_lockfile_importers_are_relative_to_lockfile_directory() {
     let root = fixture_root("nested-lockfile");
     let files = package_files(

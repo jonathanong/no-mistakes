@@ -1,19 +1,17 @@
 use super::{Dependency, PackageNode, RULE_ID};
-use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 mod dependency_type;
+mod importer_cache;
 mod path_alias;
-
-pub(super) fn base_root<'a>(root: &'a Path, target_roots: &'a [PathBuf]) -> &'a Path {
-    target_roots
-        .first()
-        .filter(|_| target_roots.len() == 1)
-        .map_or(root, PathBuf::as_path)
-}
+mod paths;
+pub(super) use importer_cache::LockfileImporterCache;
+use importer_cache::ParsedImporters;
+use paths::{absolute_lockfile_path, importer_key};
+pub(super) use paths::{base_root, normalize_importer_path};
 
 pub(super) fn lockfile_nodes(
     root: &Path,
@@ -21,6 +19,7 @@ pub(super) fn lockfile_nodes(
     lockfile: &Path,
     workspace: &workspaces::WorkspaceMap,
     manifest_nodes: &BTreeMap<String, PackageNode>,
+    importer_cache: &LockfileImporterCache,
     request: (&[&str], &[String], &crate::codebase::ts_source::SourceStore),
 ) -> std::result::Result<BTreeMap<String, PackageNode>, String> {
     let (dependency_types, start_packages, sources) = request;
@@ -32,31 +31,41 @@ pub(super) fn lockfile_nodes(
     let dependency_types = dependency_type::validate(dependency_types)?;
     let lockfile_path = absolute_lockfile_path(root, lockfile_base, lockfile);
     let lockfile_root = lockfile_path.parent().unwrap_or(root);
-    let content = sources.read_path(&lockfile_path).map_err(|error| {
+    let rel_lockfile = relative_slash_path(root, &lockfile_path);
+    let parsed = importer_cache.get_or_compute(&lockfile_path, || {
+        let content = sources
+            .read_path(&lockfile_path)
+            .map_err(|error| error.to_string())?;
+        importer_cache::parse_importer_content(&content)
+    });
+    let parsed = parsed.as_ref().as_ref().map_err(|error| {
         format!(
             "{RULE_ID}: could not read lockfile {}: {error}",
             relative_slash_path(root, &lockfile_path)
         )
     })?;
-    let rel_lockfile = relative_slash_path(root, &lockfile_path);
-    let docs = crate::codebase::lockfile::pnpm::load_documents(&content)
-        .map_err(|_| format!("{RULE_ID}: lockfile {rel_lockfile} could not be parsed"))?;
-    if crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).is_err() {
-        return Err(format!(
-            "{RULE_ID}: lockfile {rel_lockfile} has a non-env document before the project lockfile"
-        ));
-    }
-    let importers = crate::codebase::lockfile::pnpm::parse_importers(&content);
+    let importers = match parsed {
+        ParsedImporters::Malformed => {
+            return Err(format!(
+                "{RULE_ID}: lockfile {rel_lockfile} could not be parsed"
+            ));
+        }
+        ParsedImporters::Loaded {
+            env_prefix_valid: false,
+            ..
+        } => {
+            return Err(format!(
+                "{RULE_ID}: lockfile {rel_lockfile} has a non-env document before the project lockfile"
+            ));
+        }
+        ParsedImporters::Loaded { by_path, .. } => by_path,
+    };
     if importers.is_empty() {
         return Err(format!(
             "{RULE_ID}: lockfile {} has no pnpm importers",
             relative_slash_path(root, &lockfile_path)
         ));
     }
-    let importer_by_path: BTreeMap<String, _> = importers
-        .into_iter()
-        .map(|importer| (normalize_importer_path(&importer.path), importer))
-        .collect();
     let package_by_name: BTreeMap<String, _> = workspace
         .packages
         .iter()
@@ -79,7 +88,7 @@ pub(super) fn lockfile_nodes(
     while let Some(package_name) = queue.pop_front() {
         let package = package_by_name[&package_name];
         let importer_key = importer_key(lockfile_root, &package.dir);
-        let Some(importer) = importer_by_path.get(&importer_key) else {
+        let Some(importer) = importers.get(&importer_key) else {
             return Err(format!(
                 "{RULE_ID}: lockfile is missing importer for workspace package '{}'",
                 package.name
@@ -105,31 +114,6 @@ pub(super) fn lockfile_nodes(
         nodes.insert(package_name, PackageNode { manifest, deps });
     }
     Ok(nodes)
-}
-
-fn importer_key(lockfile_root: &Path, package_dir: &Path) -> String {
-    let rel_dir = relative_slash_path(lockfile_root, package_dir);
-    if rel_dir.is_empty() {
-        ".".to_string()
-    } else {
-        rel_dir
-    }
-}
-
-fn absolute_lockfile_path(root: &Path, lockfile_base: &Path, lockfile: &Path) -> PathBuf {
-    let path = if lockfile.is_absolute() {
-        lockfile.to_path_buf()
-    } else if lockfile_base != root {
-        let project_lockfile = lockfile_base.join(lockfile);
-        if project_lockfile.exists() {
-            project_lockfile
-        } else {
-            root.join(lockfile)
-        }
-    } else {
-        root.join(lockfile)
-    };
-    normalize_path(&path)
 }
 
 fn lockfile_dependencies(
@@ -192,13 +176,4 @@ fn lockfile_dependencies(
     });
     deps.dedup();
     deps
-}
-
-pub(super) fn normalize_importer_path(path: &str) -> String {
-    let normalized = path.trim_start_matches("./").trim_end_matches('/');
-    if normalized.is_empty() {
-        ".".to_string()
-    } else {
-        normalized.to_string()
-    }
 }

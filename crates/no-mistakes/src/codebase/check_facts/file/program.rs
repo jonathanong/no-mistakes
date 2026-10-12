@@ -98,6 +98,7 @@ pub(crate) fn collect_file_facts_from_program(
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),
+        production_imports: None,
         source: stored_source,
         symbols,
         legacy_symbols: None,

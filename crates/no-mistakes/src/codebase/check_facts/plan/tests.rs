@@ -2,6 +2,48 @@ use super::CheckFactPlan;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 
 #[test]
+fn production_path_demand_is_shared_across_plan_clones_and_unioned_once() {
+    use std::sync::Arc;
+    let paths = Arc::new(
+        [std::path::PathBuf::from("/fixture/index.ts")]
+            .into_iter()
+            .collect(),
+    );
+    let mut plan = CheckFactPlan {
+        production_import_paths: Arc::clone(&paths),
+        ..Default::default()
+    };
+    let cloned = plan.clone();
+    assert!(Arc::ptr_eq(
+        &plan.production_import_paths,
+        &cloned.production_import_paths
+    ));
+    plan.include(cloned);
+    plan.include(CheckFactPlan::default());
+    assert!(Arc::ptr_eq(&plan.production_import_paths, &paths));
+    plan.include(CheckFactPlan {
+        production_import_paths: Arc::new(
+            [std::path::PathBuf::from("/fixture/helper.ts")]
+                .into_iter()
+                .collect(),
+        ),
+        ..Default::default()
+    });
+    assert_eq!(plan.production_import_paths.len(), 2);
+    assert_eq!(
+        paths.len(),
+        1,
+        "union must not mutate another request's demand"
+    );
+    let mut empty = CheckFactPlan::default();
+    empty.include(plan.clone());
+    assert!(Arc::ptr_eq(
+        &empty.production_import_paths,
+        &plan.production_import_paths
+    ));
+}
+
+#[test]
 fn explicit_annotation_profiles_union_and_deduplicate() {
     let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
     let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);

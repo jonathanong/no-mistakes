@@ -27,7 +27,19 @@ pub struct PnpmImporterDependency {
 }
 
 pub fn parse_importers(content: &str) -> Vec<PnpmImporter> {
-    parse_importers_for_impact(content)
+    let Ok(docs) = super::documents::load_documents(content) else {
+        return Vec::new();
+    };
+    parse_importers_from_documents(&docs)
+}
+
+/// Project workspace importers from documents a caller has already parsed.
+/// This lets request-scoped consumers share one YAML parse for validation
+/// and importer extraction.
+pub(super) fn parse_importers_from_documents(
+    docs: &super::documents::PnpmDocuments,
+) -> Vec<PnpmImporter> {
+    parse_importers_from_project(docs)
         .into_iter()
         .map(|importer| PnpmImporter {
             path: importer.path,
@@ -44,6 +56,12 @@ pub(crate) fn parse_importers_for_impact(content: &str) -> Vec<PnpmImpactImporte
     let Ok(docs) = super::documents::load_documents(content) else {
         return Vec::new();
     };
+    parse_importers_from_project(&docs)
+}
+
+fn parse_importers_from_project(docs: &super::documents::PnpmDocuments) -> Vec<PnpmImpactImporter> {
+    // Importers come from the project document. The env document reuses `.`
+    // for config and package-manager dependencies, so it is not a workspace root.
     let Some(root) = docs.project() else {
         return Vec::new();
     };

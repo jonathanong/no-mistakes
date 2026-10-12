@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@source/alias":["packages/lib/alias.ts"]}}}

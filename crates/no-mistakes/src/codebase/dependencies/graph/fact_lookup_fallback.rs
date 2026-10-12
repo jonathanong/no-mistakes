@@ -51,10 +51,7 @@ pub(crate) fn playwright_fetch_parse_error(
 ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
     let facts = fallback.get(path)?;
     let error = facts.parse_error.as_ref()?;
-    Some(Err(format!(
-        "failed to parse {}: {error}",
-        path.display()
-    )))
+    Some(Err(format!("failed to parse {}: {error}", path.display())))
 }
 
 pub(crate) fn same_graph_universe(
@@ -72,8 +69,13 @@ pub(crate) fn same_graph_universe(
 }
 
 impl TsFactLookup for FallbackTsFactLookup<'_> {
-    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
-        self.primary.integration_route_links(source).or_else(|| self.fallback.integration_route_links(source))
+    fn integration_route_links(
+        &self,
+        source: &crate::config::v2::schema::RouteCoverageSource,
+    ) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+        self.primary
+            .integration_route_links(source)
+            .or_else(|| self.fallback.integration_route_links(source))
     }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         if self.prefer_fallback {

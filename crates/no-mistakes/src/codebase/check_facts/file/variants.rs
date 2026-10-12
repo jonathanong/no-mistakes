@@ -41,7 +41,19 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
     let mut results = (0..variants.len()).map(|_| None).collect::<Vec<_>>();
     let mut parse_variants = Vec::new();
     for (index, variant) in variants.iter().enumerate() {
-        if variant.plan.storybook && is_mdx_file(path)
+        if variant.plan.production_import_paths.contains(path)
+            && !crate::codebase::dependencies::extract::is_indexable(path)
+            && !(variant.plan.storybook && is_mdx_file(path))
+        {
+            // Unknown extensions were historically parsed as TypeScript by
+            // this rule. Avoid a competing unsupported Standard parse.
+            let stored_source = should_store_source(variant.plan).then(|| Arc::clone(&source));
+            results[index] = Some(CheckFileFacts {
+                ts: Arc::new(super::ts_source(stored_source.clone())),
+                source: stored_source,
+                ..CheckFileFacts::default()
+            });
+        } else if variant.plan.storybook && is_mdx_file(path)
             || !requires_parse(variant.plan, path, variant.playwright)
         {
             results[index] = collect_file_facts_from_source(
@@ -56,8 +68,16 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
         } else {
             parse_variants.push((index, variant));
         }
+        if variant.plan.production_import_paths.contains(path)
+            && !crate::codebase::dependencies::extract::is_indexable(path)
+            && variant.plan.legacy_symbol_paths.contains(path)
+            && (variant.plan.symbols || variant.plan.graph.symbols)
+        {
+            parse_variants.push((index, variant));
+        }
     }
     if parse_variants.is_empty() {
+        super::production_imports::project(session, path, &source, variants, &mut results);
         return results;
     }
     let modes = parse_variants
@@ -73,6 +93,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
         &mut results,
     );
     collect_legacy_variants(session, path, &source, parse_variants, &modes, &mut results);
+    super::production_imports::project(session, path, &source, variants, &mut results);
     results
 }
 

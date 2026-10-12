@@ -58,6 +58,10 @@ pub(super) fn build(
         embedded_sql: enabled.embedded_sql,
     });
     plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
+    plan.production_import_paths = no_mistakes::codebase::rules::production_dependency_declarations::required_import_fact_files(
+        root, config, prepared.visible_paths.paths_for(root).as_ref(),
+    )?;
+    plan.graph.imports |= !plan.production_import_paths.is_empty();
     no_mistakes::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
     plan.embedded_sql_options =
         no_mistakes::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;

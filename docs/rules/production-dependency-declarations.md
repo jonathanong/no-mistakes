@@ -48,6 +48,12 @@ marked production-reachable and its findings go unseeded. List every root
 that participates in the import graph you care about, not just the packages
 you want findings for.
 
+Checks prepare import facts before evaluating this rule, retaining recovered
+imports and the historical TypeScript/TSX interpretation of source extensions.
+Within each rule application, each distinct source/specifier pair is resolved
+once, then package reachability uses those prepared relationships. Preparation
+and memoization belong to that invocation and do not persist between checks.
+
 Counterexample:
 
 ```json

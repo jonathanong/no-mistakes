@@ -1,4 +1,3 @@
-use super::super::value::Values;
 use super::super::{Environment, Value};
 use super::arena::ArenaMut;
 use super::{freshness, reachable};
@@ -18,39 +17,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
     pub updates: &'a mut FxHashMap<u64, Value>,
 }
 
-pub(super) fn remap(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
-    if indices.iter().all(|(before, after)| before == after) {
-        return;
-    }
-    match value {
-        Value::Function(_, _, env) => {
-            if let Some(index) = indices.get(env) {
-                *env = *index;
-            }
-        }
-        Value::Promise(value) | Value::Evaluated(value, _) => remap(value, indices),
-        Value::Aggregate(values)
-        | Value::References(values)
-        | Value::Object(values)
-        | Value::Joined(values)
-        | Value::Possible(values)
-            if changes_environment(values, indices) =>
-        {
-            for value in values {
-                remap(value, indices);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn changes_environment(values: &Values, indices: &FxHashMap<Environment, Environment>) -> bool {
-    values.contains_environment()
-        && values
-            .environment_indices()
-            .iter()
-            .any(|env| indices.get(env).is_some_and(|after| after != env))
-}
+mod remap;
+pub(super) use remap::remap;
+use remap::remap_changed;
 
 /// Keep only frames and heap objects reachable from restored scopes or callback
 /// results. Original frame identities and all argument identities stay stable.
@@ -130,32 +99,41 @@ fn compact_from_roots(
         .enumerate()
         .map(|(index, old)| (*old, roots.preserved + index))
         .collect::<FxHashMap<_, _>>();
+    let environments_changed = indices.iter().any(|(before, after)| before != after);
     let mut frames = retained
         .into_iter()
         .map(|env| std::mem::take(&mut scopes[env]))
         .collect::<Vec<_>>();
-    for frame in &mut frames {
-        for value in frame.values_mut() {
-            remap(value, &indices);
+    // A mutable Scope view detaches shared bindings and clears their indexes.
+    // Prune unreachable state below even when retained environments keep IDs.
+    if environments_changed {
+        for frame in &mut frames {
+            for value in frame.values_mut() {
+                remap_changed(value, &indices);
+            }
         }
-    }
-    for value in returned {
-        remap(value, &indices);
+        for value in returned {
+            remap_changed(value, &indices);
+        }
     }
     arena
         .objects
         .retain(|id, _| reachable.arguments.contains(id));
-    for values in arena.objects.values_mut() {
-        for value in values {
-            remap(value, &indices);
+    if environments_changed {
+        for values in arena.objects.values_mut() {
+            for value in values {
+                remap_changed(value, &indices);
+            }
         }
     }
     arena
         .extras
         .retain(|id, _| reachable.arguments.contains(id));
-    for slots in arena.extras.values_mut() {
-        for value in slots.values_mut() {
-            remap(value, &indices);
+    if environments_changed {
+        for slots in arena.extras.values_mut() {
+            for value in slots.values_mut() {
+                remap_changed(value, &indices);
+            }
         }
     }
     *mapped = std::mem::take(mapped)

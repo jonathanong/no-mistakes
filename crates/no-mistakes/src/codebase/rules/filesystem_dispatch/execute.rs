@@ -67,7 +67,22 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    run_prepared_filesystem_rules(root, config, files, prepared, facts, false)
+    // This public standalone adapter owns missing demand at its boundary.
+    // Lower rule layers only borrow it; a supplied sparse map is not repaired.
+    let owned_facts = if facts.is_none() && rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
+    {
+        super::entrypoints::prepare_call_site_facts(root, config, &prepared.sources)?
+    } else {
+        None
+    };
+    run_prepared_filesystem_rules(
+        root,
+        config,
+        files,
+        prepared,
+        facts.or(owned_facts.as_ref()),
+        false,
+    )
 }
 
 /// Aggregate check adapter that defers suppression to the shared result pass.

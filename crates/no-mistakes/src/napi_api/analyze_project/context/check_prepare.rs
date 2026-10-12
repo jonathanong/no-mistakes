@@ -14,7 +14,11 @@ impl SharedCheckContext {
             filesystem_rules_configured, queues_configured, unique_exports_configured,
         };
 
-        let SharedCheckPreparationOptions { config_path, tsconfig_path, deadlines } = options;
+        let SharedCheckPreparationOptions {
+            config_path,
+            tsconfig_path,
+            deadlines,
+        } = options;
 
         // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
@@ -65,20 +69,27 @@ impl SharedCheckContext {
                 crate::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
             )?;
         plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
+        plan.production_import_paths =
+            crate::codebase::rules::production_dependency_declarations::required_import_fact_files(
+                &root,
+                config,
+                prepared.visible_paths.paths_for(&root).as_ref(),
+            )?;
+        plan.graph.imports |= !plan.production_import_paths.is_empty();
         crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
         let prepare_runner_configs = if deadlines {
             crate::integration_tests::prepare_runner_configs_with_deadline_evidence
-        } else { crate::integration_tests::prepare_runner_configs_with_catalog };
+        } else {
+            crate::integration_tests::prepare_runner_configs_with_catalog
+        };
         if integration_enabled || enabled.dynamic_import_rules || deadlines {
-            plan.integration_runner_configs = Some(std::sync::Arc::new(
-                prepare_runner_configs(
-                    &root,
-                    config,
-                    prepared.visible_paths.paths_for(&root).as_ref(),
-                    std::sync::Arc::clone(&prepared.tsconfig_catalog),
-                    prepared.visible_paths.source_store_for(&root),
-                ),
-            ));
+            plan.integration_runner_configs = Some(std::sync::Arc::new(prepare_runner_configs(
+                &root,
+                config,
+                prepared.visible_paths.paths_for(&root).as_ref(),
+                std::sync::Arc::clone(&prepared.tsconfig_catalog),
+                prepared.visible_paths.source_store_for(&root),
+            )));
         }
         let mut prepared_graph = graph_plan
             .map(|graph_plan| {
@@ -113,9 +124,7 @@ impl SharedCheckContext {
                 None => playwright_fact_plan = Some(graph_playwright),
             }
         }
-        if let (Some(graph_plan), Some(prepared_graph)) =
-            (graph_plan, prepared_graph.as_ref())
-        {
+        if let (Some(graph_plan), Some(prepared_graph)) = (graph_plan, prepared_graph.as_ref()) {
             let (fact_plan, fact_context) =
                 crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
                     &root,

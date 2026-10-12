@@ -90,12 +90,14 @@ fn batch_unsupported_sources_preserve_requested_boundary_facts() {
     let path = ast_fixture("unknown-extension.source");
     let facts = collect(&root, &path);
 
-    assert!(facts.iter().all(|facts| facts
-        .as_ref()
-        .unwrap()
-        .parse_error
-        .as_deref()
-        .is_some_and(|error| error.contains("unsupported file type"))));
+    assert!(facts.iter().all(|facts| {
+        facts
+            .as_ref()
+            .unwrap()
+            .parse_error
+            .as_deref()
+            .is_some_and(|error| error.contains("unsupported file type"))
+    }));
     assert_boundary_is_variant_specific(&facts);
 }
 

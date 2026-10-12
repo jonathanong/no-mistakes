@@ -1,0 +1,1 @@
+{"name":"@acme/lib","exports":{".":"./index.mts","./sub":"./sub.mts"}}
