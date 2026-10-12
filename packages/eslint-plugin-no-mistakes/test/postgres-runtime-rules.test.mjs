@@ -842,6 +842,39 @@ describe("postgres runtime helpers", () => {
 });
 
 describe("postgres-no-manual-transaction", () => {
+  it("does not treat positional parameters as dollar quotes hiding transaction commands", () => {
+    const recovery = `${IMPORT}
+      client.query("SELECT $1 AS value", [1]);
+      client.query("SAVEPOINT owned");
+      client.query("SELECT $1::text AS first, $2::text AS second", ["first", "second"]);
+      client.query("ROLLBACK WORK TO SAVEPOINT owned");
+      client.query("RELEASE SAVEPOINT owned");
+    `;
+    assert.deepEqual(ids(recovery, "postgres-no-manual-transaction"), []);
+    const lifecycle = `${IMPORT}
+      client.query("SELECT $1 AS value", [1]);
+      client.query("BEGIN");
+      client.query("SELECT $1 AS value", [1]);
+      client.query("COMMIT");
+      client.query("SELECT $1 AS value", [1]);
+      client.query("ROLLBACK TRANSACTION AND NO CHAIN");
+    `;
+    assert.deepEqual(ids(lifecycle, "postgres-no-manual-transaction"), [
+      "manualTransaction",
+      "manualTransaction",
+      "manualTransaction",
+    ]);
+    // Analyze mixed SQL as source text; this is not a PostgreSQL extended-query
+    // execution claim. A positional token must not hide later lifecycle control.
+    assert.deepEqual(
+      ids(
+        `${IMPORT} client.query("SELECT $1 AS value; ROLLBACK", [1]);`,
+        "postgres-no-manual-transaction",
+      ),
+      ["manualTransaction"],
+    );
+  });
+
   it("recognizes PostgreSQL non-ASCII dollar tags and contiguous escape-string prefixes", () => {
     const allowed = [
       "SELECT $é$'abc$é$; ROLLBACK TO owned; SELECT $é$def'$é$",
