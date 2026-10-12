@@ -60,7 +60,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_binding_indexes(
         &mut self,
     ) {
-        self.rebuild_captured_readers();
+        self.rebuild_compacted_binding_indexes(true);
+    }
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_compacted_binding_indexes(
+        &mut self,
+        captured_changed: bool,
+    ) {
+        if captured_changed {
+            self.rebuild_captured_readers();
+        }
         self.rebuild_mapped_argument_owners();
         self.rebuild_fresh_mapped_argument_bindings();
     }

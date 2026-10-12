@@ -33,21 +33,19 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     arena
         .extras
         .retain(|id, _| reachable.arguments.contains(id));
-    state
-        .deleted
-        .retain(|(id, _)| reachable.arguments.contains(id));
-    state
-        .definite
-        .retain(|(id, _)| reachable.arguments.contains(id));
-    state
-        .disconnected
-        .retain(|(id, _)| reachable.arguments.contains(id));
-    state
-        .invalidated
-        .retain(|id| reachable.identities.contains(id));
-    state
-        .updates
-        .retain(|id, _| reachable.identities.contains(id));
+    prune_mutations(state, &reachable.arguments, &reachable.identities);
+}
+
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_mutations(
+    state: MutationState<'_>,
+    arguments: &FxHashSet<u64>,
+    identities: &FxHashSet<u64>,
+) {
+    state.deleted.retain(|(id, _)| arguments.contains(id));
+    state.definite.retain(|(id, _)| arguments.contains(id));
+    state.disconnected.retain(|(id, _)| arguments.contains(id));
+    state.invalidated.retain(|id| identities.contains(id));
+    state.updates.retain(|id, _| identities.contains(id));
 }
 
 /// Compact request state from explicit module roots, then remap cached module
@@ -59,7 +57,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
-) -> FxHashMap<Environment, Environment> {
+) -> Compaction {
     let roots = modules.values().copied().collect::<Vec<_>>();
     let indices = compact_from_roots(
         scopes,
@@ -74,7 +72,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
         captured,
     );
     for env in modules.values_mut() {
-        if let Some(remapped) = indices.get(env) {
+        if let Some(remapped) = indices.indices.get(env) {
             *env = *remapped;
         }
     }

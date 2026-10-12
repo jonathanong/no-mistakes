@@ -71,7 +71,8 @@ pub(crate) struct ResolveKey {
     specifier: Arc<str>,
 }
 
-pub(crate) type ResolverResultCache = DashMap<ResolveKey, Option<PathBuf>>;
+pub(crate) type ResolverResultCache =
+    DashMap<ResolveKey, Option<PathBuf>, rustc_hash::FxBuildHasher>;
 
 /// Exact identity for a resolver cache within one analysis invocation.
 ///
@@ -163,8 +164,8 @@ impl ImportClassification {
 /// traversal prepare any other graph consumer.
 #[derive(Default)]
 pub(crate) struct ImportResolutionCache {
-    raw_entries: DashMap<ResolveKey, Option<PathBuf>>,
-    final_entries: DashMap<ResolveKey, ImportClassification>,
+    raw_entries: DashMap<ResolveKey, Option<PathBuf>, rustc_hash::FxBuildHasher>,
+    final_entries: DashMap<ResolveKey, ImportClassification, rustc_hash::FxBuildHasher>,
     classifications: std::sync::atomic::AtomicUsize,
     requests: std::sync::atomic::AtomicUsize,
 }

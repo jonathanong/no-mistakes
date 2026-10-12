@@ -147,7 +147,13 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
         &mut fresh,
         &mut captured,
     );
-    assert_eq!(indices, FxHashMap::from_iter([(0, 0), (1, 1)]));
+    assert_eq!(indices.indices, FxHashMap::from_iter([(0, 0), (1, 1)]));
+    assert!(
+        indices.captured_changed,
+        "dead capture ownership was pruned"
+    );
+    assert_eq!(indices.arguments, FxHashSet::from_iter([42]));
+    assert_eq!(indices.identities, FxHashSet::from_iter([7, 8, 42]));
     assert_eq!(scopes.len(), 2);
     for index in 0..2 {
         // Output equality would miss a needless copy and invalidated memo.
@@ -215,7 +221,10 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
         &mut fresh,
         &mut captured,
     );
-    assert_eq!(indices, FxHashMap::from_iter([(0, 0), (2, 1)]));
+    assert_eq!(indices.indices, FxHashMap::from_iter([(0, 0), (2, 1)]));
+    assert!(indices.captured_changed);
+    assert_eq!(indices.arguments, FxHashSet::from_iter([42]));
+    assert_eq!(indices.identities, FxHashSet::from_iter([7, 42]));
     assert_eq!(scopes.len(), 2);
     assert!(!std::ptr::eq(&*scopes[1], &*snapshot));
     assert!(!scopes[1].builder_index_initialized());

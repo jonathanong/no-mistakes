@@ -263,6 +263,43 @@ fn normalize_path_drops_current_dir_components() {
 }
 
 #[test]
+fn normalize_path_preserves_unmatched_relative_parent_components() {
+    assert_eq!(
+        normalize_path(Path::new("../a/../../b")),
+        Path::new("../../b")
+    );
+}
+
+#[test]
+fn normalize_path_preserves_root_and_root_parent_components() {
+    assert_eq!(normalize_path(Path::new("/")), Path::new("/"));
+    assert_eq!(normalize_path(Path::new("/a/../../b")), Path::new("/../b"));
+    assert_eq!(normalize_path(Path::new("/../../b")), Path::new("/../../b"));
+    assert_eq!(normalize_path(Path::new("")), Path::new(""));
+}
+
+#[cfg(windows)]
+#[test]
+fn normalize_path_preserves_windows_prefix_and_root_parent_components() {
+    assert_eq!(
+        normalize_path(Path::new(r"C:\a\..\..\b")),
+        Path::new(r"C:\..\b")
+    );
+    assert_eq!(normalize_path(Path::new(r"C:\")), Path::new(r"C:\"));
+}
+
+#[cfg(unix)]
+#[test]
+fn normalize_path_preserves_non_utf8_normal_components() {
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let path = Path::new(OsStr::from_bytes(b"dir/\xff/file"));
+    let normalized = normalize_path(path);
+    assert_eq!(normalized.as_os_str().as_bytes(), b"dir/\xff/file");
+}
+
+#[test]
 fn match_alias_captures_wildcard_segment() {
     assert_eq!(match_alias("@/*", "@/foo"), Some("foo".to_string()));
 }

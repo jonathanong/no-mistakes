@@ -102,6 +102,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_captured_readers(
         &mut self,
     ) {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.captured_reader_rebuilds", 1);
+        }
         self.captured_binding_readers.clear();
         for (frame, bindings) in &self.captured_bindings {
             for (name, origin) in bindings {
@@ -120,12 +123,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) {
         for (frame, bindings) in &self.captured_bindings {
             for (name, origin) in bindings {
-                let value = self.scopes[*origin]
-                    .get(name)
-                    .cloned()
-                    .unwrap_or(Value::Unknown);
-                self.scopes[*frame].insert(name.clone(), value);
+                let value = self.scopes[*origin].get(name).unwrap_or(&Value::Unknown);
+                // A missing binding must still acquire Unknown; equal writes
+                // would detach shared scopes and invalidate their indexes.
+                if self.scopes[*frame].get(name) != Some(value) {
+                    let value = value.clone();
+                    self.scopes[*frame].insert(name.clone(), value);
+                }
             }
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

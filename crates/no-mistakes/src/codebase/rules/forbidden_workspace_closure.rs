@@ -11,6 +11,7 @@ mod alias;
 mod lockfile;
 mod manifest;
 mod options;
+mod selection;
 mod traversal;
 mod workspace;
 use options::Options;
@@ -48,6 +49,7 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let lockfile_importers =
         lockfile::LockfileImporterCache::with_observer(sources.observer().cloned());
+    let selections = selection::SelectionCache::default();
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -72,7 +74,7 @@ pub(crate) fn check_with_files_and_sources(
                 &files,
                 &source_filter,
                 sources,
-                &lockfile_importers,
+                (&lockfile_importers, &selections),
             )
         })
         .collect();
@@ -88,9 +90,11 @@ fn scan_with_sources(
     files: &[PathBuf],
     source_filter: &super::path_filter::RulePathFilter,
     sources: &crate::codebase::ts_source::SourceStore,
-    lockfile_importers: &lockfile::LockfileImporterCache,
+    preparation: (&lockfile::LockfileImporterCache, &selection::SelectionCache),
 ) -> Result<Vec<RuleFinding>> {
-    let workspace = workspace::load_workspace_with_sources(root, target_roots, files, sources)?;
+    let (lockfile_importers, selections) = preparation;
+    let selection = selections.get_or_compute(root, target_roots, files, sources)?;
+    let workspace = &selection.workspace;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -111,27 +115,35 @@ fn scan_with_sources(
         Ok(dependency_types) => dependency_types,
         Err(message) => return Ok(vec![config_finding(&message)]),
     };
-    let mut nodes = manifest::manifest_nodes_with_sources(&workspace, &dependency_types, sources);
-    if let Some(lockfile) = &opts.lockfile {
-        let lockfile_manifest_nodes = manifest::manifest_nodes_with_sources(
-            &workspace,
-            package_deps::ALL_DEPENDENCY_FIELDS,
-            sources,
-        );
+    // Lockfile field matching and manifest-only peers need every field;
+    // the selected-field projection would be discarded on that path.
+    let manifest_nodes = selection.manifest_nodes(
+        if opts.lockfile.is_some() {
+            package_deps::ALL_DEPENDENCY_FIELDS
+        } else {
+            &dependency_types
+        },
+        sources,
+    );
+    let lockfile_nodes;
+    let nodes = if let Some(lockfile) = &opts.lockfile {
         let lockfile_base = lockfile::base_root(root, target_roots);
-        match lockfile::lockfile_nodes(
+        lockfile_nodes = match lockfile::lockfile_nodes(
             root,
             lockfile_base,
             lockfile,
-            &workspace,
-            &lockfile_manifest_nodes,
+            workspace,
+            &manifest_nodes,
             lockfile_importers,
             (&dependency_types, &opts.packages, sources),
         ) {
-            Ok(lockfile_backed) => nodes = lockfile_backed,
+            Ok(lockfile_backed) => lockfile_backed,
             Err(message) => return Ok(vec![config_finding(&message)]),
-        }
-    }
+        };
+        &lockfile_nodes
+    } else {
+        manifest_nodes.as_ref()
+    };
 
     let workspace_names: BTreeSet<String> = nodes.keys().cloned().collect();
     let mut findings = Vec::new();
@@ -145,7 +157,7 @@ fn scan_with_sources(
         traversal::collect_findings_for_package(
             root,
             package,
-            &nodes,
+            nodes,
             &workspace_names,
             &forbidden,
             source_filter,

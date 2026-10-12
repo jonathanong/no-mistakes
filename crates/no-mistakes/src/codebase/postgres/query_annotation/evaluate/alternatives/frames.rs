@@ -9,6 +9,13 @@ struct Roots<'a> {
     preserved: Environment,
 }
 
+pub(super) struct Compaction {
+    pub indices: FxHashMap<Environment, Environment>,
+    pub arguments: FxHashSet<u64>,
+    pub identities: FxHashSet<u64>,
+    pub captured_changed: bool,
+}
+
 pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationState<'a> {
     pub deleted: &'a mut FxHashSet<(u64, Option<usize>)>,
     pub definite: &'a mut FxHashSet<(u64, usize)>,
@@ -17,6 +24,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
     pub updates: &'a mut FxHashMap<u64, Value>,
 }
 
+mod captures;
 mod remap;
 pub(super) use remap::remap;
 use remap::remap_changed;
@@ -37,7 +45,7 @@ pub(super) fn compact(
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
-) -> FxHashMap<Environment, Environment> {
+) -> Compaction {
     let original = cache.original;
     let mut roots = (0..original).collect::<Vec<_>>();
     roots.extend(cache.modules.values().copied());
@@ -61,10 +69,10 @@ pub(super) fn compact(
     );
     returned.clone_from_slice(&rooted_values[..count]);
     for initial in cache.initials.iter_mut() {
-        initial.remap(&indices);
+        initial.remap(&indices.indices);
     }
     for env in cache.modules.values_mut() {
-        if let Some(remapped) = indices.get(env) {
+        if let Some(remapped) = indices.indices.get(env) {
             *env = *remapped;
         }
     }
@@ -79,7 +87,7 @@ fn compact_from_roots(
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
-) -> FxHashMap<Environment, Environment> {
+) -> Compaction {
     let reachable = reachable::collect_from_roots(
         scopes,
         roots.environments,
@@ -146,30 +154,20 @@ fn compact_from_roots(
             }
         })
         .collect();
-    *captured = std::mem::take(captured)
-        .into_iter()
-        .filter_map(|(env, mut origins)| {
-            let key = if env < roots.preserved {
-                Some(env)
-            } else {
-                indices.get(&env).copied()
-            }?;
-            for origin in origins.values_mut() {
-                if let Some(index) = indices.get(origin) {
-                    *origin = *index;
-                }
-            }
-            Some((key, origins))
-        })
-        .collect();
+    let captured_changed = captures::remap(captured, roots.preserved, &indices);
     freshness::remap(fresh, roots.preserved, &indices);
     scopes.truncate(roots.preserved);
     scopes.extend(frames);
-    indices
+    Compaction {
+        indices,
+        arguments: reachable.arguments,
+        identities: reachable.identities,
+        captured_changed,
+    }
 }
 
 mod state;
-pub(super) use state::{compact_modules, prune_state};
+pub(super) use state::{compact_modules, prune_mutations, prune_state};
 
 #[cfg(test)]
 mod tests;

@@ -135,12 +135,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut self.fresh_mapped_parameters,
                 &mut self.captured_bindings,
             );
-            self.remap_active_callbacks(scopes.len(), &indices);
-            super::callback_seen::remap(&mut joined_seen, scopes.len(), &indices);
+            self.remap_active_callbacks(scopes.len(), &indices.indices);
+            super::callback_seen::remap(&mut joined_seen, scopes.len(), &indices.indices);
             modules.clone_from(&self.modules);
             module_states.remapped(&self.scopes, &modules);
             joined_extras = Some(self.argument_extra_slots.clone());
-            self.rebuild_binding_indexes();
+            self.rebuild_compacted_binding_indexes(indices.captured_changed);
             joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             joined.clone_from(&self.argument_objects);
         }
