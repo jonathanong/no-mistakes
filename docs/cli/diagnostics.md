@@ -39,7 +39,10 @@ from parsing, with `postgres.annotation.reachability_walks` counting the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
 counts reverse capture-index reconstruction; unchanged compaction retains the
-existing index.
+existing index. `postgres.annotation.incoming_dense_slots_copied` counts incoming
+argument slots cloned into a branch join, including every slot of a new object
+and only changed slots of an existing object. It excludes clones of prior
+values needed to build candidate sets for changed slots.
 
 File-scoped forbidden call checks report `forbidden_calls.path_filter_checks`
 once per selected file instead of once per call occurrence.

@@ -57,6 +57,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &self.scopes,
             &[env],
             &[],
+            &[],
             Arena {
                 objects: &self.argument_objects,
                 extras: &self.argument_extra_slots,

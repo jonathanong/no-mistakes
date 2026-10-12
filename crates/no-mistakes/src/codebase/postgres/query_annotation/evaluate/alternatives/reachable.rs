@@ -56,12 +56,13 @@ pub(super) fn collect(
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
     let roots = (0..originals).collect::<Vec<_>>();
-    collect_from_roots(scopes, &roots, returned, arena, mapped, captured)
+    collect_from_roots(scopes, &roots, &[], returned, arena, mapped, captured)
 }
 
 pub(super) fn collect_from_roots(
     scopes: &[Scope],
     roots: &[Environment],
+    argument_roots: &[u64],
     returned: &[Value],
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -72,6 +73,7 @@ pub(super) fn collect_from_roots(
     }
     let mut found = Reachable::default();
     found.pending_env.extend(roots.iter().copied());
+    found.pending_args.extend(argument_roots.iter().copied());
     for value in returned {
         found.value(value);
     }

@@ -10,6 +10,32 @@ fn fixture_root() -> PathBuf {
 }
 
 #[test]
+fn dense_branch_fixture_keeps_query_findings_and_tracks_copied_slots() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/postgres-branch-copies")
+        .canonicalize()
+        .expect("saved branch fixture should exist");
+    let (output, diagnostics) = check_json_observed(&root, true).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let entry =
+        include_str!("../../../../fixtures/performance/postgres-branch-copies/src/entry-00.mts");
+    let unsafe_line = entry
+        .lines()
+        .position(|line| line.ends_with("// unsafe-query"))
+        .unwrap() as u64
+        + 1;
+    assert_eq!(report["warnings"], json!([]));
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 12);
+    assert!(findings.iter().all(|finding| {
+        finding["rule"] == "postgres-require-query-annotation"
+            && finding["line"].as_u64() == Some(unsafe_line)
+    }));
+    assert_eq!(diagnostics.work["parse.files"], 14);
+    assert!(diagnostics.work["postgres.annotation.incoming_dense_slots_copied"] > 0);
+}
+
+#[test]
 fn benchmark_adapters_preserve_output_with_and_without_observers() {
     let root = fixture_root();
     let plain_check = check_json(&root).expect("plain check should succeed");

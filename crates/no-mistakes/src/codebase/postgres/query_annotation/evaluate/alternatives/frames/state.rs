@@ -63,6 +63,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
         scopes,
         Roots {
             environments: &roots,
+            arguments: &[],
             preserved: 0,
         },
         &mut [],

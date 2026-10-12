@@ -136,6 +136,7 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
         &mut scopes,
         Roots {
             environments: &[0],
+            arguments: &[],
             preserved: 0,
         },
         &mut returned,
@@ -210,6 +211,7 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
         &mut scopes,
         Roots {
             environments: &[0],
+            arguments: &[],
             preserved: 0,
         },
         &mut returned,
@@ -243,4 +245,46 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
     assert_eq!(mapped[&1], vec![(42, vec!["parameter".to_string()])]);
     assert!(fresh[&1].contains("parameter"));
     assert_eq!(captured[&1]["owner"], 1);
+}
+
+#[test]
+fn initial_argument_roots_preserve_cycles_and_callbacks_without_copying_returns() {
+    let mut scopes = vec![Scope::default(), Scope::default(), Scope::default()];
+    let mut returned = vec![Value::Prefix("SELECT 1".into(), true, None)];
+    let Value::Prefix(text, _, _) = &returned[0] else {
+        unreachable!()
+    };
+    let return_buffer = text.as_ptr();
+    let mut objects = FxHashMap::from_iter([(42, vec![Value::Arguments(42), function_value(2)])]);
+    let mut extras = FxHashMap::default();
+    let mut mapped = FxHashMap::default();
+    let mut fresh = FxHashMap::default();
+    let mut captured = FxHashMap::default();
+
+    let compacted = compact_from_roots(
+        &mut scopes,
+        Roots {
+            environments: &[0],
+            arguments: &[42],
+            preserved: 1,
+        },
+        &mut returned,
+        &mut mapped,
+        ArenaMut {
+            objects: &mut objects,
+            extras: &mut extras,
+        },
+        &mut fresh,
+        &mut captured,
+    );
+
+    assert_eq!(compacted.indices.get(&2), Some(&1));
+    assert_eq!(compacted.arguments, FxHashSet::from_iter([42]));
+    assert_eq!(compacted.identities, FxHashSet::from_iter([42]));
+    assert!(objects[&42][0] == Value::Arguments(42));
+    assert_eq!(function_environment(&objects[&42][1]), 1);
+    let Value::Prefix(text, _, _) = &returned[0] else {
+        panic!("returned value changed shape")
+    };
+    assert_eq!(text.as_ptr(), return_buffer, "the return was not copied");
 }

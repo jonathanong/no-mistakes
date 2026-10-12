@@ -16,19 +16,15 @@
 ### Prepared analysis, source-session ownership, and relationship projection
 
 The public check, query, N-API, or integration-runner boundary owns one
-`AnalysisSession`/prepared analysis for the invocation. That owner declares the
-complete `TsFactPlan` and graph demand, then prepares the visible-file inventory,
-`SourceStore`, resolver/catalog, fact map, workspace data, and canonical graph
-once. Lower layers receive the prepared facts and session-owned stores by
-reference; they must not open an independent source/read/parse/resolution or
-graph-building pipeline.
+`AnalysisSession`/prepared analysis for the invocation. It declares the complete
+`TsFactPlan` and graph demand, then prepares the visible-file inventory,
+`SourceStore`, resolver/catalog, fact map, workspace data, and canonical graph once.
+Lower layers borrow these inputs; they must not start another read/parse/graph pipeline.
 
-`SourceStore` is specifically a *session-owned* physical-I/O boundary. A
-source consumer must use the store supplied by its prepared request, including
-for a supplemental normalized path. This memoizes both source text and read
-failures and makes read accounting meaningful. Do not compensate for a missing
-prepared source parameter by calling `std::fs::read_to_string`; thread the
-prepared store down instead.
+`SourceStore` is a *session-owned* physical-I/O boundary. Source consumers use
+the store from the prepared request, including for supplemental normalized paths.
+It memoizes text and read failures for meaningful accounting. Thread the store
+down instead of compensating with `std::fs::read_to_string`.
 
 Each layer has a deliberately narrow, declarative responsibility:
 
@@ -45,13 +41,17 @@ Each layer has a deliberately narrow, declarative responsibility:
    discovers files, reads sources, parses programs, or calls an extractor has
    crossed the boundary in the wrong direction.
 
-This split is important for determinism as well as speed: a fact plan makes
-what is collected explicit, the source session gives every input one identity,
-and a canonical relationship projection gives every consumer the same answer.
+This split keeps collection explicit, gives every input one source identity, and
+gives every consumer the same canonical relationship answer.
 
 Keep extracted facts in their final ownership form. Do not wrap an owned value
 in `Arc` only to recover it with `as_deref().cloned()` for its sole consumer;
 that deep-copies nested data. Use `Arc` only for retained shared ownership.
+
+When merging incoming dense slots, borrow existing values; copy only new
+objects and differing slots. During compaction, pass returns directly and
+initial argument IDs as separate roots. Prove work counts and fixture behavior
+while retaining callbacks, argument cycles, mutations, and frame remapping.
 
 Cache immutable selection work at the coarsest stable request key. A scoped
 resolver selects once per importing file, including negative results; assert
