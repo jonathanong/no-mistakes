@@ -1,6 +1,7 @@
 use super::{
     extract_embedded_sql_from_source, leading_query_annotation, EmbeddedSqlKind, EmbeddedSqlOptions,
 };
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -32,29 +33,41 @@ pub fn extract_executed_postgres_sql(
     sources: &[ExecutedPostgresSource],
     options: &EmbeddedSqlOptions,
 ) -> Vec<ExecutedPostgresSql> {
+    sources
+        .par_iter()
+        .map(|source| extract_source(source, options))
+        .collect::<Vec<_>>()
+        .into_iter()
+        .flatten()
+        .collect()
+}
+
+fn extract_source(
+    source: &ExecutedPostgresSource,
+    options: &EmbeddedSqlOptions,
+) -> Vec<ExecutedPostgresSql> {
     let mut statements = Vec::new();
-    for source in sources {
-        let facts =
-            extract_embedded_sql_from_source(Path::new(&source.file_name), &source.source, options);
-        for call in facts.calls {
-            if call.variants.is_empty() {
+    let facts =
+        extract_embedded_sql_from_source(Path::new(&source.file_name), &source.source, options);
+    for call in facts.calls {
+        if call.variants.is_empty() {
+            statements.push(statement(
+                &source.file_name,
+                call.line,
+                call.sql_text,
+                call.kind != EmbeddedSqlKind::Dynamic
+                    && call.recovered_placeholder_positions.is_empty(),
+                call.kind,
+            ));
+        } else {
+            for variant in call.variants {
                 statements.push(statement(
                     &source.file_name,
                     call.line,
-                    call.sql_text,
-                    call.kind != EmbeddedSqlKind::Dynamic,
+                    Some(variant.sql_text),
+                    variant.recovered_placeholder_positions.is_empty(),
                     call.kind,
                 ));
-            } else {
-                for variant in call.variants {
-                    statements.push(statement(
-                        &source.file_name,
-                        call.line,
-                        Some(variant.sql_text),
-                        true,
-                        call.kind,
-                    ));
-                }
             }
         }
     }

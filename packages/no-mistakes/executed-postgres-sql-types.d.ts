@@ -14,6 +14,8 @@ export interface ExecutedPostgresSqlOptions {
   trustedSqlTags?: { module: string; name: string }[];
 }
 
+export type ExecutedPostgresSqlKind = "inline" | "immutableLocal" | "composed" | "dynamic";
+
 export interface ExecutedPostgresSql {
   fileName: string;
   /** One-based line of the executor call. */
@@ -23,5 +25,10 @@ export interface ExecutedPostgresSql {
   sqlText: string | null;
   /** False when full SQL could not be proven, including interpolation. */
   complete: boolean;
-  kind: "inline" | "immutableLocal" | "composed" | "dynamic";
+  kind: ExecutedPostgresSqlKind;
 }
+
+/** Extract configured PostgreSQL executor calls from supplied TS/JS source. */
+export function extractExecutedPostgresSql(
+  options: ExecutedPostgresSqlOptions,
+): Promise<ExecutedPostgresSql[]>;

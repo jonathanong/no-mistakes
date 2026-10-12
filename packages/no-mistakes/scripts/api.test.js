@@ -57,7 +57,7 @@ function nativeExportNames() {
 }
 
 function declarationExportNames() {
-  const declarations = ["index.d.ts", "index-ci-infra.d.ts"]
+  const declarations = ["index.d.ts", "index-ci-infra.d.ts", "executed-postgres-sql-types.d.ts"]
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");
   return [
@@ -952,15 +952,19 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
 test("executed PostgreSQL source extraction exposes its named async contract", () => {
   const declarations = readFileSync(join(packageRoot, "executed-postgres-sql-types.d.ts"), "utf8");
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  const postgresSource = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
   assert.match(declarations, /export interface ExecutedPostgresSource \{/);
   assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
   assert.match(declarations, /export interface ExecutedPostgresSql \{/);
+  assert.match(declarations, /export type ExecutedPostgresSqlKind =/);
+  assert.match(declarations, /kind: ExecutedPostgresSqlKind;/);
   assert.match(declarations, /complete: boolean;/);
   assert.match(
-    index,
+    declarations,
     /extractExecutedPostgresSql\(\s*options: ExecutedPostgresSqlOptions,\s*\): Promise<ExecutedPostgresSql\[\]>;/,
   );
-  assert.match(index, /export type \* from "\.\/executed-postgres-sql-types";/);
+  assert.match(index, /export \* from "\.\/postgres-source-types";/);
+  assert.match(postgresSource, /export \* from "\.\/executed-postgres-sql-types";/);
 });
 
 test("PostgreSQL metadata facts export routine signatures and typed index operations", () => {
@@ -1150,11 +1154,7 @@ test("declarations expose invocation controls on every analysis", () => {
     /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
   );
   for (const [declaration, name] of declarations) {
-    if (
-      name === "version" ||
-      name === "parsePostgresSql" ||
-      name === "extractExecutedPostgresSql"
-    ) {
+    if (name === "version" || name === "parsePostgresSql") {
       assert.doesNotMatch(declaration, /WithInvocationOptions/);
     } else {
       assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);
