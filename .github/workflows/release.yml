@@ -331,6 +331,17 @@ jobs:
         timeout-minutes: 5
         run: pnpm test
 
+      # Debug test executables (one per test target, with embedded debug info)
+      # fill most of the runner disk, leaving package verification no room to
+      # build. They are not reused after the tests ran, and rust-cache never
+      # saves workspace artifacts, so drop them before packaging.
+      - name: Drop Rust test executables
+        timeout-minutes: 2
+        run: |
+          df -h /
+          find target/debug/deps -maxdepth 1 -type f -perm -u+x ! -name '*.*' -delete
+          df -h /
+
       - name: Check Cargo packages
         timeout-minutes: 10
         run: cargo publish --dry-run --locked -p no-mistakes
