@@ -96,9 +96,10 @@ pub use collect::{
     collect_check_facts_with_playwright, collect_check_facts_with_playwright_and_session,
 };
 pub(crate) use collect::{collect_check_facts_with_precollected_graph_facts, graph_only_files};
+#[cfg(test)]
+pub(crate) use file::collect_file_facts_with_session_and_sources;
 pub(crate) use file::{
-    collect_file_facts_from_program_with_context, collect_file_facts_with_session_and_sources,
-    is_mdx_file, ts_extract_context,
+    collect_file_facts_from_program_with_context, is_mdx_file, ts_extract_context,
 };
 pub use map::CheckFactMap;
 pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};

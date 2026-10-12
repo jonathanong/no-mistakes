@@ -11,10 +11,9 @@ mod program;
 mod program_walk;
 mod variants;
 
-pub(crate) use collect::{
-    collect_file_facts_with_session_and_sources,
-    collect_file_facts_with_session_and_sources_and_context,
-};
+#[cfg(test)]
+pub(crate) use collect::collect_file_facts_with_session_and_sources;
+pub(crate) use collect::collect_file_facts_with_session_and_sources_and_context;
 pub(crate) use plan::prepared_ts_extract_context;
 pub(crate) use plan::ts_extract_context;
 use plan::{requires_parse, should_store_source, ts_source};

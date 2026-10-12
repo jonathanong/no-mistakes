@@ -2,6 +2,7 @@ use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use std::path::Path;
 use std::sync::Arc;
 
+#[cfg(test)]
 pub(crate) fn collect_file_facts_with_session_and_sources(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,

@@ -26,6 +26,8 @@ mod postgres_annotations;
 mod postgres_bounds;
 #[path = "core_analysis/postgres_scopes.rs"]
 mod postgres_scopes;
+#[path = "core_analysis/prepared_extraction_context.rs"]
+mod prepared_extraction_context;
 #[path = "core_analysis/query_indexes.rs"]
 mod query_indexes;
 #[path = "core_analysis/react_traits.rs"]
@@ -97,6 +99,7 @@ criterion_group!(
     dependency_checks::bench_dependency_checks,
     companion_imports::bench_companion_imports,
     postgres_bounds::bench_postgres_bounds,
+    prepared_extraction_context::bench_prepared_extraction_context,
     postgres_annotations::bench_postgres_annotations,
     annotation_modules::bench_annotation_module_indexes,
     bench_import_only_vs_workspace_relationships,
