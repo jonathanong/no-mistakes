@@ -29,9 +29,10 @@ export type PostgresSqlExpressionRoot =
   | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
   | { kind: "binary"; operator: string }
   | { kind: "unary"; operator: string; expression: PostgresSqlExpressionRoot }
-  | { kind: "case" | "subquery" | "other" };
+  | { kind: "array" | "case" | "subquery" | "other" };
 export type PostgresSqlExpressionChildRole =
   | "argument"
+  | "arrayElement"
   | "binaryLeft"
   | "binaryRight"
   | "caseOperand"
@@ -63,7 +64,7 @@ export type PostgresSqlExpressionChildRoot =
   | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
   | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
   | { kind: "binary" | "unary"; operator: string }
-  | { kind: "case" | "subquery" | "other" };
+  | { kind: "array" | "case" | "subquery" | "other" };
 export interface PostgresSqlExpressionChild {
   role: PostgresSqlExpressionChildRole;
   index: number | null;

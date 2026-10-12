@@ -11,7 +11,16 @@ pub(super) fn project_with_delimiters(
     locations: &Locations<'_>,
     delimiters: &[PostgresSqlSpan],
 ) -> (Vec<PostgresSqlExpressionChild>, bool) {
-    children(expr, locations, delimiters, 0)
+    project_with_arrays(expr, locations, delimiters, false)
+}
+
+pub(super) fn project_with_arrays(
+    expr: &Expr,
+    locations: &Locations<'_>,
+    delimiters: &[PostgresSqlSpan],
+    arrays: bool,
+) -> (Vec<PostgresSqlExpressionChild>, bool) {
+    children(expr, locations, delimiters, 0, arrays)
 }
 
 struct Spec<'a> {
@@ -26,14 +35,16 @@ fn children(
     locations: &Locations<'_>,
     delimiters: &[PostgresSqlSpan],
     depth: usize,
+    arrays: bool,
 ) -> (Vec<PostgresSqlExpressionChild>, bool) {
     if depth >= 64 {
         return (Vec::new(), false);
     }
-    let (specs, mut complete) = specs(expr);
+    let (specs, mut complete) = specs(expr, arrays);
     let mut projected = Vec::with_capacity(specs.len());
     for spec in specs {
-        let (nested, nested_complete) = children(spec.expr, locations, delimiters, depth + 1);
+        let (nested, nested_complete) =
+            children(spec.expr, locations, delimiters, depth + 1, arrays);
         let sql = spec.expr.to_string();
         let span = if nested_complete && nested.iter().all(|child| child.span.is_some()) {
             exact_ast_span(spec.expr, locations, delimiters)
@@ -49,7 +60,11 @@ fn children(
             argument_name: spec.argument_name,
             sql,
             span,
-            root: roots::root(spec.expr, locations),
+            root: if arrays && matches!(spec.expr, Expr::Array(_)) {
+                PostgresSqlExpressionChildRoot::Array
+            } else {
+                roots::root(spec.expr, locations)
+            },
             children: nested,
             children_complete: nested_complete,
         });
@@ -97,7 +112,7 @@ pub(super) fn exact_ast_span(
     locations.span_covering(Some(span), &expr.to_string())
 }
 
-fn specs(expr: &Expr) -> (Vec<Spec<'_>>, bool) {
+fn specs(expr: &Expr, arrays: bool) -> (Vec<Spec<'_>>, bool) {
     use PostgresSqlExpressionChildRole as Role;
     match expr {
         Expr::BinaryOp { left, right, .. } => (
@@ -156,6 +171,15 @@ fn specs(expr: &Expr) -> (Vec<Spec<'_>>, bool) {
             }
             (children, true)
         }
+        Expr::Array(array) if arrays => (
+            array
+                .elem
+                .iter()
+                .enumerate()
+                .map(|(index, expr)| spec(Role::ArrayElement, Some(index), expr))
+                .collect(),
+            true,
+        ),
         Expr::Function(function) => function::specs(function),
         Expr::Identifier(_) | Expr::CompoundIdentifier(_) | Expr::Value(_) => (Vec::new(), true),
         _ => (Vec::new(), false),

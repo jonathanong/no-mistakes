@@ -38,6 +38,15 @@ pub(super) fn expression_with_delimiters(
     locations: &Locations<'_>,
     delimiters: &[PostgresSqlSpan],
 ) -> PostgresSqlExpression {
+    expression_with_arrays(expr, locations, delimiters, false)
+}
+
+pub(super) fn expression_with_arrays(
+    expr: &Expr,
+    locations: &Locations<'_>,
+    delimiters: &[PostgresSqlSpan],
+    arrays: bool,
+) -> PostgresSqlExpression {
     let mut refs = References {
         locations,
         columns: Vec::new(),
@@ -51,8 +60,11 @@ pub(super) fn expression_with_delimiters(
             .collect::<Vec<_>>()
     });
     refs.columns.dedup();
-    let (children, children_complete) =
-        super::expression_children::project_with_delimiters(expr, locations, delimiters);
+    let (children, children_complete) = if arrays {
+        super::expression_children::project_with_arrays(expr, locations, delimiters, true)
+    } else {
+        super::expression_children::project_with_delimiters(expr, locations, delimiters)
+    };
     let sql = expr.to_string();
     PostgresSqlExpression {
         sql: sql.clone(),
@@ -60,7 +72,7 @@ pub(super) fn expression_with_delimiters(
         span: locations.span_covering(locations.span(expr.span()), &sql),
         columns: refs.columns,
         functions: refs.functions,
-        root: super::expression_roots::root(expr, locations),
+        root: super::expression_roots::root_with_arrays(expr, locations, arrays),
         children,
         children_complete,
     }

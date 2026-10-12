@@ -8,6 +8,14 @@ use sqlparser::ast::{
 };
 
 pub(super) fn root(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpressionRoot {
+    root_with_arrays(expr, locations, false)
+}
+
+pub(super) fn root_with_arrays(
+    expr: &Expr,
+    locations: &Locations<'_>,
+    arrays: bool,
+) -> PostgresSqlExpressionRoot {
     use PostgresSqlExpressionRoot as Root;
     match expr {
         Expr::Identifier(ident) => Root::ColumnReference {
@@ -18,14 +26,14 @@ pub(super) fn root(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpress
         },
         Expr::Function(function) => function_root(function, locations),
         Expr::Nested(inner) => Root::Parenthesized {
-            expression: Box::new(root(inner, locations)),
+            expression: Box::new(root_with_arrays(inner, locations, arrays)),
         },
         Expr::Cast {
             expr, data_type, ..
         } => Root::Cast {
             data_type: data_type.to_string(),
             data_type_facts: super::type_facts::data_type(data_type, locations),
-            expression: Box::new(root(expr, locations)),
+            expression: Box::new(root_with_arrays(expr, locations, arrays)),
         },
         Expr::IsNull(_) | Expr::IsNotNull(_) => Root::NullTest {
             negated: matches!(expr, Expr::IsNotNull(_)),
@@ -54,8 +62,9 @@ pub(super) fn root(expr: &Expr, locations: &Locations<'_>) -> PostgresSqlExpress
         },
         Expr::UnaryOp { op, expr } => Root::Unary {
             operator: op.to_string(),
-            expression: Box::new(root(expr, locations)),
+            expression: Box::new(root_with_arrays(expr, locations, arrays)),
         },
+        Expr::Array(_) if arrays => Root::Array,
         Expr::Case { .. } => Root::Case,
         Expr::Subquery(_) => Root::Subquery,
         _ => Root::Other,

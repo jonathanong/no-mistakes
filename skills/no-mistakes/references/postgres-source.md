@@ -107,3 +107,15 @@ distinguishes restricted from unrestricted UPDATE. Compare cast
 text. Literal EXECUTE `using` expressions are source syntax, never resolved
 runtime parameters. Require `childrenComplete` for represented structure and
 check nullable spans separately before relying on exact source boundaries.
+
+Scalar array `ANY`/`ALL` comparisons appear in `query.quantifiedComparisons`,
+in traversal order, with `scopeId`, `clause`, `joinId`, operator, `quantifier`
+(`any` or `all`), predicate context, nullable source span, and typed `left`/`right`
+expressions. `complete` requires a supported scalar comparison operator
+(`=`, `<>`, `<`, `<=`, `>`, `>=`) and completely represented operands. Columns,
+literals (including signed numbers), bind parameters, parentheses, casts, and array literals are supported;
+array expressions expose ordered `arrayElement` children. Row operands, subqueries,
+arithmetic or unknown function operands, `SOME`, and unsupported operators remain incomplete
+with query diagnostics. Quantified equality does not add an ordinary equality
+fact or evaluate array contents. An otherwise supported `INSERT ... SELECT`
+with `x = ANY(t.aliases)` can therefore be complete.
