@@ -100,10 +100,14 @@ Each source is `{ fileName, source }`; optional `executorNames`,
 bindings as the annotation rule. It returns one record per executor call or
 recoverable conditional alternative, in source order. Records include `fileName`,
 the one-based executor `line`, `annotation`, `sqlText`, `kind`, and `complete`.
+Recovered conditional alternatives have `kind: "composed"`. The named
+`ExecutedPostgresTrustedSqlTag` type describes each `trustedSqlTags` entry.
 Template interpolations appear as `sql_placeholder_N` markers and remain
 `complete: false` because their runtime content is unknown. Dynamic SQL can
 expose only a leading prefix or `null`; require `complete` for checks that need
 the entire SQL statement. `annotation` is `null` for unannotated or unrecoverable SQL.
+An invalid TS/JS source or unknown option rejects the whole request, so a
+recovered parse cannot silently report incomplete input as complete SQL.
 This source-only API reads no files and does not resolve helpers imported from
 other files; use `check()` for project-wide annotation enforcement.
 

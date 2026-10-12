@@ -74,6 +74,7 @@ pub(crate) use embedded::{
 pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
 };
+pub(crate) use executed_source::extract_executed_postgres_sql_with_session;
 pub use executed_source::{
     extract_executed_postgres_sql, ExecutedPostgresSource, ExecutedPostgresSql,
 };

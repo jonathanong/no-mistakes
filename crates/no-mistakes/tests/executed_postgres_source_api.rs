@@ -22,7 +22,7 @@ fn source_api_keeps_execution_sites_annotations_and_complete_alternatives() {
             name: "sql".into(),
         },
     ]);
-    let statements = extract_executed_postgres_sql(&sources, &options);
+    let statements = extract_executed_postgres_sql(&sources, &options).unwrap();
     assert_eq!(statements.len(), 9);
     assert_eq!(statements[0].file_name, "reads.ts");
     assert_eq!(statements[0].line, 4);
@@ -44,6 +44,14 @@ fn source_api_keeps_execution_sites_annotations_and_complete_alternatives() {
     assert_eq!(statements[3].annotation.as_deref(), Some("posts/one"));
     assert_eq!(statements[4].annotation.as_deref(), Some("posts/two"));
     assert!(statements[3].complete && statements[4].complete);
+    assert_eq!(
+        statements[3].kind,
+        no_mistakes::codebase::postgres::EmbeddedSqlKind::Composed
+    );
+    assert_eq!(
+        statements[4].kind,
+        no_mistakes::codebase::postgres::EmbeddedSqlKind::Composed
+    );
     assert_eq!(statements[5].annotation, None);
     assert!(!statements[5].complete);
     assert_eq!(statements[6].annotation.as_deref(), Some("posts/runtime"));
@@ -57,4 +65,12 @@ fn source_api_keeps_execution_sites_annotations_and_complete_alternatives() {
     assert!(statements[7].complete);
     assert_eq!(statements[8].sql_text, None);
     assert!(!statements[8].complete);
+}
+
+#[test]
+fn source_api_rejects_recovered_parse_diagnostics_for_the_whole_batch() {
+    let sources = [source("reads.ts"), source("broken.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let error = extract_executed_postgres_sql(&sources, &options).unwrap_err();
+    assert!(error.to_string().contains("broken.ts"), "{error}");
 }

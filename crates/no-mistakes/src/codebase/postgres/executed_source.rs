@@ -1,9 +1,13 @@
 use super::{
-    extract_embedded_sql_from_source, leading_query_annotation, EmbeddedSqlKind, EmbeddedSqlOptions,
+    extract_embedded_sql_from_program, leading_query_annotation, EmbeddedSqlKind,
+    EmbeddedSqlOptions,
 };
+use crate::codebase::analysis_session::AnalysisSession;
+use anyhow::Result;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use std::sync::Arc;
 
 /// Supplied TypeScript or JavaScript source; no repository read is performed.
 #[derive(Debug, Clone, Deserialize)]
@@ -32,27 +36,44 @@ pub struct ExecutedPostgresSql {
 pub fn extract_executed_postgres_sql(
     sources: &[ExecutedPostgresSource],
     options: &EmbeddedSqlOptions,
-) -> Vec<ExecutedPostgresSql> {
-    sources
+) -> Result<Vec<ExecutedPostgresSql>> {
+    extract_executed_postgres_sql_with_session(sources, options, &AnalysisSession::disabled())
+}
+
+pub(crate) fn extract_executed_postgres_sql_with_session(
+    sources: &[ExecutedPostgresSource],
+    options: &EmbeddedSqlOptions,
+    session: &AnalysisSession,
+) -> Result<Vec<ExecutedPostgresSql>> {
+    let batches = sources
         .par_iter()
-        .map(|source| extract_source(source, options))
-        .collect::<Vec<_>>()
-        .into_iter()
-        .flatten()
-        .collect()
+        .map(|source| extract_source(source, options, session))
+        .collect::<Result<Vec<_>>>()?;
+    Ok(batches.into_iter().flatten().collect())
 }
 
 fn extract_source(
     source: &ExecutedPostgresSource,
     options: &EmbeddedSqlOptions,
-) -> Vec<ExecutedPostgresSql> {
+    session: &AnalysisSession,
+) -> Result<Vec<ExecutedPostgresSql>> {
+    let path = Path::new(&source.file_name);
+    session.with_program(
+        path,
+        &Arc::from(source.source.as_str()),
+        |program, source_text| {
+            let facts = extract_embedded_sql_from_program(path, program, source_text, options);
+            project_calls(&source.file_name, facts.calls)
+        },
+    )
+}
+
+fn project_calls(file_name: &str, calls: Vec<super::EmbeddedSqlCall>) -> Vec<ExecutedPostgresSql> {
     let mut statements = Vec::new();
-    let facts =
-        extract_embedded_sql_from_source(Path::new(&source.file_name), &source.source, options);
-    for call in facts.calls {
+    for call in calls {
         if call.variants.is_empty() {
             statements.push(statement(
-                &source.file_name,
+                file_name,
                 call.line,
                 call.sql_text,
                 call.kind != EmbeddedSqlKind::Dynamic
@@ -62,11 +83,11 @@ fn extract_source(
         } else {
             for variant in call.variants {
                 statements.push(statement(
-                    &source.file_name,
+                    file_name,
                     call.line,
                     Some(variant.sql_text),
                     variant.recovered_placeholder_positions.is_empty(),
-                    call.kind,
+                    EmbeddedSqlKind::Composed,
                 ));
             }
         }

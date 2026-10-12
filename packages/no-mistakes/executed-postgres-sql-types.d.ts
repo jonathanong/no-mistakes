@@ -3,6 +3,11 @@ export interface ExecutedPostgresSource {
   source: string;
 }
 
+export interface ExecutedPostgresTrustedSqlTag {
+  module: string;
+  name: string;
+}
+
 export interface ExecutedPostgresSqlOptions {
   sources: ExecutedPostgresSource[];
   /** Module whose named imports provide the configured executors. */
@@ -11,7 +16,7 @@ export interface ExecutedPostgresSqlOptions {
   executorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
-  trustedSqlTags?: { module: string; name: string }[];
+  trustedSqlTags?: ExecutedPostgresTrustedSqlTag[];
 }
 
 export type ExecutedPostgresSqlKind = "inline" | "immutableLocal" | "composed" | "dynamic";

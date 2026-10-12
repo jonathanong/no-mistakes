@@ -954,7 +954,9 @@ test("executed PostgreSQL source extraction exposes its named async contract", (
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   const postgresSource = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
   assert.match(declarations, /export interface ExecutedPostgresSource \{/);
+  assert.match(declarations, /export interface ExecutedPostgresTrustedSqlTag \{/);
   assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
+  assert.match(declarations, /trustedSqlTags\?: ExecutedPostgresTrustedSqlTag\[\];/);
   assert.match(declarations, /export interface ExecutedPostgresSql \{/);
   assert.match(declarations, /export type ExecutedPostgresSqlKind =/);
   assert.match(declarations, /kind: ExecutedPostgresSqlKind;/);

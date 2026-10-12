@@ -27,6 +27,43 @@ fn executed_source_binding_keeps_annotation_text_and_source_location() {
         .unwrap()
         .contains("sql_placeholder_1"));
 }
+
+#[test]
+fn executed_source_binding_rejects_parse_diagnostics_and_unknown_options() {
+    let valid = serde_json::json!({
+        "fileName": "reads.ts",
+        "source": include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/postgres-facts/executed-source/reads.ts"
+        ))
+    });
+    let broken = serde_json::json!({
+        "fileName": "broken.ts",
+        "source": include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/postgres-facts/executed-source/broken.ts"
+        ))
+    });
+    let parse_error = extract_executed_postgres_sql_json_impl(serde_json::json!({
+        "sources": [valid.clone(), broken],
+        "importSpecifier": "@example/db"
+    }))
+    .unwrap_err();
+    assert!(
+        parse_error.to_string().contains("broken.ts"),
+        "{parse_error}"
+    );
+    let option_error = extract_executed_postgres_sql_json_impl(serde_json::json!({
+        "sources": [valid],
+        "importSpecifier": "@example/db",
+        "executorFactoryName": ["makeQuery"]
+    }))
+    .unwrap_err();
+    assert!(
+        option_error.to_string().contains("executorFactoryName"),
+        "{option_error}"
+    );
+}
 #[test]
 fn standalone_and_batch_bindings_keep_structured_source_facts() {
     let sql = include_str!(concat!(
