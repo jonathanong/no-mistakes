@@ -110,6 +110,10 @@ requirements. Apply them when optimizing core analysis or reporting performance.
   identified live spans, including parallel siblings. Start before the closure;
   remove with a guard on success, returned error, and unwinding. Disabled requests
   must not create clocks, IDs, active maps, heartbeat threads, or registry entries.
+- Rayon workers do not inherit the caller's thread-local observer. Capture it
+  before scheduling and install/restore it per task so counters and spans are
+  retained by the owning request. Guard concurrent requests against dropped
+  observations and cross-request contamination.
 - CLI progress is opt-in and flushes stderr only. Keep stdout and signal exit
   behavior intact; use the existing child-group forwarding listener for Unix
   termination snapshots, including lock waiting and disabled deadlines. Progress
