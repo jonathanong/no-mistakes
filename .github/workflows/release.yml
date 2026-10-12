@@ -400,10 +400,12 @@ jobs:
     # A cold ARM macOS build hit the 45-minute compile deadline with fat LTO
     # and one codegen unit (run 37216235586). ThinLTO and multiple units let
     # LLVM optimize in parallel. Set these before rust-cache so its CARGO env
-    # fingerprint also distinguishes the profile. Other targets keep full LTO.
+    # fingerprint also distinguishes the profile. Windows MSVC crept from
+    # 24-43 minutes to the same deadline (runs 38016955440, 38290227989,
+    # 38295690089), so it gets the same profile. Linux keeps full LTO.
     env:
-      CARGO_PROFILE_RELEASE_LTO: ${{ matrix.target == 'aarch64-apple-darwin' && 'thin' || 'fat' }}
-      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.target == 'aarch64-apple-darwin' && '16' || '1' }}
+      CARGO_PROFILE_RELEASE_LTO: ${{ (matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc') && 'thin' || 'fat' }}
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ (matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc') && '16' || '1' }}
     steps:
       - name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' }}
