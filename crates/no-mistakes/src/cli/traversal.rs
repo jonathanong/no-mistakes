@@ -1,4 +1,6 @@
+use crate::edge_index::PreparedRelationshipIndex;
 use crate::edge_index::{CanonicalEdge, EdgeDirection, EdgeIndex};
+use std::hash::Hash;
 pub trait TraversableEdge: Clone {
     type Kind: Ord + Clone;
 
@@ -152,4 +154,46 @@ where
         matches!(direction, EdgeDirection::Dependencies | EdgeDirection::Both),
         matches!(direction, EdgeDirection::Dependents | EdgeDirection::Both),
     )
+}
+
+pub(crate) fn prepared_edge_view<Node, Kind, Output>(
+    relationships: &PreparedRelationshipIndex<Node, Kind>,
+    roots: &[String],
+    depth: Option<usize>,
+    mut project: impl FnMut(&str, &str, &Kind) -> Output,
+) -> Vec<Output>
+where
+    Node: Clone + Eq + Hash + Ord,
+    Kind: Clone + Eq + Hash + Ord,
+    Output: Clone + Eq + Hash,
+{
+    relationships.edge_view(roots, depth, |relationship, from, to| {
+        project(from, to, &relationship.kind)
+    })
+}
+
+pub(crate) fn prepared_related_view<Node, Kind, Output>(
+    relationships: &PreparedRelationshipIndex<Node, Kind>,
+    roots: &[String],
+    direction: EdgeDirection,
+    mut project: impl FnMut(&str, &str, &Kind) -> Output,
+) -> Vec<Output>
+where
+    Node: Clone + Eq + Hash + Ord,
+    Kind: Clone + Eq + Hash + Ord,
+    Output: Clone + Eq + Hash + Ord,
+{
+    let mut output = relationships.related(roots, direction, |relationship, from, to| {
+        project(from, to, &relationship.kind)
+    });
+    output.sort();
+    output
+}
+
+pub(crate) fn project_relationship_edge<Kind, Output>(from: &str, to: &str, kind: &Kind) -> Output
+where
+    Kind: Copy,
+    Output: From<(String, String, Kind)>,
+{
+    Output::from((from.to_owned(), to.to_owned(), *kind))
 }

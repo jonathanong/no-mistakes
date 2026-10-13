@@ -14,9 +14,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Result};
 use serde::Serialize;
 
-use crate::codebase::dependencies::graph::{
-    DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild,
-};
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::dependencies::{EdgeKind, NodeId};
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
@@ -91,111 +89,56 @@ pub fn run(
 ) -> Result<EffectsReport> {
     let root = normalize_path(root);
     let root = root.canonicalize().unwrap_or(root);
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    let dataset = session.dataset(&root);
-    let visible_paths = dataset.visible_paths_arc();
-    let root_visible_paths = dataset.paths_for(&root);
-    let sources = dataset.sources_for(&root);
-    let mut graph_files = GraphFiles::from_files_with_resource_candidates(
-        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths),
-        visible_paths.tracked_paths_for(&root).as_ref().clone(),
-    );
-    let config = dataset.config(config_path)?;
-    let selection = selection_from_config(&config, kind, categories)?;
-
     let entry_abs = if entry.is_absolute() {
         entry.to_path_buf()
     } else {
         root.join(entry)
     };
-    if !entry_abs.is_file() {
-        bail!("entry file not found: {}", entry_abs.display());
-    }
-    graph_files.add_explicit_root(&entry_abs);
-    let explicit_tsconfig = tsconfig;
-    let (tsconfig, tsconfig_catalog) = match explicit_tsconfig {
-        None => {
-            let workspace = dataset.workspace();
-            let catalog =
-                crate::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources_with_workspace(
-                &root,
-                std::slice::from_ref(&root),
-                &root_visible_paths,
-                &sources,
-                &workspace,
-            );
-            let config = catalog.config_for(&entry_abs).clone();
-            (config, catalog)
-        }
-        Some(path) => {
-            let config = (*dataset.tsconfig(Some(path))?).clone();
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            let catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(
-                &root,
-                config.clone(),
-                Some(normalize_path(&path)),
-            );
-            (config, catalog)
-        }
-    };
     let allowed = runtime_edges();
-    // Build only the runtime-import edges we traverse, not every edge producer
-    // (routes, queues, React, Swift, …), which an `effects` query discards.
-    let plan = GraphBuildPlan {
-        calls: !selection.targets.is_empty(),
-        ..GraphBuildPlan::from_allowed(Some(&allowed))
-    };
-    let mut fact_context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
-    fact_context.effect_functions = selection.names.clone();
-    fact_context.set_visible_file_set(graph_files.visible_path_set());
-    let facts =
-        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
-            &session,
-            graph_files.indexable(),
-            crate::codebase::ts_source::facts::TsFactPlan {
+    let crate::codebase::dependencies::query::PreparedQueryGraph {
+        selection,
+        graph,
+        facts,
+        interner,
+    } = crate::codebase::dependencies::query::prepare_query_graph(
+        crate::codebase::dependencies::query::QueryGraphRequest {
+            root: &root,
+            config_path,
+            tsconfig_path: tsconfig,
+            explicit_root: &entry_abs,
+            config_before_facts: true,
+            fact_plan: crate::codebase::ts_source::facts::TsFactPlan {
                 imports: true,
                 function_calls: true,
                 effect_calls: true,
                 ..Default::default()
             },
-            &fact_context,
-            &sources,
-        );
-    crate::invocation::check_timeout()?;
-    let codebase_config =
-        crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
-    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
-        &root,
-        plan,
-        &codebase_config,
-        &config,
-        &visible_paths,
-    );
-    let prepared_graph = prepared_graph?;
-    let interner = session.interner_arc();
-    let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
-        PreparedGraphBuild {
-            root: &root,
-            tsconfig: &tsconfig,
-            tsconfig_catalog: Some(&tsconfig_catalog),
-            plan,
-            graph_files: &graph_files,
-            config_path,
-            prepared: &prepared_graph,
-            facts: Some(&facts),
-            import_resolution_cache: None,
-            dotnet_facts: None,
-            swift_facts: None,
-            visible_paths: Some(&visible_paths),
+            select: |config: Option<&crate::config::v2::schema::NoMistakesConfig>| {
+                selection_from_config(
+                    config.expect("effects config is loaded before selection"),
+                    kind,
+                    categories,
+                )
+            },
+            validate_root:
+                |_: &EffectsSelection, _: &mut crate::codebase::dependencies::graph::GraphFiles| {
+                    if !entry_abs.is_file() {
+                        bail!("entry file not found: {}", entry_abs.display());
+                    }
+                    Ok(())
+                },
+            graph_plan: |selection: &EffectsSelection| GraphBuildPlan {
+                calls: !selection.targets.is_empty(),
+                ..GraphBuildPlan::from_allowed(Some(&allowed))
+            },
+            configure_context:
+                |selection: &EffectsSelection,
+                 context: &mut crate::codebase::ts_source::facts::TsFactContext| {
+                    context.effect_functions = selection.names.clone()
+                },
+            selection: std::marker::PhantomData,
         },
-        session,
-    );
-    let graph = graph?;
+    )?;
 
     run_with_prepared(&root, &selection, entry, depth, &graph, &facts, &interner)
 }

@@ -1,3 +1,4 @@
+use super::status_visitor::StatusAwareVisitor;
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::{ast, playwright_tests};
 use oxc_ast_visit::Visit;
@@ -115,34 +116,18 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightHelperReferenceVisitor<'a> {
     }
 
     fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
-        self.visit_expression(&statement.test);
-        let status = playwright_tests::status_for_if_branch(self.status);
-        self.with_status(status, |visitor| {
-            visitor.visit_statement(&statement.consequent);
-            if let Some(alternate) = &statement.alternate {
-                visitor.visit_statement(alternate);
-            }
-        });
+        self.visit_if_with_status(statement);
     }
 
     fn visit_conditional_expression(
         &mut self,
         expression: &oxc_ast::ast::ConditionalExpression<'a>,
     ) {
-        self.visit_expression(&expression.test);
-        let status = playwright_tests::status_for_if_branch(self.status);
-        self.with_status(status, |visitor| {
-            visitor.visit_expression(&expression.consequent);
-            visitor.visit_expression(&expression.alternate);
-        });
+        self.visit_conditional_with_status(expression);
     }
 
     fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) {
-        self.visit_expression(&expression.left);
-        let status = playwright_tests::status_for_if_branch(self.status);
-        self.with_status(status, |visitor| {
-            visitor.visit_expression(&expression.right)
-        });
+        self.visit_logical_with_status(expression);
     }
 }
 
@@ -178,6 +163,20 @@ impl PlaywrightHelperReferenceVisitor<'_> {
             self.annotation_status =
                 playwright_tests::merge_annotation_status(self.annotation_status, status);
         }
+    }
+}
+
+impl<'a> StatusAwareVisitor<'a> for PlaywrightHelperReferenceVisitor<'a> {
+    fn current_status(&self) -> playwright_tests::TestStatus {
+        self.status
+    }
+
+    fn with_branch_status(
+        &mut self,
+        status: playwright_tests::TestStatus,
+        visit: impl FnOnce(&mut Self),
+    ) {
+        self.with_status(status, visit);
     }
 }
 

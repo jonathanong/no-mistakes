@@ -1,45 +1,44 @@
 use crate::cli::related_edge_view;
-use crate::edge_index::EdgeDirection;
 use crate::server_routes::graph::RelatedDirection;
 use crate::server_routes::model::{PreparedProjectReport, ProjectReport};
 use crate::server_routes::types::Edge;
 
-pub fn related(report: &ProjectReport, roots: &[String], direction: RelatedDirection) -> Vec<Edge> {
-    related_edge_view(
-        &report.edges,
-        roots,
+impl From<RelatedDirection> for crate::edge_index::EdgeDirection {
+    fn from(direction: RelatedDirection) -> Self {
         match direction {
-            RelatedDirection::Deps => EdgeDirection::Dependencies,
-            RelatedDirection::Dependents => EdgeDirection::Dependents,
-            RelatedDirection::Both => EdgeDirection::Both,
-        },
-    )
+            RelatedDirection::Deps => Self::Dependencies,
+            RelatedDirection::Dependents => Self::Dependents,
+            RelatedDirection::Both => Self::Both,
+        }
+    }
+}
+
+impl From<(String, String, crate::server_routes::types::EdgeKind)> for Edge {
+    fn from((from, to, kind): (String, String, crate::server_routes::types::EdgeKind)) -> Self {
+        Self { from, to, kind }
+    }
+}
+
+pub fn related(report: &ProjectReport, roots: &[String], direction: RelatedDirection) -> Vec<Edge> {
+    related_edge_view(&report.edges, roots, direction.into())
 }
 
 impl PreparedProjectReport {
     pub fn edge_view(&self, roots: &[String], depth: Option<usize>) -> Vec<Edge> {
-        self.relationships
-            .edge_view(roots, depth, |relationship, from, to| Edge {
-                from: from.to_owned(),
-                to: to.to_owned(),
-                kind: relationship.kind,
-            })
+        crate::cli::prepared_edge_view(
+            &self.relationships,
+            roots,
+            depth,
+            crate::cli::project_relationship_edge,
+        )
     }
 
     pub fn related(&self, roots: &[String], direction: RelatedDirection) -> Vec<Edge> {
-        let direction = match direction {
-            RelatedDirection::Deps => EdgeDirection::Dependencies,
-            RelatedDirection::Dependents => EdgeDirection::Dependents,
-            RelatedDirection::Both => EdgeDirection::Both,
-        };
-        let mut edges = self
-            .relationships
-            .related(roots, direction, |relationship, from, to| Edge {
-                from: from.to_owned(),
-                to: to.to_owned(),
-                kind: relationship.kind,
-            });
-        edges.sort();
-        edges
+        crate::cli::prepared_related_view(
+            &self.relationships,
+            roots,
+            direction.into(),
+            crate::cli::project_relationship_edge,
+        )
     }
 }

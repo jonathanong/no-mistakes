@@ -50,6 +50,11 @@ fn parser_count_fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/effects")
 }
 
+fn invalid_config_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/impacted-checks/multi-framework")
+}
+
 fn gitignore_fixture() -> tempfile::TempDir {
     let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
     crate::test_support::git_init(fixture.path());
@@ -175,6 +180,22 @@ fn missing_entry_errors() {
     )
     .unwrap_err();
     assert!(err.to_string().contains("entry file not found"));
+}
+
+#[test]
+fn invalid_config_precedes_missing_entry() {
+    let err = run(
+        &invalid_config_fixture(),
+        Some(Path::new("invalid.no-mistakes.yml")),
+        None,
+        "valkey",
+        Path::new("app/does-not-exist.ts"),
+        &[],
+        None,
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("failed to parse"), "{err:#}");
+    assert!(!err.to_string().contains("entry file not found"));
 }
 
 #[test]
@@ -367,12 +388,7 @@ fn effects_reuses_one_parse_for_imports_and_effect_calls() {
     );
 
     let run_source = include_str!("../effects_query.rs");
-    assert_eq!(
-        run_source
-            .matches("collect_ts_facts_with_context_sources_and_session(")
-            .count(),
-        1
-    );
+    assert_eq!(run_source.matches("prepare_query_graph(").count(), 1);
     assert!(!run_source.contains("scan_file("));
 }
 

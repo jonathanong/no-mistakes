@@ -47,45 +47,10 @@ fn unsupported_flag(token: &str, flag: &str) -> bool {
 }
 
 fn tokens(value: &str) -> Option<Vec<String>> {
-    let mut tokens = Vec::new();
-    let mut current = String::new();
-    let mut quote = None;
-    let mut escaped = false;
-    for character in value.chars() {
-        if escaped {
-            current.push(character);
-            escaped = false;
-            continue;
-        }
-        if character == '\\' && quote != Some('\'') {
-            escaped = true;
-            continue;
-        }
-        if matches!(character, '\'' | '"') {
-            if quote == Some(character) {
-                quote = None;
-            } else if quote.is_none() {
-                quote = Some(character);
-            } else {
-                current.push(character);
-            }
-            continue;
-        }
-        if character.is_ascii_whitespace() && quote.is_none() {
-            if !current.is_empty() {
-                tokens.push(std::mem::take(&mut current));
-            }
-        } else {
-            current.push(character);
-        }
-    }
-    if escaped || quote.is_some() {
-        return None;
-    }
-    if !current.is_empty() {
-        tokens.push(current);
-    }
-    Some(tokens)
+    crate::codebase::shell_words::split_quoted_words(
+        value,
+        crate::codebase::shell_words::Whitespace::Ascii,
+    )
 }
 
 #[cfg(test)]

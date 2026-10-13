@@ -92,45 +92,10 @@ fn push_static_segment(segments: &mut Vec<Vec<String>>, segment: &str) -> bool {
 }
 
 fn shellish_literal_words(input: &str) -> Option<Vec<String>> {
-    let mut words = Vec::new();
-    let mut current = String::new();
-    let mut quote = None;
-    let mut escaped = false;
-    for character in input.chars() {
-        if escaped {
-            current.push(character);
-            escaped = false;
-            continue;
-        }
-        if character == '\\' && quote != Some('\'') {
-            escaped = true;
-            continue;
-        }
-        if matches!(character, '\'' | '"') {
-            if quote == Some(character) {
-                quote = None;
-            } else if quote.is_none() {
-                quote = Some(character);
-            } else {
-                current.push(character);
-            }
-            continue;
-        }
-        if character.is_whitespace() && quote.is_none() {
-            if !current.is_empty() {
-                words.push(std::mem::take(&mut current));
-            }
-        } else {
-            current.push(character);
-        }
-    }
-    if escaped || quote.is_some() {
-        return None;
-    }
-    if !current.is_empty() {
-        words.push(current);
-    }
-    Some(words)
+    crate::codebase::shell_words::split_quoted_words(
+        input,
+        crate::codebase::shell_words::Whitespace::Unicode,
+    )
 }
 
 fn is_static_path_token(token: &str) -> bool {

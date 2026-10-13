@@ -3,6 +3,8 @@ mod check_discovery;
 mod check_parallel;
 mod check_runner;
 mod check_tasks;
+#[path = "main/common_graph_args.rs"]
+mod common_graph_args;
 mod config_cmd;
 mod data_pw;
 mod effects;
@@ -13,6 +15,8 @@ mod infra;
 mod invocation;
 mod lockfile;
 mod postgres;
+#[path = "main/query_render.rs"]
+mod query_render;
 mod queues;
 mod react;
 mod registry_extension;

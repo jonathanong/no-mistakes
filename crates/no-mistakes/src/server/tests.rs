@@ -3,6 +3,7 @@ use no_mistakes::cli::Format;
 use no_mistakes::server_routes::{
     Edge, EdgeKind, Framework, ProjectReport, ServerContractsReport, ServerRoute,
 };
+use std::path::PathBuf;
 
 fn sample_route() -> ServerRoute {
     ServerRoute {
@@ -81,13 +82,15 @@ fn run_contracts_prints_json_for_a_fixture_root() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/server-ast-routes/remix/fixture");
     let code = run(ServerArgs {
-        root,
-        tsconfig: None,
-        filters: Vec::new(),
-        depth: None,
-        format: Format::Json,
-        json: true,
-        timings: false,
+        common: GraphCommandArgs {
+            root,
+            tsconfig: None,
+            filters: Vec::new(),
+            depth: None,
+            format: Format::Json,
+            json: true,
+            timings: false,
+        },
         command: ServerCommand::Contracts,
     })
     .expect("contracts command runs");

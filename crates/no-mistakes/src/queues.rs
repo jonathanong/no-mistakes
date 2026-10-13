@@ -1,3 +1,4 @@
+use super::common_graph_args::GraphCommandArgs;
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use no_mistakes::cli::{print_json, resolve_root, root_scoped_edge_depth, Format};
@@ -5,39 +6,12 @@ use no_mistakes::queue::{
     analyze_project, analyze_project_indexed, CheckFinding, Edge, RelatedDirection,
 };
 use std::collections::BTreeSet;
-use std::path::PathBuf;
 use std::process::ExitCode;
 
 #[derive(Args)]
 pub(crate) struct QueuesArgs {
-    /// Project root directory.
-    #[arg(long, default_value = ".", global = true)]
-    root: PathBuf,
-    /// Path to tsconfig.json for path alias resolution.
-    #[arg(long, global = true)]
-    tsconfig: Option<PathBuf>,
-    /// Filter to files matching this glob. Can be repeated.
-    #[arg(long = "filter", global = true)]
-    filters: Vec<String>,
-    /// Maximum edge traversal depth for the edges command when roots are provided.
-    /// Defaults to 1 when roots are provided, and unlimited otherwise.
-    #[arg(long, alias = "max-depth", global = true)]
-    depth: Option<usize>,
-    /// Output format: json, yml, md, paths, human.
-    #[arg(
-        long,
-        value_enum,
-        default_value = "human",
-        global = true,
-        conflicts_with = "json"
-    )]
-    format: Format,
-    /// Alias for --format json; cannot be combined with --format.
-    #[arg(long, global = true, conflicts_with = "format")]
-    json: bool,
-    /// Legacy programmatic timing switch. CLI timing flags are root-global.
-    #[arg(skip)]
-    timings: bool,
+    #[command(flatten)]
+    common: GraphCommandArgs,
     #[command(subcommand)]
     command: QueuesCommand,
 }
@@ -79,22 +53,34 @@ impl From<QueueDirection> for RelatedDirection {
 
 pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
     let base = std::env::current_dir().context("cwd must be accessible")?;
-    let root = resolve_root(&args.root, &base);
-    let format = if args.json { Format::Json } else { args.format };
-    let _ = args.timings;
+    let root = resolve_root(&args.common.root, &base);
+    let format = if args.common.json {
+        Format::Json
+    } else {
+        args.common.format
+    };
+    let _ = args.common.timings;
     match &args.command {
         QueuesCommand::Edges { files } => {
             let report = trace_queue_analysis(|| {
-                analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)
+                analyze_project_indexed(
+                    &root,
+                    args.common.tsconfig.as_deref(),
+                    &args.common.filters,
+                )
             })?;
-            let depth = root_scoped_edge_depth(files, args.depth);
+            let depth = root_scoped_edge_depth(files, args.common.depth);
             let edges = report.edge_view(files, depth);
             print_edges(&edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Related { files, direction } => {
             let report = trace_queue_analysis(|| {
-                analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)
+                analyze_project_indexed(
+                    &root,
+                    args.common.tsconfig.as_deref(),
+                    &args.common.filters,
+                )
             })?;
             let edges = report.related(files, (*direction).into());
             print_related(files, &edges, format)?;
@@ -102,7 +88,7 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
         }
         QueuesCommand::Check => {
             let report = trace_queue_analysis(|| {
-                analyze_project(&root, args.tsconfig.as_deref(), &args.filters)
+                analyze_project(&root, args.common.tsconfig.as_deref(), &args.common.filters)
             })?;
             print_check(&report.check, format)?;
             Ok(if report.check.is_empty() {

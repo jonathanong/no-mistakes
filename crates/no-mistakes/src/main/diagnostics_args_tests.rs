@@ -110,3 +110,23 @@ fn progress_interval_is_positive_and_requires_progress() {
     let cli = Cli::try_parse_from(["no-mistakes", "check", "--timings"]).unwrap();
     assert!(cli.diagnostics.progress_interval().is_none());
 }
+
+#[test]
+fn queue_and_server_graph_flags_keep_global_placement_and_format_conflicts() {
+    for (command, leaf) in [("queues", "check"), ("server", "contracts")] {
+        for args in [
+            vec!["no-mistakes", command, "--format", "json", leaf],
+            vec!["no-mistakes", command, leaf, "--format", "json"],
+            vec!["no-mistakes", command, leaf, "--json"],
+            vec!["no-mistakes", command, "--max-depth", "2", leaf],
+        ] {
+            assert!(Cli::try_parse_from(&args).is_ok(), "{args:?}");
+        }
+        assert!(Cli::try_parse_from(
+            ["no-mistakes", command, leaf, "--json", "--format", "human",]
+        )
+        .is_err());
+        assert!(Cli::try_parse_from(["no-mistakes", "--format", "json", command, leaf]).is_err());
+        assert!(Cli::try_parse_from(["no-mistakes", "--json", command, leaf]).is_err());
+    }
+}
