@@ -1,5 +1,5 @@
 use super::steps::scan_steps;
-use super::yaml::finding;
+use super::yaml::{finding, StepLocations};
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
@@ -41,22 +41,31 @@ fn check_parsed(
     value: &Value,
     opts: &CompiledOptions,
 ) -> Vec<RuleFinding> {
-    let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
-        return Vec::new();
-    };
+    let jobs = value.get("jobs").and_then(Value::as_mapping);
     let mut findings = Vec::new();
     let mut used = BTreeSet::new();
-    for (job_id, job) in jobs {
-        let (Some(job_id), Some(job)) = (job_id.as_str(), job.as_mapping()) else {
-            continue;
-        };
-        if job.contains_key(Value::String("uses".into())) {
-            continue;
+    let locations = StepLocations::new(source);
+    if let Some(jobs) = jobs {
+        for (job_id, job) in jobs {
+            let (Some(job_id), Some(job)) = (job_id.as_str(), job.as_mapping()) else {
+                continue;
+            };
+            if job.contains_key(Value::String("uses".into())) {
+                continue;
+            }
+            let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
+                continue;
+            };
+            scan_steps(
+                rel,
+                job_id,
+                steps,
+                opts,
+                &locations,
+                &mut findings,
+                &mut used,
+            );
         }
-        let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
-            continue;
-        };
-        scan_steps(rel, source, job_id, steps, opts, &mut findings, &mut used);
     }
     for key in opts.allow.keys() {
         if key.starts_with(&format!("{rel}#")) && !used.contains(key) {

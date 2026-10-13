@@ -1,15 +1,15 @@
 use super::{is_inline_value_line, value_after_anchor, yaml_key_value};
 
 mod parallel;
-use parallel::parallel_child_line;
+use parallel::parallel_child_lines;
 
 fn indent(line: &str) -> usize {
     line.len() - line.trim_start_matches(' ').len()
 }
 
 fn is_content(line: &str) -> bool {
-    let line = line.trim_start();
-    !line.is_empty() && !line.starts_with('#')
+    let line = line.split('#').next().unwrap_or("").trim();
+    !line.is_empty() && !(line.starts_with('&') && line.split_whitespace().count() == 1)
 }
 
 pub(super) fn has_child_inline_value(lines: &[&str], key: (usize, usize), opening: char) -> bool {
@@ -70,13 +70,9 @@ fn find_steps_line(lines: &[&str], job: (usize, usize)) -> Option<(usize, usize)
     None
 }
 
-pub(super) fn sequence_item_line(
-    lines: &[&str],
-    key: (usize, usize),
-    wanted: usize,
-) -> Option<usize> {
+pub(super) fn sequence_item_lines(lines: &[&str], key: (usize, usize), count: usize) -> Vec<usize> {
     let mut item_indent = None;
-    let mut seen = 0;
+    let mut result = Vec::with_capacity(count);
     for (index, line) in lines.iter().enumerate().skip(key.0 + 1) {
         if !is_content(line) {
             continue;
@@ -92,47 +88,71 @@ pub(super) fn sequence_item_line(
         }
         let item_depth = *item_indent.get_or_insert(depth);
         if depth == item_depth {
-            if seen == wanted {
-                return Some(index + 1);
+            result.push(index + 1);
+            if result.len() == count {
+                break;
             }
-            seen += 1;
         }
     }
-    None
+    result.resize(count, 1);
+    result
 }
 
 // Return an inline declaration for aliases and flow collections; otherwise
 // locate the authored sequence item so line suppressions remain precise.
-pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usize> {
-    let lines: Vec<_> = source.lines().collect();
-    let jobs = find_jobs_line(&lines)?;
-    if is_inline_value_line(lines[jobs.0]) || has_child_inline_value(&lines, jobs, '{') {
-        return Some(jobs.0 + 1);
-    }
-    let job = find_job_line(&lines, jobs, job_id)?;
-    if is_inline_value_line(lines[job.0]) || has_child_inline_value(&lines, job, '{') {
-        return Some(job.0 + 1);
-    }
-    let steps = find_steps_line(&lines, job)?;
-    if is_inline_value_line(lines[steps.0]) || has_child_inline_value(&lines, steps, '[') {
-        return Some(steps.0 + 1);
-    }
-    sequence_item_line(&lines, steps, index)
+pub(crate) struct StepLocations<'a> {
+    lines: Vec<&'a str>,
+    jobs: Option<(usize, usize)>,
 }
 
-pub(crate) fn step_line_path(source: &str, job_id: &str, path: &[usize]) -> Option<usize> {
-    let (first, rest) = path.split_first()?;
-    let mut line = step_line(source, job_id, *first)?;
-    let lines: Vec<_> = source.lines().collect();
-    let key = (line - 1, indent(lines[line - 1]));
-    if is_inline_value_line(lines[key.0])
-        || has_child_inline_value(&lines, key, '[')
-        || has_child_inline_value(&lines, key, '{')
-    {
-        return Some(line);
+impl<'a> StepLocations<'a> {
+    pub(crate) fn new(source: &'a str) -> Self {
+        let lines: Vec<_> = source.lines().collect();
+        let jobs = find_jobs_line(&lines);
+        Self { lines, jobs }
     }
-    for index in rest {
-        line = parallel_child_line(source, line, *index)?;
+
+    pub(crate) fn job_steps(&self, job_id: &str, count: usize) -> Vec<usize> {
+        let Some(jobs) = self.jobs else {
+            return vec![1; count];
+        };
+        if is_inline_value_line(self.lines[jobs.0])
+            || has_child_inline_value(&self.lines, jobs, '{')
+        {
+            return vec![jobs.0 + 1; count];
+        }
+        let Some(job) = find_job_line(&self.lines, jobs, job_id) else {
+            return vec![1; count];
+        };
+        if is_inline_value_line(self.lines[job.0]) || has_child_inline_value(&self.lines, job, '{')
+        {
+            return vec![job.0 + 1; count];
+        }
+        let Some(steps) = find_steps_line(&self.lines, job) else {
+            return vec![1; count];
+        };
+        if is_inline_value_line(self.lines[steps.0])
+            || has_child_inline_value(&self.lines, steps, '[')
+        {
+            return vec![steps.0 + 1; count];
+        }
+        sequence_item_lines(&self.lines, steps, count)
     }
-    Some(line)
+
+    pub(crate) fn parallel_steps(&self, parent_line: usize, count: usize) -> Vec<usize> {
+        let Some(parent) = parent_line
+            .checked_sub(1)
+            .filter(|index| *index < self.lines.len())
+        else {
+            return vec![1; count];
+        };
+        let key = (parent, indent(self.lines[parent]));
+        if is_inline_value_line(self.lines[parent])
+            || has_child_inline_value(&self.lines, key, '[')
+            || has_child_inline_value(&self.lines, key, '{')
+        {
+            return vec![parent_line; count];
+        }
+        parallel_child_lines(&self.lines, parent_line, count)
+    }
 }

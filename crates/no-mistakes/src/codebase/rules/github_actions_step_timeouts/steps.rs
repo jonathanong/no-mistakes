@@ -1,11 +1,11 @@
-use super::yaml::{finding, has_key, is_expression, mapping_str, step_line_path, timeout_minutes};
+use super::yaml::{finding, has_key, is_expression, mapping_str, timeout_minutes, StepLocations};
 use super::{CompiledOptions, RuleFinding, GITHUB_MAX_MINUTES};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
 struct StepScan<'a> {
     rel: &'a str,
-    source: &'a str,
+    locations: &'a StepLocations<'a>,
     job_id: &'a str,
     opts: &'a CompiledOptions,
     findings: &'a mut Vec<RuleFinding>,
@@ -14,31 +14,34 @@ struct StepScan<'a> {
 
 pub(super) fn scan_steps(
     rel: &str,
-    source: &str,
     job_id: &str,
     steps: &[Value],
     opts: &CompiledOptions,
+    locations: &StepLocations<'_>,
     findings: &mut Vec<RuleFinding>,
     used: &mut BTreeSet<String>,
 ) {
     StepScan {
         rel,
-        source,
+        locations,
         job_id,
         opts,
         findings,
         used,
     }
-    .visit_steps(steps, &format!("{rel}#{job_id}#"), &mut Vec::new());
+    .visit_steps(
+        steps,
+        &format!("{rel}#{job_id}#"),
+        &locations.job_steps(job_id, steps.len()),
+    );
 }
 
 impl StepScan<'_> {
-    fn visit_steps(&mut self, steps: &[Value], prefix: &str, path: &mut Vec<usize>) {
+    fn visit_steps(&mut self, steps: &[Value], prefix: &str, lines: &[usize]) {
         for (index, step) in steps.iter().enumerate() {
             let Some(step) = step.as_mapping() else {
                 continue;
             };
-            path.push(index);
             let step_id = mapping_str(step, "id")
                 .map(str::to_owned)
                 .unwrap_or_else(|| (index + 1).to_string());
@@ -47,7 +50,7 @@ impl StepScan<'_> {
                 .iter()
                 .any(|key| has_key(step, key))
             {
-                let line = step_line_path(self.source, self.job_id, path).unwrap_or(1);
+                let line = lines.get(index).copied().unwrap_or(1);
                 let label = mapping_str(step, "name")
                     .or_else(|| mapping_str(step, "id"))
                     .map(str::to_owned)
@@ -55,9 +58,10 @@ impl StepScan<'_> {
                 self.check_timeout(&key, &label, line, step);
             }
             if let Some(nested) = step.get("parallel").and_then(Value::as_sequence) {
-                self.visit_steps(nested, &format!("{key}/"), path);
+                let line = lines.get(index).copied().unwrap_or(1);
+                let child_lines = self.locations.parallel_steps(line, nested.len());
+                self.visit_steps(nested, &format!("{key}/"), &child_lines);
             }
-            path.pop();
         }
     }
 

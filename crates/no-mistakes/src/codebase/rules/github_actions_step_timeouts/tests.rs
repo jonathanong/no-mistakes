@@ -341,6 +341,35 @@ fn non_job_and_non_step_shapes_do_not_hide_authored_executable_steps() {
 }
 
 #[test]
+fn no_jobs_still_audits_stale_and_duplicate_allows() {
+    let findings = run(
+        "no-jobs",
+        r#"
+allow:
+  - step: ".github/workflows/ci.yml#removed#checkout"
+    reason: "Former exception."
+  - step: ".github/workflows/ci.yml#removed#checkout"
+    reason: "Duplicate former exception."
+"#,
+    );
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("stale")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("duplicate")));
+}
+
+#[test]
+fn next_line_job_anchor_preserves_step_line_and_suppression() {
+    let findings = run("next-line-job-anchor", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert!(run("next-line-job-anchor-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn missing_workflow_source_is_skipped() {
     assert!(run_files("pass", "{}", &[".github/workflows/missing.yml"]).is_empty());
 }

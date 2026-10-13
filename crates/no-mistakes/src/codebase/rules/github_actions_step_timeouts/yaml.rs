@@ -51,7 +51,7 @@ pub(super) fn value_after_anchor(value: &str) -> &str {
 }
 
 mod location;
-pub(super) use location::step_line_path;
+pub(super) use location::StepLocations;
 
 pub(super) fn finding(
     file: &str,
