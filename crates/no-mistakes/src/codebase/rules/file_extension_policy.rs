@@ -38,14 +38,7 @@ pub(crate) fn check_with_files(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            let files = super::selected_rule_files(root, config, rule, all_files)?;
             Ok(scan(root, &opts, &files))
         })
         .collect();

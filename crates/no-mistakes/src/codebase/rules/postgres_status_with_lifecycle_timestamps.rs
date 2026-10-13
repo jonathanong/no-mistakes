@@ -4,7 +4,6 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 mod scan;
 
@@ -29,33 +28,7 @@ pub(crate) struct Compiled {
     message: Option<String>,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    let _ = compile_applications(config)?;
-    let catalog_paths =
-        crate::codebase::postgres::configured_schema_catalog_paths(config, &[RULE_ID])?;
-    let facts = crate::codebase::postgres::prepare_embedded_sql_facts(
-        root,
-        all_files,
-        Arc::clone(sources),
-        Vec::new(),
-        catalog_paths,
-    );
-    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
-}
+super::prepared_rule_entrypoints!(super::check_prepared_schema_rule, compile_applications);
 
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,

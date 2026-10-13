@@ -8,6 +8,7 @@ pub mod declared_payload_compatibility;
 pub mod doc_consistency;
 pub mod file_extension_policy;
 mod file_matching;
+mod finding;
 pub mod finite_set_consistency;
 pub mod forbidden_calls;
 pub mod forbidden_dependencies;
@@ -55,6 +56,7 @@ pub mod postgres_duplicate_function_body;
 pub mod postgres_explicit_columns;
 pub mod postgres_finite_text_columns;
 pub mod postgres_fk_index;
+mod postgres_function_name;
 pub mod postgres_generated_column_predicates;
 pub mod postgres_idempotent_insert;
 pub mod postgres_identifier_length;
@@ -111,11 +113,10 @@ pub mod workspace_package_cycles;
 
 pub mod filesystem_dispatch;
 pub(crate) mod path_filter;
+mod rule_context;
 mod run;
 mod source_access;
 mod suppression;
-
-use serde::Serialize;
 
 pub use filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
@@ -156,30 +157,36 @@ pub(crate) use suppression::{
     suppress_rule_findings_with_sources_except,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RuleFinding {
-    pub rule: String,
-    pub file: String,
-    pub line: usize,
-    pub message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub import: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub target: Option<String>,
-}
-
-pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id: &str) -> bool {
-    config.rule_configured(rule_id)
-}
+pub(crate) use finding::rule_enabled;
+pub use finding::RuleFinding;
 
 mod postgres_findings;
 mod sort_findings;
 mod variant_findings;
 pub(crate) use postgres_findings::{LocatedRuleFinding, PostgresFindings};
 pub(crate) use variant_findings::{index_sql_variants, VariantFindingDedup};
+mod masked_source;
+mod selected_files;
 mod target_roots;
-pub(crate) use sort_findings::sort_findings;
+pub(crate) use masked_source::{scan_masked_file, scan_masked_files, MaskedFileContext};
+mod entrypoints;
+pub(crate) use entrypoints::{
+    borrowed_source_rule_entrypoints, prepared_file_rule_facts, prepared_rule_entrypoints,
+    sourced_file_rule_entrypoints,
+};
+pub(crate) use selected_files::*;
+mod catalog_rule;
+mod prepared_facts;
+mod prepared_postgres_scan;
+mod simple_schema_rule;
+mod sql_glob_rules;
+pub(crate) use self::{
+    catalog_rule::run_catalog_rule, prepared_postgres_scan::collect_prepared_sql_inputs,
+    simple_schema_rule::run_simple_schema_rule, sort_findings::sort_findings,
+    sql_glob_rules::run_sql_rule_with_glob_filters,
+};
+pub(crate) use prepared_facts::*;
+pub(crate) use rule_context::{PreparedRuleContext, SourcedRuleContext};
 pub(crate) use target_roots::{
     file_allowed_by_roots_and_skip, skip_dir_set, target_project_root, target_roots,
     target_roots_with_inferred,

@@ -1,10 +1,8 @@
 use super::RuleFinding;
 use crate::codebase::postgres::PostgresSchemaOptions;
 use crate::codebase::ts_source::relative_slash_path;
-use crate::config::v2::NoMistakesConfig;
-use anyhow::Result;
 use serde::Deserialize;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod scan;
 
@@ -34,65 +32,13 @@ struct CompiledOptions {
     allowed_migrations: Vec<AllowedMigration>,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
+super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
 
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
-        root,
-        all_files,
-        std::sync::Arc::clone(sources),
-        config,
-        &[RULE_ID],
-    )?;
-    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
-}
-
-pub(crate) fn check_with_files_sources_and_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.try_rule_options()?;
-        let compiled = compile_options(&opts);
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &compiled, &files, sources, facts)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
+super::prepared_file_rule_facts!();
 
 fn compile_options(opts: &Options) -> CompiledOptions {
     CompiledOptions {
-        schema: PostgresSchemaOptions {
-            sql_include: if opts.sql_include.is_empty() {
-                PostgresSchemaOptions::default().sql_include
-            } else {
-                opts.sql_include.clone()
-            },
-        },
+        schema: super::schema_options_with_fallback(&opts.sql_include),
         allowed_migrations: opts.allowed_migrations.clone(),
     }
 }

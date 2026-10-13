@@ -1,3 +1,4 @@
+use super::super::simple_schema_rule::{compile_options, Options};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},

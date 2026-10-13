@@ -1,10 +1,7 @@
-use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
-use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -50,14 +47,7 @@ pub(crate) struct CompiledOptions {
     check_returning: bool,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
+super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
 
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
@@ -66,63 +56,15 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    check_applications(root, config, all_files, sources, Some(facts))
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
-        root,
-        all_files,
-        std::sync::Arc::clone(sources),
-        config,
-        &[RULE_ID],
-    )?;
-    check_applications(root, config, all_files, sources, Some(&facts))
-}
-
-fn check_applications(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<super::PostgresFindings>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<super::PostgresFindings> {
-            let opts: Options = rule.try_rule_options()?;
-            let compiled = compile_options(&opts)?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|path| {
-                    super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                })
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
-            let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-            let files: Vec<PathBuf> = files
-                .into_iter()
-                .filter(|path| {
-                    let rel = relative_slash_path(root, path);
-                    (include.is_empty() || include.is_match(&rel))
-                        && (exclude.is_empty() || !exclude.is_match(&rel))
-                })
-                .collect();
-            scan::scan(root, &compiled, &files, sources, facts)
-        })
-        .collect();
-    let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
-    Ok(findings.finish())
+    super::run_sql_rule_with_glob_filters(
+        super::PreparedRuleContext::new(root, config, all_files, sources, facts),
+        RULE_ID,
+        compile_options,
+        |opts: &Options| (&opts.include, &opts.exclude),
+        |root, compiled, files, sources, facts| {
+            scan::scan(root, compiled, files, sources, Some(facts))
+        },
+    )
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
