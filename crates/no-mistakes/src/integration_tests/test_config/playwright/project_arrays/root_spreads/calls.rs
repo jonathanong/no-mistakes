@@ -1,7 +1,4 @@
-use super::{
-    import_bindings, objects, project_options, shared, top_level_function_bodies, Ctx,
-    ImportBinding, Options,
-};
+use super::{import_bindings, objects, project_options, shared, Ctx, ImportBinding, Options};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, FunctionBody, Statement};
@@ -38,43 +35,13 @@ fn imported_project_options(
     base_path: &Path,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Vec<Options>>> {
-    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
-        return Ok(None);
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(None);
-    }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(None),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
-            &source,
-            |program, source| {
-                let bindings = shared::top_level_object_bindings(program);
-                let functions = top_level_function_bodies(program);
-                let Some(body) = functions.get(import.imported.as_str()).copied() else {
-                    return Ok(None);
-                };
-                let mut local_seen = BTreeSet::new();
-                let mut object_seen = BTreeSet::new();
-                let mut scoped = Ctx {
-                    source,
-                    bindings,
-                    functions,
-                    imports: import_bindings(program),
-                    resolver: ctx.resolver,
-                    path: &path,
-                    seen: ctx.seen,
-                    local_seen: &mut local_seen,
-                    object_seen: &mut object_seen,
-                };
-                body_return_project_options(body, &mut scoped)
-            },
-        )
-        .and_then(|options| options),
-    };
-    ctx.seen.remove(&path);
-    result
+    crate::integration_tests::test_config::shared_project_arrays::imported_function_options(
+        import,
+        base_path,
+        ctx,
+        import_bindings,
+        body_return_project_options,
+    )
 }
 
 fn helper_project_options(
@@ -112,6 +79,7 @@ fn body_return_project_options(
         let mut local_seen = BTreeSet::new();
         let mut object_seen = BTreeSet::new();
         let mut scoped = Ctx {
+            is_test_object: false,
             source: ctx.source,
             bindings,
             functions: ctx.functions.clone(),

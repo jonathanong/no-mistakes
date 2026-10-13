@@ -7,38 +7,51 @@ use oxc_ast::ast::{
     ObjectExpression, Program, Statement,
 };
 use oxc_span::GetSpan;
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::collections::BTreeSet;
+use std::path::Path;
 
-mod calls;
+mod calls {
+    use super::{body_return_options, helper_expression_options, imported_options, Ctx, Options};
+    use anyhow::Result;
+    use oxc_ast::ast::Expression;
+
+    pub(super) fn call_options(
+        callee: &Expression<'_>,
+        ctx: &mut Ctx<'_, '_>,
+    ) -> Result<Vec<Options>> {
+        crate::integration_tests::test_config::shared_project_arrays::calls::call_options(
+            callee,
+            ctx,
+            helper_expression_options,
+            body_return_options,
+            imported_options,
+        )
+    }
+}
 mod exports;
 mod function_returns;
-mod functions;
 mod imports;
-mod member_helpers;
-mod members;
+use crate::integration_tests::test_config::shared_project_arrays::members::{self, MemberOps};
 mod objects;
 mod root_options;
 mod root_spreads;
 
+use crate::integration_tests::test_config::shared_project_arrays::top_level_function_bodies;
 use function_returns::body_return_options;
-use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
 pub(super) use root_options::root_options;
 
-type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
-type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
+use crate::integration_tests::test_config::shared_project_arrays::{Context as Ctx, ExprMap};
 
-pub(super) struct Ctx<'a, 'r> {
-    source: &'a str,
-    bindings: ExprMap<'a>,
-    functions: FnMap<'a>,
-    imports: BTreeMap<String, ImportBinding>,
-    resolver: &'r dyn ImportResolution,
-    path: &'r Path,
-    seen: &'r mut BTreeSet<PathBuf>,
-    local_seen: &'r mut BTreeSet<String>,
-    object_seen: &'r mut BTreeSet<String>,
+fn member_ops() -> MemberOps<Options> {
+    MemberOps {
+        expression_options,
+        imported_options,
+        exported_options: exports::exported_options,
+        expression_object: objects::expression_object,
+        import_bindings,
+        default_identifier_reexport: false,
+    }
 }
 
 pub(super) fn project_options(
@@ -62,6 +75,7 @@ fn project_options_inner(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),
@@ -114,7 +128,7 @@ pub(super) fn expression_options(
         }
         Expression::CallExpression(_) => Ok(Vec::new()),
         Expression::StaticMemberExpression(member) => {
-            members::namespace_member_options(member, ctx)
+            members::namespace_member_options(member, ctx, &member_ops())
         }
         _ => Ok(Vec::new()),
     }?;

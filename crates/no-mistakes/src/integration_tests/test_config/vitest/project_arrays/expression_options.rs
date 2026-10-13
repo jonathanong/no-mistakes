@@ -24,7 +24,7 @@ pub(super) fn expression_options(
             }
         }
         Expression::StaticMemberExpression(member) => {
-            members::namespace_member_options(member, ctx)
+            members::namespace_member_options(member, ctx, &super::member_ops())
         }
         _ => Ok(Vec::new()),
     }

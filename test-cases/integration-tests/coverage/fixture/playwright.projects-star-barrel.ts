@@ -1,2 +1,2 @@
-// Star barrel for projects array - covers imported_options_lookup success path (line 107)
+// A star barrel can resolve a single named projects export.
 export * from './playwright.projects-star-barrel-source'

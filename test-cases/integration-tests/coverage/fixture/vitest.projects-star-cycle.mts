@@ -4,7 +4,7 @@ import { nonExistent } from './vitest.projects-star-cycle-a'
 
 // cycle-a and cycle-b form a mutual star-export cycle.
 // When looking for 'nonExistent', the star loop traverses A→B→A, hitting
-// cycle detection in imported_options_lookup (line 103 of exports.rs).
+// The mutual star-export cycle has no named target, so it resolves empty.
 export default defineConfig({
   test: {
     // @ts-ignore

@@ -68,10 +68,10 @@ fn expression_object_options_inner(
             result
         }
         Expression::StaticMemberExpression(member) => {
-            members::namespace_member_options(member, ctx)
+            members::namespace_member_options(member, ctx, &super::object_member_ops())
         }
         Expression::CallExpression(call) if call.arguments.is_empty() => {
-            super::calls::call_object_options(&call.callee, ctx)
+            super::calls::call_object_options(&call.callee, ctx, &super::object_call_ops())
         }
         Expression::CallExpression(_) => Ok(None),
         _ => {

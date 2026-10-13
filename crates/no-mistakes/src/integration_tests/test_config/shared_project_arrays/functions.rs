@@ -1,7 +1,9 @@
 use super::FnMap;
 use oxc_ast::ast::{Declaration, Program, Statement};
 
-pub(super) fn top_level_function_bodies<'a>(program: &'a Program<'a>) -> FnMap<'a> {
+pub(in crate::integration_tests::test_config) fn top_level_function_bodies<'a>(
+    program: &'a Program<'a>,
+) -> FnMap<'a> {
     program
         .body
         .iter()

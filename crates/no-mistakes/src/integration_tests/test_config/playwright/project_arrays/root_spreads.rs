@@ -176,6 +176,7 @@ fn exported_project_options(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings,
         functions: top_level_function_bodies(program),

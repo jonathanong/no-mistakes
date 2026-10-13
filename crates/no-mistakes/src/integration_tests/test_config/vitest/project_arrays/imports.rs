@@ -1,51 +1,17 @@
-use oxc_ast::ast::{BindingPattern, ImportDeclarationSpecifier, Program, Statement};
+use crate::integration_tests::test_config::shared_project_arrays::add_es_import_bindings;
+pub(super) use crate::integration_tests::test_config::shared_project_arrays::ImportBinding;
+use oxc_ast::ast::{BindingPattern, Program, Statement};
 use std::collections::{BTreeMap, BTreeSet};
 
 mod commonjs;
 pub(super) use commonjs::direct_literal_require_binding;
 use commonjs::{is_direct_commonjs_require, require_binding};
 
-#[derive(Clone)]
-pub(super) struct ImportBinding {
-    pub(super) source: String,
-    pub(super) imported: String,
-}
-
 pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportBinding> {
     let mut bindings = BTreeMap::new();
     for statement in &program.body {
         match statement {
-            Statement::ImportDeclaration(import) => {
-                if import.import_kind.is_type() {
-                    continue;
-                }
-                for specifier in import.specifiers.iter().flatten() {
-                    let (local, imported) = match specifier {
-                        ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
-                            (specifier.local.name.to_string(), "default".to_string())
-                        }
-                        ImportDeclarationSpecifier::ImportSpecifier(specifier)
-                            if specifier.import_kind.is_type() =>
-                        {
-                            continue;
-                        }
-                        ImportDeclarationSpecifier::ImportSpecifier(specifier) => (
-                            specifier.local.name.to_string(),
-                            specifier.imported.name().to_string(),
-                        ),
-                        ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
-                            (specifier.local.name.to_string(), "*".to_string())
-                        }
-                    };
-                    bindings.insert(
-                        local,
-                        ImportBinding {
-                            source: import.source.value.to_string(),
-                            imported,
-                        },
-                    );
-                }
-            }
+            Statement::ImportDeclaration(import) => add_es_import_bindings(import, &mut bindings),
             Statement::VariableDeclaration(declaration) => {
                 for declarator in &declaration.declarations {
                     let Some(init) = declarator.init.as_ref() else {

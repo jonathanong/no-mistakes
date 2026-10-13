@@ -1,22 +1,31 @@
 use super::{
     array_options, body_return_options, helper_expression_options, import_bindings,
-    imported_options, top_level_function_bodies, Ctx,
+    imported_options, Ctx,
 };
-use crate::integration_tests::test_config::vitest::shared;
 use crate::integration_tests::test_config::vitest::Options;
 use anyhow::Result;
 use oxc_ast::ast::{ArrowFunctionBody, ExportDefaultDeclarationKind, Program, Statement};
-use std::collections::BTreeSet;
 use std::path::Path;
 
 pub(in crate::integration_tests::test_config::vitest::project_arrays) mod commonjs;
-mod declarations;
+use crate::integration_tests::test_config::shared_project_arrays::declarations::{
+    self, DeclarationOps,
+};
+use crate::integration_tests::test_config::shared_project_arrays::export_scan::{
+    self, ExportScanOps,
+};
 mod workspace;
 use commonjs::commonjs_exported_expression;
-use declarations::{
-    declaration_options, default_function_options, export_from_options, named_export_options,
-};
 pub(super) use workspace::workspace_default_options;
+
+fn declaration_ops() -> DeclarationOps<Options> {
+    DeclarationOps {
+        expression_options: helper_expression_options,
+        body_options: body_return_options,
+        imported_options,
+        expression_object: super::objects::expression_object,
+    }
+}
 
 pub(super) fn exported_options(
     program: &Program<'_>,
@@ -28,6 +37,16 @@ pub(super) fn exported_options(
     Ok(exported_options_lookup(program, source, path, parent, exported)?.unwrap_or_default())
 }
 
+fn export_scan_ops() -> ExportScanOps<Options> {
+    ExportScanOps {
+        declarations: declaration_ops(),
+        import_bindings,
+        default_options: default_export_options,
+        commonjs_options,
+        preserve_test_scope: true,
+    }
+}
+
 fn exported_options_lookup(
     program: &Program<'_>,
     source: &str,
@@ -35,103 +54,25 @@ fn exported_options_lookup(
     parent: &mut Ctx<'_, '_>,
     exported: &str,
 ) -> Result<Option<Vec<Options>>> {
-    let mut local_seen = BTreeSet::new();
-    let mut object_seen = BTreeSet::new();
-    let mut ctx = Ctx {
-        is_test_object: parent.is_test_object,
+    export_scan::exported_options_lookup(
+        program,
         source,
-        bindings: shared::top_level_object_bindings(program),
-        functions: top_level_function_bodies(program),
-        imports: import_bindings(program),
-        resolver: parent.resolver,
         path,
-        seen: parent.seen,
-        local_seen: &mut local_seen,
-        object_seen: &mut object_seen,
-    };
-    let mut export_all_sources = Vec::new();
-    for statement in &program.body {
-        match statement {
-            Statement::ExportNamedDeclaration(export) => {
-                if export.export_kind.is_type() {
-                    continue;
-                }
-                if let Some(options) = named_export_options(export, exported, &mut ctx) {
-                    return options.map(Some);
-                }
-            }
-            Statement::ExportDeclaration(export) => {
-                if let Some(options) = declaration_options(&export.declaration, exported, &mut ctx)
-                {
-                    return options.map(Some);
-                }
-            }
-            Statement::ExportFromDeclaration(export) => {
-                if let Some(options) = export_from_options(export, exported, &mut ctx) {
-                    return options.map(Some);
-                }
-            }
-            Statement::ExportAllDeclaration(export)
-                if exported != "default"
-                    && export.exported.is_none()
-                    && !export.export_kind.is_type() =>
-            {
-                export_all_sources.push(export.source.value.to_string());
-            }
-            Statement::ExportDefaultDeclaration(export) if exported == "default" => {
-                return default_export_options(&export.declaration, &mut ctx).map(Some);
-            }
-            Statement::ExpressionStatement(_) => {
-                if let Some(expression) =
-                    commonjs_exported_expression(program, exported, &ctx.bindings)
-                {
-                    return super::expression_options(expression, &mut ctx).map(Some);
-                }
-            }
-            _ => {}
-        }
-    }
-    let mut resolved = None;
-    for source in export_all_sources {
-        let binding = super::ImportBinding {
-            source,
-            imported: exported.to_string(),
-        };
-        let Some(options) = imported_options_lookup(&binding, path, &mut ctx)? else {
-            continue;
-        };
-        if resolved.is_some() {
-            return Ok(None);
-        }
-        resolved = Some(options);
-    }
-    Ok(resolved)
+        parent,
+        exported,
+        &export_scan_ops(),
+        exported_options_lookup,
+    )
 }
 
-fn imported_options_lookup(
-    import: &super::ImportBinding,
-    base_path: &Path,
+fn commonjs_options(
+    program: &Program<'_>,
+    _statement: &Statement<'_>,
+    exported: &str,
     ctx: &mut Ctx<'_, '_>,
-) -> Result<Option<Vec<Options>>> {
-    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
-        return Ok(None);
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(None);
-    }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(None),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
-            &source,
-            |program, source| {
-                exported_options_lookup(program, source, &path, ctx, &import.imported)
-            },
-        )
-        .and_then(|options| options),
-    };
-    ctx.seen.remove(&path);
-    result
+) -> Option<Result<Vec<Options>>> {
+    commonjs_exported_expression(program, exported, &ctx.bindings)
+        .map(|expression| super::expression_options(expression, ctx))
 }
 
 fn default_export_options(
@@ -150,7 +91,11 @@ fn default_export_options(
             super::calls::call_options(&call.callee, ctx)
         }
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            default_function_options(function.body.as_deref(), ctx)
+            declarations::default_function_options(
+                function.body.as_deref(),
+                ctx,
+                &declaration_ops(),
+            )
         }
         ExportDefaultDeclarationKind::ArrayExpression(array) => array_options(array, ctx),
         ExportDefaultDeclarationKind::ObjectExpression(object) => {

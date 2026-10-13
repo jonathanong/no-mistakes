@@ -6,26 +6,42 @@ use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, Expression, FunctionBody, ObjectExpression, Program,
     Statement,
 };
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::collections::BTreeSet;
+use std::path::Path;
 
-mod calls;
+mod calls {
+    use super::{body_return_options, helper_expression_options, imported_options, Ctx, Options};
+    use anyhow::Result;
+    use oxc_ast::ast::Expression;
+
+    pub(super) fn call_options(
+        callee: &Expression<'_>,
+        ctx: &mut Ctx<'_, '_>,
+    ) -> Result<Vec<Options>> {
+        crate::integration_tests::test_config::shared_project_arrays::calls::call_options(
+            callee,
+            ctx,
+            helper_expression_options,
+            body_return_options,
+            imported_options,
+        )
+    }
+}
 mod exports;
 mod expression_options;
 mod function_returns;
-mod functions;
 pub(in crate::integration_tests::test_config::vitest) mod imports;
-mod member_helpers;
-mod members;
+use crate::integration_tests::test_config::shared_project_arrays::members::{self, MemberOps};
 mod objects;
 mod project_entries;
 mod root_options;
 mod root_spreads;
 mod string_projects;
 
+use crate::integration_tests::test_config::shared_project_arrays::top_level_function_bodies;
+use crate::integration_tests::test_config::shared_project_arrays::{Context as Ctx, ExprMap};
 use expression_options::{expression_options, helper_expression_options, imported_options};
 use function_returns::body_return_options;
-use functions::top_level_function_bodies;
 use imports::{direct_literal_require_binding, import_bindings, ImportBinding};
 use project_entries::{
     flattened_project_elements, global_excluded_string_projects, selected_string_project_paths,
@@ -37,20 +53,16 @@ pub(in crate::integration_tests::test_config::vitest) use string_projects::{
     string_project_roots_with_resolver,
 };
 use string_projects::{string_project_options_for_paths, string_project_paths};
-type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
-type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
-pub(super) struct Ctx<'a, 'r> {
-    /// A nested test object retains setup planning but does not own SDK extends.
-    is_test_object: bool,
-    source: &'a str,
-    bindings: ExprMap<'a>,
-    functions: FnMap<'a>,
-    imports: BTreeMap<String, ImportBinding>,
-    resolver: &'r dyn ImportResolution,
-    path: &'r Path,
-    seen: &'r mut BTreeSet<PathBuf>,
-    local_seen: &'r mut BTreeSet<String>,
-    object_seen: &'r mut BTreeSet<String>,
+
+fn member_ops() -> MemberOps<Options> {
+    MemberOps {
+        expression_options,
+        imported_options,
+        exported_options: exports::exported_options,
+        expression_object: objects::expression_object,
+        import_bindings,
+        default_identifier_reexport: true,
+    }
 }
 
 pub(super) fn project_options(
