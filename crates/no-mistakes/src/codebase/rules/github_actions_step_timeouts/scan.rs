@@ -29,6 +29,16 @@ pub(super) fn check_file(
             None,
         )],
     };
+    for key in &opts.duplicate_allow {
+        if key.starts_with(&format!("{rel}#")) {
+            findings.push(finding(
+                &rel,
+                1,
+                format!("{rel}: duplicate {RULE_ID} allow entry `{key}`"),
+                Some(key),
+            ));
+        }
+    }
     if !opts.defer_suppression {
         super::super::suppress_rule_findings_with_source(&mut findings, &source);
     }
@@ -73,16 +83,6 @@ fn check_parsed(
                 rel,
                 1,
                 format!("{rel}: stale {RULE_ID} allow entry `{key}`"),
-                Some(key),
-            ));
-        }
-    }
-    for key in &opts.duplicate_allow {
-        if key.starts_with(&format!("{rel}#")) {
-            findings.push(finding(
-                rel,
-                1,
-                format!("{rel}: duplicate {RULE_ID} allow entry `{key}`"),
                 Some(key),
             ));
         }

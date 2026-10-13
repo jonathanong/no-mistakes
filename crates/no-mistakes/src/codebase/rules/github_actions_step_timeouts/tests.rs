@@ -370,6 +370,14 @@ fn next_line_job_anchor_preserves_step_line_and_suppression() {
 }
 
 #[test]
+fn anchor_properties_on_mapping_keys_preserve_nested_step_locations() {
+    let findings = run("anchored-keys", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert!(run("anchored-keys-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn missing_workflow_source_is_skipped() {
     assert!(run_files("pass", "{}", &[".github/workflows/missing.yml"]).is_empty());
 }
@@ -473,6 +481,27 @@ fn invalid_yaml_reports_a_diagnostic() {
     let findings = run("bad-yaml", "{}");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("invalid YAML"));
+}
+
+#[test]
+fn invalid_yaml_still_reports_duplicate_allow_entries() {
+    let findings = run(
+        "bad-yaml",
+        r#"
+allow:
+  - step: ".github/workflows/ci.yml#build#checkout"
+    reason: "Former exception."
+  - step: ".github/workflows/ci.yml#build#checkout"
+    reason: "Duplicate former exception."
+"#,
+    );
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("invalid YAML")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("duplicate")));
 }
 
 #[test]

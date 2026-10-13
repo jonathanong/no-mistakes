@@ -1,0 +1,8 @@
+name: CI
+&jobs_key jobs:
+  &build_key build:
+    runs-on: ubuntu-latest
+    &steps_key steps:
+      - &parallel_key parallel:
+          # no-mistakes-disable-next-line github-actions-step-timeouts
+          - run: echo missing

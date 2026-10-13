@@ -25,7 +25,14 @@ pub(super) fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
     let text = line.trim_start();
     let text = text.strip_prefix("- ").unwrap_or(text);
     let (key, value) = text.split_once(':')?;
-    let key = key.trim().trim_matches(['\'', '"']);
+    let key = key.trim();
+    let key = if key.starts_with('&') {
+        key.find(char::is_whitespace)
+            .map(|position| key[position..].trim_start())?
+    } else {
+        key
+    };
+    let key = key.trim_matches(['\'', '"']);
     (!key.is_empty() && !key.starts_with('#')).then_some((key, value.trim()))
 }
 
