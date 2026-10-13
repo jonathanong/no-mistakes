@@ -41,7 +41,9 @@ rules:
 
 ```yaml
 - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-- uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+- uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+  with:
+    toolchain: stable
 ```
 
 **Counterexample:**
@@ -67,8 +69,10 @@ Then update the workflow line:
 ```
 
 The comment must start with a version number (`# v1.2.3`, `# v2`, or
-`# 1.96.0`). Branch-name and tool-name comments (`# main`, `# stable`) are
-rejected.
+`# 1.96.0`). For an untagged action, a numeric snapshot date such as
+`# 2026.10.09` also passes. The Rust example pins the setup action snapshot
+while selecting the latest stable compiler through its input. Branch-name and
+tool-name comments (`# main`, `# stable`) are rejected.
 
 **Exemptions:** Local action references (`./`, `../`) and Docker image
 references (`docker://`) are never checked. Use `excludePaths` to opt out

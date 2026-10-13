@@ -56,7 +56,9 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: stable
 
       - name: Install Node.js
         timeout-minutes: 5
@@ -200,8 +202,9 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         with:
+          toolchain: stable
           components: clippy, rustfmt
 
       - name: Install Node.js
@@ -437,8 +440,9 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
 
       - name: Cache Rust build artifacts
@@ -584,7 +588,9 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: stable
 
       - name: Install Node.js
         timeout-minutes: 5
