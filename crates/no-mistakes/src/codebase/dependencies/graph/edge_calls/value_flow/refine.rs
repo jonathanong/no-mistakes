@@ -34,17 +34,47 @@ pub(in super::super) fn refine_value_calls(
 }
 fn incoming_inputs(sites: &[ResolvedCallSite]) -> ParameterInputs {
     let mut incoming: FxHashMap<_, Vec<_>> = fx_map();
+    let constructors: FxHashMap<_, _> = sites
+        .iter()
+        .filter(|site| {
+            site.invocation == InvocationKind::Membership && site.source_callee == "constructor"
+        })
+        .filter_map(|site| {
+            let caller = site.caller_id?;
+            let NodeId::Symbol {
+                file,
+                callable_id: Some(id),
+                ..
+            } = site.target_node.as_ref()?
+            else {
+                return None;
+            };
+            Some(((site.file.clone(), caller), (file.to_path_buf(), *id)))
+        })
+        .collect();
     for site in sites {
+        if site.invocation == InvocationKind::Membership {
+            continue;
+        }
         if let Some(NodeId::Symbol {
             file,
             callable_id: Some(id),
             ..
         }) = &site.target_node
         {
-            incoming
-                .entry((file.to_path_buf(), *id))
-                .or_default()
-                .push((site.file.clone(), site.offset, site.source_callee.clone()));
+            let key = if site.invocation == InvocationKind::Construct {
+                constructors
+                    .get(&(file.to_path_buf(), *id))
+                    .cloned()
+                    .unwrap_or((file.to_path_buf(), *id))
+            } else {
+                (file.to_path_buf(), *id)
+            };
+            incoming.entry(key).or_default().push((
+                site.file.clone(),
+                site.offset,
+                site.source_callee.clone(),
+            ));
         }
     }
     incoming

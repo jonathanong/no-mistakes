@@ -7,6 +7,13 @@ impl ImportCollector {
         }
         if let Some(init) = &declarator.init {
             let value = self.value_expression(init);
+            if !immutable {
+                for name in binding_names(&declarator.id) {
+                    if let Some(scope) = self.callee_binding_scope(&name) {
+                        self.invalidate_value_write(scope, &name, declarator.span.start);
+                    }
+                }
+            }
             if !immutable && !matches!(value, ValueExpression::Call(_, _)) {
                 return;
             }
@@ -96,18 +103,7 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
-        let callee = self.value_expression(&call.callee);
-        let arguments = call
-            .arguments
-            .iter()
-            .map(|argument| {
-                argument
-                    .as_expression()
-                    .map_or(ValueExpression::Unknown, |expression| {
-                        self.value_expression(expression)
-                    })
-            })
-            .collect();
+        let (callee, arguments, spread_at) = self.adapted_value_call(call);
         self.value_flow.calls.push(ValueCall {
             offset: call.span.start,
             end: call.span.end,
@@ -115,10 +111,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee,
             arguments,
-            spread_at: call
-                .arguments
-                .iter()
-                .position(|argument| argument.as_expression().is_none()),
+            spread_at,
         });
     }
 }
@@ -162,9 +155,7 @@ impl ImportCollector {
 
 impl ImportCollector {
     pub(in super::super) fn record_value_fallthrough(&mut self, statements: &[Statement<'_>]) {
-        if self.collect_value_flow
-            && !matches!(statements.last(), Some(Statement::ReturnStatement(_)))
-        {
+        if self.collect_value_flow && completion::sequence_completes(statements) {
             if let Some(owner) = self.current_function_id() {
                 self.value_flow
                     .returns

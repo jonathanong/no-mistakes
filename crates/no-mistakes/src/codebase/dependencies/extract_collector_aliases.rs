@@ -151,14 +151,7 @@ impl ImportCollector {
             return;
         };
         self.insert_reassigned_callable_at(binding_scope, name.to_string());
-        for parameter in &mut self.value_flow.parameters {
-            if parameter.scope == binding_scope && parameter.name == binding_name { parameter.invalidated_at.get_or_insert(offset); }
-        }
-        for binding in &mut self.value_flow.bindings {
-            if binding.scope == binding_scope && (binding.name == binding_name || binding.name.starts_with(&format!("{name}."))) {
-                binding.invalidated_at.get_or_insert(offset);
-            }
-        }
+        self.invalidate_value_write(binding_scope, name, offset);
         if let Some(index) = self.callable_alias_index_at(binding_scope, name) {
             if let Some(alias) = self.callable_aliases.get_mut(index) {
                 if alias.lexical_scope_depth == lexical_scope_depth {

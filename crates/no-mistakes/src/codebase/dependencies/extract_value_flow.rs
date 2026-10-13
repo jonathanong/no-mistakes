@@ -53,3 +53,10 @@ mod collect;
 
 #[path = "extract_value_flow/expressions.rs"]
 mod expressions;
+
+#[path = "extract_value_flow/adapters.rs"]
+mod adapters;
+#[path = "extract_value_flow/completion.rs"]
+mod completion;
+#[path = "extract_value_flow/mutations.rs"]
+mod mutations;
