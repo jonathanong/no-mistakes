@@ -42,7 +42,7 @@ impl ValueFlowResolution<'_, '_> {
             }
         } else if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
             if self.initializing.iter().any(|(file, owner, index)| {
-                file == path && *owner == parameter.owner && parameter.index >= *index
+                file == path && *owner == parameter.owner && parameter.initialization_order >= *index
             }) || parameter
                 .mutation_contexts
                 .iter()

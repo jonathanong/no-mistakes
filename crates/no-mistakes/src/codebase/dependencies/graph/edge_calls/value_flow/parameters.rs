@@ -78,15 +78,52 @@ impl ValueFlowResolution<'_, '_> {
                 continue;
             };
             let argument = self.invocation_argument(&caller, call, parameter.index);
-            values.push(match argument {
+            let from_default = matches!(argument, None | Some(FlowValue::Undefined));
+            let value = match argument {
                 None | Some(FlowValue::Undefined) => self.parameter_default(path, parameter),
                 Some(value) => value,
-            });
+            };
+            values.push(self.project_parameter(path, parameter, value, from_default));
         }
         if values.is_empty() {
-            values.push(self.parameter_default(path, parameter));
+            let value = self.parameter_default(path, parameter);
+            values.push(self.project_parameter(path, parameter, value, true));
         }
         agreed_value(values)
+    }
+    fn project_parameter(
+        &mut self,
+        path: &std::path::Path,
+        parameter: &ValueParameter,
+        mut value: FlowValue,
+        from_default: bool,
+    ) -> FlowValue {
+        let mut origin_order = from_default.then_some(parameter.default_order);
+        for step in &parameter.projection {
+            value = match step {
+                ValueProjection::Member(member) => {
+                    if let Some(order) = origin_order {
+                        self.initializing
+                            .push((path.to_path_buf(), parameter.owner, order));
+                    }
+                    let value = self.member(value, member);
+                    if origin_order.is_some() {
+                        self.initializing.pop();
+                    }
+                    value
+                }
+                ValueProjection::Default(fallback, order) if value == FlowValue::Undefined => {
+                    self.initializing
+                        .push((path.to_path_buf(), parameter.owner, *order));
+                    let value = self.value(path, fallback);
+                    self.initializing.pop();
+                    origin_order = Some(*order);
+                    value
+                }
+                ValueProjection::Default(_, _) => value,
+            };
+        }
+        value
     }
     fn parameter_default(
         &mut self,
@@ -94,7 +131,7 @@ impl ValueFlowResolution<'_, '_> {
         parameter: &ValueParameter,
     ) -> FlowValue {
         self.initializing
-            .push((path.to_path_buf(), parameter.owner, parameter.index));
+            .push((path.to_path_buf(), parameter.owner, parameter.default_order));
         let value = self.value(path, &parameter.default);
         self.initializing.pop();
         value

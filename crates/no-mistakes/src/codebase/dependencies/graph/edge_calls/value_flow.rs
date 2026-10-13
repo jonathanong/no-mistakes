@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::dependencies::extract::{
-    ValueBinding, ValueCall, ValueExpression, ValueParameter,
+    ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
 };
 
 #[derive(Clone, Default)]

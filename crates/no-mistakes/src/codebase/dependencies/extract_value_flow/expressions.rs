@@ -47,6 +47,24 @@ impl ImportCollector {
             Expression::FunctionExpression(function) => {
                 ValueExpression::Callable(CallableId(function.span.start))
             }
+            Expression::ArrayExpression(array) => {
+                let mut fields = fx_map();
+                for (index, element) in array.elements.iter().enumerate() {
+                    if matches!(
+                        element,
+                        oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)
+                    ) {
+                        return ValueExpression::Unknown;
+                    }
+                    let value = element
+                        .as_expression()
+                        .map_or(ValueExpression::Undefined, |expression| {
+                            self.value_expression(expression)
+                        });
+                    fields.insert(index.to_string(), value);
+                }
+                ValueExpression::Object(std::sync::Arc::new(fields))
+            }
             Expression::ObjectExpression(object) => {
                 let mut fields = fx_map();
                 for property in &object.properties {

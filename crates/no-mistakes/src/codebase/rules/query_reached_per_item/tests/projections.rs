@@ -134,3 +134,18 @@ fn switch_tags_void_defaults_and_nested_mutations_preserve_value_flow() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn destructured_parameters_project_before_caller_agreement() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/destructured-parameters.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [4, 6, 8, 17, 21, 31, 43, 45],
+        "{findings:#?}"
+    );
+}

@@ -4,6 +4,8 @@ use super::*;
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_link_constructions: usize,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
@@ -42,12 +44,20 @@ pub struct ValueBinding {
     pub value: ValueExpression,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValueProjection {
+    Member(String),
+    Default(ValueExpression, usize),
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueParameter {
     pub owner: CallableId,
     pub index: usize,
     pub name: String,
     pub scope: usize,
     pub default: ValueExpression,
+    pub projection: Vec<ValueProjection>,
+    pub initialization_order: usize,
+    pub default_order: usize,
     pub invalidated_at: Option<u32>,
     pub mutation_contexts: FxHashSet<Option<CallableId>>,
 }
@@ -84,3 +94,6 @@ mod templates;
 
 #[path = "extract_value_flow/nested.rs"]
 mod nested;
+
+#[path = "extract_value_flow/parameter_patterns.rs"]
+mod parameter_patterns;

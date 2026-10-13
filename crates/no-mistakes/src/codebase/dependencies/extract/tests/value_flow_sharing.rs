@@ -15,6 +15,8 @@ fn destructured_value_bindings_share_one_initializer() {
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program, &source, false, false, true,
     );
+    #[cfg(feature = "test-instrumentation")]
+    assert_eq!(facts.value_flow.reference_link_constructions, 0);
     let bases = facts
         .value_flow
         .bindings
@@ -29,4 +31,24 @@ fn destructured_value_bindings_share_one_initializer() {
         .iter()
         .all(|base| std::sync::Arc::ptr_eq(bases[0], base)));
     assert!(matches!(bases[0].as_ref(), ValueExpression::Object(fields) if fields.len() == 128));
+}
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn member_writes_do_not_rebuild_reference_links() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts");
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program, &source, false, false, true,
+    );
+    assert_eq!(facts.value_flow.reference_link_constructions, 515);
+    for name in ["client", "alias", "late"] {
+        let binding = facts.value_flow.bindings.iter().find(|binding| binding.name == name).unwrap();
+        assert!(binding.invalidated_at.is_some());
+    }
+    assert!(facts.value_flow.bindings.iter().filter(|binding| binding.name.starts_with("unused"))
+        .all(|binding| binding.invalidated_at.is_none()));
 }
