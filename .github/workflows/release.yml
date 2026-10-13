@@ -788,7 +788,7 @@ jobs:
             --version "$version"
 
   publish-js:
-    name: Publish JS packages
+    name: Publish root npm package
     needs:
       - prepare
       - verify-npm-platform
@@ -838,6 +838,61 @@ jobs:
           wait_script="packages/no-mistakes/scripts/wait-npm-tarball.js"
           packages=(
             no-mistakes
+          )
+          for pkg in "${packages[@]}"; do
+            if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
+              echo "$pkg $version tarball is already fetchable; skipping publish"
+            elif pnpm view "$pkg@$version" version >/dev/null 2>&1; then
+              echo "$pkg $version metadata exists without a fetchable tarball; waiting"
+            else
+              npm publish "./packages/$pkg" --provenance --access public
+            fi
+          done
+          for pkg in "${packages[@]}"; do
+            node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 1800000
+          done
+
+  publish-eslint:
+    name: Publish ESLint package
+    needs:
+      - prepare
+      - validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          ref: ${{ needs.prepare.outputs.release-sha }}
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          install: false
+
+      # This source-only package does not depend on native artifacts.
+      - name: Publish ESLint package with OIDC
+        timeout-minutes: 40
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          wait_script="packages/no-mistakes/scripts/wait-npm-tarball.js"
+          packages=(
             eslint-plugin-no-mistakes
           )
           for pkg in "${packages[@]}"; do

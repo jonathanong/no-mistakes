@@ -131,6 +131,28 @@ test("Cargo publication overlaps the native and npm path after validation", () =
   assert.match(npm, /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-native$/m);
 });
 
+test("ESLint publication overlaps native builds without gating root verification", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const eslint = workflow.match(/^ {2}publish-eslint:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  const root = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  const verifyRoot = workflow.match(/^ {2}verify-npm-root:[\s\S]*$/m)?.[0];
+  assert.ok(eslint, "source-only ESLint publication must have its own job");
+  assert.ok(root);
+  assert.ok(verifyRoot);
+  assert.match(eslint, /^ {4}needs:\n {6}- prepare\n {6}- validate$/m);
+  assert.match(eslint, /ref: \$\{\{ needs\.prepare\.outputs\.release-sha \}\}/);
+  assert.match(eslint, /^ {6}contents: read$/m);
+  assert.match(eslint, /^ {6}id-token: write$/m);
+  assert.match(eslint, /persist-credentials: false/);
+  assert.doesNotMatch(eslint, /RELEASE_TOKEN|NPM_TOKEN/);
+  assert.match(eslint, /^ {12}eslint-plugin-no-mistakes$/m);
+  assert.doesNotMatch(eslint, /^ {12}no-mistakes$/m);
+  assert.match(eslint, /npm publish "\.\/packages\/\$pkg" --provenance --access public/);
+  assert.match(eslint, /--timeout-ms 1800000/);
+  assert.doesNotMatch(root, /eslint-plugin-no-mistakes/);
+  assert.doesNotMatch(verifyRoot, /publish-eslint/);
+});
+
 test("release does not publish no-mistakes until every platform tarball installs", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   assert.match(workflow, /wait-npm-tarball\.js/);
