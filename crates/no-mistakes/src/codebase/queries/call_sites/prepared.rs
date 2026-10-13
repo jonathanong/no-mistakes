@@ -16,6 +16,7 @@ pub(super) fn prepare(target: &Target) -> anyhow::Result<CallSitesAnalysis> {
         &prepared,
         TsFactPlan {
             function_calls: true,
+            value_flow: true,
             call_sites: true,
             ..Default::default()
         },

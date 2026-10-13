@@ -64,6 +64,9 @@ pub(super) fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<Stri
         }
         AssignmentTarget::ComputedMemberExpression(member) => {
             super::simple_computed_member_name(member)
+                .or_else(|| {
+                    super::simple_callee_name(&member.object).map(|base| format!("{base}.*"))
+                })
                 .into_iter()
                 .collect()
         }

@@ -102,6 +102,7 @@ fn record_callable_argument_transitions(
 }
 
 fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewExpression<'_>) {
+    collector.record_value_new(new);
     collector.mark_namespace_head(&new.callee);
     if let Some(callee) = simple_callee_name(&new.callee) {
         if collector.should_record_call(&callee) {

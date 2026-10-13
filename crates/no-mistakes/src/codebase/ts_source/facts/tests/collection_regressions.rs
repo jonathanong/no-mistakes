@@ -101,3 +101,35 @@ fn collect_file_facts_falls_back_to_ts_source_type_for_unknown_extension() {
 
 #[path = "../tests_observer.rs"]
 mod observer_tests;
+
+#[test]
+fn import_graph_facts_only_collect_value_flow_with_consumer_demand() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts");
+    let imports = crate::codebase::dependencies::graph::GraphBuildPlan {
+        imports: true,
+        ..Default::default()
+    }
+    .ts_fact_plan();
+    assert!(imports.function_calls);
+    assert!(!imports.value_flow);
+    let facts = collect_ts_facts(std::slice::from_ref(&path), imports);
+    assert!(facts[&path].value_flow.bindings.is_empty());
+    let calls = crate::codebase::dependencies::graph::GraphBuildPlan {
+        calls: true,
+        ..Default::default()
+    }
+    .ts_fact_plan();
+    assert!(calls.value_flow);
+    assert!(!imports.covers(calls));
+    let mut combined = imports;
+    combined.include(calls);
+    assert!(combined.covers(calls));
+    let facts = collect_ts_facts(std::slice::from_ref(&path), combined);
+    assert_eq!(facts[&path].value_flow.bindings.len(), 128);
+    assert!(!TsFactPlan {
+        value_flow: true,
+        ..Default::default()
+    }
+    .is_empty());
+}

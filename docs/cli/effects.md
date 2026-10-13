@@ -67,3 +67,9 @@ excludes from discovery can still be reported if it is imported from the entry.
 An unknown `<kind>` or a missing entry file is an error.
 
 Node API: `effects(options)`.
+
+Binding-aware selectors retain visible factory returns and client parameter/default
+provenance. Configure `effects.<kind>.returnedExecutors` for opaque imported
+factories whose returned callable performs the effect. These selectors report
+executor invocations, independent of local names, rather than factory creation.
+See [effects configuration](../configuration/effects.md).

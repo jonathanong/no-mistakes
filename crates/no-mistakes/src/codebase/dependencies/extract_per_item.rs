@@ -69,6 +69,7 @@ impl ImportCollector {
 }
 
 fn visit_call_expression_per_item<'a>(collector: &mut ImportCollector, call: &CallExpression<'a>) {
+    collector.record_value_call(call);
     let iteration = collector.record_iteration_callback(call);
     let before = collector.function_calls.len();
     with_conditional_execution(collector, call_has_execution_guard(call), |collector| {

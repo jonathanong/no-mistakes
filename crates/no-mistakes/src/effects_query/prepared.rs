@@ -28,7 +28,7 @@ pub(crate) fn selection_from_config(
             names.entry(function.clone()).or_insert(None);
         }
     }
-    for target in &kind_config.targets {
+    for target in kind_config.targets.iter().chain(&kind_config.returned_executors) {
         anyhow::ensure!(
             !target.module.trim().is_empty() && !target.export.trim().is_empty(),
             "effects kind `{kind}` targets require non-empty module and export"
@@ -51,13 +51,20 @@ pub(crate) fn selection_from_config(
                 .insert(target.export.clone(), target.clone());
         }
     }
-    if names.is_empty() && targets.is_empty() {
+    let mut returned: crate::fx::FxHashMap<String, crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>> = crate::fx::FxHashMap::default();
+    for target in &kind_config.returned_executors {
+        if categories.is_empty() || target.category.as_ref().is_some_and(|category| categories.contains(category)) {
+            returned.entry(target.module.clone()).or_default().insert(target.export.clone(), target.clone());
+        }
+    }
+    if names.is_empty() && targets.is_empty() && returned.is_empty() {
         bail!("effects kind `{kind}` has no functions for the requested categories");
     }
     Ok(EffectsSelection {
         kind: kind.to_string(),
         names,
         targets,
+        returned,
     })
 }
 
@@ -96,6 +103,7 @@ pub(crate) fn run_with_prepared(
             file_depths.entry(path.to_path_buf()).or_insert(entry.depth);
         }
     }
+    let target_nodes: crate::fx::FxHashMap<_, _> = selection.targets.iter().flat_map(|(module, exports)| exports.values().flat_map(|target| graph.module_export_nodes(module, &target.export).into_iter().map(move |node| (node, target)))).collect();
     let mut call_sites = Vec::new();
     for (path, depth) in &file_depths {
         let Some(file) = facts.get(path) else {
@@ -116,7 +124,7 @@ pub(crate) fn run_with_prepared(
                 matched_offsets.insert(call.offset);
             }
         }
-        if selection.targets.is_empty() {
+        if selection.targets.is_empty() && selection.returned.is_empty() && !selection.names.keys().any(|name| name.contains('.')) {
             continue;
         }
         let callers: crate::fx::FxHashMap<_, _> = file
@@ -132,21 +140,22 @@ pub(crate) fn run_with_prepared(
             ) {
                 continue;
             }
-            let crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport {
-                specifier,
-                export_path,
-                ..
-            } = &site.target
-            else {
-                continue;
+            if let crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { export_path, .. } = &site.target {
+                if export_path.contains('.') {
+                    if let Some(category) = selection.names.get(export_path) {
+                        if matched_offsets.insert(site.offset) {
+                            call_sites.push(EffectCallSite { file: relative_path.clone(), line: site.line as usize, callee: export_path.clone(), category: category.clone(), caller: callers.get(&site.offset).and_then(|caller| (*caller).clone()), depth: *depth });
+                        }
+                        continue;
+                    }
+                }
+            }
+            let direct = match &site.target {
+                crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { specifier, export_path, .. } => selection.targets.get(specifier).and_then(|exports| exports.get(export_path)),
+                _ => None,
             };
-            let Some(target) = selection
-                .targets
-                .get(specifier.as_str())
-                .and_then(|exports| exports.get(export_path.as_str()))
-            else {
-                continue;
-            };
+            let returned = site.returned_from.iter().find_map(|(module, export)| selection.returned.get(module).and_then(|exports| exports.get(export)));
+            let Some(target) = direct.or(returned).or_else(|| matches!(site.target, crate::codebase::dependencies::graph::ResolvedCallTarget::RepositoryFunction { .. }).then(|| site.target_node.as_ref().and_then(|node| target_nodes.get(node).copied())).flatten()) else { continue; };
             if !matched_offsets.insert(site.offset) {
                 continue;
             }

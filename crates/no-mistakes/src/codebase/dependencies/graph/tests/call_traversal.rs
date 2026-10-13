@@ -410,3 +410,14 @@ fn call_resolution_walks_lexical_parent_scopes_without_guessing_properties() {
         "the parent-local edge participates in ordinary traversal"
     );
 }
+
+#[test]
+fn effect_selector_mappings_are_explicit_demand_and_reuse_call_resolution() {
+    let (root, graph) = call_fixture_graph();
+    assert!(graph.module_files.is_empty());
+    let tsconfig = TsConfig { dir: root.clone(), paths: vec![], paths_dir: root.clone(), base_url: None };
+    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan {
+        calls: true, imports: true, effect_selectors: true, ..Default::default()
+    }).unwrap();
+    assert!(!graph.module_export_nodes("./alias-target.mts", "importedTarget").is_empty());
+}

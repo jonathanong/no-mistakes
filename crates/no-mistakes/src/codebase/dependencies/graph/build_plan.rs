@@ -4,6 +4,8 @@ pub struct GraphBuildPlan {
     /// Build opt-in lexical call edges. This is excluded from `all()` so
     /// existing dependency output remains stable.
     pub calls: bool,
+    /// Retain import-selector mappings for effects consumers of call records.
+    pub effect_selectors: bool,
     /// Build opt-in class `extends` edges and class declaration records.
     /// Runs the call resolution pass but keeps its `Call` edges and call sites
     /// out unless `calls` is also set. Excluded from `all()`.
@@ -41,6 +43,7 @@ impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
             calls: false,
+            effect_selectors: false,
             extends: false,
             imports: true,
             // RouteImport is an alternate, deliberately conservative import
@@ -98,6 +101,7 @@ impl GraphBuildPlan {
         };
         Self {
             calls: allowed.contains(&EdgeKind::Call),
+            effect_selectors: false,
             extends: allowed.contains(&EdgeKind::Extends),
             // Resolved call and extends edges use the prepared import projection
             // to find direct and re-exported callable targets. Traversal still
@@ -155,6 +159,7 @@ impl GraphBuildPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.calls |= other.calls;
+        self.effect_selectors |= other.effect_selectors;
         self.extends |= other.extends;
         self.imports |= other.imports;
         self.route_imports |= other.route_imports;
@@ -195,15 +200,6 @@ impl GraphBuildPlan {
         self.imports && domains == Self::default()
     }
 
-    /// Reverse walks need the full fact index even when the plan is import-only.
-    pub fn collect_eager_graph_facts(
-        self,
-        include_check_plan: bool,
-        needs_reverse_graph: bool,
-    ) -> bool {
-        !include_check_plan && (!self.is_lazy_import_plan() || needs_reverse_graph)
-    }
-
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
@@ -214,6 +210,7 @@ impl GraphBuildPlan {
                 || self.assets
                 || self.symbols
                 || self.resources,
+            value_flow: self.calls,
             resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,

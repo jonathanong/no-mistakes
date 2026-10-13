@@ -33,3 +33,23 @@ fn per_item_effect_configuration_round_trips_without_changing_query_sinks() {
     assert!(legacy.effects["postgres"].transaction_functions.is_empty());
     assert!(legacy.effects["postgres"].batch_functions.is_empty());
 }
+
+#[test]
+fn returned_executor_selectors_round_trip_and_reject_unknown_fields() {
+    let config: NoMistakesConfig = serde_yaml::from_str("effects: {postgres: {returnedExecutors: [{module: '@vendor/database', export: begin, category: transaction}]}}").unwrap();
+    assert_eq!(
+        config.effects["postgres"].returned_executors[0].export,
+        "begin"
+    );
+    assert_eq!(
+        config,
+        serde_yaml::from_str(&serde_yaml::to_string(&config).unwrap()).unwrap()
+    );
+    assert!(serde_yaml::from_str::<NoMistakesConfig>(
+        "effects: {postgres: {returnedExecutors: [{module: db, export: begin, unknown: true}]}}"
+    )
+    .is_err());
+    let legacy: NoMistakesConfig =
+        serde_yaml::from_str("effects: {postgres: {functions: [read]}}").unwrap();
+    assert!(legacy.effects["postgres"].returned_executors.is_empty());
+}

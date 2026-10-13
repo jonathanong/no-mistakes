@@ -136,3 +136,54 @@ fn module_export_targets_validate_empty_selectors_and_unknown_fields() {
         .is_err()
     );
 }
+
+#[test]
+fn effect_queries_share_factory_and_client_provenance_with_per_item_checks() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/query-reached-per-item/provenance-fixture");
+    let report = run(
+        &root,
+        None,
+        None,
+        "valkey",
+        Path::new("src/entry.mts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        report
+            .call_sites
+            .iter()
+            .map(|site| (site.file.as_str(), site.line, site.callee.as_str()))
+            .collect::<Vec<_>>(),
+        [
+            ("src/helpers.mts", 2, "primary.get"),
+            ("src/helpers.mts", 3, "session.info"),
+            ("src/helpers.mts", 3, "session.scan"),
+        ]
+    );
+    let report = run(
+        &root,
+        None,
+        None,
+        "postgres",
+        Path::new("src/entry.mts"),
+        &["transaction".into()],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        report
+            .call_sites
+            .iter()
+            .map(|site| (
+                site.file.as_str(),
+                site.line,
+                site.callee.as_str(),
+                site.caller.as_deref()
+            ))
+            .collect::<Vec<_>>(),
+        [("src/entry.mts", 26, "begin", Some("opaque"))]
+    );
+}

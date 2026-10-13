@@ -12,6 +12,7 @@ pub(super) fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
 ) {
+    collector.record_callable_result_kind(function.r#async, function.generator);
     // Default parameters run in the parameter environment, before the body
     // lexical environment exists. Visit them before introducing body bindings.
     visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
@@ -20,6 +21,7 @@ pub(super) fn walk_function_with_body_bindings<'a>(
         walk::walk_ts_type_annotation(collector, return_type);
     }
     if let Some(body) = &function.body {
+        collector.record_value_fallthrough(&body.statements);
         predeclare_function_declarations(collector, &body.statements);
         walk::walk_function_body(collector, body);
     }
@@ -29,6 +31,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
+    collector.record_callable_result_kind(arrow.r#async, false);
     // Default parameters run before the body lexical environment exists.
     visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
     walk::walk_formal_parameters(collector, &arrow.params);
@@ -36,9 +39,16 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
         walk::walk_ts_type_annotation(collector, return_type);
     }
     if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
+        collector.record_value_fallthrough(&body.statements);
         predeclare_function_declarations(collector, &body.statements);
         walk::walk_function_body(collector, body);
     } else if let Some(expression) = arrow.body.as_expression() {
+        if collector.collect_value_flow {
+            if let Some(owner) = collector.current_function_id() {
+                let value = collector.value_expression(expression);
+                collector.value_flow.returns.push((owner, value));
+            }
+        }
         collector.visit_expression(expression);
     }
 }

@@ -6,6 +6,12 @@ struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
     classes: Vec<ClassDeclaration>,
+    class_ids: Vec<(std::path::PathBuf, FxHashSet<CallableId>)>,
+    constructor_bases: Vec<(NodeId, NodeId)>,
+    constructor_routes: value_flow::ConstructorRoutes,
+    super_constructors: value_flow::ConstructorRoutes,
+    parameter_cache: value_flow::ParameterCache,
+    modules: Vec<(String, std::path::PathBuf)>,
     /// Namespaces whose use the graph cannot follow to a class, per file.
     escapes: Vec<(std::path::PathBuf, String)>,
 }
@@ -18,6 +24,7 @@ fn collect_call_edges_for_core(
         (std::path::PathBuf, String),
         ExportedCallableResolution,
     >,
+    module_files: &mut FxHashMap<String, FxHashSet<std::path::PathBuf>>,
 ) -> CallPass {
     use rayon::prelude::*;
     let plan = edge_inputs.plan;
@@ -48,7 +55,26 @@ fn collect_call_edges_for_core(
                 escapes: Default::default(),
             };
             let mut output = CallPass::default();
+            if plan.calls && plan.effect_selectors {
+                for binding in &file.imported_bindings {
+                    if !binding.is_type_only {
+                        if let Some(target) =
+                            resolver
+                                .resolve(&binding.specifier, path)
+                                .and_then(|target| {
+                                    edge_inputs
+                                        .graph_files
+                                        .visible_path(&target)
+                                        .map(std::path::Path::to_path_buf)
+                                })
+                        {
+                            output.modules.push((binding.specifier.clone(), target));
+                        }
+                    }
+                }
+            }
             if plan.calls {
+                value_flow::collect_constructors(&resolution, file, &mut output);
                 for call in file
                     .function_calls
                     .iter()
@@ -94,12 +120,27 @@ fn collect_call_edges_for_core(
     let mut pass = per_file
         .into_iter()
         .fold(CallPass::default(), |mut all, part| {
+            all.modules.extend(part.modules);
             all.edges.extend(part.edges);
             all.sites.extend(part.sites);
             all.classes.extend(part.classes);
+            all.class_ids.extend(part.class_ids);
+            all.constructor_bases.extend(part.constructor_bases);
             all.escapes.extend(part.escapes);
             all
         });
+    for (module, file) in pass.modules.drain(..) {
+        module_files.entry(module).or_default().insert(file);
+    }
+    if plan.calls {
+        value_flow::prepare_constructor_routes(&mut pass);
+        refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass);
+        if plan.effect_selectors {
+            value_flow::resolve_value_exports(edge_inputs, facts, resolver, &indexes, &pass, callable_export_resolutions);
+        }
+    }
+    #[cfg(feature = "test-instrumentation")]
+    value_flow_metrics::record_parameters(pass.parameter_cache.computations());
     if namespaces_in_repo {
         let mut escapes = NamespaceEscapes::default();
         for (file, root) in pass.escapes.drain(..) {

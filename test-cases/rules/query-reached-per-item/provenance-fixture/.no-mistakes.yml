@@ -1,0 +1,19 @@
+effects:
+  postgres:
+    targets:
+      - { module: './psql.mjs', export: read }
+      - { module: './psql.mjs', export: executeHandlerWithCursorInBatches }
+      - { module: './psql.mjs', export: createAsyncGeneratorFromCursor }
+    returnedExecutors:
+      - { module: '@vendor/opaque-database', export: begin, category: transaction }
+    transactionFunctions: [rejected, finalize]
+  valkey:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey', export: session.info }
+      - { module: '@vendor/valkey', export: session.scan }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres, valkey]

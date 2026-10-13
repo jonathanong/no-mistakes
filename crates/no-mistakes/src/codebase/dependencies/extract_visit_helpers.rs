@@ -57,6 +57,7 @@ impl ImportCollector {
         if let Some(rest) = &params.rest {
             self.add_binding_names(&rest.rest.argument);
         }
+        self.record_value_parameters(params);
     }
 
     fn add_var_binding_names(&mut self, pattern: &BindingPattern<'_>) {

@@ -5,6 +5,7 @@ impl TsFactPlan {
         self.module_bindings |= other.module_bindings;
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
+        self.value_flow |= other.value_flow;
         self.per_item_calls |= other.per_item_calls;
         self.call_sites |= other.call_sites;
         self.resources |= other.resources;
@@ -23,6 +24,14 @@ impl TsFactPlan {
         self.rsc_environment |= other.rsc_environment;
         self.trpc_router |= other.trpc_router;
         self.trpc_calls |= other.trpc_calls;
+    }
+
+    pub(crate) fn needs_value_flow(self) -> bool {
+        self.value_flow || self.effect_calls || self.per_item_calls
+    }
+
+    pub(crate) fn needs_import_facts(self) -> bool {
+        self.imports || self.function_calls || self.needs_value_flow()
     }
 
     pub fn imports() -> Self {
@@ -47,6 +56,7 @@ impl TsFactPlan {
         !self.module_bindings
             && !self.imports
             && !self.function_calls
+            && !self.value_flow
             && !self.per_item_calls
             && !self.call_sites
             && !self.resources
@@ -91,6 +101,7 @@ impl TsFactPlan {
         (!required.module_bindings || self.module_bindings)
             && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
+            && (!required.value_flow || self.needs_value_flow())
             && (!required.per_item_calls || self.per_item_calls)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)
