@@ -27,6 +27,7 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
     let mut jobs_indent = None;
     let mut job_key_indent = None;
     let mut job_indent = None;
+    let mut job_child_indent = None;
     let mut steps_indent = None;
     let mut found_steps = false;
     let mut item_indent = None;
@@ -52,7 +53,7 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
-            let Some(candidate) = key.strip_suffix(':') else {
+            let Some((candidate, _)) = key.split_once(':') else {
                 continue;
             };
             let depth = *job_key_indent.get_or_insert(indent);
@@ -61,7 +62,14 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             }
             continue;
         }
-        if !found_steps && key == "steps:" {
+        if job_child_indent.is_none()
+            && indent > job_indent.unwrap()
+            && !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+        {
+            job_child_indent = Some(indent);
+        }
+        if !found_steps && indent == job_child_indent.unwrap_or(usize::MAX) && key == "steps:" {
             steps_indent = Some(indent);
             found_steps = true;
             continue;

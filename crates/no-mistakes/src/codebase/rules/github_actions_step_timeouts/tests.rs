@@ -216,6 +216,22 @@ fn workflow_dispatch_input_named_like_job_does_not_shift_step_location() {
 }
 
 #[test]
+fn anchored_job_has_usable_step_location() {
+    let findings = run("anchored-job", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("anchored-job-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn matrix_steps_do_not_shift_executable_step_location() {
+    let findings = run("matrix-steps", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 11);
+    assert!(run("matrix-steps-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn disable_file_and_line_suppressions_work() {
     assert!(run("disable-file", "{}").is_empty());
     assert!(run("disable-line", "{}").is_empty());

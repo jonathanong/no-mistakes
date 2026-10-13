@@ -1,0 +1,12 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        steps:
+          - first
+          - second
+    steps:
+      # no-mistakes-disable-next-line github-actions-step-timeouts
+      - run: echo missing
