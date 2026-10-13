@@ -30,7 +30,14 @@ pub(super) fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
 }
 
 pub(super) fn is_inline_value_line(line: &str) -> bool {
-    yaml_key_value(line).is_some_and(|(_, value)| value.starts_with(&['*', '[', '{'][..]))
+    yaml_key_value(line).is_some_and(|(_, value)| {
+        let value = if value.starts_with('&') {
+            value.split_whitespace().nth(1).unwrap_or("")
+        } else {
+            value
+        };
+        value.starts_with(&['*', '[', '{'][..])
+    })
 }
 
 mod location;
