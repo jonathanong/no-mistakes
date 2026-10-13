@@ -302,9 +302,9 @@ test("release publication requires both parallel validation suites", () => {
   for (const command of [
     "cargo fmt --all -- --check",
     "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings",
-    "bash validation-tools/.github/scripts/rust-validation.sh build",
-    "bash validation-tools/.github/scripts/rust-validation.sh test",
-    "bash validation-tools/.github/scripts/rust-validation.sh doc",
+    'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" build',
+    'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test',
+    'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" doc',
     "cargo publish --dry-run --locked -p no-mistakes",
     "pnpm run build:js",
   ])

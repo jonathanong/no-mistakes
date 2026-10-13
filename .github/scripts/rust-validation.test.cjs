@@ -57,16 +57,16 @@ test("CI and release both use the shared test and doctest scopes", () => {
     const workflow = readFileSync(path.join(root, ".github/workflows", file), "utf8");
     const body = workflow.split(`\n  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
     assert.ok(body, `${file} must retain ${job}`);
-    const prefix = job === "validate-rust" ? "validation-tools/" : "";
+    const prefix = job === "validate-rust" ? '"$RUNNER_TEMP/validation-tools/' : "";
+    const quote = job === "validate-rust" ? '"' : "";
     for (const mode of ["build", "test", "doc"]) {
-      assert.match(
-        body,
-        new RegExp(`bash ${prefix}\\.github/scripts/rust-validation\\.sh ${mode}(?:\\n|$)`),
+      assert.ok(
+        body.includes(`bash ${prefix}.github/scripts/rust-validation.sh${quote} ${mode}\n`),
+        `${file} must use the shared ${mode} scope`,
       );
     }
-    assert.match(
-      workflow,
-      new RegExp(`node --test ${prefix}\\.github/scripts/rust-validation\\.test\\.cjs`),
+    assert.ok(
+      workflow.includes(`node --test ${prefix}.github/scripts/rust-validation.test.cjs${quote}`),
     );
     const overrides = [...workflow.matchAll(/CARGO_PROFILE_(?:DEV|TEST)_DEBUG: (.+)/g)];
     for (const [, value] of overrides) assert.equal(value, '"0"');
@@ -107,6 +107,17 @@ test("release validation tools come from the workflow without replacing tagged R
   assert.doesNotMatch(body, /working-directory:/);
   for (const profile of ["DEV", "TEST"])
     assert.match(body, new RegExp(`CARGO_PROFILE_${profile}_DEBUG: "0"`));
+});
+
+test("release isolates workflow tooling before validating tagged source", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
+  const body = workflow.split("\n  validate-rust:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const checkout = body.indexOf("- name: Checkout validation tooling\n");
+  const isolation = body.indexOf("- name: Isolate validation tooling\n");
+  const validation = body.indexOf("- name: Check Rust validation parity\n");
+  assert.ok(checkout >= 0 && isolation > checkout && validation > isolation);
+  assert.match(body, /run: mv -- validation-tools "\$RUNNER_TEMP\/validation-tools"/);
+  assert.doesNotMatch(body, /run: (?:bash|node --test) validation-tools\//);
 });
 
 test("shared tooling validates a historical release directory without local helpers", () => {
