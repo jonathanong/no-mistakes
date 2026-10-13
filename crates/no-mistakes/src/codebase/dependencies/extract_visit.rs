@@ -178,6 +178,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
+        self.record_default_value(export);
         visit_export_default_declaration_with_scope(self, export);
     }
 
@@ -201,8 +202,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
-        visit_tagged_template_expression_with_imports(self, tagged);
-        walk::walk_tagged_template_expression(self, tagged);
+        self.visit_value_tagged(tagged);
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {

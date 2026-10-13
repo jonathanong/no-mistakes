@@ -40,6 +40,7 @@ pub(in super::super::super) fn refine_value_calls(
                     indexes,
                     &base[*index..=*index],
                     ValueInputs {
+                        cache: &pass.parameter_cache,
                         incoming: &incoming,
                         supers: &pass.super_constructors,
                     },
@@ -76,6 +77,9 @@ pub(in super::super::super) fn refine_value_calls(
             }
             pass.sites[index] = site;
             edges.insert(index, resolved_edges);
+        }
+        if !changed.is_empty() {
+            pass.parameter_cache.clear();
         }
         for key in changed {
             if let Some(users) = dependencies.get(&key) {

@@ -105,7 +105,7 @@ struct ValueFlowResolution<'a, 'b> {
     used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
     initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
-    parameters: FxHashMap<(std::path::PathBuf, usize, String), FlowValue>,
+    cache: &'a ParameterCache,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
 }
@@ -175,9 +175,15 @@ mod parameters;
 pub(super) type ConstructorRoutes = FxHashMap<std::path::PathBuf, FxHashMap<CallableId, NodeId>>;
 #[derive(Clone, Copy)]
 struct ValueInputs<'a> {
+    cache: &'a ParameterCache,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,
 }
 #[path = "value_flow/constructors.rs"]
 mod constructors;
 pub(super) use constructors::{collect_constructors, prepare_constructor_routes};
+
+#[path = "value_flow/parameter_cache.rs"]
+mod parameter_cache;
+pub(super) use parameter_cache::ParameterCache;
+use parameter_cache::{CacheAccess, CachedParameter, ParameterKey};

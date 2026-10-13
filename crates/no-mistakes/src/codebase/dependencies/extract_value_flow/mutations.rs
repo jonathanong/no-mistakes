@@ -21,12 +21,42 @@ impl ImportCollector {
                     links.entry(target).or_default().push(local);
                 }
             }
-            let mut pending = vec![(scope, base.to_string())];
-            while let Some(key) = pending.pop() {
+            let mut parts = name
+                .split('.')
+                .skip(1)
+                .map(str::to_string)
+                .collect::<Vec<_>>();
+            parts.pop();
+            let mut pending = vec![(((scope, base.to_string()), parts), false)];
+            let mut active = fx_set();
+            let mut visited = fx_set();
+            while let Some(((key, path), exiting)) = pending.pop() {
+                if exiting {
+                    active.remove(&key);
+                    continue;
+                }
+                if !visited.insert((key.clone(), path.clone())) || !active.insert(key.clone()) {
+                    continue;
+                }
+                pending.push(((key.clone(), Vec::new()), true));
+                affected.insert(key.clone());
                 for target in links.get(&key).into_iter().flatten() {
-                    if affected.insert(target.clone()) {
-                        pending.push(target.clone());
-                    }
+                    pending.push(((target.clone(), path.clone()), false));
+                }
+                for index in self
+                    .value_binding_indexes
+                    .get(&key.0)
+                    .and_then(|names| names.get(key.1.as_str()))
+                    .into_iter()
+                    .flatten()
+                {
+                    let mut references = Vec::new();
+                    nested::receiver_references(
+                        &self.value_flow.bindings[*index].value,
+                        &path,
+                        &mut references,
+                    );
+                    pending.extend(references.into_iter().map(|reference| (reference, false)));
                 }
             }
         }

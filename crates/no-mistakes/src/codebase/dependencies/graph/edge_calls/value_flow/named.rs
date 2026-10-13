@@ -19,6 +19,10 @@ impl ValueFlowResolution<'_, '_> {
             return FlowValue::Unknown;
         };
         let key = (path.to_path_buf(), scope, base.to_string());
+        if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
+            self.used_parameters
+                .insert((path.to_path_buf(), parameter.owner));
+        }
         if !self.visiting.insert(key.clone()) {
             return FlowValue::Unknown;
         }

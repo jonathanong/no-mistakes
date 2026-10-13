@@ -205,3 +205,6 @@ mod value_flow_metrics;
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::last_evaluations as benchmark_probe_value_flow_evaluations;
+
+#[cfg(feature = "test-instrumentation")]
+pub use value_flow_metrics::parameter_agreements as benchmark_probe_parameter_agreements;

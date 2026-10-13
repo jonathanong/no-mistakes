@@ -14,6 +14,14 @@ impl ImportCollector {
             {
                 ValueExpression::Undefined
             }
+            Expression::UnaryExpression(unary)
+                if unary.operator == oxc_syntax::operator::UnaryOperator::Void =>
+            {
+                ValueExpression::Undefined
+            }
+            Expression::TaggedTemplateExpression(tagged) => {
+                ValueExpression::Call(templates::tag_offset(tagged), tagged.span.end)
+            }
             Expression::Super(_) => self
                 .current_function_id()
                 .map_or(ValueExpression::Unknown, ValueExpression::Super),

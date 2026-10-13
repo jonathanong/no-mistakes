@@ -110,3 +110,27 @@ fn inherited_constructors_forward_inputs_and_preserve_defaults() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn switch_tags_void_defaults_and_nested_mutations_preserve_value_flow() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/syntax-and-nesting.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [7, 12, 18, 22],
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/default-executor-entry.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [3, 4],
+        "{findings:#?}"
+    );
+}

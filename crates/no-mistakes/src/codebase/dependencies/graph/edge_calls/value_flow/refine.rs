@@ -57,7 +57,7 @@ fn refine_iteration(
         used_parameters: fx_set(),
         parameters_enabled,
         initializing: Vec::new(),
-        parameters: fx_map(),
+        cache: data.cache,
         visiting: fx_set(),
         calls_visiting: fx_set(),
     };

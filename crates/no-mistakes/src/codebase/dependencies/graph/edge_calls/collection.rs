@@ -10,6 +10,7 @@ struct CallPass {
     constructor_bases: Vec<(NodeId, NodeId)>,
     constructor_routes: value_flow::ConstructorRoutes,
     super_constructors: value_flow::ConstructorRoutes,
+    parameter_cache: value_flow::ParameterCache,
     modules: Vec<(String, std::path::PathBuf)>,
     /// Namespaces whose use the graph cannot follow to a class, per file.
     escapes: Vec<(std::path::PathBuf, String)>,
@@ -138,6 +139,8 @@ fn collect_call_edges_for_core(
             value_flow::resolve_value_exports(edge_inputs, facts, resolver, &indexes, &pass, callable_export_resolutions);
         }
     }
+    #[cfg(feature = "test-instrumentation")]
+    value_flow_metrics::record_parameters(pass.parameter_cache.computations());
     if namespaces_in_repo {
         let mut escapes = NamespaceEscapes::default();
         for (file, root) in pass.escapes.drain(..) {

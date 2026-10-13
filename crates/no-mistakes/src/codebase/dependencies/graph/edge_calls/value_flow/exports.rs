@@ -25,7 +25,7 @@ pub(in super::super) fn resolve_value_exports(
                 used_parameters: fx_set(),
                 parameters_enabled: true,
                 initializing: Vec::new(),
-                parameters: fx_map(),
+                cache: &pass.parameter_cache,
                 visiting: fx_set(),
                 calls_visiting: fx_set(),
             };

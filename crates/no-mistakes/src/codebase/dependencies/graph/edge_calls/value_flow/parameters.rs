@@ -11,10 +11,52 @@ impl ValueFlowResolution<'_, '_> {
         if !self.parameters_enabled {
             return FlowValue::Unknown;
         }
-        let key = (path.to_path_buf(), parameter.scope, parameter.name.clone());
-        if let Some(value) = self.parameters.get(&key) {
-            return value.clone();
-        }
+        let key = ParameterKey {
+            file: path.to_path_buf(),
+            scope: parameter.scope,
+            name: parameter.name.clone(),
+            initializing: self.initializing.clone(),
+        };
+        let cached = match self.cache.acquire(key) {
+            CacheAccess::Ready(value) => value,
+            CacheAccess::Cycle => return FlowValue::Unknown,
+            CacheAccess::Compute(lease) => {
+                let mut flow = ValueFlowResolution {
+                    inputs: self.inputs,
+                    facts: self.facts,
+                    resolver: self.resolver,
+                    indexes: self.indexes,
+                    incoming: self.incoming,
+                    supers: self.supers,
+                    cache: self.cache,
+                    parameters_enabled: true,
+                    initializing: self.initializing.clone(),
+                    used_parameters: fx_set(),
+                    visiting: fx_set(),
+                    calls_visiting: fx_set(),
+                };
+                flow.visiting
+                    .insert((path.to_path_buf(), parameter.scope, parameter.name.clone()));
+                flow.used_parameters
+                    .insert((path.to_path_buf(), parameter.owner));
+                let value = flow.compute_parameter(path, parameter);
+                let cached = std::sync::Arc::new(CachedParameter {
+                    value,
+                    dependencies: flow.used_parameters,
+                });
+                lease.publish(std::sync::Arc::clone(&cached));
+                cached
+            }
+        };
+        self.used_parameters
+            .extend(cached.dependencies.iter().cloned());
+        cached.value.clone()
+    }
+    fn compute_parameter(
+        &mut self,
+        path: &std::path::Path,
+        parameter: &ValueParameter,
+    ) -> FlowValue {
         let incoming = self
             .incoming
             .get(&(path.to_path_buf(), parameter.owner))
@@ -44,9 +86,7 @@ impl ValueFlowResolution<'_, '_> {
         if values.is_empty() {
             values.push(self.parameter_default(path, parameter));
         }
-        let value = agreed_value(values);
-        self.parameters.insert(key, value.clone());
-        value
+        agreed_value(values)
     }
     fn parameter_default(
         &mut self,

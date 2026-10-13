@@ -76,3 +76,11 @@ mod mutations;
 
 #[path = "extract_value_flow/result_kind.rs"]
 mod result_kind;
+
+#[path = "extract_value_flow/default_export.rs"]
+mod default_export;
+#[path = "extract_value_flow/templates.rs"]
+mod templates;
+
+#[path = "extract_value_flow/nested.rs"]
+mod nested;
