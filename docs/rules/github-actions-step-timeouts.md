@@ -9,7 +9,7 @@ download, or command promptly. GitHub supports `timeout-minutes` on workflow
 ## What it requires
 
 Every authored executable step under `jobs.<job_id>.steps` must set a positive,
-literal YAML number for `timeout-minutes`. This includes blocking `wait` and
+positive integer YAML number for `timeout-minutes`. This includes blocking `wait` and
 `wait-all` steps as well as `run` and `uses`. GitHub Actions rejects quoted
 numbers. Missing values, zero, negative values, booleans, expressions, and
 values above the cap are findings.
