@@ -1,0 +1,4 @@
+--- {jobs: {build: {runs-on: ubuntu-latest, steps: [
+  {run: echo bounded, timeout-minutes: 5},
+  {run: echo missing}
+]}}}

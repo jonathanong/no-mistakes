@@ -255,6 +255,7 @@ fn root_flow_mapping_locates_each_authored_step() {
     for (scenario, line) in [
         ("root-flow", 3),
         ("anchored-root-flow", 3),
+        ("document-root-flow", 3),
         ("multiline-root-flow", 7),
     ] {
         let findings = run(scenario, "{}");

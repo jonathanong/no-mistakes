@@ -120,7 +120,14 @@ impl<'a> StepLocations<'a> {
         let is_root_flow = lines
             .iter()
             .find(|line| is_content(line) && line.trim() != "---")
-            .is_some_and(|line| value_after_anchor(line.trim_start()).starts_with('{'));
+            .is_some_and(|line| {
+                let text = line.trim_start();
+                let text = text
+                    .strip_prefix("---")
+                    .filter(|rest| rest.starts_with(char::is_whitespace))
+                    .map_or(text, str::trim_start);
+                value_after_anchor(text).starts_with('{')
+            });
         let root_flow = is_root_flow.then(|| RootFlowIndex::new(&lines));
         let job_lines = jobs
             .map(|jobs| index_job_lines(&lines, jobs))
