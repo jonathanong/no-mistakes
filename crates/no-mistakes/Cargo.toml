@@ -27,7 +27,8 @@ hcl-rs = "0.19"
 ignore = "0.4"
 is-terminal = "0.4"
 jsonc-parser = { version = "0.34", features = ["serde", "serde_json"] }
-merman-analysis = { version = "=0.8.0", optional = true }
+# Merman 0.8 requires explicit diagram selection; validation supports every family.
+merman-analysis = { version = "=0.8.0", optional = true, features = ["all-diagrams"] }
 napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = "3.5.6"
 num_cpus = "1.16"

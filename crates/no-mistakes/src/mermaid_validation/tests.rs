@@ -35,10 +35,11 @@ fn extracts_and_validates_supported_commonmark_fences() {
 
 #[test]
 fn validates_merman_full_registry_diagram_families() {
+    // Merman 0.8 defaults to no parsers; keep families beyond common diagrams enabled.
     let result = validate_markdown(&fixture("full-registry.md"), Some("docs/full-registry.md"));
 
     assert!(result.valid, "{:#?}", result.diagnostics);
-    assert_eq!(result.diagram_count, 3);
+    assert_eq!(result.diagram_count, 4);
     assert!(result.diagnostics.is_empty());
 }
 
