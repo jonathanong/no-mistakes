@@ -1,0 +1,52 @@
+name: Measure CI debug information
+on:
+  push:
+    branches: [codex/measure-ci-debug-info]
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        order: ["2 0", "0 2"]
+    env:
+      RUSTFLAGS: "-D warnings"
+      ORDER: ${{ matrix.order }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+      - name: Measure clean CLI and addon builds
+        timeout-minutes: 25
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir results
+          rustc -Vv > results/provenance.txt
+          git rev-parse HEAD >> results/provenance.txt
+          lscpu >> results/provenance.txt
+          for debug in $ORDER; do
+            export CARGO_PROFILE_DEV_DEBUG="$debug"
+            export CARGO_TARGET_DIR="$RUNNER_TEMP/build-debug-$debug"
+            /usr/bin/time -v -o "results/cli-$debug.time" cargo build --locked -p no-mistakes
+            /usr/bin/time -v -o "results/addon-$debug.time" env NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
+            cp "$CARGO_TARGET_DIR/debug/libno_mistakes.so" "$CARGO_TARGET_DIR/debug/no-mistakes.node"
+            ADDON="$CARGO_TARGET_DIR/debug/no-mistakes.node" node -e 'require(process.env.ADDON).version().then(console.log)' > "results/addon-$debug.txt"
+            "$CARGO_TARGET_DIR/debug/no-mistakes" --version > "results/cli-$debug.txt"
+            stat -c '%n %s' "$CARGO_TARGET_DIR/debug/no-mistakes" "$CARGO_TARGET_DIR/debug/no-mistakes.node" > "results/size-$debug.txt"
+            du -sb "$CARGO_TARGET_DIR" > "results/target-$debug.txt"
+            rm -rf "$CARGO_TARGET_DIR"
+          done
+          diff results/addon-2.txt results/addon-0.txt
+          diff results/cli-2.txt results/cli-0.txt
+          cat results/*.time results/size-* results/target-* >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        with:
+          name: debug-build-${{ strategy.job-index }}
+          path: results
+          retention-days: 7
