@@ -983,9 +983,44 @@ test("executed PostgreSQL source extraction exposes its named async contract", (
     declarations,
     /extractExecutedPostgresSql\(\s*options: ExecutedPostgresSqlOptions,\s*\): Promise<ExecutedPostgresSql\[\]>;/,
   );
+  assert.match(
+    index,
+    /export \{ extractExecutedPostgresSql \} from "\.\/executed-postgres-sql-types";/,
+  );
   assert.match(index, /export \* from "\.\/postgres-source-types";/);
   assert.match(postgresSource, /export \* from "\.\/executed-postgres-sql-types";/);
 });
+
+test(
+  "executed PostgreSQL source extraction compiles from the package root",
+  { timeout: 20_000 },
+  () => {
+    const { createRequire } = require("node:module");
+    const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+    const ts = dependencyRequire("typescript");
+    const program = ts.createProgram(
+      [join(repositoryRoot, "fixtures", "node-api", "executed-postgres-sql", "public.mts")],
+      {
+        noEmit: true,
+        strict: true,
+        skipLibCheck: true,
+        types: [],
+        target: ts.ScriptTarget.ESNext,
+        module: ts.ModuleKind.NodeNext,
+        moduleResolution: ts.ModuleResolutionKind.NodeNext,
+        baseUrl: repositoryRoot,
+        paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
+        ignoreDeprecations: "6.0",
+      },
+    );
+    assert.deepEqual(
+      ts
+        .getPreEmitDiagnostics(program)
+        .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+      [],
+    );
+  },
+);
 
 test("PostgreSQL metadata facts export routine signatures and typed index operations", () => {
   const declarations = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");

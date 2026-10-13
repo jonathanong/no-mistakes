@@ -14,5 +14,6 @@ export * from "./named-query-types";
 export * from "./mermaid-types";
 export * from "./resolve-config-types";
 export * from "./postgres-query-annotation-types";
+export * from "./postgres-catalog-types";
 export * from "./planning-impact-artifacts-types";
 export * from "./declared-payload-types";
