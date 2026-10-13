@@ -67,6 +67,7 @@ jobs:
     name: Lint and package checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: ${{ always() }}
 
     steps:
       - name: Checkout
@@ -458,6 +459,7 @@ jobs:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: ${{ always() }}
     permissions:
       id-token: write
     env:
@@ -513,7 +515,7 @@ jobs:
 
       - name: Record Rust disk usage before test build
         timeout-minutes: 1
-        run: bash .github/scripts/rust-disk-usage.sh "before Rust test build" target/llvm-cov-target
+        run: bash .github/scripts/rust-disk-usage.sh "before Rust test build" target
 
       - name: Build Rust tests for coverage
         timeout-minutes: 15
@@ -524,7 +526,7 @@ jobs:
 
       - name: Record Rust disk usage after test build
         timeout-minutes: 1
-        run: bash .github/scripts/rust-disk-usage.sh "after Rust test build" target/llvm-cov-target
+        run: bash .github/scripts/rust-disk-usage.sh "after Rust test build" target
 
       - name: Run Rust tests for coverage
         timeout-minutes: 10
@@ -594,7 +596,7 @@ jobs:
       - name: Diagnose Rust disk usage after failure
         if: ${{ failure() || cancelled() }}
         timeout-minutes: 2
-        run: bash .github/scripts/rust-disk-usage.sh "Rust tests job failure" target/llvm-cov-target
+        run: bash .github/scripts/rust-disk-usage.sh "Rust tests job failure" target
 
   tests-gate:
     name: Tests with coverage
