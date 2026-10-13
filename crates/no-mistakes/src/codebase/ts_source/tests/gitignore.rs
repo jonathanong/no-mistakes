@@ -227,41 +227,48 @@ fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
     for (source, signature) in [
         (include_str!("../../../effects_query.rs"), "pub fn run("),
         (
-            concat!(
-                include_str!("../../../rsc_callers_query.rs"),
-                include_str!("../../../rsc_callers_query/prepare.rs")
-            ),
+            include_str!("../../../rsc_callers_query/prepare.rs"),
             "pub fn run(",
         ),
     ] {
         let body = function_body(source, signature);
         assert_eq!(
+            body.matches("prepare_query_graph(").count(),
+            1,
+            "{signature}"
+        );
+        assert_eq!(
             body.matches("VisiblePathSnapshot::new").count(),
             0,
             "{signature}"
         );
-        assert_eq!(
-            body.matches("AnalysisSession::new").count(),
-            1,
-            "{signature}"
-        );
-        assert_eq!(
-            body.matches("dataset.visible_paths_arc").count(),
-            1,
-            "{signature}"
-        );
-        assert_eq!(
-            body.matches("discover_files_from_visible").count(),
-            1,
-            "{signature}"
-        );
-        assert_eq!(
-            body.matches("GraphFiles::from_files").count(),
-            1,
-            "{signature}"
-        );
+        for delegated in [
+            "AnalysisSession::new",
+            "dataset.visible_paths_arc",
+            "discover_files_from_visible",
+            "GraphFiles::from_files",
+        ] {
+            assert!(
+                !body.contains(delegated),
+                "{signature} must delegate {delegated}"
+            );
+        }
         assert!(!body.contains("load_v2_config("), "{signature}");
         assert!(!body.contains("discover_visible_paths("), "{signature}");
+    }
+
+    // Both queries delegate to this shared request owner, which discovers graph files once.
+    let prepare = function_body(
+        include_str!("../../dependencies/query.rs"),
+        "pub(crate) fn prepare_query_graph<",
+    );
+    for required in [
+        "AnalysisSession::new",
+        "dataset.visible_paths_arc",
+        "discover_files_from_visible",
+        "GraphFiles::from_files_with_resource_candidates",
+    ] {
+        assert_eq!(prepare.matches(required).count(), 1, "{required}");
     }
 
     assert_flow_query_uses_one_shared_graph_file_discovery();
