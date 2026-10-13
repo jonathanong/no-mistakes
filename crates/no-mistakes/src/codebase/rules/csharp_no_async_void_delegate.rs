@@ -32,23 +32,7 @@ pub(super) struct CompiledOptions {
     pub(super) message: String,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    check_with_files_sources_and_deferred_suppression(root, config, all_files, sources, false)
-}
+super::borrowed_source_rule_entrypoints!();
 
 pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
@@ -60,18 +44,16 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts = compile_options(rule.try_rule_options()?)?;
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| {
-                is_csharp_file(path)
-                    && super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-            })
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &opts, &files, sources, defer_suppression));
+        let files =
+            super::selected_rule_files_matching(root, config, rule, all_files, is_csharp_file)?;
+        findings.extend(super::scan_masked_files(
+            root,
+            &opts,
+            &files,
+            sources,
+            defer_suppression,
+            scan::check_file,
+        ));
     }
     super::sort_findings(&mut findings);
     Ok(findings)

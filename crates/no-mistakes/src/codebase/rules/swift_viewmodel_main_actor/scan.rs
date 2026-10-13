@@ -1,5 +1,5 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path, SourceStore};
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -29,10 +29,7 @@ pub(super) fn scan(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    files
-        .iter()
-        .flat_map(|path| check_file(root, path, opts, sources, defer_suppression))
-        .collect()
+    super::super::scan_masked_files(root, opts, files, sources, defer_suppression, check_file)
 }
 
 fn check_file(
@@ -42,41 +39,40 @@ fn check_file(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    let rel = relative_slash_path(root, path);
-    if opts.allow.is_match(&rel) {
-        return Vec::new();
-    }
-    let Some(source) = super::super::read_source(sources, path) else {
-        return Vec::new();
-    };
-    if !defer_suppression && has_disable_file_comment(&source, RULE_ID) {
-        return Vec::new();
-    }
-    let code = super::super::lexical_mask::swift_code_mask(&source);
-    let mut findings = Vec::new();
-    for cap in CLASS_DECL.captures_iter(&code) {
-        let Some(name) = cap.get(1) else { continue };
-        if !name.as_str().ends_with(&opts.suffix) {
-            continue;
-        }
-        let start = cap.get(0).map_or(name.start(), |m| m.start());
-        if has_attribute(&code, start, &opts.attribute) {
-            continue;
-        }
-        let line = source[..start].bytes().filter(|&b| b == b'\n').count() + 1;
-        findings.push(RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: rel.to_string(),
-            line,
-            message: opts.message.clone(),
-            import: None,
-            target: None,
-        });
-    }
-    if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, &source);
-    }
-    findings
+    super::super::scan_masked_file(
+        super::super::MaskedFileContext::new(
+            root,
+            path,
+            RULE_ID,
+            &opts.allow,
+            sources,
+            defer_suppression,
+        ),
+        super::super::lexical_mask::swift_code_mask,
+        |source, code, rel| {
+            let mut findings = Vec::new();
+            for cap in CLASS_DECL.captures_iter(code) {
+                let Some(name) = cap.get(1) else { continue };
+                if !name.as_str().ends_with(&opts.suffix) {
+                    continue;
+                }
+                let start = cap.get(0).map_or(name.start(), |m| m.start());
+                if has_attribute(code, start, &opts.attribute) {
+                    continue;
+                }
+                let line = source[..start].bytes().filter(|&b| b == b'\n').count() + 1;
+                findings.push(RuleFinding {
+                    rule: RULE_ID.to_string(),
+                    file: rel.to_string(),
+                    line,
+                    message: opts.message.clone(),
+                    import: None,
+                    target: None,
+                });
+            }
+            findings
+        },
+    )
 }
 
 fn has_attribute(source: &str, mut i: usize, attr: &str) -> bool {

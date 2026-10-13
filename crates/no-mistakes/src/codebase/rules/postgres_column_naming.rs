@@ -133,32 +133,7 @@ pub(crate) struct ExemptPattern {
     pub(crate) reason: String,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    let catalog_paths =
-        crate::codebase::postgres::configured_schema_catalog_paths(config, &[RULE_ID])?;
-    let facts = crate::codebase::postgres::prepare_embedded_sql_facts(
-        root,
-        all_files,
-        std::sync::Arc::clone(sources),
-        Vec::new(),
-        catalog_paths,
-    );
-    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
-}
+super::prepared_rule_entrypoints!(super::check_prepared_schema_rule);
 
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
@@ -167,19 +142,18 @@ pub(crate) fn check_with_files_sources_and_facts(
     _sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.try_rule_options()?;
-        let compiled = compile::compile(&options, rule.message.clone())?;
-        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-        if !filter.is_match(Path::new(&options.schema_catalog_path)) {
-            continue;
-        }
-        let catalog = facts.postgres_schema_catalog(&options.schema_catalog_path)?;
-        findings.extend(scan::scan(catalog, &compiled, &options.schema_catalog_path));
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::run_catalog_rule(
+        root,
+        config,
+        facts,
+        RULE_ID,
+        |rule| {
+            let options: Options = rule.try_rule_options()?;
+            let compiled = compile::compile(&options, rule.message.clone())?;
+            Ok((options.schema_catalog_path, compiled))
+        },
+        |compiled, catalog, path| scan::scan(catalog, &compiled, path),
+    )
 }
 
 #[cfg(test)]

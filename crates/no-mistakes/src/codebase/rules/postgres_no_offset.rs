@@ -50,30 +50,7 @@ impl CompiledOptions {
     }
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
-        root,
-        all_files,
-        std::sync::Arc::clone(sources),
-        config,
-        &[RULE_ID],
-    )?;
-    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
-}
+super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
 
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
@@ -88,16 +65,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         .map(|rule| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|path| {
-                    super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                })
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            let files = super::selected_rule_files(root, config, rule, all_files)?;
             let sql_paths =
                 crate::codebase::postgres::postgres_sql_paths(root, &files, &compiled.schema)?;
             let sql = crate::codebase::check_facts::PathMembership::new(&sql_paths);

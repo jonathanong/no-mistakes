@@ -59,8 +59,7 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
+    super::check_with_borrowed_source_store(root, config, all_files, check_with_files_and_sources)
 }
 
 pub(crate) fn check_with_files_and_sources(
@@ -69,36 +68,17 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts = compile_options(rule.try_rule_options()?);
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        if files.is_empty() {
-            continue;
-        }
-        let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
-        findings.extend(scan_files(root, &opts, &files, sources));
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::run_selected_workflow_rule(
+        super::SourcedRuleContext::new(root, config, all_files, sources),
+        RULE_ID,
+        compile_options,
+        |opts| &opts.include,
+        scan_files,
+    )
 }
 
 fn compile_options(opts: Options) -> CompiledOptions {
-    let include = if opts.include.is_empty() {
-        DEFAULT_INCLUDE
-            .iter()
-            .map(|pattern| (*pattern).to_string())
-            .collect()
-    } else {
-        opts.include
-    };
+    let include = super::configured_includes(opts.include, DEFAULT_INCLUDE);
     let allowed_keys = if opts.allowed_keys.is_empty() {
         DEFAULT_ALLOWED_KEYS
             .iter()

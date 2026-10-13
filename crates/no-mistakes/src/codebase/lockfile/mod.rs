@@ -1,6 +1,7 @@
 pub mod bun;
 pub mod npm;
 pub mod pnpm;
+pub(crate) mod pnpm_alias;
 pub mod yarn;
 
 pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};

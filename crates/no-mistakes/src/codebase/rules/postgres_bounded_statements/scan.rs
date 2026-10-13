@@ -11,26 +11,17 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
-    let prepared =
-        prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
-    let catalog = prepared.postgres_schema_catalog(&opts.schema_catalog_path)?;
-    let paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
-    let mut statements = Vec::new();
-    let mut embedded = Vec::new();
-    for path in &paths {
-        statements.extend(prepared.postgres_statements(path, None)?.iter());
-    }
-    for path in files
-        .iter()
-        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
-    {
-        embedded.push(prepared.embedded_sql(path, &opts.embedded)?);
-        statements.extend(
-            prepared
-                .postgres_statements(path, Some(&opts.embedded))?
-                .iter(),
-        );
-    }
+    let inputs = crate::codebase::rules::collect_prepared_sql_inputs(
+        root,
+        files,
+        &opts.schema,
+        &opts.schema_catalog_path,
+        &opts.embedded,
+        prepared,
+    )?;
+    let catalog = inputs.catalog;
+    let statements = inputs.statements;
+    let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
     for file in embedded {

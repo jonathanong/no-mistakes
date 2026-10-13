@@ -1,5 +1,4 @@
 use super::RuleFinding;
-use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Result};
@@ -42,14 +41,7 @@ struct Options {
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let root = crate::codebase::ts_resolver::normalize_path(root);
-    let files =
-        crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
-    let files: Vec<_> = files
-        .into_iter()
-        .filter(|path| is_indexable(path))
-        .collect();
-    check_files(&root, config, &files)
+    super::check_indexed_standalone(root, config, check_files)
 }
 
 pub(crate) fn check_with_facts_for_aggregate(

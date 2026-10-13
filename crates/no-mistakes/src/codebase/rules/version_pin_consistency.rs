@@ -27,23 +27,7 @@ pub(crate) struct Anchor {
     pub(crate) label: String,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    check_with_files_sources_and_deferred_suppression(root, config, all_files, sources, false)
-}
+super::borrowed_source_rule_entrypoints!();
 
 pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
