@@ -25,7 +25,7 @@ fn comment_relation_and_alias_queries_keep_baseline_wrapped_and_procedural_facts
     let result = facts("comment-join-alias-parity.sql");
     assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
     assert_eq!(result.statements.len(), 13);
-    for pair in result.statements[..10].chunks_exact(2) {
+    for pair in result.statements[..10].as_chunks::<2>().0 {
         let PostgresSqlStatementKind::Select { query: baseline } = &pair[0].facts else {
             panic!()
         };

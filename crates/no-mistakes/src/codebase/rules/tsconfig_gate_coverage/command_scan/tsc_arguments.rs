@@ -29,7 +29,8 @@ pub(super) fn project_argument(arguments: &[String]) -> Option<String> {
                 return None;
             }
             index += 1;
-        } else if let Some(raw_option) = argument.strip_prefix("--") {
+        } else {
+            let raw_option = argument.strip_prefix("--")?;
             let (option, inline_value) = raw_option
                 .split_once('=')
                 .map_or((raw_option, None), |(option, value)| (option, Some(value)));
@@ -55,8 +56,6 @@ pub(super) fn project_argument(arguments: &[String]) -> Option<String> {
                 }
                 (OptionValueKind::OptionalBoolean, None) => {}
             }
-        } else {
-            return None;
         }
         index += 1;
     }

@@ -170,6 +170,13 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
 3. Maintain 98% project and patch test coverage
 
+<!-- cspell:ignore rustup Clippy -->
+Development, CI, release builds, and benchmarks use the latest stable Rust.
+Run `rustup update stable` before local validation; `rust-toolchain.toml` selects
+that channel and installs Clippy and rustfmt. Workflows select `toolchain: stable`
+while pinning the setup action code separately. Benchmark comparisons must use
+the same resolved compiler version for both runs and record that version.
+
 CI enforces per-function CRAP and cyclomatic complexity limits of 30. The
 complexity gate runs `cargo crap --workspace --missing optimistic --fail-above
 --threshold 30 --summary` without LCOV: assuming full coverage makes CRAP equal

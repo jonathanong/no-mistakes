@@ -89,6 +89,8 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 
 ## Development
 
+- Use latest stable Rust everywhere; run `rustup update stable` before validation.
+
 - When finding an error, always create a regression test
 - Continuously add test fixtures for cases you find. Which tree (`test-cases/` or `fixtures/`) a suite loads is in [Contributing](README.md#contributing); add to the tree its loader reads.
 - Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to that fixture tree and reference them via the per-crate / per-package fixture helper.
