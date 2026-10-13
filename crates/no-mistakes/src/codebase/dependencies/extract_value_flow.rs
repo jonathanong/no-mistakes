@@ -1,5 +1,7 @@
 use super::*;
 
+pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
+
 /// Syntactic value flow retained by the import collector. Resolution uses the
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

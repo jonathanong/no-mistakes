@@ -114,7 +114,6 @@ impl ImportCollector {
         }
     }
 }
-type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 impl ImportCollector {
     fn prepare_value_references(&mut self) {
         if self.value_reference_links.is_some() {
