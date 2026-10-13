@@ -1,15 +1,17 @@
 mod merge;
 mod named;
-mod patterns;
 
 use super::Options;
-use crate::config::v2::schema::{NoMistakesConfig, Project, TestPlanProjectDependency};
+pub(super) use crate::codebase::test_discovery::{
+    normalize_project_glob_part, project_dependency_patterns, project_relative_pattern,
+    project_root_patterns,
+};
+use crate::config::v2::schema::NoMistakesConfig;
 use crate::integration_tests::{
     config as integration_config, project_config, types::ConfigProject, types::Framework,
 };
 use anyhow::Result;
 use merge::merge_explicit_project;
-use patterns::{normalize_project_glob_part, project_relative_pattern, project_root_patterns};
 use std::path::Path;
 
 #[cfg(test)]
@@ -143,43 +145,4 @@ fn include_without_excludes(project: &ConfigProject) -> Vec<String> {
             .map(|pattern| format!("!{}", normalize_project_glob_part(pattern))),
     );
     patterns
-}
-
-fn project_dependency_patterns(
-    project_name: &str,
-    project: &Project,
-    trigger: &TestPlanProjectDependency,
-) -> Vec<String> {
-    match trigger {
-        TestPlanProjectDependency::All(false) => Vec::new(),
-        TestPlanProjectDependency::All(true) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            if project.include.is_empty() {
-                project_root_patterns(root)
-            } else {
-                project
-                    .include
-                    .iter()
-                    .map(|pattern| project_relative_pattern(root, pattern))
-                    .collect()
-            }
-        }
-        TestPlanProjectDependency::Patterns(patterns) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            patterns
-                .iter()
-                .map(|pattern| project_relative_pattern(root, pattern))
-                .collect()
-        }
-        // Structured triggers are still source-path coverage requirements;
-        // their runner-target restriction is irrelevant to CI path filters.
-        TestPlanProjectDependency::Targeted(targeted) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            targeted
-                .paths
-                .iter()
-                .map(|pattern| project_relative_pattern(root, pattern))
-                .collect()
-        }
-    }
 }

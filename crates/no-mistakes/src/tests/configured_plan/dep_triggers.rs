@@ -9,9 +9,9 @@ use super::super::plan::relative_path;
 use super::TestFramework;
 use anyhow::Result;
 use globset::{GlobBuilder, GlobMatcher};
-use no_mistakes::codebase::test_discovery::TestRunner;
+use no_mistakes::codebase::test_discovery::{project_dependency_patterns, TestRunner};
 use no_mistakes::config::v2::schema::{
-    NoMistakesConfig, Project, TestPlanIgnoredChangedTestsFramework, TestPlanProjectDependency,
+    NoMistakesConfig, TestPlanIgnoredChangedTestsFramework, TestPlanProjectDependency,
 };
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -188,43 +188,6 @@ fn ignored_changed_test_sets(
     Ok(sets)
 }
 
-pub(super) fn project_dependency_patterns(
-    project_name: &str,
-    project: &Project,
-    trigger: &TestPlanProjectDependency,
-) -> Vec<String> {
-    match trigger {
-        TestPlanProjectDependency::All(false) => Vec::new(),
-        TestPlanProjectDependency::All(true) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            if project.include.is_empty() {
-                project_root_patterns(root)
-            } else {
-                project
-                    .include
-                    .iter()
-                    .map(|pattern| project_relative_pattern(root, pattern))
-                    .collect()
-            }
-        }
-        TestPlanProjectDependency::Patterns(patterns) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            patterns
-                .iter()
-                .map(|pattern| project_relative_pattern(root, pattern))
-                .collect()
-        }
-        TestPlanProjectDependency::Targeted(targeted) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            targeted
-                .paths
-                .iter()
-                .map(|pattern| project_relative_pattern(root, pattern))
-                .collect()
-        }
-    }
-}
-
 pub(super) struct OrderedPattern {
     negated: bool,
     matcher: GlobMatcher,
@@ -262,44 +225,6 @@ fn normalize_trigger_glob(pattern: &str) -> String {
     let mut part = pattern.trim().to_string();
     while let Some(rest) = part.strip_prefix("./") {
         part = rest.trim().to_string();
-    }
-    part
-}
-
-fn project_root_patterns(project_root: &str) -> Vec<String> {
-    let root = normalize_project_glob_part(project_root);
-    if root.is_empty() || root == "." {
-        vec!["**".to_string()]
-    } else {
-        vec![format!("{root}/**")]
-    }
-}
-
-/// Split `!` before root-prefixing. Prefixing first produces invalid globs
-/// such as `pkg/!dist/**` and makes negated entries impossible to re-include.
-pub(super) fn project_relative_pattern(project_root: &str, raw_pattern: &str) -> String {
-    let (negated, pattern) = raw_pattern
-        .trim()
-        .strip_prefix('!')
-        .map_or((false, raw_pattern.trim()), |pattern| (true, pattern));
-    let root = normalize_project_glob_part(project_root);
-    let pattern = normalize_project_glob_part(pattern);
-    let joined = if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
-        pattern
-    } else {
-        format!("{root}/{pattern}")
-    };
-    if negated {
-        format!("!{joined}")
-    } else {
-        joined
-    }
-}
-
-fn normalize_project_glob_part(raw: &str) -> String {
-    let mut part = raw.trim().trim_matches('/').to_string();
-    while let Some(rest) = part.strip_prefix("./") {
-        part = rest.to_string();
     }
     part
 }

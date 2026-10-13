@@ -180,7 +180,7 @@ pub(crate) fn generate_impact_plan_with_prepared(
                     }
                     node_chain.push(slash_node_name(parent, root));
                     reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, root));
-                    push_warning(
+                    crate::tests::push_edge_warning(
                         root,
                         &curr,
                         parent,
@@ -362,56 +362,6 @@ mod registry_edge_tests {
         assert!(is_runtime_registration_edge(&EdgeKind::Import));
         assert!(is_runtime_registration_edge(&EdgeKind::WorkspaceImport));
         assert!(is_runtime_registration_edge(&EdgeKind::Require));
-    }
-}
-
-fn push_warning(
-    root: &Path,
-    curr: &NodeId,
-    parent: &NodeId,
-    kind: EdgeKind,
-    warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<WarningKey>,
-) {
-    let (warn_type, message, file) = match kind {
-        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
-            let file = slash_node_name(curr, root);
-            (
-                "dynamic-import",
-                format!("Dynamic import in `{}` might not be fully resolved.", file),
-                file,
-            )
-        }
-        EdgeKind::HttpCall => {
-            let file = slash_node_name(curr, root);
-            (
-                "http-call",
-                format!(
-                    "Dynamic HTTP call in `{}` to backend `{}`.",
-                    file,
-                    slash_node_name(parent, root)
-                ),
-                file,
-            )
-        }
-        EdgeKind::ProcessSpawn => {
-            let file = slash_node_name(curr, root);
-            (
-                "process-spawn",
-                format!("Process spawned in `{}`.", file),
-                file,
-            )
-        }
-        _ => return,
-    };
-    let warn = Warning {
-        r#type: warn_type.to_string(),
-        message,
-        file,
-        line: None,
-    };
-    if warnings_seen.insert(warning_key(&warn)) {
-        warnings.push(warn);
     }
 }
 

@@ -168,6 +168,60 @@ pub(crate) fn warning_key(warning: &Warning) -> WarningKey {
     (warning.r#type.clone(), warning.file.clone(), warning.line)
 }
 
+/// Add the stable warning projection for graph edges whose targets may be
+/// unresolved at analysis time.
+pub(crate) fn push_edge_warning(
+    root: &Path,
+    curr: &no_mistakes::codebase::dependencies::graph::NodeId,
+    parent: &no_mistakes::codebase::dependencies::graph::NodeId,
+    kind: no_mistakes::codebase::dependencies::graph::EdgeKind,
+    warnings: &mut Vec<Warning>,
+    warnings_seen: &mut HashSet<WarningKey>,
+) {
+    use no_mistakes::codebase::dependencies::graph::EdgeKind;
+
+    let (warning_type, message, file) = match kind {
+        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
+            let file = plan::slash_node_name(curr, root);
+            (
+                "dynamic-import",
+                format!("Dynamic import in `{}` might not be fully resolved.", file),
+                file,
+            )
+        }
+        EdgeKind::HttpCall => {
+            let file = plan::slash_node_name(curr, root);
+            (
+                "http-call",
+                format!(
+                    "Dynamic HTTP call in `{}` to backend `{}`.",
+                    file,
+                    plan::slash_node_name(parent, root)
+                ),
+                file,
+            )
+        }
+        EdgeKind::ProcessSpawn => {
+            let file = plan::slash_node_name(curr, root);
+            (
+                "process-spawn",
+                format!("Process spawned in `{}`.", file),
+                file,
+            )
+        }
+        _ => return,
+    };
+    let warning = Warning {
+        r#type: warning_type.to_string(),
+        message,
+        file,
+        line: None,
+    };
+    if warnings_seen.insert(warning_key(&warning)) {
+        warnings.push(warning);
+    }
+}
+
 /// Surface only resource diagnostics that belong to a changed file or an
 /// already-selected graph path. Dynamic calls deliberately have no graph edge,
 /// so they are warnings rather than a fallback signal.

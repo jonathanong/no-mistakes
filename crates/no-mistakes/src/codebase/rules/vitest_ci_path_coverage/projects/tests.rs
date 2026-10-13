@@ -8,7 +8,7 @@ fn coverage_units(
     coverage_units_with_catalog(root, config, opts, None)
 }
 use crate::config::v2::schema::{
-    NamedFullSuiteTrigger, StringOrList, TestPlanProjectDependency,
+    NamedFullSuiteTrigger, Project, StringOrList, TestPlanProjectDependency,
     TestPlanTargetedProjectDependency, TestProjectPolicy,
 };
 use std::collections::BTreeMap;
