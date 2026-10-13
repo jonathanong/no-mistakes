@@ -126,6 +126,9 @@ fn collect_call_edges_for_core(
     }
     if plan.calls {
         refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass);
+        if plan.effect_selectors {
+            value_flow::resolve_value_exports(edge_inputs, facts, resolver, &indexes, &pass.sites, callable_export_resolutions);
+        }
     }
     if namespaces_in_repo {
         let mut escapes = NamespaceEscapes::default();

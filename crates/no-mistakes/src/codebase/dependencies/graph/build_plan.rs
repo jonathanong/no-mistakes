@@ -210,6 +210,7 @@ impl GraphBuildPlan {
                 || self.assets
                 || self.symbols
                 || self.resources,
+            value_flow: self.calls,
             resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,

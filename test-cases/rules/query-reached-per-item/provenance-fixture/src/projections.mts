@@ -21,3 +21,8 @@ function shadowed(undefined: unknown) {
   for (const item of items) { applyShadow.apply(null, undefined); }
 }
 shadowed(unrelated);
+const dynamicClient = { query: read };
+dynamicClient[key] = unrelated;
+for (const item of items) { dynamicClient.query(item); }
+function applyHole(client = primary) { return client.get('key'); }
+for (const item of items) { applyHole.apply(null, [,]); }

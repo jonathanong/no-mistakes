@@ -53,6 +53,8 @@ pub struct TsFactPlan {
     pub module_bindings: bool,
     pub imports: bool,
     pub function_calls: bool,
+    /// Value provenance needed by canonical call and effect consumers.
+    pub value_flow: bool,
     /// Per-item invocation positions, collected with canonical call facts.
     pub per_item_calls: bool,
     pub call_sites: bool,

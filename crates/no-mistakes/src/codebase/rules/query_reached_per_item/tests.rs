@@ -486,17 +486,5 @@ fn mutation_aliases_completion_adapters_constructors_and_redeclarations_keep_pro
     );
 }
 
-#[test]
-fn copied_members_defaults_and_undefined_apply_preserve_provenance() {
-    let root = root().with_file_name("provenance-fixture");
-    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|finding| finding.file == "src/projections.mts")
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        [5, 10, 11, 14, 16],
-        "{findings:#?}"
-    );
-}
+#[path = "tests/projections.rs"]
+mod projections;

@@ -93,18 +93,17 @@ pub(crate) fn collect_file_facts_from_program(
     parse_error: Option<String>,
     stored_source: Option<Arc<str>>,
 ) -> TsFileFacts {
-    let import_facts =
-        if plan.imports || plan.function_calls || plan.effect_calls || plan.per_item_calls {
-            extract_import_facts_from_program_with_source_and_demands(
-                program,
-                source,
-                plan.resources,
-                plan.per_item_calls,
-                plan.function_calls || plan.effect_calls || plan.per_item_calls,
-            )
-        } else {
-            Default::default()
-        };
+    let import_facts = if plan.needs_import_facts() {
+        extract_import_facts_from_program_with_source_and_demands(
+            program,
+            source,
+            plan.resources,
+            plan.per_item_calls,
+            plan.needs_value_flow(),
+        )
+    } else {
+        Default::default()
+    };
     let resources = if plan.resources {
         crate::codebase::ts_resources::extract(program, source)
     } else {

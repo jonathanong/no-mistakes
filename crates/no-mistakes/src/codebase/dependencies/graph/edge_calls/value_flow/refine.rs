@@ -3,7 +3,7 @@ use super::*;
 #[path = "worklist.rs"]
 mod worklist;
 pub(in super::super) use worklist::refine_value_calls;
-fn incoming_inputs(sites: &[ResolvedCallSite]) -> ParameterInputs {
+pub(super) fn incoming_inputs(sites: &[ResolvedCallSite]) -> ParameterInputs {
     let mut incoming: FxHashMap<_, Vec<_>> = fx_map();
     let constructors: FxHashMap<_, _> = sites
         .iter()

@@ -139,3 +139,7 @@ impl FlowFileIndex {
         }
     }
 }
+
+#[path = "value_flow/exports.rs"]
+mod exports;
+pub(super) use exports::resolve_value_exports;

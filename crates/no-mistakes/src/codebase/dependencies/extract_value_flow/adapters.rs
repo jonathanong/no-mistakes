@@ -52,6 +52,12 @@ impl ImportCollector {
                             .elements
                             .iter()
                             .map(|element| {
+                                if matches!(
+                                    element,
+                                    oxc_ast::ast::ArrayExpressionElement::Elision(_)
+                                ) {
+                                    return ValueExpression::Undefined;
+                                }
                                 element
                                     .as_expression()
                                     .map_or(ValueExpression::Unknown, |value| {
