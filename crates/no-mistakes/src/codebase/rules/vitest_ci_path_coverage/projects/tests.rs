@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::test_discovery::project_root_patterns;
+use crate::codebase::test_discovery::project_patterns::project_root_patterns;
 
 fn coverage_units(
     root: &Path,

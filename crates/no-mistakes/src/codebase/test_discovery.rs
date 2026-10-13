@@ -3,7 +3,7 @@ mod filters;
 mod lang_projects;
 mod lang_targets;
 mod ownership;
-mod project_patterns;
+pub(crate) mod project_patterns;
 mod projects;
 mod reserved;
 mod swift_projects;
@@ -21,8 +21,6 @@ pub(crate) use filters::fallback_runner_match;
 pub use filters::{fallback_test_path, ProjectTestFilter};
 use ownership::owning_projects;
 pub use project_patterns::project_dependency_patterns;
-#[cfg(test)]
-pub(crate) use project_patterns::project_root_patterns;
 pub(crate) use project_patterns::{normalize_project_glob_part, project_relative_pattern};
 pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, PreparedRunnerProject, TestRunner};
