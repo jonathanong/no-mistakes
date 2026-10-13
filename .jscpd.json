@@ -6,6 +6,7 @@
   "minNodes": 20,
   "mode": "weak",
   "format": ["rust", "javascript", "jsx", "typescript", "tsx"],
+  "crossFormats": "js-ts",
   "exitCode": 1,
   "failOnEmpty": true,
   "reporters": ["console"],
