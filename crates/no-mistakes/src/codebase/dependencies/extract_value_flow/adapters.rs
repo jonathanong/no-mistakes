@@ -42,6 +42,11 @@ impl ImportCollector {
                 let array = call.arguments.get(1).and_then(Argument::as_expression);
                 return match array {
                     None | Some(Expression::NullLiteral(_)) => (callee, Vec::new(), None),
+                    Some(expression)
+                        if self.value_expression(expression) == ValueExpression::Undefined =>
+                    {
+                        (callee, Vec::new(), None)
+                    }
                     Some(Expression::ArrayExpression(array)) => {
                         let arguments = array
                             .elements

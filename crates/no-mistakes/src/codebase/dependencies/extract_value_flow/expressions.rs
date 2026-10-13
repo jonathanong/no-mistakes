@@ -6,6 +6,14 @@ impl ImportCollector {
         expression: &Expression<'_>,
     ) -> ValueExpression {
         match expression {
+            Expression::Identifier(identifier)
+                if identifier.name == "undefined"
+                    && self.callee_binding_scope("undefined").is_none()
+                    && !self.imported_bindings.contains("undefined")
+                    && !self.predeclared_imported_bindings.contains("undefined") =>
+            {
+                ValueExpression::Undefined
+            }
             Expression::AwaitExpression(awaited) => self.value_expression(&awaited.argument),
             Expression::ParenthesizedExpression(parenthesized) => {
                 self.value_expression(&parenthesized.expression)
@@ -27,7 +35,7 @@ impl ImportCollector {
                 ValueExpression::Callable(CallableId(function.span.start))
             }
             Expression::ObjectExpression(object) => {
-                let mut fields = Vec::new();
+                let mut fields = fx_map();
                 for property in &object.properties {
                     let ObjectPropertyKind::ObjectProperty(property) = property else {
                         return ValueExpression::Unknown;
@@ -40,9 +48,9 @@ impl ImportCollector {
                     else {
                         return ValueExpression::Unknown;
                     };
-                    fields.push((key.to_string(), self.value_expression(&property.value)));
+                    fields.insert(key.to_string(), self.value_expression(&property.value));
                 }
-                ValueExpression::Object(fields)
+                ValueExpression::Object(std::sync::Arc::new(fields))
             }
             _ => simple_callee_name(expression).map_or(ValueExpression::Unknown, |name| {
                 ValueExpression::Named {

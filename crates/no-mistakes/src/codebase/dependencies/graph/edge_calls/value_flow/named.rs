@@ -118,6 +118,8 @@ impl ValueFlowResolution<'_, '_> {
         path: &std::path::Path,
         parameter: &ValueParameter,
     ) -> FlowValue {
+        self.used_parameters
+            .insert((path.to_path_buf(), parameter.owner));
         if !self.parameters_enabled {
             return FlowValue::Unknown;
         }
@@ -153,7 +155,7 @@ impl ValueFlowResolution<'_, '_> {
                 continue;
             }
             let argument = call.arguments.get(parameter.index);
-            let omitted = argument.is_none() || argument.is_some_and(|value| matches!(value, ValueExpression::Named { name, scope: None, .. } if name == "undefined"));
+            let omitted = argument.is_none() || argument == Some(&ValueExpression::Undefined);
             values.push(if omitted {
                 self.value(path, &parameter.default)
             } else {

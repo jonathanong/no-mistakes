@@ -19,7 +19,12 @@ pub enum ValueExpression {
     Call(u32, u32),
     Callable(CallableId),
     Member(std::sync::Arc<ValueExpression>, String),
-    Object(Vec<(String, ValueExpression)>),
+    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>),
+    Undefined,
+    Default(
+        std::sync::Arc<ValueExpression>,
+        std::sync::Arc<ValueExpression>,
+    ),
     Unknown,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]

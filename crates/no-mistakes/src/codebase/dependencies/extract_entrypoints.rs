@@ -18,7 +18,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     source: &str,
     collect_resource_roots: bool,
 ) -> ImportFacts {
-    extract_import_facts_from_program_with_source_and_demands(program, source, collect_resource_roots, false, true)
+    extract_import_facts_from_program_with_source_and_demands(program, source, collect_resource_roots, false, false)
 }
 
 pub(crate) fn extract_import_facts_from_program_with_source_and_demands(

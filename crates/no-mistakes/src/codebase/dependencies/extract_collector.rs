@@ -22,6 +22,8 @@ struct ImportCollector {
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
+    value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
+    value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     collect_value_flow: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,

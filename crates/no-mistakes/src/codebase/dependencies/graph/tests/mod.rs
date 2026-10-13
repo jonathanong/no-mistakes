@@ -128,3 +128,6 @@ include!("accessor_kind_index.rs");
 include!("class_resolution_index.rs");
 include!("symbol_runtime_edges.rs");
 include!("call_site_index.rs");
+
+#[path = "value_flow_worklist.rs"]
+mod value_flow_worklist;

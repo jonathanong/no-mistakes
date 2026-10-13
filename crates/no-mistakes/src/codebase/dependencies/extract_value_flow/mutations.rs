@@ -36,14 +36,28 @@ impl ImportCollector {
                 }
             }
         }
-        for binding in &mut self.value_flow.bindings {
-            if affected.contains(&(binding.scope, binding.name.clone())) {
-                binding.invalidated_at.get_or_insert(offset);
+        for (scope, name) in &affected {
+            for index in self
+                .value_binding_indexes
+                .get(scope)
+                .and_then(|names| names.get(name.as_str()))
+                .into_iter()
+                .flatten()
+            {
+                self.value_flow.bindings[*index]
+                    .invalidated_at
+                    .get_or_insert(offset);
             }
-        }
-        for parameter in &mut self.value_flow.parameters {
-            if affected.contains(&(parameter.scope, parameter.name.clone())) {
-                parameter.invalidated_at.get_or_insert(offset);
+            for index in self
+                .value_parameter_indexes
+                .get(scope)
+                .and_then(|names| names.get(name.as_str()))
+                .into_iter()
+                .flatten()
+            {
+                self.value_flow.parameters[*index]
+                    .invalidated_at
+                    .get_or_insert(offset);
             }
         }
         let mut invalidated = Vec::new();
@@ -65,13 +79,13 @@ impl ImportCollector {
 }
 fn referenced_value_root(value: &ValueExpression) -> Option<(usize, String)> {
     match value {
-        ValueExpression::Named { name, scope, .. } => Some((
+        ValueExpression::Named { name, scope, .. } if !name.contains('.') => Some((
             scope.unwrap_or(0),
             name.split_once('.')
                 .map_or(name.as_str(), |(head, _)| head)
                 .to_string(),
         )),
-        ValueExpression::Member(base, _) => referenced_value_root(base),
+
         _ => None,
     }
 }

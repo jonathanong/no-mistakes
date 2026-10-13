@@ -63,7 +63,11 @@ enum FlowValue {
         scope: String,
         id: CallableId,
     },
-    Object(Vec<(String, FlowValue)>),
+    Object {
+        file: std::path::PathBuf,
+        fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
+    },
+    Undefined,
     Unknown,
 }
 
@@ -79,7 +83,8 @@ struct ValueFlowResolution<'a, 'b> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     indexes: &'a CallableResolutionIndexes,
-    incoming: ParameterInputs,
+    incoming: &'a ParameterInputs,
+    used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
     parameters: FxHashMap<(std::path::PathBuf, usize, String), FlowValue>,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,

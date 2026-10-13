@@ -61,7 +61,7 @@ struct ResolvedLocalCallee {
 include!("edge_calls/index_build.rs");
 #[path = "edge_calls/value_flow.rs"]
 mod value_flow;
-use value_flow::{FlowFileIndex, refine_value_calls};
+use value_flow::{refine_value_calls, FlowFileIndex};
 include!("edge_calls/scoped_names.rs");
 include!("edge_calls/namespace_table.rs");
 
@@ -198,3 +198,10 @@ include!("edge_calls/local_resolution.rs");
 include!("edge_calls/site_index.rs");
 #[cfg(feature = "test-instrumentation")]
 include!("edge_calls/bench.rs");
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "edge_calls/value_flow_metrics.rs"]
+mod value_flow_metrics;
+
+#[cfg(feature = "test-instrumentation")]
+pub use value_flow_metrics::last_evaluations as benchmark_probe_value_flow_evaluations;

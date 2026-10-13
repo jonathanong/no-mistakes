@@ -1,37 +1,8 @@
 use super::*;
 
-pub(in super::super) fn refine_value_calls(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
-    resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
-    pass: &mut CallPass,
-) {
-    let base = pass.sites.clone();
-    let mut incoming = incoming_inputs(&base);
-    for _ in 0..=base.len() {
-        let (sites, edges) = refine_iteration(
-            inputs,
-            facts,
-            resolver,
-            indexes,
-            &base,
-            incoming.clone(),
-            true,
-        );
-        let next = incoming_inputs(&sites);
-        if next == incoming {
-            pass.sites = sites;
-            pass.edges.extend(edges);
-            return;
-        }
-        incoming = next;
-    }
-    // Recursive argument/callee cycles cannot prove a parameter binding.
-    let (sites, edges) = refine_iteration(inputs, facts, resolver, indexes, &base, incoming, false);
-    pass.sites = sites;
-    pass.edges.extend(edges);
-}
+#[path = "worklist.rs"]
+mod worklist;
+pub(in super::super) use worklist::refine_value_calls;
 fn incoming_inputs(sites: &[ResolvedCallSite]) -> ParameterInputs {
     let mut incoming: FxHashMap<_, Vec<_>> = fx_map();
     let constructors: FxHashMap<_, _> = sites
@@ -85,15 +56,20 @@ fn refine_iteration(
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
     base: &[ResolvedCallSite],
-    incoming: ParameterInputs,
+    incoming: &ParameterInputs,
     parameters_enabled: bool,
-) -> (Vec<ResolvedCallSite>, Vec<Edge>) {
+) -> (
+    Vec<ResolvedCallSite>,
+    Vec<Edge>,
+    FxHashSet<(std::path::PathBuf, CallableId)>,
+) {
     let mut flow = ValueFlowResolution {
         inputs,
         facts,
         resolver,
         indexes,
         incoming,
+        used_parameters: fx_set(),
         parameters_enabled,
         parameters: fx_map(),
         visiting: fx_set(),
@@ -181,5 +157,5 @@ fn refine_iteration(
         }
         site.target = target;
     }
-    (sites, edges)
+    (sites, edges, flow.used_parameters)
 }

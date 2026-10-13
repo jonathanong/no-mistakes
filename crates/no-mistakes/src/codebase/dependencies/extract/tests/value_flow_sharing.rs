@@ -8,7 +8,13 @@ fn destructured_value_bindings_share_one_initializer() {
     let source = std::fs::read_to_string(fixture).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    let facts = extract_import_facts_from_program(&parsed.program);
+    let import_only = extract_import_facts_from_program(&parsed.program);
+    assert!(import_only.value_flow.bindings.is_empty());
+    assert!(import_only.value_flow.parameters.is_empty());
+    assert!(import_only.value_flow.calls.is_empty());
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program, &source, false, false, true,
+    );
     let bases = facts
         .value_flow
         .bindings

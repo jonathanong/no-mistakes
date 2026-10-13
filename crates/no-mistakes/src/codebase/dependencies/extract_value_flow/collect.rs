@@ -32,6 +32,12 @@ impl ImportCollector {
                 let scope = self
                     .callee_binding_scope(&name)
                     .unwrap_or(self.current_lexical_scope_id());
+                self.value_binding_indexes
+                    .entry(scope)
+                    .or_default()
+                    .entry(name.clone())
+                    .or_default()
+                    .push(self.value_flow.bindings.len());
                 self.value_flow.bindings.push(ValueBinding {
                     name,
                     scope,
@@ -59,9 +65,14 @@ impl ImportCollector {
                     }
                 }
             }
-            BindingPattern::AssignmentPattern(assignment) => {
-                self.record_value_pattern(&assignment.left, value, declared_at)
-            }
+            BindingPattern::AssignmentPattern(assignment) => self.record_value_pattern(
+                &assignment.left,
+                ValueExpression::Default(
+                    std::sync::Arc::new(value),
+                    std::sync::Arc::new(self.value_expression(&assignment.right)),
+                ),
+                declared_at,
+            ),
             BindingPattern::ArrayPattern(_) => {}
         }
     }
@@ -88,6 +99,12 @@ impl ImportCollector {
                 ),
             };
             if let Some(name) = binding_identifier_name(pattern) {
+                self.value_parameter_indexes
+                    .entry(self.current_lexical_scope_id())
+                    .or_default()
+                    .entry(name.to_string())
+                    .or_default()
+                    .push(self.value_flow.parameters.len());
                 self.value_flow.parameters.push(ValueParameter {
                     owner,
                     index,
