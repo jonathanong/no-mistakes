@@ -294,9 +294,9 @@ jobs:
       contents: read
       actions: read
     env:
-      # Focused native integration tests reuse the preceding ordinary rlib.
-      # Match build/test profiles to preserve that reuse, without
-      # disabling debug assertions or changing the platform test deadlines.
+      # Focused native integration tests avoid the full lib-test harness.
+      # Omit debug metadata without disabling debug assertions or changing
+      # the platform test deadlines.
       CARGO_PROFILE_DEV_DEBUG: "0"
       CARGO_PROFILE_TEST_DEBUG: "0"
     strategy:
@@ -369,9 +369,9 @@ jobs:
       # Both native platforms use focused integration tests so cargo does not
       # typecheck the unrelated lib unit tests for platform regressions.
       #
-      # Rewrite crate-type in this job only so one rustc emits the rlib (CLI
-      # + focused integration test) and the Node cdylib. Do not commit that
-      # crate-type: Linux coverage should not also link a cdylib.
+      # Rewrite crate-type in this job only so one rustc emits the CLI rlib
+      # and Node cdylib. Do not commit that crate-type: Linux coverage should
+      # not also link a cdylib.
       - name: Build native CLI and N-API addon
         timeout-minutes: 10
         shell: bash
@@ -395,8 +395,8 @@ jobs:
         timeout-minutes: 10
         shell: bash
         env:
-          # Match the preceding build so both `cargo test --test` targets
-          # reuse the rlib instead of rustc-ing no-mistakes again.
+          # Match the preceding build's N-API setting; Cargo may still
+          # compile a separate rlib for the integration-test profile.
           NO_MISTAKES_BUILD_NAPI: "1"
         run: |
           set -euo pipefail

@@ -259,8 +259,8 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
 });
 
-// Keep build/test profiles aligned so native integration tests can reuse the
-// preceding library build without recompiling it for a different profile.
+// Keep native build/test debug settings aligned without relying on Cargo to
+// reuse the preceding library build for integration tests.
 test("native CI omits debug metadata without weakening runtime checks", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const body = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
