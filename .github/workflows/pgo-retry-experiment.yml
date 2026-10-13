@@ -1,0 +1,127 @@
+name: Temporary bounded PGO experiment
+
+on:
+  push:
+    branches:
+      - codex/native-cpu-20261012
+    paths:
+      - .github/workflows/pgo-retry-experiment.yml
+      - .github/scripts/pgo-retry-experiment.py
+
+permissions:
+  contents: read
+
+env:
+  CARGO_PROFILE_RELEASE_OPT_LEVEL: "3"
+  CARGO_PROFILE_RELEASE_LTO: thin
+  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
+
+jobs:
+  train:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # stable
+        with:
+          toolchain: stable
+          targets: aarch64-unknown-linux-gnu
+          components: llvm-tools-preview
+      - name: Build instrumented CLI and addon, then train
+        shell: bash
+        run: |
+          set -euo pipefail
+          profile_dir="$RUNNER_TEMP/pgo-retry/raw"
+          result_dir="$RUNNER_TEMP/pgo-retry/train"
+          mkdir -p "$profile_dir" "$result_dir"
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path('crates/no-mistakes/Cargo.toml')
+          source = manifest.read_text()
+          before = 'crate-type = ["rlib"]'
+          assert source.count(before) == 1
+          manifest.write_text(source.replace(before, 'crate-type = ["rlib", "cdylib"]', 1))
+          PY
+          export RUSTFLAGS="-D warnings -Cprofile-generate=$profile_dir"
+          /usr/bin/time -v -o "$result_dir/build-generate.time" \
+            env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked \
+              --target aarch64-unknown-linux-gnu -p no-mistakes
+          cp target/aarch64-unknown-linux-gnu/release/libno_mistakes.so "$result_dir/instrumented.node"
+          PGO_RESULT_DIR="$result_dir" PGO_PROFILE_DIR="$profile_dir" \
+            python .github/scripts/pgo-retry-experiment.py train
+          tool="$(rustc --print sysroot)/lib/rustlib/aarch64-unknown-linux-gnu/bin/llvm-profdata"
+          test -x "$tool"
+          "$tool" merge -o "$result_dir/merged.profdata" "$profile_dir"/*.profraw
+          "$tool" show --summary "$result_dir/merged.profdata" > "$result_dir/profile-summary.txt"
+          find "$profile_dir" -type f -name '*.profraw' | wc -l > "$result_dir/profile-count.txt"
+          sha256sum "$result_dir/merged.profdata" > "$result_dir/profile-hash.txt"
+          rustc -Vv > "$result_dir/rustc.txt"
+          git rev-parse HEAD > "$result_dir/source-commit.txt"
+          lscpu > "$result_dir/cpu.txt"
+          rm -f "$result_dir/instrumented.node"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: pgo-train
+          path: ${{ runner.temp }}/pgo-retry/train/
+          if-no-files-found: warn
+          retention-days: 3
+
+  use:
+    needs: train
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # stable
+        with:
+          toolchain: stable
+          targets: aarch64-unknown-linux-gnu
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: pgo-train
+          path: ${{ runner.temp }}/pgo-retry/train
+      - name: Build matched baseline and PGO, compare held-out checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="$RUNNER_TEMP/pgo-retry"
+          mkdir -p "$base/result"
+          rustc -Vv | diff - "$base/train/rustc.txt"
+          test "$(git rev-parse HEAD)" = "$(cat "$base/train/source-commit.txt")"
+          test -s "$base/train/merged.profdata"
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path('crates/no-mistakes/Cargo.toml')
+          source = manifest.read_text()
+          before = 'crate-type = ["rlib"]'
+          assert source.count(before) == 1
+          manifest.write_text(source.replace(before, 'crate-type = ["rlib", "cdylib"]', 1))
+          PY
+          export RUSTFLAGS="-D warnings"
+          /usr/bin/time -v -o "$base/result/build-baseline.time" \
+            env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked \
+              --target aarch64-unknown-linux-gnu -p no-mistakes
+          cp target/aarch64-unknown-linux-gnu/release/no-mistakes "$base/result/baseline"
+          cp target/aarch64-unknown-linux-gnu/release/libno_mistakes.so "$base/result/baseline.node"
+          rm -rf target
+          export RUSTFLAGS="-D warnings -Cprofile-use=$base/train/merged.profdata"
+          /usr/bin/time -v -o "$base/result/build-use.time" \
+            env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked \
+              --target aarch64-unknown-linux-gnu -p no-mistakes
+          cp target/aarch64-unknown-linux-gnu/release/no-mistakes "$base/result/pgo"
+          cp target/aarch64-unknown-linux-gnu/release/libno_mistakes.so "$base/result/pgo.node"
+          sha256sum "$base/result"/{baseline,pgo,baseline.node,pgo.node} > "$base/result/hashes.txt"
+          stat -c '%n %s' "$base/result"/{baseline,pgo,baseline.node,pgo.node} > "$base/result/sizes.txt"
+          PGO_RESULT_DIR="$base/result" python .github/scripts/pgo-retry-experiment.py measure
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: pgo-use
+          path: ${{ runner.temp }}/pgo-retry/result/
+          if-no-files-found: warn
+          retention-days: 3
