@@ -6,6 +6,7 @@ struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
     classes: Vec<ClassDeclaration>,
+    modules: Vec<(String, std::path::PathBuf)>,
     /// Namespaces whose use the graph cannot follow to a class, per file.
     escapes: Vec<(std::path::PathBuf, String)>,
 }
@@ -49,6 +50,24 @@ fn collect_call_edges_for_core(
                 escapes: Default::default(),
             };
             let mut output = CallPass::default();
+            if plan.calls && plan.effect_selectors {
+                for binding in &file.imported_bindings {
+                    if !binding.is_type_only {
+                        if let Some(target) =
+                            resolver
+                                .resolve(&binding.specifier, path)
+                                .and_then(|target| {
+                                    edge_inputs
+                                        .graph_files
+                                        .visible_path(&target)
+                                        .map(std::path::Path::to_path_buf)
+                                })
+                        {
+                            output.modules.push((binding.specifier.clone(), target));
+                        }
+                    }
+                }
+            }
             if plan.calls {
                 for call in file
                     .function_calls
@@ -84,16 +103,6 @@ fn collect_call_edges_for_core(
         })
         .collect::<Vec<_>>();
     if plan.calls {
-        for path in edge_inputs.graph_files.indexable() {
-            if let Some(file) = facts.get_ts_facts(path) {
-                for binding in &file.imported_bindings {
-                    if binding.is_type_only { continue; }
-                    if let Some(target) = resolver.resolve(&binding.specifier, path).and_then(|target| edge_inputs.graph_files.visible_path(&target).map(std::path::Path::to_path_buf)) {
-                        module_files.entry(binding.specifier.clone()).or_default().insert(target);
-                    }
-                }
-            }
-        }
         populate_callable_export_resolutions(
             edge_inputs,
             facts,
@@ -105,13 +114,19 @@ fn collect_call_edges_for_core(
     let mut pass = per_file
         .into_iter()
         .fold(CallPass::default(), |mut all, part| {
+            all.modules.extend(part.modules);
             all.edges.extend(part.edges);
             all.sites.extend(part.sites);
             all.classes.extend(part.classes);
             all.escapes.extend(part.escapes);
             all
         });
-    if plan.calls { refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass); }
+    for (module, file) in pass.modules.drain(..) {
+        module_files.entry(module).or_default().insert(file);
+    }
+    if plan.calls {
+        refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass);
+    }
     if namespaces_in_repo {
         let mut escapes = NamespaceEscapes::default();
         for (file, root) in pass.escapes.drain(..) {

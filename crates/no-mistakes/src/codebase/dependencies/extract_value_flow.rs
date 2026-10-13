@@ -16,9 +16,9 @@ pub enum ValueExpression {
         scope: Option<usize>,
         offset: u32,
     },
-    Call(u32),
+    Call(u32, u32),
     Callable(CallableId),
-    Member(Box<ValueExpression>, String),
+    Member(std::sync::Arc<ValueExpression>, String),
     Object(Vec<(String, ValueExpression)>),
     Unknown,
 }
@@ -42,6 +42,8 @@ pub struct ValueParameter {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueCall {
     pub offset: u32,
+    pub end: u32,
+    pub source_callee: String,
     pub callee: ValueExpression,
     pub arguments: Vec<ValueExpression>,
     pub spread_at: Option<usize>,

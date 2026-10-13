@@ -79,7 +79,10 @@ impl ValueFlowResolution<'_, '_> {
                             module_export_target(&file, base, Some((target, scope)), Some(id))
                                 .expect("import binding"),
                         ),
-                        returned @ FlowValue::Returned { .. } => returned,
+                        FlowValue::Returned { factory, executor, .. } => {
+                            let receiver = match self.imported_value(&file, base) { FlowValue::Target(target) => Some(target), _ => None };
+                            FlowValue::Returned { factory, executor, receiver }
+                        },
                         _ => self.imported_value(&file, base),
                     }
                 }
@@ -128,11 +131,17 @@ impl ValueFlowResolution<'_, '_> {
             .cloned()
             .unwrap_or_default();
         let mut values = Vec::new();
-        for (caller, offset) in incoming {
+        for (caller, offset, callee) in incoming {
             let Some(index) = self.indexes.file(self.facts, &caller) else {
                 continue;
             };
-            let Some(call) = index.values.calls.get(&offset) else {
+            let call = index
+                .values
+                .sites
+                .get(&offset)
+                .and_then(|sites| sites.get(callee.as_str()))
+                .and_then(|key| index.values.calls.get(key));
+            let Some(call) = call else {
                 values.push(FlowValue::Unknown);
                 continue;
             };

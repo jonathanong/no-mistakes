@@ -1,8 +1,8 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
-    pub(super) fn returned(&mut self, path: &std::path::Path, offset: u32) -> FlowValue {
-        let key = (path.to_path_buf(), offset);
+    pub(super) fn returned(&mut self, path: &std::path::Path, offset: u32, end: u32) -> FlowValue {
+        let key = (path.to_path_buf(), offset, end);
         if !self.calls_visiting.insert(key.clone()) {
             return FlowValue::Unknown;
         }
@@ -10,7 +10,7 @@ impl ValueFlowResolution<'_, '_> {
         let result = self
             .indexes
             .file(self.facts, path)
-            .and_then(|file| file.values.calls.get(&offset).cloned())
+            .and_then(|file| file.values.calls.get(&(offset, end)).cloned())
             .map(|call| {
                 let target = self.value(path, &call.callee);
                 if let FlowValue::Target(ResolvedCallTarget::ModuleExport {
@@ -83,11 +83,16 @@ impl ValueFlowResolution<'_, '_> {
                 FlowValue::Returned {
                     mut factory,
                     executor,
+                    receiver,
                 },
             ) => {
                 factory.retain(|previous| previous != &origin);
                 factory.insert(0, origin);
-                FlowValue::Returned { factory, executor }
+                FlowValue::Returned {
+                    factory,
+                    executor,
+                    receiver,
+                }
             }
             (
                 Some(factory),
@@ -95,6 +100,7 @@ impl ValueFlowResolution<'_, '_> {
             ) => FlowValue::Returned {
                 factory: vec![factory],
                 executor: Box::new(executor),
+                receiver: None,
             },
             (_, result) => result,
         }

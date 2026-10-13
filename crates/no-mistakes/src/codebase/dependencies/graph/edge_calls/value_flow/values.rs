@@ -1,7 +1,11 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
-    pub(super) fn value(&mut self, path: &std::path::Path, expression: &ValueExpression) -> FlowValue {
+    pub(super) fn value(
+        &mut self,
+        path: &std::path::Path,
+        expression: &ValueExpression,
+    ) -> FlowValue {
         match expression {
             ValueExpression::Named {
                 name,
@@ -19,7 +23,7 @@ impl ValueFlowResolution<'_, '_> {
                     .map(|(name, value)| (name.clone(), self.value(path, value)))
                     .collect(),
             ),
-            ValueExpression::Call(offset) => self.returned(path, *offset),
+            ValueExpression::Call(offset, end) => self.returned(path, *offset, *end),
             ValueExpression::Unknown => FlowValue::Unknown,
         }
     }
@@ -39,6 +43,10 @@ impl ValueFlowResolution<'_, '_> {
     }
     pub(super) fn member(&self, base: FlowValue, member: &str) -> FlowValue {
         match base {
+            FlowValue::Returned {
+                receiver: Some(receiver),
+                ..
+            } => self.member(FlowValue::Target(receiver), member),
             FlowValue::Object(fields) => fields
                 .into_iter()
                 .rev()

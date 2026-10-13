@@ -34,7 +34,7 @@ pub(in super::super) fn refine_value_calls(
 }
 fn incoming_inputs(
     sites: &[ResolvedCallSite],
-) -> FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32)>> {
+) -> FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>> {
     let mut incoming: FxHashMap<_, Vec<_>> = fx_map();
     for site in sites {
         if let Some(NodeId::Symbol {
@@ -46,7 +46,7 @@ fn incoming_inputs(
             incoming
                 .entry((file.to_path_buf(), *id))
                 .or_default()
-                .push((site.file.clone(), site.offset));
+                .push((site.file.clone(), site.offset, site.source_callee.clone()));
         }
     }
     incoming
@@ -57,7 +57,7 @@ fn refine_iteration(
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
     base: &[ResolvedCallSite],
-    incoming: FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32)>>,
+    incoming: FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>,
     parameters_enabled: bool,
 ) -> (Vec<ResolvedCallSite>, Vec<Edge>) {
     let mut flow = ValueFlowResolution {
@@ -80,7 +80,13 @@ fn refine_iteration(
         let Some(index) = indexes.file(facts, &site.file) else {
             continue;
         };
-        let Some(call) = index.values.calls.get(&site.offset) else {
+        let call = index
+            .values
+            .sites
+            .get(&site.offset)
+            .and_then(|sites| sites.get(site.source_callee.as_str()))
+            .and_then(|key| index.values.calls.get(key));
+        let Some(call) = call else {
             continue;
         };
         if matches!(site.target, ResolvedCallTarget::Unknown) {
@@ -96,7 +102,9 @@ fn refine_iteration(
         }
         let value = flow.value(&site.file, &call.callee);
         let value = match value {
-            FlowValue::Returned { factory, executor } => {
+            FlowValue::Returned {
+                factory, executor, ..
+            } => {
                 site.returned_from = factory;
                 *executor
             }

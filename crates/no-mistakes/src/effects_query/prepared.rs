@@ -124,7 +124,7 @@ pub(crate) fn run_with_prepared(
                 matched_offsets.insert(call.offset);
             }
         }
-        if selection.targets.is_empty() && selection.returned.is_empty() {
+        if selection.targets.is_empty() && selection.returned.is_empty() && !selection.names.keys().any(|name| name.contains('.')) {
             continue;
         }
         let callers: crate::fx::FxHashMap<_, _> = file
@@ -139,6 +139,16 @@ pub(crate) fn run_with_prepared(
                     | crate::codebase::dependencies::extract::InvocationKind::Construct
             ) {
                 continue;
+            }
+            if let crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { export_path, .. } = &site.target {
+                if export_path.contains('.') {
+                    if let Some(category) = selection.names.get(export_path) {
+                        if matched_offsets.insert(site.offset) {
+                            call_sites.push(EffectCallSite { file: relative_path.clone(), line: site.line as usize, callee: export_path.clone(), category: category.clone(), caller: callers.get(&site.offset).and_then(|caller| (*caller).clone()), depth: *depth });
+                        }
+                        continue;
+                    }
+                }
             }
             let direct = match &site.target {
                 crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { specifier, export_path, .. } => selection.targets.get(specifier).and_then(|exports| exports.get(export_path)),

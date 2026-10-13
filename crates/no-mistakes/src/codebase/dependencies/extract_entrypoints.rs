@@ -193,3 +193,7 @@ fn import_line_at(line_starts: &[u32], byte_offset: usize) -> u32 {
         Err(index) => index as u32,
     }
 }
+
+#[cfg(test)]
+#[path = "extract/tests/value_flow_sharing.rs"]
+mod value_flow_sharing;

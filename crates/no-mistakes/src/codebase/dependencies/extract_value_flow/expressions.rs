@@ -17,7 +17,9 @@ impl ImportCollector {
             Expression::TSNonNullExpression(assertion) => {
                 self.value_expression(&assertion.expression)
             }
-            Expression::CallExpression(call) => ValueExpression::Call(call.span.start),
+            Expression::CallExpression(call) => {
+                ValueExpression::Call(call.span.start, call.span.end)
+            }
             Expression::ArrowFunctionExpression(arrow) => {
                 ValueExpression::Callable(CallableId(arrow.span.start))
             }

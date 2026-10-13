@@ -22,7 +22,9 @@ effects:
 All lists default to empty. `categories` maps category labels to sink spellings;
 `functions` declares uncategorized sinks. These lists match the exact source spelling
 or a member call's terminal name, following the existing effects query. Aliased
-imports are not inferred from the configured original name.
+imports are not inferred from a configured bare function name. Qualified
+client-member spellings, such as `sessionValkeyClient.scan`, also follow proven
+receiver bindings through aliases, parameters, and defaults.
 
 `targets` adds binding-aware matching for the `effects` query and the per-item
 rule. Each selector
@@ -46,7 +48,8 @@ Returned functions and destructured factory exports resolve through their visibl
 factory bodies, including awaited initializers and explicit re-export chains.
 Receiver provenance follows client defaults and supplied arguments through helpers.
 A shared helper receiver resolves only when its statically known callers agree;
-unknown, conflicting, or reassigned values stay unresolved.
+unknown, conflicting, or reassigned values stay unresolved. Imported clients
+created by opaque factories retain their exported receiver identity.
 
 `returnedExecutors` selects imported factories whose returned callable is an
 effect sink. It uses the same `{module, export, category?}` selectors as `targets`,

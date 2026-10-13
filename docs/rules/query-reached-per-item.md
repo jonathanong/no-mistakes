@@ -65,7 +65,8 @@ For example, `import { valkey as cache } from '@vendor/cache'` followed by
 `items.map(item => cache.hget(item))` matches `valkey.hget`; a local parameter
 named `cache` does not. Calls such as `console.write()` and stream methods do
 not match a PostgreSQL target. Transitive helper paths use the same selectors. Visible factory returns and
-client parameter/default values retain their bindings. Unknown or conflicting
+client parameter/default values retain their bindings, including qualified
+named-client command lists. Unknown or conflicting
 client arguments stay unresolved. A configured cursor runner is an effect sink
 per invocation; its internal batch size does not exempt an outer loop.
 

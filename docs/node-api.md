@@ -606,7 +606,8 @@ selectors by exact import specifier and export path; its string lists retain
 spelling-based matching. The `query-reached-per-item` rule in `check()` and
 `analyzeProject()` check reports honors those same binding-aware selectors,
 including transitive helper calls, factory returns, and agreeing client
-argument/default bindings, without matching unrelated same-named bindings.
+argument/default bindings, including qualified named-client command lists,
+without matching unrelated same-named bindings.
 `effects.<kind>.returnedExecutors` selects callable results of imported factories
 whose implementation is opaque; both APIs honor these selectors.
 `resolveCheck` import rows include `computed: true` for non-literal

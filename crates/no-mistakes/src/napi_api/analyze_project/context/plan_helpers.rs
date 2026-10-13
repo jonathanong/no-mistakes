@@ -34,6 +34,7 @@ fn graph_build_plan(options: &AnalyzeProjectOptions) -> Result<GraphBuildPlan> {
         } else if request.report_type == "effects" {
             plan.include(GraphBuildPlan {
                 calls: true,
+                effect_selectors: true,
                 ..runtime_import_graph_plan()
             });
         } else if request.report_type == "rscCallers" {

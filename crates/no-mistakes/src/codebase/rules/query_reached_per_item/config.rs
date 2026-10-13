@@ -94,6 +94,11 @@ impl<'a> Sinks<'a> {
                 else {
                     return None;
                 };
+                if export_path.contains('.') {
+                    if let Some(transaction) = sink(self.config, export_path) {
+                        return Some(transaction);
+                    }
+                }
                 self.targets
                     .get(specifier.as_str())
                     .is_some_and(|exports| exports.contains(export_path.as_str()))
@@ -166,6 +171,10 @@ pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<(
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
         calls: true,
+        effect_selectors: config
+            .effects
+            .values()
+            .any(|effect| !effect.targets.is_empty()),
         ..Default::default()
     })
 }

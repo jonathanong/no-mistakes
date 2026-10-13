@@ -7,7 +7,7 @@ impl ImportCollector {
         }
         if let Some(init) = &declarator.init {
             let value = self.value_expression(init);
-            if !immutable && !matches!(value, ValueExpression::Call(_)) {
+            if !immutable && !matches!(value, ValueExpression::Call(_, _)) {
                 return;
             }
             self.record_value_pattern(&declarator.id, value, declarator.span.start);
@@ -34,6 +34,7 @@ impl ImportCollector {
                 });
             }
             BindingPattern::ObjectPattern(object) => {
+                let shared = std::sync::Arc::new(value);
                 for property in &object.properties {
                     if !property.computed {
                         if let Some(key) =
@@ -41,7 +42,10 @@ impl ImportCollector {
                         {
                             self.record_value_pattern(
                                 &property.value,
-                                ValueExpression::Member(Box::new(value.clone()), key.to_string()),
+                                ValueExpression::Member(
+                                    std::sync::Arc::clone(&shared),
+                                    key.to_string(),
+                                ),
                                 declared_at,
                             );
                         }
@@ -106,6 +110,9 @@ impl ImportCollector {
             .collect();
         self.value_flow.calls.push(ValueCall {
             offset: call.span.start,
+            end: call.span.end,
+            source_callee: recorded_call_callee(self, call)
+                .unwrap_or_else(|| "<unknown>".to_string()),
             callee,
             arguments,
             spread_at: call
