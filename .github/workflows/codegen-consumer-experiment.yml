@@ -53,11 +53,8 @@ jobs:
       - name: Install pinned consumer dependencies
         working-directory: fixture
         run: pnpm install --frozen-lockfile --loglevel=warn
-      - name: Install pinned consumer CI tools
-        uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
-        with:
-          cache: false
-          working_directory: fixture
+      # The consumer's pinned selene tool has no linux/arm64 release. Its
+      # no-mistakes check needs Node and pnpm, both installed above.
       - name: Download same-source fat and Thin binaries
         env:
           GH_TOKEN: ${{ github.token }}
