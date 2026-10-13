@@ -10,7 +10,7 @@ For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 `CARGO_PROFILE_TEST_DEBUG=2` when invoking Cargo to restore debugger symbols.
 
 CI and release validation share `.github/scripts/rust-validation.sh`. Coverage
-instrumentation is applied only to the coverage build and test steps; doctests
+instrumentation is applied only to the coverage build and test steps; documentation tests
 run separately in both workflows. Resumed releases may use historical source
 tags without the shared helpers or profile defaults. Release validation checks
 out the running workflow's revision (`github.workflow_sha`) separately into

@@ -74,9 +74,14 @@ echo "Running oxlint..."
 "$oxlint" packages/ vitest.config.js </dev/null &
 pid_oxlint=$!
 
+echo "Running CSpell..."
+pnpm run lint:spell </dev/null &
+pid_cspell=$!
+
 wait "$pid_ast" || fail=1
 wait "$pid_rust" || fail=1
 wait "$pid_oxfmt" || fail=1
 wait "$pid_oxlint" || fail=1
+wait "$pid_cspell" || fail=1
 
 exit "$fail"

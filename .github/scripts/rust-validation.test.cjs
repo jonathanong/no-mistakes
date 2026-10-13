@@ -129,3 +129,11 @@ test("shared tooling validates a historical release directory without local help
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim().split("\n")[0], historical);
 });
+
+test("pre-push enforces the same documentation spelling scope as CI", () => {
+  const hook = readFileSync(path.join(root, ".husky/pre-push"), "utf8");
+  assert.match(hook, /pnpm run lint:spell/);
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  assert.match(workflow, /pnpm run lint:spell/);
+  assert.match(hook, /wait "\$pid_cspell" \|\| fail=1/);
+});

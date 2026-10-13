@@ -196,7 +196,7 @@ debugging, use `CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
 
 CI and release validation share `.github/scripts/rust-validation.sh`: `build` and
 `test` select the locked workspace, all features, libraries, binaries, and integration
-tests; `doc` runs doctests separately. Coverage instrumentation stays scoped to
+tests; `doc` runs documentation tests separately. Coverage instrumentation stays scoped to
 the coverage build and test steps. Run the shared script locally with Bash to
 reproduce either validation scope. Release resumes use validation tooling from
 the running workflow while retaining the tagged Rust source; see the
