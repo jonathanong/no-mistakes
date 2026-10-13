@@ -1,9 +1,9 @@
-use super::{flow_sequence_lines_from, is_content, value_after_anchor, FlowState};
+use super::{
+    flow_sequence_lines_from, is_content, key::key_boundary, key::mapping_key_len,
+    value_after_anchor, FlowState,
+};
 use crate::codebase::rules::github_actions_step_timeouts::yaml::yaml_key_value;
 use std::collections::BTreeMap;
-
-mod key;
-use key::{key_boundary, mapping_key_len};
 
 #[derive(Clone, Copy)]
 struct JobMarker {

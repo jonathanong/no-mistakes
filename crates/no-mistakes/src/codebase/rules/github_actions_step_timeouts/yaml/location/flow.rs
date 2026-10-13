@@ -110,15 +110,17 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
             {
                 break;
             }
-            if state.mapping_depth == 1 && state.sequence_depth == 0 && state.quote.is_none() {
-                for key in ["parallel:", "\"parallel\":", "'parallel':"] {
-                    if line[column..].starts_with(key) {
-                        let value = &line[column + key.len()..];
-                        if value_after_anchor(value.trim_start()).starts_with('[') {
-                            return value
-                                .find('[')
-                                .map(|offset| (line_index, column + key.len() + offset));
-                        }
+            if state.mapping_depth == 1
+                && state.sequence_depth == 0
+                && state.quote.is_none()
+                && key::key_boundary(previous)
+            {
+                if let Some(length) = key::mapping_key_len(&line[column..], "parallel") {
+                    let value = &line[column + length..];
+                    if value_after_anchor(value.trim_start()).starts_with('[') {
+                        return value
+                            .find('[')
+                            .map(|offset| (line_index, column + length + offset));
                     }
                 }
             }
@@ -134,6 +136,7 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
 }
 
 mod jobs;
+mod key;
 pub(super) use jobs::jobs_flow_start;
 mod root;
 pub(super) use root::{locate_job_steps, RootFlowIndex};

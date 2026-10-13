@@ -251,6 +251,14 @@ fn parallel_children_in_multiline_flow_mapping_keep_own_lines() {
 }
 
 #[test]
+fn spaced_parallel_key_keeps_child_step_line_and_suppression() {
+    let findings = run("spaced-flow-parallel", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert!(run("spaced-flow-parallel-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn root_flow_mapping_locates_each_authored_step() {
     for (scenario, line) in [
         ("root-flow", 3),
