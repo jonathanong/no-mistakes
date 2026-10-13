@@ -19,7 +19,11 @@ fn repository_declarations_select_lint_and_format_without_file_arguments() {
     ]);
     assert_eq!(
         command_strings(&report),
-        ["pnpm run fmt:js:check", "pnpm run lint:js"]
+        [
+            "pnpm run fmt:js:check",
+            "pnpm run lint:duplicates",
+            "pnpm run lint:js"
+        ]
     );
     assert!(report.warnings.is_empty());
     assert!(!report.fallback_triggered);
@@ -28,6 +32,7 @@ fn repository_declarations_select_lint_and_format_without_file_arguments() {
 #[test]
 fn repository_quality_configuration_changes_select_their_checks() {
     for (file, expected) in [
+        (".jscpd.json", vec!["pnpm run lint:duplicates"]),
         (".oxlintrc.json", vec!["pnpm run lint:js"]),
         (".oxfmtrc.json", vec!["pnpm run fmt:js:check"]),
         ("cspell.config.yaml", vec!["pnpm run lint:spell"]),
@@ -35,6 +40,7 @@ fn repository_quality_configuration_changes_select_their_checks() {
             "package.json",
             vec![
                 "pnpm run fmt:js:check",
+                "pnpm run lint:duplicates",
                 "pnpm run lint:js",
                 "pnpm run lint:spell",
             ],
@@ -43,6 +49,7 @@ fn repository_quality_configuration_changes_select_their_checks() {
             "pnpm-lock.yaml",
             vec![
                 "pnpm run fmt:js:check",
+                "pnpm run lint:duplicates",
                 "pnpm run lint:js",
                 "pnpm run lint:spell",
             ],
@@ -78,14 +85,43 @@ fn repository_docs_select_spelling_with_package_formatting_when_applicable() {
 fn repository_quality_checks_stay_scoped_and_skip_empty_changes() {
     for files in [
         vec![],
-        vec!["crates/no-mistakes/src/impacted_checks.rs"],
         vec!["fixtures/node-api/executed-postgres-sql/public.mts"],
-        vec!["packages/no-mistakes/vendor/generated.js"],
         vec!["packages/no-mistakes/node_modules/dependency/index.js"],
         vec!["packages/no-mistakes/coverage/index.html"],
     ] {
         assert!(repository_report(&files).checks.is_empty(), "{files:?}");
     }
+    for file in [
+        "crates/no-mistakes/src/impacted_checks.rs",
+        "packages/no-mistakes/vendor/generated.js",
+    ] {
+        assert_eq!(
+            command_strings(&repository_report(&[file])),
+            ["pnpm run lint:duplicates"],
+            "{file}"
+        );
+    }
+}
+
+#[test]
+fn repository_duplicate_gate_excludes_test_helpers_but_keeps_integration_analyzers() {
+    for file in [
+        "crates/no-mistakes/src/test_support.rs",
+        "crates/no-mistakes/src/codebase/dependencies/graph/test_support/graph_files.rs",
+        "packages/eslint-plugin-no-mistakes/test/helpers.mjs",
+    ] {
+        assert!(
+            !command_strings(&repository_report(&[file]))
+                .contains(&"pnpm run lint:duplicates".to_string()),
+            "{file}"
+        );
+    }
+    assert_eq!(
+        command_strings(&repository_report(&[
+            "crates/no-mistakes/src/integration_tests/project_config/parse.rs",
+        ])),
+        ["pnpm run lint:duplicates"]
+    );
 }
 
 #[test]
@@ -94,7 +130,11 @@ fn repository_deleted_declaration_still_selects_whole_scope_validation() {
     let report = repository_report(&["packages/no-mistakes/deleted.d.ts"]);
     assert_eq!(
         command_strings(&report),
-        ["pnpm run fmt:js:check", "pnpm run lint:js"]
+        [
+            "pnpm run fmt:js:check",
+            "pnpm run lint:duplicates",
+            "pnpm run lint:js"
+        ]
     );
 }
 
@@ -109,7 +149,11 @@ fn repository_package_module_variants_and_runner_config_select_lint_and_format()
     ] {
         assert_eq!(
             command_strings(&repository_report(&[file])),
-            ["pnpm run fmt:js:check", "pnpm run lint:js"],
+            [
+                "pnpm run fmt:js:check",
+                "pnpm run lint:duplicates",
+                "pnpm run lint:js"
+            ],
             "{file}"
         );
     }

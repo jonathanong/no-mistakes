@@ -7,8 +7,8 @@ There is no baseline or overall duplication-percentage allowance.
 
 ## Detection
 
-`.jscpd.json` explicitly scans Rust, JavaScript, and TypeScript in `crates/` and
-`packages/`. Exact token clones need at least 30 lines and 50 tokens. The `weak`
+`.jscpd.json` explicitly scans Rust, JavaScript, JSX, TypeScript, and TSX in
+`crates/` and `packages/`. Exact token clones need at least 30 lines and 50 tokens. The `weak`
 mode ignores whitespace and comments.
 
 The additional function similarity pass requires at least 30 lines and 20
@@ -28,7 +28,8 @@ Treat a finding as a prompt to inspect semantics before extracting a helper.
 
 The scan respects `.gitignore`. Explicit exclusions cover fixture directories,
 test files named `tests.rs`, `tests_*.rs`, `*_tests.rs`, `*.test.*`, or `*.spec.*`,
-directories named `tests`, dependency directories, and Cargo build output.
+directories named `test` or `tests`, Rust `test_support.rs` files and
+`test_support/` directories, dependency directories, and Cargo build output.
 Tests and fixtures intentionally repeat setup and examples. Directory names
 such as `integration_tests` are not excluded: they contain production analyzers.
 Local scans can include untracked files allowed by `.gitignore`; CI uses a clean checkout.

@@ -9,9 +9,12 @@ checks:
         - pnpm-lock.yaml
       exclude:
         - "**/tests/**"
+        - "**/test/**"
         - "**/tests.rs"
         - "**/tests_*.rs"
         - "**/*_tests.rs"
+        - "**/test_support.rs"
+        - "**/test_support/**"
         - "**/*.test.*"
         - "**/*.spec.*"
         - "**/fixtures/**"
