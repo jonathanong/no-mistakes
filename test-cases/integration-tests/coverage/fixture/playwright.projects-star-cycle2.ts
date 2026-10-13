@@ -3,8 +3,7 @@ import { defineConfig } from '@playwright/test'
 import { nonExistent } from './playwright.projects-star-cycle2-a'
 
 // cycle2-a and cycle2-b form a mutual star-export cycle with no named exports.
-// When looking for 'nonExistent', the star loop traverses A→B→A, hitting
-// The mutual star-export cycle has no named target, so it resolves empty.
+// Looking for 'nonExistent' traverses A→B→A and resolves empty.
 export default defineConfig({
   // @ts-ignore
   projects: nonExistent,

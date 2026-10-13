@@ -8,13 +8,15 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 
-#[path = "../../shared_project_arrays/object_calls.rs"]
-mod calls;
+use crate::integration_tests::test_config::shared_project_arrays::object_calls::{
+    self as calls, ObjectCallOps,
+};
 mod config_extends;
 mod dynamic_triggers;
 mod exports;
-#[path = "../../shared_project_arrays/object_members.rs"]
-mod members;
+use crate::integration_tests::test_config::shared_project_arrays::object_members::{
+    self as members, ObjectMemberOps,
+};
 mod merge;
 mod object_expressions;
 mod properties;
@@ -31,6 +33,23 @@ use merge::merge_options;
 pub(super) use object_expressions::expression_object_options;
 use object_expressions::{imported_options, spread_options};
 use setup_dependencies::setup_dependencies;
+
+fn object_call_ops() -> ObjectCallOps<Options> {
+    ObjectCallOps {
+        expression_object_options,
+        import_bindings: super::import_bindings,
+    }
+}
+
+fn object_member_ops() -> ObjectMemberOps<Options> {
+    ObjectMemberOps {
+        expression_object,
+        project_options,
+        imported_options,
+        import_bindings: super::import_bindings,
+        default_identifier_reexport: true,
+    }
+}
 
 pub(super) fn project_options(
     object: &ObjectExpression<'_>,

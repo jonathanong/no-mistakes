@@ -40,7 +40,7 @@ fn imported_project_options(
         base_path,
         ctx,
         import_bindings,
-        |body, scoped| body_return_project_options(body, scoped),
+        body_return_project_options,
     )
 }
 

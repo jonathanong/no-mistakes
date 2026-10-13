@@ -9,15 +9,29 @@ use oxc_ast::ast::{
 use std::collections::BTreeSet;
 use std::path::Path;
 
-#[path = "../shared_project_arrays/calls.rs"]
-mod calls;
+mod calls {
+    use super::{body_return_options, helper_expression_options, imported_options, Ctx, Options};
+    use anyhow::Result;
+    use oxc_ast::ast::Expression;
+
+    pub(super) fn call_options(
+        callee: &Expression<'_>,
+        ctx: &mut Ctx<'_, '_>,
+    ) -> Result<Vec<Options>> {
+        crate::integration_tests::test_config::shared_project_arrays::calls::call_options(
+            callee,
+            ctx,
+            helper_expression_options,
+            body_return_options,
+            imported_options,
+        )
+    }
+}
 mod exports;
 mod expression_options;
 mod function_returns;
 pub(in crate::integration_tests::test_config::vitest) mod imports;
-mod member_helpers;
-#[path = "../shared_project_arrays/members.rs"]
-mod members;
+use crate::integration_tests::test_config::shared_project_arrays::members::{self, MemberOps};
 mod objects;
 mod project_entries;
 mod root_options;
@@ -39,6 +53,17 @@ pub(in crate::integration_tests::test_config::vitest) use string_projects::{
     string_project_roots_with_resolver,
 };
 use string_projects::{string_project_options_for_paths, string_project_paths};
+
+fn member_ops() -> MemberOps<Options> {
+    MemberOps {
+        expression_options,
+        imported_options,
+        exported_options: exports::exported_options,
+        expression_object: objects::expression_object,
+        import_bindings,
+        default_identifier_reexport: true,
+    }
+}
 
 pub(super) fn project_options(
     program: &Program<'_>,

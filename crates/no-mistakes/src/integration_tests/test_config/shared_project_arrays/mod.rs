@@ -7,9 +7,16 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::path::PathBuf;
 
+pub(super) mod calls;
 mod context;
+pub(super) mod declarations;
+pub(super) mod export_scan;
 mod exports;
 mod functions;
+mod member_ops;
+pub(super) mod members;
+pub(super) mod object_calls;
+pub(super) mod object_members;
 pub(super) use context::{Context, ExprMap, FnMap};
 pub(super) use exports::{imported_reexport, named_export_object, sourced_reexport};
 pub(super) use functions::top_level_function_bodies;
@@ -60,7 +67,7 @@ pub(super) fn resolve_imported_star_exports<T>(
     exported: &str,
     path: &Path,
     ctx: &mut Context<'_, '_>,
-    lookup: fn(&Program<'_>, &str, &Path, &mut Context<'_, '_>, &str) -> Result<Option<Vec<T>>>,
+    lookup: StarExportLookup<T>,
 ) -> Result<Option<Vec<T>>> {
     resolve_star_exports(sources, exported, path, ctx, |import, base_path, ctx| {
         with_imported_context(import, base_path, ctx, |program, source, path, ctx| {
@@ -68,6 +75,9 @@ pub(super) fn resolve_imported_star_exports<T>(
         })
     })
 }
+
+type StarExportLookup<T> =
+    fn(&Program<'_>, &str, &Path, &mut Context<'_, '_>, &str) -> Result<Option<Vec<T>>>;
 
 /// Resolve an imported helper once, preserving the active import cycle guard
 /// through parsing and projection. Unresolved and unreadable imports are empty.
@@ -89,17 +99,20 @@ pub(super) fn imported_function_options<T: Default>(
     let result = read_imported_program(&path, |program, source| {
         let mut local_seen = BTreeSet::new();
         let mut object_seen = BTreeSet::new();
-        let mut scoped = Context::for_program(
-            program,
-            source,
-            &path,
-            resolver,
-            ctx.seen,
-            &mut local_seen,
-            &mut object_seen,
-            import_bindings(program),
+        let mut scoped = Context {
             is_test_object,
-        );
+            source,
+            bindings: crate::integration_tests::test_config::shared::top_level_object_bindings(
+                program,
+            ),
+            functions: top_level_function_bodies(program),
+            imports: import_bindings(program),
+            resolver,
+            path: &path,
+            seen: ctx.seen,
+            local_seen: &mut local_seen,
+            object_seen: &mut object_seen,
+        };
         let Some(body) = scoped.functions.get(import.imported.as_str()).copied() else {
             return Ok(T::default());
         };

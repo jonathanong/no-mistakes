@@ -1,7 +1,6 @@
-use super::{top_level_function_bodies, ImportBinding, ImportContext};
+use super::{ImportBinding, ImportContext};
 use crate::codebase::ts_resolver::ImportResolution;
-use crate::integration_tests::test_config::shared;
-use oxc_ast::ast::{Expression, FunctionBody, Program};
+use oxc_ast::ast::{Expression, FunctionBody};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -23,33 +22,6 @@ pub(in crate::integration_tests::test_config) struct Context<'a, 'r> {
     pub(in crate::integration_tests::test_config) seen: &'r mut BTreeSet<PathBuf>,
     pub(in crate::integration_tests::test_config) local_seen: &'r mut BTreeSet<String>,
     pub(in crate::integration_tests::test_config) object_seen: &'r mut BTreeSet<String>,
-}
-
-impl<'a, 'r> Context<'a, 'r> {
-    pub(in crate::integration_tests::test_config) fn for_program(
-        program: &'a Program<'a>,
-        source: &'a str,
-        path: &'r Path,
-        resolver: &'r dyn ImportResolution,
-        seen: &'r mut BTreeSet<PathBuf>,
-        local_seen: &'r mut BTreeSet<String>,
-        object_seen: &'r mut BTreeSet<String>,
-        imports: BTreeMap<String, ImportBinding>,
-        is_test_object: bool,
-    ) -> Self {
-        Self {
-            is_test_object,
-            source,
-            bindings: shared::top_level_object_bindings(program),
-            functions: top_level_function_bodies(program),
-            imports,
-            resolver,
-            path,
-            seen,
-            local_seen,
-            object_seen,
-        }
-    }
 }
 
 impl ImportContext for Context<'_, '_> {

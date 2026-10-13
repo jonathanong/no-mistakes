@@ -7,14 +7,33 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 
-#[path = "../../shared_project_arrays/object_calls.rs"]
-mod calls;
+use crate::integration_tests::test_config::shared_project_arrays::object_calls::{
+    self as calls, ObjectCallOps,
+};
 mod exports;
-#[path = "../../shared_project_arrays/object_members.rs"]
-mod members;
 use self::project_object_options as project_options;
+use crate::integration_tests::test_config::shared_project_arrays::object_members::{
+    self as members, ObjectMemberOps,
+};
 use exports::imported_object_options;
 use exports::imported_object_options as imported_options;
+
+fn object_call_ops() -> ObjectCallOps<Options> {
+    ObjectCallOps {
+        expression_object_options,
+        import_bindings: super::import_bindings,
+    }
+}
+
+fn object_member_ops() -> ObjectMemberOps<Options> {
+    ObjectMemberOps {
+        expression_object,
+        project_options,
+        imported_options,
+        import_bindings: super::import_bindings,
+        default_identifier_reexport: false,
+    }
+}
 
 pub(super) fn project_object_options(
     object: &ObjectExpression<'_>,
@@ -110,10 +129,10 @@ fn expression_object_options_inner(
             return result;
         }
         Expression::StaticMemberExpression(member) => {
-            return members::namespace_member_options(member, ctx);
+            return members::namespace_member_options(member, ctx, &object_member_ops());
         }
         Expression::CallExpression(call) if call.arguments.is_empty() => {
-            return calls::call_object_options(&call.callee, ctx);
+            return calls::call_object_options(&call.callee, ctx, &object_call_ops());
         }
         Expression::CallExpression(_) => return Ok(None),
         _ => {}

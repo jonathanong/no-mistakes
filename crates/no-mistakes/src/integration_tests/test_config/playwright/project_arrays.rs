@@ -10,14 +10,28 @@ use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-#[path = "../shared_project_arrays/calls.rs"]
-mod calls;
+mod calls {
+    use super::{body_return_options, helper_expression_options, imported_options, Ctx, Options};
+    use anyhow::Result;
+    use oxc_ast::ast::Expression;
+
+    pub(super) fn call_options(
+        callee: &Expression<'_>,
+        ctx: &mut Ctx<'_, '_>,
+    ) -> Result<Vec<Options>> {
+        crate::integration_tests::test_config::shared_project_arrays::calls::call_options(
+            callee,
+            ctx,
+            helper_expression_options,
+            body_return_options,
+            imported_options,
+        )
+    }
+}
 mod exports;
 mod function_returns;
 mod imports;
-mod member_helpers;
-#[path = "../shared_project_arrays/members.rs"]
-mod members;
+use crate::integration_tests::test_config::shared_project_arrays::members::{self, MemberOps};
 mod objects;
 mod root_options;
 mod root_spreads;
@@ -28,6 +42,17 @@ use imports::{import_bindings, ImportBinding};
 pub(super) use root_options::root_options;
 
 use crate::integration_tests::test_config::shared_project_arrays::{Context as Ctx, ExprMap};
+
+fn member_ops() -> MemberOps<Options> {
+    MemberOps {
+        expression_options,
+        imported_options,
+        exported_options: exports::exported_options,
+        expression_object: objects::expression_object,
+        import_bindings,
+        default_identifier_reexport: false,
+    }
+}
 
 pub(super) fn project_options(
     program: &Program<'_>,
@@ -103,7 +128,7 @@ pub(super) fn expression_options(
         }
         Expression::CallExpression(_) => Ok(Vec::new()),
         Expression::StaticMemberExpression(member) => {
-            members::namespace_member_options(member, ctx)
+            members::namespace_member_options(member, ctx, &member_ops())
         }
         _ => Ok(Vec::new()),
     }?;
