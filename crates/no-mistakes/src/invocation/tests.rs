@@ -8,8 +8,10 @@ use std::time::Instant;
 #[cfg(unix)]
 use wait_timeout::ChildExt;
 
+#[path = "tests/napi_options.rs"]
 mod napi_options;
 #[cfg(unix)]
+#[path = "tests/progress.rs"]
 mod progress;
 
 fn fixture_path(name: &str) -> std::path::PathBuf {

@@ -59,4 +59,5 @@ pub(super) fn decode_line(line: &[u8]) -> std::borrow::Cow<'_, str> {
 }
 
 #[cfg(test)]
+#[path = "reading/tests.rs"]
 mod tests;

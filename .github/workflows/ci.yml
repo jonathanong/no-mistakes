@@ -294,9 +294,9 @@ jobs:
       contents: read
       actions: read
     env:
-      # The macOS test-name filter still compiles the full lib-test binary.
-      # Match build/test profiles to preserve Windows rlib reuse, without
-      # disabling debug assertions or changing the platform test deadlines.
+      # Focused native integration tests avoid the full lib-test harness.
+      # Omit debug metadata without disabling debug assertions or changing
+      # the platform test deadlines.
       CARGO_PROFILE_DEV_DEBUG: "0"
       CARGO_PROFILE_TEST_DEBUG: "0"
     strategy:
@@ -313,7 +313,6 @@ jobs:
             target: aarch64-apple-darwin
             binary: ./target/debug/no-mistakes
             addon: target/debug/libno_mistakes.dylib
-            rust_test: "invocation::"
 
     steps:
       - name: Exclude workspace from Microsoft Defender
@@ -367,12 +366,12 @@ jobs:
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
-      # Windows uses an integration test so cargo does not typecheck ~7,500
-      # lib unit tests just to run the Job Object resume regression.
+      # Both native platforms use focused integration tests so cargo does not
+      # typecheck the unrelated lib unit tests for platform regressions.
       #
-      # Rewrite crate-type in this job only so one rustc emits the rlib (CLI
-      # + Windows integration test) and the Node cdylib. Do not commit that
-      # crate-type: Linux coverage should not also link a cdylib.
+      # Rewrite crate-type in this job only so one rustc emits the CLI rlib
+      # and Node cdylib. Do not commit that crate-type: Linux coverage should
+      # not also link a cdylib.
       - name: Build native CLI and N-API addon
         timeout-minutes: 10
         shell: bash
@@ -396,15 +395,15 @@ jobs:
         timeout-minutes: 10
         shell: bash
         env:
-          # Must match the preceding build so Windows `cargo test --test`
-          # reuses the rlib instead of rustc-ing no-mistakes again.
+          # Match the preceding build's N-API setting; Cargo may still
+          # compile a separate rlib for the integration-test profile.
           NO_MISTAKES_BUILD_NAPI: "1"
         run: |
           set -euo pipefail
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             cargo test --locked -p no-mistakes --test windows_job_object -- --exact --test-threads=1
           else
-            cargo test --locked -p no-mistakes --lib '${{ matrix.rust_test }}'
+            cargo test --locked -p no-mistakes --test macos_invocation
           fi
 
       - name: Run native CLI smoke test

@@ -190,9 +190,10 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     body,
-    /cargo test --locked -p no-mistakes --lib/,
-    "macOS native jobs must compile only the no-mistakes lib tests",
+    /cargo test --locked -p no-mistakes --test macos_invocation/,
+    "macOS native jobs must run the focused invocation test target",
   );
+  assert.doesNotMatch(body, /cargo test --locked -p no-mistakes --lib/);
   assert.doesNotMatch(
     unfoldedNativeJob,
     /cargo test\b[^\r\n]*--all-features\b/,
@@ -203,7 +204,12 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     /cargo test --locked -p no-mistakes --test windows_job_object/,
     "Windows must run the Job Object regression as an integration test",
   );
-  assert.match(body, /rust_test: ["']invocation::["']/);
+  const macosInvocation = readFileSync(
+    join(repoRoot, "crates", "no-mistakes", "tests", "macos_invocation.rs"),
+    "utf8",
+  );
+  assert.match(macosInvocation, /#\[path = "\.\.\/src\/invocation\.rs"\]/);
+  assert.match(macosInvocation, /mod invocation;/);
   assert.doesNotMatch(
     body,
     /pull-requests:\s*write/,
@@ -253,8 +259,8 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
 });
 
-// A Cargo test-name filter still compiles the whole macOS lib-test binary.
-// Keep build/test profiles aligned so Windows can reuse its preceding build.
+// Keep native build/test debug settings aligned without relying on Cargo to
+// reuse the preceding library build for integration tests.
 test("native CI omits debug metadata without weakening runtime checks", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const body = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
