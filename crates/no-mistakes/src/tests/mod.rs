@@ -168,6 +168,60 @@ pub(crate) fn warning_key(warning: &Warning) -> WarningKey {
     (warning.r#type.clone(), warning.file.clone(), warning.line)
 }
 
+/// Add the stable warning projection for graph edges whose targets may be
+/// unresolved at analysis time.
+pub(crate) fn push_edge_warning(
+    root: &Path,
+    curr: &no_mistakes::codebase::dependencies::graph::NodeId,
+    parent: &no_mistakes::codebase::dependencies::graph::NodeId,
+    kind: no_mistakes::codebase::dependencies::graph::EdgeKind,
+    warnings: &mut Vec<Warning>,
+    warnings_seen: &mut HashSet<WarningKey>,
+) {
+    use no_mistakes::codebase::dependencies::graph::EdgeKind;
+
+    let (warning_type, message, file) = match kind {
+        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
+            let file = plan::slash_node_name(curr, root);
+            (
+                "dynamic-import",
+                format!("Dynamic import in `{}` might not be fully resolved.", file),
+                file,
+            )
+        }
+        EdgeKind::HttpCall => {
+            let file = plan::slash_node_name(curr, root);
+            (
+                "http-call",
+                format!(
+                    "Dynamic HTTP call in `{}` to backend `{}`.",
+                    file,
+                    plan::slash_node_name(parent, root)
+                ),
+                file,
+            )
+        }
+        EdgeKind::ProcessSpawn => {
+            let file = plan::slash_node_name(curr, root);
+            (
+                "process-spawn",
+                format!("Process spawned in `{}`.", file),
+                file,
+            )
+        }
+        _ => return,
+    };
+    let warning = Warning {
+        r#type: warning_type.to_string(),
+        message,
+        file,
+        line: None,
+    };
+    if warnings_seen.insert(warning_key(&warning)) {
+        warnings.push(warning);
+    }
+}
+
 /// Surface only resource diagnostics that belong to a changed file or an
 /// already-selected graph path. Dynamic calls deliberately have no graph edge,
 /// so they are warnings rather than a fallback signal.
@@ -251,39 +305,5 @@ pub(crate) use impact_graph::{
 };
 
 #[cfg(test)]
-mod serde_tests {
-    use super::*;
-
-    #[test]
-    fn impact_reason_resource_details_round_trip_and_legacy_details_are_optional() {
-        let reason = ImpactReason {
-            changed_file: "resources/schema.sql".to_string(),
-            path: vec![
-                "resources/schema.sql".to_string(),
-                "src/load.ts".to_string(),
-                "src/load.test.ts".to_string(),
-            ],
-            via: vec!["resource".to_string(), "dependency".to_string()],
-            via_details: vec![
-                Some(ImpactEdgeDetail::Resource {
-                    consumer_file: "src/load.ts".to_string(),
-                    call_sites: vec![ResourceCallSite {
-                        call_kind: "read-file".to_string(),
-                        line: 8,
-                    }],
-                }),
-                None,
-            ],
-        };
-        let json = serde_json::to_string(&reason).unwrap();
-        assert!(json.contains("via_details"));
-        assert_eq!(serde_json::from_str::<ImpactReason>(&json).unwrap(), reason);
-
-        let legacy = r#"{"changed_file":"a.ts","path":["a.ts","a.test.ts"],"via":["dependency"]}"#;
-        let legacy_reason: ImpactReason = serde_json::from_str(legacy).unwrap();
-        assert!(legacy_reason.via_details.is_empty());
-        assert!(!serde_json::to_string(&legacy_reason)
-            .unwrap()
-            .contains("via_details"));
-    }
-}
+#[path = "mod_serde_tests.rs"]
+mod serde_tests;

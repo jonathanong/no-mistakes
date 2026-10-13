@@ -1,7 +1,6 @@
 use super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
 use super::{
-    push_resource_diagnostics, warning_key, Confidence, ImpactReason, SelectedTest, Warning,
-    WarningKey,
+    push_resource_diagnostics, Confidence, ImpactReason, SelectedTest, Warning, WarningKey,
 };
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
@@ -165,7 +164,14 @@ fn direct_candidates(
                 continue;
             }
             push_resource_diagnostics(graph, root, test_path.as_ref(), warnings, warnings_seen);
-            push_edge_warning(root, dependent, &start, *kind, warnings, warnings_seen);
+            crate::tests::push_edge_warning(
+                root,
+                dependent,
+                &start,
+                *kind,
+                warnings,
+                warnings_seen,
+            );
             let next = SelectedTest {
                 test_file: rel_test.clone(),
                 confidence: path_confidence(&[*kind]),
@@ -443,7 +449,7 @@ fn reason_from_path(
         reverse_details.push(crate::tests::plan::resource_edge_detail(
             graph, &curr, parent, *kind, root,
         ));
-        push_edge_warning(root, &curr, parent, *kind, warnings, warnings_seen);
+        crate::tests::push_edge_warning(root, &curr, parent, *kind, warnings, warnings_seen);
         curr = parent.clone();
     }
     if let Some(file) = curr.as_file() {
@@ -460,56 +466,6 @@ fn reason_from_path(
             .map(|kind| impact_reason_label(*kind).to_string())
             .collect(),
         via_details: reverse_details,
-    }
-}
-
-fn push_edge_warning(
-    root: &Path,
-    curr: &NodeId,
-    parent: &NodeId,
-    kind: EdgeKind,
-    warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<WarningKey>,
-) {
-    let (r#type, message, file) = match kind {
-        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
-            let file = slash_node_name(curr, root);
-            (
-                "dynamic-import",
-                format!("Dynamic import in `{}` might not be fully resolved.", file),
-                file,
-            )
-        }
-        EdgeKind::HttpCall => {
-            let file = slash_node_name(curr, root);
-            (
-                "http-call",
-                format!(
-                    "Dynamic HTTP call in `{}` to backend `{}`.",
-                    file,
-                    slash_node_name(parent, root)
-                ),
-                file,
-            )
-        }
-        EdgeKind::ProcessSpawn => {
-            let file = slash_node_name(curr, root);
-            (
-                "process-spawn",
-                format!("Process spawned in `{}`.", file),
-                file,
-            )
-        }
-        _ => return,
-    };
-    let warn = Warning {
-        r#type: r#type.to_string(),
-        message,
-        file,
-        line: None,
-    };
-    if warnings_seen.insert(warning_key(&warn)) {
-        warnings.push(warn);
     }
 }
 

@@ -1,6 +1,7 @@
 pub mod extract;
 pub mod graph;
 pub mod output;
+pub(crate) mod query;
 
 use anyhow::{bail, Context, Result};
 use globset::{Glob, GlobSetBuilder};

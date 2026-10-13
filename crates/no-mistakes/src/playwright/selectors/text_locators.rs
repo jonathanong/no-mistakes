@@ -1,9 +1,24 @@
+use super::status_visitor::StatusAwareVisitor;
 use super::text_locator_calls::extract_text_locator_call;
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::analysis::text_types::PlaywrightTextLocator;
 use crate::playwright::playwright_tests;
 use oxc_ast::ast::CallExpression;
 use oxc_ast_visit::Visit;
+
+impl<'ast, 'source> StatusAwareVisitor<'ast> for PlaywrightTextLocatorVisitor<'source> {
+    fn current_status(&self) -> playwright_tests::TestStatus {
+        self.status
+    }
+
+    fn with_branch_status(
+        &mut self,
+        status: playwright_tests::TestStatus,
+        visit: impl FnOnce(&mut Self),
+    ) {
+        self.with_status(status, visit);
+    }
+}
 
 #[cfg(test)]
 mod tests;
@@ -36,8 +51,8 @@ struct PlaywrightTextLocatorVisitor<'a> {
     describe_stack: Vec<String>,
 }
 
-impl<'a> Visit<'a> for PlaywrightTextLocatorVisitor<'_> {
-    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+impl<'ast, 'source> Visit<'ast> for PlaywrightTextLocatorVisitor<'source> {
+    fn visit_call_expression(&mut self, call: &CallExpression<'ast>) {
         if let Some(locator) = extract_text_locator_call(call, self.source) {
             self.locators.push(playwright_tests::TestOccurrence {
                 value: locator,
@@ -72,35 +87,19 @@ impl<'a> Visit<'a> for PlaywrightTextLocatorVisitor<'_> {
         oxc_ast_visit::walk::walk_call_expression(self, call);
     }
 
-    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
-        self.visit_expression(&statement.test);
-        let status = playwright_tests::status_for_if_branch(self.status);
-        self.with_status(status, |visitor| {
-            visitor.visit_statement(&statement.consequent);
-            if let Some(alternate) = &statement.alternate {
-                visitor.visit_statement(alternate);
-            }
-        });
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'ast>) {
+        self.visit_if_with_status(statement);
     }
 
     fn visit_conditional_expression(
         &mut self,
-        expression: &oxc_ast::ast::ConditionalExpression<'a>,
+        expression: &oxc_ast::ast::ConditionalExpression<'ast>,
     ) {
-        self.visit_expression(&expression.test);
-        let status = playwright_tests::status_for_if_branch(self.status);
-        self.with_status(status, |visitor| {
-            visitor.visit_expression(&expression.consequent);
-            visitor.visit_expression(&expression.alternate);
-        });
+        self.visit_conditional_with_status(expression);
     }
 
-    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) {
-        self.visit_expression(&expression.left);
-        let status = playwright_tests::status_for_if_branch(self.status);
-        self.with_status(status, |visitor| {
-            visitor.visit_expression(&expression.right)
-        });
+    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'ast>) {
+        self.visit_logical_with_status(expression);
     }
 }
 

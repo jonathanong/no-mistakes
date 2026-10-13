@@ -3,6 +3,7 @@ mod dart;
 mod elixir;
 mod facts;
 mod go;
+pub(super) mod http_routes;
 mod java;
 mod kafka;
 mod kotlin;

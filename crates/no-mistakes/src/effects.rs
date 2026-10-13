@@ -63,21 +63,13 @@ pub(crate) fn run(args: EffectsArgs) -> Result<ExitCode> {
         depth,
     );
     let report = report?;
-    match effective_format {
-        Format::Json => {
-            println!("{}", no_mistakes::cli::json_string(&report));
-        }
-        Format::Yml => {
-            println!("{}", no_mistakes::cli::yaml_string(&report));
-        }
-        Format::Md => print_md(&report),
-        Format::Paths => {
-            for path in report.paths() {
-                println!("{path}");
-            }
-        }
-        Format::Human => print_human(&report),
-    }
+    super::query_render::print_query_report(
+        &report,
+        report.paths(),
+        effective_format,
+        print_human,
+        print_md,
+    );
     Ok(ExitCode::SUCCESS)
 }
 

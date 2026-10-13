@@ -10,6 +10,7 @@ mod matcher;
 mod regex_mod;
 pub(crate) mod scoped_defaults;
 mod shadowing;
+mod status_visitor;
 mod template;
 #[cfg(test)]
 mod tests;

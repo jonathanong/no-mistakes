@@ -11,6 +11,11 @@ fn parser_count_fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/rsc")
 }
 
+fn invalid_config_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/impacted-checks/multi-framework")
+}
+
 #[test]
 fn rsc_callers_reuses_one_parse_for_imports_and_directives() {
     let source = crate::codebase::ts_resolver::normalize_path(&parser_count_fixture());
@@ -36,12 +41,7 @@ fn rsc_callers_reuses_one_parse_for_imports_and_directives() {
     );
 
     let run_source = include_str!("prepare.rs");
-    assert_eq!(
-        run_source
-            .matches("collect_ts_facts_with_context_sources_and_session(")
-            .count(),
-        1
-    );
+    assert_eq!(run_source.matches("prepare_query_graph(").count(), 1);
     let run_body = run_source
         .split("pub fn run(")
         .nth(1)
@@ -135,6 +135,20 @@ fn missing_component_errors() {
     )
     .unwrap_err();
     assert!(err.to_string().contains("component file not found"));
+}
+
+#[test]
+fn invalid_tsconfig_precedes_invalid_config() {
+    let err = run(
+        &invalid_config_fixture(),
+        Some(Path::new("invalid.no-mistakes.yml")),
+        Some(Path::new("missing-tsconfig.json")),
+        Path::new("src/value.ts"),
+        None,
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("missing-tsconfig.json"));
+    assert!(!err.to_string().contains("config file does not exist"));
 }
 
 #[test]

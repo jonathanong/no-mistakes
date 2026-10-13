@@ -6,8 +6,10 @@ mod traversal_impls;
 pub(crate) use json_write::json_value;
 pub use json_write::{json_pretty, json_string, print_json, yaml_string};
 pub use output_format::{resolve_format, Format};
-pub(crate) use traversal::related_edge_view;
 pub use traversal::{edge_view, TraversableEdge};
+pub(crate) use traversal::{
+    prepared_edge_view, prepared_related_view, project_relationship_edge, related_edge_view,
+};
 
 use std::path::{Path, PathBuf};
 

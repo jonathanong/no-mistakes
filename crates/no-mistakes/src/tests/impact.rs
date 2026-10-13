@@ -180,7 +180,7 @@ pub(crate) fn generate_impact_plan_with_prepared(
                     }
                     node_chain.push(slash_node_name(parent, root));
                     reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, root));
-                    push_warning(
+                    crate::tests::push_edge_warning(
                         root,
                         &curr,
                         parent,
@@ -347,145 +347,9 @@ fn is_runtime_registration_edge(kind: &EdgeKind) -> bool {
 }
 
 #[cfg(test)]
-mod registry_edge_tests {
-    use super::*;
-
-    #[test]
-    fn registry_hints_ignore_non_runtime_dependency_edges() {
-        for kind in [
-            EdgeKind::TypeImport,
-            EdgeKind::WorkspaceTypeImport,
-            EdgeKind::RequireResolve,
-        ] {
-            assert!(!is_runtime_registration_edge(&kind));
-        }
-        assert!(is_runtime_registration_edge(&EdgeKind::Import));
-        assert!(is_runtime_registration_edge(&EdgeKind::WorkspaceImport));
-        assert!(is_runtime_registration_edge(&EdgeKind::Require));
-    }
-}
-
-fn push_warning(
-    root: &Path,
-    curr: &NodeId,
-    parent: &NodeId,
-    kind: EdgeKind,
-    warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<WarningKey>,
-) {
-    let (warn_type, message, file) = match kind {
-        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
-            let file = slash_node_name(curr, root);
-            (
-                "dynamic-import",
-                format!("Dynamic import in `{}` might not be fully resolved.", file),
-                file,
-            )
-        }
-        EdgeKind::HttpCall => {
-            let file = slash_node_name(curr, root);
-            (
-                "http-call",
-                format!(
-                    "Dynamic HTTP call in `{}` to backend `{}`.",
-                    file,
-                    slash_node_name(parent, root)
-                ),
-                file,
-            )
-        }
-        EdgeKind::ProcessSpawn => {
-            let file = slash_node_name(curr, root);
-            (
-                "process-spawn",
-                format!("Process spawned in `{}`.", file),
-                file,
-            )
-        }
-        _ => return,
-    };
-    let warn = Warning {
-        r#type: warn_type.to_string(),
-        message,
-        file,
-        line: None,
-    };
-    if warnings_seen.insert(warning_key(&warn)) {
-        warnings.push(warn);
-    }
-}
+#[path = "impact_registry_edge_tests.rs"]
+mod registry_edge_tests;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn impact_classifies_missing_setup_helper_entrypoints_as_deleted() {
-        let root = no_mistakes::codebase::ts_resolver::normalize_path(
-            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../fixtures/test-plan/vitest-setup-dependencies"),
-        );
-        let plan = generate_impact_plan(&ImpactArgs {
-            entrypoints: vec!["runtime-owner/setup/deleted-runtime-helper.ts".to_string()],
-            entrypoint_symbols: Vec::new(),
-            include_symbols: false,
-            root,
-            config: None,
-            tsconfig: None,
-            format: None,
-            json: true,
-        })
-        .unwrap();
-
-        assert!(plan.fallback_triggered, "{plan:#?}");
-        assert_eq!(
-            plan.selected_tests[0].test_file,
-            "runtime-owner/runtime-owner.test.ts"
-        );
-        assert!(plan.fallback_reason.as_deref().is_some_and(|reason| {
-            reason.contains("transitive dependency of a resolved setup was deleted")
-        }));
-    }
-
-    #[test]
-    fn impact_keeps_native_tests_when_optional_vitest_discovery_fails() {
-        let root = no_mistakes::codebase::ts_resolver::normalize_path(
-            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../fixtures/test-plan/impact-invalid-vitest-config"),
-        );
-        let plan = generate_impact_plan(&ImpactArgs {
-            entrypoints: vec!["tests/ServiceTests.cs".to_string()],
-            entrypoint_symbols: Vec::new(),
-            include_symbols: false,
-            root,
-            config: None,
-            tsconfig: None,
-            format: None,
-            json: true,
-        })
-        .unwrap();
-
-        assert_eq!(plan.selected_tests[0].test_file, "tests/ServiceTests.cs");
-        assert_eq!(plan.selected_tests[0].reasons[0].via, ["self"]);
-    }
-
-    #[test]
-    fn impact_rejects_valid_vitest_discovery_errors() {
-        let root = no_mistakes::codebase::ts_resolver::normalize_path(
-            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../fixtures/test-plan/impact-invalid-vitest-discovery"),
-        );
-        let result = generate_impact_plan(&ImpactArgs {
-            entrypoints: vec!["tests/ServiceTests.cs".to_string()],
-            entrypoint_symbols: Vec::new(),
-            include_symbols: false,
-            root,
-            config: None,
-            tsconfig: None,
-            format: None,
-            json: true,
-        });
-
-        assert!(result.is_err());
-    }
-}
+#[path = "impact_tests.rs"]
+mod tests;

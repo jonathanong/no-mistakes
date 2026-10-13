@@ -425,7 +425,9 @@ fn dependency_patterns_use_ordered_negation_and_reinclusion() {
         targets: vec!["unit".to_string()],
         include_changed_tests: None,
     });
-    let patterns = super::dep_triggers::project_dependency_patterns("src", &project, &trigger);
+    let patterns = no_mistakes::codebase::test_discovery::project_dependency_patterns(
+        "src", &project, &trigger,
+    );
     assert_eq!(
         patterns,
         vec!["src/**/*.ts", "!src/generated/**", "src/generated/keep.ts"]
