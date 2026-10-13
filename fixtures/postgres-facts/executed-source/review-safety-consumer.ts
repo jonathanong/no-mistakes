@@ -1,6 +1,6 @@
 import sql from 'sql-template-strings'
 import { read } from '@example/db'
-import { appendKnown, makeQuery } from './review-safety-helper.js'
+import { appendKnown, appendLater, makeQuery } from './review-safety-helper.js'
 
 export function authoredMarker() {
   return read("/* authored marker */ SELECT 'sql_placeholder_1'")
@@ -46,4 +46,29 @@ export function boundRead(id: string) {
 
 export function boundWrite(id: string) {
   return read(sql`/* bound write */ WITH rows AS (UPDATE posts SET title = ${id} RETURNING id) SELECT id FROM rows`)
+}
+
+export function taggedGetterArgument() {
+  const query = sql`/* tagged getter */ SELECT 1`
+  const object = {
+    get trigger() {
+      query.append(' UPDATE posts SET title = title')
+      return 1
+    },
+  }
+  appendKnown(query, sql`${object.trigger}`)
+  return read(query)
+}
+
+export function twoBindTemplates(first: string, second: string) {
+  const query = sql`/* two binds */ SELECT ${first}::text`
+  query.append(sql` || ${second}::text`)
+  return read(query)
+}
+
+export function unawaitedAppend() {
+  const query = sql`/* async append */ SELECT 1`
+  const pending = appendLater(query)
+  void pending
+  return read(query)
 }

@@ -86,6 +86,33 @@ fn source_api_projects_imported_read_from_supplied_sources() {
 }
 
 #[test]
+fn source_api_observes_side_effect_only_module_before_imported_read() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    for consumer in ["eager-consumer.ts", "eager-unused-consumer.ts"] {
+        let sources = [
+            source(consumer),
+            source("eager-builder.ts"),
+            source("eager-mutator.ts"),
+        ];
+        let statements =
+            extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+        let statement = statements
+            .iter()
+            .find(|statement| statement.file_name == consumer)
+            .unwrap();
+        assert!(
+            !statement.complete
+                || statement
+                    .sql_text
+                    .as_deref()
+                    .unwrap_or("")
+                    .contains("UPDATE posts"),
+            "{statement:?}"
+        );
+    }
+}
+
+#[test]
 fn source_api_resolves_explicit_supplied_alias_edge() {
     let sources = [source("aliased-consumer.ts"), source("imported-builder.ts")];
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);

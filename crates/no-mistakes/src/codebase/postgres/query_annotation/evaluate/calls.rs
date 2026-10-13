@@ -1,3 +1,4 @@
+mod async_suspension;
 pub(super) mod scopes;
 mod values;
 use super::{Environment, Evaluator, Value};
@@ -177,6 +178,15 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.register_mappings(scope, captured, &function, mapping);
         self.register_captured_bindings(scope, captured, &function);
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
+        if function.asynchronous && async_suspension::has_suspension(&function.body) {
+            // The evaluator does not schedule post-await work. Whether the
+            // caller awaits this promise or reads a shared builder first is
+            // unknown, so neither the returned SQL nor its shared builders
+            // can certify a complete statement.
+            self.invalidate_builders(&arguments);
+            self.invalidate_captured(captured, &function);
+            return Value::Promise(Box::new(Value::Unknown));
+        }
         // Trace forwarded executor calls, but do not treat a helper's return
         // as immutable SQL when arbitrary effects could mutate its builder.
         if !function.asynchronous {

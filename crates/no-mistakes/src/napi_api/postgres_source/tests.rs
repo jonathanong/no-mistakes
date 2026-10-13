@@ -152,6 +152,10 @@ fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
         by_annotation("generated marker")["onlyValuePlaceholders"],
         true
     );
+    let two_binds = by_annotation("two binds");
+    assert_eq!(two_binds["onlyValuePlaceholders"], true);
+    let sql = two_binds["sqlText"].as_str().unwrap();
+    assert!(sql.contains("sql_placeholder_1::text || sql_placeholder_2::text"));
     for (name, expected_kind) in [("bound read", None), ("bound write", Some("update"))] {
         let row = by_annotation(name);
         assert_eq!(row["onlyValuePlaceholders"], true);
@@ -171,13 +175,16 @@ fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
             expected_kind
         );
     }
-    for line in [22, 28, 40] {
-        assert!(rows.iter().any(|row| {
-            row["line"] == line
-                && row["complete"] == false
-                && row["onlyValuePlaceholders"] == false
-                && row["annotation"].is_null()
-        }));
+    for line in [22, 28, 40, 60, 73] {
+        assert!(
+            rows.iter().any(|row| {
+                row["line"] == line
+                    && row["complete"] == false
+                    && row["onlyValuePlaceholders"] == false
+                    && row["annotation"].is_null()
+            }),
+            "line {line}: {rows:?}"
+        );
     }
 }
 #[test]

@@ -148,7 +148,8 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
         let embedded = &facts.embedded_sql[0].1;
         for (index, call) in embedded.calls.iter().enumerate() {
             let mut statements_for_call = project_calls(&source.file_name, vec![call.clone()]);
-            if call.kind == EmbeddedSqlKind::Dynamic
+            if call.kind == EmbeddedSqlKind::ImmutableLocal
+                || call.kind == EmbeddedSqlKind::Dynamic
                 || call.kind == EmbeddedSqlKind::Composed
                 || !call.recovered_placeholder_positions.is_empty()
             {

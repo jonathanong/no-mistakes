@@ -29,7 +29,12 @@ pub(super) fn resolve_supplied_relative(
         if let Some(first) = found.next() {
             return found.next().is_none().then_some(first);
         }
-        return supplied.contains(&base).then_some(base);
+        if supplied.contains(&base) {
+            return Some(base);
+        }
+        return (extension == "js")
+            .then(|| base.with_extension("jsx"))
+            .filter(|path| supplied.contains(path));
     }
     let path = base.to_string_lossy();
     let mut candidates = vec![base.clone()];

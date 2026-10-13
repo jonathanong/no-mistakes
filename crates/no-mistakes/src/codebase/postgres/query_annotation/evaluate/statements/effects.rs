@@ -69,7 +69,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             | Expr::Sequence(parts) => parts
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),
-            Expr::Tagged(tag, _, _) => !self.tag_trusted(tag, path, env),
+            Expr::Tagged(tag, _, effects) => {
+                !self.tag_trusted(tag, path, env)
+                    || effects
+                        .iter()
+                        .any(|effect| self.effect_can_mutate(effect, path, env))
+            }
             Expr::Await(expr) => self.effect_can_mutate(expr, path, env),
             // A getter or proxy trap can mutate captured state. Numeric argument
             // slots and `length` are data. Any other property can be an accessor.

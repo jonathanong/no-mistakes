@@ -1,3 +1,4 @@
+use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
@@ -22,6 +23,15 @@ impl Module {
                 imports.entry(binding.local.clone()).or_insert(index);
                 targets
                     .entry(binding.specifier.clone())
+                    .or_insert_with(OnceLock::new);
+            }
+        }
+        // Static dependencies execute even when this module never reads one of
+        // their exports (including bare imports).
+        for import in &ts.imports {
+            if import.kind == ImportKind::Static && import.function_scope.is_none() {
+                targets
+                    .entry(import.specifier.clone())
                     .or_insert_with(OnceLock::new);
             }
         }

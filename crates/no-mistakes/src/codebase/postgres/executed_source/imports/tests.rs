@@ -25,4 +25,19 @@ fn supplied_node_next_imports_prefer_source_and_support_commonjs() {
         resolve_supplied_relative(from, "./common", &files),
         Some(PathBuf::from("src/common.cts"))
     );
+    let jsx_only = [PathBuf::from("src/helper.jsx")].into_iter().collect();
+    assert_eq!(
+        resolve_supplied_relative(from, "./helper.js", &jsx_only),
+        Some(PathBuf::from("src/helper.jsx"))
+    );
+    let literal_and_jsx = [
+        PathBuf::from("src/helper.js"),
+        PathBuf::from("src/helper.jsx"),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(
+        resolve_supplied_relative(from, "./helper.js", &literal_and_jsx),
+        Some(PathBuf::from("src/helper.js"))
+    );
 }
