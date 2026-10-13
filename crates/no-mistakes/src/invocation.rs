@@ -1,9 +1,14 @@
 //! Process-wide invocation coordination shared by the CLI and N-API entrypoints.
 
+#[path = "invocation/child.rs"]
 mod child;
+#[path = "invocation/clock.rs"]
 mod clock;
+#[path = "invocation/deadline.rs"]
 mod deadline;
+#[path = "invocation/lock.rs"]
 mod lock;
+#[path = "invocation/napi_options.rs"]
 mod napi_options;
 
 pub use child::command_output;
@@ -222,4 +227,5 @@ pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {
 }
 
 #[cfg(test)]
+#[path = "invocation/tests.rs"]
 mod tests;

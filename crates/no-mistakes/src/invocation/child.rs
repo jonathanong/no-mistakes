@@ -5,6 +5,7 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 use wait_timeout::ChildExt;
 
+#[path = "child/process_tree.rs"]
 pub(super) mod process_tree;
 #[cfg(not(unix))]
 use process_tree::configure_process_group;
@@ -13,6 +14,7 @@ pub(super) use process_tree::configure_process_group;
 pub(super) use process_tree::ParentSignalForwardingGuard;
 pub(super) use process_tree::ProcessTree;
 
+#[path = "child/stream.rs"]
 pub(super) mod stream;
 
 const CLEANUP_TIMEOUT: Duration = Duration::from_millis(100);

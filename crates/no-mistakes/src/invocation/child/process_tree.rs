@@ -20,6 +20,7 @@ pub(crate) fn configure_process_group(command: &mut std::process::Command) {
 }
 
 #[cfg(unix)]
+#[path = "process_tree/signals.rs"]
 pub(crate) mod signals;
 
 #[cfg(unix)]
@@ -164,6 +165,7 @@ impl Drop for ProcessTree {
     }
 }
 #[cfg(windows)]
+#[path = "process_tree/windows.rs"]
 mod windows;
 
 #[cfg(windows)]

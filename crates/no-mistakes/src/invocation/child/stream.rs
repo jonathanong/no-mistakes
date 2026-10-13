@@ -15,6 +15,7 @@ use std::process::{Command, ExitStatus, Stdio};
 use std::sync::mpsc::{self, Receiver};
 use wait_timeout::ChildExt;
 
+#[path = "stream/reading.rs"]
 mod reading;
 
 /// Bytes read per stdout chunk sent over the channel. Chosen to amortize

@@ -1,3 +1,4 @@
+#[path = "deadline/watch.rs"]
 mod watch;
 use super::{clock, InvocationError, InvocationErrorKind};
 use anyhow::{Context, Result};
@@ -186,4 +187,5 @@ pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
 }
 
 #[cfg(test)]
+#[path = "deadline/tests.rs"]
 mod tests;
