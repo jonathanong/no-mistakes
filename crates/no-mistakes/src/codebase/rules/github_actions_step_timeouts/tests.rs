@@ -100,6 +100,20 @@ allow:
 }
 
 #[test]
+fn allow_selector_preserves_hash_in_workflow_filename() {
+    let findings = run_files(
+        "hash-workflow",
+        r#"
+allow:
+  - step: ".github/workflows/release#nightly.yml#build#dynamic"
+    reason: "Matrix value is bounded."
+"#,
+        &[".github/workflows/release#nightly.yml"],
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn blank_and_stale_allow_entries_are_findings() {
     let findings = run(
         "allowed",

@@ -1,0 +1,8 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: dynamic
+        run: echo bounded
+        timeout-minutes: ${{ matrix.timeout }}

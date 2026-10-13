@@ -1,9 +1,10 @@
 use super::{is_inline_value_line, value_after_anchor, yaml_key_value};
+use std::collections::BTreeMap;
 
 mod parallel;
 use parallel::parallel_child_lines;
 mod flow;
-use flow::{flow_sequence_item_lines, root_flow_job_steps};
+use flow::{flow_sequence_item_lines, RootFlowIndex};
 
 fn indent(line: &str) -> usize {
     line.len() - line.trim_start_matches(' ').len()
@@ -36,8 +37,9 @@ fn find_jobs_line(lines: &[&str]) -> Option<(usize, usize)> {
     })
 }
 
-fn find_job_line(lines: &[&str], jobs: (usize, usize), job_id: &str) -> Option<(usize, usize)> {
+fn index_job_lines(lines: &[&str], jobs: (usize, usize)) -> BTreeMap<String, (usize, usize)> {
     let mut child_indent = None;
+    let mut result = BTreeMap::new();
     for (index, line) in lines.iter().enumerate().skip(jobs.0 + 1) {
         if !is_content(line) {
             continue;
@@ -47,11 +49,13 @@ fn find_job_line(lines: &[&str], jobs: (usize, usize), job_id: &str) -> Option<(
             break;
         }
         let direct_depth = *child_indent.get_or_insert(depth);
-        if depth == direct_depth && yaml_key_value(line).is_some_and(|(key, _)| key == job_id) {
-            return Some((index, depth));
+        if depth == direct_depth {
+            if let Some((key, _)) = yaml_key_value(line) {
+                result.insert(key.to_string(), (index, depth));
+            }
         }
     }
-    None
+    result
 }
 
 fn find_steps_line(lines: &[&str], job: (usize, usize)) -> Option<(usize, usize)> {
@@ -105,28 +109,33 @@ pub(super) fn sequence_item_lines(lines: &[&str], key: (usize, usize), count: us
 pub(crate) struct StepLocations<'a> {
     lines: Vec<&'a str>,
     jobs: Option<(usize, usize)>,
-    root_flow: bool,
+    job_lines: BTreeMap<String, (usize, usize)>,
+    root_flow: Option<RootFlowIndex>,
 }
 
 impl<'a> StepLocations<'a> {
     pub(crate) fn new(source: &'a str) -> Self {
         let lines: Vec<_> = source.lines().collect();
         let jobs = find_jobs_line(&lines);
-        let root_flow = lines
+        let is_root_flow = lines
             .iter()
             .find(|line| is_content(line) && line.trim() != "---")
             .is_some_and(|line| line.trim_start().starts_with('{'));
+        let root_flow = is_root_flow.then(|| RootFlowIndex::new(&lines));
+        let job_lines = jobs
+            .map(|jobs| index_job_lines(&lines, jobs))
+            .unwrap_or_default();
         Self {
             lines,
             jobs,
+            job_lines,
             root_flow,
         }
     }
 
     pub(crate) fn job_steps(&self, job_id: &str, count: usize) -> Vec<usize> {
-        if self.root_flow {
-            return root_flow_job_steps(&self.lines, job_id, count)
-                .unwrap_or_else(|| vec![1; count]);
+        if let Some(root_flow) = &self.root_flow {
+            return root_flow.job_steps(&self.lines, job_id, count);
         }
         let Some(jobs) = self.jobs else {
             return vec![1; count];
@@ -136,7 +145,7 @@ impl<'a> StepLocations<'a> {
         {
             return vec![jobs.0 + 1; count];
         }
-        let Some(job) = find_job_line(&self.lines, jobs, job_id) else {
+        let Some(job) = self.job_lines.get(job_id).copied() else {
             return vec![1; count];
         };
         if is_inline_value_line(self.lines[job.0]) || has_child_inline_value(&self.lines, job, '{')

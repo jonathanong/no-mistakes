@@ -261,6 +261,55 @@ fn root_flow_mapping_locates_each_authored_step() {
 }
 
 #[test]
+fn root_flow_job_alias_uses_its_own_declaration() {
+    let findings = run("root-flow-job-alias", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some(".github/workflows/ci.yml#build#1")
+    );
+    assert!(run("root-flow-job-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn root_flow_next_line_steps_locate_each_child() {
+    let findings = run("root-flow-next-line-steps", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 4);
+    assert!(run("root-flow-next-line-steps-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn root_flow_next_line_job_alias_uses_job_declaration() {
+    let findings = run("root-flow-next-line-job-alias", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("root-flow-next-line-job-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn root_flow_step_alias_uses_alias_declaration() {
+    let findings = run("root-flow-step-alias", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("root-flow-step-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn indexed_jobs_keep_distinct_step_lines() {
+    let findings = run("multi-jobs", "{}");
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [6, 10, 14]
+    );
+}
+
+#[test]
 fn flow_mapping_comment_delimiter_does_not_hide_parallel_children() {
     let findings = run("nested-flow-comment", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

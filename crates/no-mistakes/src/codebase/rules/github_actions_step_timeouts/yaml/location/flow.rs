@@ -117,7 +117,7 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
 }
 
 mod root;
-pub(super) use root::root_flow_job_steps;
+pub(super) use root::RootFlowIndex;
 
 pub(super) fn flow_sequence_item_lines(
     lines: &[&str],

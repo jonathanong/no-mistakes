@@ -96,7 +96,7 @@ fn scan_files(
         .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
         .collect();
     for key in opts.allow.keys() {
-        let path = key.split_once('#').map_or(key.as_str(), |(path, _)| path);
+        let path = selector_file(key);
         if !present.contains(path) {
             findings.push(yaml::finding(
                 path,
@@ -107,7 +107,7 @@ fn scan_files(
         }
     }
     for key in &opts.duplicate_allow {
-        let path = key.split_once('#').map_or(key.as_str(), |(path, _)| path);
+        let path = selector_file(key);
         if !present.contains(path) {
             findings.push(yaml::finding(
                 path,
@@ -118,6 +118,12 @@ fn scan_files(
         }
     }
     findings
+}
+
+fn selector_file(key: &str) -> &str {
+    key.rsplit_once('#')
+        .and_then(|(file_and_job, _)| file_and_job.rsplit_once('#'))
+        .map_or(key, |(file, _)| file)
 }
 
 mod scan;
