@@ -48,3 +48,35 @@ fn call_valued_export_selectors_match_local_and_imported_occurrences() {
         "{report:#?}"
     );
 }
+
+#[test]
+fn async_factory_awaits_and_bound_arguments_preserve_provenance() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/async-and-bind.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 13, 19, 22, 29],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn imported_promises_and_bound_functions_keep_their_value_kinds() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("async-imports.yml")), None)
+            .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/async-binding-entry.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [3, 4],
+        "{findings:#?}"
+    );
+}

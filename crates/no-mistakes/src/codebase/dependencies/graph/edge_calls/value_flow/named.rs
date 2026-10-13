@@ -83,6 +83,7 @@ impl ValueFlowResolution<'_, '_> {
                             let receiver = match self.imported_value(&file, base) { FlowValue::Target(target) => Some(target), _ => None };
                             FlowValue::Returned { factory, executor, receiver }
                         },
+                        value @ (FlowValue::Promise(_) | FlowValue::Bound { .. }) => value,
                         _ => self.imported_value(&file, base),
                     }
                 }
@@ -112,61 +113,5 @@ impl ValueFlowResolution<'_, '_> {
                 module_export_target(file, base, None, None).unwrap_or(ResolvedCallTarget::Unknown),
             )
         }
-    }
-    pub(super) fn parameter(
-        &mut self,
-        path: &std::path::Path,
-        parameter: &ValueParameter,
-    ) -> FlowValue {
-        self.used_parameters
-            .insert((path.to_path_buf(), parameter.owner));
-        if !self.parameters_enabled {
-            return FlowValue::Unknown;
-        }
-        let key = (path.to_path_buf(), parameter.scope, parameter.name.clone());
-        if let Some(value) = self.parameters.get(&key) {
-            return value.clone();
-        }
-        let incoming = self
-            .incoming
-            .get(&(path.to_path_buf(), parameter.owner))
-            .cloned()
-            .unwrap_or_default();
-        let mut values = Vec::new();
-        for (caller, offset, callee) in incoming {
-            let Some(index) = self.indexes.file(self.facts, &caller) else {
-                continue;
-            };
-            let call = index
-                .values
-                .sites
-                .get(&offset)
-                .and_then(|sites| sites.get(callee.as_str()))
-                .and_then(|key| index.values.calls.get(key));
-            let Some(call) = call else {
-                values.push(FlowValue::Unknown);
-                continue;
-            };
-            if call
-                .spread_at
-                .is_some_and(|spread| parameter.index >= spread)
-            {
-                values.push(FlowValue::Unknown);
-                continue;
-            }
-            let argument = call.arguments.get(parameter.index);
-            let omitted = argument.is_none() || argument == Some(&ValueExpression::Undefined);
-            values.push(if omitted {
-                self.value(path, &parameter.default)
-            } else {
-                self.value(&caller, argument.expect("present argument"))
-            });
-        }
-        if values.is_empty() {
-            values.push(self.value(path, &parameter.default));
-        }
-        let value = agreed_value(values);
-        self.parameters.insert(key, value.clone());
-        value
     }
 }

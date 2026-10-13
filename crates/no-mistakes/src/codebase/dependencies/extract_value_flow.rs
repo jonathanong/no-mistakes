@@ -8,6 +8,7 @@ pub struct ValueFlowFacts {
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
+    pub async_callables: FxHashSet<CallableId>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueExpression {
@@ -17,6 +18,7 @@ pub enum ValueExpression {
         offset: u32,
     },
     Call(u32, u32),
+    Awaited(std::sync::Arc<ValueExpression>),
     Callable(CallableId),
     Member(std::sync::Arc<ValueExpression>, String),
     Object(std::sync::Arc<FxHashMap<String, ValueExpression>>),
@@ -50,7 +52,8 @@ pub struct ValueCall {
     pub end: u32,
     pub source_callee: String,
     pub callee: ValueExpression,
-    pub arguments: Vec<ValueExpression>,
+    pub arguments: std::sync::Arc<Vec<ValueExpression>>,
+    pub bound: bool,
     pub spread_at: Option<usize>,
 }
 #[path = "extract_value_flow/collect.rs"]

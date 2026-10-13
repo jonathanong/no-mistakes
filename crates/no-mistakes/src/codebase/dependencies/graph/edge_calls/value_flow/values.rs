@@ -30,6 +30,13 @@ impl ValueFlowResolution<'_, '_> {
                     value
                 }
             }
+            ValueExpression::Awaited(value) => {
+                let mut value = self.value(path, value);
+                while let FlowValue::Promise(inner) = value {
+                    value = *inner;
+                }
+                value
+            }
             ValueExpression::Call(offset, end) => self.returned(path, *offset, *end),
             ValueExpression::Unknown => FlowValue::Unknown,
         }

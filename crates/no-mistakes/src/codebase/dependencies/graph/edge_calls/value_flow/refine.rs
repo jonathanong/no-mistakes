@@ -104,16 +104,30 @@ fn refine_iteration(
                 if index.imported.get(head).is_some_and(|binding| binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace) { continue; }
             }
         }
+        if call.bound {
+            continue;
+        }
         let value = flow.value(&site.file, &call.callee);
-        let value = match value {
-            FlowValue::Returned {
-                factory, executor, ..
-            } => {
-                site.returned_from = factory;
-                *executor
-            }
-            value => value,
-        };
+        let mut value = value;
+        loop {
+            value = match value {
+                FlowValue::Returned {
+                    factory, executor, ..
+                } => {
+                    site.returned_from.extend(factory);
+                    *executor
+                }
+                FlowValue::Bound { target, .. } => *target,
+                other => {
+                    value = other;
+                    break;
+                }
+            };
+        }
+        if matches!(value, FlowValue::Promise(_)) {
+            site.target = ResolvedCallTarget::Unknown;
+            continue;
+        }
         let (target, exact_id) = match value {
             FlowValue::Callable { file, scope, id } => {
                 let target = match &site.target {

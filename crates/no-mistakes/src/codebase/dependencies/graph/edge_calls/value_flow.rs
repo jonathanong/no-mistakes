@@ -11,6 +11,7 @@ pub(super) struct FlowFileIndex {
     calls: FxHashMap<(u32, u32), ValueCall>,
     sites: FxHashMap<u32, FxHashMap<String, (u32, u32)>>,
     scopes: FxHashMap<CallableId, String>,
+    async_callables: FxHashSet<CallableId>,
 }
 impl FlowFileIndex {
     pub(super) fn new(
@@ -29,6 +30,7 @@ impl FlowFileIndex {
                 .insert(call.source_callee.clone(), (call.offset, call.end));
         }
         Self {
+            async_callables: flow.async_callables.clone(),
             sites,
             scopes: scopes.iter().cloned().collect(),
             bindings: index_scoped_names(
@@ -52,6 +54,11 @@ impl FlowFileIndex {
 }
 #[derive(Clone, PartialEq, Eq)]
 enum FlowValue {
+    Promise(Box<FlowValue>),
+    Bound {
+        target: Box<FlowValue>,
+        arguments: Vec<BoundArguments>,
+    },
     Target(ResolvedCallTarget),
     Returned {
         factory: Vec<(String, String)>,
@@ -69,6 +76,13 @@ enum FlowValue {
     },
     Undefined,
     Unknown,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+struct BoundArguments {
+    file: std::path::PathBuf,
+    arguments: std::sync::Arc<Vec<ValueExpression>>,
+    spread_at: Option<usize>,
 }
 
 type ParameterInputs =
@@ -121,7 +135,12 @@ impl FlowFileIndex {
     ) -> bool {
         match value {
             ValueExpression::Call(_, _) => true,
-            ValueExpression::Member(value, _) => self.factory_value(value, visiting),
+            ValueExpression::Member(value, _) | ValueExpression::Awaited(value) => {
+                self.factory_value(value, visiting)
+            }
+            ValueExpression::Default(value, fallback) => {
+                self.factory_value(value, visiting) || self.factory_value(fallback, visiting)
+            }
             ValueExpression::Named {
                 name,
                 scope: Some(scope),
@@ -143,3 +162,6 @@ impl FlowFileIndex {
 #[path = "value_flow/exports.rs"]
 mod exports;
 pub(super) use exports::resolve_value_exports;
+
+#[path = "value_flow/parameters.rs"]
+mod parameters;

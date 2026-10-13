@@ -12,6 +12,7 @@ pub(super) fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
 ) {
+    collector.record_async_callable(function.r#async);
     // Default parameters run in the parameter environment, before the body
     // lexical environment exists. Visit them before introducing body bindings.
     visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
@@ -30,6 +31,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
+    collector.record_async_callable(arrow.r#async);
     // Default parameters run before the body lexical environment exists.
     visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
     walk::walk_formal_parameters(collector, &arrow.params);

@@ -28,8 +28,15 @@ pub(in super::super) fn resolve_value_exports(
                 calls_visiting: fx_set(),
             };
             let mut value = flow.named(file, local, Some(0), u32::MAX);
-            while let FlowValue::Returned { executor, .. } = value {
-                value = *executor;
+            loop {
+                value = match value {
+                    FlowValue::Returned { executor, .. } => *executor,
+                    FlowValue::Bound { target, .. } => *target,
+                    other => {
+                        value = other;
+                        break;
+                    }
+                };
             }
             let (target, exact) = match value {
                 FlowValue::Callable { file, scope, id } => (

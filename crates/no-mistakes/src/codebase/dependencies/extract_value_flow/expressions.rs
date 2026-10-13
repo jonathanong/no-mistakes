@@ -14,7 +14,9 @@ impl ImportCollector {
             {
                 ValueExpression::Undefined
             }
-            Expression::AwaitExpression(awaited) => self.value_expression(&awaited.argument),
+            Expression::AwaitExpression(awaited) => ValueExpression::Awaited(std::sync::Arc::new(
+                self.value_expression(&awaited.argument),
+            )),
             Expression::ParenthesizedExpression(parenthesized) => {
                 self.value_expression(&parenthesized.expression)
             }

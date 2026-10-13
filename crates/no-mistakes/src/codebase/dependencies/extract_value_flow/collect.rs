@@ -14,7 +14,9 @@ impl ImportCollector {
                     }
                 }
             }
-            if !immutable && !matches!(value, ValueExpression::Call(_, _)) {
+            let factory_result = matches!(&value, ValueExpression::Call(_, _))
+                || matches!(&value, ValueExpression::Awaited(inner) if matches!(inner.as_ref(), ValueExpression::Call(_, _)));
+            if !immutable && !factory_result {
                 return;
             }
             self.record_value_pattern(&declarator.id, value, declarator.span.start);
@@ -120,14 +122,15 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
-        let (callee, arguments, spread_at) = self.adapted_value_call(call);
+        let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
         self.value_flow.calls.push(ValueCall {
             offset: call.span.start,
             end: call.span.end,
             source_callee: recorded_call_callee(self, call)
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee,
-            arguments,
+            arguments: std::sync::Arc::new(arguments),
+            bound,
             spread_at,
         });
     }
@@ -177,6 +180,16 @@ impl ImportCollector {
                 self.value_flow
                     .returns
                     .push((owner, ValueExpression::Unknown));
+            }
+        }
+    }
+}
+
+impl ImportCollector {
+    pub(in super::super) fn record_async_callable(&mut self, is_async: bool) {
+        if self.collect_value_flow && is_async {
+            if let Some(owner) = self.current_function_id() {
+                self.value_flow.async_callables.insert(owner);
             }
         }
     }

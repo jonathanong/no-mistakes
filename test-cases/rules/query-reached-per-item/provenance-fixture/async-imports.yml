@@ -1,0 +1,13 @@
+effects:
+  postgres:
+    targets:
+      - { module: './async-binding-exports.mjs', export: unawaited }
+      - { module: './async-binding-exports.mjs', export: awaited }
+  valkey:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres, valkey]
