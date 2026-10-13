@@ -89,13 +89,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 
 ## Development
 
-- Always use the latest stable Rust toolchain for development, CI, releases,
-  and benchmarks. Select `stable`, never a fixed compiler version. Update the
-  local channel with `rustup update stable` before validation. Keep action code
-  pinned to an immutable SHA separately from the compiler channel; for the
-  untagged Rust setup action, its numeric date comment identifies the action
-  snapshot. Benchmark comparisons must still use the same resolved compiler
-  version for both runs and record it in their results.
+- Use latest stable Rust everywhere; run `rustup update stable` before validation.
 
 - When finding an error, always create a regression test
 - Continuously add test fixtures for cases you find. Which tree (`test-cases/` or `fixtures/`) a suite loads is in [Contributing](README.md#contributing); add to the tree its loader reads.
