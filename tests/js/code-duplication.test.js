@@ -22,6 +22,13 @@ function readReport(reportDir) {
   return JSON.parse(readFileSync(join(reportDir, "jscpd-report.json"), "utf8"));
 }
 
+function plannerFixtureIgnore(gate) {
+  assert.ok(gate.ignore.includes("**/fixtures/**"));
+  assert.ok(gate.ignore.includes("**/*_tests.rs"));
+  // Remove only the fixture-tree umbrella so its saved sources can exercise the other globs.
+  return ["--ignore", gate.ignore.filter((pattern) => pattern !== "**/fixtures/**").join(",")];
+}
+
 test("the duplication gate finds exact copies across JS and annotated TS", () => {
   const gate = JSON.parse(readFileSync(join(root, ".jscpd.json"), "utf8"));
   assert.equal(gate.crossFormats, "js-ts");
@@ -61,10 +68,11 @@ test("the production planner participates in function similarity without duplica
 
   const plannerFixture = join(root, "fixtures/code-duplication/planner-similarity");
   const config = join(plannerFixture, ".jscpd.json");
+  const ignore = plannerFixtureIgnore(gate);
   const reportDir = mkdtempSync(join(tmpdir(), "no-mistakes-jscpd-planner-"));
   try {
     // Under only the broad crates root, jscpd mistakes production src/tests for tests.
-    const isolated = runJscpd(config, reportDir, [], ["--kind", "ast"]);
+    const isolated = runJscpd(config, reportDir, [], ["--kind", "ast", ...ignore]);
     assert.ifError(isolated.error);
     assert.equal(isolated.status, 0, isolated.stdout + isolated.stderr);
     const isolatedReport = readReport(reportDir);
@@ -72,7 +80,7 @@ test("the production planner participates in function similarity without duplica
     assert.equal(isolatedReport.duplicates.length, 0);
 
     const roots = [join(plannerFixture, "crates"), join(plannerFixture, plannerRoot)];
-    const explicit = runJscpd(config, reportDir, roots, ["--kind", "ast"]);
+    const explicit = runJscpd(config, reportDir, roots, ["--kind", "ast", ...ignore]);
     assert.ifError(explicit.error);
     assert.equal(explicit.status, 1, explicit.stdout + explicit.stderr);
     const report = readReport(reportDir);
@@ -86,6 +94,42 @@ test("the production planner participates in function similarity without duplica
       new Set([clone.firstFile.name, clone.secondFile.name]),
       new Set(["no-mistakes/src/planner.rs", "no-mistakes/src/tests/plan.rs"]),
     );
+  } finally {
+    rmSync(reportDir, { recursive: true, force: true });
+  }
+});
+
+test("ignored sibling unit-test bodies stay out of the production token scan", () => {
+  const gate = JSON.parse(readFileSync(join(root, ".jscpd.json"), "utf8"));
+  const plannerFixture = join(root, "fixtures/code-duplication/planner-similarity");
+  const config = join(plannerFixture, ".jscpd.json");
+  const reportDir = mkdtempSync(join(tmpdir(), "no-mistakes-jscpd-sibling-"));
+  try {
+    const unfiltered = runJscpd(config, reportDir, [], ["--kind", "exact"]);
+    assert.ifError(unfiltered.error);
+    assert.equal(unfiltered.status, 1, unfiltered.stdout + unfiltered.stderr);
+    const unfilteredReport = readReport(reportDir);
+    assert.equal(unfilteredReport.statistics.total.sources, 3);
+    assert.equal(unfilteredReport.duplicates.length, 1);
+    assert.deepEqual(
+      new Set([
+        unfilteredReport.duplicates[0].firstFile.name,
+        unfilteredReport.duplicates[0].secondFile.name,
+      ]),
+      new Set(["no-mistakes/src/planner.rs", "no-mistakes/src/tests/plan_tests.rs"]),
+    );
+
+    const filtered = runJscpd(
+      config,
+      reportDir,
+      [],
+      ["--kind", "exact", ...plannerFixtureIgnore(gate)],
+    );
+    assert.ifError(filtered.error);
+    assert.equal(filtered.status, 0, filtered.stdout + filtered.stderr);
+    const report = readReport(reportDir);
+    assert.equal(report.statistics.total.sources, 2);
+    assert.equal(report.duplicates.length, 0);
   } finally {
     rmSync(reportDir, { recursive: true, force: true });
   }
