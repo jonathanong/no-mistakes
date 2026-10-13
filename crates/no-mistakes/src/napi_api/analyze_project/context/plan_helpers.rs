@@ -99,6 +99,7 @@ fn check_fact_plan(
     {
         graph.0.imports = true;
         graph.0.function_calls = true;
+        graph.0.value_flow = true;
         graph.0.call_sites = true;
         graph.0.symbols = true;
     }
