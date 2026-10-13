@@ -32,9 +32,7 @@ pub(in super::super) fn refine_value_calls(
     pass.sites = sites;
     pass.edges.extend(edges);
 }
-fn incoming_inputs(
-    sites: &[ResolvedCallSite],
-) -> FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>> {
+fn incoming_inputs(sites: &[ResolvedCallSite]) -> ParameterInputs {
     let mut incoming: FxHashMap<_, Vec<_>> = fx_map();
     for site in sites {
         if let Some(NodeId::Symbol {
@@ -57,7 +55,7 @@ fn refine_iteration(
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
     base: &[ResolvedCallSite],
-    incoming: FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>,
+    incoming: ParameterInputs,
     parameters_enabled: bool,
 ) -> (Vec<ResolvedCallSite>, Vec<Edge>) {
     let mut flow = ValueFlowResolution {

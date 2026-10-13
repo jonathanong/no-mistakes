@@ -67,6 +67,9 @@ enum FlowValue {
     Unknown,
 }
 
+type ParameterInputs =
+    FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>;
+
 /// Resolves returned values and receiver parameters over parser-owned facts and
 /// the same prepared callable indexes as ordinary calls. Incoming argument
 /// bindings must agree; an unknown or unrelated argument cannot manufacture a
@@ -76,7 +79,7 @@ struct ValueFlowResolution<'a, 'b> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     indexes: &'a CallableResolutionIndexes,
-    incoming: FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>,
+    incoming: ParameterInputs,
     parameters_enabled: bool,
     parameters: FxHashMap<(std::path::PathBuf, usize, String), FlowValue>,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
