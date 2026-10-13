@@ -47,3 +47,34 @@ registry wait earlier, after validation. In the previous `0.87.3` run the gap
 was only ten seconds. This change removes the dependency; its elapsed-time gain
 varies with registry propagation. These observations do not establish the
 end-to-end duration of a future release.
+
+## Parallel validation
+
+Rust and JavaScript validation consume the same prepared source archive in
+independent jobs. The Rust job retains formatting, Rust linting, the full Rust suite
+with PostgreSQL 18 fixtures, and Cargo package verification. It still installs
+and builds the JavaScript fixtures used by Rust tests. The JavaScript job retains
+formatting, lint, spelling, Chromium browser tests, the full coverage-gated test
+suite, and npm package dry runs.
+
+The `Validate` join succeeds only when both jobs succeed. A failed, cancelled,
+or skipped suite blocks all publication channels. Native compilation continues
+to overlap validation. The Rust cache keeps its previous `validate` shared key
+so splitting the job does not deliberately discard the existing dependency cache.
+
+In release run `38330395062`, Chromium installation took 22 seconds and the
+JavaScript tests took 79 seconds, in sequence with Rust validation. Moving these
+and the smaller JavaScript checks to a concurrent runner removes about 101
+seconds from that observed Rust validation path. This is a replay estimate:
+native builds can remain the bottleneck, runner queues add overhead, and this
+change does not establish a shorter end-to-end release on its own.
+
+The isolated JavaScript job was exercised twice on `ubuntu-latest`, Node 24,
+with source `bd1181f41583d83cca847110c8c073c54fe903b4` in
+[run 38338859408](https://github.com/jonathanong/no-mistakes/actions/runs/38338859408).
+Both jobs passed without any Rust toolchain or build, in 120 and 121 seconds
+including setup and post steps. The configured suite passed 1,197 tests with 264
+configured skips, and retained its coverage gates. Chromium installation took
+20–23 seconds and the test steps took 76–79 seconds. The experiment used a
+checkout of that source rather than the release archive; both production jobs
+continue to use the same prepared archive.

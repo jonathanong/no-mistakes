@@ -275,3 +275,65 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
     assert.match(step, /^ {8}timeout-minutes: 10$/m);
   }
 });
+
+// Publication must fail closed when either parallel suite fails or never runs.
+test("release publication requires both parallel validation suites", () => {
+  const { spawnSync } = require("node:child_process");
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const job = (name) =>
+    workflow.match(new RegExp(`^ {2}${name}:[\\s\\S]*?(?=^ {2}[a-z]|$(?![\\s\\S]))`, "m"))?.[0];
+  const rust = job("validate-rust");
+  const js = job("validate-js");
+  const gate = job("validate");
+  assert.ok(rust && js && gate);
+  for (const suite of [rust, js]) {
+    assert.match(suite, /^ {4}needs: prepare$/m);
+    assert.match(suite, /name: release-source/);
+    assert.match(suite, /tar -xzf prepared-release\/release-source.tgz/);
+    assert.doesNotMatch(suite, /continue-on-error|npm publish|cargo publish --locked/);
+  }
+  for (const command of [
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo test --all-features --no-run",
+    "cargo test --all-features",
+    "cargo publish --dry-run --locked -p no-mistakes",
+    "pnpm run build:js",
+  ])
+    assert.ok(rust.includes(`run: ${command}\n`), command);
+  assert.match(rust, /shared-key: validate/);
+  assert.match(rust, /postgresql-18/);
+  for (const command of [
+    "pnpm run build:js",
+    "pnpm run fmt:js:check",
+    "pnpm run lint:js",
+    "pnpm run lint:spell",
+    "pnpm test",
+  ]) {
+    assert.ok(js.includes(`run: ${command}\n`), command);
+  }
+  assert.match(js, /playwright install --with-deps chromium/);
+  assert.match(js, /pnpm --filter "\$pkg" pack --dry-run/);
+  assert.doesNotMatch(js, /cargo|Install Rust/);
+  assert.match(gate, /needs:\n {6}- validate-rust\n {6}- validate-js/);
+  assert.match(gate, /if: \$\{\{ always\(\) \}\}/);
+  assert.match(gate, /permissions: \{\}/);
+  assert.match(gate, /RUST_RESULT: \$\{\{ needs\.validate-rust\.result \}\}/);
+  assert.match(gate, /JS_RESULT: \$\{\{ needs\.validate-js\.result \}\}/);
+  const script = gate
+    .split("run: |\n")[1]
+    ?.trim()
+    .replace(/^ {10}/gm, "");
+  assert.ok(script);
+  for (const rustResult of ["success", "failure", "cancelled", "skipped"]) {
+    for (const jsResult of ["success", "failure", "cancelled", "skipped"]) {
+      const result = spawnSync("bash", ["-e", "-c", script], {
+        env: { ...process.env, RUST_RESULT: rustResult, JS_RESULT: jsResult },
+      });
+      assert.equal(result.status === 0, rustResult === "success" && jsResult === "success");
+    }
+  }
+  for (const publisher of ["publish", "publish-cargo", "publish-eslint"]) {
+    assert.match(job(publisher), /^ {6}- validate$/m);
+  }
+});
