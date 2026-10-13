@@ -13,11 +13,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     Value::Primitive
                 }
             }
-            Value::Record(values, keys) if self.files[path].facts.precise_records => keys
-                .iter()
-                .rposition(|key| key == name)
-                .and_then(|index| values.get(index).cloned())
-                .unwrap_or(Value::Unknown),
+            Value::Record(values, keys)
+                if self.files[path].facts.precise_records && !name.is_empty() =>
+            {
+                keys.iter()
+                    .rposition(|key| key == name)
+                    .and_then(|index| values.get(index).cloned())
+                    .unwrap_or(Value::Unknown)
+            }
             // Preserve conservative member effects for other object shapes.
             value => member_candidates(value),
         }

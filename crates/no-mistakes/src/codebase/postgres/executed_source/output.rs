@@ -14,6 +14,7 @@ pub(super) fn project_calls(
                 call.sql_text,
                 call.kind != EmbeddedSqlKind::Dynamic
                     && call.recovered_placeholder_positions.is_empty(),
+                false,
                 call.kind,
             ));
         } else {
@@ -23,6 +24,7 @@ pub(super) fn project_calls(
                     call.line,
                     Some(variant.sql_text),
                     variant.recovered_placeholder_positions.is_empty(),
+                    false,
                     EmbeddedSqlKind::Composed,
                 ));
             }
@@ -36,6 +38,7 @@ pub(super) fn statement(
     line: u32,
     sql_text: Option<String>,
     complete: bool,
+    only_value_placeholders: bool,
     kind: EmbeddedSqlKind,
 ) -> ExecutedPostgresSql {
     let annotation = sql_text
@@ -48,6 +51,7 @@ pub(super) fn statement(
         annotation,
         sql_text,
         complete,
+        only_value_placeholders,
         kind,
     }
 }

@@ -37,9 +37,12 @@ pub struct ExecutedPostgresSql {
     pub line: u32,
     pub annotation: Option<String>,
     pub sql_text: Option<String>,
-    /// `dynamic` may expose only a verified prefix. Only complete SQL is safe
-    /// for downstream statement classification.
+    /// `dynamic` may expose only a verified prefix. An incomplete statement
+    /// needs `only_value_placeholders` before a consumer may parse its shape.
     pub complete: bool,
+    /// SQL is structurally known except for generated value binds. Consumers
+    /// must still parse the statement and reject writes or unsupported syntax.
+    pub only_value_placeholders: bool,
     pub kind: EmbeddedSqlKind,
 }
 
@@ -145,7 +148,10 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
         let embedded = &facts.embedded_sql[0].1;
         for (index, call) in embedded.calls.iter().enumerate() {
             let mut statements_for_call = project_calls(&source.file_name, vec![call.clone()]);
-            if call.kind == EmbeddedSqlKind::Dynamic || call.kind == EmbeddedSqlKind::Composed {
+            if call.kind == EmbeddedSqlKind::Dynamic
+                || call.kind == EmbeddedSqlKind::Composed
+                || !call.recovered_placeholder_positions.is_empty()
+            {
                 let key = (
                     crate::codebase::ts_resolver::normalize_path(Path::new(&source.file_name)),
                     embedded.call_spans[index],
@@ -162,6 +168,7 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
                                     call.line,
                                     Some(candidate.text.clone()),
                                     candidate.complete,
+                                    candidate.only_value_placeholders,
                                     EmbeddedSqlKind::Composed,
                                 )
                             })
@@ -173,6 +180,7 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
                             &source.file_name,
                             call.line,
                             None,
+                            false,
                             false,
                             EmbeddedSqlKind::Dynamic,
                         )];

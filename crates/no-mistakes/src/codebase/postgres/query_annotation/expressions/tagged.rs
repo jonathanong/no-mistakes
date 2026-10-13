@@ -48,7 +48,10 @@ pub(super) fn tagged(
         let mut parts = Vec::new();
         for (index, quasi) in value.quasi.quasis.iter().enumerate() {
             if index > 0 {
-                parts.push(Expr::Text(format!("sql_placeholder_{index}")));
+                parts.push(Expr::Text(format!(
+                    "{}{index}",
+                    super::super::super::embedded::INTERNAL_PLACEHOLDER
+                )));
             }
             parts.push(Expr::Text(quasi.value.cooked.as_ref().map_or_else(
                 || quasi.value.raw.to_string(),

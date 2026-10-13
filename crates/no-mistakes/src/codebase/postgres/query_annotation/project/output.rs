@@ -1,13 +1,19 @@
 use super::super::evaluate::Value;
 use super::ProjectedSql;
+use crate::codebase::postgres::embedded::publish_placeholders_with_positions;
 use crate::codebase::postgres::sql_requires_query_annotation;
 
 pub(super) fn projected_sql(value: &Value) -> Option<Vec<ProjectedSql>> {
     match value {
-        Value::Prefix(text, complete, _) => Some(vec![ProjectedSql {
-            text: text.clone(),
-            complete: *complete && !text.contains("sql_placeholder_"),
-        }]),
+        Value::Prefix(text, complete, _) => {
+            let (text, positions) = publish_placeholders_with_positions(text.clone());
+            let generated_bind = !positions.is_empty();
+            Some(vec![ProjectedSql {
+                text,
+                complete: *complete && !generated_bind,
+                only_value_placeholders: *complete && generated_bind,
+            }])
+        }
         Value::Promise(value) | Value::Evaluated(value, _) => projected_sql(value),
         Value::Joined(values) if !values.is_empty() => {
             let mut alternatives = Vec::new();

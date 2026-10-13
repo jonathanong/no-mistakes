@@ -17,6 +17,7 @@ use output::{prefix, projected_sql};
 pub(crate) struct ProjectedSql {
     pub text: String,
     pub complete: bool,
+    pub only_value_placeholders: bool,
 }
 
 pub(crate) type ProjectedCalls = BTreeMap<(PathBuf, (u32, u32)), Option<Vec<ProjectedSql>>>;

@@ -113,6 +113,73 @@ fn executed_source_binding_opts_in_to_supplied_import_resolution() {
     .unwrap_err();
     assert!(error.to_string().contains("requires resolveImports"));
 }
+
+#[test]
+fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/review-safety-consumer.ts"
+    ));
+    let helper = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/review-safety-helper.ts"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": [
+                {"fileName":"review-safety-consumer.ts","source":source},
+                {"fileName":"review-safety-helper.ts","source":helper}
+            ],
+            "importSpecifier":"@example/db",
+            "resolveImports":true
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let rows = result.as_array().unwrap();
+    let by_annotation = |name: &str| {
+        rows.iter()
+            .find(|row| row["annotation"] == name)
+            .unwrap_or_else(|| panic!("missing {name}: {rows:?}"))
+    };
+    assert_eq!(by_annotation("authored marker")["complete"], true);
+    assert_eq!(
+        by_annotation("authored marker")["onlyValuePlaceholders"],
+        false
+    );
+    assert_eq!(by_annotation("generated marker")["complete"], false);
+    assert_eq!(
+        by_annotation("generated marker")["onlyValuePlaceholders"],
+        true
+    );
+    for (name, expected_kind) in [("bound read", None), ("bound write", Some("update"))] {
+        let row = by_annotation(name);
+        assert_eq!(row["onlyValuePlaceholders"], true);
+        let parsed: serde_json::Value = serde_json::from_str(
+            &parse_postgres_sql_json_impl(serde_json::json!({"sql":row["sqlText"]})).unwrap(),
+        )
+        .unwrap();
+        assert!(parsed["diagnostics"].as_array().unwrap().is_empty());
+        assert_eq!(parsed["statements"][0]["kind"], "select");
+        let nested = parsed["statements"][0]["query"]["nestedStatements"]
+            .as_array()
+            .unwrap();
+        assert_eq!(
+            nested
+                .first()
+                .and_then(|statement| statement["kind"].as_str()),
+            expected_kind
+        );
+    }
+    for line in [22, 28, 40] {
+        assert!(rows.iter().any(|row| {
+            row["line"] == line
+                && row["complete"] == false
+                && row["onlyValuePlaceholders"] == false
+                && row["annotation"].is_null()
+        }));
+    }
+}
 #[test]
 fn standalone_and_batch_bindings_keep_structured_source_facts() {
     let sql = include_str!(concat!(

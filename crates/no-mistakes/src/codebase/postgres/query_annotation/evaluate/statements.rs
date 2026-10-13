@@ -102,7 +102,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let effect = self.expr(expr, path, env, depth, generic);
                     if self.effect_can_mutate(expr, path, *env)
                         && !self.handled_deletion_effect(expr, &effect, path, *env)
-                        && !self.proven_append_only_effect(expr, path, depth, generic)
+                        && !self.proven_append_only_effect(expr, path, *env, depth, generic)
                     {
                         opaque_return = true;
                         // Arbitrary effects can mutate a builder passed by

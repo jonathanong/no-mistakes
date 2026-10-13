@@ -38,8 +38,10 @@ export interface ExecutedPostgresSql {
   annotation: string | null;
   /** Interpolations are represented by sql_placeholder_N markers. */
   sqlText: string | null;
-  /** False when full SQL could not be proven, including interpolation. */
+  /** False when full SQL could not be proven, including generated binds. */
   complete: boolean;
+  /** True only when all incompleteness is from generated value binds. Parse before classifying reads. */
+  onlyValuePlaceholders: boolean;
   kind: ExecutedPostgresSqlKind;
 }
 

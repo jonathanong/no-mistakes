@@ -7,18 +7,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
         expr: &Expr,
         path: &Path,
+        env: Environment,
         depth: u8,
         generic: bool,
     ) -> bool {
-        let Expr::Call { callee, .. } = expr else {
+        let Expr::Call { callee, args, .. } = expr else {
             return false;
         };
+        if args
+            .iter()
+            .any(|arg| self.effect_can_mutate(arg, path, env))
+        {
+            return false;
+        }
         let Expr::Name(name) = &**callee else {
             return false;
         };
-        let Value::Function(function, function_path, captured) =
-            self.name(path, name, depth, generic)
-        else {
+        let value = self.mapped_parameter_value(env, name).unwrap_or_else(|| {
+            self.scopes[env]
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| self.name(path, name, depth, generic))
+        });
+        let Value::Function(function, function_path, captured) = value.exposed() else {
             return false;
         };
         function.supported && function.body.iter().all(|step| match step {

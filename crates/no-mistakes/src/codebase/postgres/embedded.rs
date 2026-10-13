@@ -11,6 +11,7 @@ pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDE
 mod dml_kind;
 mod options;
 mod placeholders;
+pub(crate) use placeholders::{publish_placeholders_with_positions, INTERNAL_PLACEHOLDER};
 mod relative;
 mod scoped_bindings;
 mod source_positions;

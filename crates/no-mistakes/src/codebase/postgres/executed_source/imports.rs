@@ -15,13 +15,27 @@ pub(super) fn resolve_supplied_relative(
     supplied: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     let base = crate::codebase::ts_resolver::normalize_path(&from.parent()?.join(specifier));
-    let mut candidates = vec![base.clone()];
-    if base.extension().is_none() {
-        let path = base.to_string_lossy();
-        for extension in [".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx"] {
-            candidates.push(PathBuf::from(format!("{path}{extension}")));
-            candidates.push(base.join(format!("index{extension}")));
+    if let Some(extension) = base.extension().and_then(|value| value.to_str()) {
+        let source_extensions: &[&str] = match extension {
+            "js" => &["ts", "tsx"],
+            "mjs" => &["mts"],
+            "cjs" => &["cts"],
+            _ => &[],
+        };
+        let mut found = source_extensions
+            .iter()
+            .map(|extension| base.with_extension(extension))
+            .filter(|path| supplied.contains(path));
+        if let Some(first) = found.next() {
+            return found.next().is_none().then_some(first);
         }
+        return supplied.contains(&base).then_some(base);
+    }
+    let path = base.to_string_lossy();
+    let mut candidates = vec![base.clone()];
+    for extension in [".mts", ".ts", ".tsx", ".cts", ".mjs", ".js", ".jsx", ".cjs"] {
+        candidates.push(PathBuf::from(format!("{path}{extension}")));
+        candidates.push(base.join(format!("index{extension}")));
     }
     let mut found = candidates
         .into_iter()
@@ -64,4 +78,36 @@ pub(super) fn extract_source_with_imports(
             )
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_supplied_relative;
+    use std::path::{Path, PathBuf};
+
+    #[test]
+    fn supplied_node_next_imports_prefer_source_and_support_commonjs() {
+        let files = [
+            "src/helper.ts",
+            "src/helper.js",
+            "src/common.cts",
+            "src/index.cjs",
+        ]
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
+        let from = Path::new("src/consumer.mts");
+        assert_eq!(
+            resolve_supplied_relative(from, "./helper.js", &files),
+            Some(PathBuf::from("src/helper.ts"))
+        );
+        assert_eq!(
+            resolve_supplied_relative(from, "./common.cjs", &files),
+            Some(PathBuf::from("src/common.cts"))
+        );
+        assert_eq!(
+            resolve_supplied_relative(from, "./common", &files),
+            Some(PathBuf::from("src/common.cts"))
+        );
+    }
 }
