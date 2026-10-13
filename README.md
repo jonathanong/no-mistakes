@@ -192,6 +192,17 @@ within their ten-minute step deadlines. Development and test profiles use the sa
 setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
 Linux still runs the full suite and enforces the coverage gates.
 
+Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
+`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and
+`suite_contracts`. This links the analyzer once per suite instead of once per
+source file. Keep new root `crates/no-mistakes/tests/*.rs` modules registered in
+one suite; the registration test rejects omitted or duplicate sources. Original
+module and fixture paths stay unchanged. To run one former target, use, for example,
+`cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::`.
+Use the full module-qualified name with `-- --exact` for a single test.
+`windows_job_object` and `macos_invocation` remain separate platform harnesses
+for their process and crate-root requirements.
+
 CI checks links to this repository's `main` documentation against the checked-out
 `docs/` files, including new pages in a pull request. Missing targets still fail;
 links outside that documentation prefix continue to be checked over the network.

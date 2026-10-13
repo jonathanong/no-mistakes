@@ -1,6 +1,4 @@
-#[allow(dead_code)]
-#[path = "common/gitignore_fixture.rs"]
-mod gitignore_fixture;
+use crate::gitignore_fixture;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 

@@ -3,8 +3,7 @@ use super::common::{
 };
 use std::collections::BTreeSet;
 
-#[path = "../common/gitignore_fixture.rs"]
-mod gitignore_fixture;
+use crate::gitignore_fixture;
 
 #[test]
 fn import_forms_report_expected_edge_kinds() {

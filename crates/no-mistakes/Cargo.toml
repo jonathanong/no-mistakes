@@ -2,6 +2,8 @@
 name = "no-mistakes"
 version = "0.89.0"
 edition = "2021"
+# Explicit suites avoid statically linking the analyzer once per test source.
+autotests = false
 license = "MIT"
 description = "Static analysis tools for codebase dependency and symbol queries"
 repository = "https://github.com/jonathanong/no-mistakes"
@@ -97,3 +99,33 @@ harness = false
 [[bench]]
 name = "sql_bound_scopes"
 harness = false
+
+# Test modules retain their original paths so fixture and include paths stay stable.
+
+[[test]]
+name = "suite_cli_queries"
+path = "tests/suite_cli_queries.rs"
+
+[[test]]
+name = "suite_cli_rules"
+path = "tests/suite_cli_rules.rs"
+
+[[test]]
+name = "suite_cli_postgres"
+path = "tests/suite_cli_postgres.rs"
+
+[[test]]
+name = "suite_cli_test_plans"
+path = "tests/suite_cli_test_plans.rs"
+
+[[test]]
+name = "suite_contracts"
+path = "tests/suite_contracts.rs"
+
+[[test]]
+name = "macos_invocation"
+path = "tests/macos_invocation.rs"
+
+[[test]]
+name = "windows_job_object"
+path = "tests/windows_job_object.rs"
