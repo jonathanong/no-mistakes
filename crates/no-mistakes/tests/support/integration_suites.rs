@@ -56,3 +56,48 @@ fn every_integration_source_is_registered_once() {
     // New root sources must join a suite; duplicates and missing files fail too.
     assert_eq!(registrations, expected);
 }
+
+#[test]
+fn changed_suite_modules_select_the_configured_workspace_test_command() {
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "impacted-checks",
+            "crates/no-mistakes/tests/cli_test_plan_dotnet.rs",
+            "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs",
+            "--root",
+        ])
+        .arg(repo_root)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let check = report["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|check| check["name"] == "rust-integration-validation")
+        .expect("changed suite modules must select executable Cargo validation");
+    // Filename-derived --test stems no longer identify these integration modules.
+    assert_eq!(
+        check["command"],
+        serde_json::json!([
+            "cargo",
+            "test",
+            "--locked",
+            "--workspace",
+            "--all-features",
+            "--lib",
+            "--bins",
+            "--tests"
+        ])
+    );
+    assert_eq!(
+        check["files"],
+        serde_json::json!([
+            "crates/no-mistakes/tests/cli_test_plan_dotnet.rs",
+            "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs"
+        ])
+    );
+}

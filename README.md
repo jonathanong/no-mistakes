@@ -203,6 +203,12 @@ Use the full module-qualified name with `-- --exact` for a single test.
 `windows_job_object` and `macos_invocation` remain separate platform harnesses
 for their process and crate-root requirements.
 
+For this repository, use `no-mistakes impacted-checks <changed-file> --root .
+--format json` to obtain the configured Rust validation command. The Cargo test
+planner currently derives integration target names from source filenames; it
+cannot project a changed suite module onto an explicit `[[test]]` target.
+Run the returned workspace test command or the suite commands above.
+
 CI checks links to this repository's `main` documentation against the checked-out
 `docs/` files, including new pages in a pull request. Missing targets still fail;
 links outside that documentation prefix continue to be checked over the network.

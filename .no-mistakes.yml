@@ -1,5 +1,14 @@
 checks:
   commands:
+    # Explicit opt-in: integration sources are modules of shared Cargo suites.
+    - name: rust-integration-validation
+      include:
+        - "crates/*/tests/**/*.rs"
+        - "crates/*/Cargo.toml"
+        - Cargo.toml
+        - Cargo.lock
+      command: [cargo, test, --locked, --workspace, --all-features, --lib, --bins, --tests]
+      fileArgs: none
     - name: jscpd
       include:
         - "crates/**/*.rs"
