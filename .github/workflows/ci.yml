@@ -366,11 +366,11 @@ jobs:
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
-      # Windows uses an integration test so cargo does not typecheck ~7,500
-      # lib unit tests just to run the Job Object resume regression.
+      # Both native platforms use focused integration tests so cargo does not
+      # typecheck the unrelated lib unit tests for platform regressions.
       #
       # Rewrite crate-type in this job only so one rustc emits the rlib (CLI
-      # + Windows integration test) and the Node cdylib. Do not commit that
+      # + focused integration test) and the Node cdylib. Do not commit that
       # crate-type: Linux coverage should not also link a cdylib.
       - name: Build native CLI and N-API addon
         timeout-minutes: 10
@@ -395,8 +395,8 @@ jobs:
         timeout-minutes: 10
         shell: bash
         env:
-          # Must match the preceding build so Windows `cargo test --test`
-          # reuses the rlib instead of rustc-ing no-mistakes again.
+          # Match the preceding build so both `cargo test --test` targets
+          # reuse the rlib instead of rustc-ing no-mistakes again.
           NO_MISTAKES_BUILD_NAPI: "1"
         run: |
           set -euo pipefail

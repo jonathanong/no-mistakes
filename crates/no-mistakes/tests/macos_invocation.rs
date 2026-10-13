@@ -1,6 +1,6 @@
 //! Run the existing invocation unit tests on macOS without compiling every
-//! library test into one large `--lib` harness. The ordinary library build and
-//! Linux coverage job still compile the full crate test suite.
+//! library test into one large `--lib` harness. The ordinary library build
+//! remains reusable; Linux coverage still compiles and runs the full suite.
 
 #![cfg(target_os = "macos")]
 
