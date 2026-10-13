@@ -14,3 +14,8 @@ mindmap
 flowchart-elk TD
   A --> B
 ```
+
+```mermaid
+pie title Parser feature coverage
+  "Enabled" : 1
+```
