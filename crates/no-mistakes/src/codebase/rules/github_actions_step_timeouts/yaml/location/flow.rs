@@ -3,6 +3,20 @@ use crate::codebase::rules::github_actions_step_timeouts::yaml::{
     value_after_anchor, yaml_key_value,
 };
 
+pub(super) fn is_root_flow(lines: &[&str]) -> bool {
+    lines
+        .iter()
+        .find(|line| is_content(line) && line.trim() != "---")
+        .is_some_and(|line| {
+            let text = line.trim_start();
+            let text = text
+                .strip_prefix("---")
+                .filter(|rest| rest.starts_with(char::is_whitespace))
+                .map_or(text, str::trim_start);
+            value_after_anchor(text).starts_with('{')
+        })
+}
+
 fn flow_start(lines: &[&str], key: (usize, usize)) -> Option<(usize, usize)> {
     if yaml_key_value(lines[key.0])
         .is_some_and(|(_, value)| value_after_anchor(value).starts_with('['))
@@ -86,7 +100,7 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
     let mut state = FlowState::default();
     let mut seen_mapping = false;
     let mut ignored = Vec::new();
-    for (line_index, line) in lines.iter().enumerate().skip(parent) {
+    'scan: for (line_index, line) in lines.iter().enumerate().skip(parent) {
         let mut previous = None;
         for (column, character) in line.char_indices() {
             if state.quote.is_none() && character == '#' && previous.is_none_or(char::is_whitespace)
@@ -108,7 +122,7 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
             state.visit(character, line_index + 1, &mut ignored);
             seen_mapping |= state.mapping_depth > 0;
             if seen_mapping && state.mapping_depth == 0 {
-                return None;
+                break 'scan;
             }
             previous = Some(character);
         }
@@ -117,7 +131,7 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
 }
 
 mod root;
-pub(super) use root::RootFlowIndex;
+pub(super) use root::{locate_job_steps, RootFlowIndex};
 
 pub(super) fn flow_sequence_item_lines(
     lines: &[&str],
@@ -139,7 +153,7 @@ fn flow_sequence_lines_from(
 ) -> Vec<usize> {
     let mut result = Vec::with_capacity(count);
     let mut state = FlowState::default();
-    for (index, line) in lines.iter().enumerate().skip(start) {
+    'scan: for (index, line) in lines.iter().enumerate().skip(start) {
         let text = if index == start {
             &line[column..]
         } else {
@@ -153,11 +167,9 @@ fn flow_sequence_lines_from(
             }
             if state.visit(character, index + 1, &mut result) {
                 if start + 1 > declaration_line && index == start {
-                    return vec![declaration_line; count];
+                    result = vec![declaration_line; count];
                 }
-                result.truncate(count);
-                result.resize(count, declaration_line);
-                return result;
+                break 'scan;
             }
             previous = Some(character);
         }

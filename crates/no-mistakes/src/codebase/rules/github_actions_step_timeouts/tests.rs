@@ -114,6 +114,26 @@ allow:
 }
 
 #[test]
+fn allow_audits_are_scoped_to_each_workflow_file() {
+    let findings = run_files(
+        "multi-file-allows",
+        r#"
+allow:
+  - step: ".github/workflows/ci.yml#build#dynamic"
+    reason: "Bounded by the matrix."
+  - step: ".github/workflows/ci.yml#build#dynamic"
+    reason: "Duplicate exception."
+  - step: ".github/workflows/release.yml#publish#dynamic"
+    reason: "Bounded by the matrix."
+"#,
+        &[".github/workflows/ci.yml", ".github/workflows/release.yml"],
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ".github/workflows/ci.yml");
+    assert!(findings[0].message.contains("duplicate"));
+}
+
+#[test]
 fn blank_and_stale_allow_entries_are_findings() {
     let findings = run(
         "allowed",

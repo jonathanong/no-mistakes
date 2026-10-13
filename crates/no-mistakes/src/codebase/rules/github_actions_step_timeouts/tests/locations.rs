@@ -266,6 +266,14 @@ fn root_flow_mapping_locates_each_authored_step() {
 }
 
 #[test]
+fn block_job_with_multiline_flow_value_locates_child_steps() {
+    let findings = run("multiline-flow-job", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 4);
+    assert!(run("multiline-flow-job-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn root_flow_job_alias_uses_its_own_declaration() {
     let findings = run("root-flow-job-alias", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
@@ -275,6 +283,14 @@ fn root_flow_job_alias_uses_its_own_declaration() {
         Some(".github/workflows/ci.yml#build#1")
     );
     assert!(run("root-flow-job-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn root_flow_jobs_alias_uses_its_declaration() {
+    let findings = run("root-flow-jobs-alias", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 4);
+    assert!(run("root-flow-jobs-alias-suppressed", "{}").is_empty());
 }
 
 #[test]

@@ -29,15 +29,13 @@ pub(super) fn check_file(
             None,
         )],
     };
-    for key in &opts.duplicate_allow {
-        if super::selector_file(key).is_some() && key.starts_with(&format!("{rel}#")) {
-            findings.push(finding(
-                &rel,
-                1,
-                format!("{rel}: duplicate {RULE_ID} allow entry `{key}`"),
-                Some(key),
-            ));
-        }
+    for key in opts.duplicate_by_file.get(&rel).into_iter().flatten() {
+        findings.push(finding(
+            &rel,
+            1,
+            format!("{rel}: duplicate {RULE_ID} allow entry `{key}`"),
+            Some(key),
+        ));
     }
     if !opts.defer_suppression {
         super::super::suppress_rule_findings_with_source(&mut findings, &source);
@@ -77,11 +75,8 @@ fn check_parsed(
             );
         }
     }
-    for key in opts.allow.keys() {
-        if super::selector_file(key).is_some()
-            && key.starts_with(&format!("{rel}#"))
-            && !used.contains(key)
-        {
+    for key in opts.allow_by_file.get(rel).into_iter().flatten() {
+        if !used.contains(key) {
             findings.push(finding(
                 rel,
                 1,

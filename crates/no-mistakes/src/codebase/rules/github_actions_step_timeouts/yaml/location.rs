@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 mod parallel;
 use parallel::parallel_child_lines;
 mod flow;
-use flow::{flow_sequence_item_lines, RootFlowIndex};
+use flow::{flow_sequence_item_lines, locate_job_steps, RootFlowIndex};
 
 fn indent(line: &str) -> usize {
     line.len() - line.trim_start_matches(' ').len()
@@ -117,18 +117,7 @@ impl<'a> StepLocations<'a> {
     pub(crate) fn new(source: &'a str) -> Self {
         let lines: Vec<_> = source.lines().collect();
         let jobs = find_jobs_line(&lines);
-        let is_root_flow = lines
-            .iter()
-            .find(|line| is_content(line) && line.trim() != "---")
-            .is_some_and(|line| {
-                let text = line.trim_start();
-                let text = text
-                    .strip_prefix("---")
-                    .filter(|rest| rest.starts_with(char::is_whitespace))
-                    .map_or(text, str::trim_start);
-                value_after_anchor(text).starts_with('{')
-            });
-        let root_flow = is_root_flow.then(|| RootFlowIndex::new(&lines));
+        let root_flow = flow::is_root_flow(&lines).then(|| RootFlowIndex::new(&lines));
         let job_lines = jobs
             .map(|jobs| index_job_lines(&lines, jobs))
             .unwrap_or_default();
@@ -155,6 +144,16 @@ impl<'a> StepLocations<'a> {
         let Some(job) = self.job_lines.get(job_id).copied() else {
             return vec![1; count];
         };
+        if let Some((_, value)) = yaml_key_value(self.lines[job.0]) {
+            if value_after_anchor(value).starts_with('{') {
+                return locate_job_steps(
+                    &self.lines,
+                    job.0,
+                    self.lines[job.0].len() - value.len(),
+                    count,
+                );
+            }
+        }
         if is_inline_value_line(self.lines[job.0]) || has_child_inline_value(&self.lines, job, '{')
         {
             return vec![job.0 + 1; count];

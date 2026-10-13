@@ -30,7 +30,9 @@ struct CompiledOptions {
     include: Vec<String>,
     max_minutes: u64,
     allow: BTreeMap<String, AllowEntry>,
+    allow_by_file: BTreeMap<String, Vec<String>>,
     duplicate_allow: BTreeSet<String>,
+    duplicate_by_file: BTreeMap<String, Vec<String>>,
     defer_suppression: bool,
 }
 
@@ -69,6 +71,24 @@ fn compile_options(opts: Options) -> CompiledOptions {
             duplicate_allow.insert(key);
         }
     }
+    let mut allow_by_file: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for key in allow.keys() {
+        if let Some(file) = selector_file(key) {
+            allow_by_file
+                .entry(file.to_string())
+                .or_default()
+                .push(key.clone());
+        }
+    }
+    let mut duplicate_by_file: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for key in &duplicate_allow {
+        if let Some(file) = selector_file(key) {
+            duplicate_by_file
+                .entry(file.to_string())
+                .or_default()
+                .push(key.clone());
+        }
+    }
     CompiledOptions {
         include: super::configured_includes(opts.include, DEFAULT_INCLUDE),
         max_minutes: opts
@@ -76,7 +96,9 @@ fn compile_options(opts: Options) -> CompiledOptions {
             .unwrap_or(GITHUB_MAX_MINUTES)
             .min(GITHUB_MAX_MINUTES),
         allow,
+        allow_by_file,
         duplicate_allow,
+        duplicate_by_file,
         defer_suppression: false,
     }
 }

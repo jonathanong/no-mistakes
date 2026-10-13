@@ -47,7 +47,7 @@ impl RootFlowIndex {
         let mut found_jobs = false;
         let mut inside_jobs = false;
         let mut jobs_alias_line = None;
-        for (line_index, line) in lines.iter().enumerate() {
+        'scan: for (line_index, line) in lines.iter().enumerate() {
             let mut previous = None;
             for (column, character) in line.char_indices() {
                 if state.quote.is_none()
@@ -85,10 +85,7 @@ impl RootFlowIndex {
                 state.visit(character, line_index + 1, &mut ignored);
                 inside_jobs |= found_jobs && state.mapping_depth == 2;
                 if inside_jobs && state.mapping_depth == 1 {
-                    return Self {
-                        jobs,
-                        jobs_alias_line,
-                    };
+                    break 'scan;
                 }
                 previous = Some(character);
             }
@@ -109,7 +106,7 @@ impl RootFlowIndex {
         if marker.alias || next_line_alias(lines, marker.line, marker.value_column) {
             return vec![marker.line + 1; count];
         }
-        locate_job_steps(lines, *marker, count)
+        locate_job_steps(lines, marker.line, marker.value_column, count)
     }
 }
 
@@ -124,16 +121,21 @@ fn next_line_alias(lines: &[&str], line: usize, value_column: usize) -> bool {
         .is_some_and(|line| value_after_anchor(line.trim_start()).starts_with('*'))
 }
 
-fn locate_job_steps(lines: &[&str], marker: JobMarker, count: usize) -> Vec<usize> {
+pub(crate) fn locate_job_steps(
+    lines: &[&str],
+    job_line: usize,
+    value_column: usize,
+    count: usize,
+) -> Vec<usize> {
     let mut state = FlowState {
         mapping_depth: 2,
         ..FlowState::default()
     };
     let mut ignored = Vec::new();
     let mut inside_job = false;
-    for (line_index, line) in lines.iter().enumerate().skip(marker.line) {
-        let text = if line_index == marker.line {
-            &line[marker.value_column..]
+    for (line_index, line) in lines.iter().enumerate().skip(job_line) {
+        let text = if line_index == job_line {
+            &line[value_column..]
         } else {
             line
         };
@@ -180,10 +182,10 @@ fn locate_job_steps(lines: &[&str], marker: JobMarker, count: usize) -> Vec<usiz
             state.visit(character, line_index + 1, &mut ignored);
             inside_job |= state.mapping_depth == 3;
             if inside_job && state.mapping_depth == 2 {
-                return vec![marker.line + 1; count];
+                return vec![job_line + 1; count];
             }
             previous = Some(character);
         }
     }
-    vec![marker.line + 1; count]
+    vec![job_line + 1; count]
 }
