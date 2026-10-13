@@ -27,6 +27,7 @@ pub enum ValueExpression {
     Super(CallableId),
     Member(std::sync::Arc<ValueExpression>, String),
     Object(std::sync::Arc<FxHashMap<String, ValueExpression>>),
+    Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
     Undefined,
     Default(
         std::sync::Arc<ValueExpression>,
@@ -46,6 +47,7 @@ pub struct ValueBinding {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueProjection {
     Member(String),
+    Element(String),
     Default(ValueExpression, usize),
 }
 #[derive(Debug, Clone, PartialEq, Eq)]

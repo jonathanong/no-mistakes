@@ -23,6 +23,10 @@ impl ValueFlowResolution<'_, '_> {
                 file: path.to_path_buf(),
                 fields: std::sync::Arc::clone(fields),
             },
+            ValueExpression::Array(fields) => FlowValue::Array {
+                file: path.to_path_buf(),
+                fields: std::sync::Arc::clone(fields),
+            },
             ValueExpression::Undefined => FlowValue::Undefined,
             ValueExpression::Default(value, fallback) => {
                 let value = self.value(path, value);
@@ -63,7 +67,7 @@ impl ValueFlowResolution<'_, '_> {
                 receiver: Some(receiver),
                 ..
             } => self.member(FlowValue::Target(receiver), member),
-            FlowValue::Object { file, fields } => fields
+            FlowValue::Object { file, fields } | FlowValue::Array { file, fields } => fields
                 .get(member)
                 .map_or(FlowValue::Undefined, |value| self.value(&file, value)),
             FlowValue::Target(ResolvedCallTarget::ModuleExport {

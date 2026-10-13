@@ -43,3 +43,6 @@ import { projected } from './destructured-export.mjs';
 for (const item of items) { projected({ client: primary }); }
 const arrow = ([client]) => client.get('key');
 for (const item of items) { arrow([primary]); }
+// Numeric object keys do not make an object iterable.
+function nonIterable([client]) { client.get('key'); }
+for (const item of items) { nonIterable({ 0: primary }); }

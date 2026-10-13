@@ -63,7 +63,7 @@ impl ImportCollector {
                         });
                     fields.insert(index.to_string(), value);
                 }
-                ValueExpression::Object(std::sync::Arc::new(fields))
+                ValueExpression::Array(std::sync::Arc::new(fields))
             }
             Expression::ObjectExpression(object) => {
                 let mut fields = fx_map();

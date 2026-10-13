@@ -77,6 +77,10 @@ enum FlowValue {
         file: std::path::PathBuf,
         fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
     },
+    Array {
+        file: std::path::PathBuf,
+        fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
+    },
     Undefined,
     Unknown,
 }

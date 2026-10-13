@@ -56,7 +56,7 @@ impl ImportCollector {
                 for (position, element) in array.elements.iter().enumerate() {
                     if let Some(element) = element {
                         let mut steps = projection.clone();
-                        steps.push(ValueProjection::Member(position.to_string()));
+                        steps.push(ValueProjection::Element(position.to_string()));
                         self.record_parameter_pattern(element, slot, default, default_order, steps);
                     }
                 }

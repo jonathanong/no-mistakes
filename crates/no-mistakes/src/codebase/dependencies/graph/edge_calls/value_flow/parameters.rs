@@ -101,7 +101,10 @@ impl ValueFlowResolution<'_, '_> {
         let mut origin_order = from_default.then_some(parameter.default_order);
         for step in &parameter.projection {
             value = match step {
-                ValueProjection::Member(member) => {
+                ValueProjection::Element(_) if !matches!(&value, FlowValue::Array { .. }) => {
+                    FlowValue::Unknown
+                }
+                ValueProjection::Member(member) | ValueProjection::Element(member) => {
                     if let Some(order) = origin_order {
                         self.initializing
                             .push((path.to_path_buf(), parameter.owner, order));
