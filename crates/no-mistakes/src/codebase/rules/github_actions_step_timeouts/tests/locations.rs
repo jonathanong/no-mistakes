@@ -251,6 +251,24 @@ fn parallel_children_in_multiline_flow_mapping_keep_own_lines() {
 }
 
 #[test]
+fn root_flow_mapping_locates_each_authored_step() {
+    for (scenario, line) in [("root-flow", 3), ("multiline-root-flow", 7)] {
+        let findings = run(scenario, "{}");
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+        assert_eq!(findings[0].line, line);
+        assert!(run(&format!("{scenario}-suppressed"), "{}").is_empty());
+    }
+}
+
+#[test]
+fn flow_mapping_comment_delimiter_does_not_hide_parallel_children() {
+    let findings = run("nested-flow-comment", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 9);
+    assert!(run("nested-flow-comment-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn next_line_flow_collections_use_declaration_lines() {
     for (scenario, line) in [
         ("next-line-flow-steps", 5),

@@ -3,7 +3,7 @@ use super::{is_inline_value_line, value_after_anchor, yaml_key_value};
 mod parallel;
 use parallel::parallel_child_lines;
 mod flow;
-use flow::flow_sequence_item_lines;
+use flow::{flow_sequence_item_lines, root_flow_job_steps};
 
 fn indent(line: &str) -> usize {
     line.len() - line.trim_start_matches(' ').len()
@@ -105,16 +105,29 @@ pub(super) fn sequence_item_lines(lines: &[&str], key: (usize, usize), count: us
 pub(crate) struct StepLocations<'a> {
     lines: Vec<&'a str>,
     jobs: Option<(usize, usize)>,
+    root_flow: bool,
 }
 
 impl<'a> StepLocations<'a> {
     pub(crate) fn new(source: &'a str) -> Self {
         let lines: Vec<_> = source.lines().collect();
         let jobs = find_jobs_line(&lines);
-        Self { lines, jobs }
+        let root_flow = lines
+            .iter()
+            .find(|line| is_content(line) && line.trim() != "---")
+            .is_some_and(|line| line.trim_start().starts_with('{'));
+        Self {
+            lines,
+            jobs,
+            root_flow,
+        }
     }
 
     pub(crate) fn job_steps(&self, job_id: &str, count: usize) -> Vec<usize> {
+        if self.root_flow {
+            return root_flow_job_steps(&self.lines, job_id, count)
+                .unwrap_or_else(|| vec![1; count]);
+        }
         let Some(jobs) = self.jobs else {
             return vec![1; count];
         };
@@ -149,7 +162,10 @@ impl<'a> StepLocations<'a> {
             return vec![1; count];
         };
         let key = (parent, indent(self.lines[parent]));
-        if is_inline_value_line(self.lines[parent])
+        let item = self.lines[parent].trim_start();
+        let item = item.strip_prefix("- ").unwrap_or(item);
+        if value_after_anchor(item).starts_with('{')
+            || is_inline_value_line(self.lines[parent])
             || has_child_inline_value(&self.lines, key, '[')
             || has_child_inline_value(&self.lines, key, '{')
         {

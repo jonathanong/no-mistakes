@@ -1,0 +1,11 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: [
+      {name: group, # } ignored delimiter
+        parallel: [
+          {run: echo bounded, timeout-minutes: 5},
+          {run: echo missing}
+        ]},
+    ]

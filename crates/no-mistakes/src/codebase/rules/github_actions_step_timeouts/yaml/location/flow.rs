@@ -87,7 +87,12 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
     let mut seen_mapping = false;
     let mut ignored = Vec::new();
     for (line_index, line) in lines.iter().enumerate().skip(parent) {
+        let mut previous = None;
         for (column, character) in line.char_indices() {
+            if state.quote.is_none() && character == '#' && previous.is_none_or(char::is_whitespace)
+            {
+                break;
+            }
             if state.mapping_depth == 1 && state.sequence_depth == 0 && state.quote.is_none() {
                 for key in ["parallel:", "\"parallel\":", "'parallel':"] {
                     if line[column..].starts_with(key) {
@@ -105,10 +110,14 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
             if seen_mapping && state.mapping_depth == 0 {
                 return None;
             }
+            previous = Some(character);
         }
     }
     None
 }
+
+mod root;
+pub(super) use root::root_flow_job_steps;
 
 pub(super) fn flow_sequence_item_lines(
     lines: &[&str],
@@ -118,6 +127,16 @@ pub(super) fn flow_sequence_item_lines(
     let Some((start, column)) = flow_start(lines, key) else {
         return vec![key.0 + 1; count];
     };
+    flow_sequence_lines_from(lines, start, column, key.0 + 1, count)
+}
+
+fn flow_sequence_lines_from(
+    lines: &[&str],
+    start: usize,
+    column: usize,
+    declaration_line: usize,
+    count: usize,
+) -> Vec<usize> {
     let mut result = Vec::with_capacity(count);
     let mut state = FlowState::default();
     for (index, line) in lines.iter().enumerate().skip(start) {
@@ -133,17 +152,17 @@ pub(super) fn flow_sequence_item_lines(
                 break;
             }
             if state.visit(character, index + 1, &mut result) {
-                if start > key.0 && index == start {
-                    return vec![key.0 + 1; count];
+                if start + 1 > declaration_line && index == start {
+                    return vec![declaration_line; count];
                 }
                 result.truncate(count);
-                result.resize(count, key.0 + 1);
+                result.resize(count, declaration_line);
                 return result;
             }
             previous = Some(character);
         }
     }
     result.truncate(count);
-    result.resize(count, key.0 + 1);
+    result.resize(count, declaration_line);
     result
 }
