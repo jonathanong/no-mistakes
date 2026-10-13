@@ -53,11 +53,14 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
-            let Some((candidate, _)) = key.split_once(':') else {
+            let Some((candidate, value)) = key.split_once(':') else {
                 continue;
             };
             let depth = *job_key_indent.get_or_insert(indent);
             if indent == depth && candidate.trim_matches(['\'', '"']) == job_id {
+                if value.trim_start().starts_with('*') {
+                    return Some(line_number + 1);
+                }
                 job_indent = Some(indent);
             }
             continue;

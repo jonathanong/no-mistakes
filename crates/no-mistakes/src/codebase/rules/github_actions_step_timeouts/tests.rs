@@ -224,6 +224,14 @@ fn anchored_job_has_usable_step_location() {
 }
 
 #[test]
+fn aliased_job_reports_inherited_steps_on_alias_line() {
+    let findings = run("aliased-job", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert!(run("aliased-job-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn matrix_steps_do_not_shift_executable_step_location() {
     let findings = run("matrix-steps", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
