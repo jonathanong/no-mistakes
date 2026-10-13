@@ -10,6 +10,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod output;
+use output::{prefix, projected_sql};
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct ProjectedSql {
     pub text: String,
@@ -188,63 +191,6 @@ fn project_impl(
         }
     }
     projected
-}
-
-fn projected_sql(value: &Value) -> Option<Vec<ProjectedSql>> {
-    match value {
-        Value::Prefix(text, complete, _) => Some(vec![ProjectedSql {
-            text: text.clone(),
-            complete: *complete && !text.contains("sql_placeholder_"),
-        }]),
-        Value::Promise(value) | Value::Evaluated(value, _) => projected_sql(value),
-        Value::Joined(values) if !values.is_empty() => {
-            let mut alternatives = Vec::new();
-            for value in values.iter() {
-                for candidate in projected_sql(value)? {
-                    if !alternatives.contains(&candidate) {
-                        alternatives.push(candidate);
-                    }
-                }
-            }
-            Some(alternatives)
-        }
-        _ => None,
-    }
-}
-
-fn prefix(value: Value) -> Option<String> {
-    if let Value::Possible(values) = value {
-        // A known unsafe possibility still violates the rule. A known safe
-        // possibility cannot establish safety for the implicit unknown case.
-        return values
-            .into_iter()
-            .filter_map(prefix)
-            .find(|text| sql_requires_query_annotation(text));
-    }
-    let Value::Prefix(text, complete, _) = value else {
-        return None;
-    };
-    let start = text.trim_start();
-    if complete
-        || super::super::annotation::has_leading_query_annotation(&text)
-        || (!start.is_empty()
-            && !start.starts_with('/')
-            && !could_be_transaction(start)
-            && sql_requires_query_annotation(&text))
-        || (start.starts_with('/') && start.len() > 1 && !start.starts_with("/*"))
-        || (start.starts_with("/*") && start.contains("*/") && sql_requires_query_annotation(&text))
-    {
-        Some(text)
-    } else {
-        None
-    }
-}
-
-fn could_be_transaction(prefix: &str) -> bool {
-    let prefix = prefix.to_ascii_uppercase();
-    ["BEGIN", "COMMIT", "ROLLBACK"]
-        .iter()
-        .any(|statement| statement.starts_with(&prefix))
 }
 
 #[cfg(test)]
