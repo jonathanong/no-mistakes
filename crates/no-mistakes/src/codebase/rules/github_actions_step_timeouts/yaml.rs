@@ -24,6 +24,8 @@ pub(super) fn is_expression(value: &Value) -> bool {
 // Locate the sequence entry instead of the first timeout key, so line suppressions
 // work on workflows with several steps.
 pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usize> {
+    let mut jobs_indent = None;
+    let mut job_key_indent = None;
     let mut job_indent = None;
     let mut steps_indent = None;
     let mut found_steps = false;
@@ -32,25 +34,34 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
     for (line_number, line) in source.lines().enumerate() {
         let indent = line.len() - line.trim_start_matches(' ').len();
         let trimmed = line.trim_start();
+        let key = trimmed.split('#').next().unwrap_or(trimmed).trim_end();
+        if jobs_indent.is_none() {
+            if indent == 0 && key == "jobs:" {
+                jobs_indent = Some(indent);
+            }
+            continue;
+        }
         if let Some(depth) = job_indent {
             if indent <= depth && !trimmed.is_empty() && !trimmed.starts_with('#') {
                 break;
             }
-        } else if trimmed
-            .split('#')
-            .next()
-            .unwrap_or(trimmed)
-            .trim_end()
-            .strip_suffix(':')
-            .is_some_and(|key| key.trim_matches(['\'', '"']) == job_id)
-        {
-            job_indent = Some(indent);
+        } else {
+            if indent <= jobs_indent.unwrap() && !trimmed.is_empty() && !trimmed.starts_with('#') {
+                break;
+            }
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                continue;
+            }
+            let Some(candidate) = key.strip_suffix(':') else {
+                continue;
+            };
+            let depth = *job_key_indent.get_or_insert(indent);
+            if indent == depth && candidate.trim_matches(['\'', '"']) == job_id {
+                job_indent = Some(indent);
+            }
             continue;
         }
-        if job_indent.is_some()
-            && !found_steps
-            && trimmed.split('#').next().unwrap_or(trimmed).trim_end() == "steps:"
-        {
+        if !found_steps && key == "steps:" {
             steps_indent = Some(indent);
             found_steps = true;
             continue;

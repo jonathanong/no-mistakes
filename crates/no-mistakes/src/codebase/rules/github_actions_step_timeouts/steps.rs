@@ -60,9 +60,6 @@ impl StepScan<'_> {
 
     fn check_timeout(&mut self, key: &str, label: &str, line: usize, step: &serde_yaml::Mapping) {
         let allowed = self.opts.allow.get(key);
-        if allowed.is_some() {
-            self.used.insert(key.to_string());
-        }
         if allowed.is_some_and(|entry| entry.reason.trim().is_empty()) {
             self.findings.push(finding(
                 self.rel,
@@ -75,18 +72,22 @@ impl StepScan<'_> {
         let minutes = raw.and_then(timeout_minutes);
         match (raw, minutes, allowed) {
             (None, _, None) => self.findings.push(finding(self.rel, line,
-                format!("{}: job \"{}\" step \"{label}\" has no timeout-minutes; add a positive literal number", self.rel, self.job_id), Some(key))),
-            (Some(raw), None, Some(_)) if is_expression(raw) => {}
+                format!("{}: job \"{}\" step \"{label}\" has no timeout-minutes and can stall until its job deadline; add a positive literal number", self.rel, self.job_id), Some(key))),
+            (None, _, Some(_)) => { self.used.insert(key.to_string()); }
+            (Some(raw), None, Some(_)) if is_expression(raw) => { self.used.insert(key.to_string()); }
             (Some(_), None, _) => self.findings.push(finding(self.rel, line,
                 format!("{}: job \"{}\" step \"{label}\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)", self.rel, self.job_id), Some(key))),
             (Some(_), Some(minutes), allowed) => {
                 let cap = allowed.and_then(|entry| entry.max_minutes).unwrap_or(self.opts.max_minutes).min(GITHUB_MAX_MINUTES);
+                if allowed.is_some_and(|entry| entry.max_minutes.is_some_and(|max| max.min(GITHUB_MAX_MINUTES) > self.opts.max_minutes))
+                    && minutes > self.opts.max_minutes {
+                    self.used.insert(key.to_string());
+                }
                 if minutes > cap {
                     self.findings.push(finding(self.rel, line,
                         format!("{}: job \"{}\" step \"{label}\" timeout-minutes is {minutes}, over the {cap}-minute cap", self.rel, self.job_id), Some(key)));
                 }
             }
-            _ => {}
         }
     }
 }

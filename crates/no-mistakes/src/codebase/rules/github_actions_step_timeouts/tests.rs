@@ -103,6 +103,22 @@ allow:
 }
 
 #[test]
+fn allow_for_literal_within_default_cap_is_stale() {
+    let findings = run(
+        "pass",
+        r#"
+maxMinutes: 30
+allow:
+  - step: ".github/workflows/ci.yml#build#checkout"
+    reason: "No longer needed."
+    maxMinutes: 40
+"#,
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("stale"));
+}
+
+#[test]
 fn allow_does_not_accept_invalid_literal_timeouts() {
     let findings = run(
         "invalid",
@@ -189,6 +205,14 @@ fn job_key_comments_keep_step_locations_and_suppression() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 6);
     assert!(run("commented-job-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn workflow_dispatch_input_named_like_job_does_not_shift_step_location() {
+    let findings = run("duplicate-job-name", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 11);
+    assert!(run("duplicate-job-name-suppressed", "{}").is_empty());
 }
 
 #[test]

@@ -1,0 +1,11 @@
+name: CI
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: Build choice
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo missing
