@@ -252,7 +252,11 @@ fn parallel_children_in_multiline_flow_mapping_keep_own_lines() {
 
 #[test]
 fn root_flow_mapping_locates_each_authored_step() {
-    for (scenario, line) in [("root-flow", 3), ("multiline-root-flow", 7)] {
+    for (scenario, line) in [
+        ("root-flow", 3),
+        ("anchored-root-flow", 3),
+        ("multiline-root-flow", 7),
+    ] {
         let findings = run(scenario, "{}");
         assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
         assert_eq!(findings[0].line, line);

@@ -30,7 +30,7 @@ pub(super) fn check_file(
         )],
     };
     for key in &opts.duplicate_allow {
-        if key.starts_with(&format!("{rel}#")) {
+        if super::selector_file(key).is_some() && key.starts_with(&format!("{rel}#")) {
             findings.push(finding(
                 &rel,
                 1,
@@ -78,7 +78,10 @@ fn check_parsed(
         }
     }
     for key in opts.allow.keys() {
-        if key.starts_with(&format!("{rel}#")) && !used.contains(key) {
+        if super::selector_file(key).is_some()
+            && key.starts_with(&format!("{rel}#"))
+            && !used.contains(key)
+        {
             findings.push(finding(
                 rel,
                 1,

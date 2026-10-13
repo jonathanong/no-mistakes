@@ -203,6 +203,21 @@ allow:
     assert!(findings.iter().any(|f| f.message.contains("duplicate")));
 }
 
+#[test]
+fn incomplete_allow_selector_has_one_malformed_finding() {
+    let findings = run(
+        "pass",
+        r#"
+allow:
+  - step: ".github/workflows/ci.yml#build"
+    reason: "Missing step selector."
+"#,
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("malformed"));
+    assert!(!findings[0].message.contains("stale"));
+}
+
 mod locations;
 
 #[test]

@@ -96,7 +96,15 @@ fn scan_files(
         .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
         .collect();
     for key in opts.allow.keys() {
-        let path = selector_file(key);
+        let Some(path) = selector_file(key) else {
+            findings.push(yaml::finding(
+                key,
+                1,
+                format!("{key}: malformed {RULE_ID} allow selector; expected file#job#step"),
+                Some(key),
+            ));
+            continue;
+        };
         if !present.contains(path) {
             findings.push(yaml::finding(
                 path,
@@ -107,7 +115,9 @@ fn scan_files(
         }
     }
     for key in &opts.duplicate_allow {
-        let path = selector_file(key);
+        let Some(path) = selector_file(key) else {
+            continue;
+        };
         if !present.contains(path) {
             findings.push(yaml::finding(
                 path,
@@ -120,10 +130,14 @@ fn scan_files(
     findings
 }
 
-fn selector_file(key: &str) -> &str {
+fn selector_file(key: &str) -> Option<&str> {
     key.rsplit_once('#')
+        .filter(|(_, step)| !step.is_empty())
         .and_then(|(file_and_job, _)| file_and_job.rsplit_once('#'))
-        .map_or(key, |(file, _)| file)
+        .filter(|(file, job)| {
+            !job.is_empty() && (file.ends_with(".yml") || file.ends_with(".yaml"))
+        })
+        .map(|(file, _)| file)
 }
 
 mod scan;
