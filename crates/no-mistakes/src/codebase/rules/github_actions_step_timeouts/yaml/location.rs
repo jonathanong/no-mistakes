@@ -103,12 +103,9 @@ impl<'a> StepLocations<'a> {
         };
         if let Some((_, value)) = yaml_key_value(self.lines[job.0]) {
             if value_after_anchor(value).starts_with('{') {
-                return locate_job_steps(
-                    &self.lines,
-                    job.0,
-                    self.lines[job.0].len() - value.len(),
-                    count,
-                );
+                if let Some(column) = self.lines[job.0].find('{') {
+                    return locate_job_steps(&self.lines, job.0, column, count);
+                }
             }
         }
         if is_inline_value_line(self.lines[job.0]) || has_child_inline_value(&self.lines, job, '{')

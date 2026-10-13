@@ -274,6 +274,15 @@ fn block_job_with_multiline_flow_value_locates_child_steps() {
 }
 
 #[test]
+fn trailing_spaces_after_flow_job_opener_keep_child_lines() {
+    // The saved YAML deliberately ends its `build: {` line with spaces.
+    let findings = run("trailing-space-flow-job", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("trailing-space-flow-job-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn next_line_multiline_flow_jobs_locates_child_steps() {
     let findings = run("multiline-next-line-flow-jobs", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
