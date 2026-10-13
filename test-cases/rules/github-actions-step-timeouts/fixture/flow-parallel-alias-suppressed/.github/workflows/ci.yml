@@ -1,0 +1,9 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: base
+        parallel: &tasks
+          - run: echo missing
+      # no-mistakes-disable-next-line github-actions-step-timeouts
+      - {name: alias, parallel: *tasks}

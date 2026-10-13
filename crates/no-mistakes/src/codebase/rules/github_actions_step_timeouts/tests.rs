@@ -238,6 +238,22 @@ allow:
     assert!(!findings[0].message.contains("stale"));
 }
 
+#[test]
+fn duplicate_incomplete_allow_selector_has_one_malformed_finding() {
+    let findings = run(
+        "pass",
+        r#"
+allow:
+  - step: ".github/workflows/ci.yml#build"
+    reason: "Incomplete selector."
+  - step: ".github/workflows/ci.yml#build"
+    reason: "Duplicated incomplete selector."
+"#,
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("malformed"));
+}
+
 mod locations;
 
 #[test]

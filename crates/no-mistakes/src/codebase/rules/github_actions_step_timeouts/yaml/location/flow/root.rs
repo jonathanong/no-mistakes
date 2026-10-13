@@ -64,7 +64,9 @@ impl RootFlowIndex {
                         found_jobs = true;
                         let length = mapping_key_len(&line[column..], "jobs").unwrap_or(0);
                         let value = value_after_anchor(line[column + length..].trim_start());
-                        if value.starts_with('*') {
+                        if value.starts_with('*')
+                            || next_line_alias(lines, line_index, column + length)
+                        {
                             jobs_alias_line = Some(line_index + 1);
                         }
                     } else if found_jobs && state.mapping_depth == 2 {

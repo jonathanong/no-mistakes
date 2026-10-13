@@ -269,7 +269,7 @@ fn root_flow_mapping_locates_each_authored_step() {
 fn block_job_with_multiline_flow_value_locates_child_steps() {
     let findings = run("multiline-flow-job", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].line, 4);
+    assert_eq!(findings[0].line, 6);
     assert!(run("multiline-flow-job-suppressed", "{}").is_empty());
 }
 
@@ -291,6 +291,24 @@ fn root_flow_jobs_alias_uses_its_declaration() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 4);
     assert!(run("root-flow-jobs-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn root_flow_next_line_jobs_alias_uses_its_declaration() {
+    let findings = run("root-flow-next-line-jobs-alias", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 4);
+    assert!(run("root-flow-next-line-jobs-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn flow_parallel_alias_uses_group_line_for_inherited_child() {
+    let findings = run("flow-parallel-alias", "{}");
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings.iter().map(|f| f.line).collect::<Vec<_>>(), [7, 8]);
+    let suppressed = run("flow-parallel-alias-suppressed", "{}");
+    assert_eq!(suppressed.len(), 1, "{suppressed:?}");
+    assert_eq!(suppressed[0].line, 7);
 }
 
 #[test]
