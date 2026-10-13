@@ -3,10 +3,11 @@ checks:
     # Explicit opt-in: integration sources are modules of shared Cargo suites.
     - name: rust-integration-validation
       include:
-        - "crates/*/tests/**/*.rs"
-        - "crates/*/Cargo.toml"
+        - "crates/no-mistakes/tests/**/*.rs"
+        - crates/no-mistakes/Cargo.toml
         - Cargo.toml
         - Cargo.lock
+        - .no-mistakes.yml
       command: [cargo, test, --locked, --workspace, --all-features, --lib, --bins, --tests]
       fileArgs: none
     - name: jscpd

@@ -65,6 +65,12 @@ fn changed_suite_modules_select_the_configured_workspace_test_command() {
             "impacted-checks",
             "crates/no-mistakes/tests/cli_test_plan_dotnet.rs",
             "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs",
+            // This production directory is named tests but holds planner implementation.
+            "crates/no-mistakes/src/tests/plan/framework.rs",
+            ".no-mistakes.yml",
+            "Cargo.toml",
+            "Cargo.lock",
+            "crates/no-mistakes/Cargo.toml",
             "--root",
         ])
         .arg(repo_root)
@@ -96,6 +102,10 @@ fn changed_suite_modules_select_the_configured_workspace_test_command() {
     assert_eq!(
         check["files"],
         serde_json::json!([
+            ".no-mistakes.yml",
+            "Cargo.lock",
+            "Cargo.toml",
+            "crates/no-mistakes/Cargo.toml",
             "crates/no-mistakes/tests/cli_test_plan_dotnet.rs",
             "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs"
         ])
