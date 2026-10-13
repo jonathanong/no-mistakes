@@ -1,0 +1,18 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: zero
+        run: echo zero
+        timeout-minutes: 0
+      - id: bool
+        uses: actions/checkout@v4
+        timeout-minutes: true
+      - id: dynamic
+        run: echo dynamic
+        timeout-minutes: ${{ fromJSON(vars.TIMEOUT) }}
+      - id: huge
+        run: echo huge
+        timeout-minutes: 400

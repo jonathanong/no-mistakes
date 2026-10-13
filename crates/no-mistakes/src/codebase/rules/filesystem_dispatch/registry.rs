@@ -6,6 +6,7 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => github_actions_action_timeout_pair::check_with_files,
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files,
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files,
+            GITHUB_ACTIONS_STEP_TIMEOUTS => github_actions_step_timeouts::check_with_files,
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,
             GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS => github_actions_test_timeout_literals::check_with_files,
             VERSION_PIN_CONSISTENCY => version_pin_consistency::check_with_files,

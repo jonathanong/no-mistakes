@@ -1,0 +1,7 @@
+# no-mistakes-disable-file github-actions-step-timeouts
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo missing
