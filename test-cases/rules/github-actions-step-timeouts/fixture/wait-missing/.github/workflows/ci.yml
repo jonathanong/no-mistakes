@@ -1,0 +1,11 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: background
+        run: echo background
+        background: true
+        timeout-minutes: 5
+      - wait: background
+      - wait-all:

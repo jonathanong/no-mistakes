@@ -9,14 +9,16 @@ download, or command promptly. GitHub supports `timeout-minutes` on workflow
 ## What it requires
 
 Every authored executable step under `jobs.<job_id>.steps` must set a positive,
-literal YAML number for `timeout-minutes`. GitHub Actions rejects quoted
+literal YAML number for `timeout-minutes`. This includes blocking `wait` and
+`wait-all` steps as well as `run` and `uses`. GitHub Actions rejects quoted
 numbers. Missing values, zero, negative values, booleans, expressions, and
 values above the cap are findings.
 The rule scans `.github/workflows/**/*.yml` and `*.yaml` by default. It skips
 jobs that call reusable workflows, which have no `steps`, and it does not scan
 composite action metadata, where step `timeout-minutes` is unsupported.
 Executable children of a workflow `parallel` group are checked recursively.
-Metadata-only steps without `run` or `uses` are outside the rule's scope.
+Metadata-only steps without `run`, `uses`, `wait`, or `wait-all` are outside the
+rule's scope.
 
 ## Options
 

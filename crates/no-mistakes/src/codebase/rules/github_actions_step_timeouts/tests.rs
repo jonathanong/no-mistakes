@@ -40,6 +40,16 @@ fn requires_run_and_uses_step_timeouts() {
 }
 
 #[test]
+fn blocking_wait_steps_require_bounded_timeouts() {
+    let missing = run("wait-missing", "{}");
+    assert_eq!(missing.len(), 2, "{missing:?}");
+    assert_eq!(missing.iter().map(|f| f.line).collect::<Vec<_>>(), [10, 11]);
+    assert!(run("wait-valid", "{}").is_empty());
+    let invalid = run("wait-invalid", "{}");
+    assert_eq!(invalid.len(), 2, "{invalid:?}");
+}
+
+#[test]
 fn literals_within_cap_pass_and_reusable_callers_are_skipped() {
     assert!(run("pass", "maxMinutes: 30").is_empty());
 }

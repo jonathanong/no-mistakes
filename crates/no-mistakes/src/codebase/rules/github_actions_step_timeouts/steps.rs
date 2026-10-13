@@ -43,7 +43,10 @@ impl StepScan<'_> {
                 .map(str::to_owned)
                 .unwrap_or_else(|| (index + 1).to_string());
             let key = format!("{prefix}{step_id}");
-            if has_key(step, "run") || has_key(step, "uses") {
+            if ["run", "uses", "wait", "wait-all"]
+                .iter()
+                .any(|key| has_key(step, key))
+            {
                 let line = step_line_path(self.source, self.job_id, path).unwrap_or(1);
                 let label = mapping_str(step, "name")
                     .or_else(|| mapping_str(step, "id"))
