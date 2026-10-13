@@ -1,0 +1,1 @@
+This checked-in target tree exercises the shared Rust disk usage diagnostic.
