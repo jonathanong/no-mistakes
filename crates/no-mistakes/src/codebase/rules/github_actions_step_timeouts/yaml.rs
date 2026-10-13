@@ -29,8 +29,8 @@ fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
     (!key.is_empty() && !key.starts_with('#')).then_some((key, value.trim()))
 }
 
-fn is_alias_line(line: &str) -> bool {
-    yaml_key_value(line).is_some_and(|(_, value)| value.starts_with('*'))
+fn is_inline_value_line(line: &str) -> bool {
+    yaml_key_value(line).is_some_and(|(_, value)| value.starts_with(&['*', '[', '{'][..]))
 }
 
 // Locate the sequence entry instead of the first timeout key, so line suppressions
@@ -49,7 +49,7 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
         let trimmed = line.trim_start();
         if jobs_indent.is_none() {
             if indent == 0 && yaml_key_value(line).is_some_and(|(key, _)| key == "jobs") {
-                if is_alias_line(line) {
+                if is_inline_value_line(line) {
                     return Some(line_number + 1);
                 }
                 jobs_indent = Some(indent);
@@ -67,12 +67,12 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
-            let Some((candidate, value)) = yaml_key_value(line) else {
+            let Some((candidate, _)) = yaml_key_value(line) else {
                 continue;
             };
             let depth = *job_key_indent.get_or_insert(indent);
             if indent == depth && candidate == job_id {
-                if value.starts_with('*') {
+                if is_inline_value_line(line) {
                     return Some(line_number + 1);
                 }
                 job_indent = Some(indent);
@@ -90,7 +90,7 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             && indent == job_child_indent.unwrap_or(usize::MAX)
             && yaml_key_value(line).is_some_and(|(key, _)| key == "steps")
         {
-            if is_alias_line(line) {
+            if is_inline_value_line(line) {
                 return Some(line_number + 1);
             }
             steps_indent = Some(indent);
@@ -124,7 +124,7 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
 pub(super) fn step_line_path(source: &str, job_id: &str, path: &[usize]) -> Option<usize> {
     let (first, rest) = path.split_first()?;
     let mut line = step_line(source, job_id, *first)?;
-    if source.lines().nth(line - 1).is_some_and(is_alias_line) {
+    if is_inline_value_line(source.lines().nth(line - 1)?) {
         return Some(line);
     }
     for index in rest {
@@ -154,7 +154,7 @@ fn parallel_child_line(source: &str, parent_line: usize, index: usize) -> Option
         }
     }
     let (key_line, key_indent) = key?;
-    if is_alias_line(lines[key_line]) {
+    if is_inline_value_line(lines[key_line]) {
         return Some(key_line + 1);
     }
     let mut item_indent = None;

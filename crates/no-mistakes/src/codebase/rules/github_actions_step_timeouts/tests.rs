@@ -240,6 +240,24 @@ fn quoted_and_anchored_mapping_keys_keep_nested_locations() {
 }
 
 #[test]
+fn flow_style_steps_use_their_declaration_line() {
+    let findings = run("flow-steps", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 5);
+    assert!(run("flow-steps-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn flow_style_parallel_and_jobs_use_declaration_lines() {
+    for (scenario, line) in [("flow-parallel", 6), ("flow-jobs", 2)] {
+        let findings = run(scenario, "{}");
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+        assert_eq!(findings[0].line, line);
+        assert!(run(&format!("{scenario}-suppressed"), "{}").is_empty());
+    }
+}
+
+#[test]
 fn matrix_steps_do_not_shift_executable_step_location() {
     let findings = run("matrix-steps", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
