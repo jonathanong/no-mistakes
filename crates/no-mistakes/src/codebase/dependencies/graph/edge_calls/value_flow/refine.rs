@@ -102,7 +102,7 @@ fn refine_iteration(
     let mut sites = base.to_vec();
     let mut edges = Vec::new();
     for site in &mut sites {
-        if site.target_node.is_some() {
+        if site.target_node.is_some() || site.invocation == InvocationKind::Construct {
             continue;
         }
         let Some(index) = indexes.file(facts, &site.file) else {
