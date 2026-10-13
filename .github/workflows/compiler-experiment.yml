@@ -21,9 +21,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: opt2
-            opt: "2"
-            rustflags: -D warnings
           - variant: lld
             opt: "3"
             rustflags: -D warnings -C link-arg=-fuse-ld=lld
@@ -44,8 +41,10 @@ jobs:
         run: |
           set -euo pipefail
           if [[ '${{ matrix.variant }}' == lld ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y lld
             command -v ld.lld
-            ld.lld --version
+            ld.lld --version > experiment-linker-version.txt
           fi
           python - <<'PY'
           from pathlib import Path
@@ -69,6 +68,9 @@ jobs:
           lscpu > experiment/cpu.txt
           git rev-parse HEAD > experiment/source-commit.txt
           env | sort | grep -E '^(CARGO_PROFILE_RELEASE_|RUSTFLAGS=|ImageOS=|ImageVersion=|RUNNER_ARCH=)' > experiment/environment.txt
+          if [[ -f experiment-linker-version.txt ]]; then
+            cp experiment-linker-version.txt experiment/linker-version.txt
+          fi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: compiler-${{ matrix.variant }}
@@ -89,6 +91,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh run download 38333004819 --repo jonathanong/no-mistakes --name codegen-baseline --dir "$RUNNER_TEMP/compiler-experiment/baseline"
+      - name: Download exact opt2 candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 38333310090 --repo jonathanong/no-mistakes --name compiler-opt2 --dir "$RUNNER_TEMP/compiler-experiment/compiler-opt2"
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: compiler-*
