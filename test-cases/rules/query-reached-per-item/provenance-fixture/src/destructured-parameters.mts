@@ -50,3 +50,6 @@ function aliasMutation({ client, alias = client }) { client.get = unrelated; ali
 for (const item of items) { aliasMutation({ client: primary }); }
 function copiedDefault({ client, get = client.get }) { client.get = unrelated; get('key'); }
 for (const item of items) { copiedDefault({ client: primary }); }
+// Array length exists even when the array has no elements.
+function arrayLength({ length: client = primary }) { client.get('key'); }
+for (const item of items) { arrayLength([]); }
