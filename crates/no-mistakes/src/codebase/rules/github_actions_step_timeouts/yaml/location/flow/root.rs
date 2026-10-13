@@ -2,30 +2,8 @@ use super::{flow_sequence_lines_from, is_content, value_after_anchor, FlowState}
 use crate::codebase::rules::github_actions_step_timeouts::yaml::yaml_key_value;
 use std::collections::BTreeMap;
 
-fn mapping_key_len(text: &str, wanted: &str) -> Option<usize> {
-    if text
-        .strip_prefix(wanted)
-        .is_some_and(|rest| rest.starts_with(':'))
-    {
-        return Some(wanted.len() + 1);
-    }
-    for quote in ['"', '\''] {
-        if text.starts_with(quote)
-            && text[quote.len_utf8()..]
-                .strip_prefix(wanted)
-                .is_some_and(|rest| {
-                    rest.starts_with(quote) && rest[quote.len_utf8()..].starts_with(':')
-                })
-        {
-            return Some(wanted.len() + 3);
-        }
-    }
-    None
-}
-
-fn key_boundary(previous: Option<char>) -> bool {
-    previous.is_none_or(|char| char.is_whitespace() || char == '{' || char == ',')
-}
+mod key;
+use key::{key_boundary, mapping_key_len};
 
 #[derive(Clone, Copy)]
 struct JobMarker {
@@ -41,15 +19,25 @@ pub(crate) struct RootFlowIndex {
 
 impl RootFlowIndex {
     pub(crate) fn new(lines: &[&str]) -> Self {
+        Self::index(lines, 0, 0, 2, false)
+    }
+
+    pub(crate) fn jobs_flow(lines: &[&str], line: usize, column: usize) -> Self {
+        Self::index(lines, line, column, 1, true)
+    }
+
+    fn index(lines: &[&str], start: usize, column: usize, jobs_depth: usize, found: bool) -> Self {
         let mut state = FlowState::default();
         let mut ignored = Vec::new();
         let mut jobs = BTreeMap::new();
-        let mut found_jobs = false;
+        let mut found_jobs = found;
         let mut inside_jobs = false;
         let mut jobs_alias_line = None;
-        'scan: for (line_index, line) in lines.iter().enumerate() {
+        'scan: for (line_index, line) in lines.iter().enumerate().skip(start) {
+            let offset = if line_index == start { column } else { 0 };
             let mut previous = None;
-            for (column, character) in line.char_indices() {
+            for (relative_column, character) in line[offset..].char_indices() {
+                let column = offset + relative_column;
                 if state.quote.is_none()
                     && character == '#'
                     && previous.is_none_or(char::is_whitespace)
@@ -69,7 +57,7 @@ impl RootFlowIndex {
                         {
                             jobs_alias_line = Some(line_index + 1);
                         }
-                    } else if found_jobs && state.mapping_depth == 2 {
+                    } else if found_jobs && state.mapping_depth == jobs_depth {
                         if let Some((job_id, _)) = yaml_key_value(&line[column..]) {
                             if let Some(colon) = line[column..].find(':') {
                                 let value_column = column + colon + 1;
@@ -85,8 +73,8 @@ impl RootFlowIndex {
                     }
                 }
                 state.visit(character, line_index + 1, &mut ignored);
-                inside_jobs |= found_jobs && state.mapping_depth == 2;
-                if inside_jobs && state.mapping_depth == 1 {
+                inside_jobs |= found_jobs && state.mapping_depth == jobs_depth;
+                if inside_jobs && state.mapping_depth + 1 == jobs_depth {
                     break 'scan;
                 }
                 previous = Some(character);

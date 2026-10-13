@@ -130,6 +130,8 @@ fn nested_parallel_start(lines: &[&str], parent: usize) -> Option<(usize, usize)
     None
 }
 
+mod jobs;
+pub(super) use jobs::jobs_flow_start;
 mod root;
 pub(super) use root::{locate_job_steps, RootFlowIndex};
 

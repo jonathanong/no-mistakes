@@ -274,6 +274,22 @@ fn block_job_with_multiline_flow_value_locates_child_steps() {
 }
 
 #[test]
+fn next_line_multiline_flow_jobs_locates_child_steps() {
+    let findings = run("multiline-next-line-flow-jobs", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 4);
+    assert!(run("multiline-next-line-flow-jobs-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn anchored_multiline_flow_jobs_locates_child_steps() {
+    let findings = run("same-line-multiline-flow-jobs", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 3);
+    assert!(run("same-line-multiline-flow-jobs-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn root_flow_job_alias_uses_its_own_declaration() {
     let findings = run("root-flow-job-alias", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

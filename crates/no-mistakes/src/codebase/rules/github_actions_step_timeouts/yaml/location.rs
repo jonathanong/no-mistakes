@@ -117,7 +117,12 @@ impl<'a> StepLocations<'a> {
     pub(crate) fn new(source: &'a str) -> Self {
         let lines: Vec<_> = source.lines().collect();
         let jobs = find_jobs_line(&lines);
-        let root_flow = flow::is_root_flow(&lines).then(|| RootFlowIndex::new(&lines));
+        let root_flow = if flow::is_root_flow(&lines) {
+            Some(RootFlowIndex::new(&lines))
+        } else {
+            jobs.and_then(|jobs| flow::jobs_flow_start(&lines, jobs))
+                .map(|(line, column)| RootFlowIndex::jobs_flow(&lines, line, column))
+        };
         let job_lines = jobs
             .map(|jobs| index_job_lines(&lines, jobs))
             .unwrap_or_default();
