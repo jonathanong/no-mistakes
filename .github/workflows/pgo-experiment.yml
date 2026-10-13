@@ -1,0 +1,94 @@
+name: Temporary PGO experiment
+
+on:
+  push:
+    branches:
+      - codex/pgo-codegen-20261012
+    paths:
+      - .github/workflows/pgo-experiment.yml
+      - .github/scripts/pgo-experiment.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  train-build-measure:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 115
+    env:
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: "3"
+      CARGO_PROFILE_RELEASE_LTO: fat
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        with:
+          targets: aarch64-unknown-linux-gnu
+          components: llvm-tools-preview
+      - name: Build instrumented CLI and train on repository plus graph fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROFILE_DIR="$RUNNER_TEMP/no-mistakes-pgo/raw"
+          PROFDATA="$RUNNER_TEMP/no-mistakes-pgo/merged.profdata"
+          echo "PROFDATA=$PROFDATA" >> "$GITHUB_ENV"
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('crates/no-mistakes/Cargo.toml')
+          source = path.read_text()
+          before = 'crate-type = ["rlib"]'
+          assert source.count(before) == 1
+          path.write_text(source.replace(before, 'crate-type = ["rlib", "cdylib"]', 1))
+          PY
+          mkdir -p "$PROFILE_DIR" "$RUNNER_TEMP/no-mistakes-pgo/result"
+          export RUSTFLAGS="-D warnings -Cprofile-generate=$PROFILE_DIR"
+          /usr/bin/time -v -o "$RUNNER_TEMP/no-mistakes-pgo/result/build-generate.time" \
+            env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked \
+              --target aarch64-unknown-linux-gnu -p no-mistakes
+          binary=target/aarch64-unknown-linux-gnu/release/no-mistakes
+          LLVM_PROFILE_FILE="$PROFILE_DIR/self-%p-%m.profraw" \
+            "$binary" check --root "$GITHUB_WORKSPACE" --format json \
+              > "$RUNNER_TEMP/no-mistakes-pgo/result/train-self.json"
+          LLVM_PROFILE_FILE="$PROFILE_DIR/graph-%p-%m.profraw" \
+            "$binary" check --root "$GITHUB_WORKSPACE/fixtures/performance/graph-gates" --format json \
+              > "$RUNNER_TEMP/no-mistakes-pgo/result/train-graph.json"
+          tool="$(rustc --print sysroot)/lib/rustlib/aarch64-unknown-linux-gnu/bin/llvm-profdata"
+          test -x "$tool"
+          "$tool" merge -o "$PROFDATA" "$PROFILE_DIR"/*.profraw
+          "$tool" show --summary "$PROFDATA" > "$RUNNER_TEMP/no-mistakes-pgo/result/profile-summary.txt"
+          find "$PROFILE_DIR" -type f -name '*.profraw' | wc -l > "$RUNNER_TEMP/no-mistakes-pgo/result/profile-count.txt"
+          sha256sum "$PROFDATA" > "$RUNNER_TEMP/no-mistakes-pgo/result/profile-hash.txt"
+          du -sh target > "$RUNNER_TEMP/no-mistakes-pgo/result/instrumented-target-size.txt"
+          rm -rf target
+      - name: Build PGO optimized CLI and addon
+        shell: bash
+        run: |
+          set -euo pipefail
+          export RUSTFLAGS="-D warnings -Cprofile-use=$PROFDATA"
+          /usr/bin/time -v -o "$RUNNER_TEMP/no-mistakes-pgo/result/build-use.time" \
+            env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked \
+              --target aarch64-unknown-linux-gnu -p no-mistakes
+          binary=target/aarch64-unknown-linux-gnu/release/no-mistakes
+          addon=target/aarch64-unknown-linux-gnu/release/libno_mistakes.so
+          test -s "$addon"
+          cp "$binary" "$RUNNER_TEMP/no-mistakes-pgo/result/no-mistakes-pgo"
+          sha256sum "$binary" "$addon" > "$RUNNER_TEMP/no-mistakes-pgo/result/hashes.txt"
+          stat -c '%n %s' "$binary" "$addon" > "$RUNNER_TEMP/no-mistakes-pgo/result/sizes.txt"
+          rustc -Vv > "$RUNNER_TEMP/no-mistakes-pgo/result/rustc.txt"
+          lscpu > "$RUNNER_TEMP/no-mistakes-pgo/result/cpu.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/no-mistakes-pgo/result/source-commit.txt"
+      - name: Download matched baseline binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 38333004819 --repo jonathanong/no-mistakes --name codegen-baseline --dir "$RUNNER_TEMP/no-mistakes-pgo/baseline"
+      - name: Run balanced PGO comparison
+        run: python .github/scripts/pgo-experiment.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: pgo-experiment-results
+          path: ${{ runner.temp }}/no-mistakes-pgo/result/
+          retention-days: 3
