@@ -258,6 +258,14 @@ fn flow_style_parallel_and_jobs_use_declaration_lines() {
 }
 
 #[test]
+fn indented_root_mapping_keeps_step_location() {
+    let findings = run("indented-root", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("indented-root-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn matrix_steps_do_not_shift_executable_step_location() {
     let findings = run("matrix-steps", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
