@@ -37,6 +37,11 @@ pub(super) fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
 }
 
 pub(super) fn is_inline_value_line(line: &str) -> bool {
+    if let Some(value) = line.trim_start().strip_prefix(':') {
+        if value_after_anchor(value.trim_start()).starts_with(&['*', '[', '{'][..]) {
+            return true;
+        }
+    }
     if let Some(item) = line.trim_start().strip_prefix("- ") {
         if value_after_anchor(item).starts_with(&['*', '{'][..]) {
             return true;

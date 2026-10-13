@@ -1,15 +1,16 @@
-use super::{indent, is_content};
+use super::{indent, is_content, is_document_marker};
 use crate::codebase::rules::github_actions_step_timeouts::yaml::yaml_key_value;
 use std::collections::BTreeMap;
 
-fn explicit_key_name(line: &str) -> Option<&str> {
-    line.trim_start()
-        .strip_prefix("? ")
+pub(super) fn explicit_key_name(line: &str) -> Option<&str> {
+    let text = line.trim_start();
+    let text = text.strip_prefix("- ").unwrap_or(text);
+    text.strip_prefix("? ")
         .map(str::trim)
         .map(|key| key.trim_matches(['\'', '"']))
 }
 
-fn explicit_value(line: &str) -> bool {
+pub(super) fn explicit_value(line: &str) -> bool {
     let text = line.trim_start();
     text == ":" || text.starts_with(": ")
 }
@@ -19,7 +20,7 @@ pub(super) fn find_jobs_line(lines: &[&str]) -> Option<(usize, usize)> {
         .iter()
         .find(|line| {
             let text = line.trim_start();
-            is_content(line) && text != "---" && !text.starts_with('%')
+            is_content(line) && !is_document_marker(line) && !text.starts_with('%')
         })
         .map(|line| indent(line))?;
     let mut explicit_jobs = false;

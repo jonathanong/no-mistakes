@@ -1,5 +1,6 @@
 use super::super::{is_inline_value_line, yaml_key_value};
 use super::{
+    block::{explicit_key_name, explicit_value},
     flow_sequence_item_lines, has_child_inline_value, indent, is_content, sequence_item_lines,
 };
 
@@ -11,6 +12,7 @@ fn find_parallel_key(lines: &[&str], parent: usize) -> Option<(usize, usize)> {
     {
         return Some((parent, parent_depth + 2));
     }
+    let mut explicit_parallel = explicit_key_name(parent_line) == Some("parallel");
     let mut child_indent = parent_line
         .trim_start()
         .strip_prefix("- ")
@@ -24,8 +26,13 @@ fn find_parallel_key(lines: &[&str], parent: usize) -> Option<(usize, usize)> {
             break;
         }
         let direct_depth = *child_indent.get_or_insert(depth);
-        if depth == direct_depth && yaml_key_value(line).is_some_and(|(key, _)| key == "parallel") {
-            return Some((index, depth));
+        if depth == direct_depth {
+            if yaml_key_value(line).is_some_and(|(key, _)| key == "parallel")
+                || (explicit_parallel && explicit_value(line))
+            {
+                return Some((index, depth));
+            }
+            explicit_parallel = explicit_key_name(line) == Some("parallel");
         }
     }
     None

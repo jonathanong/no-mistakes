@@ -274,6 +274,32 @@ fn root_flow_mapping_locates_each_authored_step() {
 }
 
 #[test]
+fn commented_document_marker_keeps_root_flow_step_location() {
+    let findings = run("commented-document-root-flow", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert!(run("commented-document-root-flow-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn commented_document_marker_keeps_indented_block_root_location() {
+    let findings = run("commented-document-block-root", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert!(run("commented-document-block-root-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn explicit_parallel_key_keeps_child_step_location() {
+    for (scenario, line) in [("explicit-parallel", 11), ("explicit-inline-parallel", 7)] {
+        let findings = run(scenario, "{}");
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+        assert_eq!(findings[0].line, line);
+        assert!(run(&format!("{scenario}-suppressed"), "{}").is_empty());
+    }
+}
+
+#[test]
 fn whitespace_before_flow_key_colons_keeps_step_location() {
     let findings = run("spaced-flow-keys", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

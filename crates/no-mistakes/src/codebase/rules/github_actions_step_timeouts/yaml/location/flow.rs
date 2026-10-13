@@ -1,4 +1,4 @@
-use super::{indent, is_content};
+use super::{indent, is_content, is_document_marker};
 use crate::codebase::rules::github_actions_step_timeouts::yaml::{
     value_after_anchor, yaml_key_value,
 };
@@ -8,7 +8,7 @@ pub(super) fn is_root_flow(lines: &[&str]) -> bool {
         .iter()
         .find(|line| {
             let text = line.trim_start();
-            is_content(line) && text != "---" && !text.starts_with('%')
+            is_content(line) && !is_document_marker(line) && !text.starts_with('%')
         })
         .is_some_and(|line| {
             let text = line.trim_start().trim_start_matches('\u{feff}');
@@ -21,6 +21,13 @@ pub(super) fn is_root_flow(lines: &[&str]) -> bool {
 }
 
 fn flow_start(lines: &[&str], key: (usize, usize)) -> Option<(usize, usize)> {
+    if lines[key.0]
+        .trim_start()
+        .strip_prefix(':')
+        .is_some_and(|value| value_after_anchor(value.trim_start()).starts_with('['))
+    {
+        return lines[key.0].find('[').map(|column| (key.0, column));
+    }
     if yaml_key_value(lines[key.0])
         .is_some_and(|(_, value)| value_after_anchor(value).starts_with('['))
     {

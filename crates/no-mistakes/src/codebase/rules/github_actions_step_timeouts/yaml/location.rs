@@ -17,6 +17,16 @@ fn is_content(line: &str) -> bool {
     !line.is_empty() && !(line.starts_with('&') && line.split_whitespace().count() == 1)
 }
 
+fn is_document_marker(line: &str) -> bool {
+    let text = line.trim_start().trim_start_matches('\u{feff}');
+    let Some(rest) = text.strip_prefix("---") else {
+        return false;
+    };
+    rest.is_empty()
+        || (rest.starts_with(char::is_whitespace)
+            && (rest.trim_start().is_empty() || rest.trim_start().starts_with('#')))
+}
+
 pub(super) fn has_child_inline_value(lines: &[&str], key: (usize, usize), opening: char) -> bool {
     lines
         .iter()
