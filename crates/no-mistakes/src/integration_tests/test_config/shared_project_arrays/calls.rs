@@ -1,5 +1,4 @@
-use super::{body_return_options, helper_expression_options, imported_options, Ctx};
-use crate::integration_tests::test_config::playwright::Options;
+use super::{body_return_options, helper_expression_options, imported_options, Ctx, Options};
 use anyhow::Result;
 use oxc_ast::ast::Expression;
 

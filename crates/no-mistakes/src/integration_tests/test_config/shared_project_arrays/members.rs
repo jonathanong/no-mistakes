@@ -1,9 +1,9 @@
+use super::Options;
 use super::{
     expression_options, import_bindings, imported_options, objects, root_spreads, shared,
     top_level_function_bodies, Ctx, ImportBinding,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use crate::integration_tests::test_config::vitest::Options;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, Program, Statement};
 use std::collections::BTreeSet;
@@ -86,25 +86,14 @@ fn imported_options_from_base(
     base_path: &Path,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
-        return Ok(Vec::new());
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(Vec::new());
-    }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(Vec::new()),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
-            &source,
-            |program, source| {
-                super::exports::exported_options(program, source, &path, ctx, &import.imported)
-            },
-        )
-        .and_then(|options| options),
-    };
-    ctx.seen.remove(&path);
-    result
+    crate::integration_tests::test_config::shared_project_arrays::with_imported_context(
+        import,
+        base_path,
+        ctx,
+        |program, source, path, ctx| {
+            super::exports::exported_options(program, source, path, ctx, &import.imported)
+        },
+    )
 }
 
 pub(super) fn imported_member_options_from(
@@ -113,32 +102,14 @@ pub(super) fn imported_member_options_from(
     base_path: &Path,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
-        return Ok(Vec::new());
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(Vec::new());
-    }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(Vec::new()),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
-            &source,
-            |program, source| {
-                exported_member_options(
-                    program,
-                    source,
-                    import.imported.as_str(),
-                    member,
-                    &path,
-                    ctx,
-                )
-            },
-        )
-        .and_then(|options| options),
-    };
-    ctx.seen.remove(&path);
-    result
+    crate::integration_tests::test_config::shared_project_arrays::with_imported_context(
+        import,
+        base_path,
+        ctx,
+        |program, source, path, ctx| {
+            exported_member_options(program, source, import.imported.as_str(), member, path, ctx)
+        },
+    )
 }
 
 fn exported_member_options(

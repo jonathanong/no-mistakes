@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 pub(in crate::integration_tests::test_config::vitest::project_arrays) mod commonjs;
+#[path = "../../shared_project_arrays/declarations.rs"]
 mod declarations;
 mod workspace;
 use commonjs::commonjs_exported_expression;
@@ -91,47 +92,13 @@ fn exported_options_lookup(
             _ => {}
         }
     }
-    let mut resolved = None;
-    for source in export_all_sources {
-        let binding = super::ImportBinding {
-            source,
-            imported: exported.to_string(),
-        };
-        let Some(options) = imported_options_lookup(&binding, path, &mut ctx)? else {
-            continue;
-        };
-        if resolved.is_some() {
-            return Ok(None);
-        }
-        resolved = Some(options);
-    }
-    Ok(resolved)
-}
-
-fn imported_options_lookup(
-    import: &super::ImportBinding,
-    base_path: &Path,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Option<Vec<Options>>> {
-    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
-        return Ok(None);
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(None);
-    }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(None),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
-            &source,
-            |program, source| {
-                exported_options_lookup(program, source, &path, ctx, &import.imported)
-            },
-        )
-        .and_then(|options| options),
-    };
-    ctx.seen.remove(&path);
-    result
+    crate::integration_tests::test_config::shared_project_arrays::resolve_imported_star_exports(
+        export_all_sources,
+        exported,
+        path,
+        &mut ctx,
+        exported_options_lookup,
+    )
 }
 
 fn default_export_options(

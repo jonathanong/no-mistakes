@@ -37,6 +37,9 @@ mod vitest_setup_reexports;
 #[path = "parser_coverage/vitest_exclusions.rs"]
 mod vitest_exclusions;
 
+#[path = "parser_coverage/shared_project_arrays.rs"]
+mod shared_project_arrays;
+
 fn coverage_files(prefix: &str, suffix: &str) -> Vec<String> {
     let mut files: Vec<_> = std::fs::read_dir(fixture("coverage"))
         .unwrap()

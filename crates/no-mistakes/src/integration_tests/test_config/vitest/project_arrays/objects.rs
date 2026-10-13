@@ -1,4 +1,4 @@
-use super::{shared, Ctx, ExprMap, ImportBinding, Options};
+use super::{shared, Ctx, ExprMap, Options};
 use crate::integration_tests::test_config::deadlines;
 use crate::integration_tests::test_config::vitest::Extends;
 use crate::integration_tests::types::DeadlineUnknownReason;
@@ -8,10 +8,12 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 
+#[path = "../../shared_project_arrays/object_calls.rs"]
 mod calls;
 mod config_extends;
 mod dynamic_triggers;
 mod exports;
+#[path = "../../shared_project_arrays/object_members.rs"]
 mod members;
 mod merge;
 mod object_expressions;

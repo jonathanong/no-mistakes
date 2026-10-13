@@ -7,39 +7,27 @@ use oxc_ast::ast::{
     ObjectExpression, Program, Statement,
 };
 use oxc_span::GetSpan;
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::collections::BTreeSet;
+use std::path::Path;
 
+#[path = "../shared_project_arrays/calls.rs"]
 mod calls;
 mod exports;
 mod function_returns;
-mod functions;
 mod imports;
 mod member_helpers;
+#[path = "../shared_project_arrays/members.rs"]
 mod members;
 mod objects;
 mod root_options;
 mod root_spreads;
 
+use crate::integration_tests::test_config::shared_project_arrays::top_level_function_bodies;
 use function_returns::body_return_options;
-use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
 pub(super) use root_options::root_options;
 
-type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
-type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
-
-pub(super) struct Ctx<'a, 'r> {
-    source: &'a str,
-    bindings: ExprMap<'a>,
-    functions: FnMap<'a>,
-    imports: BTreeMap<String, ImportBinding>,
-    resolver: &'r dyn ImportResolution,
-    path: &'r Path,
-    seen: &'r mut BTreeSet<PathBuf>,
-    local_seen: &'r mut BTreeSet<String>,
-    object_seen: &'r mut BTreeSet<String>,
-}
+use crate::integration_tests::test_config::shared_project_arrays::{Context as Ctx, ExprMap};
 
 pub(super) fn project_options(
     program: &Program<'_>,
@@ -62,6 +50,7 @@ fn project_options_inner(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),

@@ -41,11 +41,9 @@ pub(super) fn imported_member_project_options(
     if !ctx.seen.insert(path.clone()) {
         return Ok(None);
     }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(None),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
+    let result =
+        crate::integration_tests::test_config::shared_project_arrays::read_imported_program(
             &path,
-            &source,
             |program, source| {
                 exported_member_project_options(
                     program,
@@ -56,9 +54,7 @@ pub(super) fn imported_member_project_options(
                     member,
                 )
             },
-        )
-        .and_then(|options| options),
-    };
+        );
     ctx.seen.remove(&path);
     result
 }
@@ -96,6 +92,7 @@ fn exported_member_project_options(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: false,
         source,
         bindings,
         functions: top_level_function_bodies(program),

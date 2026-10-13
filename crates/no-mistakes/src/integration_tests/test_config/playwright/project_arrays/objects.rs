@@ -7,10 +7,14 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 
+#[path = "../../shared_project_arrays/object_calls.rs"]
 mod calls;
 mod exports;
+#[path = "../../shared_project_arrays/object_members.rs"]
 mod members;
+use self::project_object_options as project_options;
 use exports::imported_object_options;
+use exports::imported_object_options as imported_options;
 
 pub(super) fn project_object_options(
     object: &ObjectExpression<'_>,

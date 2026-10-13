@@ -1,7 +1,7 @@
 use super::super::{
     import_bindings, root_spreads, shared, top_level_function_bodies, Ctx, ImportBinding, Options,
 };
-use super::{expression_object, project_object_options};
+use super::{expression_object, imported_options, project_options};
 use anyhow::Result;
 use oxc_ast::ast::{Expression, Program};
 use std::collections::BTreeSet;
@@ -15,7 +15,16 @@ pub(super) fn namespace_member_options(
         return Ok(None);
     };
     if let Some(import) = ctx.imports.get(object.name.as_str()).cloned() {
-        return imported_member_options(&import, member.property.name.as_str(), ctx.path, ctx);
+        if import.imported != "*" {
+            return imported_member_options(&import, member.property.name.as_str(), ctx.path, ctx);
+        }
+        return imported_options(
+            &ImportBinding {
+                source: import.source,
+                imported: member.property.name.to_string(),
+            },
+            ctx,
+        );
     }
     let Some(object) = ctx
         .bindings
@@ -32,7 +41,7 @@ pub(super) fn namespace_member_options(
     let Some(object) = expression_object(expression, &ctx.bindings) else {
         return Ok(None);
     };
-    project_object_options(object, ctx).map(Some)
+    project_options(object, ctx).map(Some)
 }
 
 fn imported_member_options(
@@ -41,15 +50,6 @@ fn imported_member_options(
     base_path: &Path,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Option<Options>> {
-    if import.imported == "*" {
-        return super::imported_object_options(
-            &ImportBinding {
-                source: import.source.clone(),
-                imported: member.to_string(),
-            },
-            ctx,
-        );
-    }
     let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
         return Ok(None);
     };
@@ -111,6 +111,7 @@ fn exported_member_options(
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
+        is_test_object: parent.is_test_object,
         source,
         bindings,
         functions: top_level_function_bodies(program),
@@ -121,5 +122,5 @@ fn exported_member_options(
         local_seen: &mut local_seen,
         object_seen: &mut object_seen,
     };
-    project_object_options(object, &mut ctx).map(Some)
+    project_options(object, &mut ctx).map(Some)
 }
