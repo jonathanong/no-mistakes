@@ -15,12 +15,6 @@ impl ImportCollector {
         if member {
             let mut links: FxHashMap<(usize, String), Vec<(usize, String)>> = fx_map();
             for binding in &self.value_flow.bindings {
-                if binding
-                    .invalidated_at
-                    .is_some_and(|cutoff| cutoff <= offset)
-                {
-                    continue;
-                }
                 if let Some(target) = referenced_value_root(&binding.value) {
                     let local = (binding.scope, binding.name.clone());
                     links.entry(local.clone()).or_default().push(target.clone());
@@ -36,6 +30,7 @@ impl ImportCollector {
                 }
             }
         }
+        let context = self.current_function_id();
         for (scope, name) in &affected {
             for index in self
                 .value_binding_indexes
@@ -44,6 +39,9 @@ impl ImportCollector {
                 .into_iter()
                 .flatten()
             {
+                self.value_flow.bindings[*index]
+                    .mutation_contexts
+                    .insert(context);
                 self.value_flow.bindings[*index]
                     .invalidated_at
                     .get_or_insert(offset);
@@ -55,6 +53,9 @@ impl ImportCollector {
                 .into_iter()
                 .flatten()
             {
+                self.value_flow.parameters[*index]
+                    .mutation_contexts
+                    .insert(context);
                 self.value_flow.parameters[*index]
                     .invalidated_at
                     .get_or_insert(offset);

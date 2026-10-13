@@ -37,15 +37,26 @@ impl ValueFlowResolution<'_, '_> {
             };
             let argument = self.invocation_argument(&caller, call, parameter.index);
             values.push(match argument {
-                None | Some(FlowValue::Undefined) => self.value(path, &parameter.default),
+                None | Some(FlowValue::Undefined) => self.parameter_default(path, parameter),
                 Some(value) => value,
             });
         }
         if values.is_empty() {
-            values.push(self.value(path, &parameter.default));
+            values.push(self.parameter_default(path, parameter));
         }
         let value = agreed_value(values);
         self.parameters.insert(key, value.clone());
+        value
+    }
+    fn parameter_default(
+        &mut self,
+        path: &std::path::Path,
+        parameter: &ValueParameter,
+    ) -> FlowValue {
+        self.initializing
+            .push((path.to_path_buf(), parameter.owner, parameter.index));
+        let value = self.value(path, &parameter.default);
+        self.initializing.pop();
         value
     }
     fn invocation_argument(

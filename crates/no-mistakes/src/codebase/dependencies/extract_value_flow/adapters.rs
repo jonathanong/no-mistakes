@@ -36,6 +36,7 @@ impl ImportCollector {
                             name: receiver.to_string(),
                             scope: self.callee_binding_scope(receiver),
                             offset: call.span.start,
+                            context: self.current_function_id(),
                         },
                         arguments.into_iter().skip(1).collect(),
                         spread.map(|index| index.saturating_sub(1)),
@@ -52,6 +53,7 @@ impl ImportCollector {
                     scope: self.callee_binding_scope(&normalized),
                     name: normalized,
                     offset: call.span.start,
+                    context: self.current_function_id(),
                 };
                 if raw.ends_with(".call") {
                     let (arguments, spread) = self.value_arguments(&call.arguments);

@@ -12,6 +12,7 @@ pub(super) struct FlowFileIndex {
     sites: FxHashMap<u32, FxHashMap<String, (u32, u32)>>,
     scopes: FxHashMap<CallableId, String>,
     async_callables: FxHashSet<CallableId>,
+    generator_callables: FxHashSet<CallableId>,
 }
 impl FlowFileIndex {
     pub(super) fn new(
@@ -31,6 +32,7 @@ impl FlowFileIndex {
         }
         Self {
             async_callables: flow.async_callables.clone(),
+            generator_callables: flow.generator_callables.clone(),
             sites,
             scopes: scopes.iter().cloned().collect(),
             bindings: index_scoped_names(
@@ -54,6 +56,7 @@ impl FlowFileIndex {
 }
 #[derive(Clone, PartialEq, Eq)]
 enum FlowValue {
+    Uncallable,
     Promise(Box<FlowValue>),
     Bound {
         target: Box<FlowValue>,
@@ -98,8 +101,10 @@ struct ValueFlowResolution<'a, 'b> {
     resolver: &'a dyn ImportResolution,
     indexes: &'a CallableResolutionIndexes,
     incoming: &'a ParameterInputs,
+    supers: &'a ConstructorRoutes,
     used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
+    initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
     parameters: FxHashMap<(std::path::PathBuf, usize, String), FlowValue>,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
@@ -124,6 +129,7 @@ impl FlowFileIndex {
                 name: name.to_string(),
                 scope: Some(scope),
                 offset: u32::MAX,
+                context: None,
             },
             &mut fx_set(),
         )
@@ -165,3 +171,13 @@ pub(super) use exports::resolve_value_exports;
 
 #[path = "value_flow/parameters.rs"]
 mod parameters;
+
+pub(super) type ConstructorRoutes = FxHashMap<std::path::PathBuf, FxHashMap<CallableId, NodeId>>;
+#[derive(Clone, Copy)]
+struct ValueInputs<'a> {
+    incoming: &'a ParameterInputs,
+    supers: &'a ConstructorRoutes,
+}
+#[path = "value_flow/constructors.rs"]
+mod constructors;
+pub(super) use constructors::{collect_constructors, prepare_constructor_routes};

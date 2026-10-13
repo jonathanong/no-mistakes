@@ -6,6 +6,10 @@ struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
     classes: Vec<ClassDeclaration>,
+    class_ids: Vec<(std::path::PathBuf, FxHashSet<CallableId>)>,
+    constructor_bases: Vec<(NodeId, NodeId)>,
+    constructor_routes: value_flow::ConstructorRoutes,
+    super_constructors: value_flow::ConstructorRoutes,
     modules: Vec<(String, std::path::PathBuf)>,
     /// Namespaces whose use the graph cannot follow to a class, per file.
     escapes: Vec<(std::path::PathBuf, String)>,
@@ -69,6 +73,7 @@ fn collect_call_edges_for_core(
                 }
             }
             if plan.calls {
+                value_flow::collect_constructors(&resolution, file, &mut output);
                 for call in file
                     .function_calls
                     .iter()
@@ -118,6 +123,8 @@ fn collect_call_edges_for_core(
             all.edges.extend(part.edges);
             all.sites.extend(part.sites);
             all.classes.extend(part.classes);
+            all.class_ids.extend(part.class_ids);
+            all.constructor_bases.extend(part.constructor_bases);
             all.escapes.extend(part.escapes);
             all
         });
@@ -125,9 +132,10 @@ fn collect_call_edges_for_core(
         module_files.entry(module).or_default().insert(file);
     }
     if plan.calls {
+        value_flow::prepare_constructor_routes(&mut pass);
         refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass);
         if plan.effect_selectors {
-            value_flow::resolve_value_exports(edge_inputs, facts, resolver, &indexes, &pass.sites, callable_export_resolutions);
+            value_flow::resolve_value_exports(edge_inputs, facts, resolver, &indexes, &pass, callable_export_resolutions);
         }
     }
     if namespaces_in_repo {

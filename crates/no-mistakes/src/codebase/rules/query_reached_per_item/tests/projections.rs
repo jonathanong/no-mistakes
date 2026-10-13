@@ -80,3 +80,33 @@ fn imported_promises_and_bound_functions_keep_their_value_kinds() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn generators_captured_mutations_and_parameter_initialization_are_conservative() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/review-contexts.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [19, 24, 28, 30],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn inherited_constructors_forward_inputs_and_preserve_defaults() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/inherited-constructors.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 12, 18],
+        "{findings:#?}"
+    );
+}

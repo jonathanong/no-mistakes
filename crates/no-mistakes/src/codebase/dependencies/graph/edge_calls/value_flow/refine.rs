@@ -3,49 +3,33 @@ use super::*;
 #[path = "worklist.rs"]
 mod worklist;
 pub(in super::super) use worklist::refine_value_calls;
-pub(super) fn incoming_inputs(sites: &[ResolvedCallSite]) -> ParameterInputs {
-    let mut incoming: FxHashMap<_, Vec<_>> = fx_map();
-    let constructors: FxHashMap<_, _> = sites
-        .iter()
-        .filter(|site| {
-            site.invocation == InvocationKind::Membership && site.source_callee == "constructor"
-        })
-        .filter_map(|site| {
-            let caller = site.caller_id?;
-            let NodeId::Symbol {
-                file,
-                callable_id: Some(id),
-                ..
-            } = site.target_node.as_ref()?
-            else {
-                return None;
-            };
-            Some(((site.file.clone(), caller), (file.to_path_buf(), *id)))
-        })
-        .collect();
+pub(super) fn incoming_inputs(
+    sites: &[ResolvedCallSite],
+    constructors: &ConstructorRoutes,
+) -> ParameterInputs {
+    let mut incoming: ParameterInputs = fx_map();
     for site in sites {
         if site.invocation == InvocationKind::Membership {
             continue;
         }
-        if let Some(NodeId::Symbol {
+        let Some(target) = &site.target_node else {
+            continue;
+        };
+        let target = if site.invocation == InvocationKind::Construct {
+            constructors::route(constructors, target).unwrap_or(target)
+        } else {
+            target
+        };
+        if let NodeId::Symbol {
             file,
             callable_id: Some(id),
             ..
-        }) = &site.target_node
+        } = target
         {
-            let key = if site.invocation == InvocationKind::Construct {
-                constructors
-                    .get(&(file.to_path_buf(), *id))
-                    .cloned()
-                    .unwrap_or((file.to_path_buf(), *id))
-            } else {
-                (file.to_path_buf(), *id)
-            };
-            incoming.entry(key).or_default().push((
-                site.file.clone(),
-                site.offset,
-                site.source_callee.clone(),
-            ));
+            incoming
+                .entry((file.to_path_buf(), *id))
+                .or_default()
+                .push((site.file.clone(), site.offset, site.source_callee.clone()));
         }
     }
     incoming
@@ -56,7 +40,7 @@ fn refine_iteration(
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
     base: &[ResolvedCallSite],
-    incoming: &ParameterInputs,
+    data: ValueInputs<'_>,
     parameters_enabled: bool,
 ) -> (
     Vec<ResolvedCallSite>,
@@ -68,9 +52,11 @@ fn refine_iteration(
         facts,
         resolver,
         indexes,
-        incoming,
+        incoming: data.incoming,
+        supers: data.supers,
         used_parameters: fx_set(),
         parameters_enabled,
+        initializing: Vec::new(),
         parameters: fx_map(),
         visiting: fx_set(),
         calls_visiting: fx_set(),
@@ -124,7 +110,7 @@ fn refine_iteration(
                 }
             };
         }
-        if matches!(value, FlowValue::Promise(_)) {
+        if matches!(value, FlowValue::Promise(_) | FlowValue::Uncallable) {
             site.target = ResolvedCallTarget::Unknown;
             continue;
         }

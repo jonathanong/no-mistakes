@@ -11,8 +11,10 @@ impl ValueFlowResolution<'_, '_> {
                 name,
                 scope,
                 offset,
-            } => self.named(path, name, *scope, *offset),
+                context,
+            } => self.named(path, name, *scope, *offset, *context),
             ValueExpression::Callable(id) => self.callable(path, *id),
+            ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
                 let base = self.value(path, base);
                 self.member(base, member)

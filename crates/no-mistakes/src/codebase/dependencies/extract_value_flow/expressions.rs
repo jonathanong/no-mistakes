@@ -14,6 +14,9 @@ impl ImportCollector {
             {
                 ValueExpression::Undefined
             }
+            Expression::Super(_) => self
+                .current_function_id()
+                .map_or(ValueExpression::Unknown, ValueExpression::Super),
             Expression::AwaitExpression(awaited) => ValueExpression::Awaited(std::sync::Arc::new(
                 self.value_expression(&awaited.argument),
             )),
@@ -59,6 +62,7 @@ impl ImportCollector {
                     scope: self.callee_binding_scope(&name),
                     name,
                     offset: expression.span().start,
+                    context: self.current_function_id(),
                 }
             }),
         }

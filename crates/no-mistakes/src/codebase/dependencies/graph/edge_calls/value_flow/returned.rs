@@ -83,6 +83,9 @@ impl ValueFlowResolution<'_, '_> {
                 let Some(index) = self.indexes.file(self.facts, &file) else {
                     return FlowValue::Unknown;
                 };
+                if index.values.generator_callables.contains(&id) {
+                    return FlowValue::Uncallable;
+                }
                 is_async = index.values.async_callables.contains(&id);
                 let Some(returns) = index.values.returns.get(&id) else {
                     return FlowValue::Unknown;

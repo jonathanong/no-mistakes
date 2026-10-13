@@ -10,7 +10,7 @@ pub(in super::super::super) fn refine_value_calls(
     pass: &mut CallPass,
 ) {
     let base = pass.sites.clone();
-    let mut incoming = incoming_inputs(&base);
+    let mut incoming = incoming_inputs(&base, &pass.constructor_routes);
     let mut pending: FxHashSet<usize> = base
         .iter()
         .enumerate()
@@ -39,7 +39,10 @@ pub(in super::super::super) fn refine_value_calls(
                     resolver,
                     indexes,
                     &base[*index..=*index],
-                    &incoming,
+                    ValueInputs {
+                        incoming: &incoming,
+                        supers: &pass.super_constructors,
+                    },
                     enabled,
                 );
                 (*index, sites.remove(0), edges, used)

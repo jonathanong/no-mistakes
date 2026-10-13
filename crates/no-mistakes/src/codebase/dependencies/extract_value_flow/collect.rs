@@ -45,6 +45,7 @@ impl ImportCollector {
                     scope,
                     declared_at,
                     invalidated_at: None,
+                    mutation_contexts: fx_set(),
                     value,
                 });
             }
@@ -114,6 +115,7 @@ impl ImportCollector {
                     scope: self.current_lexical_scope_id(),
                     default,
                     invalidated_at: None,
+                    mutation_contexts: fx_set(),
                 });
             }
         }
@@ -180,16 +182,6 @@ impl ImportCollector {
                 self.value_flow
                     .returns
                     .push((owner, ValueExpression::Unknown));
-            }
-        }
-    }
-}
-
-impl ImportCollector {
-    pub(in super::super) fn record_async_callable(&mut self, is_async: bool) {
-        if self.collect_value_flow && is_async {
-            if let Some(owner) = self.current_function_id() {
-                self.value_flow.async_callables.insert(owner);
             }
         }
     }

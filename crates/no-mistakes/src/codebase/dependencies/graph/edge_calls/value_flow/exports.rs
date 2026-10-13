@@ -5,10 +5,10 @@ pub(in super::super) fn resolve_value_exports(
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
-    sites: &[ResolvedCallSite],
+    pass: &CallPass,
     exports: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) {
-    let incoming = refine::incoming_inputs(sites);
+    let incoming = refine::incoming_inputs(&pass.sites, &pass.constructor_routes);
     let resolved: Vec<_> = exports
         .par_iter()
         .filter_map(|(key, export)| {
@@ -21,13 +21,15 @@ pub(in super::super) fn resolve_value_exports(
                 resolver,
                 indexes,
                 incoming: &incoming,
+                supers: &pass.super_constructors,
                 used_parameters: fx_set(),
                 parameters_enabled: true,
+                initializing: Vec::new(),
                 parameters: fx_map(),
                 visiting: fx_set(),
                 calls_visiting: fx_set(),
             };
-            let mut value = flow.named(file, local, Some(0), u32::MAX);
+            let mut value = flow.named(file, local, Some(0), u32::MAX, None);
             loop {
                 value = match value {
                     FlowValue::Returned { executor, .. } => *executor,

@@ -7,6 +7,7 @@ impl ValueFlowResolution<'_, '_> {
         name: &str,
         scope: Option<usize>,
         offset: u32,
+        context: Option<CallableId>,
     ) -> FlowValue {
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
@@ -22,7 +23,11 @@ impl ValueFlowResolution<'_, '_> {
             return FlowValue::Unknown;
         }
         let value = if let Some(binding) = scoped_name(&file.values.bindings, scope, base) {
-            if offset < binding.declared_at
+            if binding
+                .mutation_contexts
+                .iter()
+                .any(|writer| *writer != context)
+                || offset < binding.declared_at
                 || binding
                     .invalidated_at
                     .is_some_and(|cutoff| offset >= cutoff)
@@ -32,9 +37,15 @@ impl ValueFlowResolution<'_, '_> {
                 self.value(path, &binding.value)
             }
         } else if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
-            if parameter
-                .invalidated_at
-                .is_some_and(|cutoff| offset >= cutoff)
+            if self.initializing.iter().any(|(file, owner, index)| {
+                file == path && *owner == parameter.owner && parameter.index >= *index
+            }) || parameter
+                .mutation_contexts
+                .iter()
+                .any(|writer| *writer != context)
+                || parameter
+                    .invalidated_at
+                    .is_some_and(|cutoff| offset >= cutoff)
             {
                 FlowValue::Unknown
             } else {
@@ -69,7 +80,7 @@ impl ValueFlowResolution<'_, '_> {
                 });
             match imported_value {
                 Some(ExportedCallableResolution::Value(target, local)) => {
-                    let value = self.named(&target, &local, Some(0), u32::MAX);
+                    let value = self.named(&target, &local, Some(0), u32::MAX, None);
                     match value {
                         FlowValue::Callable {
                             file: target,
@@ -83,7 +94,7 @@ impl ValueFlowResolution<'_, '_> {
                             let receiver = match self.imported_value(&file, base) { FlowValue::Target(target) => Some(target), _ => None };
                             FlowValue::Returned { factory, executor, receiver }
                         },
-                        value @ (FlowValue::Promise(_) | FlowValue::Bound { .. }) => value,
+                        value @ (FlowValue::Promise(_) | FlowValue::Bound { .. } | FlowValue::Uncallable) => value,
                         _ => self.imported_value(&file, base),
                     }
                 }

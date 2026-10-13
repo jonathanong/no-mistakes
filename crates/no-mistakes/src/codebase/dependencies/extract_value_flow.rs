@@ -9,6 +9,7 @@ pub struct ValueFlowFacts {
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
     pub async_callables: FxHashSet<CallableId>,
+    pub generator_callables: FxHashSet<CallableId>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueExpression {
@@ -16,10 +17,12 @@ pub enum ValueExpression {
         name: String,
         scope: Option<usize>,
         offset: u32,
+        context: Option<CallableId>,
     },
     Call(u32, u32),
     Awaited(std::sync::Arc<ValueExpression>),
     Callable(CallableId),
+    Super(CallableId),
     Member(std::sync::Arc<ValueExpression>, String),
     Object(std::sync::Arc<FxHashMap<String, ValueExpression>>),
     Undefined,
@@ -35,6 +38,7 @@ pub struct ValueBinding {
     pub scope: usize,
     pub declared_at: u32,
     pub invalidated_at: Option<u32>,
+    pub mutation_contexts: FxHashSet<Option<CallableId>>,
     pub value: ValueExpression,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,6 +49,7 @@ pub struct ValueParameter {
     pub scope: usize,
     pub default: ValueExpression,
     pub invalidated_at: Option<u32>,
+    pub mutation_contexts: FxHashSet<Option<CallableId>>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueCall {
@@ -68,3 +73,6 @@ mod adapters;
 mod completion;
 #[path = "extract_value_flow/mutations.rs"]
 mod mutations;
+
+#[path = "extract_value_flow/result_kind.rs"]
+mod result_kind;
