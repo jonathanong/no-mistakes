@@ -1,0 +1,12 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - parallel:
+          - id: frontend
+            run: echo frontend
+          - uses: actions/checkout@v4
+            timeout-minutes: 2
+      - run: echo after
+        timeout-minutes: 2

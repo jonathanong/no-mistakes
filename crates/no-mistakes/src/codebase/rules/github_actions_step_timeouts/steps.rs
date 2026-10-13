@@ -1,0 +1,92 @@
+use super::yaml::{finding, has_key, is_expression, mapping_str, step_line_path, timeout_minutes};
+use super::{CompiledOptions, RuleFinding, GITHUB_MAX_MINUTES};
+use serde_yaml::Value;
+use std::collections::BTreeSet;
+
+struct StepScan<'a> {
+    rel: &'a str,
+    source: &'a str,
+    job_id: &'a str,
+    opts: &'a CompiledOptions,
+    findings: &'a mut Vec<RuleFinding>,
+    used: &'a mut BTreeSet<String>,
+}
+
+pub(super) fn scan_steps(
+    rel: &str,
+    source: &str,
+    job_id: &str,
+    steps: &[Value],
+    opts: &CompiledOptions,
+    findings: &mut Vec<RuleFinding>,
+    used: &mut BTreeSet<String>,
+) {
+    StepScan {
+        rel,
+        source,
+        job_id,
+        opts,
+        findings,
+        used,
+    }
+    .visit_steps(steps, &format!("{rel}#{job_id}#"), &mut Vec::new());
+}
+
+impl StepScan<'_> {
+    fn visit_steps(&mut self, steps: &[Value], prefix: &str, path: &mut Vec<usize>) {
+        for (index, step) in steps.iter().enumerate() {
+            let Some(step) = step.as_mapping() else {
+                continue;
+            };
+            path.push(index);
+            let step_id = mapping_str(step, "id")
+                .map(str::to_owned)
+                .unwrap_or_else(|| (index + 1).to_string());
+            let key = format!("{prefix}{step_id}");
+            if has_key(step, "run") || has_key(step, "uses") {
+                let line = step_line_path(self.source, self.job_id, path).unwrap_or(1);
+                let label = mapping_str(step, "name")
+                    .or_else(|| mapping_str(step, "id"))
+                    .map(str::to_owned)
+                    .unwrap_or_else(|| format!("step #{}", index + 1));
+                self.check_timeout(&key, &label, line, step);
+            }
+            if let Some(nested) = step.get("parallel").and_then(Value::as_sequence) {
+                self.visit_steps(nested, &format!("{key}/"), path);
+            }
+            path.pop();
+        }
+    }
+
+    fn check_timeout(&mut self, key: &str, label: &str, line: usize, step: &serde_yaml::Mapping) {
+        let allowed = self.opts.allow.get(key);
+        if allowed.is_some() {
+            self.used.insert(key.to_string());
+        }
+        if allowed.is_some_and(|entry| entry.reason.trim().is_empty()) {
+            self.findings.push(finding(
+                self.rel,
+                line,
+                format!("{}: allow entry `{key}` needs a reason", self.rel),
+                Some(key),
+            ));
+        }
+        let raw = step.get("timeout-minutes");
+        let minutes = raw.and_then(timeout_minutes);
+        match (raw, minutes, allowed) {
+            (None, _, None) => self.findings.push(finding(self.rel, line,
+                format!("{}: job \"{}\" step \"{label}\" has no timeout-minutes; add a positive literal number", self.rel, self.job_id), Some(key))),
+            (Some(raw), None, Some(_)) if is_expression(raw) => {}
+            (Some(_), None, _) => self.findings.push(finding(self.rel, line,
+                format!("{}: job \"{}\" step \"{label}\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)", self.rel, self.job_id), Some(key))),
+            (Some(_), Some(minutes), allowed) => {
+                let cap = allowed.and_then(|entry| entry.max_minutes).unwrap_or(self.opts.max_minutes).min(GITHUB_MAX_MINUTES);
+                if minutes > cap {
+                    self.findings.push(finding(self.rel, line,
+                        format!("{}: job \"{}\" step \"{label}\" timeout-minutes is {minutes}, over the {cap}-minute cap", self.rel, self.job_id), Some(key)));
+                }
+            }
+            _ => {}
+        }
+    }
+}

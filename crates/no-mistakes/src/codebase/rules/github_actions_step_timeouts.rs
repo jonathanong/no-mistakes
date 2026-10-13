@@ -31,6 +31,7 @@ struct CompiledOptions {
     max_minutes: u64,
     allow: BTreeMap<String, AllowEntry>,
     duplicate_allow: BTreeSet<String>,
+    defer_suppression: bool,
 }
 
 pub(crate) fn check_with_files(
@@ -38,7 +39,8 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    super::check_with_borrowed_source_store(root, config, all_files, check_with_files_and_sources)
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources, false)
 }
 
 pub(crate) fn check_with_files_and_sources(
@@ -46,11 +48,16 @@ pub(crate) fn check_with_files_and_sources(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     super::run_selected_workflow_rule(
         super::SourcedRuleContext::new(root, config, all_files, sources),
         RULE_ID,
-        compile_options,
+        |opts| {
+            let mut compiled = compile_options(opts);
+            compiled.defer_suppression = defer_suppression;
+            compiled
+        },
         |opts| &opts.include,
         scan_files,
     )
@@ -73,6 +80,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
             .min(GITHUB_MAX_MINUTES),
         allow,
         duplicate_allow,
+        defer_suppression: false,
     }
 }
 
@@ -89,6 +97,7 @@ fn scan_files(
 }
 
 mod scan;
+mod steps;
 #[cfg(test)]
 mod tests;
 mod yaml;

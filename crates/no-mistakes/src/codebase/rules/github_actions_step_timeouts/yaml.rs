@@ -36,13 +36,21 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             if indent <= depth && !trimmed.is_empty() && !trimmed.starts_with('#') {
                 break;
             }
-        } else if trimmed.trim_end_matches(':').trim_matches(['\'', '"']) == job_id
-            && trimmed.ends_with(':')
+        } else if trimmed
+            .split('#')
+            .next()
+            .unwrap_or(trimmed)
+            .trim_end()
+            .strip_suffix(':')
+            .is_some_and(|key| key.trim_matches(['\'', '"']) == job_id)
         {
             job_indent = Some(indent);
             continue;
         }
-        if job_indent.is_some() && !found_steps && trimmed == "steps:" {
+        if job_indent.is_some()
+            && !found_steps
+            && trimmed.split('#').next().unwrap_or(trimmed).trim_end() == "steps:"
+        {
             steps_indent = Some(indent);
             found_steps = true;
             continue;
@@ -63,6 +71,60 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
                 }
                 if seen == index {
                     return Some(line_number + 1);
+                }
+                seen += 1;
+            }
+        }
+    }
+    None
+}
+
+pub(super) fn step_line_path(source: &str, job_id: &str, path: &[usize]) -> Option<usize> {
+    let (first, rest) = path.split_first()?;
+    let mut line = step_line(source, job_id, *first)?;
+    for index in rest {
+        line = parallel_child_line(source, line, *index)?;
+    }
+    Some(line)
+}
+
+fn parallel_child_line(source: &str, parent_line: usize, index: usize) -> Option<usize> {
+    let lines: Vec<&str> = source.lines().collect();
+    let parent = *lines.get(parent_line.checked_sub(1)?)?;
+    let parent_indent = parent.len() - parent.trim_start_matches(' ').len();
+    let inline = parent.trim_start().starts_with("- parallel:");
+    let mut key = inline.then_some((parent_line - 1, parent_indent + 2));
+    if key.is_none() {
+        for (line_index, line) in lines.iter().enumerate().skip(parent_line) {
+            let indent = line.len() - line.trim_start_matches(' ').len();
+            let trimmed = line.trim_start();
+            if indent <= parent_indent && !trimmed.is_empty() && !trimmed.starts_with('#') {
+                break;
+            }
+            if trimmed.split('#').next().unwrap_or(trimmed).trim_end() == "parallel:" {
+                key = Some((line_index, indent));
+                break;
+            }
+        }
+    }
+    let (key_line, key_indent) = key?;
+    let mut item_indent = None;
+    let mut seen = 0;
+    for (line_index, line) in lines.iter().enumerate().skip(key_line + 1) {
+        let indent = line.len() - line.trim_start_matches(' ').len();
+        let trimmed = line.trim_start();
+        let is_item = trimmed.starts_with("- ") || trimmed == "-";
+        if (indent < key_indent || (indent == key_indent && !is_item))
+            && !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+        {
+            break;
+        }
+        if indent >= key_indent && is_item {
+            let depth = *item_indent.get_or_insert(indent);
+            if indent == depth {
+                if seen == index {
+                    return Some(line_index + 1);
                 }
                 seen += 1;
             }

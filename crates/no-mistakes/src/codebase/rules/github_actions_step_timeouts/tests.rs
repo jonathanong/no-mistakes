@@ -159,9 +159,68 @@ fn indentless_step_sequence_has_usable_locations() {
 }
 
 #[test]
+fn parallel_group_checks_nested_executable_steps() {
+    let findings = run("parallel", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some(".github/workflows/ci.yml#build#1/frontend")
+    );
+    assert!(run("parallel-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn nested_step_allow_uses_group_and_child_selectors() {
+    let findings = run(
+        "parallel",
+        r#"
+allow:
+  - step: ".github/workflows/ci.yml#build#1/frontend"
+    reason: "Covered by an external deadline."
+"#,
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn job_key_comments_keep_step_locations_and_suppression() {
+    let findings = run("commented-job", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("commented-job-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn disable_file_and_line_suppressions_work() {
     assert!(run("disable-file", "{}").is_empty());
     assert!(run("disable-line", "{}").is_empty());
+}
+
+#[test]
+fn deferred_suppression_retains_findings_for_audit_reports() {
+    for scenario in [
+        "disable-file",
+        "disable-line",
+        "parallel-suppressed",
+        "commented-job-suppressed",
+    ] {
+        let root = fixture(scenario);
+        let files = [root.join(".github/workflows/ci.yml")];
+        let sources = super::super::source_store_for_files(&files);
+        let config = NoMistakesConfig {
+            rules: vec![RuleDef {
+                rule: RULE_ID.into(),
+                scope: Some(RuleScope::Repository),
+                options: serde_yaml::from_str("{}").unwrap(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let findings =
+            check_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+    }
 }
 
 #[test]

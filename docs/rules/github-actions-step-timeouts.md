@@ -15,6 +15,7 @@ values above the cap are findings.
 The rule scans `.github/workflows/**/*.yml` and `*.yaml` by default. It skips
 jobs that call reusable workflows, which have no `steps`, and it does not scan
 composite action metadata, where step `timeout-minutes` is unsupported.
+Executable children of a workflow `parallel` group are checked recursively.
 Metadata-only steps without `run` or `uses` are outside the rule's scope.
 
 ## Options
@@ -27,7 +28,10 @@ job's `steps` array, such as `path#jobId#2`. An allow entry permits an absent or
 expression timeout; malformed literal values still fail. Its optional
 `maxMinutes` overrides the ordinary cap for a literal timeout, but cannot
 exceed 360. Blank reasons, duplicate entries, and stale entries in scanned
-workflows are findings.
+workflows are findings. For a step inside `parallel`, append `/childId` or a
+1-based child position to its group's selector; for example,
+`.github/workflows/ci.yml#build#2/frontend` or
+`.github/workflows/ci.yml#build#2/1`.
 
 ```yaml
 rules:
