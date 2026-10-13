@@ -14,8 +14,8 @@ pub struct ResolvedCallSite {
     /// Exact source spelling, kept apart from canonical target selectors.
     pub source_callee: String,
     pub target: ResolvedCallTarget,
-    /// Imported factory which produced this executor, separate from its callable target.
-    pub returned_from: Option<(String, String)>,
+    /// Imported factories which produced or wrapped this executor, separate from its callable target.
+    pub returned_from: Vec<(String, String)>,
     /// Exact target of this occurrence in the canonical call graph.
     pub target_node: Option<NodeId>,
 }

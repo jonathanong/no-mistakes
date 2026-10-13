@@ -61,23 +61,22 @@ impl<'a> Sinks<'a> {
     }
 
     pub(super) fn match_site(&self, site: &ResolvedCallSite) -> Option<bool> {
-        // Keep legacy spelling/transaction precedence when both selectors match.
+        let returned = site.returned_from.iter().any(|(module, export)| {
+            self.returned
+                .get(module.as_str())
+                .is_some_and(|exports| exports.contains(export.as_str()))
+        });
         sink(self.config, &site.source_callee)
             .filter(|transaction| {
                 !*transaction
                     || site.source_callee.contains('.')
-                    || site.returned_from.is_some()
+                    || !site.returned_from.is_empty()
                     || !matches!(site.target, ResolvedCallTarget::RepositoryFunction { .. })
             })
+            .map(|transaction| transaction || returned)
             .or_else(|| {
-                if let Some((specifier, export_path)) = &site.returned_from {
-                    if self
-                        .returned
-                        .get(specifier.as_str())
-                        .is_some_and(|exports| exports.contains(export_path.as_str()))
-                    {
-                        return Some(true);
-                    }
+                if returned {
+                    return Some(true);
                 }
                 if matches!(site.target, ResolvedCallTarget::RepositoryFunction { .. })
                     && site

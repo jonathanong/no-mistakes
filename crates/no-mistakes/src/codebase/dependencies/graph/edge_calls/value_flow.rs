@@ -45,7 +45,7 @@ impl FlowFileIndex {
 enum FlowValue {
     Target(ResolvedCallTarget),
     Returned {
-        factory: (String, String),
+        factory: Vec<(String, String)>,
         executor: Box<FlowValue>,
     },
     Callable {
@@ -67,6 +67,7 @@ struct ValueFlowResolution<'a, 'b> {
     resolver: &'a dyn ImportResolution,
     indexes: &'a CallableResolutionIndexes,
     incoming: FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32)>>,
+    parameters_enabled: bool,
     parameters: FxHashMap<(std::path::PathBuf, usize, String), FlowValue>,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32)>,

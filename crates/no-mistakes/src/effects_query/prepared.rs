@@ -144,7 +144,7 @@ pub(crate) fn run_with_prepared(
                 crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { specifier, export_path, .. } => selection.targets.get(specifier).and_then(|exports| exports.get(export_path)),
                 _ => None,
             };
-            let returned = site.returned_from.as_ref().and_then(|(module, export)| selection.returned.get(module).and_then(|exports| exports.get(export)));
+            let returned = site.returned_from.iter().find_map(|(module, export)| selection.returned.get(module).and_then(|exports| exports.get(export)));
             let Some(target) = direct.or(returned).or_else(|| matches!(site.target, crate::codebase::dependencies::graph::ResolvedCallTarget::RepositoryFunction { .. }).then(|| site.target_node.as_ref().and_then(|node| target_nodes.get(node).copied())).flatten()) else { continue; };
             if !matched_offsets.insert(site.offset) {
                 continue;

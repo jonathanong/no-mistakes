@@ -79,6 +79,7 @@ impl ValueFlowResolution<'_, '_> {
                             module_export_target(&file, base, Some((target, scope)), Some(id))
                                 .expect("import binding"),
                         ),
+                        returned @ FlowValue::Returned { .. } => returned,
                         _ => self.imported_value(&file, base),
                     }
                 }
@@ -109,7 +110,14 @@ impl ValueFlowResolution<'_, '_> {
             )
         }
     }
-    pub(super) fn parameter(&mut self, path: &std::path::Path, parameter: &ValueParameter) -> FlowValue {
+    pub(super) fn parameter(
+        &mut self,
+        path: &std::path::Path,
+        parameter: &ValueParameter,
+    ) -> FlowValue {
+        if !self.parameters_enabled {
+            return FlowValue::Unknown;
+        }
         let key = (path.to_path_buf(), parameter.scope, parameter.name.clone());
         if let Some(value) = self.parameters.get(&key) {
             return value.clone();

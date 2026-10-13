@@ -155,7 +155,7 @@ impl ImportCollector {
             if parameter.scope == binding_scope && parameter.name == binding_name { parameter.invalidated_at.get_or_insert(offset); }
         }
         for binding in &mut self.value_flow.bindings {
-            if binding.scope == binding_scope && (binding.name == name || binding.name.starts_with(&format!("{name}."))) {
+            if binding.scope == binding_scope && (binding.name == binding_name || binding.name.starts_with(&format!("{name}."))) {
                 binding.invalidated_at.get_or_insert(offset);
             }
         }

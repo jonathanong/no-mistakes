@@ -79,10 +79,21 @@ impl ValueFlowResolution<'_, '_> {
         self.calls_visiting.remove(&key);
         match (factory, result) {
             (
+                Some(origin),
+                FlowValue::Returned {
+                    mut factory,
+                    executor,
+                },
+            ) => {
+                factory.retain(|previous| previous != &origin);
+                factory.insert(0, origin);
+                FlowValue::Returned { factory, executor }
+            }
+            (
                 Some(factory),
                 executor @ (FlowValue::Callable { .. } | FlowValue::Target(_) | FlowValue::Unknown),
             ) => FlowValue::Returned {
-                factory,
+                factory: vec![factory],
                 executor: Box::new(executor),
             },
             (_, result) => result,

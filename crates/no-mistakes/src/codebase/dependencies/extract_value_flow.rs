@@ -48,3 +48,6 @@ pub struct ValueCall {
 }
 #[path = "extract_value_flow/collect.rs"]
 mod collect;
+
+#[path = "extract_value_flow/expressions.rs"]
+mod expressions;

@@ -20,6 +20,7 @@ pub(super) fn walk_function_with_body_bindings<'a>(
         walk::walk_ts_type_annotation(collector, return_type);
     }
     if let Some(body) = &function.body {
+        collector.record_value_fallthrough(&body.statements);
         predeclare_function_declarations(collector, &body.statements);
         walk::walk_function_body(collector, body);
     }
@@ -36,6 +37,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
         walk::walk_ts_type_annotation(collector, return_type);
     }
     if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
+        collector.record_value_fallthrough(&body.statements);
         predeclare_function_declarations(collector, &body.statements);
         walk::walk_function_body(collector, body);
     } else if let Some(expression) = arrow.body.as_expression() {
