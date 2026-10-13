@@ -1,5 +1,4 @@
-#[path = "common/saved_fixture.rs"]
-mod saved_fixture;
+use crate::saved_fixture;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

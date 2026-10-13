@@ -1,5 +1,4 @@
-#[path = "common/gitignore_fixture.rs"]
-mod gitignore_fixture;
+use crate::gitignore_fixture;
 
 use std::path::PathBuf;
 use std::process::{Command, Output};

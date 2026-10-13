@@ -2,8 +2,7 @@
 mod config_invalidation;
 #[path = "cli_test_plan_targeted_triggers/group_order.rs"]
 mod group_order;
-#[path = "common/saved_fixture.rs"]
-mod saved_fixture;
+use crate::saved_fixture;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

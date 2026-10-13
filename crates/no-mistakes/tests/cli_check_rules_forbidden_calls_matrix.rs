@@ -1,5 +1,4 @@
-#[path = "common/git_tracked_rule.rs"]
-mod git_tracked_rule;
+use crate::git_tracked_rule;
 
 use serde_json::Value;
 use std::collections::BTreeMap;

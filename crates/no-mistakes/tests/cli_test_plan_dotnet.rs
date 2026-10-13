@@ -1,6 +1,5 @@
-mod common;
-#[path = "common/saved_fixture.rs"]
-mod saved_fixture;
+use crate::common;
+use crate::saved_fixture;
 #[path = "cli_test_plan_dotnet/semantic.rs"]
 mod semantic;
 
