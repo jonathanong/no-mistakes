@@ -1,0 +1,6 @@
+{shared: &job_list {build: {runs-on: ubuntu-latest, steps: [
+  {run: echo missing}
+]}},
+ # no-mistakes-disable-next-line github-actions-step-timeouts
+ jobs:
+ *job_list}

@@ -1,0 +1,7 @@
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - id: dynamic
+        run: echo release
+        timeout-minutes: ${{ matrix.timeout }}

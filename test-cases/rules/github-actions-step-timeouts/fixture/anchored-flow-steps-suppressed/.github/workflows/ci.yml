@@ -1,0 +1,6 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # no-mistakes-disable-next-line github-actions-step-timeouts
+    steps: &shared [{ run: echo missing }]

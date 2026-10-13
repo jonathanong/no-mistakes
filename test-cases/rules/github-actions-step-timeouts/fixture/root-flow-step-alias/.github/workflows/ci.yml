@@ -1,0 +1,7 @@
+{jobs: {
+  base: {runs-on: ubuntu-latest, steps: &shared [
+    # no-mistakes-disable-next-line github-actions-step-timeouts
+    {run: echo missing}
+  ]},
+  build: {runs-on: ubuntu-latest, steps: *shared}
+}}

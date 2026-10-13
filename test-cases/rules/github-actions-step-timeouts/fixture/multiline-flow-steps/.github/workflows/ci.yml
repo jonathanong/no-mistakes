@@ -1,0 +1,8 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: [
+      {run: "echo [one]", timeout-minutes: 5},
+      {run: echo missing, env: {TEXT: "escaped \" quote },[,]"}},
+    ]

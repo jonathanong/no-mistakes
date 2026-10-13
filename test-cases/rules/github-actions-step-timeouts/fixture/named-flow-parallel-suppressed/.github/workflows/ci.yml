@@ -1,0 +1,9 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: group
+        # A comment separates the group name from its children.
+        # no-mistakes-disable-next-line github-actions-step-timeouts
+        parallel: [{run: echo missing}]

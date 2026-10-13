@@ -1,0 +1,15 @@
+name: CI
+jobs:
+  alpha:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo alpha
+  beta:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo beta
+  gamma:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo gamma
+on: push

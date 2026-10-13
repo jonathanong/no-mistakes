@@ -1,0 +1,8 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # This intentional diagnostic is suppressed at the step line.
+      # no-mistakes-disable-next-line github-actions-step-timeouts
+      - run: echo missing

@@ -1,0 +1,2 @@
+name: CI
+"jobs": {build: {runs-on: ubuntu-latest, steps: [{name: group, parallel: [{run: echo missing}]}]}}

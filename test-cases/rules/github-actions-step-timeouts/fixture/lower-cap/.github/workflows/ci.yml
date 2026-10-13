@@ -1,0 +1,8 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: slow
+        run: echo slow
+        timeout-minutes: 20

@@ -1,0 +1,6 @@
+name: CI
+jobs:
+  build: &base_job
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo missing

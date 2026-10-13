@@ -1,0 +1,7 @@
+name: CI
+&jobs_key jobs:
+  &build_key build:
+    runs-on: ubuntu-latest
+    &steps_key steps:
+      - &parallel_key parallel:
+          - run: echo missing

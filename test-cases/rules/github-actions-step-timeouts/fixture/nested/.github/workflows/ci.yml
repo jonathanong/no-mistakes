@@ -1,0 +1,13 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo list
+          - nested shell text
+        timeout-minutes: 2
+        with:
+          values:
+            - nested YAML item
+      - run: echo missing

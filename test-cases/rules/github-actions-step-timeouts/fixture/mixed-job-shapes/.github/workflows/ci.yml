@@ -1,0 +1,13 @@
+name: CI
+jobs:
+  42:
+    steps:
+      - run: echo ignored
+  broken: invalid
+  empty:
+    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - ignored scalar
+      - run: echo missing

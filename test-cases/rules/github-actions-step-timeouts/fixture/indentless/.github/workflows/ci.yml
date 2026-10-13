@@ -1,0 +1,8 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo valid
+      timeout-minutes: 2
+    - run: echo missing

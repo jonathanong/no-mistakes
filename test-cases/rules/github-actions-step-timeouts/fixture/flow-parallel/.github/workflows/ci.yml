@@ -1,0 +1,6 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - parallel: [{ run: echo missing }]

@@ -1,0 +1,5 @@
+{shared: &job_list {build: {runs-on: ubuntu-latest, steps: [
+  {run: echo missing}
+]}},
+ jobs:
+ *job_list}

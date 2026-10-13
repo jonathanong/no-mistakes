@@ -30,6 +30,43 @@ fn stdout(output: &Output) -> String {
 }
 
 #[test]
+fn github_actions_step_timeouts_cli_fails_for_missing_run_and_uses_timeouts() {
+    let root = fixture("github-actions-step-timeouts", "missing");
+    let output = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&output);
+    assert!(!output.status.success(), "expected findings: {body}");
+    assert!(body.contains("github-actions-step-timeouts"), "{body}");
+    assert!(body.contains("checkout"), "{body}");
+}
+
+#[test]
+fn github_actions_step_timeouts_cli_passes_for_bounded_steps() {
+    let root = fixture("github-actions-step-timeouts", "pass");
+    let output = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(output.status.success(), "{}", stdout(&output));
+}
+
+#[test]
+fn github_actions_step_timeouts_cli_reports_suppressed_step() {
+    let root = fixture("github-actions-step-timeouts", "disable-line");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--include-suppressed", "--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(output.status.success(), "{report}");
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    let suppressed = report["suppressed"].as_array().unwrap();
+    assert_eq!(suppressed.len(), 1, "{report}");
+    assert_eq!(suppressed[0]["rule"], "github-actions-step-timeouts");
+    assert_eq!(suppressed[0]["directive"]["kind"], "nextLine");
+}
+
+#[test]
 fn github_actions_composite_step_schema_fails_for_timeout_minutes() {
     let root = fixture("github-actions-composite-step-schema", "fail");
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();

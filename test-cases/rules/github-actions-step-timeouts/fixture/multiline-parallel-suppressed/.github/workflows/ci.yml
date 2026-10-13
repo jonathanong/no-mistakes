@@ -1,0 +1,11 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: |
+          Run these checks
+          parallel:
+        parallel:
+          # no-mistakes-disable-next-line github-actions-step-timeouts
+          - run: echo missing
