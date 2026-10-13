@@ -38,6 +38,8 @@ directories, Rust `test_support.rs` files and `test_support/` directories,
 dependency directories, and Cargo build output. Tests and fixtures intentionally
 repeat setup and examples. The root `src/tests/` planner and directories such as
 `integration_tests` remain in scope because they contain production analyzers.
+Keep the planner's unit-test bodies in ignored sibling `*_tests.rs` files; an
+inline `#[cfg(test)]` body in a production file would enter the exact-token scan.
 Local scans can include untracked files allowed by `.gitignore`; CI uses a clean checkout.
 
 ## Fixing findings
