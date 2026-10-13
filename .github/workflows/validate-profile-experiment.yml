@@ -1,0 +1,119 @@
+name: Validate profile experiment
+
+on:
+  push:
+    branches:
+      - codex/validate-debug-profile-experiment
+  workflow_dispatch:
+    inputs:
+      order:
+        description: Profile order for the paired measurement
+        type: choice
+        required: true
+        default: debug-2-then-0
+        options:
+          - debug-2-then-0
+          - debug-0-then-2
+
+permissions: {}
+
+jobs:
+  measure:
+    name: Paired Rust compile measurement
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: "-D warnings"
+    steps:
+      - name: Reclaim runner disk space
+        timeout-minutes: 10
+        uses: insightsengineering/disk-space-reclaimer@dae9fabcb8febe09f6585471948acf9dc9a57489 # v1.1.2
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+          large-packages: false
+          swap-storage: false
+          tools-cache: false
+
+      - name: Checkout experiment source
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Install Rust 1.99.0
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: 1.99.0
+          components: clippy
+
+      - name: Record environment and prefetch dependencies
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/profile-measurements"
+          {
+            echo "workflow_sha=$(git rev-parse HEAD)"
+            echo "source_sha=$(git rev-parse HEAD^)"
+            rustc +1.99.0 -Vv
+            cargo +1.99.0 -V
+            uname -a
+            nproc
+            df -h "$RUNNER_TEMP"
+          } | tee "$RUNNER_TEMP/profile-measurements/environment.txt"
+          cargo +1.99.0 fetch --locked --target x86_64-unknown-linux-gnu
+
+      - name: Measure fresh debug-profile builds
+        timeout-minutes: 22
+        shell: bash
+        env:
+          DISPATCH_ORDER: ${{ inputs.order }}
+        run: |
+          set -euo pipefail
+          order="${DISPATCH_ORDER:-debug-2-then-0}"
+          if [[ "$order" == "debug-0-then-2" ]]; then
+            profiles=(0 2)
+          else
+            profiles=(2 0)
+          fi
+
+          for debug in "${profiles[@]}"; do
+            label="debug-${debug}"
+            target_dir="$RUNNER_TEMP/target-${label}"
+            mkdir -p "$target_dir"
+            echo "===== $label: clippy all targets/features ====="
+            /usr/bin/time -v -o "$RUNNER_TEMP/profile-measurements/${label}-clippy-time.txt" \
+              env CARGO_TARGET_DIR="$target_dir" \
+                CARGO_PROFILE_DEV_DEBUG="$debug" \
+                CARGO_PROFILE_TEST_DEBUG="$debug" \
+                cargo +1.99.0 clippy --all-targets --all-features -- -D warnings \
+              2>&1 | tee "$RUNNER_TEMP/profile-measurements/${label}-clippy.log"
+
+            echo "===== $label: test compile all features ====="
+            /usr/bin/time -v -o "$RUNNER_TEMP/profile-measurements/${label}-test-no-run-time.txt" \
+              env CARGO_TARGET_DIR="$target_dir" \
+                CARGO_PROFILE_DEV_DEBUG="$debug" \
+                CARGO_PROFILE_TEST_DEBUG="$debug" \
+                cargo +1.99.0 test --all-features --no-run \
+              2>&1 | tee "$RUNNER_TEMP/profile-measurements/${label}-test-no-run.log"
+
+            du -sb "$target_dir" | tee "$RUNNER_TEMP/profile-measurements/${label}-target-size.txt"
+            rm -rf "$target_dir"
+          done
+
+      - name: Upload measurements
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: validate-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/profile-measurements/
+          if-no-files-found: error
