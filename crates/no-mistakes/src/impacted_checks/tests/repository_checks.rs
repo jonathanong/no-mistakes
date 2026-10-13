@@ -107,6 +107,8 @@ fn repository_quality_checks_stay_scoped_and_skip_empty_changes() {
 fn repository_duplicate_gate_excludes_test_helpers_but_keeps_production_analyzers() {
     for file in [
         "crates/no-mistakes/src/test_support.rs",
+        "crates/no-mistakes/src/codebase/dependencies/root_dependency_test_helpers.rs",
+        "crates/no-mistakes/src/codebase/ts_resolver/scoped_test_support.rs",
         "crates/no-mistakes/src/codebase/dependencies/graph/test_support/graph_files.rs",
         "crates/no-mistakes/src/impacted_checks/tests/repository_checks.rs",
         "crates/no-mistakes/tests/cli.rs",

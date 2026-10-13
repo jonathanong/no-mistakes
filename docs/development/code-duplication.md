@@ -34,7 +34,8 @@ Treat a finding as a prompt to inspect semantics before extracting a helper.
 The scan respects `.gitignore`. Explicit exclusions cover fixture directories,
 test files named `tests.rs`, `tests_*.rs`, `*_tests.rs`, `*.test.*`, or `*.spec.*`,
 directories named `test`, crate integration-test trees, nested `src/<module>/tests/`
-directories, Rust `test_support.rs` files and `test_support/` directories,
+directories, Rust `test_support.rs`, `*_test_support.rs`, and
+`*_test_helpers.rs` files and `test_support/` directories,
 dependency directories, and Cargo build output. Tests and fixtures intentionally
 repeat setup and examples. The root `src/tests/` planner and directories such as
 `integration_tests` remain in scope because they contain production analyzers.

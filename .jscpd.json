@@ -18,6 +18,8 @@
     "**/tests_*.rs",
     "**/*_tests.rs",
     "**/test_support.rs",
+    "**/*_test_support.rs",
+    "**/*_test_helpers.rs",
     "**/test_support/**",
     "**/*.test.*",
     "**/*.spec.*",

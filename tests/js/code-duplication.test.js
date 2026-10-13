@@ -25,6 +25,8 @@ function readReport(reportDir) {
 function plannerFixtureIgnore(gate) {
   assert.ok(gate.ignore.includes("**/fixtures/**"));
   assert.ok(gate.ignore.includes("**/*_tests.rs"));
+  assert.ok(gate.ignore.includes("**/*_test_support.rs"));
+  assert.ok(gate.ignore.includes("**/*_test_helpers.rs"));
   // Remove only the fixture-tree umbrella so its saved sources can exercise the other globs.
   return ["--ignore", gate.ignore.filter((pattern) => pattern !== "**/fixtures/**").join(",")];
 }
@@ -99,7 +101,7 @@ test("the production planner participates in function similarity without duplica
   }
 });
 
-test("ignored sibling unit-test bodies stay out of the production token scan", () => {
+test("ignored sibling unit tests and prefixed test helpers stay out of the production token scan", () => {
   const gate = JSON.parse(readFileSync(join(root, ".jscpd.json"), "utf8"));
   const plannerFixture = join(root, "fixtures/code-duplication/planner-similarity");
   const config = join(plannerFixture, ".jscpd.json");
@@ -109,15 +111,9 @@ test("ignored sibling unit-test bodies stay out of the production token scan", (
     assert.ifError(unfiltered.error);
     assert.equal(unfiltered.status, 1, unfiltered.stdout + unfiltered.stderr);
     const unfilteredReport = readReport(reportDir);
-    assert.equal(unfilteredReport.statistics.total.sources, 3);
-    assert.equal(unfilteredReport.duplicates.length, 1);
-    assert.deepEqual(
-      new Set([
-        unfilteredReport.duplicates[0].firstFile.name,
-        unfilteredReport.duplicates[0].secondFile.name,
-      ]),
-      new Set(["no-mistakes/src/planner.rs", "no-mistakes/src/tests/plan_tests.rs"]),
-    );
+    // These identical saved files enter the exact scan without the real gate ignores.
+    assert.equal(unfilteredReport.statistics.total.sources, 5);
+    assert.ok(unfilteredReport.duplicates.length > 0);
 
     const filtered = runJscpd(
       config,
