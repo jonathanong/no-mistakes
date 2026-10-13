@@ -12,7 +12,6 @@
     "type": "git",
     "url": "git+https://github.com/jonathanong/no-mistakes.git"
   },
-  "packageManager": "pnpm@11.24.0",
   "workspaces": [
     "packages/*"
   ],
@@ -25,6 +24,7 @@
     "fmt:js": "oxfmt --write packages/ vitest.config.js",
     "fmt:js:check": "oxfmt --check packages/ vitest.config.js",
     "lint:js": "oxlint packages/ vitest.config.js",
+    "lint:duplicates": "jscpd",
     "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/*/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
     "pack:check": "pnpm --filter './packages/*' pack --dry-run",
     "prepare": "husky"
@@ -40,6 +40,7 @@
     "cspell": "^10.3.5",
     "eslint": "^10.11.0",
     "husky": "^9.1.7",
+    "jscpd": "5.4.1",
     "oxfmt": "^0.71.0",
     "oxlint": "^1.86.0",
     "playwright": "1.64.0",
@@ -51,5 +52,6 @@
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
-  }
+  },
+  "packageManager": "pnpm@11.24.0"
 }

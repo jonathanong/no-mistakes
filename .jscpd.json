@@ -1,0 +1,24 @@
+{
+  "path": ["crates", "packages"],
+  "similarity": 0.8,
+  "minLines": 30,
+  "minTokens": 50,
+  "minNodes": 20,
+  "mode": "weak",
+  "format": ["rust", "javascript", "typescript"],
+  "exitCode": 1,
+  "failOnEmpty": true,
+  "reporters": ["console"],
+  "ignore": [
+    "**/tests/**",
+    "**/tests.rs",
+    "**/tests_*.rs",
+    "**/*_tests.rs",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/fixtures/**",
+    "**/test-cases/**",
+    "**/node_modules/**",
+    "**/target/**"
+  ]
+}

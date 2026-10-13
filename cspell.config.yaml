@@ -62,6 +62,7 @@ words:
   - inout
   - invalidators
   - jsonc
+  - jscpd
   - Laravel
   - leakproof
   - linuxbrew
