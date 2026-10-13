@@ -266,6 +266,14 @@ fn root_flow_mapping_locates_each_authored_step() {
 }
 
 #[test]
+fn whitespace_before_flow_key_colons_keeps_step_location() {
+    let findings = run("spaced-flow-keys", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert!(run("spaced-flow-keys-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn block_job_with_multiline_flow_value_locates_child_steps() {
     let findings = run("multiline-flow-job", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

@@ -1,22 +1,15 @@
 pub(super) fn mapping_key_len(text: &str, wanted: &str) -> Option<usize> {
-    if text
-        .strip_prefix(wanted)
-        .is_some_and(|rest| rest.starts_with(':'))
-    {
-        return Some(wanted.len() + 1);
-    }
-    for quote in ['"', '\''] {
-        if text.starts_with(quote)
-            && text[quote.len_utf8()..]
-                .strip_prefix(wanted)
-                .is_some_and(|rest| {
-                    rest.starts_with(quote) && rest[quote.len_utf8()..].starts_with(':')
-                })
-        {
-            return Some(wanted.len() + 3);
-        }
-    }
-    None
+    let rest = text.strip_prefix(wanted).or_else(|| {
+        ['"', '\''].into_iter().find_map(|quote| {
+            text.strip_prefix(quote)?
+                .strip_prefix(wanted)?
+                .strip_prefix(quote)
+        })
+    })?;
+    let spaces = rest.len() - rest.trim_start().len();
+    rest.trim_start()
+        .starts_with(':')
+        .then_some(text.len() - rest.len() + spaces + 1)
 }
 
 pub(super) fn key_boundary(previous: Option<char>) -> bool {
