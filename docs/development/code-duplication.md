@@ -8,7 +8,10 @@ There is no baseline or overall duplication-percentage allowance.
 ## Detection
 
 `.jscpd.json` explicitly scans Rust, JavaScript, JSX, TypeScript, and TSX in
-`crates/` and `packages/`. Exact token clones need at least 30 lines and 50 tokens. The `weak`
+`crates/` and `packages/`. It also names the production planner at
+`crates/no-mistakes/src/tests/` as a scan root so jscpd's function-similarity
+pass treats those files as production code. Overlapping roots still read each
+file once. Exact token clones need at least 30 lines and 50 tokens. The `weak`
 mode ignores whitespace and comments. JavaScript, JSX, TypeScript, and TSX share
 one exact-clone comparison pool; jscpd strips erasable TypeScript syntax when
 comparing across that family.
