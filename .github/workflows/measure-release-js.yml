@@ -1,0 +1,78 @@
+name: Measure standalone release JavaScript validation
+on:
+  push:
+    branches: [codex/measure-release-js-validation]
+permissions: {}
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+jobs:
+  validate-js:
+    name: Validate JavaScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout measured source
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          install: false
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
+
+      - name: Check JavaScript formatting
+        timeout-minutes: 2
+        run: pnpm run fmt:js:check
+
+      - name: Run Oxlint
+        timeout-minutes: 2
+        run: pnpm run lint:js
+
+      - name: Run CSpell
+        timeout-minutes: 5
+        run: pnpm run lint:spell
+
+      - name: Install Chromium for timeout-policy browser tests
+        timeout-minutes: 5
+        # A resumed tag that predates the browser tests has no Playwright CLI.
+        run: |
+          if [ -x node_modules/.bin/playwright ]; then
+            pnpm exec playwright install --with-deps chromium
+          fi
+
+      - name: Run JavaScript tests
+        timeout-minutes: 5
+        run: pnpm test
+
+      - name: Check npm packages
+        timeout-minutes: 2
+        run: |
+          for pkg in no-mistakes eslint-plugin-no-mistakes; do
+            pnpm --filter "$pkg" pack --dry-run
+          done
+
