@@ -200,6 +200,17 @@ jobs:
         timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
 
+      # Validation tools belong to the running workflow, even when the release
+      # source is an older tag. Never overlay current Rust source onto that tag.
+      - name: Checkout validation tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: validation-tools
+          persist-credentials: false
+          fetch-depth: 1
+
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
@@ -275,9 +286,21 @@ jobs:
         timeout-minutes: 5
         run: cargo fmt --all -- --check
 
+      - name: Test Rust disk diagnostics
+        timeout-minutes: 2
+        run: node --test validation-tools/.github/scripts/rust-disk-usage.test.cjs
+
+      - name: Record Rust disk usage before Clippy
+        timeout-minutes: 1
+        run: bash validation-tools/.github/scripts/rust-disk-usage.sh "before Clippy"
+
       - name: Run Clippy
         timeout-minutes: 10
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Record Rust disk usage after Clippy
+        timeout-minutes: 1
+        run: bash validation-tools/.github/scripts/rust-disk-usage.sh "after Clippy"
 
       - name: Build JavaScript packages
         timeout-minutes: 2
@@ -303,9 +326,17 @@ jobs:
           echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"
 
       # Build and run separately, like CI: compiling alone takes most of a combined budget.
+      - name: Record Rust disk usage before test build
+        timeout-minutes: 1
+        run: bash validation-tools/.github/scripts/rust-disk-usage.sh "before Rust test build"
+
       - name: Build Rust tests
         timeout-minutes: 20
         run: cargo test --all-features --no-run
+
+      - name: Record Rust disk usage after test build
+        timeout-minutes: 1
+        run: bash validation-tools/.github/scripts/rust-disk-usage.sh "after Rust test build"
 
       - name: Run Rust tests
         timeout-minutes: 15
@@ -334,6 +365,11 @@ jobs:
         if: always()
         timeout-minutes: 1
         run: rm -rf target/package
+
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() }}
+        timeout-minutes: 2
+        run: bash validation-tools/.github/scripts/rust-disk-usage.sh "Rust validation failure"
 
   validate-js:
     name: Validate JavaScript

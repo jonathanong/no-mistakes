@@ -152,9 +152,21 @@ jobs:
         timeout-minutes: 2
         run: pnpm run fmt:js:check
 
+      - name: Test Rust disk diagnostics
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-disk-usage.test.cjs
+
+      - name: Record Rust disk usage before Clippy
+        timeout-minutes: 1
+        run: bash .github/scripts/rust-disk-usage.sh "before Clippy"
+
       - name: Run Clippy
         timeout-minutes: 10
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Record Rust disk usage after Clippy
+        timeout-minutes: 1
+        run: bash .github/scripts/rust-disk-usage.sh "after Clippy"
 
       - name: Deny rustc warnings in release
         timeout-minutes: 10
@@ -205,6 +217,11 @@ jobs:
       - name: Check npm packages
         timeout-minutes: 2
         run: pnpm run pack:check
+
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() || cancelled() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
 
   javascript-tests:
     name: JavaScript tests
@@ -494,12 +511,20 @@ jobs:
           source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov clean --workspace
 
+      - name: Record Rust disk usage before test build
+        timeout-minutes: 1
+        run: bash .github/scripts/rust-disk-usage.sh "before Rust test build" target
+
       - name: Build Rust tests for coverage
         timeout-minutes: 15
         run: |
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo test --workspace --all-features --lib --bins --tests --no-run
+
+      - name: Record Rust disk usage after test build
+        timeout-minutes: 1
+        run: bash .github/scripts/rust-disk-usage.sh "after Rust test build" target
 
       - name: Run Rust tests for coverage
         timeout-minutes: 10
@@ -565,6 +590,11 @@ jobs:
           files: target/llvm-cov/lcov.info
           flags: rust
           fail_ci_if_error: true
+
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "Rust tests job failure" target
 
   tests-gate:
     name: Tests with coverage

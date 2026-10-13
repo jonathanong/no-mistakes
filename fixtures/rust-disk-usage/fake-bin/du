@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+for index in $(seq 1 45); do
+  printf '1K %s/fixture-entry-%02d\n' "${@: -1}" "$index"
+done
