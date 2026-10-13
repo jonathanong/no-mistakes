@@ -113,6 +113,24 @@ test("release syncs optional native package versions and publishes only through 
   assert.match(workflow, /expected_magic='PE32\\\+\.\*x86-64'/);
 });
 
+test("Cargo publication overlaps the native and npm path after validation", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const cargo = workflow.match(/^ {2}publish-cargo:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  const npm = workflow.match(/^ {2}publish:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  assert.ok(cargo, "release must define independent Cargo publication");
+  assert.ok(npm, "release must retain native npm publication");
+  // Cargo still verifies the exact validated source, without waiting for binaries.
+  assert.match(cargo, /^ {4}needs:\n {6}- prepare\n {6}- validate$/m);
+  assert.match(cargo, /ref: \$\{\{ needs\.prepare\.outputs\.release-sha \}\}/);
+  assert.match(cargo, /persist-credentials: false/);
+  assert.match(cargo, /cargo publish --locked -p "\$pkg"/);
+  assert.doesNotMatch(cargo, /--no-verify|id-token: write|contents: write|RELEASE_TOKEN/);
+  assert.match(cargo, /already exists on crates\.io index/);
+  assert.match(cargo, /crates\.io\/api\/v1\/crates\/\$pkg\/\$version/);
+  assert.doesNotMatch(npm, /Publish Cargo crates|Install Rust|CARGO_REGISTRY_TOKEN|publish-cargo/);
+  assert.match(npm, /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-native$/m);
+});
+
 test("release does not publish no-mistakes until every platform tarball installs", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   assert.match(workflow, /wait-npm-tarball\.js/);
