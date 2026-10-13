@@ -174,7 +174,6 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 50
-    if: ${{ always() && needs.prepare.result == 'success' }}
     permissions:
       contents: read
     steps:
@@ -368,7 +367,7 @@ jobs:
         run: rm -rf target/package
 
       - name: Diagnose Rust disk usage after failure
-        if: ${{ failure() || cancelled() }}
+        if: ${{ failure() }}
         timeout-minutes: 2
         run: bash validation-tools/.github/scripts/rust-disk-usage.sh "Rust validation failure"
 

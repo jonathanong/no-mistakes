@@ -67,7 +67,6 @@ jobs:
     name: Lint and package checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: ${{ always() }}
 
     steps:
       - name: Checkout
@@ -459,7 +458,6 @@ jobs:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: ${{ always() }}
     permissions:
       id-token: write
     env:
@@ -594,7 +592,7 @@ jobs:
           fail_ci_if_error: true
 
       - name: Diagnose Rust disk usage after failure
-        if: ${{ failure() || cancelled() }}
+        if: ${{ failure() }}
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "Rust tests job failure" target
 
