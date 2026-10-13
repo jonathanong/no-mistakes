@@ -1,0 +1,9 @@
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # no-mistakes-disable-next-line github-actions-step-timeouts
+    steps: [
+      {run: "echo [one]", timeout-minutes: 5},
+      {run: echo missing},
+    ]

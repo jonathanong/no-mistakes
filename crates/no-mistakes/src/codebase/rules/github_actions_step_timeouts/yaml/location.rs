@@ -2,6 +2,8 @@ use super::{is_inline_value_line, value_after_anchor, yaml_key_value};
 
 mod parallel;
 use parallel::parallel_child_lines;
+mod flow;
+use flow::flow_sequence_item_lines;
 
 fn indent(line: &str) -> usize {
     line.len() - line.trim_start_matches(' ').len()
@@ -134,7 +136,7 @@ impl<'a> StepLocations<'a> {
         if is_inline_value_line(self.lines[steps.0])
             || has_child_inline_value(&self.lines, steps, '[')
         {
-            return vec![steps.0 + 1; count];
+            return flow_sequence_item_lines(&self.lines, steps, count);
         }
         sequence_item_lines(&self.lines, steps, count)
     }
@@ -151,7 +153,7 @@ impl<'a> StepLocations<'a> {
             || has_child_inline_value(&self.lines, key, '[')
             || has_child_inline_value(&self.lines, key, '{')
         {
-            return vec![parent_line; count];
+            return flow_sequence_item_lines(&self.lines, key, count);
         }
         parallel_child_lines(&self.lines, parent_line, count)
     }

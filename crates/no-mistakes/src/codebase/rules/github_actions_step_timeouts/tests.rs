@@ -399,6 +399,19 @@ fn flow_jobs_steps_and_parallel_share_declaration_line() {
 }
 
 #[test]
+fn multiline_flow_sequences_preserve_each_executable_step_line() {
+    for (scenario, line) in [("multiline-flow-steps", 7), ("multiline-flow-parallel", 9)] {
+        let findings = run(scenario, "{}");
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+        assert_eq!(findings[0].line, line);
+        assert!(run(&format!("{scenario}-suppressed"), "{}").is_empty());
+    }
+    let findings = run("multiline-flow-steps-key-suppressed", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+}
+
+#[test]
 fn next_line_flow_collections_use_declaration_lines() {
     for (scenario, line) in [
         ("next-line-flow-steps", 5),
