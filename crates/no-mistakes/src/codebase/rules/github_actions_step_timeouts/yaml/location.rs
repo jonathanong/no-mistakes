@@ -12,13 +12,14 @@ fn is_content(line: &str) -> bool {
     !line.is_empty() && !line.starts_with('#')
 }
 
-pub(super) fn has_child_flow(lines: &[&str], key: (usize, usize), opening: char) -> bool {
+pub(super) fn has_child_inline_value(lines: &[&str], key: (usize, usize), opening: char) -> bool {
     lines
         .iter()
         .skip(key.0 + 1)
         .find(|line| is_content(line))
         .is_some_and(|line| {
-            indent(line) > key.1 && value_after_anchor(line.trim_start()).starts_with(opening)
+            let value = value_after_anchor(line.trim_start());
+            indent(line) > key.1 && (value.starts_with(opening) || value.starts_with('*'))
         })
 }
 
@@ -105,15 +106,15 @@ pub(super) fn sequence_item_line(
 pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usize> {
     let lines: Vec<_> = source.lines().collect();
     let jobs = find_jobs_line(&lines)?;
-    if is_inline_value_line(lines[jobs.0]) || has_child_flow(&lines, jobs, '{') {
+    if is_inline_value_line(lines[jobs.0]) || has_child_inline_value(&lines, jobs, '{') {
         return Some(jobs.0 + 1);
     }
     let job = find_job_line(&lines, jobs, job_id)?;
-    if is_inline_value_line(lines[job.0]) || has_child_flow(&lines, job, '{') {
+    if is_inline_value_line(lines[job.0]) || has_child_inline_value(&lines, job, '{') {
         return Some(job.0 + 1);
     }
     let steps = find_steps_line(&lines, job)?;
-    if is_inline_value_line(lines[steps.0]) || has_child_flow(&lines, steps, '[') {
+    if is_inline_value_line(lines[steps.0]) || has_child_inline_value(&lines, steps, '[') {
         return Some(steps.0 + 1);
     }
     sequence_item_line(&lines, steps, index)
@@ -125,8 +126,8 @@ pub(crate) fn step_line_path(source: &str, job_id: &str, path: &[usize]) -> Opti
     let lines: Vec<_> = source.lines().collect();
     let key = (line - 1, indent(lines[line - 1]));
     if is_inline_value_line(lines[key.0])
-        || has_child_flow(&lines, key, '[')
-        || has_child_flow(&lines, key, '{')
+        || has_child_inline_value(&lines, key, '[')
+        || has_child_inline_value(&lines, key, '{')
     {
         return Some(line);
     }

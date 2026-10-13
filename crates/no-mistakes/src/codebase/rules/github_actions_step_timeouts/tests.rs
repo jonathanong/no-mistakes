@@ -312,6 +312,14 @@ fn next_line_anchored_flow_uses_declaration_line() {
 }
 
 #[test]
+fn next_line_alias_uses_declaration_line() {
+    let findings = run("next-line-alias", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 10);
+    assert!(run("next-line-alias-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn indented_root_mapping_keeps_step_location() {
     let findings = run("indented-root", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
