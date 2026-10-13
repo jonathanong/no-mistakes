@@ -12,7 +12,7 @@ fn fixture(scenario: &str) -> PathBuf {
     )
 }
 
-fn run(scenario: &str, options: &str) -> Vec<RuleFinding> {
+fn run_files(scenario: &str, options: &str, files: &[&str]) -> Vec<RuleFinding> {
     let root = fixture(scenario);
     let config = NoMistakesConfig {
         rules: vec![RuleDef {
@@ -23,7 +23,12 @@ fn run(scenario: &str, options: &str) -> Vec<RuleFinding> {
         }],
         ..Default::default()
     };
-    check_with_files(&root, &config, &[root.join(".github/workflows/ci.yml")]).unwrap()
+    let files = files.iter().map(|file| root.join(file)).collect::<Vec<_>>();
+    check_with_files(&root, &config, &files).unwrap()
+}
+
+fn run(scenario: &str, options: &str) -> Vec<RuleFinding> {
+    run_files(scenario, options, &[".github/workflows/ci.yml"])
 }
 
 #[test]
@@ -313,6 +318,39 @@ fn name_alias_does_not_hide_block_parallel_child_line() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 8);
     assert!(run("alias-name-parallel-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn aliased_parallel_step_uses_alias_line_for_inherited_child() {
+    let findings = run("aliased-parallel-step", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 10);
+    assert!(run("aliased-parallel-step-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn non_job_and_non_step_shapes_do_not_hide_authored_executable_steps() {
+    assert!(run("no-jobs", "{}").is_empty());
+    let findings = run("mixed-job-shapes", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 13);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some(".github/workflows/ci.yml#build#2")
+    );
+}
+
+#[test]
+fn missing_workflow_source_is_skipped() {
+    assert!(run_files("pass", "{}", &[".github/workflows/missing.yml"]).is_empty());
+}
+
+#[test]
+fn named_flow_parallel_locates_declaration_after_comment() {
+    let findings = run("named-flow-parallel", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert!(run("named-flow-parallel-suppressed", "{}").is_empty());
 }
 
 #[test]
