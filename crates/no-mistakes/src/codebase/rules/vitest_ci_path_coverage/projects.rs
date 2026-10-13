@@ -4,7 +4,6 @@ mod named;
 use super::Options;
 pub(super) use crate::codebase::test_discovery::{
     normalize_project_glob_part, project_dependency_patterns, project_relative_pattern,
-    project_root_patterns,
 };
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::integration_tests::{
