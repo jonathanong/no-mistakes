@@ -145,7 +145,7 @@ fn destructured_parameters_project_before_caller_agreement() {
             .filter(|finding| finding.file == "src/destructured-parameters.mts")
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [4, 6, 8, 17, 21, 31, 43, 45],
+        [4, 6, 8, 17, 21, 31, 43, 45, 52],
         "{findings:#?}"
     );
 }

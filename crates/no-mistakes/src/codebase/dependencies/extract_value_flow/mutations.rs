@@ -128,7 +128,19 @@ impl ImportCollector {
                 self.value_flow.reference_link_constructions += 1;
             }
         }
+        for parameter in &self.value_flow.parameters {
+            if let Some(value) = parameter_reference(parameter) {
+                insert_reference(&mut links, parameter.scope, &parameter.name, value);
+            }
+        }
         self.value_reference_links = Some(links);
+    }
+    pub(super) fn record_parameter_reference(&mut self, parameter: &ValueParameter) {
+        if let Some(links) = &mut self.value_reference_links {
+            if let Some(value) = parameter_reference(parameter) {
+                insert_reference(links, parameter.scope, &parameter.name, value);
+            }
+        }
     }
     pub(super) fn record_value_reference(
         &mut self,
@@ -171,6 +183,14 @@ fn referenced_value_root(value: &ValueExpression) -> Option<(usize, String)> {
                 .to_string(),
         )),
 
+        _ => None,
+    }
+}
+
+fn parameter_reference(parameter: &ValueParameter) -> Option<&ValueExpression> {
+    match parameter.projection.last() {
+        Some(ValueProjection::Default(value, _)) => Some(value),
+        None => Some(&parameter.default),
         _ => None,
     }
 }

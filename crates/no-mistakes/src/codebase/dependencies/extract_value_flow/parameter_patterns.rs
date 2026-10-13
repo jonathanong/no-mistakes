@@ -20,7 +20,7 @@ impl ImportCollector {
                     .entry(name.clone())
                     .or_default()
                     .push(self.value_flow.parameters.len());
-                self.value_flow.parameters.push(ValueParameter {
+                let parameter = ValueParameter {
                     owner,
                     index,
                     name,
@@ -31,7 +31,9 @@ impl ImportCollector {
                     default_order,
                     invalidated_at: None,
                     mutation_contexts: fx_set(),
-                });
+                };
+                self.record_parameter_reference(&parameter);
+                self.value_flow.parameters.push(parameter);
             }
             BindingPattern::ObjectPattern(object) => {
                 for property in &object.properties {

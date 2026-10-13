@@ -46,3 +46,7 @@ for (const item of items) { arrow([primary]); }
 // Numeric object keys do not make an object iterable.
 function nonIterable([client]) { client.get('key'); }
 for (const item of items) { nonIterable({ 0: primary }); }
+function aliasMutation({ client, alias = client }) { client.get = unrelated; alias.get('key'); }
+for (const item of items) { aliasMutation({ client: primary }); }
+function copiedDefault({ client, get = client.get }) { client.get = unrelated; get('key'); }
+for (const item of items) { copiedDefault({ client: primary }); }
