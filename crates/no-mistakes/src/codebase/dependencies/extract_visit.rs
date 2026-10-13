@@ -90,6 +90,7 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_variable_declaration_with_bindings(self, declaration);
         self.record_callable_declaration_bindings(declaration);
         self.record_const_callable_aliases(declaration);
+        self.record_value_declaration(declaration);
         walk::walk_variable_declaration(self, declaration);
     }
 

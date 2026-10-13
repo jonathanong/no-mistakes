@@ -51,12 +51,15 @@ impl ImportCollector {
             }),
         }
     }
-    pub(in super::super) fn record_value_binding(&mut self, declarator: &VariableDeclarator<'_>) {
+    fn record_value_binding(&mut self, declarator: &VariableDeclarator<'_>, immutable: bool) {
         if !self.collect_value_flow {
             return;
         }
         if let Some(init) = &declarator.init {
             let value = self.value_expression(init);
+            if !immutable && !matches!(value, ValueExpression::Call(_)) {
+                return;
+            }
             self.record_value_pattern(&declarator.id, value, declarator.span.start);
         }
     }
@@ -177,5 +180,22 @@ impl ImportCollector {
             }
         }
         walk::walk_return_statement(self, statement);
+    }
+}
+
+impl ImportCollector {
+    pub(in super::super) fn record_value_declaration(
+        &mut self,
+        declaration: &VariableDeclaration<'_>,
+    ) {
+        let immutable = matches!(
+            declaration.kind,
+            VariableDeclarationKind::Const
+                | VariableDeclarationKind::Using
+                | VariableDeclarationKind::AwaitUsing
+        );
+        for declarator in &declaration.declarations {
+            self.record_value_binding(declarator, immutable);
+        }
     }
 }

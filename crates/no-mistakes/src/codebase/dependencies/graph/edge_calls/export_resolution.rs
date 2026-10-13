@@ -124,7 +124,7 @@ fn resolve_exported_callable(
                     )
                 })
                 .unwrap_or_else(|| {
-                    if facts.get_ts_facts(path).is_some_and(|facts| facts.value_flow.bindings.iter().any(|value| value.scope == 0 && value.name == binding.local && value.invalidated_at.is_none())) {
+                    if file.values.factory_binding(0, &binding.local) {
                         ExportedCallableResolution::Value(path.to_path_buf(), binding.local.clone())
                     } else {
                         ExportedCallableResolution::Unknown

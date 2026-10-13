@@ -2,7 +2,6 @@ fn visit_variable_declarator_with_scope<'a>(
     collector: &mut ImportCollector,
     declarator: &VariableDeclarator<'a>,
 ) {
-    collector.record_value_binding(declarator);
     let name = binding_identifier_name(&declarator.id).map(str::to_string);
     match declarator.init.as_ref() {
         Some(Expression::ArrowFunctionExpression(arrow)) => {
