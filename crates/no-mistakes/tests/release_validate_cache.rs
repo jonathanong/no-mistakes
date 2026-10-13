@@ -44,7 +44,7 @@ fn is_two_space_job_heading(line: &str) -> bool {
 #[test]
 fn validate_job_drops_cargo_package_tree_before_rust_cache_save() {
     let workflow = release_workflow();
-    let validate = job_body(&workflow, "validate");
+    let validate = job_body(&workflow, "validate-rust");
     let rust_cache = validate
         .find("Swatinem/rust-cache")
         .expect("Validate must set up Swatinem/rust-cache before package verification");
@@ -76,9 +76,12 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
     // The v0.87.1 release ran every test, then `cargo publish --dry-run` hit
     // `No space left on device`: debug test executables fill the runner disk.
     let workflow = release_workflow();
-    let validate = job_body(&workflow, "validate");
+    let validate = job_body(&workflow, "validate-rust");
     let rust_tests = validate.find("run: cargo test --all-features\n").unwrap();
-    let js_tests = validate.find("run: pnpm test\n").unwrap();
+    // JavaScript tests run independently and do not consume Rust executables.
+    let javascript = job_body(&workflow, "validate-js");
+    assert!(javascript.contains("run: pnpm test\n"));
+    assert!(!validate.contains("run: pnpm test\n"));
     let cleanup_heading = validate
         .find("name: Drop Rust test executables")
         .expect("Validate must free test executables before package verification");
@@ -86,8 +89,8 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         .find("cargo publish --dry-run --locked -p no-mistakes")
         .unwrap();
     assert!(
-        rust_tests < cleanup_heading && js_tests < cleanup_heading && cleanup_heading < publish,
-        "test executables must be dropped after every test step and before cargo publish"
+        rust_tests < cleanup_heading && cleanup_heading < publish,
+        "test executables must be dropped after Rust tests and before cargo publish"
     );
     let step = &validate[cleanup_heading..publish];
     // Only extensionless executables in deps/: keep .rlib/.rmeta/.so/.d so the
@@ -125,13 +128,16 @@ fn job_body_stops_at_the_next_two_space_job_heading() {
 #[test]
 fn validate_job_starts_isolated_catalog_postgres_after_disk_reclamation_before_tests() {
     let workflow = release_workflow();
-    let validate = job_body(&workflow, "validate");
+    let validate = job_body(&workflow, "validate-rust");
     let reclaim = validate.find("name: Reclaim runner disk space").unwrap();
     let start = validate
         .find("name: Start isolated PostgreSQL for catalog fixtures")
         .expect("Release validation must provision the real catalog-test server");
     let tests = validate.find("name: Run Rust tests").unwrap();
-    assert!(reclaim < start && start < tests, "disk reclamation must finish before provisioning PostgreSQL, and the server must start before Rust tests");
+    assert!(
+        reclaim < start && start < tests,
+        "disk reclamation must finish before provisioning PostgreSQL, and the server must start before Rust tests"
+    );
     let setup = &validate[start..tests];
     for required in [
         "timeout-minutes: 5",

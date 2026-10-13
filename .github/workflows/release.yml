@@ -169,8 +169,8 @@ jobs:
           path: ${{ runner.temp }}/release-source.tgz
           if-no-files-found: error
 
-  validate:
-    name: Validate
+  validate-rust:
+    name: Validate Rust
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 50
@@ -225,6 +225,7 @@ jobs:
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           prefix-key: v1-rust-release
+          shared-key: validate
           cache-bin: "false"
 
       - name: Install pnpm dependencies
@@ -274,21 +275,9 @@ jobs:
         timeout-minutes: 5
         run: cargo fmt --all -- --check
 
-      - name: Check JavaScript formatting
-        timeout-minutes: 2
-        run: pnpm run fmt:js:check
-
       - name: Run Clippy
         timeout-minutes: 10
         run: cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: Run Oxlint
-        timeout-minutes: 2
-        run: pnpm run lint:js
-
-      - name: Run CSpell
-        timeout-minutes: 5
-        run: pnpm run lint:spell
 
       - name: Build JavaScript packages
         timeout-minutes: 2
@@ -322,18 +311,6 @@ jobs:
         timeout-minutes: 15
         run: cargo test --all-features
 
-      - name: Install Chromium for timeout-policy browser tests
-        timeout-minutes: 5
-        # A resumed tag that predates the browser tests has no Playwright CLI.
-        run: |
-          if [ -x node_modules/.bin/playwright ]; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-
-      - name: Run JavaScript tests
-        timeout-minutes: 5
-        run: pnpm test
-
       # Debug test executables (one per test target, with embedded debug info)
       # fill most of the runner disk, leaving package verification no room to
       # build. They are not reused after the tests ran, and rust-cache never
@@ -358,12 +335,95 @@ jobs:
         timeout-minutes: 1
         run: rm -rf target/package
 
+  validate-js:
+    name: Validate JavaScript
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Download prepared source
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-source
+          path: prepared-release
+
+      - name: Extract prepared source
+        timeout-minutes: 2
+        run: tar -xzf prepared-release/release-source.tgz
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          install: false
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
+
+      - name: Check JavaScript formatting
+        timeout-minutes: 2
+        run: pnpm run fmt:js:check
+
+      - name: Run Oxlint
+        timeout-minutes: 2
+        run: pnpm run lint:js
+
+      - name: Run CSpell
+        timeout-minutes: 5
+        run: pnpm run lint:spell
+
+      - name: Install Chromium for timeout-policy browser tests
+        timeout-minutes: 5
+        # A resumed tag that predates the browser tests has no Playwright CLI.
+        run: |
+          if [ -x node_modules/.bin/playwright ]; then
+            pnpm exec playwright install --with-deps chromium
+          fi
+
+      - name: Run JavaScript tests
+        timeout-minutes: 5
+        run: pnpm test
+
       - name: Check npm packages
         timeout-minutes: 2
         run: |
           for pkg in no-mistakes eslint-plugin-no-mistakes; do
             pnpm --filter "$pkg" pack --dry-run
           done
+
+  validate:
+    name: Validate
+    needs:
+      - validate-rust
+      - validate-js
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require both validation suites
+        timeout-minutes: 1
+        env:
+          RUST_RESULT: ${{ needs.validate-rust.result }}
+          JS_RESULT: ${{ needs.validate-js.result }}
+        run: |
+          test "$RUST_RESULT" = success
+          test "$JS_RESULT" = success
 
   build-native:
     name: Build native for ${{ matrix.target }}
