@@ -1,0 +1,98 @@
+name: Temporary PGO public consumer check
+
+on:
+  push:
+    branches:
+      - codex/native-cpu-20261012
+    paths:
+      - .github/workflows/pgo-consumer-experiment.yml
+      - .github/scripts/pgo-consumer-experiment.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  consumer:
+    name: Consumer ${{ matrix.fixture.name }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture:
+          - name: acceptance
+            commit: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
+            tree: e848d7ad03e0c0fca7ec70eb0f678653f70c278b
+          - name: reported-pair
+            commit: 92d0a2061bde8d260aa0b86a2d71110ece1a43ca
+            tree: 11815b62e69a39be94ed790e8984994f50113cd3
+    steps:
+      - name: Checkout experiment harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Checkout pinned public consumer
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: vouchington/vouchington
+          ref: ${{ matrix.fixture.commit }}
+          path: fixture
+          persist-credentials: false
+      - name: Install consumer Node
+        uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        with:
+          node-version-file: fixture/.nvmrc
+          package-manager-cache: false
+      - name: Install consumer pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: latest-12
+          package_json_file: fixture/package.json
+      - name: Install pinned consumer dependencies
+        working-directory: fixture
+        run: pnpm install --frozen-lockfile --loglevel=warn
+      # The consumer's pinned selene tool has no Linux ARM64 release.
+      - name: Download same-source baseline and trained PGO binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 38336820538 --repo jonathanong/no-mistakes \
+            --name pgo-use-only --dir "$RUNNER_TEMP/pgo-consumer-artifact"
+          test "$(cat "$RUNNER_TEMP/pgo-consumer-artifact/source-commit.txt")" = 8fdeedeaef6af73eb3d0bd2d1a5fc31604861f0e
+          grep -F 'rustc 1.99.0 ' "$RUNNER_TEMP/pgo-consumer-artifact/rustc.txt"
+          mkdir -p "$RUNNER_TEMP/codegen-consumer"/{baseline,pgo}
+          for variant in baseline pgo; do
+            profile_flag=
+            if test "$variant" = pgo; then
+              profile_flag=' -Cprofile-use=merged.profdata'
+            fi
+            cp "$RUNNER_TEMP/pgo-consumer-artifact/$variant" "$RUNNER_TEMP/codegen-consumer/$variant/no-mistakes"
+            cp "$RUNNER_TEMP/pgo-consumer-artifact/source-commit.txt" "$RUNNER_TEMP/codegen-consumer/$variant/source-commit.txt"
+            cp "$RUNNER_TEMP/pgo-consumer-artifact/rustc.txt" "$RUNNER_TEMP/codegen-consumer/$variant/rustc.txt"
+            printf 'CARGO_PROFILE_RELEASE_OPT_LEVEL=3\nCARGO_PROFILE_RELEASE_LTO=thin\nCARGO_PROFILE_RELEASE_CODEGEN_UNITS=16\nRUSTFLAGS=-D warnings%s\n' "$profile_flag" \
+              > "$RUNNER_TEMP/codegen-consumer/$variant/environment.txt"
+          done
+          cp "$RUNNER_TEMP/pgo-consumer-artifact/build-baseline.time" "$RUNNER_TEMP/codegen-consumer/baseline/build.time"
+          cp "$RUNNER_TEMP/pgo-consumer-artifact/build-use.time" "$RUNNER_TEMP/codegen-consumer/pgo/build.time"
+          sha256sum "$RUNNER_TEMP/codegen-consumer/"{baseline,pgo}/no-mistakes
+      - name: Run balanced exact consumer check
+        env:
+          EXPECTED_TREE: ${{ matrix.fixture.tree }}
+          EXPECTED_COMMIT: ${{ matrix.fixture.commit }}
+          NATIVE_PACKAGE: no-mistakes-linux-arm64-gnu
+        shell: bash
+        run: |
+          set -euo pipefail
+          python harness/.github/scripts/pgo-consumer-experiment.py
+      - name: Upload logs and samples
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pgo-consumer-${{ matrix.fixture.name }}
+          path: ${{ runner.temp }}/codegen-consumer/measurements/
+          if-no-files-found: warn
+          retention-days: 3
