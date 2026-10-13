@@ -209,6 +209,11 @@ jobs:
     permissions:
       id-token: write
 
+    env:
+      # These jobs execute CLI/addon behavior, without consuming native debug metadata.
+      # Keep debug assertions and overflow checks; only omit compiler debug information.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -587,6 +592,11 @@ jobs:
     name: AST analysis
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    env:
+      # These jobs execute CLI/addon behavior, without consuming native debug metadata.
+      # Keep debug assertions and overflow checks; only omit compiler debug information.
+      CARGO_PROFILE_DEV_DEBUG: "0"
 
     steps:
       - name: Checkout
