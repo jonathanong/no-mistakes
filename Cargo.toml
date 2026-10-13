@@ -4,6 +4,14 @@ members = [
 ]
 resolver = "2"
 
+# Keep local, CI, and release validation artifacts small. Debug assertions remain enabled.
+# Use CARGO_PROFILE_DEV_DEBUG=2 / CARGO_PROFILE_TEST_DEBUG=2 for debugger symbols.
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0
+
 # Full LTO + single codegen unit for maximum runtime perf (trades ~60–90 s link time).
 [profile.release]
 lto = true

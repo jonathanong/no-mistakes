@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Record the shared command without compiling a workspace in the harness test.
+printf '%s\n' "$@"
+exit "${RUST_VALIDATION_FIXTURE_STATUS:-0}"

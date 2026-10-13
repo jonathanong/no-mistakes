@@ -77,7 +77,12 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
     // `No space left on device`: debug test executables fill the runner disk.
     let workflow = release_workflow();
     let validate = job_body(&workflow, "validate-rust");
-    let rust_tests = validate.find("run: cargo test --all-features\n").unwrap();
+    let rust_tests = validate
+        .find("run: bash .github/scripts/rust-validation.sh test\n")
+        .unwrap();
+    let doctests = validate
+        .find("run: bash .github/scripts/rust-validation.sh doc\n")
+        .unwrap();
     // JavaScript tests run independently and do not consume Rust executables.
     let javascript = job_body(&workflow, "validate-js");
     assert!(javascript.contains("run: pnpm test\n"));
@@ -89,7 +94,7 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         .find("cargo publish --dry-run --locked -p no-mistakes")
         .unwrap();
     assert!(
-        rust_tests < cleanup_heading && cleanup_heading < publish,
+        rust_tests < doctests && doctests < cleanup_heading && cleanup_heading < publish,
         "test executables must be dropped after Rust tests and before cargo publish"
     );
     let step = &validate[cleanup_heading..publish];

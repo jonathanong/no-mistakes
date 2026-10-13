@@ -254,8 +254,8 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     workflow,
-    /cargo test --workspace --all-features/,
-    "Linux coverage keeps the full-suite spelling the native guard must reject",
+    /bash \.github\/scripts\/rust-validation\.sh test/,
+    "Linux coverage keeps the shared full-suite validation command",
   );
 });
 
@@ -265,11 +265,12 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const body = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   assert.ok(body, "ci.yml must define native-tests");
-  const jobEnv = body.match(/^ {4}env:\n((?:^ {6}.*\n)+)/m)?.[1];
-  assert.ok(jobEnv, "both native build and test steps must inherit the profile settings");
-  for (const profile of ["DEV", "TEST"]) {
-    assert.match(jobEnv, new RegExp(`^ {6}CARGO_PROFILE_${profile}_DEBUG: ["']0["']$`, "m"));
+  const manifest = readFileSync(join(repoRoot, "Cargo.toml"), "utf8");
+  for (const profile of ["dev", "test"]) {
+    const settings = manifest.split(`[profile.${profile}]`)[1]?.split("[")[0];
+    assert.match(settings ?? "", /^debug = 0$/m);
   }
+  assert.doesNotMatch(body, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
   assert.doesNotMatch(body, /CARGO_PROFILE_(?:DEV|TEST)_(?:DEBUG_ASSERTIONS|OVERFLOW_CHECKS):/);
   const stepEnvs = [...body.matchAll(/^ {8}env:\n((?:^ {10}.*\n)+)/gm)];
   for (const [, stepEnv] of stepEnvs) {
@@ -300,9 +301,10 @@ test("release publication requires both parallel validation suites", () => {
   }
   for (const command of [
     "cargo fmt --all -- --check",
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo test --all-features --no-run",
-    "cargo test --all-features",
+    "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings",
+    "bash .github/scripts/rust-validation.sh build",
+    "bash .github/scripts/rust-validation.sh test",
+    "bash .github/scripts/rust-validation.sh doc",
     "cargo publish --dry-run --locked -p no-mistakes",
     "pnpm run build:js",
   ])

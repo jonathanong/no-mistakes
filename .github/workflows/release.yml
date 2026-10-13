@@ -271,13 +271,17 @@ jobs:
           }
           NODE
 
+      - name: Check Rust validation parity
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-validation.test.cjs
+
       - name: Check formatting
         timeout-minutes: 5
         run: cargo fmt --all -- --check
 
       - name: Run Clippy
         timeout-minutes: 10
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
       - name: Build JavaScript packages
         timeout-minutes: 2
@@ -305,15 +309,18 @@ jobs:
       # Build and run separately, like CI: compiling alone takes most of a combined budget.
       - name: Build Rust tests
         timeout-minutes: 20
-        run: cargo test --all-features --no-run
+        run: bash .github/scripts/rust-validation.sh build
 
       - name: Run Rust tests
         timeout-minutes: 15
-        run: cargo test --all-features
+        run: bash .github/scripts/rust-validation.sh test
 
-      # Debug test executables (one per test target, with embedded debug info)
-      # fill most of the runner disk, leaving package verification no room to
-      # build. They are not reused after the tests ran, and rust-cache never
+      - name: Run Rust doctests
+        timeout-minutes: 5
+        run: bash .github/scripts/rust-validation.sh doc
+
+      # Test executables retain code even with debugger symbols disabled;
+      # reclaim their disk space before package verification builds. They are not reused after the tests ran, and rust-cache never
       # saves workspace artifacts, so drop them before packaging.
       - name: Drop Rust test executables
         timeout-minutes: 2
