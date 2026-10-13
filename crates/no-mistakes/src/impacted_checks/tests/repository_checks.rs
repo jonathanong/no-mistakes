@@ -142,9 +142,11 @@ fn repository_deleted_declaration_still_selects_whole_scope_validation() {
 fn repository_package_module_variants_and_runner_config_select_lint_and_format() {
     for file in [
         "packages/no-mistakes/index.js",
+        "packages/no-mistakes/index.jsx",
         "packages/no-mistakes/test-timeout-policy/index.mjs",
         "packages/no-mistakes/index.d.cts",
         "packages/no-mistakes/index.d.mts",
+        "packages/no-mistakes/index.tsx",
         "vitest.config.js",
     ] {
         assert_eq!(
