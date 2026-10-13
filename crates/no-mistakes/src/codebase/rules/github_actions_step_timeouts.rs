@@ -50,17 +50,14 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    super::run_selected_workflow_rule(
-        super::SourcedRuleContext::new(root, config, all_files, sources),
-        RULE_ID,
-        |opts| {
-            let mut compiled = compile_options(opts);
-            compiled.defer_suppression = defer_suppression;
-            compiled
-        },
-        |opts| &opts.include,
-        scan_files,
-    )
+    super::run_rule_applications(config, RULE_ID, |rule| {
+        let mut compiled = compile_options(rule.try_rule_options()?);
+        compiled.defer_suppression = defer_suppression;
+        let (selected, target_roots) =
+            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
+        let files = super::matching_files(root, &compiled.include, &selected, &target_roots)?;
+        Ok(scan_files(root, &compiled, &files, sources))
+    })
 }
 
 fn compile_options(opts: Options) -> CompiledOptions {
@@ -90,10 +87,37 @@ fn scan_files(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    files
+    let mut findings: Vec<_> = files
         .par_iter()
         .flat_map(|path| scan::check_file(root, path, opts, sources))
-        .collect()
+        .collect();
+    let present: BTreeSet<_> = files
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
+        .collect();
+    for key in opts.allow.keys() {
+        let path = key.split_once('#').map_or(key.as_str(), |(path, _)| path);
+        if !present.contains(path) {
+            findings.push(yaml::finding(
+                path,
+                1,
+                format!("{path}: stale {RULE_ID} allow entry `{key}`"),
+                Some(key),
+            ));
+        }
+    }
+    for key in &opts.duplicate_allow {
+        let path = key.split_once('#').map_or(key.as_str(), |(path, _)| path);
+        if !present.contains(path) {
+            findings.push(yaml::finding(
+                path,
+                1,
+                format!("{path}: duplicate {RULE_ID} allow entry `{key}`"),
+                Some(key),
+            ));
+        }
+    }
+    findings
 }
 
 mod scan;
