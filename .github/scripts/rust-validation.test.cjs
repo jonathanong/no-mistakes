@@ -68,7 +68,7 @@ test("CI and release both use the shared test and doctest scopes", () => {
   }
 });
 
-test("CI and release Clippy both validate the locked all-feature workspace", () => {
+test("CI, release, and pre-push Clippy validate the locked all-feature workspace", () => {
   for (const file of ["ci.yml", "release.yml"]) {
     const workflow = readFileSync(path.join(root, ".github/workflows", file), "utf8");
     assert.match(
@@ -76,4 +76,12 @@ test("CI and release Clippy both validate the locked all-feature workspace", () 
       /run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
     );
   }
+});
+
+test("pre-push Clippy uses the workflow scope", () => {
+  const hook = readFileSync(path.join(root, ".husky/pre-push"), "utf8");
+  assert.match(
+    hook,
+    /cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
+  );
 });

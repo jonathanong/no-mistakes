@@ -62,7 +62,7 @@ pid_ast=$!
 echo "Running cargo fmt + clippy..."
 (
   cargo fmt --all -- --check &&
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 ) </dev/null &
 pid_rust=$!
 
