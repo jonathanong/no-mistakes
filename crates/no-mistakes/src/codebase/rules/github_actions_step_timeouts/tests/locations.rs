@@ -308,6 +308,14 @@ fn explicit_job_key_preserves_step_line() {
 }
 
 #[test]
+fn explicit_jobs_and_steps_keys_preserve_step_line() {
+    let findings = run("explicit-structural-keys", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert!(run("explicit-structural-keys-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn root_flow_job_alias_uses_its_own_declaration() {
     let findings = run("root-flow-job-alias", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
