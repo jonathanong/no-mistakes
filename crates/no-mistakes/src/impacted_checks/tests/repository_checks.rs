@@ -153,7 +153,6 @@ fn repository_package_module_variants_and_runner_config_select_lint_and_format()
         "packages/no-mistakes/index.d.cts",
         "packages/no-mistakes/index.d.mts",
         "packages/no-mistakes/index.tsx",
-        "vitest.config.js",
     ] {
         assert_eq!(
             command_strings(&repository_report(&[file])),
@@ -165,4 +164,9 @@ fn repository_package_module_variants_and_runner_config_select_lint_and_format()
             "{file}"
         );
     }
+    // Root runner config is linted and formatted, but outside the crates/packages duplicate scan.
+    assert_eq!(
+        command_strings(&repository_report(&["vitest.config.js"])),
+        ["pnpm run fmt:js:check", "pnpm run lint:js"]
+    );
 }
