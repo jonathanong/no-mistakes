@@ -80,6 +80,7 @@ fn resolve_imported_call_target(
                 callable_id: None,
             }
         }
+        ExportedCallableResolution::Value(_, _) => direct_target(),
         ExportedCallableResolution::Absent | ExportedCallableResolution::Unknown => {
             ResolvedCallTarget::Unknown
         }

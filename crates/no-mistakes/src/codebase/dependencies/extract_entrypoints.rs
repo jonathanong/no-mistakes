@@ -18,14 +18,15 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     source: &str,
     collect_resource_roots: bool,
 ) -> ImportFacts {
-    extract_import_facts_from_program_with_source_and_demands(program, source, collect_resource_roots, false)
+    extract_import_facts_from_program_with_source_and_demands(program, source, collect_resource_roots, false, true)
 }
 
 pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
-    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool,
+    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
 ) -> ImportFacts {
     let mut collector = ImportCollector {
         collect_per_item_calls,
+        collect_value_flow,
         line_starts: import_line_starts(source),
         collect_resource_roots,
         sloppy_script: program.source_type.is_javascript()
@@ -135,6 +136,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
         .collect();
     exported_functions.sort();
     ImportFacts {
+        value_flow: collector.value_flow,
         imports: collector.imports,
         eager_require_specifiers: collector.eager_require_specifiers.into_iter().collect(),
         imported_bindings: collector.call_import_bindings,

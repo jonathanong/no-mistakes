@@ -123,7 +123,13 @@ fn resolve_exported_callable(
                         },
                     )
                 })
-                .unwrap_or(ExportedCallableResolution::Unknown)
+                .unwrap_or_else(|| {
+                    if facts.get_ts_facts(path).is_some_and(|facts| facts.value_flow.bindings.iter().any(|value| value.scope == 0 && value.name == binding.local && value.invalidated_at.is_none())) {
+                        ExportedCallableResolution::Value(path.to_path_buf(), binding.local.clone())
+                    } else {
+                        ExportedCallableResolution::Unknown
+                    }
+                })
         }
     } else {
         // A callable's spelling alone is not an export. Keeping this after the
@@ -134,6 +140,7 @@ fn resolve_exported_callable(
             ExportedCallableResolution::Absent
         } else {
             let mut candidates = Vec::new();
+            let mut values = Vec::new();
             let mut has_unknown_candidate = false;
             for specifier in &file.stars {
                 // An unresolved or excluded star source can still export this
@@ -162,14 +169,19 @@ fn resolve_exported_callable(
                     ExportedCallableResolution::Callable(path, scope, callable_id) => {
                         candidates.push((path, scope, callable_id))
                     }
+                    ExportedCallableResolution::Value(path, local) => values.push((path, local)),
                     ExportedCallableResolution::ExternalModuleExport(_, _)
                     | ExportedCallableResolution::Unknown => has_unknown_candidate = true,
                 }
             }
             candidates.sort();
             candidates.dedup();
-            if has_unknown_candidate || candidates.len() > 1 {
+            values.sort();
+            values.dedup();
+            if has_unknown_candidate || candidates.len() + values.len() > 1 {
                 ExportedCallableResolution::Unknown
+            } else if let Some((path, local)) = values.pop() {
+                ExportedCallableResolution::Value(path, local)
             } else if let Some((path, scope, callable_id)) = candidates.pop() {
                 ExportedCallableResolution::Callable(path, scope, callable_id)
             } else {

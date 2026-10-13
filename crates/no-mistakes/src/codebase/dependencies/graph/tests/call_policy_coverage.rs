@@ -41,6 +41,7 @@ fn call_scope_resolution_walks_multiple_lexical_parents() {
 #[test]
 fn callable_alias_resolution_uses_the_callee_binding_scope() {
     let index = CallableFileIndex {
+        values: Default::default(),
         known_scopes: ["target".to_string()].into_iter().collect(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),

@@ -49,7 +49,7 @@ impl<'a> Visit<'a> for ImportCollector {
         self.push_anonymous_function_scope(CallableId(arrow.span.start));
         self.add_type_parameter_names(arrow.type_parameters.as_deref());
         self.add_formal_parameters(&arrow.params);
-        walk::walk_arrow_function_expression(self, arrow);
+        walk_arrow_function_with_body_bindings(self, arrow);
         self.pop_function_scope(true);
     }
 
@@ -187,6 +187,8 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_ts_import_type(&mut self, import: &TSImportType<'a>) {
         visit_ts_import_type_with_scope(self, import);
     }
+
+    fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) { self.visit_value_return(statement); }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         visit_call_expression_per_item(self, call);

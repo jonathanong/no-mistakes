@@ -45,6 +45,10 @@ pub struct EffectsReport {
 pub(crate) struct EffectsSelection {
     kind: String,
     names: HashMap<String, Option<String>>,
+    returned: crate::fx::FxHashMap<
+        String,
+        crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>,
+    >,
     targets: crate::fx::FxHashMap<
         String,
         crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>,
@@ -128,7 +132,7 @@ pub fn run(
                     Ok(())
                 },
             graph_plan: |selection: &EffectsSelection| GraphBuildPlan {
-                calls: !selection.targets.is_empty(),
+                calls: !selection.targets.is_empty() || !selection.returned.is_empty(),
                 ..GraphBuildPlan::from_allowed(Some(&allowed))
             },
             configure_context:

@@ -18,6 +18,7 @@ fn collect_call_edges_for_core(
         (std::path::PathBuf, String),
         ExportedCallableResolution,
     >,
+    module_files: &mut FxHashMap<String, FxHashSet<std::path::PathBuf>>,
 ) -> CallPass {
     use rayon::prelude::*;
     let plan = edge_inputs.plan;
@@ -83,6 +84,16 @@ fn collect_call_edges_for_core(
         })
         .collect::<Vec<_>>();
     if plan.calls {
+        for path in edge_inputs.graph_files.indexable() {
+            if let Some(file) = facts.get_ts_facts(path) {
+                for binding in &file.imported_bindings {
+                    if binding.is_type_only { continue; }
+                    if let Some(target) = resolver.resolve(&binding.specifier, path).and_then(|target| edge_inputs.graph_files.visible_path(&target).map(std::path::Path::to_path_buf)) {
+                        module_files.entry(binding.specifier.clone()).or_default().insert(target);
+                    }
+                }
+            }
+        }
         populate_callable_export_resolutions(
             edge_inputs,
             facts,
@@ -100,6 +111,7 @@ fn collect_call_edges_for_core(
             all.escapes.extend(part.escapes);
             all
         });
+    if plan.calls { refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass); }
     if namespaces_in_repo {
         let mut escapes = NamespaceEscapes::default();
         for (file, root) in pass.escapes.drain(..) {

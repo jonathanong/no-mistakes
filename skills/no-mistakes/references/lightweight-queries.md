@@ -105,6 +105,11 @@ parallel union import-fact pass.
 
 ## `effects KIND --entry FILE`
 
+For opaque transaction factories, configure `effects.<kind>.returnedExecutors`
+with `{module, export}` import selectors; local executor names need no spelling
+configuration. Visible factory returns and agreeing client arguments/defaults
+reuse the prepared call bindings.
+
 Report configured effect occurrences in runtime imports reachable from an entry.
 String `functions`/`categories` match source spellings; use
 `effects.<kind>.targets: [{ module: "@vendor/database", export: "query", category: "storage" }]`

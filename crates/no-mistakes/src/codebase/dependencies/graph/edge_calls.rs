@@ -14,6 +14,7 @@ use crate::codebase::dependencies::extract::InvocationKind;
 /// Class-member maps are built separately by `index_class_members_by_id`.
 #[derive(Clone)]
 struct CallableFileIndex {
+    values: FlowFileIndex,
     known_scopes: FxHashSet<String>,
     exported_scopes: FxHashSet<String>,
     class_scopes: FxHashSet<String>,
@@ -32,7 +33,6 @@ struct CallableFileIndex {
     stars: Vec<String>,
     namespaces: NamespaceTable,
 }
-
 #[derive(Clone)]
 struct IndexedAlias {
     target: String,
@@ -59,6 +59,9 @@ struct ResolvedLocalCallee {
 }
 
 include!("edge_calls/index_build.rs");
+#[path = "edge_calls/value_flow.rs"]
+mod value_flow;
+use value_flow::{FlowFileIndex, refine_value_calls};
 include!("edge_calls/scoped_names.rs");
 include!("edge_calls/namespace_table.rs");
 
@@ -83,6 +86,7 @@ impl CallableFileIndex {
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
+            values: FlowFileIndex::new(&file.value_flow, &file.callable_scope_ids),
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes,
@@ -161,6 +165,7 @@ enum ExportedCallableResolution {
         Option<crate::codebase::dependencies::extract::CallableId>,
     ),
     ExternalModuleExport(String, String),
+    Value(std::path::PathBuf, String),
     Unknown,
 }
 

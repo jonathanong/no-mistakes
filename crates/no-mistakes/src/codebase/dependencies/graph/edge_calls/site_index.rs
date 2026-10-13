@@ -34,3 +34,16 @@ impl DepGraph {
             .unwrap_or(&[])
     }
 }
+
+impl DepGraph {
+    /// Canonical repository callables exposed by a configured import selector.
+    pub(crate) fn module_export_nodes(&self, module: &str, export: &str) -> Vec<NodeId> {
+        self.module_files.get(module).into_iter().flatten().filter_map(|file| {
+            match self.callable_export_resolutions.get(&(file.clone(), export.to_string()))? {
+                ExportedCallableResolution::Callable(file, scope, Some(id)) => Some(NodeId::callable(file, scope.clone(), *id)),
+                ExportedCallableResolution::Callable(file, scope, None) => Some(NodeId::symbol(file, scope.clone())),
+                _ => None,
+            }
+        }).collect()
+    }
+}

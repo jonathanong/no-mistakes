@@ -52,7 +52,7 @@ pub(crate) fn check_with_graph(
         let filter = super::path_filter::RulePathFilter::new(root, config, application)?;
         for kind in &options.effects {
             let effect = &config.effects[kind];
-            let configured_sinks = Sinks::new(effect);
+            let configured_sinks = Sinks::new(effect, graph);
             let mut sinks: BTreeMap<NodeId, Vec<(&ResolvedCallSite, bool)>> = BTreeMap::new();
             let mut excluded = Vec::new();
             for site in graph.resolved_call_sites() {

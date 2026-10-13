@@ -69,6 +69,7 @@
             edges: edge_index_from_maps(forward, reverse),
             callable_nodes_by_file,
             callable_export_resolutions,
+            module_files,
             resolved_call_sites,
             class_declarations,
             call_sites_by_file,

@@ -28,6 +28,7 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
     let opts =
         options("roots: [{ file: src/selectors.mts }]\ntargets: [{ terminal: waitForTimeout }]");
     let site = ResolvedCallSite {
+        returned_from: None,
         target_node: None,
         file: root.join("src/selectors.mts"),
         caller: Some("timeoutCall".to_string()),
@@ -48,6 +49,7 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
     );
 
     let bare = ResolvedCallSite {
+        returned_from: None,
         target_node: None,
         source_callee: "waitForTimeout".to_string(),
         ..site

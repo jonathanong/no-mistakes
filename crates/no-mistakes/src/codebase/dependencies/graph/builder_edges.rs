@@ -9,6 +9,7 @@ struct EdgeMaps<'a> {
     resource_edge_details: &'a mut ResourceEdgeDetails,
     resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
     callable_export_resolutions: &'a mut FxHashMap<(PathBuf, String), ExportedCallableResolution>,
+    module_files: &'a mut FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: &'a mut Vec<ResolvedCallSite>,
     class_declarations: &'a mut Vec<ClassDeclaration>,
 }
@@ -33,6 +34,7 @@ fn collect_and_merge_all_edges(
         resource_edge_details,
         resource_diagnostics,
         callable_export_resolutions,
+        module_files,
         resolved_call_sites,
         class_declarations,
     } = maps;
@@ -58,6 +60,7 @@ fn collect_and_merge_all_edges(
             facts.expect("call plan requires TS facts"),
             &call_resolver,
             callable_export_resolutions,
+        module_files,
         );
         merge_edges(forward, reverse, pass.edges);
         resolved_call_sites.extend(pass.sites);
@@ -75,6 +78,7 @@ fn collect_and_merge_all_edges(
             resource_edge_details,
             resource_diagnostics,
             callable_export_resolutions,
+        module_files,
             resolved_call_sites,
             class_declarations,
         },

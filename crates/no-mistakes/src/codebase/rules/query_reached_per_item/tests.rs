@@ -176,6 +176,7 @@ fn per_item_metadata_is_explicit_demand_and_display_roots_remain_supported() {
         invocation: crate::codebase::dependencies::extract::InvocationKind::Call,
         source_callee: "callee".into(),
         target: crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown,
+        returned_from: None,
         target_node: None,
     };
     assert_eq!(source_node(&site), NodeId::symbol(&site.file, "display"));
@@ -333,4 +334,60 @@ fn callback_occurrences_keep_their_own_bindings_within_one_caller() {
         .unwrap()
         .message
         .contains("map callback"));
+}
+
+#[test]
+fn returned_executors_factory_exports_and_client_parameters_keep_provenance() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/entry.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        (8..=15).chain([26]).collect::<Vec<_>>(),
+        "{findings:#?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file == "src/helpers.mts" && finding.line == 3),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn value_provenance_rejects_reassignments_conflicts_and_unrelated_receivers() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/controls.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [11, 17, 24, 27, 39],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn returned_executor_selectors_mark_visible_factories_without_selecting_creation_calls() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("returned-only.yml")), None)
+            .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/entry.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 9],
+        "{findings:#?}"
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.message.contains("transaction client only")));
 }

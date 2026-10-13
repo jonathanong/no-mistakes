@@ -39,6 +39,12 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
         predeclare_function_declarations(collector, &body.statements);
         walk::walk_function_body(collector, body);
     } else if let Some(expression) = arrow.body.as_expression() {
+        if collector.collect_value_flow {
+            if let Some(owner) = collector.current_function_id() {
+                let value = collector.value_expression(expression);
+                collector.value_flow.returns.push((owner, value));
+            }
+        }
         collector.visit_expression(expression);
     }
 }

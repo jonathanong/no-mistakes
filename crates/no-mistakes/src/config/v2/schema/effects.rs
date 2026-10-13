@@ -13,6 +13,8 @@ pub struct EffectKindConfig {
     pub functions: Vec<String>,
     /// Binding-aware module export selectors, independent of local import names.
     pub targets: Vec<EffectTargetConfig>,
+    /// Imported factories whose returned callable is an effect executor.
+    pub returned_executors: Vec<EffectTargetConfig>,
     /// Configured transaction-client sinks for per-item query diagnostics.
     pub transaction_functions: Vec<String>,
     /// Configured batch/pipeline builders which exempt their own call paths.

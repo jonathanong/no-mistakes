@@ -93,6 +93,7 @@ pub struct TsFileFacts {
     pub eager_require_specifiers: Vec<String>,
     pub imported_bindings: Vec<ImportedBinding>,
     pub exported_bindings: Vec<ExportedBinding>,
+    pub value_flow: crate::codebase::dependencies::extract::ValueFlowFacts,
     pub callable_aliases: Vec<crate::codebase::dependencies::extract::CallableAlias>,
     pub star_reexport_specifiers: Vec<String>,
     pub per_item_calls: Vec<crate::codebase::dependencies::extract::PerItemCall>,

@@ -13,6 +13,7 @@ impl DepGraph {
             edges: EdgeIndex::from_edges_and_nodes(edges, nodes),
             callable_nodes_by_file: fx_map(),
             callable_export_resolutions: fx_map(),
+            module_files: fx_map(),
             resolved_call_sites: Vec::new(),
             class_declarations: Vec::new(),
             call_sites_by_file: fx_map(),

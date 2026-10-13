@@ -36,11 +36,7 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     // in standard recovered mode so runner-config analysis can share the same
     // request cache. The direct-file test/support path retains the historical
     // TypeScript fallback for unknown extensions.
-    let stored_source = if plan.source {
-        Some(Arc::clone(&source))
-    } else {
-        None
-    };
+    let stored_source = plan.source.then(|| Arc::clone(&source));
     let result = if is_indexable(path) {
         session.with_recovered_program_status(
             path,
@@ -104,6 +100,7 @@ pub(crate) fn collect_file_facts_from_program(
                 source,
                 plan.resources,
                 plan.per_item_calls,
+                plan.function_calls || plan.effect_calls || plan.per_item_calls,
             )
         } else {
             Default::default()
@@ -161,6 +158,7 @@ pub(crate) fn collect_file_facts_from_program(
         eager_require_specifiers: import_facts.eager_require_specifiers,
         imported_bindings: import_facts.imported_bindings,
         exported_bindings: import_facts.exported_bindings,
+        value_flow: import_facts.value_flow,
         callable_aliases: import_facts.callable_aliases,
         star_reexport_specifiers: import_facts.star_reexport_specifiers,
         per_item_calls: import_facts.per_item_calls,

@@ -18,6 +18,7 @@ impl DepGraph {
                 .map(|target| vec![target]),
             ExportedCallableResolution::Absent => None,
             ExportedCallableResolution::ExternalModuleExport(_, _)
+            | ExportedCallableResolution::Value(_, _)
             | ExportedCallableResolution::Unknown => Some(Vec::new()),
         }
     }

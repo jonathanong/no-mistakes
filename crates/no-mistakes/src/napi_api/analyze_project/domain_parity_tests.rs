@@ -70,3 +70,5 @@ include!("domain_parity_tests/postgres_identifier.rs");
 
 include!("domain_parity_tests/postgres_shapes.rs");
 include!("domain_parity_tests/postgres_writes.rs");
+
+include!("domain_parity_tests/effects_provenance.rs");

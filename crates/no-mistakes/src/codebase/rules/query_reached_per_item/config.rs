@@ -21,11 +21,16 @@ pub(super) struct Allowance {
 /// Index selectors once per family; every occurrence uses the prepared binding.
 pub(super) struct Sinks<'a> {
     config: &'a EffectKindConfig,
+    returned: crate::fx::FxHashMap<&'a str, crate::fx::FxHashSet<&'a str>>,
+    nodes: crate::fx::FxHashSet<crate::codebase::dependencies::graph::NodeId>,
     targets: crate::fx::FxHashMap<&'a str, crate::fx::FxHashSet<&'a str>>,
 }
 
 impl<'a> Sinks<'a> {
-    pub(super) fn new(config: &'a EffectKindConfig) -> Self {
+    pub(super) fn new(
+        config: &'a EffectKindConfig,
+        graph: &crate::codebase::dependencies::graph::DepGraph,
+    ) -> Self {
         let mut targets: crate::fx::FxHashMap<_, crate::fx::FxHashSet<_>> =
             crate::fx::FxHashMap::default();
         for target in &config.targets {
@@ -34,35 +39,76 @@ impl<'a> Sinks<'a> {
                 .or_default()
                 .insert(target.export.as_str());
         }
-        Self { config, targets }
+        let nodes = config
+            .targets
+            .iter()
+            .flat_map(|target| graph.module_export_nodes(&target.module, &target.export))
+            .collect();
+        let mut returned: crate::fx::FxHashMap<_, crate::fx::FxHashSet<_>> =
+            crate::fx::FxHashMap::default();
+        for target in &config.returned_executors {
+            returned
+                .entry(target.module.as_str())
+                .or_default()
+                .insert(target.export.as_str());
+        }
+        Self {
+            returned,
+            config,
+            targets,
+            nodes,
+        }
     }
 
     pub(super) fn match_site(&self, site: &ResolvedCallSite) -> Option<bool> {
         // Keep legacy spelling/transaction precedence when both selectors match.
-        sink(self.config, &site.source_callee).or_else(|| {
-            let ResolvedCallTarget::ModuleExport {
-                specifier,
-                export_path,
-                ..
-            } = &site.target
-            else {
-                return None;
-            };
-            self.targets
-                .get(specifier.as_str())
-                .is_some_and(|exports| exports.contains(export_path.as_str()))
-                .then_some(false)
-        })
+        sink(self.config, &site.source_callee)
+            .filter(|transaction| {
+                !*transaction
+                    || site.source_callee.contains('.')
+                    || site.returned_from.is_some()
+                    || !matches!(site.target, ResolvedCallTarget::RepositoryFunction { .. })
+            })
+            .or_else(|| {
+                if let Some((specifier, export_path)) = &site.returned_from {
+                    if self
+                        .returned
+                        .get(specifier.as_str())
+                        .is_some_and(|exports| exports.contains(export_path.as_str()))
+                    {
+                        return Some(true);
+                    }
+                }
+                if matches!(site.target, ResolvedCallTarget::RepositoryFunction { .. })
+                    && site
+                        .target_node
+                        .as_ref()
+                        .is_some_and(|node| self.nodes.contains(node))
+                {
+                    return Some(false);
+                }
+                let ResolvedCallTarget::ModuleExport {
+                    specifier,
+                    export_path,
+                    ..
+                } = &site.target
+                else {
+                    return None;
+                };
+                self.targets
+                    .get(specifier.as_str())
+                    .is_some_and(|exports| exports.contains(export_path.as_str()))
+                    .then_some(false)
+            })
     }
 }
 
 pub(super) fn sink(config: &EffectKindConfig, name: &str) -> Option<bool> {
-    if config.transaction_functions.iter().any(|value| {
-        value == name
-            || name
-                .rsplit_once('.')
-                .is_some_and(|(_, terminal)| value == terminal)
-    }) {
+    if config
+        .transaction_functions
+        .iter()
+        .any(|value| value == name)
+    {
         Some(true)
     } else if config
         .functions
@@ -105,9 +151,13 @@ pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<(
             bail!("{RULE_ID}: unknown effects kind `{kind}`");
         };
         anyhow::ensure!(
-            effect.targets.iter().all(|target| {
-                !target.module.trim().is_empty() && !target.export.trim().is_empty()
-            }),
+            effect
+                .targets
+                .iter()
+                .chain(&effect.returned_executors)
+                .all(|target| {
+                    !target.module.trim().is_empty() && !target.export.trim().is_empty()
+                }),
             "effects kind `{kind}` targets require non-empty module and export"
         );
     }

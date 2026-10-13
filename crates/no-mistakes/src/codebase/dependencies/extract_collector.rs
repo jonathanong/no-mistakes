@@ -21,6 +21,8 @@ struct ImportCollector {
     /// binding target still runs only when the right-hand side has a key.
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool)>,
     function_calls: Vec<FunctionCall>,
+    value_flow: ValueFlowFacts,
+    collect_value_flow: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,
     per_item_ranges: FxHashMap<Option<CallableId>, Vec<PerItemRange>>,

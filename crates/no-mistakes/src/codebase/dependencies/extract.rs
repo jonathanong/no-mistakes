@@ -101,6 +101,9 @@ pub struct FunctionCall {
 }
 
 include!("extract_kinds.rs");
+#[path = "extract_value_flow.rs"]
+mod extract_value_flow;
+
 include!("extract_per_item.rs");
 
 #[derive(Debug, Clone, PartialEq, Eq)]

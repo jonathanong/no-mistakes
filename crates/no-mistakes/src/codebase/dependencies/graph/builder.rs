@@ -7,6 +7,7 @@ pub struct DepGraph {
     /// every selected file/Vitest root.
     callable_nodes_by_file: FxHashMap<PathBuf, Vec<NodeId>>,
     callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
+    module_files: FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: Vec<ResolvedCallSite>,
     /// Classes with a statically named `extends` base, in file order. Empty
     /// unless the graph was built with [`GraphBuildPlan::extends`].
