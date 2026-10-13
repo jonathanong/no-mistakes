@@ -293,6 +293,5 @@ fn next_project_root(path: &Path) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    include!("plan_extra_inputs/tests.rs");
-}
+#[path = "plan_extra_inputs_tests.rs"]
+mod tests;
