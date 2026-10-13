@@ -35,5 +35,29 @@ The ordinary CI tests provide broader behavior validation.
 
 This is two paired observations, not a build-time guarantee. The addon step
 rebuilds the library with N-API enabled after the CLI build, so its timing does
-not represent a clean standalone JavaScript job. These results predate the
-latest-stable compiler policy; a Rust 1.99 confirmation run is being collected.
+not represent a clean standalone JavaScript job. These results use the previous pinned compiler. The same comparison was
+repeated on Rust 1.99 after the latest-stable policy changed, as recorded below.
+
+
+## Rust 1.99 confirmation
+
+[Run 38333716822](https://github.com/jonathanong/no-mistakes/actions/runs/38333716822)
+used the same production source and reversed-order design, changing only the
+measurement workflow to install Rust 1.99.0 (LLVM 23.1.1). Its measurement commit
+was `09492537c61143aa3e893d8c1d8fc4d9e8bfb486`.
+
+| Workload | Runner A: debug 2 / 0 | Runner B: debug 2 / 0 |
+| --- | --- | --- |
+| Clean CLI wall time | 153.74 / 115.20 s | 174.58 / 140.54 s |
+| CLI user + system CPU | 373.56 / 272.60 s | 455.58 / 355.56 s |
+| CLI peak RSS | 8,142,892 / 5,214,376 KiB | 7,720,372 / 5,447,676 KiB |
+| Addon wall time after CLI build | 90.53 / 58.43 s | 97.93 / 65.33 s |
+| Addon user + system CPU | 162.49 / 98.18 s | 189.58 / 121.46 s |
+| Addon peak RSS | 7,839,504 / 5,540,288 KiB | 7,992,332 / 5,614,572 KiB |
+
+CLI size fell from 1,219,707,480 to 308,865,720 bytes; addon size from
+1,163,613,904 to 288,184,704 bytes. Complete target-directory size fell from
+6,968,360,260 to 2,465,067,906 bytes, identically on both runners. Version
+outputs and async addon responses matched. Clean CLI builds were 34–39 seconds
+faster; the dependency-warm addon rebuild was 32–33 seconds faster. These are
+again two paired observations with the scope and limitations stated above.
