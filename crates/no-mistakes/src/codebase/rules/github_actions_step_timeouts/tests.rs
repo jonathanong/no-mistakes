@@ -300,6 +300,30 @@ fn flow_style_parallel_and_jobs_use_declaration_lines() {
 }
 
 #[test]
+fn flow_step_mapping_with_parallel_uses_group_line() {
+    let findings = run("flow-step-mapping", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("flow-step-mapping-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn name_alias_does_not_hide_block_parallel_child_line() {
+    let findings = run("alias-name-parallel", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert!(run("alias-name-parallel-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn flow_jobs_steps_and_parallel_share_declaration_line() {
+    let findings = run("flow-all", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 2);
+    assert!(run("flow-all-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn next_line_flow_collections_use_declaration_lines() {
     for (scenario, line) in [
         ("next-line-flow-steps", 5),

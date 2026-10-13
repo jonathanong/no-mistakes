@@ -30,6 +30,14 @@ pub(super) fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
 }
 
 pub(super) fn is_inline_value_line(line: &str) -> bool {
+    if let Some(item) = line.trim_start().strip_prefix("- ") {
+        if item.starts_with('{') {
+            return true;
+        }
+        return yaml_key_value(line).is_some_and(|(key, value)| {
+            key == "parallel" && value_after_anchor(value).starts_with(&['*', '[', '{'][..])
+        });
+    }
     yaml_key_value(line)
         .is_some_and(|(_, value)| value_after_anchor(value).starts_with(&['*', '[', '{'][..]))
 }
