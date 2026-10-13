@@ -21,6 +21,18 @@ pub(super) fn is_expression(value: &Value) -> bool {
     })
 }
 
+fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
+    let text = line.trim_start();
+    let text = text.strip_prefix("- ").unwrap_or(text);
+    let (key, value) = text.split_once(':')?;
+    let key = key.trim().trim_matches(['\'', '"']);
+    (!key.is_empty() && !key.starts_with('#')).then_some((key, value.trim()))
+}
+
+fn is_alias_line(line: &str) -> bool {
+    yaml_key_value(line).is_some_and(|(_, value)| value.starts_with('*'))
+}
+
 // Locate the sequence entry instead of the first timeout key, so line suppressions
 // work on workflows with several steps.
 pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usize> {
@@ -35,9 +47,11 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
     for (line_number, line) in source.lines().enumerate() {
         let indent = line.len() - line.trim_start_matches(' ').len();
         let trimmed = line.trim_start();
-        let key = trimmed.split('#').next().unwrap_or(trimmed).trim_end();
         if jobs_indent.is_none() {
-            if indent == 0 && key == "jobs:" {
+            if indent == 0 && yaml_key_value(line).is_some_and(|(key, _)| key == "jobs") {
+                if is_alias_line(line) {
+                    return Some(line_number + 1);
+                }
                 jobs_indent = Some(indent);
             }
             continue;
@@ -53,12 +67,12 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
-            let Some((candidate, value)) = key.split_once(':') else {
+            let Some((candidate, value)) = yaml_key_value(line) else {
                 continue;
             };
             let depth = *job_key_indent.get_or_insert(indent);
-            if indent == depth && candidate.trim_matches(['\'', '"']) == job_id {
-                if value.trim_start().starts_with('*') {
+            if indent == depth && candidate == job_id {
+                if value.starts_with('*') {
                     return Some(line_number + 1);
                 }
                 job_indent = Some(indent);
@@ -72,7 +86,13 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
         {
             job_child_indent = Some(indent);
         }
-        if !found_steps && indent == job_child_indent.unwrap_or(usize::MAX) && key == "steps:" {
+        if !found_steps
+            && indent == job_child_indent.unwrap_or(usize::MAX)
+            && yaml_key_value(line).is_some_and(|(key, _)| key == "steps")
+        {
+            if is_alias_line(line) {
+                return Some(line_number + 1);
+            }
             steps_indent = Some(indent);
             found_steps = true;
             continue;
@@ -104,6 +124,9 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
 pub(super) fn step_line_path(source: &str, job_id: &str, path: &[usize]) -> Option<usize> {
     let (first, rest) = path.split_first()?;
     let mut line = step_line(source, job_id, *first)?;
+    if source.lines().nth(line - 1).is_some_and(is_alias_line) {
+        return Some(line);
+    }
     for index in rest {
         line = parallel_child_line(source, line, *index)?;
     }
@@ -114,7 +137,8 @@ fn parallel_child_line(source: &str, parent_line: usize, index: usize) -> Option
     let lines: Vec<&str> = source.lines().collect();
     let parent = *lines.get(parent_line.checked_sub(1)?)?;
     let parent_indent = parent.len() - parent.trim_start_matches(' ').len();
-    let inline = parent.trim_start().starts_with("- parallel:");
+    let inline = parent.trim_start().starts_with("- ")
+        && yaml_key_value(parent).is_some_and(|(key, _)| key == "parallel");
     let mut key = inline.then_some((parent_line - 1, parent_indent + 2));
     if key.is_none() {
         for (line_index, line) in lines.iter().enumerate().skip(parent_line) {
@@ -123,13 +147,16 @@ fn parallel_child_line(source: &str, parent_line: usize, index: usize) -> Option
             if indent <= parent_indent && !trimmed.is_empty() && !trimmed.starts_with('#') {
                 break;
             }
-            if trimmed.split('#').next().unwrap_or(trimmed).trim_end() == "parallel:" {
+            if yaml_key_value(line).is_some_and(|(key, _)| key == "parallel") {
                 key = Some((line_index, indent));
                 break;
             }
         }
     }
     let (key_line, key_indent) = key?;
+    if is_alias_line(lines[key_line]) {
+        return Some(key_line + 1);
+    }
     let mut item_indent = None;
     let mut seen = 0;
     for (line_index, line) in lines.iter().enumerate().skip(key_line + 1) {

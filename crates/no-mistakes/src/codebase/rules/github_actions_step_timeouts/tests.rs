@@ -232,6 +232,14 @@ fn aliased_job_reports_inherited_steps_on_alias_line() {
 }
 
 #[test]
+fn quoted_and_anchored_mapping_keys_keep_nested_locations() {
+    let findings = run("decorated-keys", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 11);
+    assert!(run("decorated-keys-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn matrix_steps_do_not_shift_executable_step_location() {
     let findings = run("matrix-steps", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

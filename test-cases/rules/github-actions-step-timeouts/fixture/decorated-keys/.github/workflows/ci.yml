@@ -1,0 +1,11 @@
+name: CI
+"jobs":
+  build:
+    runs-on: ubuntu-latest
+    "steps": &shared_steps
+      - "parallel": &group
+          # no-mistakes-disable-next-line github-actions-step-timeouts
+          - run: echo missing
+  alt:
+    runs-on: ubuntu-latest
+    "steps": *shared_steps
