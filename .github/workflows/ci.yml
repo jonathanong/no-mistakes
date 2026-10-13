@@ -174,6 +174,10 @@ jobs:
         timeout-minutes: 2
         run: pnpm run lint:js
 
+      - name: Check code duplication
+        timeout-minutes: 3
+        run: pnpm run lint:duplicates
+
       - name: Run CSpell
         timeout-minutes: 5
         run: pnpm run lint:spell

@@ -182,6 +182,11 @@ complexity gate runs `cargo crap --workspace --missing optimistic --fail-above
 --threshold 30 --summary` without LCOV: assuming full coverage makes CRAP equal
 cyclomatic complexity, including source omitted from the coverage report.
 
+Run `pnpm run lint:duplicates` to check for copied blocks of at least 30 lines
+and functions with at least 80% structural similarity. CI runs the same jscpd
+check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)
+for its scope and how to fix findings.
+
 Native CI builds and platform tests omit Rust debug metadata to keep compilation
 within their ten-minute step deadlines. Development and test profiles use the same
 setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;

@@ -1,0 +1,10 @@
+{
+  "path": ["."],
+  "format": ["javascript", "typescript"],
+  "minLines": 30,
+  "minTokens": 50,
+  "mode": "weak",
+  "exitCode": 1,
+  "failOnEmpty": true,
+  "reporters": ["json"]
+}

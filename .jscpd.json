@@ -1,0 +1,31 @@
+{
+  "path": ["crates", "packages", "crates/no-mistakes/src/tests"],
+  "similarity": 0.8,
+  "minLines": 30,
+  "minTokens": 50,
+  "minNodes": 20,
+  "mode": "weak",
+  "format": ["rust", "javascript", "jsx", "typescript", "tsx"],
+  "crossFormats": "js-ts",
+  "exitCode": 1,
+  "failOnEmpty": true,
+  "reporters": ["console"],
+  "ignore": [
+    "**/crates/no-mistakes/tests/**",
+    "**/src/?*/tests/**",
+    "**/test/**",
+    "**/tests.rs",
+    "**/tests_*.rs",
+    "**/*_tests.rs",
+    "**/test_support.rs",
+    "**/*_test_support.rs",
+    "**/*_test_helpers.rs",
+    "**/test_support/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/fixtures/**",
+    "**/test-cases/**",
+    "**/node_modules/**",
+    "**/target/**"
+  ]
+}

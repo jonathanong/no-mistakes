@@ -1,5 +1,31 @@
 checks:
   commands:
+    - name: jscpd
+      include:
+        - "crates/**/*.rs"
+        - "packages/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"
+        - .jscpd.json
+        - package.json
+        - pnpm-lock.yaml
+      exclude:
+        - "**/crates/no-mistakes/tests/**"
+        - "**/src/?*/tests/**"
+        - "**/test/**"
+        - "**/tests.rs"
+        - "**/tests_*.rs"
+        - "**/*_tests.rs"
+        - "**/test_support.rs"
+        - "**/*_test_support.rs"
+        - "**/*_test_helpers.rs"
+        - "**/test_support/**"
+        - "**/*.test.*"
+        - "**/*.spec.*"
+        - "**/fixtures/**"
+        - "**/test-cases/**"
+        - "**/node_modules/**"
+        - "**/target/**"
+      command: [pnpm, run, "lint:duplicates"]
+      fileArgs: none
     - name: oxlint
       include:
         - "packages/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"

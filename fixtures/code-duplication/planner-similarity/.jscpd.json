@@ -1,0 +1,12 @@
+{
+  "path": ["crates"],
+  "format": ["rust"],
+  "similarity": 0.8,
+  "minLines": 30,
+  "minTokens": 50,
+  "minNodes": 20,
+  "mode": "weak",
+  "exitCode": 1,
+  "failOnEmpty": true,
+  "reporters": ["json"]
+}
