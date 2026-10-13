@@ -470,7 +470,7 @@ jobs:
 
       - name: Install cargo-llvm-cov
         timeout-minutes: 5
-        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-llvm-cov
 
@@ -549,7 +549,7 @@ jobs:
 
       - name: Install cargo-crap
         timeout-minutes: 5
-        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-crap
 
@@ -885,7 +885,7 @@ jobs:
         # A cache hit finishes quickly. The first run on this runner, and the
         # first run after a libc6 update, installs valgrind and libc6-dbg.
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        uses: CodSpeedHQ/action@c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5 # v5.4.0
         with:
           mode: ${{ matrix.mode }}
           # actions/cache versions entries by path, so this also keys the cache by libc6.
