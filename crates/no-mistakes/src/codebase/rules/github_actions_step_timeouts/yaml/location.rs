@@ -1,4 +1,4 @@
-use super::{is_inline_value_line, yaml_key_value};
+use super::{is_inline_value_line, value_after_anchor, yaml_key_value};
 
 mod parallel;
 use parallel::parallel_child_line;
@@ -17,7 +17,9 @@ pub(super) fn has_child_flow(lines: &[&str], key: (usize, usize), opening: char)
         .iter()
         .skip(key.0 + 1)
         .find(|line| is_content(line))
-        .is_some_and(|line| indent(line) > key.1 && line.trim_start().starts_with(opening))
+        .is_some_and(|line| {
+            indent(line) > key.1 && value_after_anchor(line.trim_start()).starts_with(opening)
+        })
 }
 
 fn find_jobs_line(lines: &[&str]) -> Option<(usize, usize)> {
