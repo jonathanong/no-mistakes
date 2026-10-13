@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
-const { readFileSync } = require("node:fs");
+const { readFileSync, existsSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 
@@ -57,14 +57,20 @@ test("CI and release both use the shared test and doctest scopes", () => {
     const workflow = readFileSync(path.join(root, ".github/workflows", file), "utf8");
     const body = workflow.split(`\n  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
     assert.ok(body, `${file} must retain ${job}`);
+    const prefix = job === "validate-rust" ? "validation-tools/" : "";
     for (const mode of ["build", "test", "doc"]) {
       assert.match(
         body,
-        new RegExp(`bash \\.github/scripts/rust-validation\\.sh ${mode}(?:\\n|$)`),
+        new RegExp(`bash ${prefix}\\.github/scripts/rust-validation\\.sh ${mode}(?:\\n|$)`),
       );
     }
-    assert.match(workflow, /node --test \.github\/scripts\/rust-validation\.test\.cjs/);
-    assert.doesNotMatch(workflow, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
+    assert.match(
+      workflow,
+      new RegExp(`node --test ${prefix}\\.github/scripts/rust-validation\\.test\\.cjs`),
+    );
+    const overrides = [...workflow.matchAll(/CARGO_PROFILE_(?:DEV|TEST)_DEBUG: (.+)/g)];
+    for (const [, value] of overrides) assert.equal(value, '"0"');
+    if (job === "tests") assert.equal(overrides.length, 0);
   }
 });
 
@@ -84,4 +90,42 @@ test("pre-push Clippy uses the workflow scope", () => {
     hook,
     /cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
   );
+});
+
+test("release validation tools come from the workflow without replacing tagged Rust source", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
+  const body = workflow.split("\n  validate-rust:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const checkout = body
+    .split("- name: Checkout validation tooling\n")[1]
+    ?.split("\n      - name:")[0];
+  assert.ok(checkout);
+  assert.match(checkout, /ref: \$\{\{ github\.workflow_sha \}\}/);
+  assert.match(checkout, /path: validation-tools/);
+  assert.match(checkout, /persist-credentials: false/);
+  assert.match(checkout, /fetch-depth: 1/);
+  assert.doesNotMatch(checkout, /sparse-checkout/);
+  assert.doesNotMatch(body, /working-directory:/);
+  for (const profile of ["DEV", "TEST"])
+    assert.match(body, new RegExp(`CARGO_PROFILE_${profile}_DEBUG: "0"`));
+});
+
+test("shared tooling validates a historical release directory without local helpers", () => {
+  const historical = path.join(root, "test-cases/rust-validation/fixture/historical-release");
+  assert.equal(existsSync(path.join(historical, ".github/scripts/rust-validation.sh")), false);
+  const result = spawnSync(
+    "bash",
+    [path.join(root, ".github/scripts/rust-validation.sh"), "test"],
+    {
+      cwd: historical,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${fixture}${path.delimiter}${process.env.PATH}`,
+        RUST_VALIDATION_FIXTURE_PRINT_CWD: "1",
+        RUST_VALIDATION_FIXTURE_STATUS: "0",
+      },
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim().split("\n")[0], historical);
 });

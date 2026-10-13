@@ -174,6 +174,10 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 50
+    env:
+      # Resumed tags may predate the workspace profile defaults.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
     permissions:
       contents: read
     steps:
@@ -199,6 +203,17 @@ jobs:
       - name: Extract prepared source
         timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
+
+      # Validation tools belong to the running workflow, even when the release
+      # source is an older tag. Never overlay current Rust source onto that tag.
+      - name: Checkout validation tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: validation-tools
+          persist-credentials: false
+          fetch-depth: 1
 
       - name: Install Rust
         timeout-minutes: 5
@@ -273,7 +288,7 @@ jobs:
 
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs
+        run: node --test validation-tools/.github/scripts/rust-validation.test.cjs
 
       - name: Check formatting
         timeout-minutes: 5
@@ -309,15 +324,15 @@ jobs:
       # Build and run separately, like CI: compiling alone takes most of a combined budget.
       - name: Build Rust tests
         timeout-minutes: 20
-        run: bash .github/scripts/rust-validation.sh build
+        run: bash validation-tools/.github/scripts/rust-validation.sh build
 
       - name: Run Rust tests
         timeout-minutes: 15
-        run: bash .github/scripts/rust-validation.sh test
+        run: bash validation-tools/.github/scripts/rust-validation.sh test
 
       - name: Run Rust doctests
         timeout-minutes: 5
-        run: bash .github/scripts/rust-validation.sh doc
+        run: bash validation-tools/.github/scripts/rust-validation.sh doc
 
       # Test executables retain code even with debugger symbols disabled;
       # reclaim their disk space before package verification builds. They are not reused after the tests ran, and rust-cache never
