@@ -28,8 +28,9 @@ job's `steps` array, such as `path#jobId#2`. An allow entry permits an absent or
 expression timeout; malformed literal values still fail. Its optional
 `maxMinutes` overrides the ordinary cap for a literal timeout, but cannot
 exceed 360. Blank reasons, duplicate entries, and stale entries in scanned
-workflows are findings. An entry is stale if its step already has a valid
-literal timeout within the ordinary cap. For a step inside `parallel`, append
+workflows are findings. A raising entry is stale if its step already has a valid
+literal timeout within the ordinary cap; a lower cap stays active as a stricter
+limit. For a step inside `parallel`, append
 `/childId` or a 1-based child position to its group's selector; for example,
 `.github/workflows/ci.yml#build#2/frontend` or
 `.github/workflows/ci.yml#build#2/1`.

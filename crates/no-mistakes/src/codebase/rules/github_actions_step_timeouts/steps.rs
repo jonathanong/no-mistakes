@@ -78,9 +78,10 @@ impl StepScan<'_> {
             (Some(_), None, _) => self.findings.push(finding(self.rel, line,
                 format!("{}: job \"{}\" step \"{label}\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)", self.rel, self.job_id), Some(key))),
             (Some(_), Some(minutes), allowed) => {
-                let cap = allowed.and_then(|entry| entry.max_minutes).unwrap_or(self.opts.max_minutes).min(GITHUB_MAX_MINUTES);
-                if allowed.is_some_and(|entry| entry.max_minutes.is_some_and(|max| max.min(GITHUB_MAX_MINUTES) > self.opts.max_minutes))
-                    && minutes > self.opts.max_minutes {
+                let ordinary_cap = self.opts.max_minutes.min(GITHUB_MAX_MINUTES);
+                let override_cap = allowed.and_then(|entry| entry.max_minutes).map(|max| max.min(GITHUB_MAX_MINUTES));
+                let cap = override_cap.unwrap_or(ordinary_cap);
+                if override_cap.is_some_and(|max| max < ordinary_cap || (max > ordinary_cap && minutes > ordinary_cap)) {
                     self.used.insert(key.to_string());
                 }
                 if minutes > cap {

@@ -9,7 +9,10 @@ fn find_parallel_key(lines: &[&str], parent: usize) -> Option<(usize, usize)> {
     {
         return Some((parent, parent_depth + 2));
     }
-    let mut child_indent = None;
+    let mut child_indent = parent_line
+        .trim_start()
+        .strip_prefix("- ")
+        .map(|rest| parent_depth + 2 + rest.len() - rest.trim_start_matches(' ').len());
     for (index, line) in lines.iter().enumerate().skip(parent + 1) {
         if !is_content(line) {
             continue;

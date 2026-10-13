@@ -119,6 +119,22 @@ allow:
 }
 
 #[test]
+fn lower_allow_cap_is_active_without_a_stale_finding() {
+    let findings = run(
+        "lower-cap",
+        r#"
+maxMinutes: 30
+allow:
+  - step: ".github/workflows/ci.yml#build#slow"
+    reason: "This step has a stricter deadline."
+    maxMinutes: 10
+"#,
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("over the 10-minute cap"));
+}
+
+#[test]
 fn allow_does_not_accept_invalid_literal_timeouts() {
     let findings = run(
         "invalid",
@@ -184,6 +200,14 @@ fn parallel_group_checks_nested_executable_steps() {
         Some(".github/workflows/ci.yml#build#1/frontend")
     );
     assert!(run("parallel-suppressed", "{}").is_empty());
+}
+
+#[test]
+fn multiline_parallel_name_keeps_child_step_location() {
+    let findings = run("multiline-parallel", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 10);
+    assert!(run("multiline-parallel-suppressed", "{}").is_empty());
 }
 
 #[test]
