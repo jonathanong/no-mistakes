@@ -1,5 +1,5 @@
 use super::super::{is_inline_value_line, yaml_key_value};
-use super::{indent, is_content, sequence_item_line};
+use super::{has_child_flow, indent, is_content, sequence_item_line};
 
 fn find_parallel_key(lines: &[&str], parent: usize) -> Option<(usize, usize)> {
     let parent_line = *lines.get(parent)?;
@@ -32,7 +32,7 @@ fn find_parallel_key(lines: &[&str], parent: usize) -> Option<(usize, usize)> {
 pub(super) fn parallel_child_line(source: &str, parent_line: usize, index: usize) -> Option<usize> {
     let lines: Vec<_> = source.lines().collect();
     let key = find_parallel_key(&lines, parent_line.checked_sub(1)?)?;
-    if is_inline_value_line(lines[key.0]) {
+    if is_inline_value_line(lines[key.0]) || has_child_flow(&lines, key, '[') {
         return Some(key.0 + 1);
     }
     sequence_item_line(&lines, key, index)

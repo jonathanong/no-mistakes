@@ -290,6 +290,20 @@ fn flow_style_parallel_and_jobs_use_declaration_lines() {
 }
 
 #[test]
+fn next_line_flow_collections_use_declaration_lines() {
+    for (scenario, line) in [
+        ("next-line-flow-steps", 5),
+        ("next-line-flow-parallel", 6),
+        ("next-line-flow-jobs", 2),
+    ] {
+        let findings = run(scenario, "{}");
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+        assert_eq!(findings[0].line, line);
+        assert!(run(&format!("{scenario}-suppressed"), "{}").is_empty());
+    }
+}
+
+#[test]
 fn indented_root_mapping_keeps_step_location() {
     let findings = run("indented-root", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

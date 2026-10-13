@@ -12,6 +12,14 @@ fn is_content(line: &str) -> bool {
     !line.is_empty() && !line.starts_with('#')
 }
 
+pub(super) fn has_child_flow(lines: &[&str], key: (usize, usize), opening: char) -> bool {
+    lines
+        .iter()
+        .skip(key.0 + 1)
+        .find(|line| is_content(line))
+        .is_some_and(|line| indent(line) > key.1 && line.trim_start().starts_with(opening))
+}
+
 fn find_jobs_line(lines: &[&str]) -> Option<(usize, usize)> {
     let root_indent = lines
         .iter()
@@ -95,15 +103,15 @@ pub(super) fn sequence_item_line(
 pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usize> {
     let lines: Vec<_> = source.lines().collect();
     let jobs = find_jobs_line(&lines)?;
-    if is_inline_value_line(lines[jobs.0]) {
+    if is_inline_value_line(lines[jobs.0]) || has_child_flow(&lines, jobs, '{') {
         return Some(jobs.0 + 1);
     }
     let job = find_job_line(&lines, jobs, job_id)?;
-    if is_inline_value_line(lines[job.0]) {
+    if is_inline_value_line(lines[job.0]) || has_child_flow(&lines, job, '{') {
         return Some(job.0 + 1);
     }
     let steps = find_steps_line(&lines, job)?;
-    if is_inline_value_line(lines[steps.0]) {
+    if is_inline_value_line(lines[steps.0]) || has_child_flow(&lines, steps, '[') {
         return Some(steps.0 + 1);
     }
     sequence_item_line(&lines, steps, index)
@@ -112,7 +120,12 @@ pub(super) fn step_line(source: &str, job_id: &str, index: usize) -> Option<usiz
 pub(crate) fn step_line_path(source: &str, job_id: &str, path: &[usize]) -> Option<usize> {
     let (first, rest) = path.split_first()?;
     let mut line = step_line(source, job_id, *first)?;
-    if is_inline_value_line(source.lines().nth(line - 1)?) {
+    let lines: Vec<_> = source.lines().collect();
+    let key = (line - 1, indent(lines[line - 1]));
+    if is_inline_value_line(lines[key.0])
+        || has_child_flow(&lines, key, '[')
+        || has_child_flow(&lines, key, '{')
+    {
         return Some(line);
     }
     for index in rest {
