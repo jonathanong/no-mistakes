@@ -73,7 +73,7 @@ fn many_sibling_mismatches_keep_their_owners_and_source_order() {
         let (_, parsed) = block(&sql);
         assert!(!parsed.complete);
         assert_eq!(parsed.occurrences.len(), count * 2 + 3);
-        for pair in parsed.occurrences[..count * 2].chunks_exact(2) {
+        for pair in parsed.occurrences[..count * 2].as_chunks::<2>().0 {
             let mismatch = pair[0].occurrences.last().unwrap();
             assert_eq!(
                 mismatch.kind,

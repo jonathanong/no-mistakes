@@ -97,7 +97,7 @@ fn service_host_bindings(
 }
 
 fn static_host_binding(port: &str) -> Option<String> {
-    let (mapping, protocol) = port.split_once('/').map_or((port, "tcp"), |parts| parts);
+    let (mapping, protocol) = port.split_once('/').unwrap_or((port, "tcp"));
     let mut parts = mapping.split(':');
     let host = parts.next()?;
     let container = parts.next()?;

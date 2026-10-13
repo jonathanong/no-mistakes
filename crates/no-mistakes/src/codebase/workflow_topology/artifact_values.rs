@@ -33,10 +33,9 @@ fn artifact_action(uses: &str) -> Option<ArtifactAction> {
     let rest = lower.strip_prefix("actions/")?;
     let (action, ref_part) = if let Some(rest) = rest.strip_prefix("upload-artifact@") {
         (ArtifactAction::Upload, rest)
-    } else if let Some(rest) = rest.strip_prefix("download-artifact@") {
-        (ArtifactAction::Download, rest)
     } else {
-        return None;
+        let rest = rest.strip_prefix("download-artifact@")?;
+        (ArtifactAction::Download, rest)
     };
     (!ref_part.is_empty() && !ref_part.contains('/')).then_some(action)
 }
