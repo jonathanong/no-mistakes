@@ -10,7 +10,8 @@
   "failOnEmpty": true,
   "reporters": ["console"],
   "ignore": [
-    "**/tests/**",
+    "**/crates/no-mistakes/tests/**",
+    "**/src/?*/tests/**",
     "**/test/**",
     "**/tests.rs",
     "**/tests_*.rs",

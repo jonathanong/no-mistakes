@@ -8,7 +8,8 @@ checks:
         - package.json
         - pnpm-lock.yaml
       exclude:
-        - "**/tests/**"
+        - "**/crates/no-mistakes/tests/**"
+        - "**/src/?*/tests/**"
         - "**/test/**"
         - "**/tests.rs"
         - "**/tests_*.rs"

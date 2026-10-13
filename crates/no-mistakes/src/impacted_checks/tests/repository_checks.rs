@@ -104,10 +104,12 @@ fn repository_quality_checks_stay_scoped_and_skip_empty_changes() {
 }
 
 #[test]
-fn repository_duplicate_gate_excludes_test_helpers_but_keeps_integration_analyzers() {
+fn repository_duplicate_gate_excludes_test_helpers_but_keeps_production_analyzers() {
     for file in [
         "crates/no-mistakes/src/test_support.rs",
         "crates/no-mistakes/src/codebase/dependencies/graph/test_support/graph_files.rs",
+        "crates/no-mistakes/src/impacted_checks/tests/repository_checks.rs",
+        "crates/no-mistakes/tests/cli.rs",
         "packages/eslint-plugin-no-mistakes/test/helpers.mjs",
     ] {
         assert!(
@@ -116,12 +118,16 @@ fn repository_duplicate_gate_excludes_test_helpers_but_keeps_integration_analyze
             "{file}"
         );
     }
-    assert_eq!(
-        command_strings(&repository_report(&[
-            "crates/no-mistakes/src/integration_tests/project_config/parse.rs",
-        ])),
-        ["pnpm run lint:duplicates"]
-    );
+    for file in [
+        "crates/no-mistakes/src/tests/plan/framework.rs",
+        "crates/no-mistakes/src/integration_tests/project_config/parse.rs",
+    ] {
+        assert_eq!(
+            command_strings(&repository_report(&[file])),
+            ["pnpm run lint:duplicates"],
+            "{file}"
+        );
+    }
 }
 
 #[test]
