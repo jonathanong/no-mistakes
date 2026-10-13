@@ -37,3 +37,27 @@ normalized changed-file list in their result metadata, including an empty list.
 Use `fileArgs: none` for whole-project checks (typecheck, format-check) and
 `fileArgs: append` for per-file linters.
 Every `command` must start with a non-blank executable token.
+
+For Oxlint, declaration files need to match the configured globs too. Use the
+same script as CI when configuration changes or deleted files should revalidate
+the whole lint scope:
+
+```yaml
+checks:
+  commands:
+    - name: oxlint
+      include:
+        - "packages/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"
+        - "vitest.config.js"
+        - ".oxlintrc.json"
+        - "package.json"
+        - "pnpm-lock.yaml"
+      command: ["pnpm", "run", "lint:js"]
+      fileArgs: none
+```
+
+The `ts` glob also matches `.d.ts`. `fileArgs: none` avoids passing configuration
+files to a per-file linter and retains the command when a matched file is
+deleted. Configure formatting, spelling, and other validators separately using
+their actual input scopes and configuration paths. `impacted-checks` does not
+discover generic commands from package scripts or CI workflows.

@@ -1,3 +1,38 @@
+checks:
+  commands:
+    - name: oxlint
+      include:
+        - "packages/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"
+        - vitest.config.js
+        - .oxlintrc.json
+        - package.json
+        - pnpm-lock.yaml
+      exclude:
+        - "packages/**/{node_modules,vendor,coverage}/**"
+      command: [pnpm, run, "lint:js"]
+      fileArgs: none
+    - name: oxfmt
+      include:
+        - "packages/**"
+        - vitest.config.js
+        - .oxfmtrc.json
+        - package.json
+        - pnpm-lock.yaml
+      exclude:
+        - "packages/**/{node_modules,vendor,coverage}/**"
+      command: [pnpm, run, "fmt:js:check"]
+      fileArgs: none
+    - name: cspell
+      include:
+        - README.md
+        - "docs/**/*.md"
+        - "packages/*/README.md"
+        - cspell.config.yaml
+        - package.json
+        - pnpm-lock.yaml
+      command: [pnpm, run, "lint:spell"]
+      fileArgs: none
+
 rules:
   - rule: github-actions-pinned-hash
     scope: repository

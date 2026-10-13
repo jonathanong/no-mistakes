@@ -5,6 +5,19 @@ files: test commands derived from the [`tests plan`](tests-plan.md) engine plus
 generic checks (lint, typecheck, …) from the [`checks`](../configuration/checks.md)
 config block.
 
+Generic checks are explicit: the command does not infer lint or formatting
+commands from `package.json`, linter configuration, or CI workflows. A selected
+test command does not imply that lint has been covered. Configure each local
+validation command in `checks.commands`.
+
+This repository configures Oxlint for package JavaScript/TypeScript (including
+`.d.ts` declarations) and `vitest.config.js`, JavaScript formatting for package
+files and `vitest.config.js`, and CSpell for its documented spelling scope.
+Changes to the corresponding tool configuration, root package manifest, or
+lockfile also select those checks. Commands use the same whole-project scripts
+as CI, without appending changed paths; deleted files still select validation.
+These entries do not model every CI job.
+
 ```sh
 no-mistakes impacted-checks src/api/handler.ts --format paths
 no-mistakes impacted-checks --base origin/main --json
