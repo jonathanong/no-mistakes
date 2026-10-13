@@ -174,6 +174,10 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 50
+    env:
+      # Resumed tags may predate the workspace profile defaults.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
     permissions:
       contents: read
     steps:
@@ -282,6 +286,10 @@ jobs:
           }
           NODE
 
+      - name: Check Rust validation parity
+        timeout-minutes: 2
+        run: node --test validation-tools/.github/scripts/rust-validation.test.cjs
+
       - name: Check formatting
         timeout-minutes: 5
         run: cargo fmt --all -- --check
@@ -296,7 +304,7 @@ jobs:
 
       - name: Run Clippy
         timeout-minutes: 10
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
       - name: Record Rust disk usage after Clippy
         timeout-minutes: 1
@@ -332,7 +340,7 @@ jobs:
 
       - name: Build Rust tests
         timeout-minutes: 20
-        run: cargo test --all-features --no-run
+        run: bash validation-tools/.github/scripts/rust-validation.sh build
 
       - name: Record Rust disk usage after test build
         timeout-minutes: 1
@@ -340,11 +348,14 @@ jobs:
 
       - name: Run Rust tests
         timeout-minutes: 15
-        run: cargo test --all-features
+        run: bash validation-tools/.github/scripts/rust-validation.sh test
 
-      # Debug test executables (one per test target, with embedded debug info)
-      # fill most of the runner disk, leaving package verification no room to
-      # build. They are not reused after the tests ran, and rust-cache never
+      - name: Run Rust doctests
+        timeout-minutes: 5
+        run: bash validation-tools/.github/scripts/rust-validation.sh doc
+
+      # Test executables retain code even with debugger symbols disabled;
+      # reclaim their disk space before package verification builds. They are not reused after the tests ran, and rust-cache never
       # saves workspace artifacts, so drop them before packaging.
       - name: Drop Rust test executables
         timeout-minutes: 2

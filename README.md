@@ -190,7 +190,17 @@ for its scope and how to fix findings.
 Native CI builds and platform tests omit Rust debug metadata to keep compilation
 within their ten-minute step deadlines. Development and test profiles use the same
 setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
-Linux still runs the full suite and enforces the coverage gates.
+Linux still runs the full suite and enforces the coverage gates. These defaults
+live in the workspace Cargo profiles, including release validation. For local
+debugging, use `CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
+
+CI and release validation share `.github/scripts/rust-validation.sh`: `build` and
+`test` select the locked workspace, all features, libraries, binaries, and integration
+tests; `doc` runs documentation tests separately. Coverage instrumentation stays scoped to
+the coverage build and test steps. Run the shared script locally with Bash to
+reproduce either validation scope. Release resumes use validation tooling from
+the running workflow while retaining the tagged Rust source; see the
+[CI build guide](docs/development/ci-builds.md).
 
 Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
 `suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and

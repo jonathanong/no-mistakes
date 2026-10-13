@@ -1,0 +1,3 @@
+# Historical release manifests predate validation scripts and debug overrides.
+[workspace]
+members = []

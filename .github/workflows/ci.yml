@@ -144,6 +144,10 @@ jobs:
         timeout-minutes: 2
         run: curl --data-binary @codecov.yml https://codecov.io/validate
 
+      - name: Check Rust validation parity
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-validation.test.cjs
+
       - name: Check formatting
         timeout-minutes: 5
         run: cargo fmt --all -- --check
@@ -162,7 +166,7 @@ jobs:
 
       - name: Run Clippy
         timeout-minutes: 10
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
       - name: Record Rust disk usage after Clippy
         timeout-minutes: 1
@@ -229,11 +233,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       id-token: write
-
-    env:
-      # These jobs execute CLI/addon behavior, without consuming native debug metadata.
-      # Keep debug assertions and overflow checks; only omit compiler debug information.
-      CARGO_PROFILE_DEV_DEBUG: "0"
 
     steps:
       - name: Checkout
@@ -314,12 +313,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-    env:
-      # Focused native integration tests avoid the full lib-test harness.
-      # Omit debug metadata without disabling debug assertions or changing
-      # the platform test deadlines.
-      CARGO_PROFILE_DEV_DEBUG: "0"
-      CARGO_PROFILE_TEST_DEBUG: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -460,10 +453,6 @@ jobs:
     timeout-minutes: 20
     permissions:
       id-token: write
-    env:
-      # LLVM coverage maps do not require debugger symbols in ephemeral CI test binaries.
-      CARGO_PROFILE_TEST_DEBUG: "0"
-
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -520,7 +509,7 @@ jobs:
         run: |
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
-          cargo test --workspace --all-features --lib --bins --tests --no-run
+          bash .github/scripts/rust-validation.sh build
 
       - name: Record Rust disk usage after test build
         timeout-minutes: 1
@@ -531,7 +520,11 @@ jobs:
         run: |
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
-          cargo test --workspace --all-features --lib --bins --tests
+          bash .github/scripts/rust-validation.sh test
+
+      - name: Run Rust doctests
+        timeout-minutes: 5
+        run: bash .github/scripts/rust-validation.sh doc
 
       - name: Write Rust coverage report
         id: rust-coverage
@@ -625,11 +618,6 @@ jobs:
     name: AST analysis
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
-    env:
-      # These jobs execute CLI/addon behavior, without consuming native debug metadata.
-      # Keep debug assertions and overflow checks; only omit compiler debug information.
-      CARGO_PROFILE_DEV_DEBUG: "0"
 
     steps:
       - name: Checkout

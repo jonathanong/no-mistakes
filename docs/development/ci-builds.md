@@ -1,12 +1,23 @@
 # Debug metadata in CI builds
 
-The JavaScript API and AST analysis jobs set `CARGO_PROFILE_DEV_DEBUG=0` before
-Rust cache restore and compilation. These jobs execute CLI/addon behavior and
-do not consume debugger metadata. This reduces compilation work and temporary
-artifact size, at the cost of file/line and inline-frame detail in native CI
-backtraces. Debug assertions, overflow checks, features, and optimization levels
-retain their existing settings. Local development and distributed release
-profiles are unaffected.
+Workspace development and test profiles set `debug = 0`, so local builds, CI,
+and release validation omit debugger metadata. This reduces compilation work and
+temporary artifact size, at the cost of file/line and inline-frame detail in
+native backtraces. Debug assertions, overflow checks, features, and optimization
+levels retain their existing settings. Distributed release profiles are unchanged.
+
+For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
+`CARGO_PROFILE_TEST_DEBUG=2` when invoking Cargo to restore debugger symbols.
+
+CI and release validation share `.github/scripts/rust-validation.sh`. Coverage
+instrumentation is applied only to the coverage build and test steps; documentation tests
+run separately in both workflows. Resumed releases may use historical source
+tags without the shared helpers or profile defaults. Release validation checks
+out the running workflow's revision (`github.workflow_sha`) separately into
+`validation-tools`, while Cargo runs against the extracted release source in the
+workspace root. Release job environment overrides enforce the same symbol-free
+profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
+working directory.
 
 ## Hosted measurement
 
