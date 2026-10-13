@@ -290,6 +290,24 @@ fn anchored_multiline_flow_jobs_locates_child_steps() {
 }
 
 #[test]
+fn root_prefixes_preserve_step_lines() {
+    for (scenario, line) in [("bom-jobs", 7), ("yaml-directive-root-flow", 5)] {
+        let findings = run(scenario, "{}");
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:?}");
+        assert_eq!(findings[0].line, line);
+        assert!(run(&format!("{scenario}-suppressed"), "{}").is_empty());
+    }
+}
+
+#[test]
+fn explicit_job_key_preserves_step_line() {
+    let findings = run("explicit-job-key", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 6);
+    assert!(run("explicit-job-key-suppressed", "{}").is_empty());
+}
+
+#[test]
 fn root_flow_job_alias_uses_its_own_declaration() {
     let findings = run("root-flow-job-alias", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");

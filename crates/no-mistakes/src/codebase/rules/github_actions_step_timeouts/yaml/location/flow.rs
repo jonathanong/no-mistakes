@@ -6,9 +6,12 @@ use crate::codebase::rules::github_actions_step_timeouts::yaml::{
 pub(super) fn is_root_flow(lines: &[&str]) -> bool {
     lines
         .iter()
-        .find(|line| is_content(line) && line.trim() != "---")
-        .is_some_and(|line| {
+        .find(|line| {
             let text = line.trim_start();
+            is_content(line) && text != "---" && !text.starts_with('%')
+        })
+        .is_some_and(|line| {
+            let text = line.trim_start().trim_start_matches('\u{feff}');
             let text = text
                 .strip_prefix("---")
                 .filter(|rest| rest.starts_with(char::is_whitespace))

@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 
 mod parallel;
 use parallel::parallel_child_lines;
+mod block;
+use block::{find_jobs_line, find_steps_line, index_job_lines};
 mod flow;
 use flow::{flow_sequence_item_lines, locate_job_steps, RootFlowIndex};
 
@@ -24,56 +26,6 @@ pub(super) fn has_child_inline_value(lines: &[&str], key: (usize, usize), openin
             let value = value_after_anchor(line.trim_start());
             indent(line) > key.1 && (value.starts_with(opening) || value.starts_with('*'))
         })
-}
-
-fn find_jobs_line(lines: &[&str]) -> Option<(usize, usize)> {
-    let root_indent = lines
-        .iter()
-        .find(|line| is_content(line) && line.trim() != "---")
-        .map(|line| indent(line))?;
-    lines.iter().enumerate().find_map(|(index, line)| {
-        (indent(line) == root_indent && yaml_key_value(line).is_some_and(|(key, _)| key == "jobs"))
-            .then_some((index, root_indent))
-    })
-}
-
-fn index_job_lines(lines: &[&str], jobs: (usize, usize)) -> BTreeMap<String, (usize, usize)> {
-    let mut child_indent = None;
-    let mut result = BTreeMap::new();
-    for (index, line) in lines.iter().enumerate().skip(jobs.0 + 1) {
-        if !is_content(line) {
-            continue;
-        }
-        let depth = indent(line);
-        if depth <= jobs.1 {
-            break;
-        }
-        let direct_depth = *child_indent.get_or_insert(depth);
-        if depth == direct_depth {
-            if let Some((key, _)) = yaml_key_value(line) {
-                result.insert(key.to_string(), (index, depth));
-            }
-        }
-    }
-    result
-}
-
-fn find_steps_line(lines: &[&str], job: (usize, usize)) -> Option<(usize, usize)> {
-    let mut child_indent = None;
-    for (index, line) in lines.iter().enumerate().skip(job.0 + 1) {
-        if !is_content(line) {
-            continue;
-        }
-        let depth = indent(line);
-        if depth <= job.1 {
-            break;
-        }
-        let direct_depth = *child_indent.get_or_insert(depth);
-        if depth == direct_depth && yaml_key_value(line).is_some_and(|(key, _)| key == "steps") {
-            return Some((index, depth));
-        }
-    }
-    None
 }
 
 pub(super) fn sequence_item_lines(lines: &[&str], key: (usize, usize), count: usize) -> Vec<usize> {

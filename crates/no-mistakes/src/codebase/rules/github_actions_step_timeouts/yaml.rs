@@ -22,7 +22,7 @@ pub(super) fn is_expression(value: &Value) -> bool {
 }
 
 pub(super) fn yaml_key_value(line: &str) -> Option<(&str, &str)> {
-    let text = line.trim_start();
+    let text = line.trim_start().trim_start_matches('\u{feff}');
     let text = text.strip_prefix("- ").unwrap_or(text);
     let (key, value) = text.split_once(':')?;
     let key = key.trim();
