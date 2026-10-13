@@ -10,12 +10,36 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct ProjectedSql {
+    pub text: String,
+    pub complete: bool,
+}
+
+pub(crate) type ProjectedCalls = BTreeMap<(PathBuf, (u32, u32)), Option<Vec<ProjectedSql>>>;
+
 /// Resolve owned syntax against the request's canonical module facts and
 /// resolver. No source reads or parsing occur in this projection.
 pub(crate) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
 ) {
+    let _ = project_impl(files, resolve, false);
+}
+
+pub(crate) fn project_executed(
+    files: &mut FileIdMap<CheckFileFacts>,
+    resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
+) -> ProjectedCalls {
+    project_impl(files, resolve, true)
+}
+
+fn project_impl(
+    files: &mut FileIdMap<CheckFileFacts>,
+    resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
+    collect_executed: bool,
+) -> ProjectedCalls {
+    let mut projected = ProjectedCalls::new();
     let originals = files
         .into_iter()
         .map(|(path, _)| (normalize_path(path), path.clone()))
@@ -120,6 +144,23 @@ pub(crate) fn project(
                 // additive helper projection does not model the scope.
                 continue;
             }
+            if collect_executed {
+                let mut alternatives = Vec::new();
+                let mut recoverable = true;
+                for value in &values {
+                    if let Some(candidates) = projected_sql(value) {
+                        for candidate in candidates {
+                            if !alternatives.contains(&candidate) {
+                                alternatives.push(candidate);
+                            }
+                        }
+                    } else {
+                        recoverable = false;
+                        break;
+                    }
+                }
+                projected.insert((path.clone(), span), recoverable.then_some(alternatives));
+            }
             let values = values.into_iter().map(prefix).collect::<Vec<_>>();
             // Every analyzable invocation must satisfy the rule. One favorable
             // callback callsite must never hide another unannotated/opaque one.
@@ -145,6 +186,29 @@ pub(crate) fn project(
                 .expect("projected annotation profile remains prepared");
             facts.calls.insert(span, value);
         }
+    }
+    projected
+}
+
+fn projected_sql(value: &Value) -> Option<Vec<ProjectedSql>> {
+    match value {
+        Value::Prefix(text, complete, _) => Some(vec![ProjectedSql {
+            text: text.clone(),
+            complete: *complete && !text.contains("sql_placeholder_"),
+        }]),
+        Value::Promise(value) | Value::Evaluated(value, _) => projected_sql(value),
+        Value::Joined(values) if !values.is_empty() => {
+            let mut alternatives = Vec::new();
+            for value in values.iter() {
+                for candidate in projected_sql(value)? {
+                    if !alternatives.contains(&candidate) {
+                        alternatives.push(candidate);
+                    }
+                }
+            }
+            Some(alternatives)
+        }
+        _ => None,
     }
 }
 

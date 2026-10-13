@@ -48,6 +48,7 @@ impl Scope {
                     Value::Aggregate(values)
                     | Value::References(values)
                     | Value::Object(values)
+                    | Value::Record(values, _)
                     | Value::Joined(values)
                     | Value::Possible(values)
                         if values.contains_reference() && visited.insert(values.identity()) =>

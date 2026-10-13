@@ -95,6 +95,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Value::Aggregate(values)
                 | Value::References(values)
                 | Value::Object(values)
+                | Value::Record(values, _)
                 | Value::Joined(values)
                 | Value::Possible(values) => self.callback_values(values, depth, visited),
                 Value::Promise(value) | Value::Evaluated(value, _) => {

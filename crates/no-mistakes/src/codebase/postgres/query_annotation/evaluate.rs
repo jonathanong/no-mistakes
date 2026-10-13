@@ -143,18 +143,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
             Expr::Member(object, name) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
-                self.member(value, name)
+                self.member(value, name, path)
             }
             Expr::ComputedMember(object, key) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.expr(key, path, env, depth, generic);
-                self.member(value, "")
+                self.member(value, "", path)
             }
             Expr::Index(object, index) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.index(value, *index)
             }
-            Expr::Children(children) | Expr::Container(children) | Expr::Object(children) => {
+            Expr::Children(children)
+            | Expr::Container(children)
+            | Expr::Object(children)
+            | Expr::Record(children, _) => {
                 self.container(expr, children, path, env, (depth, generic))
             }
         };

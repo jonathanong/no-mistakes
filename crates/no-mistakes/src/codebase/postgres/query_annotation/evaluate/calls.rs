@@ -62,7 +62,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             Expr::Member(object, name) => {
                 let receiver = self.expr(object, path, env, depth, generic).exposed();
                 (
-                    self.member(receiver.clone(), name).exposed(),
+                    self.member(receiver.clone(), name, path).exposed(),
                     Some(receiver),
                 )
             }

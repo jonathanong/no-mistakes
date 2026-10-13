@@ -100,6 +100,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let effect = self.expr(expr, path, env, depth, generic);
                     if self.effect_can_mutate(expr, path, *env)
                         && !self.handled_deletion_effect(expr, &effect, path, *env)
+                        && !self.proven_append_only_effect(expr, path, depth, generic)
                     {
                         opaque_return = true;
                         // Arbitrary effects can mutate a builder passed by
@@ -129,6 +130,45 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         Value::Unknown
     }
 
+    fn proven_append_only_effect(
+        &mut self,
+        expr: &Expr,
+        path: &Path,
+        depth: u8,
+        generic: bool,
+    ) -> bool {
+        let Expr::Call { callee, .. } = expr else {
+            return false;
+        };
+        let Expr::Name(name) = &**callee else {
+            return false;
+        };
+        let Value::Function(function, function_path, captured) =
+            self.name(path, name, depth, generic)
+        else {
+            return false;
+        };
+        function.supported && function.body.iter().all(|step| match step {
+            Step::Reserve(_) => true,
+            Step::Append(target, tail) => {
+                function.params.contains(target)
+                    && match tail {
+                        Expr::Text(_) => true,
+                        Expr::Template(parts) => {
+                            parts.iter().all(|part| matches!(part, Expr::Text(_)))
+                        }
+                        Expr::Tagged(tag, parts, effects) => {
+                            self.tag_trusted(tag, &function_path, captured)
+                                && parts.iter().all(|part| matches!(part, Expr::Text(_)))
+                                && matches!(effects.as_slice(), [Expr::Name(name)] if name == tag)
+                        }
+                        _ => false,
+                    }
+            }
+            _ => false,
+        })
+    }
+
     pub(super) fn effect_can_mutate(&self, expr: &Expr, path: &Path, env: Environment) -> bool {
         match expr {
             Expr::Call { start, end, .. } => !self.files[path].executors.contains(&(*start, *end)),
@@ -136,6 +176,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             | Expr::Children(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
+            | Expr::Record(parts, _)
             | Expr::Sequence(parts) => parts
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),

@@ -64,6 +64,55 @@ fn executed_source_binding_rejects_parse_diagnostics_and_unknown_options() {
         "{option_error}"
     );
 }
+
+#[test]
+fn executed_source_binding_opts_in_to_supplied_import_resolution() {
+    let consumer = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/aliased-consumer.ts"
+    ));
+    let builder = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/imported-builder.ts"
+    ));
+    let sources = serde_json::json!([
+        {"fileName":"aliased-consumer.ts","source":consumer},
+        {"fileName":"imported-builder.ts","source":builder}
+    ]);
+    let unresolved: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": sources,
+            "importSpecifier":"@example/db"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(unresolved[0]["sqlText"].is_null());
+    let edges = serde_json::json!([{
+        "fromFileName":"aliased-consumer.ts",
+        "specifier":"@example/builder",
+        "toFileName":"imported-builder.ts"
+    }]);
+    let resolved: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": sources,
+            "importSpecifier":"@example/db",
+            "resolveImports":true,
+            "resolvedImports": edges
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(resolved[0]["annotation"], "imported/read");
+    assert_eq!(resolved[0]["complete"], true);
+    let error = extract_executed_postgres_sql_json_impl(serde_json::json!({
+        "sources": sources,
+        "importSpecifier":"@example/db",
+        "resolvedImports": edges
+    }))
+    .unwrap_err();
+    assert!(error.to_string().contains("requires resolveImports"));
+}
 #[test]
 fn standalone_and_batch_bindings_keep_structured_source_facts() {
     let sql = include_str!(concat!(

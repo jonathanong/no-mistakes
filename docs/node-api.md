@@ -108,8 +108,16 @@ expose only a leading prefix or `null`; require `complete` for checks that need
 the entire SQL statement. `annotation` is `null` for unannotated or unrecoverable SQL.
 An invalid TS/JS source or unknown option rejects the whole request, so a
 recovered parse cannot silently report incomplete input as complete SQL.
-This source-only API reads no files and does not resolve helpers imported from
-other files; use `check()` for project-wide annotation enforcement.
+This source-only API reads no files. By default it leaves imported SQL helpers
+unresolved. Set `resolveImports: true` to evaluate imports among the supplied
+sources, including effects of supported SQL-builder append helpers. Relative
+imports resolve by supplied `fileName`; for aliases or package imports, pass
+`resolvedImports: [{ fromFileName, specifier, toFileName }]` with exact supplied
+file names. Unresolved imports, opaque helper effects, and unknown alternatives
+remain dynamic rather than claiming complete SQL. Import-aware extraction is
+opt-in because it performs inter-file evaluation. `complete` only describes
+SQL construction; consumers must inspect the statement before classifying a
+`WITH` body as a read. Use `check()` for project-wide annotation enforcement.
 
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
 `shapeOptions.bannedFunctionCall.functions` list through the same YAML rule

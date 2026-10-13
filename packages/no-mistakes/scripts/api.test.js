@@ -365,6 +365,13 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.extractExecutedPostgresSql({ sources: [], importSpecifier: "@db" })).options,
       { sources: [], importSpecifier: "@db" },
     );
+    const importAware = {
+      sources: [],
+      importSpecifier: "@db",
+      resolveImports: true,
+      resolvedImports: [{ fromFileName: "a.ts", specifier: "@sql", toFileName: "b.ts" }],
+    };
+    assert.deepEqual((await api.extractExecutedPostgresSql(importAware)).options, importAware);
     assert.equal((await api.serverContracts({ root: "." })).command, "serverContracts");
     assert.equal((await api.flow({ target: "src/api.ts#handler" })).command, "flow");
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
@@ -973,8 +980,11 @@ test("executed PostgreSQL source extraction exposes its named async contract", (
   const postgresSource = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
   assert.match(declarations, /export interface ExecutedPostgresSource \{/);
   assert.match(declarations, /export interface ExecutedPostgresTrustedSqlTag \{/);
+  assert.match(declarations, /export interface ExecutedPostgresResolvedImport \{/);
   assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
   assert.match(declarations, /trustedSqlTags\?: ExecutedPostgresTrustedSqlTag\[\];/);
+  assert.match(declarations, /resolveImports\?: boolean;/);
+  assert.match(declarations, /resolvedImports\?: ExecutedPostgresResolvedImport\[\];/);
   assert.match(declarations, /export interface ExecutedPostgresSql \{/);
   assert.match(declarations, /export type ExecutedPostgresSqlKind =/);
   assert.match(declarations, /kind: ExecutedPostgresSqlKind;/);

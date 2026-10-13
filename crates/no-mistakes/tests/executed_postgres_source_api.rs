@@ -1,5 +1,6 @@
 use no_mistakes::codebase::postgres::{
-    extract_executed_postgres_sql, EmbeddedSqlOptions, ExecutedPostgresSource, TrustedSqlTag,
+    extract_executed_postgres_sql, extract_executed_postgres_sql_with_imports, EmbeddedSqlOptions,
+    ExecutedPostgresResolvedImport, ExecutedPostgresSource, TrustedSqlTag,
 };
 use std::path::{Path, PathBuf};
 
@@ -65,6 +66,131 @@ fn source_api_keeps_execution_sites_annotations_and_complete_alternatives() {
     assert!(statements[7].complete);
     assert_eq!(statements[8].sql_text, None);
     assert!(!statements[8].complete);
+}
+
+#[test]
+fn source_api_projects_imported_read_from_supplied_sources() {
+    let sources = [
+        source("imported-consumer.ts"),
+        source("imported-builder.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements[0].annotation.as_deref(), Some("imported/read"));
+    assert_eq!(
+        statements[0].sql_text.as_deref(),
+        Some("/* imported/read */ SELECT id FROM posts")
+    );
+    let legacy = extract_executed_postgres_sql(&sources, &options).unwrap();
+    assert!(legacy[0].sql_text.is_none());
+}
+
+#[test]
+fn source_api_resolves_explicit_supplied_alias_edge() {
+    let sources = [source("aliased-consumer.ts"), source("imported-builder.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let edges = [ExecutedPostgresResolvedImport {
+        from_file_name: "aliased-consumer.ts".into(),
+        specifier: "@example/builder".into(),
+        to_file_name: "imported-builder.ts".into(),
+    }];
+    let statements =
+        extract_executed_postgres_sql_with_imports(&sources, &options, &edges).unwrap();
+    assert_eq!(statements[0].annotation.as_deref(), Some("imported/read"));
+}
+
+#[test]
+fn source_api_resolves_unambiguous_extensionless_supplied_import() {
+    let sources = [
+        source("extensionless-consumer.ts"),
+        source("imported-builder.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements[0].annotation.as_deref(), Some("imported/read"));
+}
+
+#[test]
+fn source_api_forwards_exact_object_callbacks_across_imports() {
+    let sources = [source("ordered-consumer.ts"), source("ordered-helper.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert_eq!(statements[0].annotation.as_deref(), Some("ordered/list"));
+    assert!(statements[0].complete);
+}
+
+#[test]
+fn source_api_never_promotes_spreads_getters_or_unknown_write_alternatives_to_a_read() {
+    let sources = [source("ordered-unsafe.ts"), source("ordered-helper.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 3);
+    assert!(statements
+        .iter()
+        .all(|statement| !statement.complete && statement.sql_text.is_none()));
+}
+
+#[test]
+fn source_api_does_not_promote_an_opaque_imported_append() {
+    let sources = [source("opaque-consumer.ts"), source("opaque-append.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(!statements[0]
+        .sql_text
+        .as_deref()
+        .unwrap_or("")
+        .contains("SELECT id FROM eligible"));
+}
+
+#[test]
+fn source_api_preserves_the_full_with_body_for_callers_to_classify() {
+    let sources = [source("with-branches.ts"), source("with-builder.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 2);
+    assert!(statements.iter().all(|statement| statement.complete));
+    assert!(statements[0]
+        .sql_text
+        .as_deref()
+        .unwrap()
+        .contains("WITH source AS (SELECT"));
+    assert!(statements[1]
+        .sql_text
+        .as_deref()
+        .unwrap()
+        .contains("WITH changed AS (DELETE"));
+    assert_ne!(statements[0].annotation, statements[1].annotation);
+}
+
+#[test]
+fn source_api_projects_imported_mutating_builder_and_nested_count() {
+    let sources = [
+        source("search-consumer.ts"),
+        source("search-builder.ts"),
+        source("search-append.ts"),
+        source("search-count.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[])
+        .with_scoped_executors(&["beginTransaction".into()], &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 3);
+    assert_eq!(statements[0].annotation.as_deref(), Some("search/list"));
+    assert_eq!(statements[1].annotation.as_deref(), Some("search/count"));
+    assert_eq!(statements[2].annotation.as_deref(), Some("search/list"));
+    assert!(statements.iter().all(|statement| statement.complete));
+    assert!(statements[0]
+        .sql_text
+        .as_deref()
+        .unwrap()
+        .contains("WITH eligible AS"));
+    assert!(statements[1]
+        .sql_text
+        .as_deref()
+        .unwrap()
+        .contains("SELECT COUNT(*)"));
 }
 
 #[test]

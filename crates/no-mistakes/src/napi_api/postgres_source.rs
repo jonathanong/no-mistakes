@@ -2,8 +2,9 @@
 use super::{async_task, AsyncTask};
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::postgres::{
-    extract_executed_postgres_sql_with_session, EmbeddedSqlOptions, ExecutedPostgresSource,
-    TrustedSqlTag,
+    extract_executed_postgres_sql_with_imports_and_session,
+    extract_executed_postgres_sql_with_session, EmbeddedSqlOptions, ExecutedPostgresResolvedImport,
+    ExecutedPostgresSource, TrustedSqlTag,
 };
 use crate::codebase::postgres::{parse_postgres_source, parse_postgres_sources, PostgresSqlSource};
 #[cfg(all(not(test), not(coverage)))]
@@ -47,6 +48,10 @@ struct ExecutedSqlRequest {
     executor_type_names: Vec<String>,
     #[serde(default)]
     trusted_sql_tags: Vec<TrustedSqlTag>,
+    #[serde(default)]
+    resolve_imports: bool,
+    #[serde(default)]
+    resolved_imports: Vec<ExecutedPostgresResolvedImport>,
 }
 
 pub(crate) fn extract_executed_postgres_sql_json_impl(
@@ -61,9 +66,22 @@ pub(crate) fn extract_executed_postgres_sql_json_impl(
             )
             .with_trusted_sql_tags(&request.trusted_sql_tags);
     let session = AnalysisSession::disabled();
-    let statements =
+    if !request.resolve_imports && !request.resolved_imports.is_empty() {
+        return Err(napi::Error::from_reason(
+            "resolvedImports requires resolveImports: true".to_string(),
+        ));
+    }
+    let statements = if request.resolve_imports {
+        extract_executed_postgres_sql_with_imports_and_session(
+            &request.sources,
+            &options,
+            &request.resolved_imports,
+            &session,
+        )
+    } else {
         extract_executed_postgres_sql_with_session(&request.sources, &options, &session)
-            .map_err(|error| napi::Error::from_reason(error.to_string()))?;
+    }
+    .map_err(|error| napi::Error::from_reason(error.to_string()))?;
     serde_json::to_string(&statements).map_err(|error| napi::Error::from_reason(error.to_string()))
 }
 

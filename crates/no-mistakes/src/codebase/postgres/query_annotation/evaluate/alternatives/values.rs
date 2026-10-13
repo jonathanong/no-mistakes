@@ -20,6 +20,7 @@ fn prefixes<'a>(
         Value::Aggregate(values)
         | Value::References(values)
         | Value::Object(values)
+        | Value::Record(values, _)
         | Value::Joined(values)
         | Value::Possible(values) => {
             // A reference-free shared subtree cannot affect either map or visited set.

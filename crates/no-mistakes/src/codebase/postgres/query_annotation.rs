@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct QueryAnnotationFileFacts {
+    pub(crate) precise_records: bool,
     pub(super) globals: BTreeMap<String, Expr>,
     pub(super) roots: Vec<Step>,
     pub(super) unmodeled_calls: Vec<Expr>,
@@ -51,6 +52,8 @@ pub(super) enum Expr {
     Children(Vec<Expr>),
     Container(Vec<Expr>),
     Object(Vec<Expr>),
+    // Static init-only properties retain their names for exact member reads.
+    Record(Vec<Expr>, Vec<String>),
     Sequence(Vec<Expr>),
     Discard(Box<Expr>),
     Alternatives(Vec<Expr>),

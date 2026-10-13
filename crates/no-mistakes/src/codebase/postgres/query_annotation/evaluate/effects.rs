@@ -36,6 +36,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
+            | Value::Record(values, _)
             | Value::Joined(values)
             | Value::Possible(values) => {
                 for value in values {
@@ -101,6 +102,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     Value::Aggregate(values)
                     | Value::References(values)
                     | Value::Object(values)
+                    | Value::Record(values, _)
                     | Value::Joined(values)
                     | Value::Possible(values) => {
                         for value in values {
