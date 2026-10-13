@@ -6,6 +6,55 @@ fn read_root(path: &str) -> String {
 }
 
 #[test]
+fn release_tooling_is_relocated_outside_the_tagged_source_inventory() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rust-validation/fixture/tools-isolation");
+    let fixture = super::saved_fixture::materialize_path(&fixture);
+    let source = fixture.path().join("source");
+    let tools = fixture.path().join("runner-temp/validation-tools");
+    let duplicate = source.join("validation-tools/crates/no-mistakes/tests/docs_coverage.rs");
+    // Reproduce release-only pollution without exempting nested source from the audit.
+    assert!(super::cli_docs_helpers::consumer_identifier_paths(&source).contains(&duplicate));
+
+    let workflow = read_root(".github/workflows/release.yml");
+    let job = workflow.split("\n  validate-rust:\n").nth(1).unwrap();
+    let step_command = |name: &str| {
+        job.split(&format!("- name: {name}\n"))
+            .nth(1)
+            .unwrap_or_else(|| panic!("missing {name} step"))
+            .split("\n      - name:")
+            .next()
+            .unwrap()
+            .lines()
+            .find_map(|line| line.trim().strip_prefix("run: "))
+            .expect("release tooling steps must have an executable command")
+    };
+    let run = |command: &str| {
+        std::process::Command::new("bash")
+            .args(["-e", "-c", command])
+            .current_dir(&source)
+            .env("RUNNER_TEMP", tools.parent().unwrap())
+            .output()
+            .unwrap()
+    };
+    let moved = run(step_command("Isolate validation tooling"));
+    assert!(moved.status.success(), "{moved:?}");
+    let paths = super::cli_docs_helpers::consumer_identifier_paths(&source);
+    assert!(!paths.contains(&duplicate));
+    assert!(paths.contains(&source.join("crates/no-mistakes/tests/docs_coverage.rs")));
+    assert!(tools
+        .join("crates/no-mistakes/tests/docs_coverage.rs")
+        .is_file());
+
+    let validation = run(step_command("Run Rust tests"));
+    assert!(validation.status.success(), "{validation:?}");
+    assert_eq!(
+        String::from_utf8(validation.stdout).unwrap().trim(),
+        source.to_str().unwrap()
+    );
+}
+
+#[test]
 fn reviewed_commands_and_rule_options_stay_accurate() {
     let agent_guide = read_root("docs/agent-guide.md");
     assert!(agent_guide.contains("ci topology-impact --base <ref> --head HEAD --entry-workflow"));

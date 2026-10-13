@@ -14,8 +14,10 @@ instrumentation is applied only to the coverage build and test steps; documentat
 run separately in both workflows. Resumed releases may use historical source
 tags without the shared helpers or profile defaults. Release validation checks
 out the running workflow's revision (`github.workflow_sha`) separately into
-`validation-tools`, while Cargo runs against the extracted release source in the
-workspace root. Release job environment overrides enforce the same symbol-free
+`validation-tools`, then moves that checkout to the runner's temporary directory
+before validation. Repository-wide checks therefore inspect only the tagged
+source. Cargo runs against the extracted release source in the workspace root.
+Release job environment overrides enforce the same symbol-free
 profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
 working directory.
 
