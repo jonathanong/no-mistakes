@@ -13,6 +13,9 @@ jobs:
       - id: dynamic
         run: echo dynamic
         timeout-minutes: ${{ fromJSON(vars.TIMEOUT) }}
+      - id: quoted
+        run: echo quoted
+        timeout-minutes: "5"
       - id: huge
         run: echo huge
         timeout-minutes: 400

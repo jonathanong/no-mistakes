@@ -47,13 +47,16 @@ fn literals_within_cap_pass_and_reusable_callers_are_skipped() {
 #[test]
 fn invalid_zero_expression_and_over_cap_are_findings() {
     let findings = run("invalid", "maxMinutes: 10");
-    assert_eq!(findings.len(), 4, "{findings:?}");
+    assert_eq!(findings.len(), 5, "{findings:?}");
     assert!(findings
         .iter()
         .any(|f| f.message.contains("expressions need a reasoned allow")));
     assert!(findings
         .iter()
         .any(|f| f.message.contains("over the 10-minute cap")));
+    assert!(findings
+        .iter()
+        .any(|f| f.target.as_deref() == Some(".github/workflows/ci.yml#build#quoted")));
 }
 
 #[test]
@@ -109,6 +112,8 @@ allow:
     reason: "Test deliberate invalid input."
   - step: ".github/workflows/ci.yml#build#bool"
     reason: "Test deliberate invalid input."
+  - step: ".github/workflows/ci.yml#build#quoted"
+    reason: "Test deliberate invalid input."
 "#,
     );
     assert!(findings
@@ -117,6 +122,9 @@ allow:
     assert!(findings
         .iter()
         .any(|f| f.target.as_deref() == Some(".github/workflows/ci.yml#build#bool")));
+    assert!(findings
+        .iter()
+        .any(|f| f.target.as_deref() == Some(".github/workflows/ci.yml#build#quoted")));
 }
 
 #[test]

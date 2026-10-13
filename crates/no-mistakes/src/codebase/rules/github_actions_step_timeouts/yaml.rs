@@ -10,11 +10,7 @@ pub(super) fn mapping_str<'a>(map: &'a Mapping, key: &str) -> Option<&'a str> {
         .filter(|value| !value.trim().is_empty())
 }
 pub(super) fn timeout_minutes(value: &Value) -> Option<u64> {
-    let minutes = match value {
-        Value::Number(number) => number.as_u64(),
-        Value::String(text) => text.trim().parse().ok(),
-        _ => None,
-    }?;
+    let minutes = value.as_u64()?;
     (minutes > 0).then_some(minutes)
 }
 
