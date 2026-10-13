@@ -51,11 +51,9 @@ fn json_graph_keeps_and_merges_resource_provenance() {
         call_sites.iter().map(|site| site.line).collect::<Vec<_>>(),
         [3, 7]
     );
-    assert!(
-        !serde_json::to_string(&graph)
-            .unwrap()
-            .contains("\"detail\":null")
-    );
+    assert!(!serde_json::to_string(&graph)
+        .unwrap()
+        .contains("\"detail\":null"));
 }
 
 #[test]

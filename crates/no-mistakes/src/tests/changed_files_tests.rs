@@ -77,11 +77,9 @@ fn manual_changed_path_rejects_lexical_and_resolved_root_escape() {
         let outside = tempfile::NamedTempFile::new().unwrap();
         std::os::unix::fs::symlink(outside.path(), root.path().join("escape.ts")).unwrap();
         let resolved = resolve_manual_path(Path::new("escape.ts"), &canonical_root).unwrap_err();
-        assert!(
-            resolved
-                .to_string()
-                .contains("resolves outside the project root")
-        );
+        assert!(resolved
+            .to_string()
+            .contains("resolves outside the project root"));
     }
 }
 

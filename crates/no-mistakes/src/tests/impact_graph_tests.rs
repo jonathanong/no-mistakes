@@ -64,11 +64,9 @@ fn impact_graph_keeps_native_test_filters_when_optional_vitest_is_invalid() {
     .unwrap();
     let impact = build_test_impact_graph(&root, None, &config, None, false).unwrap();
 
-    assert!(
-        impact
-            .test_filter
-            .is_match(&root, &root.join("tests/ServiceTests.cs"))
-    );
+    assert!(impact
+        .test_filter
+        .is_match(&root, &root.join("tests/ServiceTests.cs")));
     assert!(impact.vitest_discovered.tests.is_empty());
 }
 

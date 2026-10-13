@@ -28,9 +28,7 @@ fn impact_reason_resource_details_round_trip_and_legacy_details_are_optional() {
     let legacy = r#"{"changed_file":"a.ts","path":["a.ts","a.test.ts"],"via":["dependency"]}"#;
     let legacy_reason: ImpactReason = serde_json::from_str(legacy).unwrap();
     assert!(legacy_reason.via_details.is_empty());
-    assert!(
-        !serde_json::to_string(&legacy_reason)
-            .unwrap()
-            .contains("via_details")
-    );
+    assert!(!serde_json::to_string(&legacy_reason)
+        .unwrap()
+        .contains("via_details"));
 }

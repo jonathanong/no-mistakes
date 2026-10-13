@@ -101,10 +101,8 @@ fn explain_renders_empty_fallback_and_resource_without_call_sites() {
     };
     let rendered = super::super::render(&selected_plan, PlanFormat::Explain, "tests plan").unwrap();
     assert!(rendered.contains("- resource.txt\n- unmatched.ts"));
-    assert!(
-        rendered
-            .contains("Path: `resource.txt` ➔ [resource (resource.test.ts)] ➔ `resource.test.ts`")
-    );
+    assert!(rendered
+        .contains("Path: `resource.txt` ➔ [resource (resource.test.ts)] ➔ `resource.test.ts`"));
 
     let empty_plan = TestPlan {
         changed_files: Vec::new(),

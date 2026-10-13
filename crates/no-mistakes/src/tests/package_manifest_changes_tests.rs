@@ -300,11 +300,10 @@ fn malformed_pnpm_lockfile_warns_and_obeys_fallback_policy() {
             ))
             .unwrap();
             assert_eq!(plan.fallback_triggered, fallback, "{plan:#?}");
-            assert!(
-                plan.warnings
-                    .iter()
-                    .any(|warning| warning.r#type == warning_type)
-            );
+            assert!(plan
+                .warnings
+                .iter()
+                .any(|warning| warning.r#type == warning_type));
             if fallback {
                 assert_eq!(plan.selected_tests.len(), 5, "{plan:#?}");
             } else {

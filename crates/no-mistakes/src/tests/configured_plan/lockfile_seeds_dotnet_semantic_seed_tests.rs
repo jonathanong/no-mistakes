@@ -48,17 +48,15 @@ fn central_consumers_are_scoped_to_nearest_props() {
         ),
         vec![root.join("core/core.csproj")]
     );
-    assert!(
-        central_package_seed_roots(
-            &root,
-            &root.join("Directory.Packages.props"),
-            &BTreeSet::from(["App.Only".to_string()]),
-            &facts,
-            &central_files,
-            None,
-        )
-        .is_empty()
-    );
+    assert!(central_package_seed_roots(
+        &root,
+        &root.join("Directory.Packages.props"),
+        &BTreeSet::from(["App.Only".to_string()]),
+        &facts,
+        &central_files,
+        None,
+    )
+    .is_empty());
     assert_eq!(
         central_package_seed_roots(
             &root,
@@ -71,17 +69,15 @@ fn central_consumers_are_scoped_to_nearest_props() {
         vec![root.join("app/app.csproj")],
         "NuGet package identities are case-insensitive"
     );
-    assert!(
-        central_package_seed_roots(
-            &root,
-            &root.join("Directory.Packages.props"),
-            &BTreeSet::from(["Other".to_string()]),
-            &facts,
-            &central_files,
-            None,
-        )
-        .is_empty()
-    );
+    assert!(central_package_seed_roots(
+        &root,
+        &root.join("Directory.Packages.props"),
+        &BTreeSet::from(["Other".to_string()]),
+        &facts,
+        &central_files,
+        None,
+    )
+    .is_empty());
 }
 
 #[test]
