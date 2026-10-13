@@ -12,6 +12,7 @@ use std::path::Path;
 mod coverage;
 mod generic_checks;
 mod lang_frameworks;
+mod repository_checks;
 mod runner_isolation;
 mod timeout;
 
