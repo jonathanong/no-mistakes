@@ -6,6 +6,19 @@ impl ValueFlowResolution<'_, '_> {
         path: &std::path::Path,
         expression: &ValueExpression,
     ) -> FlowValue {
+        let outer = self.default_origins.take();
+        let value = self.expression_value(path, expression);
+        if value == FlowValue::Undefined {
+            self.default_origins = None;
+        }
+        default_origins::merge(&mut self.default_origins, outer);
+        value
+    }
+    fn expression_value(
+        &mut self,
+        path: &std::path::Path,
+        expression: &ValueExpression,
+    ) -> FlowValue {
         match expression {
             ValueExpression::Named {
                 name,
@@ -62,11 +75,15 @@ impl ValueFlowResolution<'_, '_> {
             .unwrap_or(FlowValue::Unknown)
     }
     pub(super) fn member(&mut self, base: FlowValue, member: &str) -> FlowValue {
+        self.project_default_origins(member);
+        self.member_value(base, member)
+    }
+    fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
             FlowValue::Returned {
                 receiver: Some(receiver),
                 ..
-            } => self.member(FlowValue::Target(receiver), member),
+            } => self.member_value(FlowValue::Target(receiver), member),
             FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => fields
                 .get(member)
                 .map_or(FlowValue::Undefined, |value| self.value(&file, value)),

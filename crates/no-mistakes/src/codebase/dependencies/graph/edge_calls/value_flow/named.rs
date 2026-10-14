@@ -113,6 +113,11 @@ impl ValueFlowResolution<'_, '_> {
             FlowValue::Unknown
         };
         self.visiting.remove(&key);
+        let value = if self.default_origin_invalidated(path, offset, context) {
+            FlowValue::Unknown
+        } else {
+            value
+        };
         member.map_or(value.clone(), |member| self.member(value, member))
     }
     fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {

@@ -149,3 +149,18 @@ fn destructured_parameters_project_before_caller_agreement() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn selected_default_origins_track_receiver_mutations_and_copied_methods() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/default-origin-mutations.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [10, 13, 16, 19, 25, 28, 32],
+        "{findings:#?}"
+    );
+}

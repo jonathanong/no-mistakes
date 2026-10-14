@@ -12,6 +12,7 @@ pub(super) struct ParameterKey {
 #[derive(Clone)]
 pub(super) struct CachedParameter {
     pub(super) value: FlowValue,
+    pub(super) origins: Option<Arc<FxHashSet<DefaultOriginUse>>>,
     pub(super) dependencies: FxHashSet<(std::path::PathBuf, CallableId)>,
 }
 enum Entry {
@@ -121,6 +122,7 @@ impl Drop for Lease<'_> {
                 key,
                 Arc::new(CachedParameter {
                     value: FlowValue::Unknown,
+                    origins: None,
                     dependencies: fx_set(),
                 }),
             );

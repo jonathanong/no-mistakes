@@ -29,11 +29,12 @@ impl ImportCollector {
                     projection,
                     initialization_order: self.value_flow.parameters.len(),
                     default_order,
+                    default_mutations: None,
                     invalidated_at: None,
                     mutation_contexts: fx_set(),
                 };
-                self.record_parameter_reference(&parameter);
                 self.value_flow.parameters.push(parameter);
+                self.record_parameter_origins(self.value_flow.parameters.len() - 1);
             }
             BindingPattern::ObjectPattern(object) => {
                 for property in &object.properties {

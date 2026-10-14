@@ -13,7 +13,11 @@ fn destructured_value_bindings_share_one_initializer() {
     assert!(import_only.value_flow.parameters.is_empty());
     assert!(import_only.value_flow.calls.is_empty());
     let facts = extract_import_facts_from_program_with_source_and_demands(
-        &parsed.program, &source, false, false, true,
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
     );
     #[cfg(feature = "test-instrumentation")]
     assert_eq!(facts.value_flow.reference_link_constructions, 0);
@@ -42,13 +46,52 @@ fn member_writes_do_not_rebuild_reference_links() {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
     let facts = extract_import_facts_from_program_with_source_and_demands(
-        &parsed.program, &source, false, false, true,
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
     );
     assert_eq!(facts.value_flow.reference_link_constructions, 515);
     for name in ["client", "alias", "late"] {
-        let binding = facts.value_flow.bindings.iter().find(|binding| binding.name == name).unwrap();
+        let binding = facts
+            .value_flow
+            .bindings
+            .iter()
+            .find(|binding| binding.name == name)
+            .unwrap();
         assert!(binding.invalidated_at.is_some());
     }
-    assert!(facts.value_flow.bindings.iter().filter(|binding| binding.name.starts_with("unused"))
+    assert!(facts
+        .value_flow
+        .bindings
+        .iter()
+        .filter(|binding| binding.name.starts_with("unused"))
         .all(|binding| binding.invalidated_at.is_none()));
+}
+
+#[test]
+fn default_exports_extend_an_already_initialized_reference_index() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/mutated-default-export.mts");
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let exported = facts
+        .value_flow
+        .bindings
+        .iter()
+        .find(|binding| binding.name == "default")
+        .unwrap();
+    assert!(exported
+        .invalidated_at
+        .is_some_and(|offset| offset > exported.declared_at));
+    assert!(exported.mutation_contexts.contains(&None));
 }

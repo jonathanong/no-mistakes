@@ -1,5 +1,13 @@
 use super::*;
 
+pub(super) type DefaultOriginIndex =
+    FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
+pub type ValueDefaultMutations = FxHashMap<usize, FxHashMap<Vec<String>, ValueMutationInfo>>;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValueMutationInfo {
+    pub offset: u32,
+    pub contexts: FxHashSet<Option<CallableId>>,
+}
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
 /// Syntactic value flow retained by the import collector. Resolution uses the
@@ -62,6 +70,7 @@ pub struct ValueParameter {
     pub projection: Vec<ValueProjection>,
     pub initialization_order: usize,
     pub default_order: usize,
+    pub default_mutations: Option<std::sync::Arc<ValueDefaultMutations>>,
     pub invalidated_at: Option<u32>,
     pub mutation_contexts: FxHashSet<Option<CallableId>>,
 }
@@ -101,3 +110,6 @@ mod nested;
 
 #[path = "extract_value_flow/parameter_patterns.rs"]
 mod parameter_patterns;
+
+#[path = "extract_value_flow/default_origins.rs"]
+mod default_origins;

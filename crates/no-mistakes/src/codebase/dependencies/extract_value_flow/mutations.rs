@@ -32,6 +32,7 @@ impl ImportCollector {
                     continue;
                 }
                 pending.push(((key.clone(), Vec::new()), true));
+                self.invalidate_default_origins(&key, &path, offset);
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links
@@ -116,6 +117,7 @@ impl ImportCollector {
 }
 impl ImportCollector {
     fn prepare_value_references(&mut self) {
+        self.prepare_parameter_origins();
         if self.value_reference_links.is_some() {
             return;
         }
@@ -127,19 +129,7 @@ impl ImportCollector {
                 self.value_flow.reference_link_constructions += 1;
             }
         }
-        for parameter in &self.value_flow.parameters {
-            if let Some(value) = parameter_reference(parameter) {
-                insert_reference(&mut links, parameter.scope, &parameter.name, value);
-            }
-        }
         self.value_reference_links = Some(links);
-    }
-    pub(super) fn record_parameter_reference(&mut self, parameter: &ValueParameter) {
-        if let Some(links) = &mut self.value_reference_links {
-            if let Some(value) = parameter_reference(parameter) {
-                insert_reference(links, parameter.scope, &parameter.name, value);
-            }
-        }
     }
     pub(super) fn record_value_reference(
         &mut self,
@@ -182,14 +172,6 @@ fn referenced_value_root(value: &ValueExpression) -> Option<(usize, String)> {
                 .to_string(),
         )),
 
-        _ => None,
-    }
-}
-
-fn parameter_reference(parameter: &ValueParameter) -> Option<&ValueExpression> {
-    match parameter.projection.last() {
-        Some(ValueProjection::Default(value, _)) => Some(value),
-        None => Some(&parameter.default),
         _ => None,
     }
 }
