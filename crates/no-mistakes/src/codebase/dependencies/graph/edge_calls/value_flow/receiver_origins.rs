@@ -144,6 +144,8 @@ impl ValueFlowResolution<'_, '_> {
         origins: default_origins::Origins,
         owned_context: Option<(&std::path::Path, CallableId, bool)>,
     ) -> std::sync::Arc<OriginNode> {
+        let (offset, context) =
+            self.expression_read(file, call.end.saturating_sub(1), call.context);
         self.cache.origin_node(
             OriginKind::ReceiverUse(
                 origins,
@@ -151,9 +153,9 @@ impl ValueFlowResolution<'_, '_> {
                     file: file.to_path_buf(),
                     // The closing delimiter follows argument evaluation, but precedes
                     // an enclosing assignment whose exclusive end equals call.end.
-                    offset: call.end.saturating_sub(1),
+                    offset,
                     // Inline callees have no Named expression; facts own their caller context.
-                    context: call.context,
+                    context,
                     invocation: true,
                     owned_context: owned_context.map(|(file, owner, preserve)| {
                         Box::new((file.to_path_buf(), owner, preserve))

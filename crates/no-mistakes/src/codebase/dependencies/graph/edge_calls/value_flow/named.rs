@@ -9,16 +9,11 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> FlowValue {
-        // Callee-owned expressions run at invocation; supplied arguments keep
-        // their acquisition time, including methods copied before a later write.
-        // Retain invocation_read itself for the caller/owner escape guard below.
-        let (offset, context) = self
-            .invocation_read
-            .as_ref()
-            .filter(|(file, _, _, owner)| file == path && context == Some(*owner))
-            .map_or((offset, context), |(_, offset, context, _)| {
-                (*offset, *context)
-            });
+        let source_offset = offset;
+        let source_context = context;
+        // Runtime body reads and supplied acquisition are distinct; the
+        // invocation identity still owns the separate escape guard below.
+        let (offset, context) = self.expression_read(path, offset, context);
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -48,14 +43,16 @@ impl ValueFlowResolution<'_, '_> {
             return FlowValue::Unknown;
         }
         let value = if let Some(binding) = scoped_name(&file.values.bindings, scope, base) {
+            let (available_at, read_at, read_context) =
+                self.binding_read(path, scope, source_offset, source_context, offset, context);
             if binding
                 .mutation_contexts
                 .iter()
-                .any(|writer| *writer != context)
-                || offset < binding.declared_at
+                .any(|writer| *writer != read_context)
+                || available_at < binding.declared_at
                 || binding
                     .invalidated_at
-                    .is_some_and(|cutoff| offset >= cutoff)
+                    .is_some_and(|cutoff| read_at >= cutoff)
             {
                 FlowValue::Unknown
             } else {

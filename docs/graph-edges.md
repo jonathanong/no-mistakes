@@ -526,4 +526,10 @@ Live receivers supplied to helpers are read after argument evaluation. For examp
 `consume(primary.get, primary.get = replacement)`, keeps its acquisition-time
 target. Calls on an assignment's right-hand side still precede that assignment's
 write. This ordering uses the existing request-owned mutation summaries; dynamic
-spreads and uncertain execution remain conservative.
+spreads and uncertain execution remain conservative. Synchronous functions called
+from inline defaults read captured module bindings at invocation, while stored
+initializers keep their acquisition time and local temporal dead zones remain
+unresolved. A supplied nested call still acquires its value before later arguments.
+This timing applies during inline invocation analysis, including lazy fields
+projected by parameter defaults. Later body projections without that invocation
+context retain the existing conservative behavior.

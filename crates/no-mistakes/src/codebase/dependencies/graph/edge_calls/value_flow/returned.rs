@@ -101,6 +101,10 @@ impl ValueFlowResolution<'_, '_> {
                 let Some(returns) = index.values.returns.get(&id) else {
                     return FlowValue::Unknown;
                 };
+                let previous_execution = self.executing_read;
+                if !is_async {
+                    self.enter_returned_read(path, &call, &file, id);
+                }
                 let previous = self.acquisition_context.take();
                 self.acquisition_context = index.values.receiver_mutations.as_ref().map(|_| {
                     self.make_receiver_use(path, &call, previous.clone(), Some((&file, id, false)))
@@ -115,6 +119,7 @@ impl ValueFlowResolution<'_, '_> {
                     self.seal_receiver_acquisition();
                 }
                 self.acquisition_context = previous;
+                self.executing_read = previous_execution;
                 self.record_receiver_use(path, &call, &value, Some((&file, id, false)));
                 value
             })

@@ -21,8 +21,7 @@ pub(super) struct FlowFileIndex {
 mod types;
 use types::{BoundArguments, FlowValue};
 
-type ParameterInputs =
-    FxHashMap<(std::path::PathBuf, CallableId), Vec<ParameterInput>>;
+type ParameterInputs = FxHashMap<(std::path::PathBuf, CallableId), Vec<ParameterInput>>;
 
 #[derive(Clone, PartialEq, Eq)]
 struct ParameterInput {
@@ -33,10 +32,24 @@ struct ParameterInput {
     callback: bool,
 }
 impl ParameterInput {
-    fn from_site(site: &ResolvedCallSite, indexes: &CallableResolutionIndexes, facts: &dyn TsFactLookup) -> Self {
-        Self { callback: site.invocation == InvocationKind::Callback, file: site.file.clone(), offset: site.offset, callee: site.source_callee.clone(),
-            synthetic_callback: site.invocation == InvocationKind::Callback && indexes.file(facts, &site.file)
-                .is_some_and(|index| index.values.synthetic_callbacks.contains(site.source_callee.as_str())) }
+    fn from_site(
+        site: &ResolvedCallSite,
+        indexes: &CallableResolutionIndexes,
+        facts: &dyn TsFactLookup,
+    ) -> Self {
+        Self {
+            callback: site.invocation == InvocationKind::Callback,
+            file: site.file.clone(),
+            offset: site.offset,
+            callee: site.source_callee.clone(),
+            synthetic_callback: site.invocation == InvocationKind::Callback
+                && indexes.file(facts, &site.file).is_some_and(|index| {
+                    index
+                        .values
+                        .synthetic_callbacks
+                        .contains(site.source_callee.as_str())
+                }),
+        }
     }
 }
 
@@ -60,6 +73,7 @@ struct ValueFlowResolution<'a, 'b> {
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
     invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    executing_read: Option<(CallableId, u32, Option<CallableId>)>,
 }
 
 #[path = "value_flow/named.rs"]
@@ -71,7 +85,6 @@ mod returned;
 #[path = "value_flow/values.rs"]
 mod values;
 pub(super) use refine::refine_value_calls;
-
 
 #[path = "value_flow/factory_bindings.rs"]
 mod factory_bindings;
@@ -85,7 +98,6 @@ mod inline_inputs;
 
 #[path = "value_flow/parameters.rs"]
 mod parameters;
-
 
 pub(super) type ConstructorRoutes = FxHashMap<std::path::PathBuf, FxHashMap<CallableId, NodeId>>;
 #[derive(Clone, Copy)]
@@ -143,3 +155,6 @@ use agreement::agreed_value;
 
 #[path = "value_flow/invocation_argument.rs"]
 mod invocation_argument;
+
+#[path = "value_flow/binding_reads.rs"]
+mod binding_reads;

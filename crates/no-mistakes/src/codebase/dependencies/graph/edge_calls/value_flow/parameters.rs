@@ -39,6 +39,7 @@ impl ValueFlowResolution<'_, '_> {
                     default_origins: None,
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
+                    executing_read: None,
                 };
                 flow.visiting
                     .insert((path.to_path_buf(), parameter.scope, parameter.name.clone()));
