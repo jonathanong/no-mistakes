@@ -96,6 +96,7 @@ fn constructor_and_instance_aliases_taint_future_imported_intrinsics() {
     for dependency in [
         "control-flow-array-intrinsics-constructor-dependency.ts",
         "control-flow-array-intrinsics-instance-dependency.ts",
+        "control-flow-array-intrinsics-derived-dependency.ts",
     ] {
         let rows = extract(&[
             "control-flow-array-intrinsics-alias-consumer.ts",

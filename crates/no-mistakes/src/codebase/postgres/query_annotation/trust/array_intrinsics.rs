@@ -21,6 +21,7 @@ impl<'a> Visit<'a> for Exposure {
     }
     fn visit_static_member_expression(&mut self, value: &StaticMemberExpression<'a>) {
         self.0 |= value.property.name == "__proto__"
+            || value.property.name == "constructor"
             || value.property.name == "getPrototypeOf"
             || (value.property.name == "Array" && global(&value.object))
             || (value.property.name == "prototype" && array_constructor(&value.object));
@@ -28,6 +29,7 @@ impl<'a> Visit<'a> for Exposure {
     }
     fn visit_computed_member_expression(&mut self, value: &ComputedMemberExpression<'a>) {
         self.0 |= named(&value.expression, "__proto__")
+            || named(&value.expression, "constructor")
             || named(&value.expression, "getPrototypeOf")
             || (named(&value.expression, "Array") && global(&value.object))
             || (named(&value.expression, "prototype") && array_constructor(&value.object));
