@@ -1,5 +1,5 @@
 use super::*;
-use default_origins::{ReceiverRead, merge};
+use default_origins::{merge, ReceiverRead};
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn record_receiver_origin(
@@ -77,7 +77,7 @@ impl ValueFlowResolution<'_, '_> {
         self.acquisition_context = context.clone().or_else(|| previous.clone());
         let value = self.value(file, expression);
         if let Some((read_file, offset, read_context)) = self.member_read.clone() {
-            self.record_parameter_receiver_read(&read_file, offset, read_context);
+            self.record_value_receiver_read(&read_file, offset, read_context);
         }
         if self.acquisition_context.is_some() {
             self.seal_receiver_acquisition();
