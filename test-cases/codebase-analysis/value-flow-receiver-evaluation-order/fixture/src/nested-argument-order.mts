@@ -35,10 +35,12 @@ function localUnavailableAcquire() { return localUnavailable; const localUnavail
 (function localDeclarationAfterReturn(fn = localUnavailableAcquire()) { fn('key'); })();
 
 function mutableAcquire() { return mutableSaved; }
-let mutableSaved = mutableBefore.get;
+function copyMutableBefore() { return mutableBefore.get; }
+let mutableSaved = copyMutableBefore();
 (function mutableArgument(fn) { fn('key'); })(mutableAcquire(), mutableSaved = replacement);
 function mutableDefaultAcquire() { return mutableDefaultSaved; }
-let mutableDefaultSaved = mutableAfter.get;
+function copyMutableAfter() { return mutableAfter.get; }
+let mutableDefaultSaved = copyMutableAfter();
 (function mutableDefault(fn = mutableDefaultAcquire()) { fn('key'); })(undefined, mutableDefaultSaved = replacement);
 
 function laterObjectAcquire() { return { fn: objectLater.get }; }
