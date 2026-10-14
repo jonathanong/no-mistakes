@@ -127,10 +127,14 @@ builders unproven. Use `check()` for project-wide annotation enforcement.
 
 Import-aware evaluation follows helper `if`/early-return paths and finite array
 `map`, `join`, `push`, and `forEach` operations, including conditional CTE assembly
-and append helpers. It recovers whole statements, with the same 16-alternative
-limit as embedded SQL extraction. One unknown structural alternative or a limit
-overflow makes the entire executor site incomplete; a favorable read alternative
-cannot certify the others. Group alternatives by `fileName` and `line`, parse
+and append helpers. Literal booleans stringify as JavaScript `true` and `false`
+in finite joins, plain templates, and string concatenation; for example,
+`'SELECT ' + [true, false].join(', ')` recovers `SELECT true, false`.
+Trusted SQL-tag interpolations remain generated value binds, while unknown
+values and object coercions remain incomplete. It recovers whole statements,
+with the same 16-alternative limit as embedded SQL extraction. One unknown
+structural alternative or a limit overflow makes the entire executor site
+incomplete; a favorable read alternative cannot certify the others. Group alternatives by `fileName` and `line`, parse
 every statement, and inspect nested effects (including DML inside `WITH`) before
 classifying the site as read-only. SQL construction alone never proves a read.
 Conditional array cardinality stays unknown across slot writes; collection

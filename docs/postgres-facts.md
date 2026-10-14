@@ -1058,3 +1058,8 @@ Same-file helper SQL keeps its literal byte and line origins when conditional
 appends produce finite alternatives. Diagnostics on repeated clauses remain
 separate at their authored locations, rather than being rebased to the helper
 call.
+
+Import-aware executed SQL evaluation recovers JavaScript `true` and `false` text
+from finite joins, plain templates, and string concatenation. Mixed finite arrays
+retain string and number spelling. Trusted SQL-tag interpolations keep generated
+value-bind provenance; unknown values and object coercions remain incomplete.
