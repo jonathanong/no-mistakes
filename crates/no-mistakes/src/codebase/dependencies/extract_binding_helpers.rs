@@ -9,7 +9,7 @@ fn visit_binding_defaults_for_name<'a>(
                 .iter()
                 .any(|binding| binding == name)
             {
-                collector.visit_expression(&assignment.right);
+                with_conditional_receiver_write(collector, |collector| collector.visit_expression(&assignment.right));
             }
             visit_binding_defaults_for_name(collector, &assignment.left, name);
         }

@@ -38,9 +38,10 @@ impl ImportCollector {
         if let Some((assigned, completed_at)) = assigned {
             let write = mutation_history::ValueAssignedMutation {
                 offset: completed_at,
-                context,
-                multiple_contexts: false,
-                unconditional_offset: unconditional.then_some(completed_at),
+                writer: mutation_history::ValueAssignedWriter::single(context),
+                unconditional_offset: unconditional
+                    .then(|| std::num::NonZeroU32::new(completed_at))
+                    .flatten(),
             };
             history.record_assignment(path, assigned, write, propagated);
         }

@@ -78,11 +78,10 @@ impl ValueAssignedMutations {
         context: Option<CallableId>,
     ) -> bool {
         let replaced = |write: &ValueAssignedMutation| {
-            !write.multiple_contexts
-                && write.context == context
+            write.writer == mutation_history::ValueAssignedWriter::single(context)
                 && write
                     .unconditional_offset
-                    .is_some_and(|write| write <= offset)
+                    .is_some_and(|write| write.get() <= offset)
         };
         self.members.get(member).is_some_and(replaced)
             || self.propagated.as_ref().is_some_and(|propagated| {
@@ -106,7 +105,7 @@ impl ValuePropagatedMutations {
     pub(super) fn record(&mut self, member: Option<String>, write: ValueAssignedMutation) {
         self.aggregate.record(member.clone(), write);
         self.contexts
-            .entry(write.context)
+            .entry(write.writer.context())
             .or_default()
             .record(member, write);
     }

@@ -131,3 +131,11 @@ do { break; doBox.client = { get: replacement }; } while (false);
 doBox.client.get = replacement;
 function doBody(value) { value.get('key'); }
 for (const item of items) { doBody(doClient); }
+
+import { primary as client14 } from '@vendor/valkey';
+const arrayBox = { client: client14 };
+// Array binding defaults are conditional just like object binding defaults.
+const [arrayValue = (arrayBox.client = { get: replacement })] = source;
+arrayBox.client.get = replacement;
+function arrayBindingDefault(value) { value.get('key'); }
+for (const item of items) { arrayBindingDefault(client14); }

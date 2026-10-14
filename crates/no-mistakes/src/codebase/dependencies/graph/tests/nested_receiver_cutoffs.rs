@@ -31,6 +31,7 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         "logicalAssignment",
         "loop",
         "bindingDefault",
+        "arrayBindingDefault",
         "assignmentDefault",
         "sameReceiver",
         "unknownReceiver",

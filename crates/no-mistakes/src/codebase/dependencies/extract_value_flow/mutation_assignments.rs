@@ -1,5 +1,5 @@
 use super::*;
-use mutation_history::{ValueAssignedMutation, ValueMutationHistory};
+use mutation_history::{ValueAssignedMutation, ValueAssignedWriter, ValueMutationHistory};
 
 impl ValueAssignedMutation {
     pub(super) fn merge(&mut self, source: Self) {
@@ -9,13 +9,13 @@ impl ValueAssignedMutation {
             .into_iter()
             .chain(source.unconditional_offset)
             .min();
-        self.multiple_contexts |= source.multiple_contexts || self.context != source.context;
-        if self.multiple_contexts {
-            self.context = None;
+        if self.writer != source.writer {
+            self.writer = ValueAssignedWriter::Mixed;
         }
     }
     pub(super) fn invalidated(&self, reader: &impl Fn(Option<CallableId>) -> Option<u32>) -> bool {
-        self.multiple_contexts || reader(self.context).is_none_or(|offset| self.offset <= offset)
+        self.writer == ValueAssignedWriter::Mixed
+            || reader(self.writer.context()).is_none_or(|offset| self.offset <= offset)
     }
 }
 impl ValueMutationHistory {

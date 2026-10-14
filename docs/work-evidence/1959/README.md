@@ -114,3 +114,12 @@ baseline traversal is still proportional to writes times alias edges. The
 canonical root counter separately bounds the additional ancestor checks; only
 their redundant component walk was eliminated. No linear whole-collector or
 measured performance claim is made. These corrections await current-head CI.
+
+The correction's next CI run passed 11,247 library tests, including all existing
+receiver/default graph and rule controls, but exposed two fact guards: the
+unchanged 16-byte exact-summary bound and a binding-default traversal bypass.
+The next correction packs module/single/mixed writer state into one enum and
+stores the guaranteed nonzero completion offset inline, preserving the bound.
+Both object and array binding-default paths now retain receiver-only conditional
+certainty in the existing named-default visitor. No semantic expectations were
+relaxed. Current-head runtime validation remains pending.

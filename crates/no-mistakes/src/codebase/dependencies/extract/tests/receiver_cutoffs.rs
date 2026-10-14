@@ -34,7 +34,7 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
             "box {index}: {write:?}"
         );
         if let Some(guaranteed) = write.unconditional_offset {
-            assert!(guaranteed > write.offset);
+            assert!(guaranteed.get() > write.offset);
         }
     }
     let parameter = &histories[&0]["parameterBox"]
@@ -43,7 +43,7 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
         .unwrap()
         .members["client"];
     assert!(parameter.unconditional_offset.is_none());
-    for name in ["forBox", "whileBox", "doBox"] {
+    for name in ["forBox", "whileBox", "doBox", "arrayBox"] {
         let write = &histories[&0][name].assigned.as_ref().unwrap().members["client"];
         assert!(write.unconditional_offset.is_none(), "{name}: {write:?}");
     }
@@ -52,5 +52,5 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
         .as_ref()
         .unwrap()
         .members["client"];
-    assert!(acquired.unconditional_offset.unwrap() > acquired.offset);
+    assert!(acquired.unconditional_offset.unwrap().get() > acquired.offset);
 }

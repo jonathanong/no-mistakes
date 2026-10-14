@@ -30,9 +30,25 @@ pub struct ValuePropagatedMutations {
 pub struct ValueAssignedMutation {
     pub offset: u32,
     /// Earliest guaranteed fresh overwrite, distinct from merely possible writes.
-    pub unconditional_offset: Option<u32>,
-    pub context: Option<CallableId>,
-    pub multiple_contexts: bool,
+    pub unconditional_offset: Option<std::num::NonZeroU32>,
+    pub writer: ValueAssignedWriter,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValueAssignedWriter {
+    Module,
+    Callable(CallableId),
+    Mixed,
+}
+impl ValueAssignedWriter {
+    pub(super) fn single(context: Option<CallableId>) -> Self {
+        context.map_or(Self::Module, Self::Callable)
+    }
+    pub(super) fn context(self) -> Option<CallableId> {
+        match self {
+            Self::Callable(id) => Some(id),
+            _ => None,
+        }
+    }
 }
 impl ValueMutationHistory {
     pub(super) fn record(
