@@ -175,3 +175,6 @@ mod destructuring_phase_edges;
 
 #[path = "destructuring_phase_scopes.rs"]
 mod destructuring_phase_scopes;
+
+#[path = "assigned_ancestor_boundaries.rs"]
+mod assigned_ancestor_boundaries;

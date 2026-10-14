@@ -14,6 +14,20 @@ impl ValueAssignedMutation {
     }
 }
 impl ValueAssignedMutations {
+    fn invalidated(
+        &self,
+        member: &str,
+        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
+    ) -> bool {
+        [self.members.get(member), self.dynamic.as_ref()]
+            .into_iter()
+            .flatten()
+            .any(|write| write.invalidated(reader))
+            || self
+                .early
+                .as_ref()
+                .is_some_and(|early| early.invalidated(member, reader, self))
+    }
     pub(super) fn merge(&mut self, mut source: Self) {
         if let Some(early) = source.early.take() {
             self.early
@@ -80,22 +94,22 @@ impl ValueMutationHistory {
         projection: &[&str],
         reader: &impl Fn(Option<CallableId>) -> Option<u32>,
     ) -> bool {
-        let Some((member, prefix)) = projection.split_first() else {
+        let Some((_, prefix)) = projection.split_first() else {
             return false;
         };
-        if prefix.is_empty() {
-            return self.assigned.as_ref().is_some_and(|members| {
-                [members.members.get(*member), members.dynamic.as_ref()]
-                    .into_iter()
-                    .flatten()
-                    .any(|write| write.invalidated(reader))
-                    || members
-                        .early
-                        .as_ref()
-                        .is_some_and(|early| early.invalidated(member, reader, members))
-            });
+        // Replacing any receiver prefix also replaces its descendants. Keep
+        // the same reader cutoff and early destructuring phase at every step.
+        let next = projection.last().expect("nonempty projection");
+        if self
+            .assigned
+            .as_ref()
+            .is_some_and(|members| members.invalidated(next, reader))
+        {
+            return true;
         }
-        let (next, _) = prefix.split_last().expect("nonempty prefix");
+        if prefix.is_empty() {
+            return false;
+        }
         let child_matches = |child: &Self| {
             child.assignment_invalidated_reads(&projection[..projection.len() - 1], reader)
         };
