@@ -85,8 +85,9 @@ names are inferred from a module name or a PostgreSQL convention.
 `typedExecutors` uses the same exact `{module, export, category?}` selector shape
 to select calls through a parameter whose explicit callable type comes from an
 imported type export. Named and namespace type imports, aliases, and explicit
-type re-exports preserve that type provenance. Local spelling and a matching
-terminal type name alone do not select a call. These calls carry the transaction
+type re-exports preserve that type provenance. Namespace member suffixes (for example,
+`Namespace.Query`) survive explicit named and local type barrels, including aliases.
+Local spelling and a matching terminal type name alone do not select a call. These calls carry the transaction
 marker in `query-reached-per-item` findings.
 
 `returnedMembers` selects a member call on a receiver returned by a configured

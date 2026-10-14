@@ -56,17 +56,24 @@ impl ValueFlowResolution<'_, '_> {
             let Some(facts) = self.facts.get_ts_facts(&target) else {
                 break;
             };
+            // Barrels bind the exported root; the remaining namespace path stays intact.
+            let (root, member) = export
+                .split_once('.')
+                .map_or((export.as_str(), None), |(root, member)| (root, Some(member)));
             let Some(binding) = facts
                 .value_flow
                 .type_exports
                 .iter()
-                .find(|binding| binding.exported == export)
+                .find(|binding| binding.exported == root)
             else {
                 break;
             };
             if let Some(specifier) = &binding.specifier {
                 module = specifier.clone();
-                export = binding.local.clone();
+                export = member.map_or_else(
+                    || binding.local.clone(),
+                    |member| format!("{}.{member}", binding.local),
+                );
             } else {
                 let Some(imported) = facts
                     .imported_bindings
@@ -75,7 +82,7 @@ impl ValueFlowResolution<'_, '_> {
                 else {
                     break;
                 };
-                let Some(next) = type_export(imported, None) else {
+                let Some(next) = type_export(imported, member) else {
                     break;
                 };
                 module = imported.specifier.clone();
