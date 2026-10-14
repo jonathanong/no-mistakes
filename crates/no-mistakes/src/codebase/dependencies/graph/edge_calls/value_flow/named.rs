@@ -177,9 +177,7 @@ impl ValueFlowResolution<'_, '_> {
         }
         // A member initializer has already checked its source at acquisition.
         // Reading descendants still validates the live receiver projection.
-        let acquired_member = projection.is_none()
-            && member.is_none()
-            && binding.is_some_and(|binding| matches!(binding.value, ValueExpression::Member(..)));
+        let acquired_member = Self::acquired_binding_member(binding, member, projection);
         let value = if !acquired_member
             && self.default_origin_invalidated(path, offset, context, projection)
         {

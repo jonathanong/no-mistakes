@@ -163,3 +163,6 @@ mod invocation_argument;
 
 #[path = "value_flow/binding_reads.rs"]
 mod binding_reads;
+
+#[path = "value_flow/execution_phases.rs"]
+mod execution_phases;

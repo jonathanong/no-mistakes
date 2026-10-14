@@ -1,6 +1,16 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
+    pub(super) fn acquired_binding_member(
+        binding: Option<&ValueBinding>,
+        member: Option<&str>,
+        projection: Option<&member_projection::MemberProjection<'_>>,
+    ) -> bool {
+        projection.is_none()
+            && member.is_none()
+            && binding.is_some_and(|binding| matches!(binding.value, ValueExpression::Member(..)))
+    }
+
     pub(super) fn enter_inline_read(
         &mut self,
         caller: &std::path::Path,
@@ -104,18 +114,22 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         owner: CallableId,
     ) {
-        if let Some(read) = self.invocation_read.as_ref().filter(|read| {
-            call.context
-                .is_some_and(|context| read.owner.0 != caller || read.owner.1 != context)
+        if let Some(context) = call.context.filter(|context| {
+            self.invocation_read
+                .as_ref()
+                .is_some_and(|read| read.owner.0 != caller || read.owner.1 != *context)
         }) {
-            // An intermediate owner has no independent runtime phase here.
-            // Use only the qualified same-file outer phase for live reads;
-            // captured initializers keep their own source context and timing.
-            self.executing_read = (read.file == caller && read.file == file).then_some((
-                owner,
-                read.offset,
-                read.context,
-            ));
+            let phase = (caller == file)
+                .then(|| self.unique_execution_phase(file, context))
+                .flatten();
+            let fallback = self
+                .invocation_read
+                .as_ref()
+                .filter(|read| read.file == caller && read.file == file)
+                .map(|read| (read.offset, read.context));
+            self.executing_read = phase
+                .or(fallback)
+                .map(|(offset, context)| (owner, offset, context));
             return;
         }
         self.enter_returned_read(caller, call, file, owner);

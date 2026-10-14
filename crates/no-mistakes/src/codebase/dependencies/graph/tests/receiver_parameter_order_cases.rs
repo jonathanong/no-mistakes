@@ -3,6 +3,31 @@ use super::cases::Case;
 pub(super) fn cases() -> &'static [Case] {
     &[
         (
+            "unique-parameter-phase",
+            Some("escapedArgument"),
+            "fn",
+            None,
+        ),
+        (
+            "unique-parameter-phase",
+            Some("uniqueArgument"),
+            "fn",
+            Some("suppliedUnique.get"),
+        ),
+        ("unique-parameter-phase", Some("uniqueDefault"), "fn", None),
+        (
+            "unique-parameter-phase",
+            Some("multipleArgument"),
+            "fn",
+            None,
+        ),
+        (
+            "unique-parameter-phase",
+            Some("recursiveArgument"),
+            "fn",
+            None,
+        ),
+        (
             "nested-parameter-order",
             Some("parameterArgument"),
             "fn",
