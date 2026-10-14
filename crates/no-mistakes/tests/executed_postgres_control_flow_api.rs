@@ -318,3 +318,18 @@ fn unreachable_var_declarations_still_shadow_captured_sql() {
     let unchanged = rows.iter().find(|row| row.line == 11).unwrap();
     assert!(unchanged.complete, "{unchanged:?}");
 }
+
+#[test]
+fn opaque_array_callbacks_remain_safely_incomplete() {
+    let rows = extract("control-flow-array-callbacks.ts");
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert!(
+        !rows[0].complete && !rows[0].only_value_placeholders,
+        "{rows:?}"
+    );
+    assert_eq!(
+        rows[0].incomplete_reason.as_deref(),
+        Some("unresolved-sql-fragment"),
+        "{rows:?}"
+    );
+}
