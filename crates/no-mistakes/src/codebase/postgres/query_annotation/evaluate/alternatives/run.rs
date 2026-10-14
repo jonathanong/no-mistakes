@@ -25,6 +25,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let extra_slots = self.argument_extra_slots.clone();
         let mut joined_extras = None;
         let updates = self.builder_updates.clone();
+        let untrusted = self.untrusted_array_intrinsics;
+        let mut joined_untrusted = untrusted;
         let original_ids = self.next_builder;
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
@@ -43,6 +45,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut returned = Vec::new();
         let mut changed = FxHashSet::default();
         for (arm_index, arm) in arms.iter().enumerate() {
+            self.untrusted_array_intrinsics = untrusted;
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.active_callback_functions.clone_from(&seen);
@@ -72,6 +75,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.add_alternative_captured_readers(scopes.len());
             self.rebuild_compacted_binding_indexes(false);
             returned.push(self.expr(arm, path, env, depth, generic));
+            joined_untrusted |= self.untrusted_array_intrinsics;
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
             self.merge_alternative_masks(
@@ -202,6 +206,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             .pop()
             .expect("balanced alternatives");
         self.prune_alternative_state(&returned);
+        self.untrusted_array_intrinsics = joined_untrusted;
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
         super::super::concat::alternative_result(returned, self.files[path].facts.precise_records)

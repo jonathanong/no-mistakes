@@ -139,3 +139,37 @@ fn reflected_array_prototypes_taint_future_imported_intrinsics() {
         "{rows:?}"
     );
 }
+
+#[test]
+fn opaque_effects_before_allocation_taint_future_intrinsics() {
+    let rows = extract(&["control-flow-array-intrinsics-opaque.ts"]);
+    assert_eq!(rows.len(), 7, "{rows:?}");
+    for row in &rows {
+        assert_eq!(row.complete, matches!(row.line, 9 | 16 | 25), "{row:?}");
+    }
+    assert_eq!(
+        rows.iter().filter(|row| row.complete).count(),
+        3,
+        "{rows:?}"
+    );
+    for row in rows.iter().filter(|row| !row.complete) {
+        assert!(!row.only_value_placeholders, "{row:?}");
+        // Precomputed text was already conservatively invalidated before this fix.
+        let reason = if row.line == 21 {
+            "unresolved-value-or-effect"
+        } else {
+            "untrusted-array-intrinsics"
+        };
+        assert_eq!(row.incomplete_reason.as_deref(), Some(reason));
+    }
+    let rows = extract(&["control-flow-array-intrinsics-accessor.ts"]);
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert!(
+        !rows[0].complete && !rows[0].only_value_placeholders,
+        "{rows:?}"
+    );
+    assert_eq!(
+        rows[0].incomplete_reason.as_deref(),
+        Some("untrusted-array-intrinsics")
+    );
+}
