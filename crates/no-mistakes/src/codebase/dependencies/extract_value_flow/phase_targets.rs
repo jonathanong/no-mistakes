@@ -2,7 +2,7 @@ use super::*;
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
 use phase_walk::{PhaseWalk, PhaseWrite};
 
-impl PhaseWalk<'_> {
+impl PhaseWalk {
     pub(super) fn target(&mut self, target: &AssignmentTarget<'_>) {
         match target {
             AssignmentTarget::ArrayAssignmentTarget(array) => {
@@ -73,24 +73,16 @@ impl PhaseWalk<'_> {
     }
     pub(super) fn write(&mut self, target: &AssignmentTarget<'_>) {
         self.phase += 1;
-        for (name, path) in write_targets::targets(target)
+        for (name, path, target) in write_targets::targets(target)
             .into_iter()
-            .filter(|(_, path)| !path.is_empty())
+            .filter(|(_, path, _)| !path.is_empty())
         {
-            let base = name.split('.').next().expect("receiver write");
-            let scope = self.collector.callee_binding_scope(base).or_else(|| {
-                (self.collector.imported_bindings.contains(base)
-                    || self.collector.predeclared_imported_bindings.contains(base))
-                .then_some(0)
+            self.writes.push(PhaseWrite {
+                target,
+                name,
+                path,
+                phase: self.phase,
             });
-            if let Some(scope) = scope {
-                self.writes.push(PhaseWrite {
-                    scope,
-                    name,
-                    path,
-                    phase: self.phase,
-                });
-            }
         }
     }
 }

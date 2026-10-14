@@ -22,6 +22,36 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
     .unwrap();
     for (file, caller, callee, export) in [
         (
+            "destructuring-scopes",
+            Some("scopeApi"),
+            "client.get",
+            None, // Named class self-binding remains a pre-existing graph limit.
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeBlock"),
+            "client.get",
+            Some("block.get"),
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeComputed"),
+            "client.get",
+            Some("computedScope.get"),
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeUpdated"),
+            "client.get",
+            Some("updatedScope.get"),
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeMatching"),
+            "client.get",
+            None,
+        ),
+        (
             "supplied-context",
             Some("before"),
             "client.get",

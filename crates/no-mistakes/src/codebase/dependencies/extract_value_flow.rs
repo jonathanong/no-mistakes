@@ -30,6 +30,8 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub early_assignment_phase_writes: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_scope_receipts: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub early_assignment_catalogs: usize,
     #[cfg(feature = "test-instrumentation")]
     pub early_assignment_segments: usize,
@@ -155,6 +157,8 @@ mod mutation_assignments;
 
 #[path = "extract_value_flow/phase_catalog.rs"]
 mod phase_catalog;
+#[path = "extract_value_flow/phase_receipts.rs"]
+pub(super) mod phase_receipts;
 #[path = "extract_value_flow/phase_runner.rs"]
 pub(super) mod phase_runner;
 #[path = "extract_value_flow/phase_targets.rs"]

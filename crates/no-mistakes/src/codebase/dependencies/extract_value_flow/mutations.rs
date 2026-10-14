@@ -23,6 +23,7 @@ impl ImportCollector {
         let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
         affected.entry(scope).or_default().insert(base.to_string());
         if member && self.collect_value_flow {
+            self.record_phase_scope(scope);
             self.prepare_value_references();
             let mut parts = receiver.map_or_else(
                 || {

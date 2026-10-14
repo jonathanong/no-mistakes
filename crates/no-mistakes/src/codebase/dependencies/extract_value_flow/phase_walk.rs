@@ -2,19 +2,18 @@ use super::*;
 use oxc_ast_visit::Visit;
 
 pub(super) struct PhaseWrite {
-    pub(super) scope: usize,
+    pub(super) target: u32,
     pub(super) name: String,
     pub(super) path: ValueMutationPath,
     pub(super) phase: u32,
 }
-pub(super) struct PhaseWalk<'c> {
-    pub(super) collector: &'c ImportCollector,
+pub(super) struct PhaseWalk {
     pub(super) phase: u32,
     pub(super) cursor: u32,
     pub(super) segments: Vec<(u32, u32, u32)>,
     pub(super) writes: Vec<PhaseWrite>,
 }
-impl PhaseWalk<'_> {
+impl PhaseWalk {
     pub(super) fn segment(&mut self, end: u32) {
         if self.cursor < end {
             self.segments.push((self.cursor, end, self.phase));
@@ -33,7 +32,7 @@ impl PhaseWalk<'_> {
         self.cursor = span.end;
     }
 }
-impl<'a> Visit<'a> for PhaseWalk<'_> {
+impl<'a> Visit<'a> for PhaseWalk {
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
         self.segment(assignment.span.start);
         // Only assignment evaluation is reordered here. The enclosing ordinary

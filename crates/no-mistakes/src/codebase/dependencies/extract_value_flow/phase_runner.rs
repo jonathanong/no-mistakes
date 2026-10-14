@@ -27,7 +27,6 @@ impl ImportCollector {
             return None;
         }
         let mut walk = PhaseWalk {
-            collector: self,
             phase: 0,
             cursor: 0,
             segments: Vec::new(),
@@ -59,13 +58,24 @@ impl ImportCollector {
     pub(in super::super) fn end_destructuring_lhs(&mut self, phases: &Option<PreparedPhases>) {
         if let Some(phases) = phases {
             self.destructuring_phase_owner = phases.previous;
+            if let Some(receipts) = &mut self.destructuring_phase_receipts {
+                receipts.active = false;
+            }
         }
     }
     pub(in super::super) fn finish_destructuring_phases(&mut self, phases: Option<PreparedPhases>) {
         if let Some(phases) = phases {
             for write in phases.writes {
+                let Some(scope) = self
+                    .destructuring_phase_receipts
+                    .as_ref()
+                    .and_then(|receipts| receipts.scopes.get(&write.target))
+                    .copied()
+                else {
+                    continue;
+                };
                 self.record_early_assignment(
-                    write.scope,
+                    scope,
                     &write.name,
                     &write.path,
                     &phases.catalog,

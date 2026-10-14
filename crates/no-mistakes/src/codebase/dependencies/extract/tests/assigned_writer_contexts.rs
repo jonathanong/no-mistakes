@@ -116,6 +116,7 @@ fn destructuring_ranges_are_recorded_once_and_shared_across_aliases() {
         true,
     );
     assert_eq!(facts.value_flow.early_assignment_phase_writes, 128);
+    assert_eq!(facts.value_flow.early_assignment_scope_receipts, 128);
     assert_eq!(facts.value_flow.early_assignment_catalogs, 128);
     assert_eq!(facts.value_flow.early_assignment_segments, 256);
     assert_eq!(facts.value_flow.early_assignment_normalization_visits, 128);
@@ -161,6 +162,7 @@ fn non_receiver_destructuring_keeps_early_range_storage_cold() {
     assert_eq!(facts.value_flow.early_assignment_segments, 0);
     assert_eq!(facts.value_flow.early_assignment_normalization_visits, 0);
     assert_eq!(facts.value_flow.early_assignment_phase_writes, 0);
+    assert_eq!(facts.value_flow.early_assignment_scope_receipts, 0);
     let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["primary"];
     assert!(history.assigned.as_ref().unwrap().early.is_none());
 }
@@ -170,3 +172,6 @@ mod destructuring_phase_bounds;
 
 #[path = "destructuring_phase_edges.rs"]
 mod destructuring_phase_edges;
+
+#[path = "destructuring_phase_scopes.rs"]
+mod destructuring_phase_scopes;
