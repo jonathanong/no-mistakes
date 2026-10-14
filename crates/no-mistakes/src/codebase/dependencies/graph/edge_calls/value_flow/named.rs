@@ -8,6 +8,7 @@ impl ValueFlowResolution<'_, '_> {
         scope: Option<usize>,
         offset: u32,
         context: Option<CallableId>,
+        projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
         let source_offset = offset;
         let source_context = context;
@@ -23,17 +24,6 @@ impl ValueFlowResolution<'_, '_> {
         let Some(scope) = scope.or_else(|| file.imported.contains_key(base).then_some(0)) else {
             return FlowValue::Unknown;
         };
-        if self.invocation_read.is_some()
-            && file
-                .values
-                .receiver_mutations
-                .as_ref()
-                .and_then(|histories| histories.get(&scope))
-                .and_then(|names| names.get(base))
-                .is_some_and(|history| history.invalidated(&[], &[], offset, context, false))
-        {
-            return FlowValue::Unknown;
-        }
         let key = (path.to_path_buf(), scope, base.to_string());
         if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
             self.used_parameters
@@ -113,7 +103,7 @@ impl ValueFlowResolution<'_, '_> {
                 });
             match imported_value {
                 Some(ExportedCallableResolution::Value(target, local)) => {
-                    let value = self.named(&target, &local, Some(0), u32::MAX, None);
+                    let value = self.named(&target, &local, Some(0), u32::MAX, None, None);
                     value.map_executor(|value| match value {
                         FlowValue::Callable {
                             file: target,
@@ -166,7 +156,7 @@ impl ValueFlowResolution<'_, '_> {
                 default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
             }
         }
-        let value = if self.default_origin_invalidated(path, offset, context) {
+        let value = if self.default_origin_invalidated(path, offset, context, projection) {
             FlowValue::Unknown
         } else {
             value

@@ -101,7 +101,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Value::Promise(value) | Value::Evaluated(value, _) => {
                     self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
                 }
-                Value::Arguments(id)
+                Value::Arguments(id) | Value::Array(id)
                     if visited
                         .objects
                         .get(id)

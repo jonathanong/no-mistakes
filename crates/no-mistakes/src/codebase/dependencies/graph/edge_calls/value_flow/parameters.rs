@@ -157,6 +157,16 @@ impl ValueFlowResolution<'_, '_> {
             } else {
                 argument.expect("supplied non-undefined argument")
             };
+            if !parameter.projection.is_empty() {
+                // Destructuring acquires methods before the body executes. Carry
+                // caller timing into lazy receiver fields before they snapshot.
+                self.record_receiver_use(
+                    &caller,
+                    call,
+                    &value,
+                    from_default.then_some((path, parameter.owner, true)),
+                );
+            }
             values.push(self.project_parameter(path, parameter, value, from_default, acquisition));
             if self.acquisition_context.is_some() {
                 self.seal_receiver_acquisition();

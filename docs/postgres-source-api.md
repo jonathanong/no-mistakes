@@ -52,6 +52,12 @@ leaving an unused iterator's body unexecuted, including creation through literal
 conservative body checks in both CLI and async Node checks, including iterator
 results returned through invoked literal closures. No Node source-fact JSON
 fields or TypeScript declarations change.
+Opaque callback discovery also visits live modeled array slots, including nested
+arrays and aliases. Cycles share the existing callback budget, and slots marked
+definitely deleted are excluded. Traversal retains conservative captured SQL
+proofs: an opaque callback cannot restore `complete` or `onlyValuePlaceholders`
+after a potentially modifying effect. Observed callback effects can discard an
+earlier recovered fragment and report `unresolved-value-or-effect`.
 The conservative traversal isolates each case's entry state. A preceding body
 cannot supply a later case's complete SQL; bindings it changes lose recovered
 prefixes and finite versions, including when the leading DML kind can change.

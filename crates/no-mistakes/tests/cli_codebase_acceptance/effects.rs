@@ -175,3 +175,12 @@ fn effects_cli_retains_inline_invocation_context() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+#[test]
+fn effects_namespace_types_cross_explicit_barrels() {
+    let root =
+        fixture("effects").join("../../../rules/query-reached-per-item/namespace-types-fixture");
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
+    let value = run_json(&root, &["effects", "postgres", "--entry", "src/entry.mts"]);
+    assert_eq!(value["callSites"].as_array().unwrap().len(), 3, "{value}");
+}
