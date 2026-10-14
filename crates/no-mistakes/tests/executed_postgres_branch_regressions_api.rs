@@ -100,3 +100,27 @@ fn operand_failure_cannot_discard_accessor_effects() {
         assert!(!row.only_value_placeholders, "{row:?}");
     }
 }
+
+#[test]
+fn builder_coercion_observes_later_supported_operand_effects() {
+    let rows = extract("control-flow-late-builder-coercion.ts");
+    assert_eq!(rows.len(), 5, "{rows:?}");
+    for row in &rows {
+        if matches!(row.line, 17 | 29) {
+            // Builder binary coercion was already conservative before this fix.
+            assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
+            assert_eq!(
+                row.incomplete_reason.as_deref(),
+                Some("opaque-binary-coercion")
+            );
+            continue;
+        }
+        assert!(row.complete, "{rows:?}");
+        let text = if matches!(row.line, 23 | 29) {
+            "SELECT 1"
+        } else {
+            "SELECT 1; DELETE FROM records"
+        };
+        assert_eq!(row.sql_text.as_deref(), Some(text), "{rows:?}");
+    }
+}

@@ -152,6 +152,8 @@ including optional calls. Ordinary optional calls retain their existing literal
 SQL results, and annotation-only analysis retains its existing behavior.
 Opaque operand effects remain authoritative across indexed writes and binary or
 returned failures; discarding a failed value cannot restore an earlier SQL proof.
+An append observes supported mutations to its captured builder receiver while
+evaluating the tail, preserving the receiver's identity rather than an old prefix.
 
 `incompleteReason` is additive evaluator metadata: `null` for complete statements
 or proven generated value binds, otherwise a blocker such as `variant-limit`,

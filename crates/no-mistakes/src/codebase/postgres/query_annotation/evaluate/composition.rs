@@ -40,8 +40,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let base_value = self.expr(base, path, env, depth, generic);
+        let mut base_value = self.expr(base, path, env, depth, generic);
         let tail_value = self.expr(tail, path, env, depth, generic);
+        if self.files[path].facts.precise_records {
+            self.refresh_arguments(std::slice::from_mut(&mut base_value));
+        }
         if self.files[path].facts.precise_records
             && (!self.handled_deletion_effect(base, &base_value, path, *env)
                 || !self.handled_deletion_effect(tail, &tail_value, path, *env))
