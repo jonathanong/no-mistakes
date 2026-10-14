@@ -75,3 +75,6 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
     assert!(evaluator.events.is_empty());
     assert!(evaluator.active_callback_functions.is_none());
 }
+
+#[path = "array_tests.rs"]
+mod array_tests;
