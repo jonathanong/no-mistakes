@@ -38,10 +38,12 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Callable(id) => self.callable(path, *id),
             ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
+                let whole_receiver = std::cell::Cell::new(true);
                 let hint = member_projection::MemberProjection {
                     member,
                     outer: projection,
                     transparent_alias: false,
+                    whole_receiver: projection.map_or(&whole_receiver, |hint| hint.whole_receiver),
                 };
                 let base = self.value_projected(path, base, Some(&hint));
                 self.member(base, member)

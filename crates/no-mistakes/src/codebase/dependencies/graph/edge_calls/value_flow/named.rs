@@ -51,16 +51,7 @@ impl ValueFlowResolution<'_, '_> {
                 .is_some_and(|hint| hint.transparent_alias)
             {
                 let value = self.value_projected(path, &binding.value, projection);
-                if context.is_some_and(|context| {
-                    file.values
-                        .receiver_mutations
-                        .as_ref()
-                        .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
-                }) {
-                    // A whole receiver alias stays live until this read. Copied
-                    // member/object initializers never enter this branch.
-                    self.record_parameter_receiver_read(path, offset, context);
-                }
+                self.refresh_alias_receiver(path, offset, context, projection, &value);
                 value
             } else {
                 self.value(path, &binding.value)
@@ -81,6 +72,11 @@ impl ValueFlowResolution<'_, '_> {
                 FlowValue::Unknown
             } else {
                 let value = self.parameter(path, parameter, &file);
+                member_projection::preserve_whole_receiver(
+                    projection,
+                    &value,
+                    self.default_origins.as_deref(),
+                );
                 if context.is_some_and(|context| {
                     file.values
                         .receiver_mutations
@@ -98,6 +94,9 @@ impl ValueFlowResolution<'_, '_> {
                 self.visiting.remove(&key);
                 return FlowValue::Unknown;
             };
+            if let Some(hint) = projection {
+                hint.whole_receiver.set(false);
+            }
             let imported_value = self
                 .resolver
                 .resolve(&binding.specifier, path)

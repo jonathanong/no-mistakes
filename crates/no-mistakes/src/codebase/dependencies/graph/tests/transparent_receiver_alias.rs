@@ -33,6 +33,24 @@ fn whole_receiver_aliases_keep_projection_and_copied_acquisition_boundaries() {
         ("ancestor-after-alias", "alias.nested.get", None),
         ("ancestor-dynamic", "alias.nested.get", None),
         ("ancestor-snapshot", "alias.get", Some("primary.nested.get")),
+        (
+            "ancestor-copied-object",
+            "alias.get",
+            Some("primary.nested.get"),
+        ),
+        (
+            "ancestor-copied-chain",
+            "alias.get",
+            Some("primary.nested.get"),
+        ),
+        (
+            "supplied-copied-object",
+            "alias.get",
+            Some("primary.nested.get"),
+        ),
+        ("ancestor-copied-before", "alias.get", None),
+        ("exported-copied-reader", "alias.get", None),
+        ("inline-supplied-copied-object", "alias.get", None),
         ("computed", "alias.get", Some("primary.get")),
         ("supplied", "alias.get", Some("primary.get")),
         ("inline-supplied", "alias.get", Some("primary.get")),
@@ -112,5 +130,22 @@ fn alias_member_reads_share_agreements_across_small_and_large_inputs() {
             #[cfg(not(feature = "test-instrumentation"))]
             let _ = agreements;
         }
+    }
+}
+
+#[test]
+fn transparent_alias_proof_keeps_receiver_history_storage_cold() {
+    let (root, graph) = alias_graph("transparent-receiver-alias-cold");
+    let sites = graph.call_sites_in_file(&root.join("src/index.mts"));
+    let read = sites
+        .iter()
+        .find(|site| site.source_callee == "alias.get")
+        .unwrap();
+    assert!(matches!(&read.target,
+        ResolvedCallTarget::ModuleExport { export_path, .. } if export_path == "primary.get"));
+    #[cfg(feature = "test-instrumentation")]
+    {
+        assert_eq!(benchmark_probe_origin_nodes(), 0);
+        assert_eq!(benchmark_probe_parameter_agreements(), 1);
     }
 }

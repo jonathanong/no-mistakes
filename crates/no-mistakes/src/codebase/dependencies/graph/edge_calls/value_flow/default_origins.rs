@@ -13,6 +13,7 @@ pub(super) struct OriginNode {
     pub(super) height: usize,
     pub(super) has_receivers: bool,
     pub(super) has_receiver_reads: bool,
+    pub(super) has_receiver_snapshots: bool,
     pub(super) has_defaults: bool,
     pub(super) has_invocation_receivers: bool,
     pub(super) has_unsealed_owned_contexts: bool,
