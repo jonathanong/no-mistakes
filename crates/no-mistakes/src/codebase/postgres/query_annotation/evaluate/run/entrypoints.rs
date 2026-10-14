@@ -27,6 +27,7 @@ pub(super) fn collect(
         }
         Expr::Record(values, _)
         | Expr::Object(values)
+        | Expr::Array(values)
         | Expr::Container(values)
         | Expr::Sequence(values)
         | Expr::Alternatives(values) => {

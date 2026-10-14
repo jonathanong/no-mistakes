@@ -124,6 +124,46 @@ SQL construction; consumers must inspect the statement before classifying a
 `WITH` body as a read. Supplied static dependencies execute before their importer;
 opaque top-level effects and unscheduled async helper work make affected shared
 builders unproven. Use `check()` for project-wide annotation enforcement.
+
+Import-aware evaluation follows helper `if`/early-return paths and finite array
+`map`, `join`, `push`, and `forEach` operations, including conditional CTE assembly
+and append helpers. It recovers whole statements, with the same 16-alternative
+limit as embedded SQL extraction. One unknown structural alternative or a limit
+overflow makes the entire executor site incomplete; a favorable read alternative
+cannot certify the others. Group alternatives by `fileName` and `line`, parse
+every statement, and inspect nested effects (including DML inside `WITH`) before
+classifying the site as read-only. SQL construction alone never proves a read.
+Conditional array cardinality stays unknown across slot writes; collection
+projection cannot use internal shape metadata to skip possible callback effects.
+Array intrinsic projections remain incomplete when a supplied source exposes
+`Array.prototype`, an `Array` constructor reference, instance `constructor`,
+`__proto__`, or `getPrototypeOf`, including computed access, aliases, and read-only
+exposure;
+this conservative guard cannot prove that an exposed prototype stays pristine.
+Any static or literal computed member named `Array` counts as exposure, including
+local namespaces, so aliases of standard global objects cannot bypass the guard.
+Opaque effects also make later intrinsic projections incomplete, including
+unmodeled calls, accessors, constructors, tags, setters, and deletion/coercion
+hooks. This uncertainty stays within each execution;
+independent entrypoints and immutable strings computed before the effect retain
+their existing results.
+Opaque executor receiver or callee effects also make the site incomplete,
+including optional calls. Ordinary optional calls retain their existing literal
+SQL results, and annotation-only analysis retains its existing behavior.
+Opaque operand effects remain authoritative across indexed writes and binary or
+returned failures; discarding a failed value cannot restore an earlier SQL proof.
+An append observes supported mutations to its captured builder receiver while
+evaluating the tail, preserving the receiver's identity rather than an old prefix.
+Operand effects apply from left to right before later nested executor calls.
+An earlier read retains its result when an opaque effect occurs afterward.
+
+`incompleteReason` is additive evaluator metadata: `null` for complete statements
+or proven generated value binds, otherwise a blocker such as `variant-limit`,
+`unbounded-collection-shape`, `opaque-spread`, `unknown-collection-callback`, or
+`opaque-builder-effect`. Unbounded runtime collections are not sampled as empty
+or one element, and unknown callbacks, getters, spread shapes, unsupported block
+bindings, and unscheduled helper effects remain unclassified. This analysis
+requires no trusted fragment declarations and does not rewrite application SQL.
 Literal CommonJS `require` calls and awaited dynamic imports evaluate supplied
 targets at their expression position; a target that cannot be resolved leaves
 shared builder SQL unproven. Getter-capable member reads likewise prevent a

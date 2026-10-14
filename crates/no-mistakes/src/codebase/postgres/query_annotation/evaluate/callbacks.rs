@@ -82,7 +82,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    fn live_callbacks(&self, id: u64) -> Vec<Value> {
+    pub(super) fn live_callbacks(&self, id: u64) -> Vec<Value> {
         self.argument_slots(id)
             .filter(|(index, _)| !self.definite_deleted_argument_slots.contains(&(id, *index)))
             .map(|(_, value)| value.clone())

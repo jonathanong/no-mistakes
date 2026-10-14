@@ -25,6 +25,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 10,
         invalidated_builders: FxHashSet::from_iter([7, 9, 11, 12, 42, 43]),
         builder_updates: FxHashMap::from_iter(

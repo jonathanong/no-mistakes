@@ -15,9 +15,11 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Clone, Debug, Default)]
 pub(crate) struct QueryAnnotationFileFacts {
     pub(crate) precise_records: bool,
+    pub(super) array_prototype_exposed: bool,
     pub(super) globals: BTreeMap<String, Expr>,
     pub(super) roots: Vec<Step>,
     pub(super) unmodeled_calls: Vec<Expr>,
+    pub(super) branch_calls: crate::fx::FxHashSet<(u32, u32)>,
     pub(super) trusted_tags: BTreeSet<String>,
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub(super) raw_tag_reassigned: bool,
@@ -27,6 +29,8 @@ pub(crate) struct QueryAnnotationFileFacts {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Expr {
+    Number(i64),
+    Boolean(bool),
     Primitive,
     Unknown,
     Unsupported,
@@ -52,13 +56,21 @@ pub(super) enum Expr {
     // Child references/effects do not describe the expression's runtime result.
     Children(Vec<Expr>),
     Container(Vec<Expr>),
+    Array(Vec<Expr>),
     Object(Vec<Expr>),
     // Static init-only properties retain their names for exact member reads.
     Record(Vec<Expr>, Vec<String>),
     Sequence(Vec<Expr>),
     Discard(Box<Expr>),
     Alternatives(Vec<Expr>),
+    Flow(Vec<Step>),
+    Binary(String, Box<Expr>, Box<Expr>),
     Opaque(Vec<Expr>),
+    // Preserve annotation-only opaque children beside the precise call summary.
+    OptionalCall {
+        call: Box<Expr>,
+        children: Vec<Expr>,
+    },
     OpaqueWrite {
         children: Vec<Expr>,
         targets: Vec<String>,
@@ -96,6 +108,7 @@ pub(super) enum Step {
     Var(String),
     Bind(String, Expr),
     Append(String, Expr),
+    Branch(Expr, Vec<Step>, Vec<Step>),
     Effect(Expr),
     Return(Expr),
     Unsupported,

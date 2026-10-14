@@ -53,5 +53,7 @@ pub(super) fn statement(
         complete,
         only_value_placeholders,
         kind,
+        incomplete_reason: (!complete && !only_value_placeholders)
+            .then(|| "unresolved-sql-fragment".into()),
     }
 }

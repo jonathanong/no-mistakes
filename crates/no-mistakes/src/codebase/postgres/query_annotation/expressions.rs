@@ -20,12 +20,14 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         Expression::BinaryExpression(value)
             if value.operator == oxc_ast::ast::BinaryOperator::Addition =>
         {
-            Expr::Template(vec![
-                expression(&value.left, source),
-                expression(&value.right, source),
-            ])
+            Expr::Binary(
+                "+".into(),
+                Box::new(expression(&value.left, source)),
+                Box::new(expression(&value.right, source)),
+            )
         }
         Expression::CallExpression(value) => calls::calls(value, source),
+        Expression::ChainExpression(value) => calls::optional(value, expr, source),
         Expression::ImportExpression(value) => {
             crate::codebase::dependencies::extract::static_import_specifier(&value.source)
                 .map(Expr::ModuleLoad)
@@ -60,13 +62,19 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 Expr::Discard(Box::new(expression(&value.argument, source)))
             }
         }
+        Expression::NumericLiteral(value)
+            if value.value.fract() == 0.0 && value.value.abs() < 9_007_199_254_740_991.0 =>
+        {
+            Expr::Number(value.value as i64)
+        }
         Expression::NumericLiteral(_) => Expr::Primitive,
-        Expression::BinaryExpression(value) => Expr::Children(vec![
-            expression(&value.left, source),
-            expression(&value.right, source),
-        ]),
+        Expression::BinaryExpression(value) => Expr::Binary(
+            value.operator.as_str().into(),
+            Box::new(expression(&value.left, source)),
+            Box::new(expression(&value.right, source)),
+        ),
         // Boolean control values carry no SQL text and have no side effects.
-        Expression::BooleanLiteral(_) => Expr::Primitive,
+        Expression::BooleanLiteral(value) => Expr::Boolean(value.value),
         Expression::LogicalExpression(value) => Expr::Container(vec![
             expression(&value.left, source),
             Expr::Alternatives(vec![
@@ -88,7 +96,22 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
                 .map(|expr| expression(expr, source))
                 .collect(),
         ),
-        Expression::ArrayExpression(_) => Expr::Container(children::collect(expr, source)),
+        Expression::ArrayExpression(array) => Expr::Array(
+            array
+                .elements
+                .iter()
+                .map(|element| match element {
+                    oxc_ast::ast::ArrayExpressionElement::SpreadElement(spread) => {
+                        Expr::Spread(Box::new(expression(&spread.argument, source)))
+                    }
+                    oxc_ast::ast::ArrayExpressionElement::Elision(_) => Expr::Unknown,
+                    other => expression(
+                        other.as_expression().expect("array expression element"),
+                        source,
+                    ),
+                })
+                .collect(),
+        ),
         Expression::ObjectExpression(value) => objects::object(value, source),
         Expression::AssignmentExpression(_) | Expression::UpdateExpression(_) => {
             writes::collect(expr, source)

@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Default, PartialEq, Eq)]
 pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
+    untrusted_array_intrinsics: bool,
     scopes: FxHashMap<Environment, FxHashMap<String, Value>>,
     objects: FxHashMap<u64, Vec<Value>>,
     extras: FxHashMap<u64, BTreeMap<usize, Value>>,
@@ -19,6 +20,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
 }
 
 pub(super) struct View<'a> {
+    untrusted_array_intrinsics: bool,
     scopes: &'a [Scope],
     objects: &'a FxHashMap<u64, Vec<Value>>,
     extras: &'a FxHashMap<u64, BTreeMap<usize, Value>>,
@@ -35,6 +37,7 @@ pub(super) struct View<'a> {
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn callback_view(&self) -> View<'_> {
         View {
+            untrusted_array_intrinsics: self.untrusted_array_intrinsics,
             scopes: &self.scopes,
             objects: &self.argument_objects,
             extras: &self.argument_extra_slots,
@@ -59,7 +62,10 @@ impl View<'_> {
         imports: &FxHashMap<PathBuf, FxHashMap<String, Value>>,
     ) -> (Snapshot, FxHashSet<(PathBuf, String)>) {
         let mut missing = FxHashSet::default();
-        let mut found = Snapshot::default();
+        let mut found = Snapshot {
+            untrusted_array_intrinsics: self.untrusted_array_intrinsics,
+            ..Snapshot::default()
+        };
         let mut functions = vec![(path, captured, function)];
         let mut visited = FxHashSet::default();
         let mut values = Vec::new();
@@ -117,7 +123,9 @@ impl View<'_> {
                     Value::Function(function, path, env) => {
                         functions.push((path.as_path(), *env, function))
                     }
-                    Value::Arguments(id) => self.snapshot_argument(*id, &mut found, &mut values),
+                    Value::Arguments(id) | Value::Array(id) => {
+                        self.snapshot_argument(*id, &mut found, &mut values)
+                    }
                     Value::Prefix(_, _, Some(id)) => {
                         if let Some(value) = self.updates.get(id) {
                             found.updates.insert(*id, value.clone());

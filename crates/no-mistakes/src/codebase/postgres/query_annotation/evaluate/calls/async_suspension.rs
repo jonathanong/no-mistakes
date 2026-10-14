@@ -5,7 +5,7 @@ use super::super::{CallSpan, ExecutionEvents, Value};
 
 pub(super) type EventLengths = BTreeMap<(PathBuf, CallSpan), usize>;
 
-pub(super) fn event_lengths(events: &ExecutionEvents) -> EventLengths {
+pub(in super::super) fn event_lengths(events: &ExecutionEvents) -> EventLengths {
     events
         .iter()
         .map(|(key, values)| (key.clone(), values.len()))
@@ -28,6 +28,9 @@ pub(super) fn has_suspension(steps: &[Step]) -> bool {
         | Step::Append(_, expr)
         | Step::Effect(expr)
         | Step::Return(expr) => contains_await(expr),
+        Step::Branch(test, left, right) => {
+            contains_await(test) || has_suspension(left) || has_suspension(right)
+        }
         Step::Reserve(_) | Step::Var(_) | Step::Unsupported | Step::PotentialCalls(_) => false,
     })
 }
@@ -35,12 +38,14 @@ pub(super) fn has_suspension(steps: &[Step]) -> bool {
 fn contains_await(expr: &Expr) -> bool {
     match expr {
         Expr::Await(_) => true,
+        Expr::Flow(steps) => has_suspension(steps),
         Expr::Spread(inner)
         | Expr::Index(inner, _)
         | Expr::Member(inner, _)
         | Expr::OpaqueCallback(inner)
         | Expr::Discard(inner) => contains_await(inner),
-        Expr::ComputedMember(base, key)
+        Expr::Binary(_, base, key)
+        | Expr::ComputedMember(base, key)
         | Expr::Append(base, key)
         | Expr::SlotWrite {
             receiver: base,
@@ -53,17 +58,23 @@ fn contains_await(expr: &Expr) -> bool {
         Expr::Tagged(_, parts, effects) => any_await(parts.iter().chain(effects)),
         Expr::Template(parts)
         | Expr::Children(parts)
+        | Expr::Array(parts)
         | Expr::Container(parts)
         | Expr::Object(parts)
         | Expr::Record(parts, _)
         | Expr::Sequence(parts)
         | Expr::Alternatives(parts)
         | Expr::Opaque(parts)
+        | Expr::OptionalCall {
+            children: parts, ..
+        }
         | Expr::OpaqueWrite {
             children: parts, ..
         }
         | Expr::Delete(parts, _) => any_await(parts),
         Expr::ModuleLoad(_)
+        | Expr::Boolean(_)
+        | Expr::Number(_)
         | Expr::Primitive
         | Expr::Unknown
         | Expr::Unsupported

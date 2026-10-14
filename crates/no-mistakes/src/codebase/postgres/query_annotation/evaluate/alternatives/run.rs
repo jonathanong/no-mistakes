@@ -25,10 +25,13 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let extra_slots = self.argument_extra_slots.clone();
         let mut joined_extras = None;
         let updates = self.builder_updates.clone();
+        let untrusted = self.untrusted_array_intrinsics;
+        let mut joined_untrusted = untrusted;
         let original_ids = self.next_builder;
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let (baselines, mut joined_updates) = (self.alternative_builder_baselines(path), None);
         let recreated = self.recreated_argument_slots.clone();
         let disconnected = self.disconnected_argument_slots.clone();
         let mut disconnected_common = None;
@@ -43,6 +46,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut returned = Vec::new();
         let mut changed = FxHashSet::default();
         for (arm_index, arm) in arms.iter().enumerate() {
+            self.untrusted_array_intrinsics = untrusted;
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
             self.active_callback_functions.clone_from(&seen);
@@ -51,8 +55,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.argument_extra_slots
                 .retain(|id, _| !objects.contains_key(id));
             self.argument_extra_slots.extend(extra_slots.clone());
-            self.builder_updates.retain(|id, _| *id >= original_ids);
-            self.builder_updates.extend(updates.clone());
+            self.restore_builder_updates(None, updates.clone(), original_ids);
             self.remove_alternative_captured_readers(scopes.len());
             self.captured_bindings
                 .retain(|frame, _| *frame >= scopes.len());
@@ -72,6 +75,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.add_alternative_captured_readers(scopes.len());
             self.rebuild_compacted_binding_indexes(false);
             returned.push(self.expr(arm, path, env, depth, generic));
+            self.join_builder_updates(&mut joined_updates, &baselines, original_ids, path);
+            joined_untrusted |= self.untrusted_array_intrinsics;
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
             self.merge_alternative_masks(
@@ -84,20 +89,22 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
                     // An arm can drop a name the other branch still has.
-                    super::values::changes(
-                        value,
-                        super::bindings::binding_or_unproven(after, name),
-                        super::arena::Arena {
-                            objects: &objects,
-                            extras: &extra_slots,
-                        },
-                        super::arena::Arena {
-                            objects: &self.argument_objects,
-                            extras: &self.argument_extra_slots,
-                        },
-                        &mut changed,
-                        &self.definite_deleted_argument_slots,
-                    );
+                    if !self.files[path].facts.precise_records {
+                        super::values::changes(
+                            value,
+                            super::bindings::binding_or_unproven(after, name),
+                            super::arena::Arena {
+                                objects: &objects,
+                                extras: &extra_slots,
+                            },
+                            super::arena::Arena {
+                                objects: &self.argument_objects,
+                                extras: &self.argument_extra_slots,
+                            },
+                            &mut changed,
+                            &self.definite_deleted_argument_slots,
+                        );
+                    }
                 }
             }
             super::freshness::unchanged(
@@ -108,9 +115,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
             super::merge::objects(&mut joined, &self.argument_objects);
             super::extras::join(&mut joined_extras, &self.argument_extra_slots, &objects);
-            module_states.join(&self.scopes, &self.modules, scopes.len());
+            module_states.join(
+                &self.scopes,
+                &self.modules,
+                scopes.len(),
+                self.files[path].facts.precise_records,
+            );
             if let Some(joined) = &mut joined_scopes {
-                super::bindings::join(joined, &self.scopes, &scopes);
+                super::bindings::join_with_sql(
+                    joined,
+                    &self.scopes,
+                    &scopes,
+                    self.files[path].facts.precise_records,
+                );
             } else {
                 joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             }
@@ -152,8 +169,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.modules = modules;
         module_states.restore(&mut self.scopes, &self.modules);
         self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
-        self.builder_updates.retain(|id, _| *id >= original_ids);
-        self.builder_updates.extend(updates);
+        self.restore_builder_updates(joined_updates, updates, original_ids);
         self.remove_alternative_captured_readers(scopes.len());
         self.captured_bindings
             .retain(|frame, _| *frame >= scopes.len());
@@ -190,8 +206,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             .pop()
             .expect("balanced alternatives");
         self.prune_alternative_state(&returned);
+        self.untrusted_array_intrinsics = joined_untrusted;
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
-        Value::Aggregate(returned.into())
+        super::super::concat::alternative_result(returned, self.files[path].facts.precise_records)
     }
 }
