@@ -7,6 +7,10 @@ pub(super) struct OriginNode {
 }
 pub(super) enum OriginKind {
     Source(DefaultOriginUse),
+    InvocationReceiver {
+        file: std::path::PathBuf, offset: u32, context: Option<CallableId>, owner: CallableId,
+        history: std::sync::Arc<crate::codebase::dependencies::extract::ValueMutationHistory>,
+    },
     Union(Arc<OriginNode>, Arc<OriginNode>),
     Project(Arc<OriginNode>, String),
 }
@@ -92,6 +96,12 @@ impl ValueFlowResolution<'_, '_> {
                     projection.push(member.as_str());
                     pending.push(Step::Pop);
                     pending.push(Step::Visit(source));
+                }
+                OriginKind::InvocationReceiver { file: source, offset: read_offset, context: read_context, owner, history } => {
+                    if self.invocation_read.is_none() && (source != file || context != Some(*owner)
+                        || history.invalidated(&[], &[], *read_offset, *read_context, false)) {
+                        return true;
+                    }
                 }
                 OriginKind::Source(origin) => {
                     if self.source_origin_invalidated(origin, &projection, file, offset, context) {

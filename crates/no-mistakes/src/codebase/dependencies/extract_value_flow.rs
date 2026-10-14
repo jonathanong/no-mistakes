@@ -2,6 +2,8 @@ use super::*;
 
 pub(super) type DefaultOriginIndex =
     FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
+pub type ValueReceiverMutations =
+    FxHashMap<usize, FxHashMap<String, std::sync::Arc<mutation_history::ValueMutationHistory>>>;
 // None is a dynamic segment; Some("*") is an ordinary literal property.
 pub type ValueMutationPath = Vec<Option<String>>;
 pub(super) type PriorMemberMutations =
@@ -25,6 +27,7 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
+    pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
@@ -88,6 +91,7 @@ pub struct ValueCall {
     pub offset: u32,
     pub end: u32,
     pub source_callee: String,
+    pub context: Option<CallableId>,
     pub callee: ValueExpression,
     pub arguments: std::sync::Arc<Vec<ValueExpression>>,
     pub bound: bool,
@@ -125,6 +129,7 @@ mod default_origins;
 
 #[path = "extract_value_flow/mutation_history.rs"]
 mod mutation_history;
+pub use mutation_history::ValueMutationHistory;
 
 #[path = "extract_value_flow/write_targets.rs"]
 pub(super) mod write_targets;

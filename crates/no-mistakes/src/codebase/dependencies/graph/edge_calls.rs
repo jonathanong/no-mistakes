@@ -86,7 +86,7 @@ impl CallableFileIndex {
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
-            values: FlowFileIndex::new(&file.value_flow, &file.callable_scope_ids),
+            values: FlowFileIndex::new(&file.value_flow, &file.callable_scope_ids, &file.function_calls),
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes,

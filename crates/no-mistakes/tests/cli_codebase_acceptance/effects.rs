@@ -108,3 +108,28 @@ fn effects_unknown_kind_fails() {
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("unknown effects kind"));
 }
+
+#[test]
+fn effects_cli_retains_inline_invocation_context() {
+    let root = fixture("inline-call-context");
+    for (name, expected) in [
+        ("inline", 1),
+        ("function", 1),
+        ("default", 1),
+        ("returned", 1),
+        ("after", 0),
+        ("captured", 0),
+        ("callback", 0),
+        ("direct-escape", 0),
+        ("bound-escape", 0),
+        ("mixed-callback", 0),
+        ("mixed-named-callback", 0),
+        ("top-level", 1),
+    ] {
+        let entry = format!("src/{name}.mts");
+        let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}

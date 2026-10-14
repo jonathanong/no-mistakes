@@ -86,3 +86,18 @@ fn registry_extension_json_returns_report() {
     .unwrap_err();
     assert!(error.reason.contains("registryFile is required"));
 }
+
+#[test]
+fn effects_json_retains_inline_invocation_context() {
+    for (name, expected) in [("inline", 1), ("function", 1), ("default", 1), ("returned", 1), ("after", 0), ("captured", 0), ("callback", 0), ("bound-escape", 0), ("direct-escape", 0), ("mixed-callback", 0), ("mixed-named-callback", 0), ("other-context", 0), ("top-level", 1)] {
+        let options = json!({
+            "root": fixture_root("inline-call-context"),
+            "kind": "cache", "entry": format!("src/{name}.mts")
+        }).to_string();
+        let output = effects_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+        let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}

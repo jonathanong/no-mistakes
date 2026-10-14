@@ -73,3 +73,12 @@ provenance. Configure `effects.<kind>.returnedExecutors` for opaque imported
 factories whose returned callable performs the effect. These selectors report
 executor invocations, independent of local names, rather than factory creation.
 See [effects configuration](../configuration/effects.md).
+
+Inline arrows, function expressions, and returned helpers retain their enclosing
+invocation context when resolving supplied receiver arguments and defaults. A
+later receiver write in that same context does not invalidate an earlier direct
+helper call. Calls after a write and captured closures with uncertain execution
+order remain unresolved; synthetic reachability edges do not add a second
+unknown argument set to a proven invocation. Returned helpers require every
+known factory invocation to call its result immediately; a stored result or
+opaque escape keeps receiver arguments unresolved.

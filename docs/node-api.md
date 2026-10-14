@@ -1109,3 +1109,14 @@ Polling does not cancel analysis, write stderr, or install process signal
 handlers. Callers choose their polling interval and cancellation policy. The
 CLI counterpart is [`--progress`](cli/diagnostics.md), with an opt-in flushed
 heartbeat and a Unix termination snapshot.
+
+The async `effects()` API shares the CLI receiver resolution.
+
+Inline arrows, function expressions, and returned helpers retain their enclosing
+invocation context when resolving supplied receiver arguments and defaults. A
+later receiver write in that same context does not invalidate an earlier direct
+helper call. Calls after a write and captured closures with uncertain execution
+order remain unresolved; synthetic reachability edges do not add a second
+unknown argument set to a proven invocation. Returned helpers require every
+known factory invocation to call its result immediately; a stored result or
+opaque escape keeps receiver arguments unresolved.
