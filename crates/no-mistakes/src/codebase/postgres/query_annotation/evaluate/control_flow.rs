@@ -20,8 +20,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let parts = vec![left.clone(), right.clone()];
             return self.container(&Expr::Children(parts.clone()), &parts, path, env, context);
         }
-        let left = self.expr(left, path, env, depth, generic).exposed();
-        let right = self.expr(right, path, env, depth, generic).exposed();
+        let left_value = self.expr(left, path, env, depth, generic);
+        let right_value = self.expr(right, path, env, depth, generic);
+        if !self.handled_deletion_effect(left, &left_value, path, *env)
+            || !self.handled_deletion_effect(right, &right_value, path, *env)
+        {
+            self.invalidate_live_builders();
+            return Value::Failure("opaque-binary-operand-effect");
+        }
+        if !matches!(op, "===" | "!==")
+            && (!super::collections::string_element(&left_value)
+                || !super::collections::string_element(&right_value))
+        {
+            self.invalidate_live_builders();
+            return Value::Failure("opaque-binary-coercion");
+        }
+        let left = left_value.exposed();
+        let right = right_value.exposed();
         match (&left, &right) {
             (Value::Number(a), Value::Number(b)) => match op {
                 "+" => a

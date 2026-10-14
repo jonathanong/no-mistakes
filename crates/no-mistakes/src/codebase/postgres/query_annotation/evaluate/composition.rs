@@ -40,8 +40,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let base = self.expr(base, path, env, depth, generic).exposed();
-        let tail = self.expr(tail, path, env, depth, generic);
+        let base_value = self.expr(base, path, env, depth, generic);
+        let tail_value = self.expr(tail, path, env, depth, generic);
+        if self.files[path].facts.precise_records
+            && (!self.handled_deletion_effect(base, &base_value, path, *env)
+                || !self.handled_deletion_effect(tail, &tail_value, path, *env))
+        {
+            self.invalidate_live_builders();
+            return Value::Failure("opaque-append-operand-effect");
+        }
+        let base = base_value.exposed();
+        let tail = tail_value;
         let base = if matches!(&base, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
         {
             Value::Unknown

@@ -90,7 +90,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     }
                 }
                 Step::Append(name, expr) => {
-                    let tail = self.expr(expr, path, env, depth, generic).exposed();
+                    let result = self.expr(expr, path, env, depth, generic);
+                    if self.files[path].facts.precise_records
+                        && !self.handled_deletion_effect(expr, &result, path, *env)
+                    {
+                        opaque_return = true;
+                        self.invalidate_live_builders();
+                    }
+                    let tail = result.exposed();
                     let base = self.scopes[*env]
                         .get(name)
                         .cloned()

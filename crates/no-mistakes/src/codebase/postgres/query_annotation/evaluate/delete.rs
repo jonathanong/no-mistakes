@@ -67,6 +67,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             {
                 true
             }
+            Expr::Array(parts)
+                if self
+                    .files
+                    .get(path)
+                    .is_some_and(|file| file.facts.precise_records) =>
+            {
+                let Value::Array(id) = value else {
+                    return false;
+                };
+                !self.invalidated_builders.contains(id)
+                    && self.argument_objects.get(id).is_some_and(|values| {
+                        parts.len() == values.len()
+                            && parts.iter().zip(values).all(|(part, value)| {
+                                self.handled_deletion_effect(part, value, path, env)
+                            })
+                    })
+            }
             Expr::Alternatives(_)
                 if matches!(value, Value::Evaluated(_, true))
                     || !self.effect_can_mutate(expr, path, env) =>

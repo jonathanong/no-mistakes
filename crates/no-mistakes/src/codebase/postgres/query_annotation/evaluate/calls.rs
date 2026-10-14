@@ -3,6 +3,7 @@ mod collections;
 mod module_loads;
 mod names;
 pub(super) mod scopes;
+mod target;
 mod values;
 use super::statements::effects::contains_accessor_read;
 use super::{Environment, Evaluator, Value};
@@ -23,23 +24,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.initialize_require(callee, args, path);
         // Keep the member/index base so a non-arrow callee receives it as `this`.
         // Evaluating the callee expression alone would drop that reference.
-        let (target, mut receiver) = match callee {
-            Expr::Index(object, index) => {
-                let receiver = self.expr(object, path, env, depth, generic).exposed();
-                (
-                    self.index(receiver.clone(), *index).exposed(),
-                    Some(receiver),
-                )
-            }
-            Expr::Member(object, name) => {
-                let receiver = self.expr(object, path, env, depth, generic).exposed();
-                (
-                    self.member(receiver.clone(), name, path).exposed(),
-                    Some(receiver),
-                )
-            }
-            other => (self.expr(other, path, env, depth, generic).exposed(), None),
-        };
+        let (target, mut receiver, callee_handled) = self.call_target(callee, path, env, context);
         let mut raw_arguments = args
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
@@ -74,6 +59,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         let handled_projection = matches!(callee, Expr::Name(_))
             && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
+        let operands_handled = callee_handled
+            && args
+                .iter()
+                .zip(&raw_arguments)
+                .all(|(arg, value)| self.handled_deletion_effect(arg, value, path, *env));
         let arguments = raw_arguments
             .into_iter()
             .map(Value::exposed)
@@ -94,9 +84,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             receiver.as_ref(),
             &arguments,
             path,
-            (depth, generic),
+            (depth, generic, operands_handled),
         ) {
             return value;
+        }
+        if self.files[path].facts.precise_records && !operands_handled {
+            self.invalidate_live_builders();
+            self.opaque_callbacks(&arguments, depth);
+            return Value::Failure("opaque-call-operand-effect");
         }
         let spread = args.iter().any(|arg| matches!(arg, Expr::Spread(_)));
         if spread {

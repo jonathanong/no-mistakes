@@ -236,3 +236,22 @@ fn collection_deletion_is_scoped_and_static_false_branches_do_not_invent_writes(
         assert!(read_statement_shape(&variants), "{variants:?}");
     }
 }
+
+#[test]
+fn opaque_operand_effects_survive_final_collection_and_scalar_values() {
+    let rows = extract("control-flow-operand-effects.ts");
+    assert_eq!(rows.len(), 13, "{rows:?}");
+    let safe = rows
+        .iter()
+        .filter(|row| row.complete || row.only_value_placeholders)
+        .collect::<Vec<_>>();
+    assert_eq!(safe.len(), 2, "{rows:?}");
+    assert!(read_statement_shape(&safe));
+    for row in rows
+        .iter()
+        .filter(|row| !row.complete && !row.only_value_placeholders)
+    {
+        assert!(row.sql_text.is_none(), "{row:?}");
+        assert!(row.incomplete_reason.is_some(), "{row:?}");
+    }
+}
