@@ -224,3 +224,14 @@ disjoint properties, early destructuring invalidation and aggregate/writer
 propagation when those components are joined. This tests the defensive contract
 instead of changing the gate or rearranging complexity. Root reviewed the test
 and instance-initializer correction; fresh CI remains required.
+
+
+After all 30 jobs passed at 663f80e, main 44c67f4a7 introduced a genuine content
+conflict in receiver mutation collection through #2003. The required merge keeps
+canonical component history/proof lookup and compact writer/freshness summaries,
+while retaining main's has_unassigned coarse-write flag, its merge OR, and the
+projected Source guard. All upstream consumer/default/phase/cache tests and
+fixtures are retained. Root reviewed the narrow resolution before publication.
+The earlier 663f80e quality results do not validate this combined head; fresh
+semantic, coverage, quality and review gates remain required. No unrelated
+freshness merge or local compiler is used.

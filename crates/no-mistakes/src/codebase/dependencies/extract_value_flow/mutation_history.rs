@@ -7,6 +7,8 @@ pub struct ValueMutationHistory {
     pub summary: Option<ValueMutationInfo>,
     pub assigned: Option<Box<ValueAssignedMutations>>,
     pub has_assignments: bool,
+    /// A coarse write exists without a corresponding exact assignment leaf.
+    pub has_unassigned: bool,
     pub members: FxHashMap<String, Self>,
     pub dynamic: Option<Box<Self>>,
 }
@@ -77,6 +79,7 @@ impl ValueMutationHistory {
     }
     pub(super) fn merge(&mut self, source: Self) {
         self.has_assignments |= source.has_assignments;
+        self.has_unassigned |= source.has_unassigned;
         if let Some(assigned) = source.assigned {
             if let Some(target) = &mut self.assigned {
                 target.merge(*assigned);

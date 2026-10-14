@@ -15,8 +15,10 @@ fn data_pw_json_returns_report() {
     assert_eq!(value["test"].as_array().unwrap().len(), 1);
 
     // value is required
-    let error =
-        data_pw_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": fixture_root("data-pw") }).to_string())).unwrap_err();
+    let error = data_pw_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": fixture_root("data-pw") }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("value is required"));
 }
 
@@ -34,13 +36,16 @@ fn effects_json_returns_report() {
     assert_eq!(value["callSites"].as_array().unwrap().len(), 4);
     assert_eq!(value["byCategory"]["cache"], 2);
 
-    let error =
-        effects_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": fixture_root("effects") }).to_string())).unwrap_err();
+    let error = effects_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": fixture_root("effects") }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("kind is required"));
 
-    let error =
-        effects_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": fixture_root("effects"), "kind": "valkey" }).to_string()))
-            .unwrap_err();
+    let error = effects_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": fixture_root("effects"), "kind": "valkey" }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("entry is required"));
 }
 
@@ -63,8 +68,10 @@ fn rsc_callers_json_returns_report() {
     assert!(files.contains(&"app/ui/Card.tsx"));
     assert!(!files.contains(&"app/ui/ClientThing.tsx"));
 
-    let error = rsc_callers_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": fixture_root("rsc-callers") }).to_string()))
-        .unwrap_err();
+    let error = rsc_callers_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": fixture_root("rsc-callers") }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("component is required"));
 }
 
@@ -75,25 +82,77 @@ fn registry_extension_json_returns_report() {
         "registryFile": "register-call.ts"
     })
     .to_string();
-    let output = registry_extension_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let output =
+        registry_extension_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["patternKind"], "register-call");
     assert_eq!(value["entries"].as_array().unwrap().len(), 2);
 
-    let error = registry_extension_json_impl(
-        crate::napi_api::options::test_json_arg(json!({ "root": fixture_root("registry-extension") }).to_string(),)
-    )
+    let error = registry_extension_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": fixture_root("registry-extension") }).to_string(),
+    ))
     .unwrap_err();
     assert!(error.reason.contains("registryFile is required"));
 }
 
 #[test]
 fn effects_json_retains_inline_invocation_context() {
-    for (name, expected) in [("inline", 1), ("function", 1), ("default", 1), ("returned", 1), ("async", 0), ("generator", 0), ("returned-async", 0), ("after", 0), ("captured", 0), ("callback", 0), ("bound-escape", 0), ("direct-escape", 0), ("mixed-callback", 0), ("mixed-named-callback", 0), ("other-context", 0), ("top-level", 1)] {
+    for (name, expected) in [
+        ("inline", 1),
+        ("function", 1),
+        ("default", 1),
+        ("returned", 1),
+        ("async", 0),
+        ("generator", 0),
+        ("returned-async", 0),
+        ("after", 0),
+        ("captured", 0),
+        ("callback", 0),
+        ("bound-escape", 0),
+        ("direct-escape", 0),
+        ("mixed-callback", 0),
+        ("mixed-named-callback", 0),
+        ("other-context", 0),
+        ("top-level", 1),
+    ] {
         let options = json!({
             "root": fixture_root("inline-call-context"),
             "kind": "cache", "entry": format!("src/{name}.mts")
-        }).to_string();
+        })
+        .to_string();
+        let output = effects_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+        let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}
+
+#[test]
+fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
+    for (name, expected) in [
+        ("alias-named", 1),
+        ("alias-inline", 1),
+        ("alias-chain", 1),
+        ("alias-matching", 0),
+        ("alias-dynamic", 0),
+        ("alias-live", 0),
+        ("alias-supplied-live", 0),
+        ("alias-supplied-snapshot", 1),
+        ("alias-supplied-nested-live", 0),
+        ("alias-snapshot", 1),
+        ("alias-inline-live", 0),
+        ("alias-inline-snapshot", 1),
+        ("alias-inline-snapshot-owned", 0),
+        ("inline-snapshot-owned", 0),
+        ("alias-captured", 0),
+        ("alias-async", 0),
+    ] {
+        let options = json!({
+            "root": fixture_root("inline-member-precision"),
+            "kind": "cache", "entry": format!("src/{name}.mts")
+        })
+        .to_string();
         let output = effects_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
         let report: serde_json::Value = serde_json::from_str(&output).unwrap();
         let sites = report["callSites"].as_array().unwrap();
@@ -104,7 +163,19 @@ fn effects_json_retains_inline_invocation_context() {
 
 #[test]
 fn effects_json_retains_cross_file_inline_receiver_timing() {
-    for (name, expected) in [("earlier", 1), ("sibling", 1), ("reexported", 1), ("defaults", 1), ("mutated-default", 0), ("later", 0), ("prior", 0), ("other-context", 0), ("conflicting", 0), ("unknown", 0), ("escaped", 0)] {
+    for (name, expected) in [
+        ("earlier", 1),
+        ("sibling", 1),
+        ("reexported", 1),
+        ("defaults", 1),
+        ("mutated-default", 0),
+        ("later", 0),
+        ("prior", 0),
+        ("other-context", 0),
+        ("conflicting", 0),
+        ("unknown", 0),
+        ("escaped", 0),
+    ] {
         let options = json!({ "root": fixture_root("cross-file-inline-receiver"), "kind": "cache", "entry": format!("src/{name}.mts") }).to_string();
         let output = effects_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
         let report: serde_json::Value = serde_json::from_str(&output).unwrap();

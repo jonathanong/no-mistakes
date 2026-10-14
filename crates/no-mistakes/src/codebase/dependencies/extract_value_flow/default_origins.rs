@@ -33,6 +33,8 @@ impl ImportCollector {
         let unconditional =
             !self.receiver_write_is_conditional && self.receiver_replacement_is_fresh;
         let (history, proof) = self.prior_member_mutations.history_mut(key);
+        // Projected default reads retain guards for writes without an exact leaf.
+        history.has_unassigned |= assigned.is_none();
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
             let write = mutation_history::ValueAssignedMutation {

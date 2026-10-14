@@ -291,3 +291,40 @@ fn destructured_methods_acquire_receivers_at_the_callers_invocation() {
         }
     }
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn live_parameter_alias_sites_keep_shared_origin_work_linear() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("value-flow-live-alias-cache"));
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+    let aliases = sites
+        .iter()
+        .filter(|site| site.source_callee == "alias.get")
+        .collect::<Vec<_>>();
+    assert_eq!(aliases.len(), 128);
+    assert!(aliases
+        .iter()
+        .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
+    assert_eq!(benchmark_probe_parameter_agreements(), 1);
+    assert!(
+        benchmark_probe_origin_nodes() <= 128 * 8 + 8,
+        "live alias reads must retain shared origins and linear work: {} nodes",
+        benchmark_probe_origin_nodes()
+    );
+}

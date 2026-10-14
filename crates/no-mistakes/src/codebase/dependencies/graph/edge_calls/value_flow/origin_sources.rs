@@ -29,25 +29,62 @@ impl ValueFlowResolution<'_, '_> {
         &self,
         origin: &DefaultOriginUse,
         projection: &[&str],
+        hint_len: usize,
         file: &std::path::Path,
-        offset: u32,
-        context: Option<CallableId>,
+        read: (u32, Option<CallableId>),
+        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
     ) -> bool {
         self.indexes
             .file(self.facts, &origin.file)
             .is_some_and(|index| {
                 scoped_name(&index.values.parameters, origin.scope, &origin.name)
-                    .and_then(|parameter| parameter.default_mutations.as_ref())
-                    .and_then(|mutations| mutations.get(&origin.origin))
-                    .is_some_and(|sources| {
+                    .and_then(|parameter| {
+                        parameter
+                            .default_mutations
+                            .as_ref()?
+                            .get(&origin.origin)
+                            .map(|sources| (parameter, sources))
+                    })
+                    .is_some_and(|(parameter, sources)| {
                         sources.iter().any(|source| {
-                            source.history.invalidated_projected(
-                                &source.path,
-                                projection,
-                                offset,
-                                context,
-                                origin.file != file,
-                            )
+                            // Existing origin projections already describe an
+                            // acquired segment; do not apply its use hint twice.
+                            if hint_len > 0
+                                && projection.len() == hint_len
+                                && source.history.has_assignments
+                                && !source.history.has_unassigned
+                                && source.path.iter().all(Option::is_some)
+                            {
+                                let path = projection
+                                    .iter()
+                                    .copied()
+                                    .chain(source.path.iter().rev().filter_map(Option::as_deref))
+                                    .collect::<Vec<_>>();
+                                // Only the owning synchronous body may use its
+                                // acquisition timing for outer-context writes.
+                                // Forwarded and captured bodies retain the lexical guard.
+                                let acquired = read.1 == Some(parameter.owner)
+                                    && self.synchronous_callable(&origin.file, parameter.owner);
+                                source
+                                    .history
+                                    .assignment_invalidated_reads(&path, &|writer| {
+                                        if origin.file != file {
+                                            None
+                                        } else if acquired {
+                                            reader(writer)
+                                        } else {
+                                            (writer == read.1).then_some(read.0)
+                                        }
+                                    })
+                            } else {
+                                source.history.invalidated_projected(
+                                    &source.path,
+                                    &projection[hint_len..],
+                                    read.0,
+                                    read.1,
+                                    origin.file != file,
+                                )
+                            }
                         })
                     })
             })
