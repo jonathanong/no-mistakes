@@ -54,44 +54,9 @@ impl FlowFileIndex {
         }
     }
 }
-#[derive(Clone, PartialEq, Eq)]
-enum FlowValue {
-    Uncallable,
-    Promise(Box<FlowValue>),
-    Bound {
-        target: Box<FlowValue>,
-        arguments: Vec<BoundArguments>,
-    },
-    Target(ResolvedCallTarget),
-    Returned {
-        factory: Vec<(String, String)>,
-        executor: Box<FlowValue>,
-        receiver: Option<ResolvedCallTarget>,
-    },
-    Callable {
-        file: std::path::PathBuf,
-        scope: String,
-        id: CallableId,
-    },
-    Object {
-        null_prototype: bool,
-        file: std::path::PathBuf,
-        fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
-    },
-    Array {
-        file: std::path::PathBuf,
-        fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
-    },
-    Undefined,
-    Unknown,
-}
-
-#[derive(Clone, PartialEq, Eq)]
-struct BoundArguments {
-    file: std::path::PathBuf,
-    arguments: std::sync::Arc<Vec<ValueExpression>>,
-    spread_at: Option<usize>,
-}
+#[path = "value_flow/types.rs"]
+mod types;
+use types::{FlowValue, BoundArguments};
 
 type ParameterInputs =
     FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>;
@@ -126,7 +91,6 @@ mod returned;
 mod values;
 pub(super) use refine::refine_value_calls;
 
-use returned::agreed_value;
 
 impl FlowFileIndex {
     pub(super) fn factory_binding(&self, scope: usize, name: &str) -> bool {
@@ -202,3 +166,9 @@ use default_origins::{OriginKind, OriginNode};
 mod origin_tree;
 #[path = "value_flow/parameter_projection.rs"]
 mod parameter_projection;
+
+#[path = "value_flow/provenance.rs"]
+mod provenance;
+#[path = "value_flow/agreement.rs"]
+mod agreement;
+use agreement::agreed_value;

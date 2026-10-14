@@ -53,3 +53,88 @@ fn returned_executor_selectors_round_trip_and_reject_unknown_fields() {
         serde_yaml::from_str("effects: {postgres: {functions: [read]}}").unwrap();
     assert!(legacy.effects["postgres"].returned_executors.is_empty());
 }
+
+#[test]
+fn typed_executor_and_returned_member_selectors_round_trip_with_empty_defaults() {
+    let root = crate::test_support::rule_fixture_root("query-reached-per-item")
+        .with_file_name("typed-client-fixture");
+    let read_config = |file: &str| {
+        let source = std::fs::read_to_string(root.join(file)).unwrap();
+        serde_yaml::from_str::<NoMistakesConfig>(&source).unwrap()
+    };
+
+    let config = read_config(".no-mistakes.yml");
+    let effects = &config.effects["postgres"];
+    assert_eq!(
+        effects
+            .typed_executors
+            .iter()
+            .map(|selector| (
+                selector.module.as_str(),
+                selector.export.as_str(),
+                selector.category.as_deref(),
+            ))
+            .collect::<Vec<_>>(),
+        [
+            ("database-client", "TransactionQuery", Some("transaction")),
+            ("default-client", "default", Some("transaction")),
+            ("database-client", "Namespace.Query", Some("transaction")),
+        ]
+    );
+    assert_eq!(
+        effects
+            .returned_members
+            .iter()
+            .map(|selector| (
+                selector.module.as_str(),
+                selector.export.as_str(),
+                selector.member.as_str(),
+                selector.category.as_deref(),
+            ))
+            .collect::<Vec<_>>(),
+        [
+            (
+                "database-client",
+                "writePool.connect",
+                "query",
+                Some("transaction")
+            ),
+            (
+                "database-client",
+                "advisoryLockPool.connect",
+                "query",
+                Some("transaction")
+            ),
+            (
+                "database-client",
+                "makeTools",
+                "tools.query",
+                Some("transaction")
+            ),
+            (
+                "./providers.mjs",
+                "createClient",
+                "query",
+                Some("transaction")
+            ),
+            ("./providers.mjs", "createArray", "0", Some("transaction")),
+        ]
+    );
+    assert_eq!(
+        config,
+        serde_yaml::from_str(&serde_yaml::to_string(&config).unwrap()).unwrap()
+    );
+
+    let disabled = read_config("disabled.yml");
+    let effects = &disabled.effects["postgres"];
+    assert!(effects.typed_executors.is_empty());
+    assert!(effects.returned_members.is_empty());
+
+    for invalid in ["bad-typed-selector.yml", "bad-selector.yml"] {
+        let source = std::fs::read_to_string(root.join(invalid)).unwrap();
+        assert!(
+            serde_yaml::from_str::<NoMistakesConfig>(&source).is_err(),
+            "{invalid}"
+        );
+    }
+}

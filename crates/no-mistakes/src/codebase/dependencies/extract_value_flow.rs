@@ -29,6 +29,7 @@ pub struct ValueFlowFacts {
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
+    pub type_exports: Vec<ExportedBinding>,
     pub async_callables: FxHashSet<CallableId>,
     pub generator_callables: FxHashSet<CallableId>,
 }
@@ -82,6 +83,8 @@ pub struct ValueParameter {
     pub default_mutations: Option<std::sync::Arc<ValueDefaultMutations>>,
     pub invalidated_at: Option<u32>,
     pub mutation_contexts: FxHashSet<Option<CallableId>>,
+    /// An explicit reference in the annotation namespace, distinct from runtime names.
+    pub type_reference: Option<String>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueCall {

@@ -32,7 +32,7 @@ impl CallSiteResolution<'_, '_> {
                 invocation: call.invocation,
                 target: resolved_target,
                 target_node,
-                returned_from: Vec::new(),
+                returned_from: Vec::new(), typed_from: Vec::new(), returned_member_from: Vec::new(),
             },
         )
     }

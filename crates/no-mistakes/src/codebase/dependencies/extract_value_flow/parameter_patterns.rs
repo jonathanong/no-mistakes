@@ -32,6 +32,7 @@ impl ImportCollector {
                     default_mutations: None,
                     invalidated_at: None,
                     mutation_contexts: fx_set(),
+                    type_reference: None,
                 };
                 self.value_flow.parameters.push(parameter);
                 self.record_parameter_origins(self.value_flow.parameters.len() - 1);

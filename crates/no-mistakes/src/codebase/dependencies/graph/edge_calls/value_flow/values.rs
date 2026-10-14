@@ -8,7 +8,7 @@ impl ValueFlowResolution<'_, '_> {
     ) -> FlowValue {
         let outer = self.default_origins.take();
         let value = self.expression_value(path, expression);
-        if value == FlowValue::Undefined {
+        if value.is_undefined() {
             self.default_origins = None;
         }
         default_origins::merge(&mut self.default_origins, outer, self.cache);
@@ -44,19 +44,13 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Undefined => FlowValue::Undefined,
             ValueExpression::Default(value, fallback) => {
                 let value = self.value(path, value);
-                if value == FlowValue::Undefined {
+                if value.is_undefined() {
                     self.value(path, fallback)
                 } else {
                     value
                 }
             }
-            ValueExpression::Awaited(value) => {
-                let mut value = self.value(path, value);
-                while let FlowValue::Promise(inner) = value {
-                    value = *inner;
-                }
-                value
-            }
+            ValueExpression::Awaited(value) => self.value(path, value).awaited(),
             ValueExpression::Call(offset, end) => self.returned(path, *offset, *end),
             ValueExpression::Unknown => FlowValue::Unknown,
         }
@@ -79,12 +73,33 @@ impl ValueFlowResolution<'_, '_> {
         self.project_default_origins(member);
         self.member_value(base, member)
     }
-    fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
+    pub(super) fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
             FlowValue::Returned {
-                receiver: Some(receiver),
-                ..
-            } => self.member_value(FlowValue::Target(receiver), member),
+                factory,
+                executor,
+                receiver,
+            } => {
+                let value = match receiver {
+                    Some(receiver) => self.member_value(FlowValue::Target(receiver), member),
+                    None => self.member_value(*executor, member),
+                };
+                FlowValue::Provenance {
+                    executor: Box::new(value),
+                    typed: Vec::new(),
+                    members: factory
+                        .into_iter()
+                        .map(|(module, export)| (module, export, member.to_owned()))
+                        .collect(),
+                    receiver_factories: Vec::new(),
+                }
+            }
+            FlowValue::Provenance {
+                executor,
+                typed,
+                members,
+                receiver_factories,
+            } => self.project_provenance(*executor, typed, members, receiver_factories, member),
             FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => fields
                 .get(member)
                 .map_or(FlowValue::Undefined, |value| self.value(&file, value)),

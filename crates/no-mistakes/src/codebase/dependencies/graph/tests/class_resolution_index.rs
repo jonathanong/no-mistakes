@@ -73,6 +73,7 @@ fn inherited_static_members_walk_parent_lexical_scopes_and_cycles() {
 #[test]
 fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
     let index = CallableFileIndex {
+        type_imported: fx_map(),
         values: Default::default(),
         known_scopes: ["target".to_string()].into_iter().collect(),
         exported_scopes: fx_set(),
@@ -147,6 +148,7 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
 #[test]
 fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
     let index = CallableFileIndex {
+        type_imported: fx_map(),
         values: Default::default(),
         known_scopes: fx_set(),
         exported_scopes: fx_set(),
@@ -346,6 +348,7 @@ fn binding_liveness_walks_nested_parents_and_skips_synthetic_callbacks() {
 #[test]
 fn local_callable_id_walks_parents_and_rejects_dotted_bindings() {
     let index = CallableFileIndex {
+        type_imported: fx_map(),
         values: Default::default(),
         known_scopes: fx_set(),
         exported_scopes: fx_set(),

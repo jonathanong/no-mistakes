@@ -45,6 +45,7 @@ pub struct EffectsReport {
 pub(crate) struct EffectsSelection {
     kind: String,
     names: HashMap<String, Option<String>>,
+    provenance: crate::effect_provenance::EffectProvenance,
     returned: crate::fx::FxHashMap<
         String,
         crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>,
@@ -134,6 +135,7 @@ pub fn run(
             graph_plan: |selection: &EffectsSelection| GraphBuildPlan {
                 calls: !selection.targets.is_empty()
                     || !selection.returned.is_empty()
+                    || !selection.provenance.is_empty()
                     || selection.names.keys().any(|name| name.contains('.')),
                 effect_selectors: !selection.targets.is_empty(),
                 ..GraphBuildPlan::from_allowed(Some(&allowed))

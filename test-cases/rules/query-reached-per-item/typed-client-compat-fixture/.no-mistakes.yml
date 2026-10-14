@@ -1,0 +1,8 @@
+effects:
+  postgres:
+    targets:
+      - { module: '@vendor/db', export: primary.query, category: direct }
+    returnedMembers:
+      - { module: './providers.mjs', export: createClient, member: query, category: transaction }
+      - { module: './providers.mjs', export: createArray, member: '0', category: transaction }
+      - { module: './providers.mjs', export: asyncClient, member: query, category: transaction }

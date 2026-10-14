@@ -15,6 +15,10 @@ effects:
       - { module: "@vendor/database", export: "query", category: query }
     returnedExecutors:
       - { module: "@vendor/database", export: "beginTransaction", category: query }
+    typedExecutors:
+      - { module: "@vendor/database", export: "TransactionQuery", category: query }
+    returnedMembers:
+      - { module: "@vendor/database", export: "writePool.connect", member: "query", category: query }
     transactionFunctions: [transaction.query]
     batchFunctions: [readMany, pipeline]
 ```
@@ -67,6 +71,26 @@ The factory call itself is not selected by `returnedExecutors`; add a normal
 carry the transaction marker in per-item diagnostics. No transaction factory
 names are inferred from a module name or a PostgreSQL convention.
 
+`typedExecutors` uses the same exact `{module, export, category?}` selector shape
+to select calls through a parameter whose explicit callable type comes from an
+imported type export. Named and namespace type imports, aliases, and explicit
+type re-exports preserve that type provenance. Local spelling and a matching
+terminal type name alone do not select a call. These calls carry the transaction
+marker in `query-reached-per-item` findings.
+
+`returnedMembers` selects a member call on a receiver returned by a configured
+imported factory. Its selector has `{module, export, member, category?}`: `export`
+is the exact imported factory path, and `member` is the exact static member path
+on its returned receiver. For example, `writePool.connect` with `member: query`
+selects calls through the receiver returned by that factory, regardless of local
+variable names. Add one entry for each configured factory. This does not match
+an unrelated local object with a same-named method. The effects query reports
+the callee as the configured factory path followed by `().` and the member
+(for example, `writePool.connect().query`) with its configured category.
+`typedExecutors` callees display the configured type export, such as
+`TransactionQuery`. Per-item findings mark selected returned members as
+transaction effects. No type, factory, or member names are inferred.
+
 `transactionFunctions` marks additional sinks for per-item rule diagnostics.
 It matches exact source spellings, without terminal-name fallback. Bare names
 cannot relabel a known ordinary local function as a transaction executor;
@@ -74,6 +98,11 @@ use an import target or returned-executor selector for binding-aware selection.
 `batchFunctions` exempts paths through explicitly configured batch or pipeline
 builders for that family. These two fields configure the per-item rule; they do
 not change the existing effects query's output or category semantics.
+
+`typedExecutors` and `returnedMembers` are opt-in binding selectors shared by
+the effects query and the per-item rule. They default to empty and preserve
+category filtering in `no-mistakes effects --category`. Existing `targets` and
+`returnedExecutors` behavior is unchanged.
 
 The per-item rule is enabled separately and must select configured family names
 with `options.effects`. Nothing is scanned as a database effect by default.

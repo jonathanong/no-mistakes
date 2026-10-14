@@ -24,6 +24,7 @@ pub(super) struct Sinks<'a> {
     returned: crate::fx::FxHashMap<&'a str, crate::fx::FxHashSet<&'a str>>,
     nodes: crate::fx::FxHashSet<crate::codebase::dependencies::graph::NodeId>,
     targets: crate::fx::FxHashMap<&'a str, crate::fx::FxHashSet<&'a str>>,
+    provenance: crate::effect_provenance::EffectProvenance,
 }
 
 impl<'a> Sinks<'a> {
@@ -53,6 +54,7 @@ impl<'a> Sinks<'a> {
                 .insert(target.export.as_str());
         }
         Self {
+            provenance: crate::effect_provenance::EffectProvenance::new(config, &[]),
             returned,
             config,
             targets,
@@ -61,6 +63,9 @@ impl<'a> Sinks<'a> {
     }
 
     pub(super) fn match_site(&self, site: &ResolvedCallSite) -> Option<bool> {
+        if self.provenance.match_site(site).is_some() {
+            return Some(true);
+        }
         let returned = site.returned_from.iter().any(|(module, export)| {
             self.returned
                 .get(module.as_str())
@@ -154,6 +159,7 @@ pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<(
         let Some(effect) = config.effects.get(kind) else {
             bail!("{RULE_ID}: unknown effects kind `{kind}`");
         };
+        crate::effect_provenance::validate(effect, kind)?;
         anyhow::ensure!(
             effect
                 .targets

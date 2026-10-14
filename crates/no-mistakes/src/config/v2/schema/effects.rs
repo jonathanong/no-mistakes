@@ -15,6 +15,10 @@ pub struct EffectKindConfig {
     pub targets: Vec<EffectTargetConfig>,
     /// Imported factories whose returned callable is an effect executor.
     pub returned_executors: Vec<EffectTargetConfig>,
+    /// Imported parameter types whose callable bindings are effect executors.
+    pub typed_executors: Vec<EffectTargetConfig>,
+    /// Exact members of receivers returned by selected imported factories.
+    pub returned_members: Vec<EffectReturnedMemberConfig>,
     /// Configured transaction-client sinks for per-item query diagnostics.
     pub transaction_functions: Vec<String>,
     /// Configured batch/pipeline builders which exempt their own call paths.
@@ -27,6 +31,17 @@ pub struct EffectKindConfig {
 pub struct EffectTargetConfig {
     pub module: String,
     pub export: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+}
+
+/// An effect member selected by the precise factory which produced its receiver.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EffectReturnedMemberConfig {
+    pub module: String,
+    pub export: String,
+    pub member: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
 }

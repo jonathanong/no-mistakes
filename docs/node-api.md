@@ -630,6 +630,17 @@ argument/default bindings, including qualified named-client command lists,
 without matching unrelated same-named bindings.
 `effects.<kind>.returnedExecutors` selects callable results of imported factories
 whose implementation is opaque; both APIs honor these selectors.
+`effects.<kind>.typedExecutors` selects calls through parameters with explicit
+callable types imported from the configured module/export, including aliases,
+namespace imports, and explicit type re-exports. `effects.<kind>.returnedMembers`
+selects exact member calls on receivers returned by configured imported factory
+paths. Both selectors share prepared call provenance across asynchronous
+`effects()`, `check()`, and `analyzeProject()` reports; categories and selector
+paths are reflected in effects query results. Returned-member callees display
+as the factory path plus `().member` (for example,
+`writePool.connect().query`); typed executor callees display the configured type
+export. These are configuration additions to existing exports and introduce no
+new Node functions or option types.
 `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
