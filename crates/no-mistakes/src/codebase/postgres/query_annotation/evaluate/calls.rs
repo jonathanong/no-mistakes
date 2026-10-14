@@ -4,6 +4,7 @@ mod module_loads;
 mod names;
 pub(super) mod scopes;
 mod target;
+mod unsupported;
 mod values;
 use super::statements::effects::contains_accessor_read;
 use super::{Environment, Evaluator, Value};
@@ -133,44 +134,13 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                     )
                 }))
         {
-            self.invalidate_builders(&arguments);
-            self.invalidate_captured(captured, &function);
-            let mut locals = scopes::locals(&self.scopes[captured], &function);
-            if let Some(name) = &function.self_name {
-                locals.insert(name.clone(), Value::Unknown);
-            }
-            let object = self.arguments_object(&arguments, spread);
-            let mapping = self.parameter_mapping(&function, &function_path, &object);
-            scopes::arguments(&mut locals, &function, object);
-            for name in &function.params {
-                locals.insert(name.clone(), Value::Unknown);
-            }
-            scopes::bind_this(&mut locals, &function, receiver.as_ref());
-            let mut scope = self.environment(locals);
-            self.register_mappings(scope, captured, &function, mapping);
-            self.register_captured_bindings(scope, captured, &function);
-            self.steps(&function.body, &function_path, &mut scope, depth, false);
-            self.opaque_callbacks(&arguments, depth);
-            // Unsupported control flow with possible opaque calls must not
-            // revive a legacy SQL prefix that its effects could have invalidated.
-            let unsafe_calls = function.body.iter().any(|step| {
-                use crate::codebase::postgres::query_annotation::Step;
-                match step {
-                    Step::PotentialCalls(calls) => calls
-                        .iter()
-                        .any(|start| !self.files[&function_path].executors.contains(start)),
-                    Step::Effect(expr) | Step::Bind(_, expr) | Step::Return(expr) => {
-                        self.effect_can_mutate(expr, &function_path, scope)
-                    }
-                    Step::Append(_, _) => true,
-                    _ => false,
-                }
-            });
-            return if unsafe_calls {
-                Value::Unknown
-            } else {
-                Value::Unsupported
-            };
+            return self.unsupported_call(
+                &function,
+                &function_path,
+                &arguments,
+                receiver.as_ref(),
+                (captured, depth, spread),
+            );
         }
         let mut locals = scopes::locals(&self.scopes[captured], &function);
         if let Some(name) = &function.self_name {

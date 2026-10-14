@@ -276,3 +276,15 @@ fn sparse_shapes_do_not_choose_safe_branches_and_literal_elements_refresh_builde
         .contains("DELETE FROM records"));
     assert!(!read_statement_shape(&[&rows[1]]));
 }
+
+#[test]
+fn unsupported_helpers_with_appends_cannot_revive_safe_sql_prefixes() {
+    let rows = extract("control-flow-unsupported-append.ts");
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert!(
+        !rows[0].complete && !rows[0].only_value_placeholders,
+        "{rows:?}"
+    );
+    assert!(rows[0].sql_text.is_none(), "{rows:?}");
+    assert!(rows[0].incomplete_reason.is_some(), "{rows:?}");
+}
