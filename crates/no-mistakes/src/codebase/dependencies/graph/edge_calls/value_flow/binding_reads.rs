@@ -95,6 +95,32 @@ impl ValueFlowResolution<'_, '_> {
         context.map(|context| (available_at, read_at, context))
     }
 
+    /// Cached agreements derive timing from each incoming call, rather than
+    /// inheriting a phase from the individual body read requesting the cache.
+    pub(super) fn enter_parameter_read(
+        &mut self,
+        caller: &std::path::Path,
+        call: &ValueCall,
+        file: &std::path::Path,
+        owner: CallableId,
+    ) {
+        if let Some(read) = self.invocation_read.as_ref().filter(|read| {
+            call.context
+                .is_some_and(|context| read.owner.0 != caller || read.owner.1 != context)
+        }) {
+            // An intermediate owner has no independent runtime phase here.
+            // Use only the qualified same-file outer phase for live reads;
+            // captured initializers keep their own source context and timing.
+            self.executing_read = (read.file == caller && read.file == file).then_some((
+                owner,
+                read.offset,
+                read.context,
+            ));
+            return;
+        }
+        self.enter_returned_read(caller, call, file, owner);
+    }
+
     /// Only the synchronous returned body uses this scalar phase. The inline
     /// invocation identity and parameter agreement cache key remain unchanged.
     pub(super) fn enter_returned_read(

@@ -1,4 +1,4 @@
-type Case = (
+pub(super) type Case = (
     &'static str,
     Option<&'static str>,
     &'static str,

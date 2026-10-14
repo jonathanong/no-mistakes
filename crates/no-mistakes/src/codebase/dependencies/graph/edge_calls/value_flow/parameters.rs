@@ -128,7 +128,11 @@ impl ValueFlowResolution<'_, '_> {
             }
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
+            let previous_execution = self.executing_read;
             self.enter_inline_read(&caller, call, path, parameter.owner);
+            if synchronous {
+                self.enter_parameter_read(&caller, call, path, parameter.owner);
+            }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
             let acquisition = self
@@ -176,6 +180,7 @@ impl ValueFlowResolution<'_, '_> {
                 from_default.then_some((path, parameter.owner, true)),
             );
             self.invocation_read = previous_read;
+            self.executing_read = previous_execution;
             default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         }
         if values.is_empty() {
