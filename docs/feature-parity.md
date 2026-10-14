@@ -110,6 +110,10 @@ literal values equally through Rust and the async CJS/ESM/native source API.
 Conservative nullable spans and completeness remain independent of execution
 policy and INSERT provenance.
 
+Import-aware executed PostgreSQL extraction stringifies literal booleans in
+finite joins, plain templates, and string concatenation through Rust and async
+CJS/ESM APIs. Trusted-tag value binds and opaque coercion boundaries are preserved.
+
 The pure PostgreSQL source API is available through the async native Node
 binding in CJS and ESM. Its typed CREATE INDEX facts preserve the `ON ONLY`
 relation modifier in the Rust facts and Node declarations.

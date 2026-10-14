@@ -3,6 +3,8 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
+require("./postgres-boolean-stringification-api.test.js");
+
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const fixture = (name) =>
   readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
