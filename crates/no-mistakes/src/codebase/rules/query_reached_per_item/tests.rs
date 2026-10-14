@@ -177,6 +177,8 @@ fn per_item_metadata_is_explicit_demand_and_display_roots_remain_supported() {
         source_callee: "callee".into(),
         target: crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown,
         returned_from: Vec::new(),
+        typed_from: Vec::new(),
+        returned_member_from: Vec::new(),
         target_node: None,
     };
     assert_eq!(source_node(&site), NodeId::symbol(&site.file, "display"));
@@ -488,3 +490,6 @@ fn mutation_aliases_completion_adapters_constructors_and_redeclarations_keep_pro
 
 #[path = "tests/projections.rs"]
 mod projections;
+
+#[path = "tests/typed_clients.rs"]
+mod typed_clients;

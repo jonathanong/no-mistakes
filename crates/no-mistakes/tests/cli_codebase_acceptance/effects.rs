@@ -17,6 +17,45 @@ fn effects_json_reports_reachable_call_sites() {
 }
 
 #[test]
+fn effects_typed_and_returned_members_preserve_category_filters() {
+    let root =
+        fixture("effects").join("../../../rules/query-reached-per-item/typed-client-fixture");
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
+    let value = run_json(
+        &root,
+        &[
+            "effects",
+            "postgres",
+            "--entry",
+            "src/entry.mts",
+            "--category",
+            "transaction",
+        ],
+    );
+    assert_eq!(value["callSites"].as_array().unwrap().len(), 5);
+    assert_eq!(value["byCategory"]["transaction"], 5);
+    assert!(value["callSites"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|site| site["callee"] == "writePool.connect().query"));
+    let output = run_in(
+        &root,
+        &[
+            "effects",
+            "postgres",
+            "--entry",
+            "src/entry.mts",
+            "--category",
+            "absent",
+        ],
+    );
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("no functions for the requested categories"));
+}
+
+#[test]
 fn effects_category_filter() {
     let root = fixture("effects");
     let value = run_json(

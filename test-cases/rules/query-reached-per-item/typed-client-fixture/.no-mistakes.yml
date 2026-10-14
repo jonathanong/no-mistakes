@@ -1,0 +1,17 @@
+effects:
+  postgres:
+    typedExecutors:
+      - { module: database-client, export: TransactionQuery, category: transaction }
+      - { module: default-client, export: default, category: transaction }
+      - { module: database-client, export: Namespace.Query, category: transaction }
+    returnedMembers:
+      - { module: database-client, export: writePool.connect, member: query, category: transaction }
+      - { module: database-client, export: advisoryLockPool.connect, member: query, category: transaction }
+      - { module: database-client, export: makeTools, member: tools.query, category: transaction }
+      - { module: './providers.mjs', export: createClient, member: query, category: transaction }
+      - { module: './providers.mjs', export: createArray, member: '0', category: transaction }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

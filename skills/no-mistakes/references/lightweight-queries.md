@@ -119,6 +119,13 @@ selector. Explicit external re-exports resolve to the external module selector.
 Shadowed bindings are excluded from target matching. See
 [effects configuration](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/effects.md).
 
+For explicit imported callable parameter types, configure
+`effects.<kind>.typedExecutors`. For a method on a receiver returned from an
+imported factory, configure `effects.<kind>.returnedMembers` with the exact
+factory export path and member path. Both selectors are opt-in and preserve
+category filtering; no type or method names are inferred. The async Node APIs
+`effects()`, `check()`, and `analyzeProject()` share these selectors.
+
 ```bash
 no-mistakes effects storage --entry src/server.ts --root . --format json
 ```

@@ -16,6 +16,10 @@ pub struct ResolvedCallSite {
     pub target: ResolvedCallTarget,
     /// Imported factories which produced or wrapped this executor, separate from its callable target.
     pub returned_from: Vec<(String, String)>,
+    /// Explicit imported annotation provenance, without changing the runtime target.
+    pub typed_from: Vec<(String, String)>,
+    /// Factory identity and exact member projected from its returned receiver.
+    pub returned_member_from: Vec<(String, String, String)>,
     /// Exact target of this occurrence in the canonical call graph.
     pub target_node: Option<NodeId>,
 }

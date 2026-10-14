@@ -1,0 +1,4 @@
+effects:
+  postgres:
+    targets:
+      - { module: '@vendor/db', export: primary.query, category: direct }

@@ -20,6 +20,7 @@ struct CallableFileIndex {
     class_scopes: FxHashSet<String>,
     callable_bindings: ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
     imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
+    type_imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported: FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
     aliases: ScopedNameMap<IndexedAlias>,
     binding_declared_at: ScopedNameMap<u32>,
@@ -97,6 +98,7 @@ impl CallableFileIndex {
                 .filter(|binding| !binding.is_type_only)
                 .map(|binding| (binding.local.clone(), binding.clone()))
                 .collect(),
+            type_imported: file.imported_bindings.iter().map(|binding| (binding.local.clone(), binding.clone())).collect(),
             exported: file
                 .exported_bindings
                 .iter()
