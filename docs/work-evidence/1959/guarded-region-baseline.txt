@@ -1,5 +1,5 @@
-Verified frozen 917 baseline; independent saved sources.
-Original raw SHA-256: d5b781c8b3cb90986158b229efad345b31ab4a3809f46950c230a399d23e3fa8
+Verified frozen 917 baseline; independent immutable-holder saved sources.
+Original raw SHA-256: c846a746bce6738c0e986ec36fc0b566f6e9acf4c7807c908eba08eede5d12de
 Path normalization: none; only repository-relative fixture paths.
 
 src/nested-receiver-containers/guarded-arm.mts|guardedArm|value.get|primary.get
@@ -22,3 +22,7 @@ src/nested-receiver-containers/guarded-foreign.mts|guardedForeign|value.get|prim
 src/nested-receiver-containers/guarded-foreign.mts|-|guardedForeign|?
 src/nested-receiver-containers/guarded-descendant.mts|guardedDescendant|value.get|primary.get
 src/nested-receiver-containers/guarded-descendant.mts|-|guardedDescendant|?
+src/nested-receiver-containers/guarded-ancestor-rhs.mts|guardedAncestorRhs|value.get|primary.get
+src/nested-receiver-containers/guarded-ancestor-rhs.mts|-|guardedAncestorRhs|?
+src/nested-receiver-containers/guarded-ancestor-conditional.mts|guardedAncestorConditional|value.get|primary.get
+src/nested-receiver-containers/guarded-ancestor-conditional.mts|-|guardedAncestorConditional|?

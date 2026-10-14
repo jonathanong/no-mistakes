@@ -37,6 +37,8 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_path_visits: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub receiver_region_breaks: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub early_assignment_phase_writes: usize,
     #[cfg(feature = "test-instrumentation")]
     pub early_assignment_scope_receipts: usize,

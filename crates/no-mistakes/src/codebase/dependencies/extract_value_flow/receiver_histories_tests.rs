@@ -124,47 +124,5 @@ fn fresh_ancestor_does_not_prove_a_distinct_descendant_reference() {
     }
 }
 
-#[test]
-fn guarded_reference_work_uses_one_shared_index_and_no_cold_maps() {
-    assert_eq!(
-        std::mem::size_of::<Option<(std::num::NonZeroU32, u32)>>(),
-        8
-    );
-    for (case, guarded) in [("guarded-many-writes", true), ("unguarded-root", false)] {
-        let source = std::fs::read_to_string(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers")
-            .join(format!("{case}.mts"))).unwrap();
-        let allocator = Allocator::default();
-        let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
-        assert!(parsed.diagnostics.is_empty());
-        let facts = extract_import_facts_from_program_with_source_and_demands(
-            &parsed.program,
-            &source,
-            false,
-            false,
-            true,
-        );
-        let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["box"];
-        let events = history
-            .assigned
-            .as_ref()
-            .unwrap()
-            .replacements
-            .as_ref()
-            .unwrap();
-        if guarded {
-            let regions = events.regions.as_ref().unwrap();
-            assert_eq!(regions.len(), 1);
-            assert_eq!(regions.values().next().unwrap()["client"].len(), 128);
-            #[cfg(feature = "test-instrumentation")]
-            {
-                assert_eq!(events.region_record_attempts, 128);
-                assert_eq!(events.region_queries.get(), 128);
-            }
-        } else {
-            assert!(events.regions.is_none());
-            #[cfg(feature = "test-instrumentation")]
-            assert_eq!(events.region_record_attempts, 0);
-        }
-    }
-}
+#[path = "receiver_guarded_tests.rs"]
+mod guarded_tests;

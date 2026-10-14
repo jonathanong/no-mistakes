@@ -264,7 +264,7 @@ The guarded-arm correction records a lexical token only for consecutive standalo
 plain assignments inside an unknown-if block arm. Exact assignment-start equality
 prevents nested RHS writes from establishing that token's proof. Other statements
 split the segment; conditional/default/deferred walkers invalidate the token.
-Root binding writes also invalidate it, including writes nested in an admitted
+Any nested write with a different assignment start also invalidates it, including writes nested in an admitted
 assignment RHS, so a captured old LHS cannot prove the subsequently rebound root. The
 normal block and statement visitor retains scope, hoisting and binding hooks.
 Only prepared nested-reference histories allocate an optional regional event
@@ -275,10 +275,36 @@ replacement evidence remains unchanged; terminal-only cutoffs remain required.
 Saved independent controls cover same-arm replacement, RHS root rebinding, opposite/after arms,
 nested children/RHS, logical assignment, restoration, foreign writers and retained
 descendants. The frozen 917 outputs in `guarded-region-baseline.txt` resolve all
-ten to primary.get: the same-arm positive repairs introduced precision loss;
+twelve to primary.get: the same-arm positive repairs introduced precision loss;
 negative cases retain the explicit conservative boundaries of nested mutation
 tracking. No general execution-path or heap model is claimed. A saved 128-write
 control checks one regional index, 128 retained events, 128 record attempts and
 128 actual indexed queries; the unguarded control allocates no regional map.
 These are work/storage bounds, not measured CPU or RSS improvements. Semantic,
 coverage and quality validation of this correction is pending.
+
+
+The first regional-proof run at 975315b compiled and passed 11,280 library tests,
+but failed one graph aggregate assertion: guardedOpposite retained primary.get.
+The isolated regional-index and 128-write/cold-map controls passed. Investigation
+found a fixture error: generated `let box = {client}` declarations bypass the
+existing value-binding collector, which records immutable values and mutable
+factory results but does not record mutable object initializers. The original
+reviewed regression uses a supported immutable holder. The graph controls now
+use `const` holders; saved mutable root-rebind sources remain explicit unsupported
+boundary probes, without assertions that their stale Known target is desirable.
+Direct extracted facts verify same-arm regional cutoff versus no global cutoff,
+and actual imported-member mutation histories for opposite/after/child arms.
+
+Supported immutable-holder RHS ancestor-rebinding controls additionally require
+Unknown and one actual admission break: the first LHS captures the old container,
+while a nested assignment replaces its ancestor before the next member write.
+Every nested write whose assignment start differs from the admitted statement
+invalidates the transient token. This covers member ancestors as well as root
+bindings without adding RHS heap tracking. Existing expectations remain intact;
+new semantic and quality validation is pending after this correction.
+
+The pre-existing mutable object-initializer boundary is tracked separately in
+[issue #2019](https://github.com/jonathanong/no-mistakes/issues/2019), queued until
+this PR merges. Its exact failed975 graph evidence and frozen917 comparison are
+distinguished from the corrected supported immutable-holder controls.

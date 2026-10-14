@@ -35,7 +35,11 @@ fn visit_statements_with_receiver_region<'a>(collector: &mut ImportCollector, st
             collector.receiver_conditional_region = None;
         }
         collector.visit_statement(statement);
-        if collector.receiver_conditional_region.is_none() { token = None; }
+        if collector.receiver_conditional_region.is_none() {
+            #[cfg(feature = "test-instrumentation")]
+            if start.is_some() { collector.value_flow.receiver_region_breaks += 1; }
+            token = None;
+        }
         collector.receiver_conditional_region = None;
     }
 }

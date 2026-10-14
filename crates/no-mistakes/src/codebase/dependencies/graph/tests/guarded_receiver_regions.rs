@@ -14,10 +14,15 @@ pub(super) const CASES: [(&str, &str, &str, Option<&str>); 12] = [
     ("guarded-dynamic", "guardedDynamic", "value.get", None),
     ("guarded-foreign", "guardedForeign", "value.get", None),
     ("guarded-descendant", "guardedDescendant", "value.get", None),
-    ("guarded-root-rhs", "guardedRootRhs", "value.get", None),
     (
-        "guarded-root-conditional",
-        "guardedRootConditional",
+        "guarded-ancestor-rhs",
+        "guardedAncestorRhs",
+        "value.get",
+        None,
+    ),
+    (
+        "guarded-ancestor-conditional",
+        "guardedAncestorConditional",
         "value.get",
         None,
     ),

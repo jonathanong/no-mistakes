@@ -20,7 +20,11 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
-        if !member {
+        if !member
+            || self
+                .receiver_conditional_region
+                .is_some_and(|(_, admitted)| admitted != offset)
+        {
             self.receiver_conditional_region = None;
         }
         let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
