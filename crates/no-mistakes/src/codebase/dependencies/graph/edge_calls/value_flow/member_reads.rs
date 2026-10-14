@@ -9,15 +9,13 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> FlowValue {
-        let enabled = self
-            .indexes
-            .file(self.facts, file)
-            .and_then(|index| index.values.receiver_mutations.as_ref())
-            .is_some_and(|receivers| {
+        let enabled = self.indexes.file(self.facts, file).is_some_and(|index| {
+            index.values.receiver_mutations.as_ref().is_some_and(|receivers| {
                 context.map_or(receivers.module_writer, |context| {
                     receivers.writer_contexts.contains(&context)
                 })
-            });
+            })
+        });
         let previous = self.member_read.take();
         if enabled {
             self.member_read = Some((file.to_path_buf(), offset, context));
