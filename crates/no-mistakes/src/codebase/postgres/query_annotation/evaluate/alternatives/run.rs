@@ -31,6 +31,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let original = self.invalidated_builders.clone();
         let objects = self.argument_objects.clone();
         let definite = self.definite_deleted_argument_slots.clone();
+        let (baselines, mut joined_updates) = (self.alternative_builder_baselines(path), None);
         let recreated = self.recreated_argument_slots.clone();
         let disconnected = self.disconnected_argument_slots.clone();
         let mut disconnected_common = None;
@@ -54,8 +55,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.argument_extra_slots
                 .retain(|id, _| !objects.contains_key(id));
             self.argument_extra_slots.extend(extra_slots.clone());
-            self.builder_updates.retain(|id, _| *id >= original_ids);
-            self.builder_updates.extend(updates.clone());
+            self.restore_builder_updates(None, updates.clone(), original_ids);
             self.remove_alternative_captured_readers(scopes.len());
             self.captured_bindings
                 .retain(|frame, _| *frame >= scopes.len());
@@ -75,6 +75,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.add_alternative_captured_readers(scopes.len());
             self.rebuild_compacted_binding_indexes(false);
             returned.push(self.expr(arm, path, env, depth, generic));
+            self.join_builder_updates(&mut joined_updates, &baselines, original_ids, path);
             joined_untrusted |= self.untrusted_array_intrinsics;
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
             changed.extend(self.invalidated_builders.iter().copied());
@@ -168,8 +169,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.modules = modules;
         module_states.restore(&mut self.scopes, &self.modules);
         self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
-        self.builder_updates.retain(|id, _| *id >= original_ids);
-        self.builder_updates.extend(updates);
+        self.restore_builder_updates(joined_updates, updates, original_ids);
         self.remove_alternative_captured_readers(scopes.len());
         self.captured_bindings
             .retain(|frame, _| *frame >= scopes.len());

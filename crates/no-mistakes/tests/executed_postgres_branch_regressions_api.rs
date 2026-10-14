@@ -183,3 +183,39 @@ fn unvisited_branch_local_callbacks_never_certify_a_lexical_prefix() {
         "{rows:?}"
     );
 }
+
+#[test]
+fn primitive_projection_never_proves_an_unresolved_intrinsic_effect_pure() {
+    let rows = extract("control-flow-primitive-opaque-intrinsics.ts");
+    assert_eq!(rows.len(), 4, "{rows:?}");
+    for row in &rows {
+        assert_eq!(row.complete, row.line == 18, "{rows:?}");
+    }
+}
+
+#[test]
+fn handled_alternative_updates_cannot_revive_an_earlier_builder_snapshot() {
+    let rows = extract("control-flow-handled-alternative-updates.ts");
+    assert_eq!(rows.len(), 8, "{rows:?}");
+    for row in &rows {
+        // Assignment operands remain unmodeled; this fix adds no rebind precision.
+        assert_eq!(row.complete, row.line != 28, "{rows:?}");
+    }
+    for line in [9, 32] {
+        let variants = rows
+            .iter()
+            .filter(|row| row.line == line)
+            .collect::<Vec<_>>();
+        assert_eq!(variants.len(), 2, "{rows:?}");
+        assert!(
+            variants
+                .iter()
+                .any(|row| row.sql_text.as_ref().unwrap().contains("DELETE")),
+            "{rows:?}"
+        );
+    }
+    for line in [13, 17, 23] {
+        let row = rows.iter().find(|row| row.line == line).unwrap();
+        assert_eq!(row.sql_text.as_deref(), Some("SELECT 1"), "{rows:?}");
+    }
+}
