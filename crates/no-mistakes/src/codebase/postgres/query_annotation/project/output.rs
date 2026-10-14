@@ -14,7 +14,8 @@ pub(super) fn projected_sql(value: &Value) -> Option<Vec<ProjectedSql>> {
                 only_value_placeholders: *complete && generated_bind,
             }])
         }
-        Value::Promise(value) | Value::Evaluated(value, _) => projected_sql(value),
+        Value::Promise(_) => None,
+        Value::Evaluated(value, _) => projected_sql(value),
         Value::Joined(values) if !values.is_empty() => {
             let mut alternatives = Vec::new();
             for value in values.iter() {

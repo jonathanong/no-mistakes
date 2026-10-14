@@ -55,7 +55,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
-        for expr in globals.values() {
+        for (name, expr) in globals {
+            // Only exported functions are independently callable by a
+            // supplied-source consumer. A private callback still contributes
+            // its contextual invocations, but speculative calls to it must
+            // not erase the exact argument supplied by its owner.
+            if file.facts.precise_records
+                && !file
+                    .module
+                    .ts
+                    .exported_bindings
+                    .iter()
+                    .any(|binding| binding.specifier.is_none() && binding.local == *name)
+            {
+                continue;
+            }
             if let Expr::Function(function) = expr {
                 // Speculative entrypoints share initialized facts, never effects
                 // from an unrelated function considered earlier in name order.

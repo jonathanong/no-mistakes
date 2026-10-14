@@ -86,6 +86,31 @@ fn source_api_projects_imported_read_from_supplied_sources() {
 }
 
 #[test]
+fn source_api_never_unwraps_an_unawaited_sql_promise() {
+    let sources = [source("async-consumer.ts"), source("async-builder.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 2);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+    assert_eq!(
+        statements[1].sql_text.as_deref(),
+        Some("/* async/read */ SELECT id FROM posts")
+    );
+    assert!(statements[1].complete);
+}
+
+#[test]
+fn source_api_retains_the_generic_call_of_an_exported_helper() {
+    let sources = [source("exported-generic.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
 fn source_api_observes_side_effect_only_module_before_imported_read() {
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     for consumer in ["eager-consumer.ts", "eager-unused-consumer.ts"] {

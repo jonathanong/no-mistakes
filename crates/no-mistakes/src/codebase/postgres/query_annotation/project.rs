@@ -134,7 +134,11 @@ fn project_impl(
             }
         }
         for ((path, span), events) in events {
-            let contextual = events.iter().any(|(generic, _)| !generic);
+            // An exported helper can be called both locally with known SQL and
+            // externally with an unknown argument. The annotation rule keeps
+            // its contextual preference; executed SQL must include every
+            // reachable invocation before it certifies a complete statement.
+            let contextual = !collect_executed && events.iter().any(|(generic, _)| !generic);
             let values = events
                 .into_iter()
                 .filter(|(generic, _)| !contextual || !generic)
