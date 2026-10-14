@@ -88,11 +88,13 @@ fn source_api_keeps_callbacks_exported_through_containers_generic() {
     // The exact local call cannot certify an exported callback's unknown caller.
     for fixture in [
         "exported-array-callback.ts",
+        "exported-spread-callback.ts",
         "exported-indexed-callback.ts",
         "exported-computed-callback.ts",
         "exported-dynamic-key-callback.ts",
         "exported-sequence-callback.ts",
         "exported-logical-callback.ts",
+        "exported-cyclic-alias.ts",
     ] {
         let statements =
             extract_executed_postgres_sql_with_imports(&[source(fixture)], &options, &[]).unwrap();
@@ -144,16 +146,26 @@ fn source_api_classifies_nested_await_shapes_in_imported_helpers() {
         .iter()
         .filter(|statement| statement.file_name == "suspension-shapes-consumer.ts")
         .collect();
-    assert_eq!(statements.len(), 8);
+    assert_eq!(statements.len(), 10);
+    assert_eq!(
+        statements
+            .iter()
+            .filter(|statement| statement.complete)
+            .count(),
+        1
+    );
     let baseline = statements
         .iter()
-        .find(|statement| statement.line == 14)
+        .find(|statement| statement.annotation.as_deref() == Some("suspension/baseline"))
         .unwrap();
     assert!(baseline.complete, "{baseline:?}");
-    assert_eq!(baseline.annotation.as_deref(), Some("suspension/shapes"));
+    assert_eq!(
+        baseline.sql_text.as_deref(),
+        Some("/* suspension/baseline */ SELECT id FROM posts")
+    );
     assert_eq!(baseline.kind, EmbeddedSqlKind::Composed);
     for statement in statements {
-        if statement.line == 14 {
+        if statement.annotation.as_deref() == Some("suspension/baseline") {
             continue;
         }
         assert!(!statement.complete, "{statement:?}");
