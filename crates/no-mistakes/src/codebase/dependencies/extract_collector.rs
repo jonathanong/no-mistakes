@@ -17,6 +17,8 @@ struct ImportCollector {
     eager_require_specifiers: std::collections::BTreeSet<String>,
     conditional_execution: bool,
     repeat_depth: usize,
+    /// Synthetic ownership of a default value evaluated by the module itself.
+    module_evaluation_owner: Option<CallableId>,
     sloppy_script: bool,
     /// The Annex B for-in initializer runs before the first iteration. Its
     /// binding target still runs only when the right-hand side has a key.

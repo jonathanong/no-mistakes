@@ -527,6 +527,8 @@ invalidate live members. A copied method such as `const get = alias.get` keeps
 its acquisition snapshot; copying a container keeps descendant members live.
 For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
+This includes an IIFE evaluated in `export default`, directly or as an object
+member value. Exported functions and object methods retain their callable guards.
 Calls inside loops, repeatable functions, and instance initializers remain
 unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
