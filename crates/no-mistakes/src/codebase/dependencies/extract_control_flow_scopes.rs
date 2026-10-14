@@ -1,24 +1,4 @@
-fn visit_statement_with_type_binding<'a>(collector: &mut ImportCollector, statement: &Statement<'a>) {
-    record_statement_type_binding(collector, statement);
-    walk::walk_statement(collector, statement);
-}
-
-fn visit_expression_with_annex_b_initializer<'a>(
-    collector: &mut ImportCollector,
-    expression: &Expression<'a>,
-) {
-    if let Some((_, outer_conditional)) = collector.annex_b_for_in_initializer.filter(|(span, _)| {
-        !collector.suppress_imports && *span == expression.span()
-    }) {
-        let initializer = collector.annex_b_for_in_initializer.take();
-        let previous = std::mem::replace(&mut collector.conditional_execution, outer_conditional);
-        walk::walk_expression(collector, expression);
-        collector.conditional_execution = previous;
-        collector.annex_b_for_in_initializer = initializer;
-    } else {
-        walk::walk_expression(collector, expression);
-    }
-}
+include!("extract_expression_statement_walk.rs");
 
 fn visit_block_statement_with_scope<'a>(
     collector: &mut ImportCollector,
@@ -78,7 +58,9 @@ fn visit_for_statement_with_scope<'a>(
         with_conditional_execution(collector, true, |collector| collector.visit_expression(update));
     }
     let conditional = statement.test.as_ref().is_some_and(|test| literal_truthiness(test) != Some(true));
-    with_conditional_execution(collector, conditional, |collector| collector.visit_statement(&statement.body));
+    with_conditional_execution(collector, conditional, |collector| {
+        with_replacement_region(collector, statement.body.span(), false, true, |collector| collector.visit_statement(&statement.body));
+    });
     collector.pop_lexical_scope(pushed);
 }
 
@@ -110,7 +92,9 @@ fn visit_for_in_statement_with_scope<'a>(
     with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.annex_b_for_in_initializer = previous_initializer;
     collector.visit_expression(&statement.right);
-    with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
+    with_conditional_execution(collector, true, |collector| {
+        with_replacement_region(collector, statement.body.span(), false, true, |collector| collector.visit_statement(&statement.body));
+    });
     collector.pop_lexical_scope(pushed);
 }
 
@@ -123,7 +107,22 @@ fn visit_for_of_statement_with_scope<'a>(
     invalidate_for_statement_assignment_target(collector, &statement.left, statement.right.span().end);
     with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.visit_expression(&statement.right);
-    with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
+    let simple_left = matches!(&statement.left, ForStatementLeft::VariableDeclaration(declaration)
+        if declaration.declarations.len() == 1
+            && matches!(&declaration.declarations[0].id, BindingPattern::BindingIdentifier(_)));
+    let may_repeat = !matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&statement.right),
+        Expression::ArrayExpression(array) if array.elements.len() <= 1
+            && array.elements.iter().all(|element| !matches!(element, oxc_ast::ast::ArrayExpressionElement::SpreadElement(_))));
+    let repeated = simple_left && !statement.r#await && matches!(
+        crate::codebase::ts_source::unwrap_ts_wrappers(&statement.right),
+        Expression::ArrayExpression(array) if array.elements.len() >= 2
+            && array.elements.iter().all(|element| !matches!(element, oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)))
+    );
+    with_conditional_execution(collector, true, |collector| {
+        with_replacement_region(collector, statement.body.span(), repeated, may_repeat, |collector| {
+            collector.visit_statement(&statement.body);
+        });
+    });
     collector.pop_lexical_scope(pushed);
 }
 
@@ -135,6 +134,7 @@ fn invalidate_for_statement_assignment_target(
     let Some(target) = left.as_assignment_target() else {
         return;
     };
+    collector.record_replacement_target(target, ValueExpression::Unknown, completed_at);
     for (name, path) in extract_value_flow::write_targets::targets(target) {
         collector.record_reassigned_callable_alias_path(&name, target.span().start, Some(&path), completed_at);
     }
@@ -153,12 +153,12 @@ fn visit_while_statement_per_item<'a>(collector: &mut ImportCollector, statement
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "while");
     collector.visit_expression(&statement.test);
     with_conditional_execution(collector, literal_truthiness(&statement.test) != Some(true), |collector| {
-        collector.visit_statement(&statement.body);
+        with_replacement_region(collector, statement.body.span(), false, literal_truthiness(&statement.test) != Some(false), |collector| collector.visit_statement(&statement.body));
     });
 }
 fn visit_do_while_statement_per_item<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "do");
-    collector.visit_statement(&statement.body);
+    with_replacement_region(collector, statement.body.span(), false, literal_truthiness(&statement.test) != Some(false), |collector| collector.visit_statement(&statement.body));
     // Only prove simple bodies: explicit exits can skip even the first test.
     with_conditional_execution(collector, !do_body_reaches_test(&statement.body), |collector| collector.visit_expression(&statement.test));
 }

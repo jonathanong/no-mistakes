@@ -28,6 +28,7 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
+    pub replacements: Option<std::sync::Arc<replacements::ValueReplacementFacts>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
@@ -142,3 +143,7 @@ mod object_values;
 
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
+
+#[path = "extract_value_flow/replacements.rs"]
+mod replacements;
+pub use replacements::{ValueReplacementFacts, ValueReplacementWrite, ValueRepeatRegion, ValueRepeatCall};

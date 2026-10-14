@@ -175,3 +175,41 @@ fn effects_cli_retains_inline_invocation_context() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+#[test]
+fn effects_alternatives_json_and_text_keep_one_physical_occurrence() {
+    let root = fixture("effects-alternatives");
+    for (projection, category) in [
+        ("all", None),
+        ("read", Some("read")),
+        ("write", Some("write")),
+    ] {
+        let mut args = vec!["effects", "database", "--entry", "src/entry.mts"];
+        if let Some(category) = category {
+            args.extend(["--category", category]);
+        }
+        let actual = run_json(&root, &args);
+        let expected: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join(format!("expected-{projection}.json"))).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(actual, expected);
+    }
+    for format in ["human", "md"] {
+        let output = run_in(
+            &root,
+            &[
+                "effects",
+                "database",
+                "--entry",
+                "src/entry.mts",
+                "--format",
+                format,
+            ],
+        );
+        assert_success(&output);
+        let text = stdout(&output);
+        assert_eq!(text.matches("src/entry.mts:4").count(), 1);
+        assert!(text.contains("alternatives=[primary.read (read), replica.write (write)]"));
+    }
+}

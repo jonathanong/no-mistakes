@@ -1,5 +1,5 @@
 use super::*;
-use default_origins::{merge, ReceiverRead};
+use default_origins::{ReceiverRead, merge};
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn record_receiver_origin(

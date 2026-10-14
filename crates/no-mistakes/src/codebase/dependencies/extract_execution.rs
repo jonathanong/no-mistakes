@@ -14,6 +14,7 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
+    if conditional { collector.invalidate_replacement_execution(); }
     let previous = collector.conditional_execution;
     collector.conditional_execution |= conditional;
     visit(collector);

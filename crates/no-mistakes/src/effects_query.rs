@@ -19,7 +19,15 @@ use crate::codebase::dependencies::{EdgeKind, NodeId};
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 
-/// One matched effect call site.
+/// One distinct configured match for a physical effect occurrence.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+pub struct EffectCallAlternative {
+    pub callee: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+}
+
+/// One matched physical effect call site.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct EffectCallSite {
     pub file: String,
@@ -30,6 +38,9 @@ pub struct EffectCallSite {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caller: Option<String>,
     pub depth: usize,
+    /// Sorted distinct matches; omitted for ordinary singleton occurrences.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alternatives: Option<Vec<EffectCallAlternative>>,
 }
 
 /// The full `effects <kind>` report.
@@ -152,6 +163,8 @@ pub fn run(
     run_with_prepared(&root, &selection, entry, depth, &graph, &facts, &interner)
 }
 
+include!("effects_query/selection.rs");
+include!("effects_query/matches.rs");
 include!("effects_query/prepared.rs");
 
 #[cfg(test)]

@@ -18,7 +18,10 @@ pub(super) enum OriginKind {
     ReceiverContexts(Arc<OriginNode>, Arc<OriginNode>),
     ReceiverOwnedContexts(Arc<OriginNode>, std::path::PathBuf, CallableId),
     InvocationReceiver {
-        file: std::path::PathBuf, offset: u32, context: Option<CallableId>, owner: CallableId,
+        file: std::path::PathBuf,
+        offset: u32,
+        context: Option<CallableId>,
+        owner: CallableId,
         history: std::sync::Arc<crate::codebase::dependencies::extract::ValueMutationHistory>,
     },
     Union(Arc<OriginNode>, Arc<OriginNode>),

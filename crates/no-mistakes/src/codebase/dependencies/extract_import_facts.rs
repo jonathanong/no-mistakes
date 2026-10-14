@@ -1,4 +1,5 @@
 pub use extract_value_flow::{
+    ValueReplacementFacts, ValueReplacementWrite, ValueRepeatRegion, ValueRepeatCall,
     ValueBinding, ValueCall, ValueExpression, ValueFlowFacts, ValueParameter, ValueProjection, ValueDefaultMutations, ValueMutationInfo, ValueReceiverMutations, ValueMutationHistory,
 };
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

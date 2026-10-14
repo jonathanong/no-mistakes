@@ -1669,3 +1669,25 @@ test("active progress exposes named public snapshot contracts and a live-only po
   assert.match(declarations, /export function diagnosticsSnapshot\(/);
   assert.match(declarations, /DiagnosticsProgressSnapshot \| null/);
 });
+
+test("effects alternatives expose a named optional public evidence type", () => {
+  const named = readFileSync(join(packageRoot, "named-query-types.d.ts"), "utf8");
+  assert.match(
+    named,
+    /export interface EffectCallAlternative \{\s+callee: string;\s+category\?: string;/,
+  );
+  assert.match(named, /alternatives\?: EffectCallAlternative\[\];/);
+  assert.match(named, /export interface EffectCallSite/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/named-query-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8"),
+    /effects\(options: WithInvocationOptions<EffectsOptions>\): Promise<EffectsReport>/,
+  );
+});

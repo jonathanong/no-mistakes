@@ -105,6 +105,7 @@ include!("extract_kinds.rs");
 mod extract_value_flow;
 
 include!("extract_per_item.rs");
+include!("extract_replacements.rs");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownCall {

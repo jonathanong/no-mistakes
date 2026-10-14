@@ -34,7 +34,10 @@ struct ImportCollector {
     unknown_calls: Vec<UnknownCall>,
     symbol_references: Vec<FunctionCall>,
     function_stack: Vec<String>,
-    function_id_stack: Vec<CallableId>,
+    function_id_stack: Vec<(CallableId, bool)>,
+    replacement_region: Option<ReplacementRegion>,
+    replacement_root_unsafe: bool,
+    replacement_statement_call: Option<(u32, u32)>,
     callable_scope_ids: FxHashSet<(CallableId, String)>,
     /// Static class members have a display scope derived from the class name,
     /// which is not unique across sibling lexical scopes. Preserve their

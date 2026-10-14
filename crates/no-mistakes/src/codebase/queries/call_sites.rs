@@ -81,9 +81,7 @@ fn sites_for_file(
         .iter()
         .filter(|site| site.invocation == InvocationKind::Call)
         .filter(|site| {
-            site.target_node
-                .as_ref()
-                .is_some_and(|node| targets.contains(node))
+            site.target_nodes().any(|node| targets.contains(node))
         })
         .map(|site| site.offset)
         .collect();

@@ -14,24 +14,23 @@ pub(super) fn incoming_inputs(
         if site.invocation == InvocationKind::Membership {
             continue;
         }
-        let Some(target) = &site.target_node else {
-            continue;
-        };
-        let target = if site.invocation == InvocationKind::Construct {
-            constructors::route(constructors, target).unwrap_or(target)
-        } else {
-            target
-        };
-        if let NodeId::Symbol {
-            file,
-            callable_id: Some(id),
-            ..
-        } = target
-        {
-            incoming
-                .entry((file.to_path_buf(), *id))
-                .or_default()
-                .push(ParameterInput::from_site(site, indexes, facts));
+        for target in site.target_nodes() {
+            let target = if site.invocation == InvocationKind::Construct {
+                constructors::route(constructors, target).unwrap_or(target)
+            } else {
+                target
+            };
+            if let NodeId::Symbol {
+                file,
+                callable_id: Some(id),
+                ..
+            } = target
+            {
+                incoming
+                    .entry((file.to_path_buf(), *id))
+                    .or_default()
+                    .push(ParameterInput::from_site(site, indexes, facts));
+            }
         }
     }
     incoming
@@ -46,7 +45,6 @@ fn refine_iteration(
     parameters_enabled: bool,
 ) -> (
     Vec<ResolvedCallSite>,
-    Vec<Edge>,
     FxHashSet<(std::path::PathBuf, CallableId)>,
 ) {
     let mut flow = ValueFlowResolution {
@@ -56,6 +54,8 @@ fn refine_iteration(
         indexes,
         incoming: data.incoming,
         supers: data.supers,
+        replacements: data.replacements,
+        replacement_read: false,
         used_parameters: fx_set(),
         parameters_enabled,
         initializing: Vec::new(),
@@ -64,12 +64,11 @@ fn refine_iteration(
         calls_visiting: fx_set(),
         default_origins: None,
         acquisition_context: None,
-                    invocation_read: None,
+        invocation_read: None,
     };
     let mut sites = base.to_vec();
-    let mut edges = Vec::new();
     for site in &mut sites {
-        if site.target_node.is_some() || site.invocation == InvocationKind::Construct {
+        if site.invocation == InvocationKind::Construct {
             continue;
         }
         let Some(index) = indexes.file(facts, &site.file) else {
@@ -102,6 +101,7 @@ fn refine_iteration(
         if call.bound {
             continue;
         }
+        flow.replacement_read = false;
         let value = flow.value(&site.file, &call.callee);
         let mut value = value;
         loop {
@@ -142,6 +142,23 @@ fn refine_iteration(
         }
         if matches!(value, FlowValue::Promise(_) | FlowValue::Uncallable) {
             site.target = ResolvedCallTarget::Unknown;
+            site.target_node = None;
+            continue;
+        }
+        if flow.replacement_read
+            || matches!(
+                value,
+                FlowValue::Target(ResolvedCallTarget::Alternatives(_))
+            )
+        {
+            // A recognized repeat read owns the answer, including Unknown.
+            // Keeping the initial known target here would retain a stale edge.
+            let target = match value {
+                FlowValue::Target(target) => target,
+                _ => ResolvedCallTarget::Unknown,
+            };
+            site.target = target;
+            site.target_node = None;
             continue;
         }
         let (target, exact_id) = match value {
@@ -178,14 +195,9 @@ fn refine_iteration(
         if let Some(node) =
             graph_call_target_node(&inputs.interner, facts, indexes, &target, exact_id)
         {
-            let source = site.caller.as_deref().map_or_else(
-                || NodeId::file_in(&inputs.interner, &site.file),
-                |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
-            );
-            edges.push((source, node.clone(), EdgeKind::Call));
             site.target_node = Some(node);
         }
         site.target = target;
     }
-    (sites, edges, flow.used_parameters)
+    (sites, flow.used_parameters)
 }

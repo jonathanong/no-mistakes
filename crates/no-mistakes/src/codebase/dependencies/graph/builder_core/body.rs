@@ -1,4 +1,6 @@
 {
+        #[cfg(feature = "test-instrumentation")]
+        value_flow_metrics::record_replacements(Default::default());
         session.record_work("graph.builds", 1);
         let root = edge_inputs.root;
         let tsconfig = edge_inputs.tsconfig;

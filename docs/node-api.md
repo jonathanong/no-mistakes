@@ -1198,3 +1198,19 @@ unknown argument set to a proven invocation. Returned helpers require every
 known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
+
+
+### Effect alternatives
+
+The async `effects()` API and `analyzeProject()` effects report use the same
+physical-occurrence contract as [the CLI](cli/effects.md). The exported
+`EffectCallAlternative` type names `{ callee: string; category?: string }`.
+`EffectCallSite.alternatives` is optional and appears only when multiple distinct
+configured matches remain; ordinary singleton JSON stays unchanged. Alternatives
+are sorted by callee/category, with the first match also supplying scalar fields.
+
+Each `byCategory` count deduplicates a physical occurrence within that category;
+several categories may describe one row. `categories` filters alternatives before
+choosing scalar fields and counts, so a read-only request cannot expose a write
+scalar/category count. Unknown candidates add no evidence. The returned Promise,
+CommonJS/ESM facades and batched reports preserve this same projection.

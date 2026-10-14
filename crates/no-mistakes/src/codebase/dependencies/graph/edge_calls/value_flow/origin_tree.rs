@@ -70,7 +70,9 @@ impl OriginNode {
     pub(super) fn new(kind: OriginKind, height: usize) -> Self {
         let has_receivers = match &kind {
             OriginKind::Receiver(..) => true,
-            OriginKind::Source(_) | OriginKind::InvocationReceiver { .. } | OriginKind::ReceiverOwnedContexts(..) => false,
+            OriginKind::Source(_)
+            | OriginKind::InvocationReceiver { .. }
+            | OriginKind::ReceiverOwnedContexts(..) => false,
             OriginKind::Union(left, right) => left.has_receivers || right.has_receivers,
             OriginKind::ReceiverUse(source, _) => {
                 source.as_ref().is_some_and(|source| source.has_receivers)
@@ -81,7 +83,9 @@ impl OriginNode {
             | OriginKind::ReceiverContexts(source, _) => source.has_receivers,
         };
         let has_receiver_reads = match &kind {
-            OriginKind::Receiver(..) | OriginKind::Source(_) | OriginKind::InvocationReceiver { .. } => false,
+            OriginKind::Receiver(..)
+            | OriginKind::Source(_)
+            | OriginKind::InvocationReceiver { .. } => false,
             OriginKind::ReceiverOwnedContexts(root, ..) => root.has_receiver_reads,
             OriginKind::Union(left, right) => left.has_receiver_reads || right.has_receiver_reads,
             OriginKind::ReceiverUse(source, read) => {

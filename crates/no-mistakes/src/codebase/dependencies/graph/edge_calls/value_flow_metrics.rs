@@ -18,8 +18,21 @@ pub fn parameter_agreements() -> usize {
     LAST_PARAMETERS.get()
 }
 
-pub(super) fn record_origins(count: usize) { LAST_ORIGINS.set(count); }
-pub fn origin_nodes() -> usize { LAST_ORIGINS.get() }
+pub(super) fn record_origins(count: usize) {
+    LAST_ORIGINS.set(count);
+}
+pub fn origin_nodes() -> usize {
+    LAST_ORIGINS.get()
+}
 
-pub(super) fn record_dependency_links(count: usize) { LAST_DEPENDENCIES.set(count); }
-pub fn dependency_links() -> usize { LAST_DEPENDENCIES.get() }
+pub(super) fn record_dependency_links(count: usize) {
+    LAST_DEPENDENCIES.set(count);
+}
+pub fn dependency_links() -> usize {
+    LAST_DEPENDENCIES.get()
+}
+
+#[path = "replacement_probe.rs"]
+mod replacements;
+pub use replacements::*;
+pub(super) use replacements::{ReplacementLookupProbe, record_replacements};

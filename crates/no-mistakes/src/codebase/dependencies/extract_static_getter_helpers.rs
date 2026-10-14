@@ -116,6 +116,7 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
+    collector.record_replacement_assignment(assignment);
     record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
@@ -143,6 +144,7 @@ fn visit_update_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     update: &oxc_ast::ast::UpdateExpression<'a>,
 ) {
+    collector.record_replacement_target(update.argument.as_assignment_target(), ValueExpression::Unknown, update.span.end);
     record_assignment_target_writes(
         collector,
         update.argument.as_assignment_target(),
