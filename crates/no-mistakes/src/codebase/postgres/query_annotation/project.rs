@@ -20,7 +20,8 @@ pub(crate) struct ProjectedSql {
     pub only_value_placeholders: bool,
 }
 
-pub(crate) type ProjectedCalls = BTreeMap<(PathBuf, (u32, u32)), Option<Vec<ProjectedSql>>>;
+pub(crate) type ProjectedCalls =
+    BTreeMap<(PathBuf, (u32, u32)), Result<Vec<ProjectedSql>, &'static str>>;
 
 /// Resolve owned syntax against the request's canonical module facts and
 /// resolver. No source reads or parsing occur in this projection.
@@ -154,20 +155,28 @@ fn project_impl(
             }
             if collect_executed {
                 let mut alternatives = Vec::new();
-                let mut recoverable = true;
+                let mut reason = None;
                 for value in &values {
                     if let Some(candidates) = projected_sql(value) {
                         for candidate in candidates {
+                            if !candidate.complete && !candidate.only_value_placeholders {
+                                reason = Some("unresolved-sql-fragment");
+                                break;
+                            }
                             if !alternatives.contains(&candidate) {
                                 alternatives.push(candidate);
+                                if alternatives.len() > super::super::MAX_EMBEDDED_SQL_VARIANTS {
+                                    reason = Some("variant-limit");
+                                    break;
+                                }
                             }
                         }
                     } else {
-                        recoverable = false;
+                        reason = Some(output::incomplete_reason(value));
                         break;
                     }
                 }
-                projected.insert((path.clone(), span), recoverable.then_some(alternatives));
+                projected.insert((path.clone(), span), reason.map_or(Ok(alternatives), Err));
             }
             let values = values.into_iter().map(prefix).collect::<Vec<_>>();
             // Every analyzable invocation must satisfy the rule. One favorable

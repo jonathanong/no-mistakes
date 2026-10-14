@@ -59,12 +59,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
     ) -> bool {
         match expr {
+            _ if self
+                .files
+                .get(path)
+                .is_some_and(|file| file.facts.precise_records)
+                && matches!(value, Value::Evaluated(_, true)) =>
+            {
+                true
+            }
+            Expr::Alternatives(_)
+                if matches!(value, Value::Evaluated(_, true))
+                    || !self.effect_can_mutate(expr, path, env) =>
+            {
+                true
+            }
             Expr::Call { .. } | Expr::Sequence(_) | Expr::Discard(_) | Expr::SlotWrite { .. } => {
                 matches!(value, Value::Evaluated(_, true))
             }
             Expr::Await(inner) => self.handled_deletion_effect(inner, value, path, env),
             Expr::Delete(_, _) => matches!(value, Value::SlotDeletion),
             Expr::Children(parts)
+            | Expr::Array(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
             | Expr::Record(parts, _)

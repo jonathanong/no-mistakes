@@ -1,8 +1,10 @@
 mod alternatives;
 mod callbacks;
 mod calls;
+mod collections;
 mod composition;
 mod concat;
+mod control_flow;
 mod member;
 use {concat::concat, scope::Scope};
 mod delete;
@@ -79,10 +81,28 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         let Some(depth) = depth.checked_sub(1) else {
-            return Value::Unknown;
+            return Value::Failure("evaluation-depth-limit");
         };
         let value = match expr {
             Expr::Unknown | Expr::Primitive => Value::Unknown,
+            Expr::Number(number) => {
+                if self.files[path].facts.precise_records {
+                    Value::Number(*number)
+                } else {
+                    Value::Unknown
+                }
+            }
+            Expr::Boolean(boolean) => {
+                if self.files[path].facts.precise_records {
+                    Value::Boolean(*boolean)
+                } else {
+                    Value::Unknown
+                }
+            }
+            Expr::Binary(op, left, right) => {
+                self.binary(op, left, right, path, env, (depth, generic))
+            }
+            Expr::Flow(steps) => self.steps(steps, path, &mut env.clone(), depth, generic),
             Expr::Unsupported => Value::Unsupported,
             Expr::Text(value) => Value::Prefix(value.clone(), true, None),
             Expr::Name(name) => self.mapped_parameter_value(*env, name).unwrap_or_else(|| {
@@ -155,6 +175,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.index(value, *index)
             }
             Expr::Children(children)
+            | Expr::Array(children)
             | Expr::Container(children)
             | Expr::Object(children)
             | Expr::Record(children, _) => {
@@ -163,7 +184,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))
         {
-            Value::Unknown
+            if self.files[path].facts.precise_records {
+                Value::Failure("opaque-builder-effect")
+            } else {
+                Value::Unknown
+            }
         } else {
             value
         }

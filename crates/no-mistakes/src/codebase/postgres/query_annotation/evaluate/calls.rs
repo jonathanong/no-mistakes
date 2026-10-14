@@ -1,4 +1,5 @@
-mod async_suspension;
+pub(super) mod async_suspension;
+mod collections;
 mod module_loads;
 mod names;
 pub(super) mod scopes;
@@ -59,6 +60,18 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         // Later operands can mutate the object an earlier operand returned.
         self.refresh_arguments(&mut raw_arguments);
+        if self.files[path].facts.precise_records
+            && args.iter().zip(&raw_arguments).any(|(arg, value)| {
+                matches!(
+                    arg,
+                    Expr::Index(_, _) | Expr::Member(_, _) | Expr::ComputedMember(_, _)
+                ) && matches!(value, Value::Prefix(_, _, Some(_)))
+            })
+        {
+            // Preserve the existing indirect-builder argument boundary. Array
+            // evaluation does not authorize accessor-based builder forwarding.
+            self.invalidate_builders(&raw_arguments);
+        }
         let handled_projection = matches!(callee, Expr::Name(_))
             && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
         let arguments = raw_arguments
@@ -74,6 +87,16 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                     arguments.first().cloned().unwrap_or(Value::Unknown),
                 ));
             return Value::Unknown;
+        }
+        if let Some(value) = self.collection_projection(
+            callee,
+            args,
+            receiver.as_ref(),
+            &arguments,
+            path,
+            (depth, generic),
+        ) {
+            return value;
         }
         let spread = args.iter().any(|arg| matches!(arg, Expr::Spread(_)));
         if spread {
@@ -100,7 +123,15 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 Value::Unknown
             };
         };
-        if !function.supported {
+        if !function.supported
+            || (!self.files[&function_path].facts.precise_records
+                && function.body.iter().any(|step| {
+                    matches!(
+                        step,
+                        crate::codebase::postgres::query_annotation::Step::Branch(_, _, _)
+                    )
+                }))
+        {
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             let mut locals = scopes::locals(&self.scopes[captured], &function);
@@ -182,19 +213,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             value
         } else {
             Value::Promise(Box::new(value))
-        }
-    }
-
-    fn arguments_object(&mut self, values: &[Value], spread: bool) -> Value {
-        if spread {
-            Value::Unknown
-        } else {
-            let id = self.next_builder;
-            self.next_builder += 1;
-            {
-                self.argument_objects.insert(id, values.to_vec());
-                Value::Arguments(id)
-            }
         }
     }
 }

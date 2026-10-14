@@ -23,6 +23,7 @@ impl States {
         scopes: &[Scope],
         modules: &FxHashMap<PathBuf, Environment>,
         original: usize,
+        whole_sql: bool,
     ) {
         for (path, env) in modules {
             if *env < original {
@@ -34,10 +35,11 @@ impl States {
                 }
                 std::collections::hash_map::Entry::Occupied(mut entry) => {
                     let initial = vec![entry.get().clone()];
-                    bindings::join(
+                    bindings::join_with_sql(
                         std::slice::from_mut(entry.get_mut()),
                         &scopes[*env..=*env],
                         &initial,
+                        whole_sql,
                     );
                 }
             }

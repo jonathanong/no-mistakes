@@ -43,7 +43,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .flat_map(|scope| scope.values().cloned())
                 .collect::<Vec<_>>();
             self.invalidate_builders(&builders);
-            return Value::Unknown;
+            return Value::Failure("opaque-tag-interpolation-effect");
         }
         let mut prefix = Value::Prefix(String::new(), true, None);
         for (index, part) in parts.iter().enumerate() {

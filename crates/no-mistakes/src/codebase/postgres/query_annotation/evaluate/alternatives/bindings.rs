@@ -48,7 +48,12 @@ pub(super) fn binding_or_unproven<'a>(
 /// Joins preserve an annotated builder prefix only when the original scope and
 /// both arms still have that builder. A missing arm or original binding is
 /// unproven and must not keep or synthesize a SQL prefix.
-pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) {
+pub(super) fn join_with_sql(
+    joined: &mut [Scope],
+    current: &[Scope],
+    original: &[Scope],
+    whole_sql: bool,
+) {
     for ((before, after), initial) in joined.iter_mut().zip(current).zip(original) {
         // Inspect shared snapshots before taking a mutable view: unchanged
         // branches must not clone every binding in the captured environment.
@@ -71,7 +76,8 @@ pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) 
                 continue;
             };
             if let Value::Prefix(_, _, Some(id)) = initial_value {
-                if annotated_builder(initial_value, *id)
+                if !whole_sql
+                    && annotated_builder(initial_value, *id)
                     && annotated_builder(value, *id)
                     && annotated_builder(next, *id)
                 {
@@ -79,13 +85,13 @@ pub(super) fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) 
                     continue;
                 }
             }
-            *value = if scalar(value) && scalar(next) {
+            *value = if !whole_sql && scalar(value) && scalar(next) {
                 Value::Unknown
             } else {
                 let mut values = Vec::new();
                 candidates(std::mem::replace(value, Value::Unknown), &mut values);
                 candidates(next.clone(), &mut values);
-                Value::Joined(values.into())
+                super::super::concat::joined(values)
             };
         }
     }

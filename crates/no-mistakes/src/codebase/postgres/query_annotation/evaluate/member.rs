@@ -40,11 +40,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         match object {
             // The intrinsic length is a primitive; passing it cannot expose
             // an argument slot or a callback captured by the container.
-            Value::Arguments(id) if name == "length" => {
+            Value::Arguments(id) | Value::Array(id) if name == "length" => {
                 if self.invalidated_builders.contains(&id) {
                     Value::Unknown
                 } else {
-                    Value::Primitive
+                    if self.files[path].facts.precise_records {
+                        Value::Number(self.argument_objects[&id].len() as i64)
+                    } else {
+                        Value::Primitive
+                    }
                 }
             }
             Value::Record(values, keys)
@@ -54,6 +58,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .rposition(|key| key == name)
                     .and_then(|index| values.get(index).cloned())
                     .unwrap_or(Value::Unknown)
+            }
+            Value::Failure(reason) => Value::Failure(reason),
+            Value::Unknown if self.files[path].facts.precise_records => {
+                Value::Failure("opaque-member-or-getter")
             }
             // Preserve conservative member effects for other object shapes.
             value => member_candidates(value),

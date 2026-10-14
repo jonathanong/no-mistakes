@@ -17,7 +17,7 @@ impl Reachable {
     fn value(&mut self, value: &Value) {
         match value {
             Value::Function(_, _, env) => self.pending_env.push(*env),
-            Value::Arguments(id) => self.pending_args.push(*id),
+            Value::Arguments(id) | Value::Array(id) => self.pending_args.push(*id),
             Value::Prefix(_, _, Some(id)) => {
                 self.identities.insert(*id);
             }

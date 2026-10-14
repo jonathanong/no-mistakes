@@ -19,6 +19,18 @@ pub(super) fn names(function: &Function) -> Reads {
                 names.values.insert(name.clone());
                 expression(value, &mut names);
             }
+            Step::Branch(test, left, right) => {
+                expression(test, &mut names);
+                for body in [left, right] {
+                    let nested = Function {
+                        body: body.clone(),
+                        ..function.clone()
+                    };
+                    let reads = self::names(&nested);
+                    names.values.extend(reads.values);
+                    names.identities.extend(reads.identities);
+                }
+            }
             _ => {}
         }
     }
@@ -48,6 +60,7 @@ fn expression(expr: &Expr, names: &mut Reads) {
         }
         Expr::Template(values)
         | Expr::Children(values)
+        | Expr::Array(values)
         | Expr::Container(values)
         | Expr::Object(values)
         | Expr::Record(values, _)
@@ -62,7 +75,9 @@ fn expression(expr: &Expr, names: &mut Reads) {
                 expression(value, names);
             }
         }
-        Expr::Append(left, right) | Expr::ComputedMember(left, right) => {
+        Expr::Binary(_, left, right)
+        | Expr::Append(left, right)
+        | Expr::ComputedMember(left, right) => {
             expression(left, names);
             expression(right, names);
         }

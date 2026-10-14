@@ -2,6 +2,7 @@ use super::{concat, Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::{Expr, Step};
 use std::path::{Path, PathBuf};
 
+mod bindings;
 pub(super) mod effects;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -14,11 +15,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         self.reserve_bindings(steps, env);
-        let supported = !steps.iter().any(|step| matches!(step, Step::Unsupported));
+        let supported = !steps.iter().any(|step| {
+            matches!(step, Step::Unsupported)
+                || (!self.files[path].facts.precise_records
+                    && matches!(step, Step::Branch(_, _, _)))
+        });
         let unsafe_scope = steps.iter().any(|step| {
             matches!(step, Step::PotentialCalls(calls) if calls.iter().any(|start| !self.files[path].executors.contains(start)))
         });
-        let unsupported = if unsafe_scope {
+        let unsupported = if self.files[path].facts.precise_records {
+            Value::Failure("unsupported-syntax-or-control-flow")
+        } else if unsafe_scope {
             Value::Unknown
         } else {
             Value::Unsupported
@@ -39,8 +46,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         let mut opaque_return = false;
-        for step in steps {
+        for (index, step) in steps.iter().enumerate() {
             match step {
+                Step::Branch(_, _, _) if !self.files[path].facts.precise_records => {}
+                Step::Branch(test, left, right) => {
+                    return self.branch_steps(
+                        (test, left, right),
+                        &steps[index + 1..],
+                        path,
+                        env,
+                        (depth, generic),
+                        opaque_return,
+                    );
+                }
                 Step::Bind(name, expr) => {
                     let may_mutate = self.files[path].facts.precise_records
                         && (effects::contains_accessor_read(expr)
@@ -49,17 +67,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         && !self.proven_append_only_effect(expr, path, *env, depth, generic);
                     let live_before = may_mutate.then(|| self.live_builder_values());
                     let value = if supported {
-                        self.expr(expr, path, env, depth, generic).exposed()
+                        self.expr(expr, path, env, depth, generic)
                     } else {
                         unsupported.clone()
                     };
+                    let handled = self.handled_deletion_effect(expr, &value, path, *env);
+                    let value = value.exposed();
                     self.write_captured_binding_evaluated(*env, name, &value, depth);
                     if let Some(live_before) = live_before {
                         // Known function bodies have already projected their
                         // builder effects. An opaque result or accessor read
                         // still cannot prove that earlier builders survived.
-                        if effects::contains_accessor_read(expr)
-                            || matches!(value, Value::Unknown | Value::Unsupported)
+                        if !handled
+                            && (effects::contains_accessor_read(expr)
+                                || matches!(
+                                    value,
+                                    Value::Unknown | Value::Unsupported | Value::Failure(_)
+                                ))
                         {
                             self.invalidate_builders(&live_before);
                         }
@@ -71,6 +95,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         .get(name)
                         .cloned()
                         .unwrap_or(Value::Unknown);
+                    if self.files[path].facts.precise_records
+                        && !matches!(&base, Value::Prefix(_, _, Some(id)) if !self.invalidated_builders.contains(id))
+                        && !matches!(&base, Value::Joined(values) if values.iter().all(|value| matches!(value, Value::Prefix(_, _, Some(id)) if !self.invalidated_builders.contains(id))))
+                    {
+                        opaque_return = true;
+                        self.invalidate_live_builders();
+                        self.opaque_callbacks(std::slice::from_ref(&base), depth);
+                    }
                     let value = if supported {
                         concat(base, tail)
                     } else {
@@ -84,8 +116,25 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         self.apply_effect(expr, path, env, depth, generic, &unsupported);
                 }
                 Step::Return(expr) => {
-                    let value = self.expr(expr, path, env, depth, generic).exposed();
-                    return if opaque_return { Value::Unknown } else { value };
+                    let result = self.expr(expr, path, env, depth, generic);
+                    if self.files[path].facts.precise_records {
+                        if matches!(result.clone().exposed(), Value::Failure(_)) {
+                            return result.exposed();
+                        }
+                        let handled = self.handled_deletion_effect(expr, &result, path, *env);
+                        if matches!(&result, Value::Evaluated(_, false))
+                            || opaque_return
+                            || (self.effect_can_mutate(expr, path, *env) && !handled)
+                        {
+                            return Value::Failure("opaque-return-effect");
+                        }
+                        return Value::Evaluated(Box::new(result.exposed()), true);
+                    }
+                    return if opaque_return {
+                        Value::Unknown
+                    } else {
+                        result.exposed()
+                    };
                 }
                 Step::Unsupported
                 | Step::PotentialCalls(_)
@@ -94,45 +143,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 | Step::Var(_) => {}
             }
         }
-        Value::Unknown
-    }
-
-    fn reserve_bindings(&mut self, steps: &[Step], env: &Environment) {
-        let vars = steps
-            .iter()
-            .filter_map(|step| match step {
-                Step::Var(name) => Some(name.as_str()),
-                _ => None,
-            })
-            .collect::<crate::fx::FxHashSet<_>>();
-        // Reserve lexical names before evaluation so TDZ/shadowed bindings do
-        // not accidentally resolve to a module helper or trusted tag.
-        for step in steps {
-            match step {
-                Step::Bind(name, _) if vars.contains(name.as_str()) => {
-                    // Initialized var redeclarations assign at this statement,
-                    // rather than replacing a parameter during hoisting.
-                    self.scopes[*env]
-                        .entry(name.clone())
-                        .or_insert(Value::Unknown);
-                }
-                Step::Bind(name, _) | Step::Hoisted(name, _) => {
-                    self.scopes[*env].insert(name.clone(), Value::Unknown);
-                }
-                Step::Var(name) => {
-                    self.scopes[*env]
-                        .entry(name.clone())
-                        .or_insert(Value::Unsupported);
-                }
-                Step::Reserve(names) => {
-                    for name in names {
-                        self.scopes[*env]
-                            .entry(name.clone())
-                            .or_insert(Value::Unknown);
-                    }
-                }
-                _ => {}
-            }
+        if self.files[path].facts.precise_records {
+            Value::Evaluated(Box::new(Value::Primitive), !opaque_return)
+        } else {
+            Value::Unknown
         }
     }
 

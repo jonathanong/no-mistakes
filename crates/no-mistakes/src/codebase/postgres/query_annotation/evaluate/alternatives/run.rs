@@ -84,20 +84,22 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 for (name, value) in before {
                     // An arm can drop a name the other branch still has.
-                    super::values::changes(
-                        value,
-                        super::bindings::binding_or_unproven(after, name),
-                        super::arena::Arena {
-                            objects: &objects,
-                            extras: &extra_slots,
-                        },
-                        super::arena::Arena {
-                            objects: &self.argument_objects,
-                            extras: &self.argument_extra_slots,
-                        },
-                        &mut changed,
-                        &self.definite_deleted_argument_slots,
-                    );
+                    if !self.files[path].facts.precise_records {
+                        super::values::changes(
+                            value,
+                            super::bindings::binding_or_unproven(after, name),
+                            super::arena::Arena {
+                                objects: &objects,
+                                extras: &extra_slots,
+                            },
+                            super::arena::Arena {
+                                objects: &self.argument_objects,
+                                extras: &self.argument_extra_slots,
+                            },
+                            &mut changed,
+                            &self.definite_deleted_argument_slots,
+                        );
+                    }
                 }
             }
             super::freshness::unchanged(
@@ -108,9 +110,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
             super::merge::objects(&mut joined, &self.argument_objects);
             super::extras::join(&mut joined_extras, &self.argument_extra_slots, &objects);
-            module_states.join(&self.scopes, &self.modules, scopes.len());
+            module_states.join(
+                &self.scopes,
+                &self.modules,
+                scopes.len(),
+                self.files[path].facts.precise_records,
+            );
             if let Some(joined) = &mut joined_scopes {
-                super::bindings::join(joined, &self.scopes, &scopes);
+                super::bindings::join_with_sql(
+                    joined,
+                    &self.scopes,
+                    &scopes,
+                    self.files[path].facts.precise_records,
+                );
             } else {
                 joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             }
@@ -192,6 +204,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.prune_alternative_state(&returned);
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
-        Value::Aggregate(returned.into())
+        super::super::concat::alternative_result(returned, self.files[path].facts.precise_records)
     }
 }

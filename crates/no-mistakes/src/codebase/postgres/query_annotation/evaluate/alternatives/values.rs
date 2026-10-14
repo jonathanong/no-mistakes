@@ -31,7 +31,7 @@ fn prefixes<'a>(
                 prefixes(value, arena, visited, found, definite);
             }
         }
-        Value::Arguments(id) if visited.insert(*id) => {
+        Value::Arguments(id) | Value::Array(id) if visited.insert(*id) => {
             for (index, value) in arena.objects[id].iter().enumerate().chain(
                 arena
                     .extras

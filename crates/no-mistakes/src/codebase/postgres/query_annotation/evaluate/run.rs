@@ -31,6 +31,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mapped_argument_owners = self.mapped_argument_owners.clone();
         let mapped_parameter_indices = self.mapped_parameter_indices.clone();
         for call in unmodeled {
+            if file.facts.precise_records
+                && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end)))
+            {
+                continue;
+            }
             if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
             {
                 self.scopes.clone_from(&scopes);
@@ -162,7 +167,8 @@ fn value_reaches(
                 || value_reaches(globals, key, target, visiting),
         Expr::Record(values, _)
         | Expr::Object(values)
-        | Expr::Container(values)
+        | Expr::Array(values)
+            | Expr::Container(values)
         | Expr::Sequence(values)
         | Expr::Alternatives(values) => values
             .iter()

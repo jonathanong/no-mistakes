@@ -54,7 +54,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
 fn runtime_primitive(value: &Value) -> bool {
     match value {
-        Value::Primitive | Value::SlotDeletion => true,
+        Value::Boolean(_) | Value::Number(_) | Value::Primitive | Value::SlotDeletion => true,
         Value::Evaluated(value, _) => runtime_primitive(value),
         _ => false,
     }
@@ -64,7 +64,9 @@ fn runtime_primitive(value: &Value) -> bool {
 // an unresolved identifier or arbitrary Unknown value never does.
 fn primitive_result(expr: &Expr) -> bool {
     match expr {
-        Expr::Primitive | Expr::Text(_) | Expr::Discard(_) => true,
+        Expr::Boolean(_) | Expr::Number(_) | Expr::Primitive | Expr::Text(_) | Expr::Discard(_) => {
+            true
+        }
         Expr::Sequence(parts) => parts.last().is_some_and(primitive_result),
         _ => false,
     }

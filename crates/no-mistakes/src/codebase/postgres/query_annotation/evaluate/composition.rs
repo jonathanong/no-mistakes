@@ -12,10 +12,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) -> Value {
         let (depth, generic) = context;
         let mut prefix = Value::Prefix(String::new(), true, None);
+        let mut handled = true;
         for part in parts {
-            prefix = concat(prefix, self.expr(part, path, env, depth, generic));
+            let value = self.expr(part, path, env, depth, generic);
+            handled &= self.handled_deletion_effect(part, &value, path, *env);
+            if self.files[path].facts.precise_records && !super::collections::string_element(&value)
+            {
+                // Unknown template coercion may execute a getter/toString hook.
+                self.invalidate_live_builders();
+                handled = false;
+            }
+            prefix = concat(prefix, value);
         }
-        prefix
+        if self.files[path].facts.precise_records {
+            Value::Evaluated(Box::new(prefix), handled)
+        } else {
+            prefix
+        }
     }
 
     pub(super) fn append(
@@ -35,6 +48,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         } else {
             base
         };
+        if self.files[path].facts.precise_records
+            && !matches!(&base, Value::Prefix(_, _, Some(id)) if !self.invalidated_builders.contains(id))
+        {
+            self.invalidate_live_builders();
+            self.opaque_callbacks(std::slice::from_ref(&base), depth);
+            return Value::Failure("opaque-append-receiver");
+        }
         let value = concat(base, tail);
         self.replace_builder(&value);
         value
@@ -49,13 +69,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let values = children
+        let values: super::value::Values = children
             .iter()
             .map(|child| self.expr(child, path, env, depth, generic))
             .collect::<Vec<_>>()
             .into();
         match expr {
-            Expr::Container(_) => Value::Aggregate(values),
+            Expr::Array(_) if self.files[path].facts.precise_records => {
+                if children.iter().any(|child| matches!(child, Expr::Unknown)) {
+                    Value::Failure("unknown-array-element")
+                } else if children
+                    .iter()
+                    .any(|child| matches!(child, Expr::Spread(_)))
+                {
+                    Value::Failure("opaque-spread")
+                } else {
+                    let id = self.next_builder;
+                    self.next_builder += 1;
+                    self.argument_objects
+                        .insert(id, values.into_iter().collect());
+                    Value::Array(id)
+                }
+            }
+            Expr::Array(_) | Expr::Container(_) => Value::Aggregate(values),
             Expr::Object(_) => Value::Object(values),
             Expr::Record(_, keys) => Value::Record(values, keys.clone()),
             _ => Value::References(values),

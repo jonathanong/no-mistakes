@@ -74,10 +74,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Call { start, end, .. } => !self.files[path].executors.contains(&(*start, *end)),
             Expr::Template(parts)
             | Expr::Children(parts)
+            | Expr::Array(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
             | Expr::Record(parts, _)
-            | Expr::Sequence(parts) => parts
+            | Expr::Sequence(parts)
+            | Expr::Alternatives(parts) => parts
                 .iter()
                 .any(|part| self.effect_can_mutate(part, path, env)),
             Expr::Tagged(tag, _, effects) => {
@@ -85,6 +87,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     || effects
                         .iter()
                         .any(|effect| self.effect_can_mutate(effect, path, env))
+            }
+            Expr::Binary(_, left, right) => {
+                self.effect_can_mutate(left, path, env) || self.effect_can_mutate(right, path, env)
             }
             Expr::Await(expr) => self.effect_can_mutate(expr, path, env),
             // A getter or proxy trap can mutate captured state. Numeric argument
@@ -95,11 +100,34 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
             Expr::Member(expr, name) => {
                 self.effect_can_mutate(expr, path, env)
-                    || !(name == "length" && self.proven_argument_data_read(expr, env))
+                    || !((name == "length" && self.proven_argument_data_read(expr, env))
+                        || self.proven_record_read(expr, name, env))
             }
             Expr::Discard(expr) => self.effect_can_mutate(expr, path, env),
-            Expr::Primitive | Expr::Text(_) | Expr::Name(_) | Expr::Function(_) => false,
+            Expr::Boolean(_)
+            | Expr::Number(_)
+            | Expr::Primitive
+            | Expr::Text(_)
+            | Expr::Name(_)
+            | Expr::Function(_) => false,
             _ => true,
+        }
+    }
+
+    fn proven_record_read(&self, receiver: &Expr, name: &str, env: Environment) -> bool {
+        let Expr::Name(local) = receiver else {
+            return false;
+        };
+        if !self.scopes.get(env).is_some() {
+            return false;
+        }
+        match self.scopes[env].get(local) {
+            Some(Value::Record(_, keys)) => !name.is_empty() && keys.iter().any(|key| key == name),
+            Some(Value::Array(id)) => {
+                !self.invalidated_builders.contains(id)
+                    && matches!(name, "length" | "map" | "join" | "push" | "forEach")
+            }
+            _ => false,
         }
     }
 
@@ -130,6 +158,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn contains_access
         }
         Expr::Object(parts)
         | Expr::Record(parts, _)
+        | Expr::Array(parts)
         | Expr::Container(parts)
         | Expr::Children(parts)
         | Expr::Sequence(parts)
@@ -142,7 +171,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn contains_access
 
 fn is_arguments_value(value: &Value) -> bool {
     match value {
-        Value::Arguments(_) => true,
+        Value::Arguments(_) | Value::Array(_) => true,
         Value::Evaluated(inner, _) => is_arguments_value(inner),
         _ => false,
     }

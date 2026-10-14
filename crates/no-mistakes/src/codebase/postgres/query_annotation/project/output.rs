@@ -68,3 +68,18 @@ fn could_be_transaction(prefix: &str) -> bool {
 
 #[cfg(test)]
 mod tests;
+
+pub(super) fn incomplete_reason(value: &Value) -> &'static str {
+    match value {
+        Value::Failure(reason) => reason,
+        Value::Unsupported => "unsupported-syntax-or-control-flow",
+        Value::Promise(_) => "unawaited-or-suspended-helper",
+        Value::Evaluated(value, _) => incomplete_reason(value),
+        Value::Joined(values) => values
+            .iter()
+            .find(|value| projected_sql(value).is_none())
+            .map(incomplete_reason)
+            .unwrap_or("unresolved-sql-fragment"),
+        _ => "unresolved-value-or-effect",
+    }
+}
