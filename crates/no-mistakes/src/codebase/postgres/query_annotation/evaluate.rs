@@ -116,17 +116,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     _ => Value::Unknown,
                 }
             }
-            Expr::Await(expr) => {
-                if let Expr::ModuleLoad(specifier) = expr.as_ref() {
-                    self.await_dynamic_import(specifier, path)
-                } else {
-                    let mut value = self.expr(expr, path, env, depth, generic).exposed();
-                    while let Value::Promise(inner) = value {
-                        value = inner.exposed();
-                    }
-                    value
-                }
-            }
+            Expr::Await(expr) => self.await_expr(expr, path, env, depth, generic),
             Expr::Call {
                 callee,
                 args,
