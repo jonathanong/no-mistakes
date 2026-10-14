@@ -212,6 +212,66 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             "client.get",
             Some("ownDefault.get"),
         ),
+        (
+            "destructuring-nested",
+            Some("nestedRhs"),
+            "first.get",
+            Some("inner.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("nestedRhs"),
+            "second.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterInner"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterOuter"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("source"),
+            "client.get",
+            Some("rhsNested.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("rootRhs"),
+            "client.get",
+            Some("root.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("afterNested"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterRoot"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterFunction"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterUpdate"),
+            "client.get",
+            None,
+        ),
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));
         let line = match callee {

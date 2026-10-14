@@ -117,14 +117,13 @@ fn visit_assignment_expression_with_calls<'a>(
     assignment: &AssignmentExpression<'a>,
 ) {
     record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
-    if collector.collect_value_flow && matches!(assignment.left,
-        AssignmentTarget::ArrayAssignmentTarget(_) | AssignmentTarget::ObjectAssignmentTarget(_)) {
-        extract_value_flow::write_targets::record_early_targets(collector, &assignment.left);
-    }
+    let phases = collector.begin_destructuring_phases(&assignment.left);
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+    collector.end_destructuring_lhs(&phases);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         collector.visit_expression(&assignment.right);
     });
+    collector.finish_destructuring_phases(phases);
 }
 
 fn walk_assignment_lhs_without_written_getter<'a>(

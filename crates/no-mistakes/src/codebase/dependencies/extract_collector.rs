@@ -26,6 +26,7 @@ struct ImportCollector {
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
+    destructuring_phase_owner: Option<Option<CallableId>>,
     value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     collect_value_flow: bool,
     collect_per_item_calls: bool,

@@ -28,9 +28,13 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
     #[cfg(feature = "test-instrumentation")]
-    pub early_assignment_range_records: usize,
+    pub early_assignment_phase_writes: usize,
     #[cfg(feature = "test-instrumentation")]
-    pub early_assignment_stack_growths: usize,
+    pub early_assignment_catalogs: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_segments: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_normalization_visits: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
@@ -148,3 +152,12 @@ mod object_values;
 mod destructuring_order;
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
+
+#[path = "extract_value_flow/phase_catalog.rs"]
+mod phase_catalog;
+#[path = "extract_value_flow/phase_runner.rs"]
+pub(super) mod phase_runner;
+#[path = "extract_value_flow/phase_targets.rs"]
+mod phase_targets;
+#[path = "extract_value_flow/phase_walk.rs"]
+mod phase_walk;

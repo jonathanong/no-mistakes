@@ -1,24 +1,25 @@
 use super::*;
 use mutation_history::{ValueAssignedMutations, ValueMutationHistory};
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
+use phase_catalog::{PhaseCatalog, ReadPhases};
 
 /// Only reads in later destructuring targets precede the ordinary completion
 /// cutoff. RHS reads keep their original offsets and never enter these ranges.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EarlyAssignments {
-    members: FxHashMap<String, Vec<(u32, u32)>>,
-    dynamic: Vec<(u32, u32)>,
+    members: FxHashMap<String, ReadPhases>,
+    dynamic: ReadPhases,
 }
 impl EarlyAssignments {
     #[cfg(feature = "test-instrumentation")]
-    pub fn range_count(&self) -> usize {
-        self.dynamic.len() + self.members.values().map(Vec::len).sum::<usize>()
+    pub fn catalog_entries(&self) -> usize {
+        self.dynamic.len() + self.members.values().map(ReadPhases::len).sum::<usize>()
     }
 
     pub(super) fn merge(&mut self, source: Self) {
-        self.dynamic.extend(source.dynamic);
+        self.dynamic.merge(source.dynamic);
         for (member, ranges) in source.members {
-            self.members.entry(member).or_default().extend(ranges);
+            self.members.entry(member).or_default().merge(ranges);
         }
     }
     pub(super) fn invalidated(
@@ -36,10 +37,7 @@ impl EarlyAssignments {
             let Some(offset) = write.and_then(|write| reader(write.context)) else {
                 return false;
             };
-            ranges.is_some_and(|ranges| {
-                let end = ranges.partition_point(|range| range.0 <= offset);
-                end > 0 && offset < ranges[end - 1].1
-            })
+            ranges.is_some_and(|ranges| ranges.invalidated(offset))
         })
     }
 
@@ -49,22 +47,27 @@ impl EarlyAssignments {
             .values_mut()
             .chain(std::iter::once(&mut self.dynamic))
         {
-            ranges.sort_unstable();
-            let mut count = 0;
-            for index in 0..ranges.len() {
-                let range = ranges[index];
-                if count > 0 && ranges[count - 1].1 >= range.0 {
-                    ranges[count - 1].1 = ranges[count - 1].1.max(range.1);
-                } else {
-                    ranges[count] = range;
-                    count += 1;
-                }
-            }
-            ranges.truncate(count);
+            ranges.finish();
         }
     }
 }
 impl ValueMutationHistory {
+    #[cfg(feature = "test-instrumentation")]
+    pub fn early_phase_entries(&self) -> usize {
+        self.assigned
+            .as_ref()
+            .and_then(|assigned| assigned.early.as_ref())
+            .map_or(0, |early| early.catalog_entries())
+            + self
+                .members
+                .values()
+                .map(Self::early_phase_entries)
+                .sum::<usize>()
+            + self
+                .dynamic
+                .as_ref()
+                .map_or(0, |child| child.early_phase_entries())
+    }
     pub(super) fn finish_early_assignments(&mut self) {
         if let Some(early) = self
             .assigned
@@ -85,25 +88,16 @@ impl ValueMutationHistory {
 impl ImportCollector {
     pub(in super::super) fn record_early_assignment(
         &mut self,
+        scope: usize,
         name: &str,
         path: &[Option<String>],
-        ranges: &[(u32, u32)],
+        catalog: &std::sync::Arc<PhaseCatalog>,
+        phase: u32,
     ) {
-        if !self.collect_value_flow || ranges.is_empty() {
-            return;
-        }
         let Some((member, path)) = path.split_last() else {
             return;
         };
         let base = name.split('.').next().expect("write has a receiver");
-        let scope = self.callee_binding_scope(name).or_else(|| {
-            (self.imported_bindings.contains(base)
-                || self.predeclared_imported_bindings.contains(base))
-            .then_some(0)
-        });
-        let Some(scope) = scope else {
-            return;
-        };
         let Some(mut history) = self
             .prior_member_mutations
             .get_mut(&scope)
@@ -126,10 +120,10 @@ impl ImportCollector {
             Some(member) => early.members.entry(member.clone()).or_default(),
             None => &mut early.dynamic,
         };
-        target.extend_from_slice(ranges);
+        target.record(catalog, phase);
         #[cfg(feature = "test-instrumentation")]
         {
-            self.value_flow.early_assignment_range_records += ranges.len();
+            self.value_flow.early_assignment_phase_writes += 1;
         }
     }
 }

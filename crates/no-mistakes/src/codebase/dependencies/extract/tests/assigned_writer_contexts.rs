@@ -115,8 +115,10 @@ fn destructuring_ranges_are_recorded_once_and_shared_across_aliases() {
         false,
         true,
     );
-    assert_eq!(facts.value_flow.early_assignment_range_records, 128);
-    assert_eq!(facts.value_flow.early_assignment_stack_growths, 128);
+    assert_eq!(facts.value_flow.early_assignment_phase_writes, 128);
+    assert_eq!(facts.value_flow.early_assignment_catalogs, 128);
+    assert_eq!(facts.value_flow.early_assignment_segments, 256);
+    assert_eq!(facts.value_flow.early_assignment_normalization_visits, 128);
     let histories = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0];
     let history = &histories["primary"];
     assert_eq!(
@@ -127,7 +129,7 @@ fn destructuring_ranges_are_recorded_once_and_shared_across_aliases() {
             .early
             .as_ref()
             .unwrap()
-            .range_count(),
+            .catalog_entries(),
         128
     );
     for index in 0..128 {
@@ -155,8 +157,13 @@ fn non_receiver_destructuring_keeps_early_range_storage_cold() {
         false,
         true,
     );
-    assert_eq!(facts.value_flow.early_assignment_stack_growths, 0);
-    assert_eq!(facts.value_flow.early_assignment_range_records, 0);
+    assert_eq!(facts.value_flow.early_assignment_catalogs, 0);
+    assert_eq!(facts.value_flow.early_assignment_segments, 0);
+    assert_eq!(facts.value_flow.early_assignment_normalization_visits, 0);
+    assert_eq!(facts.value_flow.early_assignment_phase_writes, 0);
     let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["primary"];
     assert!(history.assigned.as_ref().unwrap().early.is_none());
 }
+
+#[path = "destructuring_phase_bounds.rs"]
+mod destructuring_phase_bounds;
