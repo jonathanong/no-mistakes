@@ -1,0 +1,79 @@
+false-id: &false-id false
+jobs:
+  !!str false: # no-mistakes-disable-line github-actions-job-timeouts
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !!bool "false":
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !custom custom:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !!str 1:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  1:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !custom suppressed: # no-mistakes-disable-line github-actions-job-timeouts
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !custom 2:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !custom "3":
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !<tag:example.com,2026:job> 4:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !!map map:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  !!seq seq:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6

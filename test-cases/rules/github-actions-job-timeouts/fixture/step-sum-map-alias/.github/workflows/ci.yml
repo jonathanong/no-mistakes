@@ -1,0 +1,9 @@
+job-map: &job-map
+  mapped:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+jobs: *job-map

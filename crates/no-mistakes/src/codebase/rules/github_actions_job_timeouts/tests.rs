@@ -392,3 +392,53 @@ fn explicit_scalar_job_keys_preserve_locations_and_suppression() {
         );
     }
 }
+
+fn assert_job_locations(name: &str, expected: &[(&str, usize)]) {
+    for options in ["rejectJobAtOrAboveStepSum: true", "maxMinutes: 9"] {
+        let findings = run(&fixture(name), options);
+        let mut locations: Vec<_> = findings
+            .iter()
+            .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+            .collect();
+        locations.sort_unstable();
+        assert_eq!(locations, expected, "{name}: {findings:?}");
+    }
+}
+
+#[test]
+fn document_locations_resolve_scalar_and_container_aliases() {
+    assert_job_locations("step-sum-alias-keys", &[("visible", 22)]);
+    assert_job_locations("step-sum-flow-alias", &[]);
+    assert_job_locations("step-sum-root-alias", &[("root-alias", 3)]);
+    assert_job_locations("step-sum-map-alias", &[("mapped", 2)]);
+}
+
+#[test]
+fn document_locations_preserve_multiline_and_tagged_key_types() {
+    assert_job_locations("step-sum-multiline", &[("multi line", 2)]);
+    assert_job_locations(
+        "step-sum-tags",
+        &[
+            ("1", 24),
+            ("3", 52),
+            ("4", 59),
+            ("custom", 17),
+            ("map", 66),
+            ("seq", 73),
+        ],
+    );
+}
+
+#[test]
+fn document_location_parse_failure_returns_no_partial_index() {
+    for name in ["invalid", "step-sum-empty"] {
+        let source =
+            std::fs::read_to_string(fixture(name).join(".github/workflows/ci.yml")).unwrap();
+        let locations = super::job_lines::collect(&source);
+        assert_eq!(locations.line("jobs"), 1);
+    }
+    let source =
+        std::fs::read_to_string(fixture("step-sum-scalar-jobs").join(".github/workflows/ci.yml"))
+            .unwrap();
+    assert_eq!(super::job_lines::collect(&source).line("missing"), 2);
+}
