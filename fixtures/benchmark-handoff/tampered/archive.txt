@@ -1,0 +1,1 @@
+Changed text stand-in for a packaged benchmark archive; digest tests must reject it.
