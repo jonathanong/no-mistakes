@@ -23,6 +23,7 @@ pub(super) fn remap_changed(value: &mut Value, indices: &FxHashMap<Environment, 
         Value::Aggregate(values)
         | Value::References(values)
         | Value::Object(values)
+        | Value::Record(values, _)
         | Value::Joined(values)
         | Value::Possible(values)
             if changes_environment(values, indices) =>

@@ -25,6 +25,7 @@ pub(super) fn collect(program: &Program<'_>, source: &str, roots: &[Step]) -> Ve
             | Expr::Children(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
+            | Expr::Record(parts, _)
             | Expr::Sequence(parts)
             | Expr::Opaque(parts)
             | Expr::OpaqueWrite {

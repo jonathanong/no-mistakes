@@ -50,6 +50,7 @@ fn expression(expr: &Expr, names: &mut Reads) {
         | Expr::Children(values)
         | Expr::Container(values)
         | Expr::Object(values)
+        | Expr::Record(values, _)
         | Expr::Sequence(values)
         | Expr::Alternatives(values)
         | Expr::Opaque(values)

@@ -23,6 +23,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
+            | Value::Record(values, _)
             | Value::Joined(values)
             | Value::Possible(values) => self.refresh_arguments(values),
             // Argument containers already resolve their slots by identity.

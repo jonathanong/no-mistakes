@@ -27,6 +27,24 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .iter()
             .map(|effect| self.expr(effect, path, env, depth, generic))
             .collect::<Vec<_>>();
+        let trusted_raw = tag == "String.raw" && self.tag_trusted(tag, path, *env);
+        let interpolation_mutates = effects
+            .iter()
+            .skip(usize::from(trusted_raw))
+            .chain(if trusted_raw { parts } else { &[] })
+            .any(|effect| self.effect_can_mutate(effect, path, *env));
+        if self.files[path].facts.precise_records && interpolation_mutates {
+            // An interpolation getter or call can mutate a captured builder
+            // before this tagged value is appended. Its generated bind marker
+            // cannot certify the builder's prior SQL prefix.
+            let builders = self
+                .scopes
+                .iter()
+                .flat_map(|scope| scope.values().cloned())
+                .collect::<Vec<_>>();
+            self.invalidate_builders(&builders);
+            return Value::Unknown;
+        }
         let mut prefix = Value::Prefix(String::new(), true, None);
         for (index, part) in parts.iter().enumerate() {
             // A trusted tag's odd parts are generated binds. A nested builder

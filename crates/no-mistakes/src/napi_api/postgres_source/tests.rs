@@ -64,6 +64,136 @@ fn executed_source_binding_rejects_parse_diagnostics_and_unknown_options() {
         "{option_error}"
     );
 }
+
+#[test]
+fn executed_source_binding_opts_in_to_supplied_import_resolution() {
+    let consumer = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/aliased-consumer.ts"
+    ));
+    let builder = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/imported-builder.ts"
+    ));
+    let sources = serde_json::json!([
+        {"fileName":"aliased-consumer.ts","source":consumer},
+        {"fileName":"imported-builder.ts","source":builder}
+    ]);
+    let unresolved: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": sources,
+            "importSpecifier":"@example/db"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(unresolved[0]["sqlText"].is_null());
+    let edges = serde_json::json!([{
+        "fromFileName":"aliased-consumer.ts",
+        "specifier":"@example/builder",
+        "toFileName":"imported-builder.ts"
+    }]);
+    let resolved: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": sources,
+            "importSpecifier":"@example/db",
+            "resolveImports":true,
+            "resolvedImports": edges
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(resolved[0]["annotation"], "imported/read");
+    assert_eq!(resolved[0]["complete"], true);
+    let error = extract_executed_postgres_sql_json_impl(serde_json::json!({
+        "sources": sources,
+        "importSpecifier":"@example/db",
+        "resolvedImports": edges
+    }))
+    .unwrap_err();
+    assert!(error.to_string().contains("requires resolveImports"));
+}
+
+#[test]
+fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/review-safety-consumer.ts"
+    ));
+    let helper = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/review-safety-helper.ts"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": [
+                {"fileName":"review-safety-consumer.ts","source":source},
+                {"fileName":"review-safety-helper.ts","source":helper}
+            ],
+            "importSpecifier":"@example/db",
+            "resolveImports":true
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let rows = result.as_array().unwrap();
+    let by_annotation = |name: &str| {
+        rows.iter()
+            .find(|row| row["annotation"] == name)
+            .unwrap_or_else(|| panic!("missing {name}: {rows:?}"))
+    };
+    assert_eq!(by_annotation("authored marker")["complete"], true);
+    assert_eq!(
+        by_annotation("authored marker")["onlyValuePlaceholders"],
+        false
+    );
+    assert_eq!(by_annotation("generated marker")["complete"], false);
+    assert_eq!(
+        by_annotation("generated marker")["onlyValuePlaceholders"],
+        true
+    );
+    let two_binds = by_annotation("two binds");
+    assert_eq!(two_binds["onlyValuePlaceholders"], true);
+    let sql = two_binds["sqlText"].as_str().unwrap();
+    assert!(sql.contains("sql_placeholder_1::text || sql_placeholder_2::text"));
+    for (name, expected_kind) in [("bound read", None), ("bound write", Some("update"))] {
+        let row = by_annotation(name);
+        assert_eq!(row["onlyValuePlaceholders"], true);
+        let parsed: serde_json::Value = serde_json::from_str(
+            &parse_postgres_sql_json_impl(serde_json::json!({"sql":row["sqlText"]})).unwrap(),
+        )
+        .unwrap();
+        assert!(parsed["diagnostics"].as_array().unwrap().is_empty());
+        assert_eq!(parsed["statements"][0]["kind"], "select");
+        let nested = parsed["statements"][0]["query"]["nestedStatements"]
+            .as_array()
+            .unwrap();
+        assert_eq!(
+            nested
+                .first()
+                .and_then(|statement| statement["kind"].as_str()),
+            expected_kind
+        );
+    }
+    for line in [22, 28, 40, 60, 83, 96] {
+        assert!(
+            rows.iter().any(|row| {
+                row["line"] == line
+                    && row["complete"] == false
+                    && row["onlyValuePlaceholders"] == false
+                    && row["annotation"].is_null()
+            }),
+            "line {line}: {rows:?}"
+        );
+    }
+    assert!(rows.iter().any(|row| {
+        row["line"] == 71
+            && row["annotation"].is_null()
+            && row["sqlText"].is_null()
+            && row["complete"] == false
+            && row["onlyValuePlaceholders"] == false
+    }));
+}
 #[test]
 fn standalone_and_batch_bindings_keep_structured_source_facts() {
     let sql = include_str!(concat!(

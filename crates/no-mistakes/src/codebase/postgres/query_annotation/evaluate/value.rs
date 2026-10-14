@@ -52,6 +52,7 @@ impl Values {
                     Value::Aggregate(values)
                     | Value::References(values)
                     | Value::Object(values)
+                    | Value::Record(values, _)
                     | Value::Joined(values)
                     | Value::Possible(values) => {
                         environments.extend(values.environment_indices());
@@ -80,6 +81,7 @@ impl Values {
                     Value::Aggregate(values)
                     | Value::References(values)
                     | Value::Object(values)
+                    | Value::Record(values, _)
                     | Value::Joined(values)
                     | Value::Possible(values) => values.contains_reference(),
                     _ => false,
@@ -152,6 +154,7 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     References(Values),
     // Direct object binds are scalars; property reads may expose these values.
     Object(Values),
+    Record(Values, Vec<String>),
     // Alternative binding values; unlike Aggregate, this is not a container.
     Joined(Values),
     // Candidate runtime values with an implicit unknown alternative.

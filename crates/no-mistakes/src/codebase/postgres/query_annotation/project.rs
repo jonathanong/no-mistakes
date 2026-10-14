@@ -10,12 +10,40 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod output;
+use output::{prefix, projected_sql};
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct ProjectedSql {
+    pub text: String,
+    pub complete: bool,
+    pub only_value_placeholders: bool,
+}
+
+pub(crate) type ProjectedCalls = BTreeMap<(PathBuf, (u32, u32)), Option<Vec<ProjectedSql>>>;
+
 /// Resolve owned syntax against the request's canonical module facts and
 /// resolver. No source reads or parsing occur in this projection.
 pub(crate) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
 ) {
+    let _ = project_impl(files, resolve, false);
+}
+
+pub(crate) fn project_executed(
+    files: &mut FileIdMap<CheckFileFacts>,
+    resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
+) -> ProjectedCalls {
+    project_impl(files, resolve, true)
+}
+
+fn project_impl(
+    files: &mut FileIdMap<CheckFileFacts>,
+    resolve: impl Fn(&str, &Path) -> Option<PathBuf> + Sync,
+    collect_executed: bool,
+) -> ProjectedCalls {
+    let mut projected = ProjectedCalls::new();
     let originals = files
         .into_iter()
         .map(|(path, _)| (normalize_path(path), path.clone()))
@@ -106,7 +134,11 @@ pub(crate) fn project(
             }
         }
         for ((path, span), events) in events {
-            let contextual = events.iter().any(|(generic, _)| !generic);
+            // An exported helper can be called both locally with known SQL and
+            // externally with an unknown argument. The annotation rule keeps
+            // its contextual preference; executed SQL must include every
+            // reachable invocation before it certifies a complete statement.
+            let contextual = !collect_executed && events.iter().any(|(generic, _)| !generic);
             let values = events
                 .into_iter()
                 .filter(|(generic, _)| !contextual || !generic)
@@ -119,6 +151,23 @@ pub(crate) fn project(
                 // Legacy lexical SQL facts remain authoritative where this
                 // additive helper projection does not model the scope.
                 continue;
+            }
+            if collect_executed {
+                let mut alternatives = Vec::new();
+                let mut recoverable = true;
+                for value in &values {
+                    if let Some(candidates) = projected_sql(value) {
+                        for candidate in candidates {
+                            if !alternatives.contains(&candidate) {
+                                alternatives.push(candidate);
+                            }
+                        }
+                    } else {
+                        recoverable = false;
+                        break;
+                    }
+                }
+                projected.insert((path.clone(), span), recoverable.then_some(alternatives));
             }
             let values = values.into_iter().map(prefix).collect::<Vec<_>>();
             // Every analyzable invocation must satisfy the rule. One favorable
@@ -146,41 +195,7 @@ pub(crate) fn project(
             facts.calls.insert(span, value);
         }
     }
-}
-
-fn prefix(value: Value) -> Option<String> {
-    if let Value::Possible(values) = value {
-        // A known unsafe possibility still violates the rule. A known safe
-        // possibility cannot establish safety for the implicit unknown case.
-        return values
-            .into_iter()
-            .filter_map(prefix)
-            .find(|text| sql_requires_query_annotation(text));
-    }
-    let Value::Prefix(text, complete, _) = value else {
-        return None;
-    };
-    let start = text.trim_start();
-    if complete
-        || super::super::annotation::has_leading_query_annotation(&text)
-        || (!start.is_empty()
-            && !start.starts_with('/')
-            && !could_be_transaction(start)
-            && sql_requires_query_annotation(&text))
-        || (start.starts_with('/') && start.len() > 1 && !start.starts_with("/*"))
-        || (start.starts_with("/*") && start.contains("*/") && sql_requires_query_annotation(&text))
-    {
-        Some(text)
-    } else {
-        None
-    }
-}
-
-fn could_be_transaction(prefix: &str) -> bool {
-    let prefix = prefix.to_ascii_uppercase();
-    ["BEGIN", "COMMIT", "ROLLBACK"]
-        .iter()
-        .any(|statement| statement.starts_with(&prefix))
+    projected
 }
 
 #[cfg(test)]

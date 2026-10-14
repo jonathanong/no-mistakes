@@ -25,6 +25,7 @@ impl Reachable {
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
+            | Value::Record(values, _)
             | Value::Joined(values)
             | Value::Possible(values)
                 // Functions carry environments without being builder/argument

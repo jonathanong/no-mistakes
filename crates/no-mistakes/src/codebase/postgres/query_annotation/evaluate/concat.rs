@@ -1,4 +1,5 @@
 use super::Value;
+use crate::codebase::postgres::embedded::{count_placeholders, renumber_placeholders};
 
 pub(super) fn concat(base: Value, tail: Value) -> Value {
     match (base.exposed(), tail.exposed()) {
@@ -8,7 +9,7 @@ pub(super) fn concat(base: Value, tail: Value) -> Value {
         }
         (Value::Prefix(base, false, id), _) => Value::Prefix(base, false, id),
         (Value::Prefix(mut base, true, id), Value::Prefix(tail, complete, _)) => {
-            base.push_str(&tail);
+            base.push_str(&renumber_placeholders(&tail, count_placeholders(&base)));
             Value::Prefix(base, complete, id)
         }
         (Value::Prefix(base, true, id), _) => Value::Prefix(base, false, id),

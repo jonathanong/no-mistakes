@@ -1,7 +1,10 @@
 use super::{Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+
+mod entrypoints;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
@@ -55,8 +58,33 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
-        for expr in globals.values() {
-            if let Expr::Function(function) = expr {
+        let mut seen_functions = BTreeSet::new();
+        for (name, expr) in globals {
+            // Only exported functions are independently callable by a
+            // supplied-source consumer. A private callback still contributes
+            // its contextual invocations, but speculative calls to it must
+            // not erase the exact argument supplied by its owner.
+            if file.facts.precise_records
+                && !file.module.ts.exported_bindings.iter().any(|binding| {
+                    binding.specifier.is_none()
+                        && exported_reaches(globals, &binding.local, name, &mut BTreeSet::new())
+                })
+            {
+                continue;
+            }
+            let mut functions = Vec::new();
+            if file.facts.precise_records {
+                entrypoints::collect(
+                    globals,
+                    expr,
+                    &mut BTreeSet::new(),
+                    &mut seen_functions,
+                    &mut functions,
+                );
+            } else if let Expr::Function(function) = expr {
+                functions.push(std::sync::Arc::clone(function));
+            }
+            for function in functions {
                 // Speculative entrypoints share initialized facts, never effects
                 // from an unrelated function considered earlier in name order.
                 self.scopes.clone_from(&scopes);
@@ -94,6 +122,55 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.steps(&function.body, path, &mut env, 16, true);
             }
         }
+    }
+}
+
+fn exported_reaches(
+    globals: &BTreeMap<String, Expr>,
+    exported: &str,
+    target: &str,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    if exported == target {
+        return true;
+    }
+    if !visiting.insert(exported.to_string()) {
+        return false;
+    }
+    let reaches = globals
+        .get(exported)
+        .is_some_and(|value| value_reaches(globals, value, target, visiting));
+    visiting.remove(exported);
+    reaches
+}
+
+fn value_reaches(
+    globals: &BTreeMap<String, Expr>,
+    value: &Expr,
+    target: &str,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    match value {
+        Expr::Name(name) => exported_reaches(globals, name, target, visiting),
+        Expr::Spread(value)
+        | Expr::Member(value, _)
+        | Expr::Index(value, _)
+        | Expr::OpaqueCallback(value)
+        | Expr::Discard(value) => value_reaches(globals, value, target, visiting),
+        Expr::ComputedMember(value, key) | Expr::Append(value, key) =>
+            value_reaches(globals, value, target, visiting)
+                || value_reaches(globals, key, target, visiting),
+        Expr::Record(values, _)
+        | Expr::Object(values)
+        | Expr::Container(values)
+        | Expr::Sequence(values)
+        | Expr::Alternatives(values) => values
+            .iter()
+            .any(|value| value_reaches(globals, value, target, visiting)),
+        Expr::Function(function) => function.body.iter().any(|step| {
+            matches!(step, super::super::Step::Return(value) if value_reaches(globals, value, target, visiting))
+        }),
+        _ => false,
     }
 }
 

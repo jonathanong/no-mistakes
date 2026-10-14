@@ -116,19 +116,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     _ => Value::Unknown,
                 }
             }
-            Expr::Await(expr) => {
-                let mut value = self.expr(expr, path, env, depth, generic).exposed();
-                while let Value::Promise(inner) = value {
-                    value = inner.exposed();
-                }
-                value
-            }
+            Expr::Await(expr) => self.await_expr(expr, path, env, depth, generic),
             Expr::Call {
                 callee,
                 args,
                 start,
                 end,
             } => self.call(callee, args, (*start, *end), path, env, (depth, generic)),
+            Expr::ModuleLoad(specifier) => self.load_dynamic_import(specifier, path),
             Expr::Delete(children, index) => {
                 self.deleted(children, *index, path, env, (depth, generic))
             }
@@ -142,19 +137,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 value,
             } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
             Expr::Member(object, name) => {
-                let value = self.expr(object, path, env, depth, generic).exposed();
-                self.member(value, name)
+                if let Some(value) = self.namespace_member(object, name, path, *env, depth, generic)
+                {
+                    value
+                } else {
+                    let value = self.expr(object, path, env, depth, generic).exposed();
+                    self.member(value, name, path)
+                }
             }
             Expr::ComputedMember(object, key) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.expr(key, path, env, depth, generic);
-                self.member(value, "")
+                self.member(value, "", path)
             }
             Expr::Index(object, index) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();
                 self.index(value, *index)
             }
-            Expr::Children(children) | Expr::Container(children) | Expr::Object(children) => {
+            Expr::Children(children)
+            | Expr::Container(children)
+            | Expr::Object(children)
+            | Expr::Record(children, _) => {
                 self.container(expr, children, path, env, (depth, generic))
             }
         };

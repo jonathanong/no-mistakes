@@ -105,11 +105,31 @@ Recovered conditional alternatives have `kind: "composed"`. The named
 Template interpolations appear as `sql_placeholder_N` markers and remain
 `complete: false` because their runtime content is unknown. Dynamic SQL can
 expose only a leading prefix or `null`; require `complete` for checks that need
-the entire SQL statement. `annotation` is `null` for unannotated or unrecoverable SQL.
+the entire SQL statement. In import-aware results, `onlyValuePlaceholders` is
+true only when the SQL structure is proven and the remaining holes are generated
+value binds. Parse that SQL and inspect nested statements before classifying a
+`WITH` query as read-only; the field does not certify read-only effects.
+`annotation` is `null` for unannotated or unrecoverable SQL.
 An invalid TS/JS source or unknown option rejects the whole request, so a
 recovered parse cannot silently report incomplete input as complete SQL.
-This source-only API reads no files and does not resolve helpers imported from
-other files; use `check()` for project-wide annotation enforcement.
+This source-only API reads no files. By default it leaves imported SQL helpers
+unresolved. Set `resolveImports: true` to evaluate imports among the supplied
+sources, including effects of supported SQL-builder append helpers. Relative
+imports resolve by supplied `fileName`; for aliases or package imports, pass
+`resolvedImports: [{ fromFileName, specifier, toFileName }]` with exact supplied
+file names. Unresolved imports, opaque helper effects, and unknown alternatives
+remain dynamic rather than claiming complete SQL. Import-aware extraction is
+opt-in because it performs inter-file evaluation. `complete` only describes
+SQL construction; consumers must inspect the statement before classifying a
+`WITH` body as a read. Supplied static dependencies execute before their importer;
+opaque top-level effects and unscheduled async helper work make affected shared
+builders unproven. Use `check()` for project-wide annotation enforcement.
+Literal CommonJS `require` calls and awaited dynamic imports evaluate supplied
+targets at their expression position; a target that cannot be resolved leaves
+shared builder SQL unproven. Getter-capable member reads likewise prevent a
+later executor from certifying a builder they could have changed.
+A dynamic import without `await` is not executed synchronously: its scheduling is
+uncertain, so later reads of affected builders remain incomplete.
 
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
 `shapeOptions.bannedFunctionCall.functions` list through the same YAML rule

@@ -244,7 +244,7 @@ fn effect_references_preserve_callbacks_mutations_and_single_operand_evaluation(
         ("computed-object key effect", "SELECT 7"),
     ] {
         assert!(
-            matches!(event(&values, marker), Value::Prefix(sql, true, _) if sql == text),
+            matches!(event(&values, marker), Value::Prefix(sql, true, _) if crate::codebase::postgres::embedded::publish_placeholders_with_positions(sql.clone()).0 == text),
             "{marker}"
         );
         assert_eq!(
@@ -291,7 +291,7 @@ fn scalar_and_object_reference_containers_survive_callback_frames_and_slot_joins
         ),
     ] {
         assert!(
-            matches!(event(&values, marker), Value::Prefix(sql, true, _) if sql == text),
+            matches!(event(&values, marker), Value::Prefix(sql, true, _) if crate::codebase::postgres::embedded::publish_placeholders_with_positions(sql.clone()).0 == text),
             "{marker}"
         );
     }

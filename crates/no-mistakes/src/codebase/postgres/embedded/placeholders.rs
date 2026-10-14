@@ -1,7 +1,7 @@
 /// Generated interpolation markers must be distinguishable from user-authored
 /// SQL that happens to contain the public `sql_placeholder_` substring.
 pub(super) const PLACEHOLDER_MARKER: &str = "sql_placeholder_";
-pub(super) const INTERNAL_PLACEHOLDER: &str = "\u{10FFFF}sqlph_";
+pub(crate) const INTERNAL_PLACEHOLDER: &str = "\u{10FFFF}sqlph_";
 
 pub(super) fn internal_placeholder(index: usize) -> String {
     format!("{INTERNAL_PLACEHOLDER}{index}")
@@ -12,7 +12,7 @@ pub(super) fn publish_placeholders(text: String) -> String {
 }
 
 /// Replace internal markers while retaining the exact SQL positions of generated values.
-pub(super) fn publish_placeholders_with_positions(text: String) -> (String, Vec<(u32, u32)>) {
+pub(crate) fn publish_placeholders_with_positions(text: String) -> (String, Vec<(u32, u32)>) {
     let mut output = String::with_capacity(text.len());
     let mut positions = Vec::new();
     let mut line = 1;
@@ -45,13 +45,13 @@ fn advance_position(text: &str, line: &mut u32, column: &mut u32) {
     }
 }
 
-pub(super) fn count_placeholders(text: &str) -> u32 {
+pub(crate) fn count_placeholders(text: &str) -> u32 {
     text.matches(INTERNAL_PLACEHOLDER).count() as u32
 }
 
 /// Shift internally generated placeholders in `text` by `offset`. User text
 /// that contains the public `sql_placeholder_` spelling is left unchanged.
-pub(super) fn renumber_placeholders(text: &str, offset: u32) -> String {
+pub(crate) fn renumber_placeholders(text: &str, offset: u32) -> String {
     if offset == 0 {
         return text.to_string();
     }

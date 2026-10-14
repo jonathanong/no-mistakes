@@ -129,6 +129,7 @@ impl View<'_> {
                     Value::Aggregate(values_)
                     | Value::References(values_)
                     | Value::Object(values_)
+                    | Value::Record(values_, _)
                     | Value::Joined(values_)
                     | Value::Possible(values_) => values.extend(values_),
                     Value::Promise(value) | Value::Evaluated(value, _) => values.push(value),

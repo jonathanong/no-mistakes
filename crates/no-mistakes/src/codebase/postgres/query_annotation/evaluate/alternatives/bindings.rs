@@ -9,6 +9,7 @@ fn scalar(value: &Value) -> bool {
         Value::Aggregate(values)
         | Value::References(values)
         | Value::Object(values)
+        | Value::Record(values, _)
         | Value::Joined(values) => values.iter().all(scalar),
         _ => false,
     }

@@ -57,6 +57,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         match expr {
             Expr::Container(_) => Value::Aggregate(values),
             Expr::Object(_) => Value::Object(values),
+            Expr::Record(_, keys) => Value::Record(values, keys.clone()),
             _ => Value::References(values),
         }
     }

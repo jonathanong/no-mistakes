@@ -124,6 +124,7 @@ impl Classification<'_> {
             Expr::Children(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
+            | Expr::Record(parts, _)
             | Expr::Template(parts)
             | Expr::Sequence(parts) => parts.iter().any(|expr| self.expression(expr)),
             _ => (self.effect)(expr),

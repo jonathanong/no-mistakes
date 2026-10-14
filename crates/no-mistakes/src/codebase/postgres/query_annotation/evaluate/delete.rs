@@ -67,9 +67,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Children(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
+            | Expr::Record(parts, _)
             | Expr::Alternatives(parts) => {
-                let (Value::Aggregate(values) | Value::References(values) | Value::Object(values)) =
-                    value
+                let (Value::Aggregate(values)
+                | Value::References(values)
+                | Value::Object(values)
+                | Value::Record(values, _)) = value
                 else {
                     return false;
                 };

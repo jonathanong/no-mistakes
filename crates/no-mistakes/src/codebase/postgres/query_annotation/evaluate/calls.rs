@@ -1,44 +1,14 @@
+mod async_suspension;
+mod module_loads;
+mod names;
 pub(super) mod scopes;
 mod values;
+use super::statements::effects::contains_accessor_read;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
 
 impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
-    pub(in crate::codebase::postgres::query_annotation) fn name(
-        &mut self,
-        path: &Path,
-        name: &str,
-        depth: u8,
-        generic: bool,
-    ) -> Value {
-        let files = self.files;
-        let file = &files[path];
-        if file.facts.globals.contains_key(name) {
-            if matches!(file.facts.globals.get(name), Some(Expr::Unknown)) {
-                return Value::Unknown;
-            }
-            let env = self.module_environment(path);
-            return self.scopes[env]
-                .get(name)
-                .cloned()
-                .unwrap_or(Value::Unknown);
-        }
-        let import = file
-            .module
-            .imports
-            .get(name)
-            .map(|index| &file.module.ts.imported_bindings[*index]);
-        let Some(import) = import else {
-            return Value::Unknown;
-        };
-        let Some(target) = file.module.target(&import.specifier, path, &self.resolve) else {
-            return Value::Unknown;
-        };
-        self.lookup_export(target, &import.imported, depth, generic)
-            .unwrap_or(Value::Unknown)
-    }
-
     pub(super) fn call(
         &mut self,
         callee: &Expr,
@@ -49,9 +19,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
+        self.initialize_require(callee, args, path);
         // Keep the member/index base so a non-arrow callee receives it as `this`.
         // Evaluating the callee expression alone would drop that reference.
-        let (target, receiver) = match callee {
+        let (target, mut receiver) = match callee {
             Expr::Index(object, index) => {
                 let receiver = self.expr(object, path, env, depth, generic).exposed();
                 (
@@ -62,7 +33,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             Expr::Member(object, name) => {
                 let receiver = self.expr(object, path, env, depth, generic).exposed();
                 (
-                    self.member(receiver.clone(), name).exposed(),
+                    self.member(receiver.clone(), name, path).exposed(),
                     Some(receiver),
                 )
             }
@@ -72,6 +43,20 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
             .collect::<Vec<_>>();
+        // Later arguments run before the executor. A getter or opaque call can
+        // mutate the SQL builder already evaluated as the first argument.
+        if args
+            .iter()
+            .skip(1)
+            .any(|arg| contains_accessor_read(arg) && self.effect_can_mutate(arg, path, *env))
+        {
+            self.invalidate_live_builders();
+        }
+        if let Some(receiver) = receiver.as_mut() {
+            // A method was selected before its arguments ran, but `this` may
+            // still hold a builder changed by an argument expression.
+            self.refresh_arguments(std::slice::from_mut(receiver));
+        }
         // Later operands can mutate the object an earlier operand returned.
         self.refresh_arguments(&mut raw_arguments);
         let handled_projection = matches!(callee, Expr::Name(_))
@@ -176,7 +161,21 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut scope = self.environment(locals);
         self.register_mappings(scope, captured, &function, mapping);
         self.register_captured_bindings(scope, captured, &function);
+        let suspended = self.files[&function_path].facts.precise_records
+            && function.asynchronous
+            && async_suspension::has_suspension(&function.body);
+        let prior_events = suspended.then(|| async_suspension::event_lengths(&self.events));
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
+        if let Some(prior_events) = prior_events {
+            // The evaluator does not schedule post-await work. Whether the
+            // caller awaits this promise or reads a shared builder first is
+            // unknown. Events recorded while evaluating the body are just as
+            // uncertain as its return value and captured builders.
+            async_suspension::invalidate_new_events(&mut self.events, &prior_events);
+            self.invalidate_builders(&arguments);
+            self.invalidate_captured(captured, &function);
+            return Value::Promise(Box::new(Value::Unknown));
+        }
         // Trace forwarded executor calls, but do not treat a helper's return
         // as immutable SQL when arbitrary effects could mutate its builder.
         if !function.asynchronous {
