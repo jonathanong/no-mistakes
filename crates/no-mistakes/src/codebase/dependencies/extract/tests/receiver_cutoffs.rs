@@ -115,7 +115,7 @@ fn deferred_receiver_certainty_belongs_to_the_callable() {
     let source = std::fs::read_to_string(fixture).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.errors.is_empty());
+    assert!(parsed.diagnostics.is_empty());
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program,
         &source,
