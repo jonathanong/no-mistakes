@@ -25,13 +25,11 @@ fn contains_await(expr: &Expr) -> bool {
             receiver: base,
             value: key,
             ..
-        } => contains_await(base) || contains_await(key),
+        } => any_await([base.as_ref(), key.as_ref()]),
         Expr::Call { callee, args, .. } => {
-            contains_await(callee) || args.iter().any(contains_await)
+            any_await(std::iter::once(callee.as_ref()).chain(args.iter()))
         }
-        Expr::Tagged(_, parts, effects) => {
-            parts.iter().any(contains_await) || effects.iter().any(contains_await)
-        }
+        Expr::Tagged(_, parts, effects) => any_await(parts.iter().chain(effects)),
         Expr::Template(parts)
         | Expr::Children(parts)
         | Expr::Container(parts)
@@ -43,7 +41,7 @@ fn contains_await(expr: &Expr) -> bool {
         | Expr::OpaqueWrite {
             children: parts, ..
         }
-        | Expr::Delete(parts, _) => parts.iter().any(contains_await),
+        | Expr::Delete(parts, _) => any_await(parts),
         Expr::Primitive
         | Expr::Unknown
         | Expr::Unsupported
@@ -51,4 +49,8 @@ fn contains_await(expr: &Expr) -> bool {
         | Expr::Name(_)
         | Expr::Function(_) => false,
     }
+}
+
+fn any_await<'a>(expressions: impl IntoIterator<Item = &'a Expr>) -> bool {
+    expressions.into_iter().any(contains_await)
 }

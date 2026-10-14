@@ -101,6 +101,21 @@ fn source_api_never_unwraps_an_unawaited_sql_promise() {
 }
 
 #[test]
+fn source_api_never_certifies_sql_across_imported_async_suspension() {
+    let sources = [
+        source("async-suspended-consumer.ts"),
+        source("async-suspended-builder.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 3);
+    for statement in statements {
+        assert!(!statement.complete, "{statement:?}");
+        assert!(statement.sql_text.is_none(), "{statement:?}");
+    }
+}
+
+#[test]
 fn source_api_retains_the_generic_call_of_an_exported_helper() {
     let sources = [source("exported-generic.ts")];
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
