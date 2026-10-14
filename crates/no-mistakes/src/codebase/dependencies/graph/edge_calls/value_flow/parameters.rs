@@ -119,7 +119,7 @@ impl ValueFlowResolution<'_, '_> {
                 values.push(FlowValue::Unknown);
                 continue;
             };
-            if inline_callee(&call.callee)
+            if super::inline_inputs::inline_callee(&call.callee)
                 && (!synchronous || !self.safe_inline_callee(&caller, &call.callee))
             {
                 values.push(FlowValue::Unknown);
@@ -127,7 +127,7 @@ impl ValueFlowResolution<'_, '_> {
             }
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
-            if inline_callee(&call.callee) {
+            if super::inline_inputs::inline_callee(&call.callee) {
                 self.invocation_read =
                     Some((caller.clone(), call.offset, call.context, parameter.owner));
             }
@@ -188,13 +188,5 @@ impl ValueFlowResolution<'_, '_> {
         let value = self.value(path, &parameter.default);
         self.initializing.pop();
         value
-    }
-}
-
-fn inline_callee(value: &ValueExpression) -> bool {
-    match value {
-        ValueExpression::Callable(_) | ValueExpression::Call(_, _) => true,
-        ValueExpression::Member(base, _) | ValueExpression::Awaited(base) => inline_callee(base),
-        _ => false,
     }
 }
