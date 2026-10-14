@@ -116,7 +116,11 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
-    record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
+    let previous = std::mem::replace(&mut collector.receiver_replacement_is_fresh, receiver_replacement_is_fresh(assignment));
+    with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
+        record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
+    });
+    collector.receiver_replacement_is_fresh = previous;
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         collector.visit_expression(&assignment.right);

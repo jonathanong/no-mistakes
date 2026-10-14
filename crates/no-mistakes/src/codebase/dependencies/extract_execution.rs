@@ -20,6 +20,44 @@ fn with_conditional_execution(
     collector.conditional_execution = previous;
 }
 
+fn visit_binding_default_with_execution<'a>(collector: &mut ImportCollector, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
+    collector.visit_binding_pattern(&pattern.left);
+    with_conditional_receiver_write(collector, |collector| collector.visit_expression(&pattern.right));
+}
+
+fn with_conditional_receiver_write(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
+    // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
+    let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
+    visit(collector);
+    collector.receiver_write_is_conditional = previous;
+}
+
+fn receiver_replacement_is_fresh(assignment: &AssignmentExpression<'_>) -> bool {
+    assignment.operator == oxc_syntax::operator::AssignmentOperator::Assign
+        && matches!(&assignment.left, AssignmentTarget::StaticMemberExpression(_) | AssignmentTarget::ComputedMemberExpression(_))
+        && matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&assignment.right),
+            Expression::ObjectExpression(_) | Expression::ArrayExpression(_)
+            | Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
+            | Expression::NullLiteral(_) | Expression::BooleanLiteral(_)
+            | Expression::NumericLiteral(_) | Expression::BigIntLiteral(_) | Expression::StringLiteral(_))
+}
+
+fn visit_target_default_with_execution<'a>(collector: &mut ImportCollector, target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>) {
+    collector.visit_assignment_target(&target.binding);
+    with_conditional_receiver_write(collector, |collector| collector.visit_expression(&target.init));
+}
+
+fn visit_parameter_default_with_execution<'a>(collector: &mut ImportCollector, parameter: &oxc_ast::ast::FormalParameter<'a>) {
+    collector.visit_decorators(&parameter.decorators);
+    collector.visit_binding_pattern(&parameter.pattern);
+    if let Some(annotation) = &parameter.type_annotation {
+        collector.visit_ts_type_annotation(annotation);
+    }
+    if let Some(initializer) = &parameter.initializer {
+        with_conditional_receiver_write(collector, |collector| collector.visit_expression(initializer));
+    }
+}
+
 // Literal conditions can prove one branch executes. Unknown conditions remain
 // conservative; these facts do not evaluate bindings or replace syntactic edges.
 fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {

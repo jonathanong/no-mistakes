@@ -27,12 +27,22 @@ impl ImportCollector {
         path: &[Option<String>],
         assigned: Option<(Option<String>, u32)>,
         offset: u32,
+        propagated: bool,
     ) {
         let context = self.current_function_id();
+        let unconditional = !self.conditional_execution
+            && !self.receiver_write_is_conditional
+            && self.receiver_replacement_is_fresh;
         let history = self.prior_member_mutations.history_mut(key);
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
-            history.record_assignment(path, assigned, completed_at, context);
+            let write = mutation_history::ValueAssignedMutation {
+                offset: completed_at,
+                context,
+                multiple_contexts: false,
+                unconditional_offset: unconditional.then_some(completed_at),
+            };
+            history.record_assignment(path, assigned, write, propagated);
         }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {

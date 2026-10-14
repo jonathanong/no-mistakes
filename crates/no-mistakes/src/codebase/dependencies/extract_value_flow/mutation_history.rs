@@ -14,8 +14,14 @@ pub struct ValueMutationHistory {
 pub struct ValueAssignedMutations {
     pub members: FxHashMap<String, ValueAssignedMutation>,
     pub dynamic: Option<ValueAssignedMutation>,
+    pub propagated: Option<Box<ValuePropagatedMutations>>,
     #[cfg(feature = "test-instrumentation")]
     pub merge_reinsertions: usize,
+}
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ValuePropagatedMutations {
+    pub aggregate: ValueAssignedMutations,
+    pub contexts: FxHashMap<Option<CallableId>, ValueAssignedMutations>,
 }
 /// Exact writes need only one context, or the fact that writers differ.
 /// With two distinct writers, at least one differs from every reader.
@@ -23,6 +29,8 @@ pub struct ValueAssignedMutations {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ValueAssignedMutation {
     pub offset: u32,
+    /// Earliest guaranteed fresh overwrite, distinct from merely possible writes.
+    pub unconditional_offset: Option<u32>,
     pub context: Option<CallableId>,
     pub multiple_contexts: bool,
 }

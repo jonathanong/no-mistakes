@@ -81,3 +81,36 @@ complete pre-push Rust checks remain pending.
   write. A request-owned union-by-size index now keeps one mutable history per
   component and produces shared final histories. Saved operation-count tests
   cover aliases, repeated writes, and unrelated bindings.
+
+## First draft CI and review corrections
+
+At `b1f2cc155d32110df3d10156f24f41669b3af76f`, CI passed formatting,
+Rust lint, duplication, spelling, AST checks, JavaScript, and both native
+platform jobs. The Rust library run passed 11,243 tests and failed two existing
+default-origin tests: an untouched literal-star selection lost its proof, and
+copied-method/replaced-container controls lost findings at lines 16 and 19.
+Those expectations remain unchanged.
+
+The correction separates newly propagated exact assignments from direct
+assignments inside the existing optional assignment box. Supplied receiver
+reads use the aggregate summary. Selected default reads retain their Source
+prefix evidence and use their owned writer's propagated summary, preserving
+acquisition offsets without importing unrelated helper writers. This adds
+optional writer metadata; its cold memory cost still requires measurement.
+
+The conditional-reference review regression is saved in
+`nested-receiver-cutoffs.mts`. Its [raw verified baseline output](conditional-baseline-targets.txt)
+retains `primary.get` for every helper. Candidate tests require Unknown except
+for the guaranteed fresh replacement control. Conditional branches, loops,
+short-circuit writes, logical assignments, default right-hand sides,
+self-assignment, and unknown values cannot establish a fresh receiver identity.
+The earliest guaranteed fresh replacement offset is stored separately from
+the earliest possible write. A saved receiver acquired between a conditional
+write and a later guaranteed replacement retains its earlier identity.
+
+The traversal counter now measures actual existing alias-edge propagation:
+128 writes over 128 undirected links assert 32,768 directed edge visits. That
+baseline traversal is still proportional to writes times alias edges. The
+canonical root counter separately bounds the additional ancestor checks; only
+their redundant component walk was eliminated. No linear whole-collector or
+measured performance claim is made. These corrections await current-head CI.

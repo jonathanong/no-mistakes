@@ -42,10 +42,15 @@ impl ImportCollector {
             let mut assigned = parts.pop().map(|member| (member, completed_at));
             let has_assignment = assigned.is_some();
             let reads = vec![(offset, self.current_function_id()); parts.len()];
-            let mut pending = vec![((((scope, base.to_string()), parts), reads), false, true)];
+            let mut pending = vec![(
+                (((scope, base.to_string()), parts), reads),
+                false,
+                true,
+                false,
+            )];
             let mut active = fx_set();
             let mut visited = fx_set();
-            while let Some((((key, path), reads), exiting, remember)) = pending.pop() {
+            while let Some((((key, path), reads), exiting, remember, propagated)) = pending.pop() {
                 if exiting {
                     active.remove(&key);
                     continue;
@@ -54,14 +59,14 @@ impl ImportCollector {
                     let exact = assigned.take().or_else(|| {
                         has_assignment.then(|| (assigned_member.map(str::to_string), completed_at))
                     });
-                    self.remember_member_mutation(&key, &path, exact, offset);
+                    self.remember_member_mutation(&key, &path, exact, offset, propagated);
                 }
                 if !visited.insert((key.clone(), path.clone(), reads.clone()))
                     || !active.insert(key.clone())
                 {
                     continue;
                 }
-                pending.push((((key.clone(), Vec::new()), Vec::new()), true, false));
+                pending.push((((key.clone(), Vec::new()), Vec::new()), true, false, false));
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links
@@ -71,10 +76,15 @@ impl ImportCollector {
                     .into_iter()
                     .flatten()
                 {
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        self.value_flow.reference_link_visits += 1;
+                    }
                     pending.push((
                         ((target.clone(), path.clone()), reads.clone()),
                         false,
                         false,
+                        propagated,
                     ));
                 }
                 for index in self
@@ -103,7 +113,7 @@ impl ImportCollector {
                     pending.extend(
                         references
                             .into_iter()
-                            .map(|reference| (reference, false, true)),
+                            .map(|reference| (reference, false, true, true)),
                     );
                 }
             }

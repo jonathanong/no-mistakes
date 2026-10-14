@@ -215,3 +215,27 @@ fn nested_alias_writes_do_not_report_stale_imported_effects() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn conditional_and_unknown_reference_writes_do_not_sever_original_receivers() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/nested-receiver-cutoffs.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [93],
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/nested-receiver-owned-defaults.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [12, 30],
+        "{findings:#?}"
+    );
+}

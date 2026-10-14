@@ -1,0 +1,113 @@
+use super::*;
+use mutation_history::{ValueAssignedMutation, ValueAssignedMutations, ValuePropagatedMutations};
+
+impl ValueAssignedMutations {
+    pub(super) fn merge(&mut self, mut source: Self) {
+        if source.members.len() > self.members.len() {
+            std::mem::swap(&mut self.members, &mut source.members);
+        }
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.merge_reinsertions += source.merge_reinsertions + source.members.len();
+        }
+        for (member, source) in source.members {
+            self.members.entry(member).or_insert(source).merge(source);
+        }
+        if let Some(source) = source.dynamic {
+            self.dynamic.get_or_insert(source).merge(source);
+        }
+        if let Some(source) = source.propagated {
+            if let Some(target) = &mut self.propagated {
+                target.merge(*source);
+            } else {
+                self.propagated = Some(source);
+            }
+        }
+    }
+
+    pub(super) fn record(&mut self, member: Option<String>, initial: ValueAssignedMutation) {
+        let write = match member {
+            Some(member) => self.members.entry(member).or_insert(initial),
+            None => self.dynamic.get_or_insert(initial),
+        };
+        write.merge(initial);
+    }
+
+    pub(super) fn invalidated(
+        &self,
+        member: &str,
+        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
+        owner: &impl Fn() -> Option<CallableId>,
+    ) -> bool {
+        self.direct_invalidated(member, reader)
+            || self.propagated.as_ref().is_some_and(|propagated| {
+                let owner = owner();
+                // Module writes still use the caller's recorded acquisition.
+                // Only unrelated callable writers are excluded for defaults.
+                if owner.is_some()
+                    && propagated
+                        .contexts
+                        .get(&None)
+                        .is_some_and(|writes| writes.direct_invalidated(member, reader))
+                {
+                    return true;
+                }
+                let selected = match owner {
+                    Some(owner) => propagated.contexts.get(&Some(owner)),
+                    None => Some(&propagated.aggregate),
+                };
+                selected.is_some_and(|selected| selected.direct_invalidated(member, reader))
+            })
+    }
+
+    fn direct_invalidated(
+        &self,
+        member: &str,
+        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
+    ) -> bool {
+        [self.members.get(member), self.dynamic.as_ref()]
+            .into_iter()
+            .flatten()
+            .any(|write| write.invalidated(reader))
+    }
+
+    pub(super) fn definitely_replaced(
+        &self,
+        member: &str,
+        offset: u32,
+        context: Option<CallableId>,
+    ) -> bool {
+        let replaced = |write: &ValueAssignedMutation| {
+            !write.multiple_contexts
+                && write.context == context
+                && write
+                    .unconditional_offset
+                    .is_some_and(|write| write <= offset)
+        };
+        self.members.get(member).is_some_and(replaced)
+            || self.propagated.as_ref().is_some_and(|propagated| {
+                propagated
+                    .aggregate
+                    .members
+                    .get(member)
+                    .is_some_and(replaced)
+            })
+    }
+}
+
+impl ValuePropagatedMutations {
+    fn merge(&mut self, source: Self) {
+        self.aggregate.merge(source.aggregate);
+        for (context, writes) in source.contexts {
+            self.contexts.entry(context).or_default().merge(writes);
+        }
+    }
+
+    pub(super) fn record(&mut self, member: Option<String>, write: ValueAssignedMutation) {
+        self.aggregate.record(member.clone(), write);
+        self.contexts
+            .entry(write.context)
+            .or_default()
+            .record(member, write);
+    }
+}

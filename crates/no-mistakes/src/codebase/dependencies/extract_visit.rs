@@ -6,6 +6,9 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) { visit_if_with_execution(self, statement); }
     fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) { visit_logical_with_execution(self, expression); }
     fn visit_conditional_expression(&mut self, expression: &oxc_ast::ast::ConditionalExpression<'a>) { visit_conditional_with_execution(self, expression); }
+    fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) { visit_binding_default_with_execution(self, pattern); }
+    fn visit_assignment_target_with_default(&mut self, target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>) { visit_target_default_with_execution(self, target); }
+    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) { visit_parameter_default_with_execution(self, parameter); }
 
     fn visit_function(
         &mut self,
@@ -87,11 +90,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
-        visit_variable_declaration_with_bindings(self, declaration);
-        self.record_callable_declaration_bindings(declaration);
-        self.record_const_callable_aliases(declaration);
-        self.record_value_declaration(declaration);
-        walk::walk_variable_declaration(self, declaration);
+        visit_variable_declaration_with_values(self, declaration);
     }
 
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
