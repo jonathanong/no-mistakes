@@ -25,6 +25,8 @@ fn inline_helper_retains_enclosing_context_before_later_receiver_write() {
         "function",
         "default",
         "returned",
+        "provider",
+        "bound-named",
         "unrelated",
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{name}.mts")));

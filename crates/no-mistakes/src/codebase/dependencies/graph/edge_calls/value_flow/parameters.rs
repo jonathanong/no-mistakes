@@ -94,11 +94,6 @@ impl ValueFlowResolution<'_, '_> {
                 .and_then(|sites| sites.get(callee.as_str()))
                 .and_then(|key| index.values.calls.get(key));
             let Some(call) = call else {
-                // Synthetic reachability edges have no authored ValueCall. A real
-                // invocation supplies arguments; do not add an unknown duplicate.
-                if has_concrete && synthetic_callback {
-                    continue;
-                }
                 values.push(FlowValue::Unknown);
                 continue;
             };
