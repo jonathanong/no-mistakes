@@ -59,7 +59,7 @@ struct ValueFlowResolution<'a, 'b> {
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
-    invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    invocation_read: Option<default_origins::InvocationRead>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
@@ -73,6 +73,8 @@ mod refine;
 mod returned;
 #[path = "value_flow/values.rs"]
 mod values;
+#[path = "value_flow/member_projection.rs"]
+mod member_projection;
 pub(super) use refine::refine_value_calls;
 
 

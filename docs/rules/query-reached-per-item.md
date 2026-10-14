@@ -30,7 +30,9 @@ identifier parameters, and destructured helper arguments or defaults. Replacing
 an imported method makes that method unresolved through those receivers; a
 method copied before replacement and an untouched method remain proven. Static
 nested receiver paths retain the same distinction, while dynamic member writes
-invalidate every matching path conservatively.
+invalidate every matching path conservatively. Destructuring acquires a method
+at the helper invocation, even when its receiver object was created earlier;
+copying the method into that earlier object preserves the original snapshot.
 
 ## Options and defaults
 
@@ -81,8 +83,10 @@ client arguments stay unresolved. A configured cursor runner is an effect sink
 per invocation; its internal batch size does not exempt an outer loop.
 
 `typedExecutors` selects calls through parameters whose explicit callable type
-resolves to the configured imported type export. `returnedMembers` selects an
-exact member call on the receiver returned by the configured imported factory
+resolves to the configured imported type export. Explicit named and local type
+barrels preserve namespace members such as `Namespace.Query`, including renamed
+imports; unrelated local types and different module names remain unselected.
+`returnedMembers` selects an exact member call on the receiver returned by the configured imported factory
 path. Both use binding provenance, so aliases and local variable names do not
 change the match and same-spelled unrelated local methods do not match. These
 selectors mark findings as transaction-client-only. They are also available to

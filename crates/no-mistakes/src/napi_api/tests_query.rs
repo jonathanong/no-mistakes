@@ -101,3 +101,15 @@ fn effects_json_retains_inline_invocation_context() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+#[test]
+fn effects_json_retains_cross_file_inline_receiver_timing() {
+    for (name, expected) in [("earlier", 1), ("sibling", 1), ("reexported", 1), ("defaults", 1), ("mutated-default", 0), ("later", 0), ("prior", 0), ("other-context", 0), ("conflicting", 0), ("unknown", 0), ("escaped", 0)] {
+        let options = json!({ "root": fixture_root("cross-file-inline-receiver"), "kind": "cache", "entry": format!("src/{name}.mts") }).to_string();
+        let output = effects_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+        let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}

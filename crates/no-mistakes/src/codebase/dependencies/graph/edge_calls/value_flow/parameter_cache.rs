@@ -7,7 +7,7 @@ pub(super) struct ParameterKey {
     pub(super) file: std::path::PathBuf,
     pub(super) scope: usize,
     pub(super) name: String,
-    pub(super) invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    pub(super) invocation_read: Option<default_origins::InvocationRead>,
     pub(super) initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
 }
 #[derive(Clone)]

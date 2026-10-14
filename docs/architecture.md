@@ -343,6 +343,11 @@ are not used: they register an organization-level runner, and this repository
 lives on a personal account. A CodSpeed report is not an implementation
 regression until both the base and the PR head ran on `ubuntu-24.04-arm`.
 
+The shared harness artifact uses compression level 1 to reduce the bytes
+transferred to every shard without paying the cost of stronger compression.
+Each shard allows ten minutes to download the artifact and twenty minutes for
+the whole job, including checkout, extraction, and a cold instrument install.
+
 Each shard's benchmark step allows six minutes so a cold install of CodSpeed's
 instruments (valgrind and `libc6-dbg`) can finish. The action's instrument
 cache key omits libc, so after a runner image updates libc6 an exact-key hit

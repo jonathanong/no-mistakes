@@ -40,15 +40,15 @@ impl ValueFlowResolution<'_, '_> {
         expression: &ValueExpression,
     ) -> (u32, Option<CallableId>) {
         if let (
-            Some((file, offset, _, owner)),
+            Some(read),
             ValueExpression::Named {
                 context: Some(read_context),
                 ..
             },
         ) = (&self.invocation_read, expression)
         {
-            if file == path && read_context == owner {
-                return (*offset, Some(*read_context));
+            if read.file == path && read.owner.0 == path && *read_context == read.owner.1 {
+                return (read.offset, Some(*read_context));
             }
         }
         match expression {

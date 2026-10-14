@@ -58,7 +58,9 @@ created by opaque factories retain their exported receiver identity.
 Synchronous inline arrows, function expressions, and returned helpers retain their enclosing
 invocation context when resolving supplied receiver arguments and defaults. A
 later receiver write in that same context does not invalidate an earlier direct
-helper call. Calls after a write and captured closures with uncertain execution
+helper call, including an immediately invoked returned helper imported directly
+or through a re-export. Supplier read timing and the helper's file-qualified
+callable ownership are tracked separately. Calls after a write and captured closures with uncertain execution
 order remain unresolved; synthetic reachability edges do not add a second
 unknown argument set to a proven invocation. Returned helpers require every
 known factory invocation to call its result immediately; a stored result or
@@ -85,8 +87,9 @@ names are inferred from a module name or a PostgreSQL convention.
 `typedExecutors` uses the same exact `{module, export, category?}` selector shape
 to select calls through a parameter whose explicit callable type comes from an
 imported type export. Named and namespace type imports, aliases, and explicit
-type re-exports preserve that type provenance. Local spelling and a matching
-terminal type name alone do not select a call. These calls carry the transaction
+type re-exports preserve that type provenance. Namespace member suffixes (for example,
+`Namespace.Query`) survive explicit named and local type barrels, including aliases.
+Local spelling and a matching terminal type name alone do not select a call. These calls carry the transaction
 marker in `query-reached-per-item` findings.
 
 `returnedMembers` selects a member call on a receiver returned by a configured

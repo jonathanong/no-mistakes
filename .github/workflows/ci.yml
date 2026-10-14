@@ -735,7 +735,8 @@ jobs:
         with:
           name: codspeed-analysis
           path: codspeed-analysis.tar
-          compression-level: 0
+          # Low-cost compression reduces the harness transferred to every shard.
+          compression-level: 1
           retention-days: 1
 
   benchmark-shards:
@@ -746,9 +747,9 @@ jobs:
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
     # Must match bench so the downloaded harness matches this machine's arch.
     runs-on: ubuntu-24.04-arm
-    # Six minutes below covers a cold valgrind install. Leave room for checkout
-    # and the harness download around that step.
-    timeout-minutes: 12
+    # Allow the ten-minute harness transfer plus a six-minute cold instrument
+    # install, with room for checkout and extraction.
+    timeout-minutes: 20
     permissions:
       contents: read
       id-token: write
@@ -859,7 +860,7 @@ jobs:
 
       - name: Download benchmark executables
         if: ${{ env.BENCHMARK_SELECTED == 'true' }}
-        timeout-minutes: 5
+        timeout-minutes: 10
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: codspeed-analysis
