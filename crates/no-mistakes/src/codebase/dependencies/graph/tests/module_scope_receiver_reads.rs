@@ -23,6 +23,9 @@ fn module_scope_lazy_receiver_reads_follow_write_order_and_preserve_snapshots() 
     for (file, callee, occurrence, expected) in [
         ("lazy-read", "options.client.get", 0, Some("primary.get")),
         ("lazy-read", "options.client.get", 1, None),
+        ("lazy-read", "<unknown>.client.get", 0, Some("primary.get")),
+        ("lazy-read", "literalCopy", 0, Some("primary.get")),
+        ("lazy-read", "<unknown>.client.get", 1, None),
         ("direct-alias", "alias.get", 0, None),
         ("snapshot-and-unrelated", "copied", 0, Some("primary.get")),
         (

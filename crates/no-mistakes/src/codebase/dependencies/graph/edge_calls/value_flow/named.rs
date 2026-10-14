@@ -146,7 +146,7 @@ impl ValueFlowResolution<'_, '_> {
             value
         };
         member.map_or(value.clone(), |member| {
-            self.member_at(value, member, path, offset, context)
+            self.member_at(value, member, path, Some((offset, context)))
         })
     }
     fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {

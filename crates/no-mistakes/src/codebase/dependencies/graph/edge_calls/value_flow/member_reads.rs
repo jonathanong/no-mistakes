@@ -6,10 +6,10 @@ impl ValueFlowResolution<'_, '_> {
         base: FlowValue,
         member: &str,
         file: &std::path::Path,
-        offset: u32,
-        context: Option<CallableId>,
+        location: Option<(u32, Option<CallableId>)>,
     ) -> FlowValue {
-        let enabled = self.indexes.file(self.facts, file).is_some_and(|index| {
+        let context = location.and_then(|(_, context)| context);
+        let enabled = location.is_some() && self.indexes.file(self.facts, file).is_some_and(|index| {
             index.values.receiver_mutations.as_ref().is_some_and(|receivers| {
                 context.map_or(receivers.module_writer, |context| {
                     receivers.writer_contexts.contains(&context)
@@ -18,6 +18,7 @@ impl ValueFlowResolution<'_, '_> {
         });
         let previous = self.member_read.take();
         if enabled {
+            let (offset, context) = location.expect("enabled reads have a source location");
             self.member_read = Some((file.to_path_buf(), offset, context));
             if self
                 .default_origins
@@ -32,15 +33,17 @@ impl ValueFlowResolution<'_, '_> {
         value
     }
 
-    pub(super) fn member_read_location(expression: &ValueExpression) -> (u32, Option<CallableId>) {
+    pub(super) fn member_read_location(
+        expression: &ValueExpression,
+    ) -> Option<(u32, Option<CallableId>)> {
         match expression {
             ValueExpression::Named {
                 offset, context, ..
-            } => (*offset, *context),
+            } => Some((*offset, *context)),
             ValueExpression::Member(base, _) | ValueExpression::Awaited(base) => {
                 Self::member_read_location(base)
             }
-            _ => (0, None),
+            _ => None,
         }
     }
 }
