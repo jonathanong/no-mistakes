@@ -4,6 +4,23 @@ use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn static_namespace_read(
+        &self,
+        object: &Expr,
+        path: &Path,
+        env: super::Environment,
+    ) -> bool {
+        let Expr::Name(local) = object else {
+            return false;
+        };
+        let file = &self.files[path];
+        !self.scopes[env].contains_key(local)
+            && self.mapped_parameter_value(env, local).is_none()
+            && file.module.imports.get(local).is_some_and(|index| {
+                file.module.ts.imported_bindings[*index].kind == ImportedBindingKind::Namespace
+            })
+    }
+
     pub(super) fn namespace_member(
         &mut self,
         object: &Expr,

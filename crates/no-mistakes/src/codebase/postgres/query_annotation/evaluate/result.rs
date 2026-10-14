@@ -27,11 +27,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: &Environment,
         context: (u8, bool),
     ) -> Value {
-        let (depth, generic) = context;
         let mut result = Value::Unknown;
         let mut handled = true;
         for part in parts {
-            let value = self.expr(part, path, env, depth, generic);
+            let value = self.operand(part, path, env, context);
             handled &= self.handled_deletion_effect(part, &value, path, *env);
             result = value.exposed();
         }

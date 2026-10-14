@@ -154,6 +154,8 @@ Opaque operand effects remain authoritative across indexed writes and binary or
 returned failures; discarding a failed value cannot restore an earlier SQL proof.
 An append observes supported mutations to its captured builder receiver while
 evaluating the tail, preserving the receiver's identity rather than an old prefix.
+Operand effects apply from left to right before later nested executor calls.
+An earlier read retains its result when an opaque effect occurs afterward.
 
 `incompleteReason` is additive evaluator metadata: `null` for complete statements
 or proven generated value binds, otherwise a blocker such as `variant-limit`,

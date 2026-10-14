@@ -59,6 +59,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         Value::Unknown
     }
 
+    pub(super) fn operand(
+        &mut self,
+        expr: &Expr,
+        path: &Path,
+        env: &Environment,
+        context: (u8, bool),
+    ) -> Value {
+        let value = self.expr(expr, path, env, context.0, context.1);
+        if self.files[path].facts.precise_records && self.effect_can_mutate(expr, path, *env) {
+            // Completed operand effects precede the next operand's executor events.
+            self.preserve_operand_effect(expr, &value, path, *env);
+        }
+        value
+    }
+
     pub(super) fn preserve_operand_effect(
         &mut self,
         expr: &Expr,
@@ -116,6 +131,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 matches!(value, Value::Evaluated(_, true))
             }
             Expr::Await(inner) => self.handled_deletion_effect(inner, value, path, env),
+            Expr::Member(object, _) if self.static_namespace_read(object, path, env) => true,
             Expr::Delete(_, _) => matches!(value, Value::SlotDeletion),
             Expr::Children(parts)
             | Expr::Array(parts)

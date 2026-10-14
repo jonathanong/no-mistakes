@@ -20,7 +20,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let parts = vec![left.clone(), right.clone()];
             return self.container(&Expr::Children(parts.clone()), &parts, path, env, context);
         }
-        let left_value = self.expr(left, path, env, depth, generic);
+        let left_value = self.operand(left, path, env, context);
         let right_value = self.expr(right, path, env, depth, generic);
         let left_handled = self.preserve_operand_effect(left, &left_value, path, *env);
         let right_handled = self.preserve_operand_effect(right, &right_value, path, *env);

@@ -39,9 +39,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: &Environment,
         context: (u8, bool),
     ) -> Value {
-        let (depth, generic) = context;
-        let mut base_value = self.expr(base, path, env, depth, generic);
-        let tail_value = self.expr(tail, path, env, depth, generic);
+        let depth = context.0;
+        let mut base_value = self.operand(base, path, env, context);
+        let tail_value = self.operand(tail, path, env, context);
         if self.files[path].facts.precise_records {
             self.refresh_arguments(std::slice::from_mut(&mut base_value));
         }
@@ -80,10 +80,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: &Environment,
         context: (u8, bool),
     ) -> Value {
-        let (depth, generic) = context;
         let mut values: super::value::Values = children
             .iter()
-            .map(|child| self.expr(child, path, env, depth, generic))
+            .map(|child| self.operand(child, path, env, context))
             .collect::<Vec<_>>()
             .into();
         if self.files[path].facts.precise_records {

@@ -23,11 +23,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
+        let trusted_tag = self.tag_trusted(tag, path, *env);
         let values = effects
             .iter()
-            .map(|effect| self.expr(effect, path, env, depth, generic))
+            .enumerate()
+            .map(|(index, effect)| {
+                if index == 0 && trusted_tag {
+                    self.expr(effect, path, env, depth, generic)
+                } else {
+                    self.operand(effect, path, env, context)
+                }
+            })
             .collect::<Vec<_>>();
-        let trusted_raw = tag == "String.raw" && self.tag_trusted(tag, path, *env);
+        let trusted_raw = tag == "String.raw" && trusted_tag;
         let interpolation_mutates = effects
             .iter()
             .skip(usize::from(trusted_raw))

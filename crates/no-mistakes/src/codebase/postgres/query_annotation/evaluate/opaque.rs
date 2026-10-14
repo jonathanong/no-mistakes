@@ -27,11 +27,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: &Environment,
         context: (u8, bool),
     ) -> Value {
-        let (depth, generic) = context;
+        let depth = context.0;
         // Read target effects and the RHS before clearing written bindings.
         let values = children
             .iter()
-            .map(|child| self.expr(child, path, env, depth, generic))
+            .map(|child| self.operand(child, path, env, context))
             .collect::<Vec<_>>();
         self.invalidate_opaque_builders(&values);
         self.opaque_callbacks(&values, depth);
