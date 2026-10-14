@@ -17,7 +17,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .iter()
             .map(|child| self.expr(child, path, env, depth, generic))
             .collect::<Vec<_>>();
-        self.invalidate_builders(&values);
+        self.invalidate_opaque_builders(&values);
         self.opaque_callbacks(&values, depth);
         // Unsupported binding writes must also clear unmodeled bindings such
         // as `arguments`, including canonical aliases captured by callbacks.

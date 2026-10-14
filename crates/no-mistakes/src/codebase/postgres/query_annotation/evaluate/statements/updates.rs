@@ -38,7 +38,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         Value::Unknown | Value::Unsupported | Value::Failure(_)
                     ))
             {
-                self.invalidate_builders(&live_before);
+                self.invalidate_opaque_builders(&live_before);
             }
         }
     }

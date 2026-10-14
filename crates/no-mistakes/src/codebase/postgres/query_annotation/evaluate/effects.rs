@@ -4,9 +4,14 @@ use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_live_builders(&mut self) {
-        self.untrusted_array_intrinsics = true;
         let values = self.live_builder_values();
-        self.invalidate_builders(&values);
+        self.invalidate_opaque_builders(&values);
+    }
+
+    pub(super) fn invalidate_opaque_builders(&mut self, values: &[Value]) {
+        // Opaque hooks can patch intrinsics even when no builder exists yet.
+        self.untrusted_array_intrinsics = true;
+        self.invalidate_builders(values);
     }
 
     pub(super) fn live_builder_values(&self) -> Vec<Value> {

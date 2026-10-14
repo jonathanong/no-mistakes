@@ -25,7 +25,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let id = match receiver {
             Value::Arguments(id) | Value::Array(id) => id,
             receiver => {
-                self.invalidate_builders(&[receiver.clone(), stored.clone()]);
+                self.invalidate_opaque_builders(&[receiver.clone(), stored.clone()]);
                 self.opaque_callbacks(&[receiver, stored.clone()], depth);
                 return Value::Evaluated(Box::new(stored), false);
             }

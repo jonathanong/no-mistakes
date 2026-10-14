@@ -42,7 +42,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .iter()
                 .flat_map(|scope| scope.values().cloned())
                 .collect::<Vec<_>>();
-            self.invalidate_builders(&builders);
+            self.invalidate_opaque_builders(&builders);
             return Value::Failure("opaque-tag-interpolation-effect");
         }
         let mut prefix = Value::Prefix(String::new(), true, None);
@@ -60,6 +60,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             } else {
                 self.expr(part, path, env, depth, generic)
             };
+            if trusted_raw
+                && self.files[path].facts.precise_records
+                && !super::collections::string_element(&value)
+                && !matches!(value, Value::Primitive)
+            {
+                self.invalidate_opaque_builders(&values);
+                return Value::Failure("opaque-tag-interpolation-effect");
+            }
             prefix = concat(prefix, value);
         }
         let trusted = self.tag_trusted(tag, path, *env);
@@ -69,7 +77,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
         });
         if !trusted && !legacy {
-            self.invalidate_builders(&values);
+            self.invalidate_opaque_builders(&values);
             self.opaque_callbacks(&values, depth);
         }
         if trusted || legacy {

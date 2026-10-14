@@ -173,3 +173,31 @@ fn opaque_effects_before_allocation_taint_future_intrinsics() {
         Some("untrusted-array-intrinsics")
     );
 }
+
+#[test]
+fn bound_accessors_before_allocation_taint_future_intrinsics() {
+    let rows = extract(&["control-flow-array-intrinsics-bound-accessor.ts"]);
+    assert_eq!(rows.len(), 10, "{rows:?}");
+    assert_eq!(
+        rows.iter().filter(|row| row.complete).count(),
+        2,
+        "{rows:?}"
+    );
+    for row in rows {
+        if row.complete {
+            assert!(
+                matches!(
+                    row.annotation.as_deref(),
+                    Some("intrinsics/known-delete" | "intrinsics/known-delete-key")
+                ),
+                "{row:?}"
+            );
+        } else {
+            assert!(!row.only_value_placeholders, "{row:?}");
+            assert_eq!(
+                row.incomplete_reason.as_deref(),
+                Some("untrusted-array-intrinsics")
+            );
+        }
+    }
+}

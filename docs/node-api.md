@@ -141,7 +141,8 @@ this conservative guard cannot prove that an exposed prototype stays pristine.
 Any static or literal computed member named `Array` counts as exposure, including
 local namespaces, so aliases of standard global objects cannot bypass the guard.
 Opaque effects also make later intrinsic projections incomplete, including
-unmodeled call/accessor effects. This uncertainty stays within each execution;
+unmodeled calls, accessors, constructors, tags, setters, and deletion/coercion
+hooks. This uncertainty stays within each execution;
 independent entrypoints and immutable strings computed before the effect retain
 their existing results.
 

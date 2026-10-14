@@ -41,11 +41,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
             self.invalidate_builders(&values[1..]);
+            if matches!(key, DeleteKey::Dynamic)
+                && values.iter().skip(1).any(|value| {
+                    !super::collections::string_element(value) && !matches!(value, Value::Primitive)
+                })
+            {
+                // ToPropertyKey may execute an opaque conversion hook.
+                self.invalidate_opaque_builders(&values[1..]);
+            }
             self.opaque_callbacks(&values[1..], depth);
             // The complete receiver/key effects are handled precisely here.
             return Value::SlotDeletion;
         } else {
-            self.invalidate_builders(&values);
+            self.invalidate_opaque_builders(&values);
             self.opaque_callbacks(&values, depth);
         }
         Value::Unknown
