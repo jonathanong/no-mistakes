@@ -10,7 +10,9 @@ impl ValueFlowResolution<'_, '_> {
         context: Option<CallableId>,
         projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
-        let (offset, context) = self.invocation_read.as_ref()
+        let (offset, context) = self
+            .invocation_read
+            .as_ref()
             .filter(|read| read.file == path)
             .map_or((offset, context), |read| (read.offset, read.context));
         let Some(file) = self.indexes.file(self.facts, path) else {
@@ -23,6 +25,9 @@ impl ValueFlowResolution<'_, '_> {
             return FlowValue::Unknown;
         };
         let key = (path.to_path_buf(), scope, base.to_string());
+        let binding = scoped_name(&file.values.bindings, scope, base);
+        let alias_hint = member_projection::MemberProjection::binding_hint(projection, binding);
+        let projection = alias_hint.as_ref().or(projection);
         if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
             self.used_parameters
                 .insert((path.to_path_buf(), parameter.owner));
@@ -30,7 +35,7 @@ impl ValueFlowResolution<'_, '_> {
         if !self.visiting.insert(key.clone()) {
             return FlowValue::Unknown;
         }
-        let value = if let Some(binding) = scoped_name(&file.values.bindings, scope, base) {
+        let value = if let Some(binding) = binding {
             if binding
                 .mutation_contexts
                 .iter()
@@ -41,6 +46,8 @@ impl ValueFlowResolution<'_, '_> {
                     .is_some_and(|cutoff| offset >= cutoff)
             {
                 FlowValue::Unknown
+            } else if alias_hint.as_ref().is_some_and(|hint| hint.transparent_alias) {
+                self.value_projected(path, &binding.value, projection)
             } else {
                 self.value(path, &binding.value)
             }
@@ -130,11 +137,21 @@ impl ValueFlowResolution<'_, '_> {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
         if let Some(read) = &self.invocation_read {
-            if let Some(history) = file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base)) {
-                let origin = self.cache.origin_node(OriginKind::InvocationReceiver {
-                    read: read.clone(), history_file: path.to_path_buf(),
-                    history: std::sync::Arc::clone(history),
-                }, 1);
+            if let Some(history) = file
+                .values
+                .receiver_mutations
+                .as_ref()
+                .and_then(|histories| histories.get(&scope))
+                .and_then(|names| names.get(base))
+            {
+                let origin = self.cache.origin_node(
+                    OriginKind::InvocationReceiver {
+                        read: read.clone(),
+                        history_file: path.to_path_buf(),
+                        history: std::sync::Arc::clone(history),
+                    },
+                    1,
+                );
                 default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
             }
         }

@@ -35,9 +35,9 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
         ("static-computed", "client.get", Some("primary.get")),
         ("default-object", "options.client.get", Some("primary.get")),
         ("default-object-matching", "options.client.get", None),
-        // Transparent aliases retain their pre-existing conservative result.
-        ("alias-named", "alias.get", None),
-        ("alias-inline", "alias.get", None),
+        // Whole receiver aliases now retain the eventual member projection.
+        ("alias-named", "alias.get", Some("primary.get")),
+        ("alias-inline", "alias.get", Some("primary.get")),
         ("snapshot-named", "get", Some("primary.get")),
         ("captured", "client.get", None),
         ("async", "client.get", None),

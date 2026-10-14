@@ -3,8 +3,30 @@
 pub(super) struct MemberProjection<'a> {
     pub(super) member: &'a str,
     pub(super) outer: Option<&'a MemberProjection<'a>>,
+    pub(super) transparent_alias: bool,
 }
 impl MemberProjection<'_> {
+    pub(super) fn binding_hint(
+        hint: Option<&Self>,
+        binding: Option<&super::ValueBinding>,
+    ) -> Option<Self> {
+        let hint = hint?;
+        let binding = binding?;
+        // Reset at copied/nontransparent initializers, even through an outer
+        // identifier alias. Parameter computation receives no hint.
+        Some(Self {
+            member: hint.member,
+            outer: hint.outer,
+            transparent_alias: matches!(&binding.value, super::ValueExpression::Named { name, .. } if !name.contains('.')),
+        })
+    }
+    pub(super) fn source_alias_seed(hint: Option<&Self>, invocation: bool, length: usize) -> usize {
+        if !invocation && hint.is_some_and(|hint| hint.transparent_alias) {
+            length
+        } else {
+            0
+        }
+    }
     pub(super) fn members(&self) -> Vec<&str> {
         let mut members = Vec::new();
         let mut hint = Some(self);

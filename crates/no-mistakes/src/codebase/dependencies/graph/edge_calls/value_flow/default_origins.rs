@@ -101,10 +101,12 @@ impl ValueFlowResolution<'_, '_> {
                 offset,
                 context,
                 false,
-                projection.filter(|_| {
-                    self.default_origins
-                        .as_ref()
-                        .is_some_and(|origins| origins.has_invocation_receivers)
+                projection.filter(|hint| {
+                    hint.transparent_alias
+                        || self
+                            .default_origins
+                            .as_ref()
+                            .is_some_and(|origins| origins.has_invocation_receivers)
                 }),
             )
     }
