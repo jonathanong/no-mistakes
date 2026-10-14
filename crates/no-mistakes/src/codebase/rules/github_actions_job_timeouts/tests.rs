@@ -236,3 +236,82 @@ fn timeout_minutes_accepts_strings_and_rejects_other_values() {
     let allow = AllowEntry::default();
     assert_eq!(allow.clone().job, allow.job);
 }
+
+#[test]
+fn step_sum_bound_is_opt_in() {
+    assert!(run(&fixture("step-sum"), "{}").is_empty());
+    assert!(run(&fixture("step-sum"), "rejectJobAtOrAboveStepSum: false").is_empty());
+}
+
+#[test]
+fn step_sum_rejects_equal_and_larger_job_deadlines_only_with_complete_bounds() {
+    let findings = run(&fixture("step-sum"), "rejectJobAtOrAboveStepSum: true");
+    let mut targets: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.target.as_deref().unwrap())
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(
+        targets,
+        ["above", "conditional-matrix-composite", "equal"],
+        "{findings:?}"
+    );
+    for finding in findings {
+        let timeout = if finding.target.as_deref() == Some("above") {
+            11
+        } else {
+            10
+        };
+        assert!(finding
+            .message
+            .contains(&format!("timeout-minutes is {timeout},")));
+        assert!(
+            finding.message.contains("step timeout sum of 10"),
+            "{finding:?}"
+        );
+        assert!(finding.message.contains("largest step timeout: 6"));
+        assert!(finding.message.contains("choose a job timeout below"));
+        assert!(finding.message.contains("tighter total runtime bound"));
+    }
+}
+
+#[test]
+fn allow_entries_do_not_bypass_step_sum_bound() {
+    for entry in ["", "    maxMinutes: 30\n"] {
+        let findings = run(&fixture("step-sum"), &format!(
+            "rejectJobAtOrAboveStepSum: true\nmaxMinutes: 10\nallow:\n  - job: '.github/workflows/ci.yml#above'\n{entry}"
+        ));
+        let above: Vec<_> = findings
+            .iter()
+            .filter(|finding| finding.target.as_deref() == Some("above"))
+            .collect();
+        assert_eq!(above.len(), 1, "{findings:?}");
+        assert!(above[0].message.contains("step timeout sum of 10"));
+    }
+}
+
+#[test]
+fn step_sum_respects_file_and_line_suppressions() {
+    for name in ["step-sum-disabled", "step-sum-suppressed"] {
+        assert!(
+            run(&fixture(name), "rejectJobAtOrAboveStepSum: true").is_empty(),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn step_sum_option_composes_with_step_exceeding_job_check() {
+    let options = "rejectJobAtOrAboveStepSum: true\nrejectStepExceedingJob: true";
+    let findings = run(&fixture("step-sum"), options);
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.message.contains("step timeout sum"))
+            .count(),
+        3
+    );
+    let findings = run(&fixture("step-exceeds"), options);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("exceeding its job timeout"));
+}

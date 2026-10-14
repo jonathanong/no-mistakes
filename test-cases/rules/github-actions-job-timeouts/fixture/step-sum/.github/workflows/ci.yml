@@ -1,0 +1,112 @@
+name: Step sums
+jobs:
+  equal:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  above:
+    timeout-minutes: 11
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  below:
+    timeout-minutes: 9
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  conditional-matrix-composite:
+    timeout-minutes: "10"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      # Conditions and matrix variants do not alter the literal sequential bound.
+      - if: ${{ false }}
+        uses: ./local-composite
+        timeout-minutes: "4"
+      - if: ${{ always() }}
+        run: echo second
+        timeout-minutes: "6"
+  overflow:
+    timeout-minutes: 18446744073709551615
+    steps:
+      # The mathematical sum exceeds u64 and must not wrap into a finding.
+      - run: echo first
+        timeout-minutes: 18446744073709551615
+      - run: echo second
+        timeout-minutes: 18446744073709551615
+  no-steps:
+    timeout-minutes: 20
+  empty-steps:
+    timeout-minutes: 20
+    steps: []
+  single-step:
+    timeout-minutes: 20
+    steps:
+      - run: echo only
+        timeout-minutes: 1
+  malformed-steps:
+    timeout-minutes: 20
+    steps: invalid
+  malformed-step:
+    timeout-minutes: 20
+    steps:
+      - invalid
+      - run: echo valid
+        timeout-minutes: 1
+  missing-step-timeout:
+    timeout-minutes: 20
+    steps:
+      - run: echo missing
+      - run: echo valid
+        timeout-minutes: 1
+  expression-step-timeout:
+    timeout-minutes: 20
+    steps:
+      - run: echo dynamic
+        timeout-minutes: ${{ inputs.timeout }}
+      - run: echo valid
+        timeout-minutes: 1
+  string-step-timeout:
+    timeout-minutes: 20
+    steps:
+      - run: echo invalid
+        timeout-minutes: nope
+      - run: echo valid
+        timeout-minutes: 1
+  boolean-step-timeout:
+    timeout-minutes: 20
+    steps:
+      - run: echo invalid
+        timeout-minutes: true
+      - run: echo valid
+        timeout-minutes: 1
+  negative-step-timeout:
+    timeout-minutes: 20
+    steps:
+      - run: echo invalid
+        timeout-minutes: -1
+      - run: echo valid
+        timeout-minutes: 1
+  float-step-timeout:
+    timeout-minutes: 20
+    steps:
+      - run: echo invalid
+        timeout-minutes: 1.5
+      - run: echo valid
+        timeout-minutes: 1
+  reusable:
+    uses: ./workflow.yml
+    timeout-minutes: 20
+    steps:
+      - run: echo ignored
+        timeout-minutes: 1
+      - run: echo ignored
+        timeout-minutes: 1

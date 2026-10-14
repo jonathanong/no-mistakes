@@ -2,24 +2,95 @@
 
 ## Why and when
 
-Use this rule when every executable job needs a bounded failure time instead of
-GitHub's long default ceiling.
+Use this rule to keep GitHub Actions jobs from running up to GitHub's default
+six-hour limit and to ensure the job deadline leaves room for its steps.
 
 ## What it requires
 
-It requires a literal job `timeout-minutes`, optionally caps it, and can reject
-a literal step timeout that exceeds its containing job timeout.
+Each executable job must set a supported literal `timeout-minutes`. Jobs that
+call reusable workflows with `uses:` are skipped because GitHub rejects a
+caller-side job timeout. Expressions such as `fromJSON(vars…)` do not satisfy
+the literal requirement. An `allow` entry can raise a cap for a job with a
+supported literal timeout, but cannot exempt a job from requiring one.
+
+With `rejectStepExceedingJob`, the rule also reports a step whose literal
+timeout exceeds its job timeout. With `rejectJobAtOrAboveStepSum`, it reports a
+job timeout greater than or equal to the sum of step timeouts, when there are
+at least two steps and every step has a supported literal upper bound accepted
+by the rule's existing `timeout-minutes` parser. Missing, invalid, or malformed
+step timeouts make the sum unprovable, so the sum check skips that job. It also
+skips jobs with zero or one step and reusable-workflow calls. Conditional and
+matrix steps count; composite action internals are not expanded, so only the
+caller's timeout is considered.
+
+This sum check keeps the job-level fail-fast deadline below the full
+end-to-end budget implied by its steps. The job timeout must be at least the
+longest step timeout and strictly less than the sum of all step timeouts.
+Neither `maxMinutes` nor `allow` entries bypass the sum check.
 
 ## Options
 
 `include` defaults to workflow `.yml` and `.yaml` files. `maxMinutes` is an
-optional cap, `rejectStepExceedingJob` defaults to `false`, and `allow` entries
-contain a `path#jobId` plus optional higher `maxMinutes`.
+optional cap. `rejectStepExceedingJob` and `rejectJobAtOrAboveStepSum` both
+default to `false`. Each `allow` entry names a `path#jobId` and may set a higher
+`maxMinutes` cap.
+
+```yaml
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: [".github/workflows/**/*.yml"]
+      maxMinutes: 10
+      rejectStepExceedingJob: true
+      rejectJobAtOrAboveStepSum: true
+      allow:
+        - job: ".github/workflows/ci.yml#coverage"
+          maxMinutes: 20
+```
+
+`timeout-minutes` must be a number or numeric string. Invalid YAML is a
+diagnostic, and unused `allow` entries for jobs in scanned files are findings.
 
 ## Valid example
 
-The fixed `test` job below is valid because its literal timeout is within the
-configured cap.
+With a cap of 10, these two step bounds sum to 13. The job timeout of 10 is at
+least the longest step timeout (8) and below the sum, so it satisfies the
+configured checks and cap.
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - run: echo again
+        timeout-minutes: 5
+      - run: echo last
+        timeout-minutes: 8
+```
+
+## Counterexample and fix
+
+This job fails the sum check because its job timeout equals the two step bounds
+combined (5 + 8 = 13).
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 13
+    steps:
+      - run: echo again
+        timeout-minutes: 5
+      - run: echo last
+        timeout-minutes: 8
+```
+
+Set a literal job timeout that is at least the longest step and strictly below
+the sum. Under the example cap of 10, valid values are 8 through 10. Use an
+`allow` entry with a higher cap only when the job legitimately needs to exceed
+that cap; it does not change the sum requirement.
 
 ## Related rules
 
@@ -30,57 +101,6 @@ covers nested action limits.
 
 ## Suppression
 
-Use a line directive for one job or a file directive for an exceptional
-workflow. Prefer a reasoned `allow` entry for a known job that legitimately
-needs a higher cap.
-
-Requires each GitHub Actions job to set a literal `timeout-minutes` so the
-job cannot sit on the default 6-hour ceiling. Optional `maxMinutes` caps that
-literal. Jobs that call a reusable workflow with `uses:` are skipped because
-GitHub rejects caller-side `timeout-minutes`.
-
-```yaml
-rules:
-  - rule: github-actions-job-timeouts
-    scope: repository
-    options:
-      include: [".github/workflows/**/*.yml"]
-      maxMinutes: 10
-      rejectStepExceedingJob: true
-      allow:
-        - job: ".github/workflows/ci.yml#coverage"
-          maxMinutes: 20
-```
-
-`include` defaults to `.github/workflows/**/*.yml` and `*.yaml`.
-`timeout-minutes` must be a number or numeric string. Expression forms such as
-`fromJSON(vars…)` are not resolved; put those jobs in `allow`.
-`rejectStepExceedingJob` also flags a step whose literal timeout exceeds its
-job timeout. Invalid YAML is a diagnostic. Unused `allow` entries for jobs in
-the scanned file are findings.
-
-Counterexample: a job has no timeout, or sets `timeout-minutes: 30` when
-`maxMinutes` is 10.
-
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-slim
-    steps:
-      - run: echo hi
-```
-
-Fix: set a literal timeout at or below the cap, or add `path#jobId` to
-`allow` with a higher `maxMinutes`.
-
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-slim
-    timeout-minutes: 10
-    steps:
-      - run: echo hi
-```
-
-Use `no-mistakes-disable-next-line github-actions-job-timeouts` or
-`no-mistakes-disable-file` for a one-off workflow exception.
+Use `no-mistakes-disable-next-line github-actions-job-timeouts` for a one-job
+exception or `no-mistakes-disable-file` for an exceptional workflow. Prefer a
+reasoned `allow` entry when only a known job needs a higher cap.

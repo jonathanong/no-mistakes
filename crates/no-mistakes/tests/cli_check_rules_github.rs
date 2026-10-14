@@ -217,3 +217,29 @@ fn github_actions_test_timeout_literals_cli_fails_for_yaml_fragments() {
         "{body}"
     );
 }
+
+#[test]
+fn github_actions_job_step_sum_cli_reads_opt_in_from_config() {
+    let root = fixture("github-actions-job-timeouts", "step-sum");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .arg("--json")
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output.status.code(), Some(1), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{report}");
+    let mut targets: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["rule"], "github-actions-job-timeouts");
+            finding["target"].as_str().unwrap()
+        })
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(targets, ["above", "conditional-matrix-composite", "equal"]);
+}

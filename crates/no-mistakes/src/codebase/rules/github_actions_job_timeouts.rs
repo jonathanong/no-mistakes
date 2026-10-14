@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod scan;
+mod step_sum;
 mod yaml;
 
 pub const RULE_ID: &str = "github-actions-job-timeouts";
@@ -19,6 +20,7 @@ pub(crate) struct Options {
     pub(crate) include: Vec<String>,
     pub(crate) max_minutes: Option<u64>,
     pub(crate) reject_step_exceeding_job: bool,
+    pub(crate) reject_job_at_or_above_step_sum: bool,
     pub(crate) allow: Vec<AllowEntry>,
 }
 
@@ -33,6 +35,7 @@ struct CompiledOptions {
     include: Vec<String>,
     max_minutes: Option<u64>,
     reject_step_exceeding_job: bool,
+    reject_job_at_or_above_step_sum: bool,
     allow: BTreeMap<String, Option<u64>>,
 }
 
@@ -65,6 +68,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
         include,
         max_minutes: opts.max_minutes,
         reject_step_exceeding_job: opts.reject_step_exceeding_job,
+        reject_job_at_or_above_step_sum: opts.reject_job_at_or_above_step_sum,
         allow: opts
             .allow
             .into_iter()

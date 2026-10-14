@@ -100,6 +100,9 @@ fn check_job(
     if opts.reject_step_exceeding_job {
         findings.extend(step_findings(rel, source, job_id, job, minutes));
     }
+    if opts.reject_job_at_or_above_step_sum {
+        findings.extend(super::step_sum::finding(rel, line, job_id, job, minutes));
+    }
     findings
 }
 

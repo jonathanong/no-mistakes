@@ -1,0 +1,10 @@
+# no-mistakes-disable-file github-actions-job-timeouts
+name: Step sums
+jobs:
+  equal:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
