@@ -64,12 +64,30 @@ pub(super) fn collect(value: &Expression<'_>, source: &str) -> Expr {
         {
             assignment_reads(assignment, source)
         }
+        Expression::AssignmentExpression(assignment) => {
+            compound_reads(assignment, source).unwrap_or_else(|| children::collect(value, source))
+        }
         _ => children::collect(value, source),
     };
     Expr::OpaqueWrite {
         children,
         targets: targets.0,
     }
+}
+
+fn compound_reads(assignment: &AssignmentExpression<'_>, source: &str) -> Option<Vec<Expr>> {
+    let read = match &assignment.left {
+        AssignmentTarget::StaticMemberExpression(member) => Expr::Member(
+            Box::new(super::expression(&member.object, source)),
+            member.property.name.to_string(),
+        ),
+        AssignmentTarget::ComputedMemberExpression(member) => Expr::ComputedMember(
+            Box::new(super::expression(&member.object, source)),
+            Box::new(super::expression(&member.expression, source)),
+        ),
+        _ => return None,
+    };
+    Some(vec![read, super::expression(&assignment.right, source)])
 }
 
 fn assignment_reads(assignment: &AssignmentExpression<'_>, source: &str) -> Vec<Expr> {

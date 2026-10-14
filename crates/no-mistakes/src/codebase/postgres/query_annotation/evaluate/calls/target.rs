@@ -20,6 +20,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     Expr::Member(_, name) => self.member(receiver.clone(), name, path),
                     _ => unreachable!(),
                 };
+                let collection = matches!(callee, Expr::Member(_, name)
+                    if matches!(name.as_str(), "map" | "join" | "push" | "forEach"));
+                let fetched = matches!(target, Value::Function(_, _, _))
+                    || (collection && matches!(receiver, Value::Array(_)))
+                    || self.handled_deletion_effect(callee, &target, path, *env);
+                // Preserve collection-specific failure reasons after guarding the fetch.
+                if collection && (!fetched || self.untrusted_array_intrinsics) {
+                    self.invalidate_live_builders();
+                }
+                let handled = handled && (collection || fetched);
                 (target.exposed(), Some(receiver), handled)
             }
             other => {

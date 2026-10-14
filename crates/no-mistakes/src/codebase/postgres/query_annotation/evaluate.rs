@@ -148,7 +148,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     }
                 }
                 Expr::ComputedMember(object, key) => {
-                    let value = self.expr(object, path, env, depth, generic).exposed();
+                    let value = self.operand(object, path, env, (depth, generic)).exposed();
                     self.expr(key, path, env, depth, generic);
                     self.member(value, "", path)
                 }

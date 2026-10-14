@@ -10,6 +10,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         path: &Path,
         env: super::Environment,
     ) -> bool {
+        if let Expr::Sequence(parts) = object {
+            return parts
+                .last()
+                .is_some_and(|part| self.static_namespace_read(part, path, env));
+        }
         let Expr::Name(local) = object else {
             return false;
         };
