@@ -1,13 +1,10 @@
 use super::{Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashMap;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 mod entrypoints;
-mod reachability;
-
-use reachability::exported_reaches;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
@@ -130,6 +127,56 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.steps(&function.body, path, &mut env, 16, true);
             }
         }
+    }
+}
+
+fn exported_reaches(
+    globals: &BTreeMap<String, Expr>,
+    exported: &str,
+    target: &str,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    if exported == target {
+        return true;
+    }
+    if !visiting.insert(exported.to_string()) {
+        return false;
+    }
+    let reaches = globals
+        .get(exported)
+        .is_some_and(|value| value_reaches(globals, value, target, visiting));
+    visiting.remove(exported);
+    reaches
+}
+
+fn value_reaches(
+    globals: &BTreeMap<String, Expr>,
+    value: &Expr,
+    target: &str,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    match value {
+        Expr::Name(name) => exported_reaches(globals, name, target, visiting),
+        Expr::Spread(value)
+        | Expr::Member(value, _)
+        | Expr::Index(value, _)
+        | Expr::OpaqueCallback(value)
+        | Expr::Discard(value) => value_reaches(globals, value, target, visiting),
+        Expr::ComputedMember(value, key) | Expr::Append(value, key) =>
+            value_reaches(globals, value, target, visiting)
+                || value_reaches(globals, key, target, visiting),
+        Expr::Record(values, _)
+        | Expr::Object(values)
+        | Expr::Array(values)
+            | Expr::Container(values)
+        | Expr::Sequence(values)
+        | Expr::Alternatives(values) => values
+            .iter()
+            .any(|value| value_reaches(globals, value, target, visiting)),
+        Expr::Function(function) => function.body.iter().any(|step| {
+            matches!(step, super::super::Step::Return(value) if value_reaches(globals, value, target, visiting))
+        }),
+        _ => false,
     }
 }
 

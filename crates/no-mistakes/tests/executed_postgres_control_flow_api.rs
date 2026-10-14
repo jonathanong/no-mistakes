@@ -288,3 +288,33 @@ fn unsupported_helpers_with_appends_cannot_revive_safe_sql_prefixes() {
     assert!(rows[0].sql_text.is_none(), "{rows:?}");
     assert!(rows[0].incomplete_reason.is_some(), "{rows:?}");
 }
+
+#[test]
+fn unsupported_nested_branch_effects_cannot_certify_caller_builders() {
+    let rows = extract("control-flow-nested-unsupported.ts");
+    assert_eq!(rows.len(), 3, "{rows:?}");
+    for line in [23, 28] {
+        let row = rows.iter().find(|row| row.line == line).unwrap();
+        assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
+        assert!(row.sql_text.is_none(), "{row:?}");
+        assert!(row.incomplete_reason.is_some(), "{row:?}");
+    }
+    let row = rows
+        .iter()
+        .find(|row| row.annotation.as_deref() == Some("nested/unreachable"))
+        .unwrap();
+    assert!(row.complete, "{row:?}");
+}
+
+#[test]
+fn unreachable_var_declarations_still_shadow_captured_sql() {
+    let rows = extract("control-flow-hoisted-branches.ts");
+    assert_eq!(rows.len(), 2, "{rows:?}");
+    let shadowed = rows.iter().find(|row| row.line == 6).unwrap();
+    assert!(
+        !shadowed.complete && !shadowed.only_value_placeholders,
+        "{shadowed:?}"
+    );
+    let unchanged = rows.iter().find(|row| row.line == 11).unwrap();
+    assert!(unchanged.complete, "{unchanged:?}");
+}

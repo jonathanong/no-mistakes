@@ -32,6 +32,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Unsupported
         };
         if !supported {
+            if self.files[path].facts.precise_records {
+                // Unsupported nested flows can mutate builders owned by the caller,
+                // even when their local parameter copies are poisoned below.
+                self.invalidate_live_builders();
+            }
             for value in self.scopes[*env].values_mut() {
                 *value = unsupported.clone();
             }
@@ -46,7 +51,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.write_captured_binding_evaluated(*env, name, &value, depth);
             }
         }
-        let mut opaque_return = false;
+        let mut opaque_return = self.files[path].facts.precise_records && !supported;
         for (index, step) in steps.iter().enumerate() {
             match step {
                 Step::Branch(_, _, _) if !self.files[path].facts.precise_records => {}

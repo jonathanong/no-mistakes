@@ -44,13 +44,13 @@ fn divergent_shape_remains_unknown_after_later_single_slot_arms() {
         &mut joined,
         &FxHashMap::from_iter([(7, vec![Value::Primitive])]),
     );
-    assert_eq!(
-        joined[&7],
-        vec![Value::Failure("conditional-collection-shape")]
-    );
+    assert!(matches!(
+        joined[&7].as_slice(),
+        [Value::Failure("conditional-collection-shape")]
+    ));
 
     // Joining a previously failed arm into a fresh one must preserve its shape.
     let mut fresh = FxHashMap::from_iter([(7, vec![Value::Primitive])]);
     objects(&mut fresh, &joined);
-    assert_eq!(fresh[&7], joined[&7]);
+    assert!(fresh[&7] == joined[&7]);
 }
