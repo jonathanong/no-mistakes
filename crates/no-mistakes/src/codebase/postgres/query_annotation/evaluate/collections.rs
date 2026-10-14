@@ -15,6 +15,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return None;
         }
         let (depth, generic) = context;
+        if self.untrusted_array_intrinsics {
+            self.invalidate_live_builders();
+            self.opaque_callbacks(args, depth);
+            return Some(Value::Failure("untrusted-array-intrinsics"));
+        }
         let Some(Value::Array(id)) = receiver else {
             self.invalidate_live_builders();
             self.opaque_callbacks(args, depth);

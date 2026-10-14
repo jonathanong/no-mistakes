@@ -9,6 +9,7 @@ pub(super) fn collect(
 ) -> QueryAnnotationFileFacts {
     let mut facts = QueryAnnotationFileFacts {
         trusted_tags: super::trust::collect(program, options),
+        array_prototype_exposed: super::trust::array_prototype_exposed(program),
         legacy_tag_spans: super::trust::legacy_local_tags(program),
         roots: steps(&program.body, source),
         mapped_arguments: super::mapped_arguments::collect(program),

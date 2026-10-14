@@ -39,6 +39,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

@@ -40,6 +40,8 @@ pub(super) struct File<'a> {
 pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
+    // Immutable request-wide trust; branch snapshots cannot restore intrinsics.
+    pub untrusted_array_intrinsics: bool,
     pub events: ExecutionEvents,
     pub scopes: Vec<Scope>,
     pub modules: FxHashMap<PathBuf, Environment>,

@@ -1,4 +1,4 @@
-use super::evaluate::{Evaluator, File, Value};
+use super::evaluate::{File, Value};
 use super::modules::Module;
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::postgres::sql_requires_query_annotation;
@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod evaluator;
 mod output;
 use output::{prefix, projected_sql};
 
@@ -90,37 +91,16 @@ fn project_impl(
                 ))
             })
             .collect::<FxHashMap<_, _>>();
+        let untrusted_array_intrinsics = collected
+            .values()
+            .any(|file| file.facts.array_prototype_exposed);
         let observer = crate::diagnostics::current();
         let mut per_file = collected
             .par_iter()
             .map(|(path, _)| {
                 let events = crate::diagnostics::with_observer(observer.clone(), || {
-                    let mut evaluator = Evaluator {
-                        files: &collected,
-                        resolve: &resolve,
-                        events: BTreeMap::new(),
-                        scopes: Vec::new(),
-                        modules: crate::fx::fx_map(),
-                        active_module_initials: Default::default(),
-                        active_callback_functions: Default::default(),
-                        active_callback_executions: Default::default(),
-                        next_builder: 0,
-                        invalidated_builders: Default::default(),
-                        builder_updates: Default::default(),
-                        captured_bindings: Default::default(),
-                        captured_binding_readers: Default::default(),
-                        mapped_argument_owners: Default::default(),
-                        mapped_parameter_indices: Default::default(),
-                        deleted_argument_slots: Default::default(),
-                        mapped_arguments: Default::default(),
-                        fresh_mapped_parameters: Default::default(),
-                        fresh_mapped_argument_bindings: Default::default(),
-                        argument_objects: Default::default(),
-                        argument_extra_slots: Default::default(),
-                        definite_deleted_argument_slots: Default::default(),
-                        recreated_argument_slots: Default::default(),
-                        disconnected_argument_slots: Default::default(),
-                    };
+                    let mut evaluator =
+                        evaluator::new(&collected, &resolve, untrusted_array_intrinsics);
                     evaluator.run(path);
                     evaluator.events
                 });

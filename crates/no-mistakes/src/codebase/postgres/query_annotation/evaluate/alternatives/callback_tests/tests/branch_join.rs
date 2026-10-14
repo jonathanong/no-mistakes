@@ -39,6 +39,7 @@ fn callback_seen_in_one_arm_remains_available_after_join() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
