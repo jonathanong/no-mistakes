@@ -1,5 +1,5 @@
 use super::deadline::{self, Deadline, DeadlineGuard};
-use super::lock::{acquire_lock, lock_path};
+use super::lock::{acquire_lock, acquire_lock_from, lock_path};
 use super::{
     child, clock, set_timeout_phase, InvocationError, InvocationErrorKind, InvocationGuard,
     InvocationOptions,
@@ -105,20 +105,31 @@ fn acquire_lock_with_budget(
         )
         .into());
     }
-    let remaining = invocation_deadline
-        .map(|deadline| deadline.expires_at.saturating_duration_since(clock::now()));
-    let invocation_limited = remaining
-        .is_some_and(|remaining| options.lock_timeout.is_none_or(|lock| remaining <= lock));
-    let lock_timeout = match (remaining, options.lock_timeout) {
+    let acquisition_started = clock::now();
+    let remaining = invocation_deadline.map(|deadline| {
+        deadline
+            .expires_at
+            .saturating_duration_since(acquisition_started)
+    });
+    // Fail-fast contention overrides the explicit wait limit, not the shared budget.
+    let lock_limit = options.lock_timeout.filter(|_| !options.fail_on_lock);
+    let invocation_limited =
+        remaining.is_some_and(|remaining| lock_limit.is_none_or(|lock| remaining <= lock));
+    let lock_timeout = match (remaining, lock_limit) {
         (Some(remaining), Some(lock)) => Some(remaining.min(lock)),
         (Some(remaining), None) => Some(remaining),
         (None, lock) => lock,
     };
-    classify_lock_result(
-        acquire_lock(path, lock_timeout, options.fail_on_lock),
-        invocation_deadline,
-        invocation_limited,
-    )
+    let result = match invocation_deadline {
+        Some(_) => acquire_lock_from(
+            path,
+            lock_timeout,
+            options.fail_on_lock,
+            Some(acquisition_started),
+        ),
+        None => acquire_lock(path, lock_timeout, options.fail_on_lock),
+    };
+    classify_lock_result(result, invocation_deadline, invocation_limited)
 }
 
 pub(super) fn classify_lock_result(

@@ -1,6 +1,6 @@
 use super::{
-    acquire_lock, classify_try_lock, create_lock_directory, lock_file_path, lock_path,
-    TryLockOutcome,
+    acquire_lock, acquire_lock_from, classify_try_lock, create_lock_directory, lock_file_path,
+    lock_path, TryLockOutcome,
 };
 use crate::invocation::{InvocationError, InvocationErrorKind};
 use std::fs::TryLockError;
@@ -94,4 +94,27 @@ fn classify_try_lock_accepts_and_waits() {
         classify_try_lock(Err(TryLockError::WouldBlock), path, false),
         TryLockOutcome::Wait
     ));
+}
+
+#[test]
+fn anchored_acquisition_budget_includes_work_before_opening_the_file() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("owned.lock");
+    let budget = Duration::from_millis(10);
+    let started = super::clock::now();
+    let (sender, receiver) = std::sync::mpsc::channel::<()>();
+    assert_eq!(
+        receiver.recv_timeout(budget),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout)
+    );
+    drop(sender);
+    let error = acquire_lock_from(&path, Some(budget), false, Some(started)).unwrap_err();
+    assert_eq!(
+        error.downcast_ref::<InvocationError>().unwrap().kind(),
+        InvocationErrorKind::LockTimeout
+    );
+    // Expiry drops the opened file without claiming/writing its holder identity.
+    assert!(std::fs::read(&path).unwrap().is_empty());
+    let ordinary = acquire_lock(&path, Some(Duration::ZERO), false).unwrap();
+    drop(ordinary);
 }

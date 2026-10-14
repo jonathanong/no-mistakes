@@ -401,6 +401,7 @@ fn unexpired_fail_fast_contention_keeps_its_original_error_kind() {
     let result = InvocationGuard::acquire_at_path(
         InvocationOptions {
             invocation_timeout: Some(Duration::from_secs(30)),
+            lock_timeout: Some(Duration::ZERO),
             fail_on_lock: true,
             ..InvocationOptions::default()
         },

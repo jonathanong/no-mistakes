@@ -731,13 +731,17 @@ interface InvocationOptions {
 ```
 
 `timeout` and `lockTimeout` use non-negative integer seconds. `timeout` limits
-command execution after the lock is acquired, while `lockTimeout` limits only
-the lock wait. Optional `invocationTimeoutMs` is a positive safe integer in
-milliseconds when present; unlike the older options, null is invalid. It is
+command execution after the lock is acquired. Without an invocation budget,
+`lockTimeout` limits only the lock wait. Optional `invocationTimeoutMs` is a
+positive safe integer in milliseconds when present; unlike the older options, null is invalid. It is
 measured once when native invocation coordination starts, before
 lock-path resolution. The lock and execution phases share this absolute budget;
-it never extends either ordinary phase deadline. Library/Node queueing before
-native coordination is outside that budget. A waiting N-API request does not
+it never extends either ordinary phase deadline. With this budget enabled,
+`lockTimeout` starts before opening the lock file. Its deadline is compared
+with the original invocation deadline, which already includes lock-path
+resolution; the earlier deadline determines the timeout classification. Ordinary
+lock-wait timing is unchanged when the invocation budget is omitted.
+Library/Node queueing before native coordination is outside that budget. A waiting N-API request does not
 change the active holder's watchdog or actor registry. `profile: "ci"` disables
 this optional budget as well as the ordinary deadlines. The
 Node/N-API defaults disable both deadlines (`timeout`/`lockTimeout` omitted,

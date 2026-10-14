@@ -32,7 +32,11 @@ or after the command name:
   budget shared by native lock acquisition and execution. It never extends an
   independently configured command or lock timeout.
   It is opt-in: ordinary command and lock deadlines retain their existing meaning
-  when omitted. The independent lock timeout may still end acquisition sooner.
+  when omitted. With this budget enabled, the independent lock timeout starts
+  before opening the lock file. Its deadline is compared with the original
+  invocation deadline, which already includes lock-path resolution; the earlier
+  deadline determines the reported timeout. Without this option,
+  the existing lock-wait timing is unchanged.
   `--profile ci` disables this budget along with the ordinary timeouts.
 - `--lock-timeout <SECONDS>` limits how long acquisition may wait. The default
   is `30`; `0` waits indefinitely.
