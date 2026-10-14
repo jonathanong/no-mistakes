@@ -1,0 +1,22 @@
+{
+  "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts": {
+    "bytes": 2454,
+    "lines": 3,
+    "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff"
+  },
+  "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts": {
+    "bytes": 24398,
+    "lines": 774,
+    "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575"
+  },
+  "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts": {
+    "bytes": 59584,
+    "lines": 1538,
+    "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2"
+  },
+  "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx": {
+    "bytes": 9660,
+    "lines": 136,
+    "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79"
+  }
+}
