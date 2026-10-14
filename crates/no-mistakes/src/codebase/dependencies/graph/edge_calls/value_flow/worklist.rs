@@ -63,8 +63,7 @@ pub(in super::super::super) fn refine_value_calls(
             if pass.sites[index].target_node != site.target_node {
                 if let Some(key) = function_key(&pass.sites[index]) {
                     if let Some(arguments) = incoming.get_mut(&key) {
-                        arguments
-                            .retain(|argument| argument != &site_argument(&site, indexes, facts));
+                        arguments.retain(|argument| argument != &site_argument(&site, indexes, facts));
                     }
                     changed.insert(key);
                 }
@@ -115,10 +114,6 @@ fn function_key(site: &ResolvedCallSite) -> Option<FunctionKey> {
         _ => None,
     }
 }
-fn site_argument(
-    site: &ResolvedCallSite,
-    indexes: &CallableResolutionIndexes,
-    facts: &dyn TsFactLookup,
-) -> ParameterInput {
+fn site_argument(site: &ResolvedCallSite, indexes: &CallableResolutionIndexes, facts: &dyn TsFactLookup) -> ParameterInput {
     ParameterInput::from_site(site, indexes, facts)
 }
