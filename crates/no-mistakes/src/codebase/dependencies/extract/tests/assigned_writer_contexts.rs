@@ -167,3 +167,6 @@ fn non_receiver_destructuring_keeps_early_range_storage_cold() {
 
 #[path = "destructuring_phase_bounds.rs"]
 mod destructuring_phase_bounds;
+
+#[path = "destructuring_phase_edges.rs"]
+mod destructuring_phase_edges;
