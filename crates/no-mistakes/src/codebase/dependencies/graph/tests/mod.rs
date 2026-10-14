@@ -113,6 +113,7 @@ mod remaining_edges;
 mod selector_fact_plan;
 mod selector_optimization;
 mod source_store_reuse;
+mod type_origin_cache;
 mod workflow_topology_edges;
 mod workflow_topology_run;
 include!("call_traversal.rs");
