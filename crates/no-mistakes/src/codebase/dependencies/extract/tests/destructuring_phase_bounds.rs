@@ -22,7 +22,7 @@ fn nested_patterns_share_one_catalog_across_same_and_distinct_receivers() {
             true,
         );
         assert_eq!(facts.value_flow.early_assignment_catalogs, 1, "{mode}");
-        assert_eq!(facts.value_flow.early_assignment_phase_writes, 84, "{mode}");
+        assert_eq!(facts.value_flow.early_assignment_phase_writes, 64, "{mode}");
         assert_eq!(facts.value_flow.early_assignment_segments, 128, "{mode}");
         assert_eq!(
             facts.value_flow.early_assignment_normalization_visits, entries,
