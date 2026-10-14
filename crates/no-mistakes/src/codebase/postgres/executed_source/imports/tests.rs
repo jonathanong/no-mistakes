@@ -25,6 +25,16 @@ fn supplied_node_next_imports_prefer_source_and_support_commonjs() {
         resolve_supplied_relative(from, "./common", &files),
         Some(PathBuf::from("src/common.cts"))
     );
+    let extensionless = [
+        PathBuf::from("src/virtual-module"),
+        PathBuf::from("src/virtual-module.ts"),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(
+        resolve_supplied_relative(from, "./virtual-module", &extensionless),
+        Some(PathBuf::from("src/virtual-module"))
+    );
     let jsx_only = [PathBuf::from("src/helper.jsx")].into_iter().collect();
     assert_eq!(
         resolve_supplied_relative(from, "./helper.js", &jsx_only),
