@@ -4,7 +4,7 @@
   "analyzer_tree": "e9e30f71cf4efbded15d813953c3629787ab5624",
   "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
   "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
-  "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>candidate.rlib",
+  "frozen": "<WORKSPACE>/performance-1972-evidence/libcandidate.rlib",
   "sha256": "53bef3abd88669513bb45c4acbf5669cebd6056925df58ebcf39ceb0a6a70f55",
   "release_profile": {
     "lto": true,

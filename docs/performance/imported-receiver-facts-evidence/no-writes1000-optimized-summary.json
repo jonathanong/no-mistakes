@@ -19,7 +19,7 @@
             "rlib"
           ],
           "name": "no_mistakes",
-          "src_path": "<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "src_path": "<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes/src/lib.rs",
           "edition": "2021",
           "doc": true,
           "doctest": true,
@@ -37,13 +37,13 @@
           "mermaid-validation"
         ],
         "filenames": [
-          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
-          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+          "<WORKSPACE>/performance-1972-target/release/libno_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps/libno_mistakes-d86b3886736f9e86.rmeta"
         ],
         "executable": null,
         "fresh": false
       },
-      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>baseline.rlib",
+      "frozen": "<WORKSPACE>/performance-1972-evidence/libbaseline.rlib",
       "sha256": "5c895c3dd890572782ee16432a4cb8deebcdb65a666226a94cb6ebcbed39d858",
       "release_profile": {
         "lto": true,
@@ -81,7 +81,7 @@
             "rlib"
           ],
           "name": "no_mistakes",
-          "src_path": "<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "src_path": "<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes/src/lib.rs",
           "edition": "2021",
           "doc": true,
           "doctest": true,
@@ -99,13 +99,13 @@
           "mermaid-validation"
         ],
         "filenames": [
-          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
-          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+          "<WORKSPACE>/performance-1972-target/release/libno_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps/libno_mistakes-d86b3886736f9e86.rmeta"
         ],
         "executable": null,
         "fresh": false
       },
-      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>candidate.rlib",
+      "frozen": "<WORKSPACE>/performance-1972-evidence/libcandidate.rlib",
       "sha256": "53bef3abd88669513bb45c4acbf5669cebd6056925df58ebcf39ceb0a6a70f55",
       "release_profile": {
         "lto": true,

@@ -52,7 +52,11 @@ manifests = {label: json.loads((out/f'{prefix}{label}-manifest.json').read_text(
 assert manifests['baseline']['lock_sha256'] == manifests['candidate']['lock_sha256']
 for key in ['rustc', 'release_profile']:
     assert manifests['baseline'][key] == manifests['candidate'][key]
-assert manifests['baseline']['artifact']['features'] == manifests['candidate']['artifact']['features']
+def crate_summary(manifest):
+    # Public records omit detailed Cargo artifact metadata.
+    return manifest.get('compiled_crate_summary') or manifest['artifact']
+
+assert crate_summary(manifests['baseline'])['features'] == crate_summary(manifests['candidate'])['features']
 assert len({digest(out/f'{prefix}{label}-facts') for label in labels}) == 2
 rows = []
 for order in ['ABBA', 'BAAB']:

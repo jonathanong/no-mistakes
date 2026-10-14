@@ -15,7 +15,7 @@
     "libc6-dbg": {
       "Package": "libc6-dbg",
       "Version": "2.41-12+deb13u4",
-      "Filename": "pool/main/g/glibc<SYSTEM_LIB>c6-dbg_2.41-12+deb13u4_amd64.deb",
+      "Filename": "pool/main/g/glibc/libc6-dbg_2.41-12+deb13u4_amd64.deb",
       "Size": "7373052",
       "Installed-Size": "17048",
       "SHA256": "0123a767a462c59d75e1bd56c4a0f7192c389f600e4743e807d3d33c679dbcf7",

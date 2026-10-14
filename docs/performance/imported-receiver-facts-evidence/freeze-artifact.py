@@ -14,7 +14,7 @@ assert len(artifacts) == 1, artifacts
 artifact = artifacts[0]
 assert not artifact['fresh'], 'A fresh cached artifact is insufficient source provenance'
 assert artifact['profile']['opt_level'] == '3'
-assert Path(artifact['target']['src_path']).resolve() == Path(checkout).resolve()/'crates/no-mistakes/src<SYSTEM_LIB>.rs'
+assert Path(artifact['target']['src_path']).resolve() == Path(checkout).resolve()/'crates/no-mistakes/src/lib.rs'
 compiler = subprocess.check_output(['rustc', '-Vv'], cwd=checkout, text=True)
 cache = json.loads((target/'.rustc_info.json').read_text())
 assert any(item.get('stdout') == compiler for item in cache['outputs'].values()), 'Compiler must match Cargo recorded compiler'
@@ -30,7 +30,7 @@ manifest = dict(revision=git('rev-parse', 'HEAD'), tree=git('rev-parse', 'HEAD^{
                 analyzer_tree=git('rev-parse', 'HEAD:crates/no-mistakes/src'),
                 lock_sha256=hashlib.sha256((Path(checkout)/'Cargo.lock').read_bytes()).hexdigest(),
                 rustc=compiler,
-                artifact=artifact, frozen=str(frozen),
+                compiled_crate_summary={key: artifact[key] for key in ('profile', 'features', 'fresh')}, frozen=str(frozen),
                 sha256=hashlib.sha256(frozen.read_bytes()).hexdigest(),
                 release_profile={'lto': True, 'codegen_units': 1, 'opt_level': 3},
                 build_command='cargo build --release --locked -p no-mistakes --lib --message-format=json')

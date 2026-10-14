@@ -9,7 +9,7 @@ import time
 
 out = Path(__file__).resolve().parent
 profiles = out/'profiles'
-tool_root = Path('<WORKSPACE>/performance-1972-profile-tools<HOME>')
+tool_root = Path('<PROFILER_ROOT>')
 valgrind = tool_root/'usr/bin/valgrind'
 fixture = Path('<WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts')
 assert not (profiles/'work-raw.json').exists(), 'Do not overwrite profiles'
@@ -26,14 +26,14 @@ for comparison, prefix in [('historical',''),('merged_1961_integration','current
             stderr = profiles/f'{name}.stderr'
             assert not any(p.exists() for p in [profile,stdout,stderr])
             command = [str(valgrind),'--tool=callgrind',
-                f'--extra-debuginfo-path={tool_root}<SYSTEM><SYSTEM_LIB>/debug',
+                f'--extra-debuginfo-path={tool_root}<SYSTEM>/lib/debug',
                 '--collect-jumps=yes','--dump-instr=yes',f'--callgrind-out-file={profile}',
                 str(binary),str(fixture),demand,'10']
             start = time.perf_counter()
             with stdout.open('wb') as output,stderr.open('wb') as errors:
                 process = subprocess.Popen(command,stdout=output,stderr=errors,
                     preexec_fn=affinity,env=dict(os.environ,RAYON_NUM_THREADS='1',
-                        VALGRIND_LIB=str(tool_root/'usr<SYSTEM_LIB>exec/valgrind'),DEBUGINFOD_URLS=''))
+                        VALGRIND_LIB=str(tool_root/'usr/libexec/valgrind'),DEBUGINFOD_URLS=''))
                 _,status,usage = os.wait4(process.pid,0)
                 process.returncode = os.waitstatus_to_exitcode(status)
             assert process.returncode == 0, stderr.read_text()

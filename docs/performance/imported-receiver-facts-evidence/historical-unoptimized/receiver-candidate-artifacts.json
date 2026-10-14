@@ -1,7 +1,7 @@
 {
   "revision": "8d81aa148eb2e62773919a290dd21439a1616f42",
-  "source_artifact": "<WORKSPACE>/no-mistakes/target/debug<SYSTEM_LIB>no_mistakes.rlib",
-  "frozen_artifact": "<WORKSPACE>/receiver-7799-library<SYSTEM_LIB>no_mistakes.rlib",
+  "source_artifact": "<WORKSPACE>/no-mistakes/target/debug/libno_mistakes.rlib",
+  "frozen_artifact": "<WORKSPACE>/receiver-7799-library/libno_mistakes.rlib",
   "rlib_sha256": "75af6bd7447682de544547904a5e7861111d8ccdf207ec85b0349de4d5efa89e",
   "features": [
     "default",

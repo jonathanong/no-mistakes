@@ -5,8 +5,8 @@
   "artifact_provenance": {
     "baseline": {
       "revision": "57c927df4c09f450f67248277d49070f9576ba3b",
-      "source_artifact": "<WORKSPACE>/no-mistakes/target/debug<SYSTEM_LIB>no_mistakes.rlib",
-      "frozen_artifact": "<WORKSPACE>/receiver-57c-baseline-library<SYSTEM_LIB>no_mistakes.rlib",
+      "source_artifact": "<WORKSPACE>/no-mistakes/target/debug/libno_mistakes.rlib",
+      "frozen_artifact": "<WORKSPACE>/receiver-57c-baseline-library/libno_mistakes.rlib",
       "rlib_sha256": "d6b1429b1b7531ab411a4a686dcac184ba3c6776356a03db34984bd15831cbbb",
       "features": [
         "default",
@@ -30,8 +30,8 @@
     },
     "candidate": {
       "revision": "8d81aa148eb2e62773919a290dd21439a1616f42",
-      "source_artifact": "<WORKSPACE>/no-mistakes/target/debug<SYSTEM_LIB>no_mistakes.rlib",
-      "frozen_artifact": "<WORKSPACE>/receiver-7799-library<SYSTEM_LIB>no_mistakes.rlib",
+      "source_artifact": "<WORKSPACE>/no-mistakes/target/debug/libno_mistakes.rlib",
+      "frozen_artifact": "<WORKSPACE>/receiver-7799-library/libno_mistakes.rlib",
       "rlib_sha256": "75af6bd7447682de544547904a5e7861111d8ccdf207ec85b0349de4d5efa89e",
       "features": [
         "default",
