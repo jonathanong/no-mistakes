@@ -62,37 +62,7 @@ impl InvocationGuard {
             None
         };
         let path = resolve_path()?;
-        let lock_timeout = match (invocation_deadline, options.lock_timeout) {
-            (Some(deadline), Some(lock)) => Some(
-                deadline
-                    .expires_at
-                    .saturating_duration_since(clock::now())
-                    .min(lock),
-            ),
-            (Some(deadline), None) => {
-                Some(deadline.expires_at.saturating_duration_since(clock::now()))
-            }
-            (None, lock) => lock,
-        };
-        let lock = match acquire_lock(&path, lock_timeout, options.fail_on_lock) {
-            Err(error)
-                if invocation_deadline
-                    .is_some_and(|deadline| deadline.expires_at <= clock::now())
-                    && error
-                        .downcast_ref::<InvocationError>()
-                        .is_some_and(|error| error.kind() == InvocationErrorKind::LockTimeout) =>
-            {
-                let timeout = invocation_deadline
-                    .expect("expired invocation deadline")
-                    .timeout;
-                return Err(InvocationError::new(
-                    InvocationErrorKind::CommandTimeout,
-                    deadline::timeout_diagnostic(timeout, "invocation.lock"),
-                )
-                .into());
-            }
-            result => result?,
-        };
+        let lock = acquire_lock_with_budget(&path, options, invocation_deadline)?;
         // Keep the original absolute invocation deadline. Cancel the acquisition
         // watcher before arming the earlier of that deadline and command timeout.
         drop(early_deadline);
@@ -119,5 +89,40 @@ impl InvocationGuard {
             _parent_signals: parent_signals,
             _lock: lock,
         })
+    }
+}
+
+fn acquire_lock_with_budget(
+    path: &std::path::Path,
+    options: InvocationOptions,
+    invocation_deadline: Option<Deadline>,
+) -> Result<std::fs::File> {
+    let lock_timeout = match (invocation_deadline, options.lock_timeout) {
+        (Some(deadline), Some(lock)) => Some(
+            deadline
+                .expires_at
+                .saturating_duration_since(clock::now())
+                .min(lock),
+        ),
+        (Some(deadline), None) => Some(deadline.expires_at.saturating_duration_since(clock::now())),
+        (None, lock) => lock,
+    };
+    match acquire_lock(path, lock_timeout, options.fail_on_lock) {
+        Err(error)
+            if invocation_deadline.is_some_and(|deadline| deadline.expires_at <= clock::now())
+                && error
+                    .downcast_ref::<InvocationError>()
+                    .is_some_and(|error| error.kind() == InvocationErrorKind::LockTimeout) =>
+        {
+            let timeout = invocation_deadline
+                .expect("expired invocation deadline")
+                .timeout;
+            Err(InvocationError::new(
+                InvocationErrorKind::CommandTimeout,
+                deadline::timeout_diagnostic(timeout, "invocation.lock"),
+            )
+            .into())
+        }
+        result => result,
     }
 }
