@@ -7,6 +7,7 @@ pub(super) struct OriginNode {
     pub(super) has_receivers: bool,
     pub(super) has_receiver_reads: bool,
     pub(super) has_defaults: bool,
+    pub(super) has_invocation_receivers: bool,
     pub(super) has_unsealed_owned_contexts: bool,
 }
 pub(super) enum OriginKind {
@@ -18,7 +19,10 @@ pub(super) enum OriginKind {
     ReceiverContexts(Arc<OriginNode>, Arc<OriginNode>),
     ReceiverOwnedContexts(Arc<OriginNode>, std::path::PathBuf, CallableId),
     InvocationReceiver {
-        file: std::path::PathBuf, offset: u32, context: Option<CallableId>, owner: CallableId,
+        file: std::path::PathBuf,
+        offset: u32,
+        context: Option<CallableId>,
+        owner: CallableId,
         history: std::sync::Arc<crate::codebase::dependencies::extract::ValueMutationHistory>,
     },
     Union(Arc<OriginNode>, Arc<OriginNode>),
@@ -82,11 +86,22 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         offset: u32,
         context: Option<CallableId>,
+        projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> bool {
         self.default_origins
             .as_ref()
             .is_some_and(|origins| origins.has_defaults)
-            && self.origins_invalidated(file, offset, context, false)
+            && self.origins_invalidated(
+                file,
+                offset,
+                context,
+                false,
+                projection.filter(|_| {
+                    self.default_origins
+                        .as_ref()
+                        .is_some_and(|origins| origins.has_invocation_receivers)
+                }),
+            )
     }
     pub(super) fn receiver_origin_invalidated(&self) -> bool {
         if !self
@@ -96,6 +111,6 @@ impl ValueFlowResolution<'_, '_> {
         {
             return false;
         }
-        self.origins_invalidated(std::path::Path::new(""), 0, None, true)
+        self.origins_invalidated(std::path::Path::new(""), 0, None, true, None)
     }
 }

@@ -70,6 +70,8 @@ mod refine;
 mod returned;
 #[path = "value_flow/values.rs"]
 mod values;
+#[path = "value_flow/member_projection.rs"]
+mod member_projection;
 pub(super) use refine::refine_value_calls;
 
 
