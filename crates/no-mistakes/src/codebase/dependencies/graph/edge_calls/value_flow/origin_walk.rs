@@ -19,6 +19,7 @@ impl ValueFlowResolution<'_, '_> {
         let mut pending = vec![Step::Visit(root, None, true, true)];
         let mut projection =
             hint.map_or_else(Vec::new, member_projection::MemberProjection::members);
+        let hint_len = projection.len();
         let mut reads = receiver_reads::ReceiverReads::default();
         let mut visited = fx_set();
         while let Some(step) = pending.pop() {
@@ -124,9 +125,14 @@ impl ValueFlowResolution<'_, '_> {
                         && self.source_origin_invalidated(
                             origin,
                             &projection,
+                            hint_len,
                             file,
-                            offset,
-                            context,
+                            (offset, context),
+                            &|writer| {
+                                reads.offset(read, &origin.file, writer).or_else(|| {
+                                    (origin.file == file && writer == context).then_some(offset)
+                                })
+                            },
                         )
                     {
                         return true;
@@ -161,7 +167,8 @@ impl ValueFlowResolution<'_, '_> {
         // file-qualified, while member writes follow the receiver projection.
         read.file != *history_file
             || if receivers_only {
-                receivers && history.assignment_invalidated(projection, read.offset, read.context, false)
+                receivers
+                    && history.assignment_invalidated(projection, read.offset, read.context, false)
             } else {
                 read.owner.0 != file || context != Some(read.owner.1)
             }

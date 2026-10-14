@@ -109,7 +109,6 @@ impl OriginNode {
             | OriginKind::ReceiverAcquisition(source)
             | OriginKind::ReceiverContexts(source, _) => source.has_defaults,
         };
-        let has_invocation_receivers = invocation_receivers(&kind);
         let has_unsealed_owned_contexts = match &kind {
             OriginKind::ReceiverOwnedContexts(..) => true,
             OriginKind::InvocationReceiver { .. }
@@ -128,31 +127,11 @@ impl OriginNode {
         };
         Self {
             has_defaults,
-            has_invocation_receivers,
             has_unsealed_owned_contexts,
             kind,
             height,
             has_receivers,
             has_receiver_reads,
         }
-    }
-}
-
-fn invocation_receivers(kind: &OriginKind) -> bool {
-    match kind {
-        OriginKind::InvocationReceiver { .. } => true,
-        OriginKind::Receiver(..)
-        | OriginKind::Source(_)
-        | OriginKind::ReceiverOwnedContexts(..) => false,
-        OriginKind::Union(left, right) => {
-            left.has_invocation_receivers || right.has_invocation_receivers
-        }
-        OriginKind::ReceiverUse(source, _) => source
-            .as_ref()
-            .is_some_and(|source| source.has_invocation_receivers),
-        OriginKind::Project(source, _)
-        | OriginKind::ReceiverSnapshot(source)
-        | OriginKind::ReceiverAcquisition(source)
-        | OriginKind::ReceiverContexts(source, _) => source.has_invocation_receivers,
     }
 }

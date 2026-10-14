@@ -8,7 +8,7 @@ impl ValueFlowResolution<'_, '_> {
     ) -> FlowValue {
         self.value_projected(path, expression, None)
     }
-    fn value_projected(
+    pub(super) fn value_projected(
         &mut self,
         path: &std::path::Path,
         expression: &ValueExpression,

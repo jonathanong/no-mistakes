@@ -35,6 +35,9 @@ impl ImportCollector {
             .or_default()
             .entry(key.1.clone())
             .or_default();
+        // Nested propagation records a coarse receiver mutation without an
+        // exact assigned leaf. Projected default reads must retain that guard.
+        history.has_unassigned |= assigned.is_none();
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
             history.record_assignment(path, assigned, completed_at, context);

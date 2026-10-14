@@ -208,3 +208,32 @@ fn effects_cli_retains_cross_file_inline_receiver_timing() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+#[test]
+fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
+    let root = fixture("inline-member-precision");
+    for (name, expected) in [
+        ("alias-named", 1),
+        ("alias-inline", 1),
+        ("alias-chain", 1),
+        ("alias-matching", 0),
+        ("alias-dynamic", 0),
+        ("alias-live", 0),
+        ("alias-supplied-live", 0),
+        ("alias-supplied-snapshot", 1),
+        ("alias-supplied-nested-live", 0),
+        ("alias-snapshot", 1),
+        ("alias-inline-live", 0),
+        ("alias-inline-snapshot", 1),
+        ("alias-inline-snapshot-owned", 0),
+        ("inline-snapshot-owned", 0),
+        ("alias-captured", 0),
+        ("alias-async", 0),
+    ] {
+        let entry = format!("src/{name}.mts");
+        let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}

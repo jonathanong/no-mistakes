@@ -25,7 +25,7 @@ impl ValueFlowResolution<'_, '_> {
                 .as_ref()
                 .is_some_and(|origins| origins.has_receivers || origins.has_receiver_reads)
             {
-                self.record_parameter_receiver_read(file, offset, context);
+                self.record_value_receiver_read(file, offset, context);
             }
         }
         let value = self.member(base, member);
