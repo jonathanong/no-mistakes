@@ -28,13 +28,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     import.kind == ImportKind::Static && import.function_scope.is_none()
                 })
                 .map(|import| import.specifier.as_str())
-                .chain(
-                    module
-                        .ts
-                        .eager_require_specifiers
-                        .iter()
-                        .map(String::as_str),
-                )
                 .filter_map(|specifier| module.target(specifier, path, &self.resolve))
                 .map(Path::to_path_buf)
                 .collect::<Vec<_>>();

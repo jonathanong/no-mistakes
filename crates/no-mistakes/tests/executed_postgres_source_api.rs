@@ -147,6 +147,29 @@ fn source_api_retains_generic_callbacks_exposed_by_exported_records() {
 }
 
 #[test]
+fn source_api_retains_generic_callbacks_exposed_by_conditional_exports() {
+    let sources = [source("exported-conditional.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
+fn source_api_preserves_proven_intrinsic_string_raw_text() {
+    let sources = [source("intrinsic-raw.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert_eq!(
+        statements[0].sql_text.as_deref(),
+        Some("/* raw/read */ SELECT id FROM posts")
+    );
+    assert!(statements[0].complete);
+}
+
+#[test]
 fn source_api_observes_side_effect_only_module_before_imported_read() {
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     for consumer in ["eager-consumer.ts", "eager-unused-consumer.ts"] {
@@ -180,6 +203,26 @@ fn source_api_observes_eager_commonjs_dependency_before_imported_read() {
         .find(|statement| statement.file_name == "cjs-eager-consumer.ts")
         .unwrap();
     assert!(!statement.complete, "{statement:?}");
+}
+
+#[test]
+fn source_api_keeps_read_before_later_commonjs_mutator() {
+    let sources = [
+        source("cjs-late-consumer.ts"),
+        source("eager-builder.ts"),
+        source("eager-mutator.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "cjs-late-consumer.ts")
+        .unwrap();
+    assert!(statement.complete, "{statement:?}");
+    assert_eq!(
+        statement.sql_text.as_deref(),
+        Some("/* eager import */ SELECT 1")
+    );
 }
 
 #[test]

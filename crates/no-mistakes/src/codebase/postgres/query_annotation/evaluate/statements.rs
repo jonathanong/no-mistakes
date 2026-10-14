@@ -1,5 +1,5 @@
 use super::{concat, Environment, Evaluator, Value};
-use crate::codebase::postgres::query_annotation::Step;
+use crate::codebase::postgres::query_annotation::{Expr, Step};
 use std::path::{Path, PathBuf};
 
 mod effects;
@@ -75,6 +75,45 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let mut opaque_return = false;
         for step in steps {
+            // ESM imports execute before module evaluation; an unconditional
+            // CommonJS require executes here, at its source statement. Moving
+            // it before an earlier executor would change the recovered SQL.
+            let eager_require = if self.files[path].facts.precise_records
+                && self
+                    .modules
+                    .get(path)
+                    .is_some_and(|current| *current == *env)
+            {
+                let call = match step {
+                    Step::Effect(call) | Step::Bind(_, call) => Some(call),
+                    _ => None,
+                };
+                match call {
+                    Some(Expr::Call { callee, args, .. }) if matches!(&**callee, Expr::Name(name) if name == "require") => {
+                        match args.as_slice() {
+                            [Expr::Text(specifier)]
+                                if self.files[path]
+                                    .module
+                                    .ts
+                                    .eager_require_specifiers
+                                    .contains(specifier) =>
+                            {
+                                self.files[path]
+                                    .module
+                                    .target(specifier, path, &self.resolve)
+                                    .map(Path::to_path_buf)
+                            }
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                }
+            } else {
+                None
+            };
+            if let Some(target) = eager_require {
+                self.module_environment(&target);
+            }
             match step {
                 Step::Bind(name, expr) => {
                     let value = if supported {

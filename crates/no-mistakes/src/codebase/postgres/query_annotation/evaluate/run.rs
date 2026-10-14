@@ -137,7 +137,11 @@ fn value_reaches(
 ) -> bool {
     match value {
         Expr::Name(name) => exported_reaches(globals, name, target, visiting),
-        Expr::Record(values, _) | Expr::Object(values) | Expr::Container(values) => values
+        Expr::Record(values, _)
+        | Expr::Object(values)
+        | Expr::Container(values)
+        | Expr::Sequence(values)
+        | Expr::Alternatives(values) => values
             .iter()
             .any(|value| value_reaches(globals, value, target, visiting)),
         Expr::Function(function) => function.body.iter().any(|step| {
