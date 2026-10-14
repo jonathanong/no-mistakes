@@ -416,3 +416,46 @@ fn unexpired_fail_fast_contention_keeps_its_original_error_kind() {
         InvocationErrorKind::LockBusy
     );
 }
+
+#[test]
+fn delayed_lock_timeout_keeps_the_deadline_that_actually_limited_acquisition() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("held.lock");
+    let _holder = acquire_lock(&path, None, false).unwrap();
+    for invocation_limited in [false, true] {
+        let budget = Duration::from_millis(10);
+        let deadline = Deadline {
+            expires_at: clock::now() + budget,
+            timeout: budget,
+            owner: None,
+            committed: false,
+        };
+        let native_error = acquire_lock(&path, Some(Duration::from_millis(1)), false);
+        assert_eq!(
+            native_error
+                .as_ref()
+                .unwrap_err()
+                .downcast_ref::<InvocationError>()
+                .unwrap()
+                .kind(),
+            InvocationErrorKind::LockTimeout
+        );
+        // Delay classification past both deadlines using an owned channel, as a
+        // descheduled waiter would; selection, not wake-up timing, owns the error.
+        resolve_after_budget(&path, budget).unwrap();
+        let error = super::super::acquisition::classify_lock_result(
+            native_error,
+            Some(deadline),
+            invocation_limited,
+        )
+        .unwrap_err();
+        assert_eq!(
+            error.downcast_ref::<InvocationError>().unwrap().kind(),
+            if invocation_limited {
+                InvocationErrorKind::CommandTimeout
+            } else {
+                InvocationErrorKind::LockTimeout
+            }
+        );
+    }
+}

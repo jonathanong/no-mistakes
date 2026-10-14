@@ -105,26 +105,37 @@ fn acquire_lock_with_budget(
         )
         .into());
     }
-    let lock_timeout = match (invocation_deadline, options.lock_timeout) {
-        (Some(deadline), Some(lock)) => Some(
-            deadline
-                .expires_at
-                .saturating_duration_since(clock::now())
-                .min(lock),
-        ),
-        (Some(deadline), None) => Some(deadline.expires_at.saturating_duration_since(clock::now())),
+    let remaining = invocation_deadline
+        .map(|deadline| deadline.expires_at.saturating_duration_since(clock::now()));
+    let invocation_limited = remaining
+        .is_some_and(|remaining| options.lock_timeout.is_none_or(|lock| remaining <= lock));
+    let lock_timeout = match (remaining, options.lock_timeout) {
+        (Some(remaining), Some(lock)) => Some(remaining.min(lock)),
+        (Some(remaining), None) => Some(remaining),
         (None, lock) => lock,
     };
-    match acquire_lock(path, lock_timeout, options.fail_on_lock) {
+    classify_lock_result(
+        acquire_lock(path, lock_timeout, options.fail_on_lock),
+        invocation_deadline,
+        invocation_limited,
+    )
+}
+
+pub(super) fn classify_lock_result(
+    result: Result<std::fs::File>,
+    invocation_deadline: Option<Deadline>,
+    invocation_limited: bool,
+) -> Result<std::fs::File> {
+    match result {
         Err(error)
-            if invocation_deadline.is_some_and(|deadline| deadline.expires_at <= clock::now())
+            if invocation_deadline.is_some()
                 && error
                     .downcast_ref::<InvocationError>()
-                    .is_some_and(|error| {
-                        matches!(
-                            error.kind(),
-                            InvocationErrorKind::LockTimeout | InvocationErrorKind::LockBusy
-                        )
+                    .is_some_and(|error| match error.kind() {
+                        InvocationErrorKind::LockTimeout => invocation_limited,
+                        InvocationErrorKind::LockBusy => invocation_deadline
+                            .is_some_and(|deadline| deadline.expires_at <= clock::now()),
+                        _ => false,
                     }) =>
         {
             let timeout = invocation_deadline
