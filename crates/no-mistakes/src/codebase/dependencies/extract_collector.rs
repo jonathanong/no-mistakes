@@ -18,6 +18,8 @@ struct ImportCollector {
     conditional_execution: bool,
     receiver_replacement_is_fresh: bool,
     receiver_write_is_conditional: bool,
+    /// Live straight-line guarded segment and its one admitted assignment.
+    receiver_conditional_region: Option<(std::num::NonZeroU32, u32)>,
     sloppy_script: bool,
     /// The Annex B for-in initializer runs before the first iteration. Its
     /// binding target still runs only when the right-hand side has a key.

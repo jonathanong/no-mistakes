@@ -20,6 +20,9 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
+        if !member {
+            self.receiver_conditional_region = None;
+        }
         let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
         affected.entry(scope).or_default().insert(base.to_string());
         if member && self.collect_value_flow {
@@ -179,22 +182,5 @@ impl ImportCollector {
         for (scope, local) in invalidated {
             self.insert_reassigned_callable_at(scope, local);
         }
-    }
-}
-impl ImportCollector {
-    fn reference_path_may_be_replaced(
-        &self,
-        key: &(usize, String),
-        path: &[Option<String>],
-        reads: &[nested::ReceiverRead],
-    ) -> bool {
-        if path.is_empty() {
-            return false;
-        }
-        self.prior_member_mutations
-            .history(key)
-            .is_some_and(|(history, complete)| {
-                complete && history.reference_may_be_replaced(path, reads)
-            })
     }
 }

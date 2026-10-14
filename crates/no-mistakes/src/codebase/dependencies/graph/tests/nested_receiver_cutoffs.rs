@@ -1,3 +1,5 @@
+#[path = "guarded_receiver_regions.rs"]
+mod guarded_regions;
 use super::*;
 
 #[test]
@@ -158,7 +160,10 @@ fn fresh_containers_retain_possible_original_descendant_mutations() {
             "value.get",
             Some("primary.get"),
         ),
-    ] {
+    ]
+    .into_iter()
+    .chain(guarded_regions::CASES.iter().copied())
+    {
         // Each file is an independent module; positive controls never import a
         // receiver already mutated by another case.
         let sites = graph

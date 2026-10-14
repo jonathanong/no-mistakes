@@ -251,6 +251,7 @@ include!("extract_collector_deferred_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
 include!("extract_control_flow_scopes.rs");
+include!("extract_receiver_regions.rs");
 include!("extract_execution.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");

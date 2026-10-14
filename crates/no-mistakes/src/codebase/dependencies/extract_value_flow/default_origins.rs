@@ -32,6 +32,10 @@ impl ImportCollector {
         let context = self.current_function_id();
         let unconditional =
             !self.receiver_write_is_conditional && self.receiver_replacement_is_fresh;
+        let region = self
+            .receiver_conditional_region
+            .filter(|(_, admitted)| *admitted == offset && self.receiver_replacement_is_fresh)
+            .map(|(token, _)| token.get());
         let (history, proof) = self.prior_member_mutations.history_mut(key);
         // Projected default reads retain guards for writes without an exact leaf.
         history.has_unassigned |= assigned.is_none();
@@ -50,6 +54,7 @@ impl ImportCollector {
                 write,
                 propagated,
                 proof.then_some(self.receiver_replacement_is_fresh),
+                region,
             );
         }
     }

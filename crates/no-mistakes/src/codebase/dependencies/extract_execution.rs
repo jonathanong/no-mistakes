@@ -14,6 +14,7 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
+    if conditional { collector.receiver_conditional_region = None; }
     let previous = collector.conditional_execution;
     let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
@@ -30,6 +31,7 @@ fn visit_binding_default_with_execution<'a>(collector: &mut ImportCollector, pat
 
 fn with_conditional_receiver_write(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
     // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
+    collector.receiver_conditional_region = None;
     let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
     visit(collector);
     collector.receiver_write_is_conditional = previous;
@@ -78,11 +80,11 @@ fn visit_if_with_execution<'a>(collector: &mut ImportCollector, statement: &oxc_
     collector.visit_expression(&statement.test);
     let truthy = literal_truthiness(&statement.test);
     with_conditional_execution(collector, truthy != Some(true), |collector| {
-        collector.visit_statement(&statement.consequent);
+        visit_guarded_receiver_arm(collector, &statement.consequent, truthy.is_none());
     });
     if let Some(alternate) = &statement.alternate {
         with_conditional_execution(collector, truthy != Some(false), |collector| {
-            collector.visit_statement(alternate);
+            visit_guarded_receiver_arm(collector, alternate, truthy.is_none());
         });
     }
 }
@@ -157,6 +159,7 @@ fn visit_new_expression_with_imports_and_calls<'a>(collector: &mut ImportCollect
 fn with_callable_receiver_execution(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
     // A deferred body has its own execution conditions; surrounding guards only
     // decide whether the callable is created or invoked.
+    collector.receiver_conditional_region = None;
     let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
     visit(collector);
     collector.receiver_write_is_conditional = conditional;

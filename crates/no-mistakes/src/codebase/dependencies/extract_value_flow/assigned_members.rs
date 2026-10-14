@@ -92,6 +92,7 @@ impl ValueAssignedMutations {
         member: &str,
         offset: u32,
         context: Option<CallableId>,
+        region: Option<u32>,
     ) -> bool {
         let replaced = |write: &ValueAssignedMutation| {
             write.writer == mutation_history::ValueAssignedWriter::single(context)
@@ -111,7 +112,12 @@ impl ValueAssignedMutations {
         {
             return false;
         }
-        if ![direct, propagated].into_iter().flatten().any(replaced) {
+        let regional = region.is_some_and(|region| {
+            self.replacements
+                .as_ref()
+                .is_some_and(|events| events.replaced_in_region(region, member, offset))
+        });
+        if !regional && ![direct, propagated].into_iter().flatten().any(replaced) {
             return false;
         }
         if [
@@ -128,7 +134,7 @@ impl ValueAssignedMutations {
         }
         self.replacements
             .as_ref()
-            .is_some_and(|events| events.replaced(member, offset))
+            .is_some_and(|events| regional || events.replaced(member, offset))
     }
 }
 

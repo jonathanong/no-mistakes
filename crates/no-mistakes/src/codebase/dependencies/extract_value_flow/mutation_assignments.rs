@@ -23,6 +23,7 @@ impl ValueMutationHistory {
         &self,
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
+        region: Option<u32>,
     ) -> bool {
         let mut node = self;
         for (index, (member, read)) in path.iter().zip(reads).enumerate() {
@@ -35,10 +36,9 @@ impl ValueMutationHistory {
             // A distinct outer container may still retain the old descendant.
             // Only replacement of the actual acquired receiver severs this path.
             if index + 1 == path.len()
-                && node
-                    .assigned
-                    .as_ref()
-                    .is_some_and(|assigned| assigned.definitely_replaced(member, *offset, *context))
+                && node.assigned.as_ref().is_some_and(|assigned| {
+                    assigned.definitely_replaced(member, *offset, *context, region)
+                })
             {
                 return true;
             }
@@ -57,6 +57,7 @@ impl ValueMutationHistory {
         initial: ValueAssignedMutation,
         propagated: bool,
         replacement: Option<bool>,
+        region: Option<u32>,
     ) {
         self.has_assignments = true;
         let mut node = self;
@@ -77,6 +78,12 @@ impl ValueMutationHistory {
                     fresh,
                     initial.unconditional_offset.is_some(),
                 );
+        }
+        if let (Some(true), Some(region), Some(member)) = (replacement, region, member.as_deref()) {
+            assigned
+                .replacements
+                .get_or_insert_with(Default::default)
+                .record_region(region, member, initial.offset);
         }
         if propagated {
             assigned
@@ -132,5 +139,29 @@ impl ValueMutationHistory {
         };
         self.members.get(*next).is_some_and(child_matches)
             || self.dynamic.as_deref().is_some_and(child_matches)
+    }
+}
+
+impl ImportCollector {
+    pub(super) fn reference_path_may_be_replaced(
+        &self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: &[nested::ReceiverRead],
+    ) -> bool {
+        if path.is_empty() {
+            return false;
+        }
+        self.prior_member_mutations
+            .history(key)
+            .is_some_and(|(history, complete)| {
+                complete
+                    && history.reference_may_be_replaced(
+                        path,
+                        reads,
+                        self.receiver_conditional_region
+                            .map(|(token, _)| token.get()),
+                    )
+            })
     }
 }

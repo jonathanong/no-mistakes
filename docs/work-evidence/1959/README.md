@@ -258,3 +258,27 @@ precision gap on that baseline, and unsound within this PR's intended mutation
 behavior. No claim is made that the new expectations passed on the frozen base.
 More general replacement-RHS shape/heap tracking is not implemented. Candidate
 semantic and quality validation is pending after this correction.
+
+
+The guarded-arm correction records a lexical token only for consecutive standalone
+plain assignments inside an unknown-if block arm. Exact assignment-start equality
+prevents nested RHS writes from establishing that token's proof. Other statements
+split the segment; conditional/default/deferred walkers invalidate the token.
+Root binding writes also invalidate it, including writes nested in an admitted
+assignment RHS, so a captured old LHS cannot prove the subsequently rebound root. The
+normal block and statement visitor retains scope, hoisting and binding hooks.
+Only prepared nested-reference histories allocate an optional regional event
+index. A query uses the current region, actual acquisition offset and same writer,
+and rejects later possible-original or dynamic restoration. Global guaranteed
+replacement evidence remains unchanged; terminal-only cutoffs remain required.
+
+Saved independent controls cover same-arm replacement, RHS root rebinding, opposite/after arms,
+nested children/RHS, logical assignment, restoration, foreign writers and retained
+descendants. The frozen 917 outputs in `guarded-region-baseline.txt` resolve all
+ten to primary.get: the same-arm positive repairs introduced precision loss;
+negative cases retain the explicit conservative boundaries of nested mutation
+tracking. No general execution-path or heap model is claimed. A saved 128-write
+control checks one regional index, 128 retained events, 128 record attempts and
+128 actual indexed queries; the unguarded control allocates no regional map.
+These are work/storage bounds, not measured CPU or RSS improvements. Semantic,
+coverage and quality validation of this correction is pending.

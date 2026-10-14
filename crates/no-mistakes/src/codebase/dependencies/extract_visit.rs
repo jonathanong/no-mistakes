@@ -1,4 +1,7 @@
 impl<'a> Visit<'a> for ImportCollector {
+    fn visit_statements(&mut self, statements: &oxc_allocator::Vec<'a, Statement<'a>>) {
+        visit_statements_with_receiver_region(self, statements);
+    }
     fn visit_expression(&mut self, expression: &Expression<'a>) { visit_expression_with_annex_b_initializer(self, expression); }
 
     fn visit_statement(&mut self, statement: &Statement<'a>) { visit_statement_with_type_binding(self, statement); }
@@ -238,11 +241,6 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
-        if let Some(name) = jsx_element_reference_name(&opening.name) {
-            if name.chars().next().is_some_and(char::is_uppercase) {
-                self.push_value_symbol_reference(name);
-            }
-        }
-        walk::walk_jsx_opening_element(self, opening);
+        visit_jsx_opening_element_with_value_reference(self, opening);
     }
 }

@@ -1,0 +1,24 @@
+Verified frozen 917 baseline; independent saved sources.
+Original raw SHA-256: d5b781c8b3cb90986158b229efad345b31ab4a3809f46950c230a399d23e3fa8
+Path normalization: none; only repository-relative fixture paths.
+
+src/nested-receiver-containers/guarded-arm.mts|guardedArm|value.get|primary.get
+src/nested-receiver-containers/guarded-arm.mts|-|guardedArm|?
+src/nested-receiver-containers/guarded-opposite.mts|guardedOpposite|value.get|primary.get
+src/nested-receiver-containers/guarded-opposite.mts|-|guardedOpposite|?
+src/nested-receiver-containers/guarded-after.mts|guardedAfter|value.get|primary.get
+src/nested-receiver-containers/guarded-after.mts|-|guardedAfter|?
+src/nested-receiver-containers/guarded-child.mts|guardedChild|value.get|primary.get
+src/nested-receiver-containers/guarded-child.mts|-|guardedChild|?
+src/nested-receiver-containers/guarded-rhs.mts|guardedRhs|value.get|primary.get
+src/nested-receiver-containers/guarded-rhs.mts|-|guardedRhs|?
+src/nested-receiver-containers/guarded-logical.mts|guardedLogical|value.get|primary.get
+src/nested-receiver-containers/guarded-logical.mts|-|guardedLogical|?
+src/nested-receiver-containers/guarded-restore.mts|guardedRestore|value.get|primary.get
+src/nested-receiver-containers/guarded-restore.mts|-|guardedRestore|?
+src/nested-receiver-containers/guarded-dynamic.mts|guardedDynamic|value.get|primary.get
+src/nested-receiver-containers/guarded-dynamic.mts|-|guardedDynamic|?
+src/nested-receiver-containers/guarded-foreign.mts|guardedForeign|value.get|primary.get
+src/nested-receiver-containers/guarded-foreign.mts|-|guardedForeign|?
+src/nested-receiver-containers/guarded-descendant.mts|guardedDescendant|value.get|primary.get
+src/nested-receiver-containers/guarded-descendant.mts|-|guardedDescendant|?
