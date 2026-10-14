@@ -74,6 +74,7 @@ enum FlowValue {
         id: CallableId,
     },
     Object {
+        null_prototype: bool,
         file: std::path::PathBuf,
         fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
     },

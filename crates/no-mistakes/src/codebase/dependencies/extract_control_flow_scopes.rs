@@ -134,8 +134,8 @@ fn invalidate_for_statement_assignment_target(
     let Some(target) = left.as_assignment_target() else {
         return;
     };
-    for name in assignment_target_names(target) {
-        collector.record_reassigned_callable_alias(&name, target.span().start);
+    for (name, path) in extract_value_flow::write_targets::targets(target) {
+        collector.record_reassigned_callable_alias_path(&name, target.span().start, Some(&path));
     }
 }
 

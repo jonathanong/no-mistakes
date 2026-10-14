@@ -22,6 +22,19 @@ impl ImportCollector {
             Expression::TaggedTemplateExpression(tagged) => {
                 ValueExpression::Call(templates::tag_offset(tagged), tagged.span.end)
             }
+            Expression::StaticMemberExpression(member) => ValueExpression::Member(
+                std::sync::Arc::new(self.value_expression(&member.object)),
+                member.property.name.to_string(),
+            ),
+            Expression::ComputedMemberExpression(member) => write_targets::static_key(
+                &member.expression,
+            )
+            .map_or(ValueExpression::Unknown, |key| {
+                ValueExpression::Member(
+                    std::sync::Arc::new(self.value_expression(&member.object)),
+                    key,
+                )
+            }),
             Expression::Super(_) => self
                 .current_function_id()
                 .map_or(ValueExpression::Unknown, ValueExpression::Super),
@@ -67,6 +80,7 @@ impl ImportCollector {
             }
             Expression::ObjectExpression(object) => {
                 let mut fields = fx_map();
+                let mut null_prototype = false;
                 for property in &object.properties {
                     let ObjectPropertyKind::ObjectProperty(property) = property else {
                         return ValueExpression::Unknown;
@@ -79,9 +93,16 @@ impl ImportCollector {
                     else {
                         return ValueExpression::Unknown;
                     };
+                    if key == "__proto__" && !property.shorthand {
+                        if matches!(property.value, Expression::NullLiteral(_)) {
+                            null_prototype = true;
+                            continue;
+                        }
+                        return ValueExpression::Unknown;
+                    }
                     fields.insert(key.to_string(), self.value_expression(&property.value));
                 }
-                ValueExpression::Object(std::sync::Arc::new(fields))
+                ValueExpression::Object(std::sync::Arc::new(fields), null_prototype)
             }
             _ => simple_callee_name(expression).map_or(ValueExpression::Unknown, |name| {
                 ValueExpression::Named {

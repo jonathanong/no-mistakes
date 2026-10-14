@@ -172,7 +172,7 @@ fn default_mutation_paths_late_declarations_and_inherited_fields_are_conservativ
     for (file, expected) in [
         ("src/default-review-stars.mts", vec![6]),
         ("src/default-review-late.mts", vec![12]),
-        ("src/default-review-inherited.mts", vec![7, 9]),
+        ("src/default-review-inherited.mts", vec![7, 9, 14]),
     ] {
         assert_eq!(
             findings

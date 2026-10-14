@@ -16,7 +16,7 @@ pub(super) fn receiver_references(
                 .collect();
             output.push(((scope.unwrap_or(0), base.to_string()), tail));
         }
-        ValueExpression::Object(fields) | ValueExpression::Array(fields) => {
+        ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
             if let Some((head, tail)) = path.split_first() {
                 if let Some(head) = head {
                     if let Some(value) = fields.get(head) {

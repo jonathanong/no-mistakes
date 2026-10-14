@@ -4,9 +4,14 @@ pub(super) type DefaultOriginIndex =
     FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
 // None is a dynamic segment; Some("*") is an ordinary literal property.
 pub type ValueMutationPath = Vec<Option<String>>;
-pub(super) type MemberMutations = FxHashMap<ValueMutationPath, ValueMutationInfo>;
-pub(super) type PriorMemberMutations = FxHashMap<usize, FxHashMap<String, MemberMutations>>;
-pub type ValueDefaultMutations = FxHashMap<usize, MemberMutations>;
+pub(super) type PriorMemberMutations =
+    FxHashMap<usize, FxHashMap<String, mutation_history::ValueMutationHistory>>;
+pub type ValueDefaultMutations = FxHashMap<usize, Vec<ValueDefaultMutationSource>>;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValueDefaultMutationSource {
+    pub path: ValueMutationPath,
+    pub history: std::sync::Arc<mutation_history::ValueMutationHistory>,
+}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueMutationInfo {
     pub offset: u32,
@@ -40,7 +45,7 @@ pub enum ValueExpression {
     Callable(CallableId),
     Super(CallableId),
     Member(std::sync::Arc<ValueExpression>, String),
-    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>),
+    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>, bool),
     Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
     Undefined,
     Default(
@@ -117,3 +122,9 @@ mod parameter_patterns;
 
 #[path = "extract_value_flow/default_origins.rs"]
 mod default_origins;
+
+#[path = "extract_value_flow/mutation_history.rs"]
+mod mutation_history;
+
+#[path = "extract_value_flow/write_targets.rs"]
+pub(super) mod write_targets;

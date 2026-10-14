@@ -7,6 +7,15 @@ impl ImportCollector {
         name: &str,
         offset: u32,
     ) {
+        self.invalidate_value_write_with_path(scope, name, offset, None);
+    }
+    pub(in super::super) fn invalidate_value_write_with_path(
+        &mut self,
+        scope: usize,
+        name: &str,
+        offset: u32,
+        receiver: Option<&[Option<String>]>,
+    ) {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
@@ -14,26 +23,31 @@ impl ImportCollector {
         affected.entry(scope).or_default().insert(base.to_string());
         if member && self.collect_value_flow {
             self.prepare_value_references();
-            let mut parts = name
-                .split('.')
-                .skip(1)
-                .map(|member| Some(member.to_string()))
-                .collect::<Vec<_>>();
+            let mut parts = receiver.map_or_else(
+                || {
+                    name.split('.')
+                        .skip(1)
+                        .map(|member| Some(member.to_string()))
+                        .collect::<Vec<_>>()
+                },
+                |path| path.to_vec(),
+            );
             parts.pop();
-            let mut pending = vec![(((scope, base.to_string()), parts), false)];
+            let mut pending = vec![(((scope, base.to_string()), parts), false, true)];
             let mut active = fx_set();
             let mut visited = fx_set();
-            while let Some(((key, path), exiting)) = pending.pop() {
+            while let Some(((key, path), exiting, remember)) = pending.pop() {
                 if exiting {
                     active.remove(&key);
                     continue;
                 }
+                if remember {
+                    self.remember_member_mutation(&key, &path, offset);
+                }
                 if !visited.insert((key.clone(), path.clone())) || !active.insert(key.clone()) {
                     continue;
                 }
-                pending.push(((key.clone(), Vec::new()), true));
-                self.invalidate_default_origins(&key, &path, offset);
-                self.remember_member_mutation(&key, &path, offset);
+                pending.push(((key.clone(), Vec::new()), true, false));
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links
@@ -43,7 +57,7 @@ impl ImportCollector {
                     .into_iter()
                     .flatten()
                 {
-                    pending.push(((target.clone(), path.clone()), false));
+                    pending.push(((target.clone(), path.clone()), false, false));
                 }
                 for index in self
                     .value_binding_indexes
@@ -52,13 +66,23 @@ impl ImportCollector {
                     .into_iter()
                     .flatten()
                 {
+                    // Direct aliases are handled by the component links at finalization.
+                    if matches!(&self.value_flow.bindings[*index].value,
+                        ValueExpression::Named { name, .. } if !name.contains('.'))
+                    {
+                        continue;
+                    }
                     let mut references = Vec::new();
                     nested::receiver_references(
                         &self.value_flow.bindings[*index].value,
                         &path,
                         &mut references,
                     );
-                    pending.extend(references.into_iter().map(|reference| (reference, false)));
+                    pending.extend(
+                        references
+                            .into_iter()
+                            .map(|reference| (reference, false, true)),
+                    );
                 }
             }
         }

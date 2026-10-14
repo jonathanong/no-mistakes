@@ -141,6 +141,14 @@ impl ImportCollector {
     }
 
     fn record_reassigned_callable_alias(&mut self, name: &str, offset: u32) {
+        self.record_reassigned_callable_alias_path(name, offset, None);
+    }
+    fn record_reassigned_callable_alias_path(
+        &mut self,
+        name: &str,
+        offset: u32,
+        path: Option<&[Option<String>]>,
+    ) {
         let binding_name = name.split_once('.').map_or(name, |(binding, _)| binding);
         let Some((lexical_scope_depth, binding_scope)) = self
             .local_stack
@@ -152,12 +160,12 @@ impl ImportCollector {
                 && (self.imported_bindings.contains(binding_name)
                     || self.predeclared_imported_bindings.contains(binding_name))
             {
-                self.invalidate_value_write(0, name, offset);
+                self.invalidate_value_write_with_path(0, name, offset, path);
             }
             return;
         };
         self.insert_reassigned_callable_at(binding_scope, name.to_string());
-        self.invalidate_value_write(binding_scope, name, offset);
+        self.invalidate_value_write_with_path(binding_scope, name, offset, path);
         if let Some(index) = self.callable_alias_index_at(binding_scope, name) {
             if let Some(alias) = self.callable_aliases.get_mut(index) {
                 if alias.lexical_scope_depth == lexical_scope_depth {

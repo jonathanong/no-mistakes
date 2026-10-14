@@ -79,20 +79,15 @@ impl ValueFlowResolution<'_, '_> {
                         scoped_name(&index.values.parameters, origin.scope, &origin.name)
                             .and_then(|parameter| parameter.default_mutations.as_ref())
                             .and_then(|mutations| mutations.get(&origin.origin))
-                            .is_some_and(|paths| {
-                                paths.iter().any(|(receiver, mutation)| {
-                                    receiver.len() >= origin.projection.len()
-                                        && receiver.iter().zip(&origin.projection).all(
-                                            |(actual, expected)| {
-                                                actual.as_deref().is_none_or(|actual| actual == expected)
-                                            },
-                                        )
-                                        && (origin.file != file
-                                            || mutation.offset <= offset
-                                            || mutation
-                                                .contexts
-                                                .iter()
-                                                .any(|writer| *writer != context))
+                            .is_some_and(|sources| {
+                                sources.iter().any(|source| {
+                                    source.history.invalidated(
+                                        &source.path,
+                                        &origin.projection,
+                                        offset,
+                                        context,
+                                        origin.file != file,
+                                    )
                                 })
                             })
                     })

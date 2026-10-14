@@ -10,3 +10,11 @@ function latePattern({ client } = lateOpts) { client.info('key'); }
 for (const item of items) { latePattern(); }
 function suppliedLate(client = primary) { client.scan('key'); }
 for (const item of items) { suppliedLate(session); }
+const lateAlias = primary;
+function lateAliased(client = lateAlias) { client.get('key'); }
+for (const item of items) { lateAliased(); }
+const earlierAlias = primary;
+earlierAlias.get = unrelated;
+const laterAlias = primary;
+function lateComponent(client = laterAlias) { client.get('key'); }
+for (const item of items) { lateComponent(); }

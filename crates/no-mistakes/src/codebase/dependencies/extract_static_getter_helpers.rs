@@ -156,11 +156,15 @@ fn record_assignment_target_writes(
     target: &AssignmentTarget<'_>,
     offset: u32,
 ) {
-    for name in assignment_target_names(target) {
+    for (name, path) in extract_value_flow::write_targets::targets(target) {
         if !record_static_setter_assignment(collector, &name, offset)
             && !record_object_setter_assignment(collector, &name, offset)
         {
-            collector.record_reassigned_callable_alias(&name, offset);
+            if path.is_empty() {
+                collector.record_reassigned_callable_alias(&name, offset);
+            } else {
+                collector.record_reassigned_callable_alias_path(&name, offset, Some(&path));
+            }
         }
     }
 }

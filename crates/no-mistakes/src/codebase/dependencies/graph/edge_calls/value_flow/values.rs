@@ -32,7 +32,8 @@ impl ValueFlowResolution<'_, '_> {
                 let base = self.value(path, base);
                 self.member(base, member)
             }
-            ValueExpression::Object(fields) => FlowValue::Object {
+            ValueExpression::Object(fields, null_prototype) => FlowValue::Object {
+                null_prototype: *null_prototype,
                 file: path.to_path_buf(),
                 fields: std::sync::Arc::clone(fields),
             },
@@ -87,9 +88,13 @@ impl ValueFlowResolution<'_, '_> {
             FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => fields
                 .get(member)
                 .map_or(FlowValue::Undefined, |value| self.value(&file, value)),
-            FlowValue::Object { file, fields } => fields.get(member).map_or_else(
+            FlowValue::Object {
+                file,
+                fields,
+                null_prototype,
+            } => fields.get(member).map_or_else(
                 || {
-                    if inherited_object_member(member) {
+                    if !null_prototype && inherited_object_member(member) {
                         FlowValue::Unknown
                     } else {
                         FlowValue::Undefined
