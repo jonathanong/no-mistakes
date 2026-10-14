@@ -273,3 +273,26 @@ fn poisoned_arguments_preserve_actual_callback_identity() {
         assert_eq!(row.complete, !matches!(row.line, 8 | 31), "{rows:?}");
     }
 }
+
+#[test]
+fn wrapped_builder_aliases_preserve_canonical_update_alternatives() {
+    let rows = extract("control-flow-wrapper-update-baselines.ts");
+    assert_eq!(rows.len(), 3, "{rows:?}");
+    assert!(
+        rows.iter()
+            .filter(|row| row.line == 10)
+            .all(|row| row.complete),
+        "{rows:?}"
+    );
+    assert!(
+        !rows.iter().find(|row| row.line == 18).unwrap().complete,
+        "{rows:?}"
+    );
+    let mut sql = rows
+        .iter()
+        .filter(|row| row.line == 10)
+        .map(|row| row.sql_text.as_deref().unwrap())
+        .collect::<Vec<_>>();
+    sql.sort_unstable();
+    assert_eq!(sql, ["SELECT 1", "SELECT 1; DELETE FROM records"]);
+}

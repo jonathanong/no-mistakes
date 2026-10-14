@@ -63,10 +63,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             ),
             // Object lowering wraps computed values in Sequence and spreads in
             // an empty-name Member. Retain the inert value, never run key effects.
-            Expr::Sequence(children) => children.last().map_or_else(
-                || unsupported.clone(),
-                |child| self.failed_binding(child, path, env, unsupported, depth),
-            ),
+            Expr::Sequence(children) => children.last().map_or(unsupported.clone(), |child| {
+                self.failed_binding(child, path, env, unsupported, depth)
+            }),
             Expr::Member(child, name) if name.is_empty() => {
                 self.failed_binding(child, path, env, unsupported, depth)
             }
