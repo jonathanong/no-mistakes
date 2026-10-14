@@ -10,7 +10,9 @@ impl ValueFlowResolution<'_, '_> {
         context: Option<CallableId>,
         projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
-        let (offset, context) = self.invocation_read.as_ref()
+        let (offset, context) = self
+            .invocation_read
+            .as_ref()
             .filter(|read| read.file == path)
             .map_or((offset, context), |read| (read.offset, read.context));
         let Some(file) = self.indexes.file(self.facts, path) else {
@@ -23,14 +25,16 @@ impl ValueFlowResolution<'_, '_> {
             return FlowValue::Unknown;
         };
         let key = (path.to_path_buf(), scope, base.to_string());
-        if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
+        let parameter = scoped_name(&file.values.parameters, scope, base);
+        if let Some(parameter) = parameter {
             self.used_parameters
                 .insert((path.to_path_buf(), parameter.owner));
         }
         if !self.visiting.insert(key.clone()) {
             return FlowValue::Unknown;
         }
-        let value = if let Some(binding) = scoped_name(&file.values.bindings, scope, base) {
+        let binding = scoped_name(&file.values.bindings, scope, base);
+        let value = if let Some(binding) = binding {
             if binding
                 .mutation_contexts
                 .iter()
@@ -42,9 +46,16 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                self.value(path, &binding.value)
+                // Whole-object aliases retain the eventual read projection. A
+                // copied member initializer must acquire its own snapshot.
+                let projection = projection.filter(|_| {
+                    matches!(
+                        &binding.value, ValueExpression::Named { name, .. } if !name.contains('.')
+                    )
+                });
+                self.value_projected(path, &binding.value, projection)
             }
-        } else if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
+        } else if let Some(parameter) = parameter {
             if self.initializing.iter().any(|(file, owner, index)| {
                 file == path
                     && *owner == parameter.owner
@@ -59,16 +70,7 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                let value = self.parameter(path, parameter, &file);
-                if context.is_some_and(|context| {
-                    file.values
-                        .receiver_mutations
-                        .as_ref()
-                        .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
-                }) {
-                    self.record_parameter_receiver_read(path, offset, context);
-                }
-                value
+                self.parameter(path, parameter, &file)
             }
         } else if let Some(id) = file.resolve_local_callable_id(Some(scope), base) {
             self.callable(path, id)
@@ -125,20 +127,49 @@ impl ValueFlowResolution<'_, '_> {
         } else {
             FlowValue::Unknown
         };
+        if (binding.is_some() || parameter.is_some())
+            && context.is_some_and(|context| {
+                file.values
+                    .receiver_mutations
+                    .as_ref()
+                    .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
+            })
+        {
+            // A container alias reads live descendants at its use, while
+            // acquired member segments retain their existing snapshot nodes.
+            self.record_value_receiver_read(path, offset, context);
+        }
         self.visiting.remove(&key);
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
         if let Some(read) = &self.invocation_read {
-            if let Some(history) = file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base)) {
-                let origin = self.cache.origin_node(OriginKind::InvocationReceiver {
-                    read: read.clone(), history_file: path.to_path_buf(),
-                    history: std::sync::Arc::clone(history),
-                }, 1);
+            if let Some(history) = file
+                .values
+                .receiver_mutations
+                .as_ref()
+                .and_then(|histories| histories.get(&scope))
+                .and_then(|names| names.get(base))
+            {
+                let origin = self.cache.origin_node(
+                    OriginKind::InvocationReceiver {
+                        read: read.clone(),
+                        history_file: path.to_path_buf(),
+                        history: std::sync::Arc::clone(history),
+                    },
+                    1,
+                );
                 default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
             }
         }
-        let value = if self.default_origin_invalidated(path, offset, context, projection) {
+        // A member initializer has already checked its source at acquisition.
+        // Reading descendants still validates the live receiver projection.
+        let acquired_member = projection.is_none()
+            && member.is_none()
+            && binding.is_some_and(|binding| matches!(binding.value, ValueExpression::Member(..)));
+        let value = if !acquired_member
+            && self.default_origin_invalidated(path, offset, context, projection)
+        {
             FlowValue::Unknown
         } else {
             value
