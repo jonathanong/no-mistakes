@@ -34,6 +34,8 @@ pub struct ValueFlowFacts {
     pub reference_component_root_steps: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_path_visits: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
@@ -153,3 +155,9 @@ mod object_values;
 
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
+
+#[path = "extract_value_flow/reference_replacements.rs"]
+mod reference_replacements;
+
+#[path = "extract_value_flow/receiver_traversal.rs"]
+mod receiver_traversal;

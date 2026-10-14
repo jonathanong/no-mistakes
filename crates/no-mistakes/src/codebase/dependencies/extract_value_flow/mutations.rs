@@ -41,7 +41,7 @@ impl ImportCollector {
             };
             let mut assigned = parts.pop().map(|member| (member, completed_at));
             let has_assignment = assigned.is_some();
-            let reads = vec![(offset, self.current_function_id()); parts.len()];
+            let reads = vec![Some((offset, self.current_function_id())); parts.len()];
             let mut pending = vec![(
                 (((scope, base.to_string()), parts), reads),
                 false,
@@ -49,7 +49,7 @@ impl ImportCollector {
                 false,
             )];
             let mut active = fx_set();
-            let mut visited = fx_set();
+            let mut visited = fx_map();
             while let Some((((key, path), reads), exiting, remember, propagated)) = pending.pop() {
                 if exiting {
                     active.remove(&key);
@@ -61,10 +61,18 @@ impl ImportCollector {
                     });
                     self.remember_member_mutation(&key, &path, exact, offset, propagated);
                 }
-                if !visited.insert((key.clone(), path.clone(), reads.clone()))
-                    || !active.insert(key.clone())
-                {
+                // A cycle must not mark an unpropagated weaker summary visited.
+                if active.contains(&key) {
                     continue;
+                }
+                let Some(reads) = receiver_traversal::merge_reads(&mut visited, &key, &path, reads)
+                else {
+                    continue;
+                };
+                active.insert(key.clone());
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    self.value_flow.reference_path_visits += 1;
                 }
                 pending.push((((key.clone(), Vec::new()), Vec::new()), true, false, false));
                 affected.entry(key.0).or_default().insert(key.1.clone());
@@ -184,6 +192,8 @@ impl ImportCollector {
         }
         self.prior_member_mutations
             .history(key)
-            .is_some_and(|history| history.reference_may_be_replaced(path, reads))
+            .is_some_and(|(history, complete)| {
+                complete && history.reference_may_be_replaced(path, reads)
+            })
     }
 }

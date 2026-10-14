@@ -1,7 +1,7 @@
 use super::*;
 
 type Receiver = ((usize, String), ValueMutationPath);
-pub(super) type ReceiverRead = (u32, Option<CallableId>);
+pub(super) type ReceiverRead = Option<(u32, Option<CallableId>)>;
 pub(super) type ReceiverWrite = (Receiver, Vec<ReceiverRead>);
 pub(super) fn receiver_references(
     value: &ValueExpression,
@@ -19,7 +19,7 @@ pub(super) fn write_receiver_references(
 ) {
     walk_references(value, path, 0, &mut |receiver, acquired, read| {
         let retained = receiver.1.len() - acquired;
-        let reads = std::iter::repeat_n(read, acquired)
+        let reads = std::iter::repeat_n(Some(read), acquired)
             .chain(reads[reads.len() - retained..].iter().copied())
             .collect();
         output.push((receiver, reads));
@@ -30,7 +30,7 @@ fn walk_references(
     value: &ValueExpression,
     path: &[Option<String>],
     acquired: usize,
-    output: &mut impl FnMut(Receiver, usize, ReceiverRead),
+    output: &mut impl FnMut(Receiver, usize, (u32, Option<CallableId>)),
 ) {
     match value {
         ValueExpression::Named {

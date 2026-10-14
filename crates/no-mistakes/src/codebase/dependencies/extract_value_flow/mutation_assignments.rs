@@ -25,7 +25,10 @@ impl ValueMutationHistory {
         reads: &[nested::ReceiverRead],
     ) -> bool {
         let mut node = self;
-        for (member, (offset, context)) in path.iter().zip(reads) {
+        for (member, read) in path.iter().zip(reads) {
+            let Some((offset, context)) = read else {
+                return false;
+            };
             let Some(member) = member else {
                 return false;
             };
@@ -50,6 +53,7 @@ impl ValueMutationHistory {
         member: Option<String>,
         initial: ValueAssignedMutation,
         propagated: bool,
+        replacement: Option<bool>,
     ) {
         self.has_assignments = true;
         let mut node = self;
@@ -60,6 +64,17 @@ impl ValueMutationHistory {
             };
         }
         let assigned = node.assigned.get_or_insert_with(Default::default);
+        if let Some(fresh) = replacement {
+            assigned
+                .replacements
+                .get_or_insert_with(Default::default)
+                .record(
+                    member.as_deref(),
+                    initial.offset,
+                    fresh,
+                    initial.unconditional_offset.is_some(),
+                );
+        }
         if propagated {
             assigned
                 .propagated

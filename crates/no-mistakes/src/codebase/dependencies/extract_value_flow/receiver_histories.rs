@@ -5,6 +5,7 @@ pub(in super::super) struct ReceiverHistories {
     names: FxHashMap<usize, FxHashMap<String, usize>>,
     components: Vec<Component>,
     histories: FxHashMap<usize, mutation_history::ValueMutationHistory>,
+    proofs: FxHashMap<usize, bool>,
     #[cfg(feature = "test-instrumentation")]
     pub(super) links: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -60,6 +61,15 @@ impl ReceiverHistories {
         if self.components[left].size < self.components[right].size {
             std::mem::swap(&mut left, &mut right);
         }
+        let proof = match (self.proofs.remove(&left), self.proofs.remove(&right)) {
+            (Some(left), Some(right)) => Some(left && right),
+            (Some(proof), None) => Some(proof && !self.histories.contains_key(&right)),
+            (None, Some(proof)) => Some(proof && !self.histories.contains_key(&left)),
+            (None, None) => None,
+        };
+        if let Some(proof) = proof {
+            self.proofs.insert(left, proof);
+        }
         self.components[right].parent = left;
         self.components[left].size += self.components[right].size;
         if let Some(history) = self.histories.remove(&right) {
@@ -67,21 +77,33 @@ impl ReceiverHistories {
         }
     }
 
+    pub(super) fn require_reference_proof(&mut self, scope: usize, name: &str) {
+        let id = self.intern(scope, name);
+        let root = self.root(id);
+        let complete = !self.histories.contains_key(&root);
+        self.proofs.entry(root).or_insert(complete);
+    }
+
     pub(super) fn history_mut(
         &mut self,
         key: &(usize, String),
-    ) -> &mut mutation_history::ValueMutationHistory {
+    ) -> (&mut mutation_history::ValueMutationHistory, bool) {
         let id = self.intern(key.0, &key.1);
         let root = self.root(id);
-        self.histories.entry(root).or_default()
+        let proof = self.proofs.get(&root) == Some(&true);
+        (self.histories.entry(root).or_default(), proof)
     }
 
     pub(super) fn history(
         &self,
         key: &(usize, String),
-    ) -> Option<&mutation_history::ValueMutationHistory> {
+    ) -> Option<(&mutation_history::ValueMutationHistory, bool)> {
         let id = self.names.get(&key.0)?.get(key.1.as_str())?;
-        self.histories.get(&self.root(*id))
+        let root = self.root(*id);
+        Some((
+            self.histories.get(&root)?,
+            self.proofs.get(&root) == Some(&true),
+        ))
     }
 
     pub(super) fn finish(
@@ -107,3 +129,7 @@ impl ReceiverHistories {
             .collect()
     }
 }
+
+#[cfg(test)]
+#[path = "receiver_histories_tests.rs"]
+mod tests;

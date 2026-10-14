@@ -65,6 +65,10 @@ fn member_writes_do_not_rebuild_reference_links() {
         .unwrap();
     assert_eq!(assigned.members.len(), 257);
     assert!(assigned.propagated.is_none());
+    assert!(
+        assigned.replacements.is_none(),
+        "ordinary direct writes retain no reference event index"
+    );
     assert_eq!(assigned.merge_reinsertions, 0);
     for name in ["client", "alias", "late"] {
         let binding = facts

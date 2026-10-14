@@ -33,7 +33,7 @@ impl ImportCollector {
         let unconditional = !self.conditional_execution
             && !self.receiver_write_is_conditional
             && self.receiver_replacement_is_fresh;
-        let history = self.prior_member_mutations.history_mut(key);
+        let (history, proof) = self.prior_member_mutations.history_mut(key);
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
             let write = mutation_history::ValueAssignedMutation {
@@ -43,7 +43,13 @@ impl ImportCollector {
                     .then(|| std::num::NonZeroU32::new(completed_at))
                     .flatten(),
             };
-            history.record_assignment(path, assigned, write, propagated);
+            history.record_assignment(
+                path,
+                assigned,
+                write,
+                propagated,
+                proof.then_some(self.receiver_replacement_is_fresh),
+            );
         }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {

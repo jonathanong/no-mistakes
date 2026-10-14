@@ -44,6 +44,9 @@ fn insert_reference(
     name: &str,
     value: &ValueExpression,
 ) {
+    if nested_reference_container(value) {
+        histories.require_reference_proof(scope, name);
+    }
     if let Some((target_scope, target_name)) = referenced_value_root(value) {
         histories.link((scope, name), (target_scope, &target_name));
         links
@@ -72,4 +75,22 @@ fn referenced_value_root(value: &ValueExpression) -> Option<(usize, String)> {
 
         _ => None,
     }
+}
+
+fn nested_reference_container(value: &ValueExpression) -> bool {
+    match value {
+        ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
+            fields.values().any(has_reference)
+        }
+        ValueExpression::Default(value, fallback) => {
+            nested_reference_container(value) || nested_reference_container(fallback)
+        }
+        ValueExpression::Member(_, _) => true,
+        ValueExpression::Named { name, .. } => name.contains('.'),
+        ValueExpression::Awaited(value) => nested_reference_container(value),
+        _ => false,
+    }
+}
+fn has_reference(value: &ValueExpression) -> bool {
+    matches!(value, ValueExpression::Named { .. }) || nested_reference_container(value)
 }

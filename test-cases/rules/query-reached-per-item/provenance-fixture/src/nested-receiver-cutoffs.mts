@@ -139,3 +139,55 @@ const [arrayValue = (arrayBox.client = { get: replacement })] = source;
 arrayBox.client.get = replacement;
 function arrayBindingDefault(value) { value.get('key'); }
 for (const item of items) { arrayBindingDefault(client14); }
+
+import { primary as client15 } from '@vendor/valkey';
+const tryBox = { client: client15 };
+// A caught throw can bypass the fresh reference replacement.
+try { mayThrow(); tryBox.client = {}; } catch {}
+tryBox.client.get = replacement;
+function caughtReplacement(value) { value.get('key'); }
+for (const item of items) { caughtReplacement(client15); }
+
+import { primary as client16 } from '@vendor/valkey';
+const restoredBox = { client: client16 };
+restoredBox.client = {};
+restoredBox.client = client16;
+restoredBox.client.get = replacement;
+function restoredReference(value) { value.get('key'); }
+for (const item of items) { restoredReference(client16); }
+
+import { primary as client17 } from '@vendor/valkey';
+const dynamicBox = { client: client17 };
+dynamicBox.client = {};
+dynamicBox[key] = client17;
+dynamicBox.client.get = replacement;
+function dynamicRestoration(value) { value.get('key'); }
+for (const item of items) { dynamicRestoration(client17); }
+
+import { primary as client18 } from '@vendor/valkey';
+const savedFreshBox = { client: client18 };
+savedFreshBox.client = {};
+const savedFresh = savedFreshBox.client;
+// Restoring the live container cannot change this previously acquired receiver.
+savedFreshBox.client = client18;
+savedFresh.get = replacement;
+function savedBeforeRestoration(value) { value.get('key'); }
+for (const item of items) { savedBeforeRestoration(client18); }
+
+import { primary as client19 } from '@vendor/valkey';
+const savedDynamicBox = { client: client19 };
+savedDynamicBox.client = {};
+const savedDynamic = savedDynamicBox.client;
+savedDynamicBox[key] = client19;
+savedDynamic.get = replacement;
+function savedBeforeDynamicRestoration(value) { value.get('key'); }
+for (const item of items) { savedBeforeDynamicRestoration(client19); }
+
+import { primary as client20 } from '@vendor/valkey';
+const cycleBox = { client: client20 };
+// The live first branch mutates primary; the fallback graph also contains a cycle.
+const { client: cycle1 = cycle2.client } = cycleBox;
+const { client: cycle2 = cycle1.client } = cycle1;
+cycle1.get = replacement;
+function cyclicAcquisition(value) { value.get('key'); }
+for (const item of items) { cyclicAcquisition(client20); }

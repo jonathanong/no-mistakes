@@ -16,6 +16,13 @@ impl ValueAssignedMutations {
         if let Some(source) = source.dynamic {
             self.dynamic.get_or_insert(source).merge(source);
         }
+        if let Some(source) = source.replacements {
+            if let Some(target) = &mut self.replacements {
+                target.merge(*source);
+            } else {
+                self.replacements = Some(source);
+            }
+        }
         if let Some(source) = source.propagated {
             if let Some(target) = &mut self.propagated {
                 target.merge(*source);
@@ -83,14 +90,36 @@ impl ValueAssignedMutations {
                     .unconditional_offset
                     .is_some_and(|write| write.get() <= offset)
         };
-        self.members.get(member).is_some_and(replaced)
-            || self.propagated.as_ref().is_some_and(|propagated| {
-                propagated
-                    .aggregate
-                    .members
-                    .get(member)
-                    .is_some_and(replaced)
-            })
+        let direct = self.members.get(member);
+        let propagated = self
+            .propagated
+            .as_ref()
+            .and_then(|writes| writes.aggregate.members.get(member));
+        if [direct, propagated]
+            .into_iter()
+            .flatten()
+            .any(|write| write.writer != mutation_history::ValueAssignedWriter::single(context))
+        {
+            return false;
+        }
+        if ![direct, propagated].into_iter().flatten().any(replaced) {
+            return false;
+        }
+        if [
+            self.dynamic.as_ref(),
+            self.propagated
+                .as_ref()
+                .and_then(|writes| writes.aggregate.dynamic.as_ref()),
+        ]
+        .into_iter()
+        .flatten()
+        .any(|write| write.writer != mutation_history::ValueAssignedWriter::single(context))
+        {
+            return false;
+        }
+        self.replacements
+            .as_ref()
+            .is_some_and(|events| events.replaced(member, offset))
     }
 }
 

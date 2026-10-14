@@ -135,3 +135,9 @@ fn has_optional_chain(expression: &Expression<'_>) -> bool {
         false
     }
 }
+
+fn visit_try_with_receiver_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::TryStatement<'a>) {
+    with_conditional_receiver_write(collector, |collector| collector.visit_block_statement(&statement.block));
+    if let Some(handler) = &statement.handler { collector.visit_catch_clause(handler); }
+    if let Some(finalizer) = &statement.finalizer { collector.visit_block_statement(finalizer); }
+}

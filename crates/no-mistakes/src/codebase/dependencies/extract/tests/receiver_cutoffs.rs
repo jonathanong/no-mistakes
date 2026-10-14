@@ -37,13 +37,31 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
             assert!(guaranteed.get() > write.offset);
         }
     }
+    let restored = histories[&0]["restoredBox"]
+        .assigned
+        .as_ref()
+        .unwrap()
+        .replacements
+        .as_ref()
+        .unwrap();
+    assert_eq!(restored.members["client"].len(), 2);
+    assert_eq!(restored.dynamic.len(), 0);
+    let dynamic = histories[&0]["dynamicBox"]
+        .assigned
+        .as_ref()
+        .unwrap()
+        .replacements
+        .as_ref()
+        .unwrap();
+    assert_eq!(dynamic.members["client"].len(), 1);
+    assert_eq!(dynamic.dynamic.len(), 1);
     let parameter = &histories[&0]["parameterBox"]
         .assigned
         .as_ref()
         .unwrap()
         .members["client"];
     assert!(parameter.unconditional_offset.is_none());
-    for name in ["forBox", "whileBox", "doBox", "arrayBox"] {
+    for name in ["forBox", "whileBox", "doBox", "arrayBox", "tryBox"] {
         let write = &histories[&0][name].assigned.as_ref().unwrap().members["client"];
         assert!(write.unconditional_offset.is_none(), "{name}: {write:?}");
     }
@@ -53,4 +71,28 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
         .unwrap()
         .members["client"];
     assert!(acquired.unconditional_offset.unwrap().get() > acquired.offset);
+}
+
+#[test]
+fn converging_default_paths_join_cutoffs_instead_of_multiplying_states() {
+    let source =
+        std::fs::read_to_string(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/codebase-analysis/import-facts/fixture/nested-receiver-branching.mts",
+        ))
+        .unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    assert!(facts.value_flow.reference_path_visits > 12);
+    assert!(
+        facts.value_flow.reference_path_visits <= 12 * 8 + 8,
+        "converging defaults must not create exponential route identities: {}",
+        facts.value_flow.reference_path_visits
+    );
 }

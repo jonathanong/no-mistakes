@@ -32,6 +32,10 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         "loop",
         "bindingDefault",
         "arrayBindingDefault",
+        "caughtReplacement",
+        "cyclicAcquisition",
+        "restoredReference",
+        "dynamicRestoration",
         "assignmentDefault",
         "sameReceiver",
         "unknownReceiver",
@@ -59,6 +63,16 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         if export_path == "primary.get"),
         "{guaranteed:?}"
     );
+    for name in ["savedBeforeRestoration", "savedBeforeDynamicRestoration"] {
+        let site = sites
+            .iter()
+            .find(|site| site.caller.as_deref() == Some(name) && site.source_callee == "value.get")
+            .unwrap();
+        assert!(
+            matches!(&site.target, ResolvedCallTarget::ModuleExport { export_path, .. } if export_path == "primary.get"),
+            "{name}: {site:?}"
+        );
+    }
     let defaults = graph.call_sites_in_file(&root.join("src/nested-receiver-owned-defaults.mts"));
     for (name, callee, expected) in [
         ("liveDefault", "client.get", None),

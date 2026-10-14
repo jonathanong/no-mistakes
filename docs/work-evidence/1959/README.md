@@ -123,3 +123,31 @@ stores the guaranteed nonzero completion offset inline, preserving the bound.
 Both object and array binding-default paths now retain receiver-only conditional
 certainty in the existing named-default visitor. No semantic expectations were
 relaxed. Current-head runtime validation remains pending.
+
+The `535349c` run passed Rust tests, documentation tests, and coverage generation; its
+weighted CRAP gate failed. GitHub's job-log endpoint returned `Transport closed`,
+so the exact failing function report was unavailable. The configured threshold
+is unchanged. Root ran the static workspace cargo-crap pass on the revised
+working source (`--missing optimistic --no-cache --jobs 1 --min 30`), which passed;
+this does not establish the coverage-weighted gate.
+
+Further review identified caught-throw replacement bypasses, later static or
+dynamic restoration of the original receiver, and exponential acquisition-route
+identities through converging defaults. The next correction retains optional
+shared indexed overwrite timelines only for prepared nested-reference components.
+Last relevant events are queried at the segment's actual acquisition offset;
+conditional fresh writes preserve, but cannot establish, a distinct receiver.
+Untracked past writes make a late-marked or merged component incomplete, so its
+missing events cannot prove replacement. Ordinary direct-write controls assert
+that no event index is allocated. Saved controls retain two static events and
+one dynamic event where needed; extra retained metadata and its CPU/RSS cost
+remain unmeasured.
+
+Converging paths now join per-segment cutoffs by receiver/path: same-context reads
+keep the earliest offset, differing contexts forbid a replacement proof. Only
+changed joined summaries propagate, and active cycles cannot mark a summary visited before it propagates. A stored 12-level branching-default fixture counts actual path
+visits with a 104-visit bound; it has not yet executed on the candidate. The
+existing alias-link bound remains explicit rather than claiming a linear whole
+collector. Root statically reviewed the timeline, completeness joins, writer
+checks, and returned joined reads before publication. Fresh semantic tests,
+weighted CRAP, coverage floors, and performance validation remain pending.

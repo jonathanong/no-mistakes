@@ -128,6 +128,7 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_do_while_statement_per_item(self, statement);
     }
 
+    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) { visit_try_with_receiver_execution(self, statement); }
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
     }
