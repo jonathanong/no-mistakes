@@ -46,8 +46,22 @@ impl ValueFlowResolution<'_, '_> {
                     .is_some_and(|cutoff| offset >= cutoff)
             {
                 FlowValue::Unknown
-            } else if alias_hint.as_ref().is_some_and(|hint| hint.transparent_alias) {
-                self.value_projected(path, &binding.value, projection)
+            } else if alias_hint
+                .as_ref()
+                .is_some_and(|hint| hint.transparent_alias)
+            {
+                let value = self.value_projected(path, &binding.value, projection);
+                if context.is_some_and(|context| {
+                    file.values
+                        .receiver_mutations
+                        .as_ref()
+                        .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
+                }) {
+                    // A whole receiver alias stays live until this read. Copied
+                    // member/object initializers never enter this branch.
+                    self.record_parameter_receiver_read(path, offset, context);
+                }
+                value
             } else {
                 self.value(path, &binding.value)
             }

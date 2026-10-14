@@ -46,6 +46,7 @@ fn whole_receiver_aliases_keep_projection_and_copied_acquisition_boundaries() {
         ("shadowed-default", "alias.get", None),
         ("mixed-copy", "alias.get", None),
         ("object-copy", "alias.get", None),
+        ("inline-object-copy", "alias.get", None),
         ("copied-member-alias", "alias", None),
         ("captured", "alias.get", None),
         ("async", "alias.get", None),

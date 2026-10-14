@@ -20,8 +20,8 @@ impl MemberProjection<'_> {
             transparent_alias: matches!(&binding.value, super::ValueExpression::Named { name, .. } if !name.contains('.')),
         })
     }
-    pub(super) fn source_alias_seed(hint: Option<&Self>, invocation: bool, length: usize) -> usize {
-        if !invocation && hint.is_some_and(|hint| hint.transparent_alias) {
+    pub(super) fn source_alias_seed(hint: Option<&Self>, length: usize) -> usize {
+        if hint.is_some_and(|hint| hint.transparent_alias) {
             length
         } else {
             0

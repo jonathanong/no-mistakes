@@ -19,11 +19,8 @@ impl ValueFlowResolution<'_, '_> {
         let mut pending = vec![Step::Visit(root, None, true, true)];
         let mut projection =
             hint.map_or_else(Vec::new, member_projection::MemberProjection::members);
-        let alias_seed = member_projection::MemberProjection::source_alias_seed(
-            hint,
-            root.has_invocation_receivers,
-            projection.len(),
-        );
+        let alias_seed =
+            member_projection::MemberProjection::source_alias_seed(hint, projection.len());
         let mut reads = receiver_reads::ReceiverReads::default();
         let mut visited = fx_set();
         while let Some(step) = pending.pop() {
