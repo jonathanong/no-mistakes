@@ -30,9 +30,8 @@ impl ImportCollector {
         propagated: bool,
     ) {
         let context = self.current_function_id();
-        let unconditional = !self.conditional_execution
-            && !self.receiver_write_is_conditional
-            && self.receiver_replacement_is_fresh;
+        let unconditional =
+            !self.receiver_write_is_conditional && self.receiver_replacement_is_fresh;
         let (history, proof) = self.prior_member_mutations.history_mut(key);
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
@@ -64,7 +63,13 @@ impl ImportCollector {
             self.value_flow.reference_component_root_steps = histories.root_steps.get();
         }
         let mut retained = fx_map();
-        for (component, history) in components {
+        for (component, mut history) in components {
+            history.finish_early_assignments();
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.early_assignment_normalization_visits +=
+                    history.early_phase_entries();
+            }
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {
                 retained

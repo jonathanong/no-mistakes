@@ -27,3 +27,17 @@ fn typed_and_returned_member_selectors_share_async_api_provenance() {
     assert!(standalone["callSites"].as_array().unwrap().iter().any(|site| site["callee"] == "writePool.connect().query"));
     assert_eq!(aggregate["reports"][1]["result"]["rules"].as_array().unwrap().len(), 16);
 }
+
+#[test]
+fn namespace_type_barrels_share_effects_and_aggregate_provenance() {
+    let root = repo_fixture(&["test-cases", "rules", "query-reached-per-item", "namespace-types-fixture"]);
+    let standalone = parse_json(crate::napi_api::effects_json_impl(crate::napi_api::options::test_json_arg(json!({
+        "root": root, "kind": "postgres", "entry": "src/entry.mts"
+    }).to_string())).unwrap());
+    let aggregate = parse_json(analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
+        "root": root, "reports": [{"type": "effects", "kind": "postgres", "entry": "src/entry.mts"}, {"type": "check"}]
+    }).to_string())).unwrap());
+    assert_eq!(aggregate["reports"][0]["result"], standalone);
+    assert_eq!(standalone["callSites"].as_array().unwrap().len(), 3);
+    assert_eq!(aggregate["reports"][1]["result"]["rules"].as_array().unwrap().len(), 3);
+}

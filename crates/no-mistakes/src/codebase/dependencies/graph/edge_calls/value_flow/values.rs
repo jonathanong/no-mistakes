@@ -6,8 +6,16 @@ impl ValueFlowResolution<'_, '_> {
         path: &std::path::Path,
         expression: &ValueExpression,
     ) -> FlowValue {
+        self.value_projected(path, expression, None)
+    }
+    fn value_projected(
+        &mut self,
+        path: &std::path::Path,
+        expression: &ValueExpression,
+        projection: Option<&member_projection::MemberProjection<'_>>,
+    ) -> FlowValue {
         let outer = self.default_origins.take();
-        let value = self.expression_value(path, expression);
+        let value = self.expression_value(path, expression, projection);
         if value.is_undefined() {
             self.default_origins = None;
         }
@@ -18,6 +26,7 @@ impl ValueFlowResolution<'_, '_> {
         &mut self,
         path: &std::path::Path,
         expression: &ValueExpression,
+        projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
         match expression {
             ValueExpression::Named {
@@ -25,11 +34,15 @@ impl ValueFlowResolution<'_, '_> {
                 scope,
                 offset,
                 context,
-            } => self.named(path, name, *scope, *offset, *context),
+            } => self.named(path, name, *scope, *offset, *context, projection),
             ValueExpression::Callable(id) => self.callable(path, *id),
             ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
-                let base = self.value(path, base);
+                let hint = member_projection::MemberProjection {
+                    member,
+                    outer: projection,
+                };
+                let base = self.value_projected(path, base, Some(&hint));
                 self.member(base, member)
             }
             ValueExpression::Object(fields, null_prototype) => FlowValue::Object {

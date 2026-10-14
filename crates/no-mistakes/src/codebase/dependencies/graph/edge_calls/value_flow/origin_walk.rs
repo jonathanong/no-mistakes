@@ -7,6 +7,7 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
         receivers_only: bool,
+        hint: Option<&member_projection::MemberProjection<'_>>,
     ) -> bool {
         let Some(root) = &self.default_origins else {
             return false;
@@ -16,7 +17,8 @@ impl ValueFlowResolution<'_, '_> {
             Pop,
         }
         let mut pending = vec![Step::Visit(root, None, true, true)];
-        let mut projection = Vec::new();
+        let mut projection =
+            hint.map_or_else(Vec::new, member_projection::MemberProjection::members);
         let mut reads = receiver_reads::ReceiverReads::default();
         let mut visited = fx_set();
         while let Some(step) = pending.pop() {
@@ -108,7 +110,14 @@ impl ValueFlowResolution<'_, '_> {
                 }
                 OriginKind::Receiver(..) | OriginKind::ReceiverOwnedContexts(..) => {}
                 origin @ OriginKind::InvocationReceiver { .. } => {
-                    if self.invocation_receiver_invalidated(origin, file, context, receivers_only) {
+                    if self.invocation_receiver_invalidated(
+                        origin,
+                        file,
+                        context,
+                        receivers_only,
+                        receivers,
+                        &projection,
+                    ) {
                         return true;
                     }
                 }
@@ -136,22 +145,27 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         context: Option<CallableId>,
         receivers_only: bool,
+        receivers: bool,
+        projection: &[&str],
     ) -> bool {
-        if receivers_only || self.invocation_read.is_some() {
+        if self.invocation_read.is_some() {
             return false;
         }
         let OriginKind::InvocationReceiver {
-            file: source,
-            offset,
-            context: read_context,
-            owner,
+            read,
+            history_file,
             history,
         } = origin
         else {
             return false;
         };
-        source != file
-            || context != Some(*owner)
-            || history.invalidated(&[], &[], *offset, *read_context, false)
+        // Supplier offsets only order their own history. Reader ownership is
+        // file-qualified, while member writes follow the receiver projection.
+        read.file != *history_file
+            || if receivers_only {
+                receivers && history.assignment_invalidated(projection, read.offset, read.context, false)
+            } else {
+                read.owner.0 != file || context != Some(read.owner.1)
+            }
     }
 }

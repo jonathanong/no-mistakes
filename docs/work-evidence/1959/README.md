@@ -162,3 +162,32 @@ freshness, and all three operators with unknown original identity. Existing
 assertions remain unchanged; new positive lines are added explicitly. The
 unchanged new-expression visitor body is delegated to keep the 200-line file
 limit without changing traversal order. No compiler or weighted-gate claim.
+
+
+A further review correction makes receiver overwrite certainty relative to the
+actual deferred function/arrow body. Guards around callable creation no longer
+make every write inside that callable conditional; guards and defaults inside
+the callable still do. Generic import-execution facts keep their original flags,
+and the Annex B for-in initializer restores both outer execution dimensions.
+The saved deferred fixture covers functions, arrows, object methods, labels,
+conditionals, try blocks, logical creation, and inner conditional/default
+negatives. The fresh-RHS flag is restored before traversing assignment targets
+and RHS bodies, so it does not leak from an enclosing assignment into deferred
+updates; no extra fresh-state mechanism is added.
+
+The isolated instrumented build at 8eec845 was stopped below the 500 MiB disk
+floor before the library test harness completed. Its manifest, raw logs and
+abandoned-target inventory remain under `/workspace/quality-1959-evidence`;
+only the private generated target was removed with root authorization. This
+provided no local semantic or coverage pass. CI retains the unchanged weighted
+CRAP command and failure status while publishing its text report and LCOV as a
+small diagnostic artifact, because the connected large-job log route fails.
+
+
+Main 2b04cef6f introduced real content conflicts through #1992 destructuring
+write-phase tracking. The required integration preserves its phase receipts,
+catalogs, early-read invalidation, instrumentation, and tests alongside nested
+receiver summaries. Canonical components normalize early assignments once before
+sharing their histories; borrowed component lookups replace upstream map access
+without adding per-read name allocation or another alias traversal. This is a
+conflict resolution, with fresh combined semantic CI still required.

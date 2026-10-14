@@ -16,6 +16,7 @@ pub struct ValueAssignedMutations {
     pub dynamic: Option<ValueAssignedMutation>,
     pub propagated: Option<Box<ValuePropagatedMutations>>,
     pub replacements: Option<Box<reference_replacements::ReferenceReplacements>>,
+    pub early: Option<Box<super::destructuring_order::EarlyAssignments>>,
     #[cfg(feature = "test-instrumentation")]
     pub merge_reinsertions: usize,
 }

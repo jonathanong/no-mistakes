@@ -175,3 +175,36 @@ fn effects_cli_retains_inline_invocation_context() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+#[test]
+fn effects_namespace_types_cross_explicit_barrels() {
+    let root =
+        fixture("effects").join("../../../rules/query-reached-per-item/namespace-types-fixture");
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
+    let value = run_json(&root, &["effects", "postgres", "--entry", "src/entry.mts"]);
+    assert_eq!(value["callSites"].as_array().unwrap().len(), 3, "{value}");
+}
+
+#[test]
+fn effects_cli_retains_cross_file_inline_receiver_timing() {
+    let root = fixture("cross-file-inline-receiver");
+    for (name, expected) in [
+        ("earlier", 1),
+        ("sibling", 1),
+        ("reexported", 1),
+        ("defaults", 1),
+        ("mutated-default", 0),
+        ("later", 0),
+        ("prior", 0),
+        ("other-context", 0),
+        ("conflicting", 0),
+        ("unknown", 0),
+        ("escaped", 0),
+    ] {
+        let entry = format!("src/{name}.mts");
+        let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}

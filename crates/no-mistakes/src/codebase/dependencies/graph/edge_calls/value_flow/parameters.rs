@@ -107,7 +107,7 @@ impl ValueFlowResolution<'_, '_> {
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
             if inline_callee(&call.callee) {
-                self.invocation_read = Some((caller.clone(), call.offset, call.context, parameter.owner));
+                self.invocation_read = Some(default_origins::InvocationRead { file: caller.clone(), offset: call.offset, context: call.context, owner: (path.to_path_buf(), parameter.owner) });
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
@@ -134,6 +134,16 @@ impl ValueFlowResolution<'_, '_> {
             } else {
                 argument.expect("supplied non-undefined argument")
             };
+            if !parameter.projection.is_empty() {
+                // Destructuring acquires methods before the body executes. Carry
+                // caller timing into lazy receiver fields before they snapshot.
+                self.record_receiver_use(
+                    &caller,
+                    call,
+                    &value,
+                    from_default.then_some((path, parameter.owner, true)),
+                );
+            }
             values.push(self.project_parameter(path, parameter, value, from_default, acquisition));
             if self.acquisition_context.is_some() {
                 self.seal_receiver_acquisition();

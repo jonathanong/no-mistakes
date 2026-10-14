@@ -3,6 +3,11 @@ use mutation_history::{ValueAssignedMutation, ValueAssignedMutations, ValuePropa
 
 impl ValueAssignedMutations {
     pub(super) fn merge(&mut self, mut source: Self) {
+        if let Some(early) = source.early.take() {
+            self.early
+                .get_or_insert_with(Default::default)
+                .merge(*early);
+        }
         if source.members.len() > self.members.len() {
             std::mem::swap(&mut self.members, &mut source.members);
         }
@@ -47,6 +52,10 @@ impl ValueAssignedMutations {
         owner: &impl Fn() -> Option<CallableId>,
     ) -> bool {
         self.direct_invalidated(member, reader)
+            || self
+                .early
+                .as_ref()
+                .is_some_and(|early| early.invalidated(member, reader, self))
             || self.propagated.as_ref().is_some_and(|propagated| {
                 let owner = owner();
                 // Module writes still use the caller's recorded acquisition.

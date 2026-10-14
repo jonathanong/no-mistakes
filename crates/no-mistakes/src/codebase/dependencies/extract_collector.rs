@@ -21,13 +21,17 @@ struct ImportCollector {
     sloppy_script: bool,
     /// The Annex B for-in initializer runs before the first iteration. Its
     /// binding target still runs only when the right-hand side has a key.
-    annex_b_for_in_initializer: Option<(oxc_span::Span, bool)>,
+    annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
+    destructuring_phase_owner: Option<Option<CallableId>>,
+    destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,
+    /// Present only while the normal visitor records this exact assignment leaf.
+    assignment_target_start: Option<u32>,
     value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     collect_value_flow: bool,
     collect_per_item_calls: bool,

@@ -106,3 +106,37 @@ fn converging_default_paths_join_cutoffs_instead_of_multiplying_states() {
         facts.value_flow.reference_path_visits
     );
 }
+
+#[test]
+fn deferred_receiver_certainty_belongs_to_the_callable() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/nested-receiver-deferred.mts",
+    );
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.errors.is_empty());
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let histories = facts.value_flow.receiver_mutations.as_ref().unwrap();
+    for (name, guaranteed) in [
+        ("labeledBox", true),
+        ("conditionalBox", true),
+        ("caughtBox", true),
+        ("logicalBox", true),
+        ("guardedBox", false),
+        ("defaultBox", false),
+    ] {
+        let write = &histories[&0][name].assigned.as_ref().unwrap().members["client"];
+        assert_eq!(
+            write.unconditional_offset.is_some(),
+            guaranteed,
+            "{name}: {write:?}"
+        );
+    }
+}

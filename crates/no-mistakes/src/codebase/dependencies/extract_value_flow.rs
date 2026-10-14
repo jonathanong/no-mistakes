@@ -36,6 +36,16 @@ pub struct ValueFlowFacts {
     pub reference_link_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_path_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_phase_writes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_scope_receipts: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_catalogs: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_segments: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub early_assignment_normalization_visits: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
@@ -153,11 +163,23 @@ pub(super) mod write_targets;
 #[path = "extract_value_flow/object_values.rs"]
 mod object_values;
 
+#[path = "extract_value_flow/destructuring_order.rs"]
+mod destructuring_order;
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
 
 #[path = "extract_value_flow/reference_replacements.rs"]
 mod reference_replacements;
 
+#[path = "extract_value_flow/phase_catalog.rs"]
+mod phase_catalog;
+#[path = "extract_value_flow/phase_receipts.rs"]
+pub(super) mod phase_receipts;
+#[path = "extract_value_flow/phase_runner.rs"]
+pub(super) mod phase_runner;
+#[path = "extract_value_flow/phase_targets.rs"]
+mod phase_targets;
+#[path = "extract_value_flow/phase_walk.rs"]
+mod phase_walk;
 #[path = "extract_value_flow/receiver_traversal.rs"]
 mod receiver_traversal;

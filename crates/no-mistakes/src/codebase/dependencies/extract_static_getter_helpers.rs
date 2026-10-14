@@ -116,15 +116,26 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
+    let receipts = collector.begin_phase_receipts(&assignment.left);
     let previous = std::mem::replace(&mut collector.receiver_replacement_is_fresh, receiver_replacement_is_fresh(assignment));
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
     });
     collector.receiver_replacement_is_fresh = previous;
+    let phases = collector.begin_destructuring_phases(&assignment.left);
+    let receipts = if phases.is_some() {
+        receipts
+    } else {
+        collector.end_phase_receipts(receipts);
+        None
+    };
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+    collector.end_destructuring_lhs(&phases);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         collector.visit_expression(&assignment.right);
     });
+    collector.finish_destructuring_phases(phases);
+    collector.end_phase_receipts(receipts);
 }
 
 fn walk_assignment_lhs_without_written_getter<'a>(
@@ -162,7 +173,8 @@ fn record_assignment_target_writes(
     offset: u32,
     completed_at: u32,
 ) {
-    for (name, path) in extract_value_flow::write_targets::targets(target) {
+    for (name, path, start) in extract_value_flow::write_targets::targets(target) {
+        let previous = collector.assignment_target_start.replace(start);
         if !record_static_setter_assignment(collector, &name, offset)
             && !record_object_setter_assignment(collector, &name, offset)
         {
@@ -172,5 +184,6 @@ fn record_assignment_target_writes(
                 collector.record_reassigned_callable_alias_path(&name, offset, Some(&path), completed_at);
             }
         }
+        collector.assignment_target_start = previous;
     }
 }

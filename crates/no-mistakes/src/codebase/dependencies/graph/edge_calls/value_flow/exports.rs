@@ -32,7 +32,7 @@ pub(in super::super) fn resolve_value_exports(
                 acquisition_context: None,
                     invocation_read: None,
             };
-            let mut value = flow.named(file, local, Some(0), u32::MAX, None);
+            let mut value = flow.named(file, local, Some(0), u32::MAX, None, None);
             loop {
                 value = match value {
                     FlowValue::Returned { executor, .. } => *executor,

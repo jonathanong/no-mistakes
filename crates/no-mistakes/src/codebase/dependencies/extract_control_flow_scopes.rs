@@ -7,12 +7,14 @@ fn visit_expression_with_annex_b_initializer<'a>(
     collector: &mut ImportCollector,
     expression: &Expression<'a>,
 ) {
-    if let Some((_, outer_conditional)) = collector.annex_b_for_in_initializer.filter(|(span, _)| {
+    if let Some((_, outer_conditional, outer_receiver_conditional)) = collector.annex_b_for_in_initializer.filter(|(span, _, _)| {
         !collector.suppress_imports && *span == expression.span()
     }) {
         let initializer = collector.annex_b_for_in_initializer.take();
         let previous = std::mem::replace(&mut collector.conditional_execution, outer_conditional);
+        let previous_receiver = std::mem::replace(&mut collector.receiver_write_is_conditional, outer_receiver_conditional);
         walk::walk_expression(collector, expression);
+        collector.receiver_write_is_conditional = previous_receiver;
         collector.conditional_execution = previous;
         collector.annex_b_for_in_initializer = initializer;
     } else {
@@ -102,7 +104,7 @@ fn visit_for_in_statement_with_scope<'a>(
                     .first()
                     .filter(|declarator| binding_identifier_name(&declarator.id).is_some())
                     .and_then(|declarator| declarator.init.as_ref())
-                    .map(|init| (init.span(), collector.conditional_execution)),
+                    .map(|init| (init.span(), collector.conditional_execution, collector.receiver_write_is_conditional)),
             _ => None,
         }
     } else {
@@ -137,7 +139,7 @@ fn invalidate_for_statement_assignment_target(
     let Some(target) = left.as_assignment_target() else {
         return;
     };
-    for (name, path) in extract_value_flow::write_targets::targets(target) {
+    for (name, path, _) in extract_value_flow::write_targets::targets(target) {
         collector.record_reassigned_callable_alias_path(&name, target.span().start, Some(&path), completed_at);
     }
 }

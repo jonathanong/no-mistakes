@@ -327,9 +327,13 @@ fn opaque_array_callbacks_remain_safely_incomplete() {
         !rows[0].complete && !rows[0].only_value_placeholders,
         "{rows:?}"
     );
+    assert!(
+        rows[0].sql_text.is_none(),
+        "observed opaque callback discards the earlier fragment: {rows:?}"
+    );
     assert_eq!(
         rows[0].incomplete_reason.as_deref(),
-        Some("unresolved-sql-fragment"),
+        Some("unresolved-value-or-effect"),
         "{rows:?}"
     );
 }

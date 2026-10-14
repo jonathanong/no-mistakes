@@ -84,6 +84,27 @@ impl ReceiverHistories {
         self.proofs.entry(root).or_insert(complete);
     }
 
+    pub(super) fn is_empty(&self) -> bool {
+        self.histories.is_empty()
+    }
+
+    pub(super) fn contains_history(&self, scope: usize, name: &str) -> bool {
+        self.names
+            .get(&scope)
+            .and_then(|names| names.get(name))
+            .is_some_and(|id| self.histories.contains_key(&self.root(*id)))
+    }
+
+    pub(super) fn existing_history_mut(
+        &mut self,
+        scope: usize,
+        name: &str,
+    ) -> Option<&mut mutation_history::ValueMutationHistory> {
+        let id = *self.names.get(&scope)?.get(name)?;
+        let root = self.root(id);
+        self.histories.get_mut(&root)
+    }
+
     pub(super) fn history_mut(
         &mut self,
         key: &(usize, String),

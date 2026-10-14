@@ -15,9 +15,12 @@ fn with_conditional_execution(
     visit: impl FnOnce(&mut ImportCollector),
 ) {
     let previous = collector.conditional_execution;
+    let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
+    collector.receiver_write_is_conditional |= conditional;
     visit(collector);
     collector.conditional_execution = previous;
+    collector.receiver_write_is_conditional = previous_receiver;
 }
 
 fn visit_binding_default_with_execution<'a>(collector: &mut ImportCollector, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
@@ -149,4 +152,12 @@ fn visit_label_with_receiver_execution<'a>(collector: &mut ImportCollector, stat
 fn visit_new_expression_with_imports_and_calls<'a>(collector: &mut ImportCollector, new: &NewExpression<'a>) {
     visit_new_expression_with_imports(collector, new);
     walk::walk_new_expression(collector, new);
+}
+
+fn with_callable_receiver_execution(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
+    // A deferred body has its own execution conditions; surrounding guards only
+    // decide whether the callable is created or invoked.
+    let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
+    visit(collector);
+    collector.receiver_write_is_conditional = conditional;
 }
