@@ -11,8 +11,8 @@ impl ValueFlowResolution<'_, '_> {
         projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
         let (offset, context) = self.invocation_read.as_ref()
-            .filter(|(file, _, _, _)| file == path)
-            .map_or((offset, context), |(_, offset, context, _)| (*offset, *context));
+            .filter(|read| read.file == path)
+            .map_or((offset, context), |read| (read.offset, read.context));
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -129,10 +129,10 @@ impl ValueFlowResolution<'_, '_> {
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
-        if let Some((source, read_offset, read_context, owner)) = &self.invocation_read {
+        if let Some(read) = &self.invocation_read {
             if let Some(history) = file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base)) {
                 let origin = self.cache.origin_node(OriginKind::InvocationReceiver {
-                    file: source.clone(), offset: *read_offset, context: *read_context, owner: *owner,
+                    read: read.clone(), history_file: path.to_path_buf(),
                     history: std::sync::Arc::clone(history),
                 }, 1);
                 default_origins::merge(&mut self.default_origins, Some(origin), self.cache);

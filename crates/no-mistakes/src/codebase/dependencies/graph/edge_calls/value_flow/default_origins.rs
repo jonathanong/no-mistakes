@@ -1,6 +1,13 @@
 use super::*;
 use std::sync::Arc;
 pub(super) type Origins = Option<Arc<OriginNode>>;
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub(super) struct InvocationRead {
+    pub(super) file: std::path::PathBuf,
+    pub(super) offset: u32,
+    pub(super) context: Option<CallableId>,
+    pub(super) owner: (std::path::PathBuf, CallableId),
+}
 pub(super) struct OriginNode {
     pub(super) kind: OriginKind,
     pub(super) height: usize,
@@ -19,10 +26,8 @@ pub(super) enum OriginKind {
     ReceiverContexts(Arc<OriginNode>, Arc<OriginNode>),
     ReceiverOwnedContexts(Arc<OriginNode>, std::path::PathBuf, CallableId),
     InvocationReceiver {
-        file: std::path::PathBuf,
-        offset: u32,
-        context: Option<CallableId>,
-        owner: CallableId,
+        read: InvocationRead,
+        history_file: std::path::PathBuf,
         history: std::sync::Arc<crate::codebase::dependencies::extract::ValueMutationHistory>,
     },
     Union(Arc<OriginNode>, Arc<OriginNode>),

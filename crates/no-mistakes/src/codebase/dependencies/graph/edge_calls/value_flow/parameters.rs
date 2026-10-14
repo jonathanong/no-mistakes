@@ -107,7 +107,7 @@ impl ValueFlowResolution<'_, '_> {
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
             if inline_callee(&call.callee) {
-                self.invocation_read = Some((caller.clone(), call.offset, call.context, parameter.owner));
+                self.invocation_read = Some(default_origins::InvocationRead { file: caller.clone(), offset: call.offset, context: call.context, owner: (path.to_path_buf(), parameter.owner) });
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
