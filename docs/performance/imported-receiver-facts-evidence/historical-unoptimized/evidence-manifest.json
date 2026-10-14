@@ -1,0 +1,88 @@
+{
+  "issue": 1972,
+  "baseline": "57c927df4c09f450f67248277d49070f9576ba3b",
+  "candidate": "8d81aa148eb2e62773919a290dd21439a1616f42",
+  "measured_checkout": "7799daf908022ad3d93af09479606e74c25bd00c",
+  "scope": "Historical unoptimized evidence before merge of main17035dadf; not measurements of the updated branch.",
+  "files": {
+    "receiver-performance-raw.json": {
+      "bytes": 46367,
+      "sha256": "4508f68b774a1fd57336941d752ab2e415049e13bcf86870f15609abc53b1908",
+      "original_bytes": 46367,
+      "original_sha256": "4508f68b774a1fd57336941d752ab2e415049e13bcf86870f15609abc53b1908"
+    },
+    "receiver-performance-summary.json": {
+      "bytes": 10058,
+      "sha256": "c56534c7d268558ef73ff737441cbe42104084851c0126618d8658114bdece22",
+      "original_bytes": 10054,
+      "original_sha256": "8f07c15021c1c14d735ccb44d2f24b8e6a1271f69a8791d570986d454ca18080"
+    },
+    "receiver-performance-final-graph-single-worker-raw.json": {
+      "bytes": 13470,
+      "sha256": "03629954307527038c9cb1d40a461a79863637f6bc0aa0d6ecf961a31d108e37",
+      "original_bytes": 13470,
+      "original_sha256": "03629954307527038c9cb1d40a461a79863637f6bc0aa0d6ecf961a31d108e37"
+    },
+    "receiver-performance-final-graph-single-worker-summary.json": {
+      "bytes": 1275,
+      "sha256": "12a6bdb891f40a9a74a0c73f639b2db145c07261c141146c10b51d50c39a9df5",
+      "original_bytes": 1275,
+      "original_sha256": "12a6bdb891f40a9a74a0c73f639b2db145c07261c141146c10b51d50c39a9df5"
+    },
+    "receiver-no-writes-recheck-raw.json": {
+      "bytes": 6709,
+      "sha256": "3226a7c128bbea0301bb3be6da375e8ca568881aa89a9b4e3308c38f8215ba8e",
+      "original_bytes": 6709,
+      "original_sha256": "3226a7c128bbea0301bb3be6da375e8ca568881aa89a9b4e3308c38f8215ba8e"
+    },
+    "receiver-no-writes-recheck-summary.json": {
+      "bytes": 757,
+      "sha256": "09370fe152f2d5be85f7c272dfc7afb86e32a4b606d38dc2f5123bb235c4d3ee",
+      "original_bytes": 757,
+      "original_sha256": "09370fe152f2d5be85f7c272dfc7afb86e32a4b606d38dc2f5123bb235c4d3ee"
+    },
+    "receiver-baseline-artifacts.json": {
+      "bytes": 893,
+      "sha256": "22c5414455700e9c051634a65e18aae294485bd5b2ffbfffe57322ee2b8bef9d",
+      "original_bytes": 891,
+      "original_sha256": "4198f8f40beb81577c0d9a12b62d736127a83a1188ef3609c24672c684ff47d1"
+    },
+    "receiver-candidate-artifacts.json": {
+      "bytes": 1022,
+      "sha256": "d5a65cdac1ceb90627aef96f8572d2328a13039e88a55332f59df5931c998ebc",
+      "original_bytes": 1020,
+      "original_sha256": "0761b289ba1d78460687850f0b3ef5a693ce383b099d3110e971f43b035b5cb0"
+    },
+    "receiver-performance.py": {
+      "bytes": 6842,
+      "sha256": "cdaa30ada797344385e70368445c5573415d7b965d5fc9fb56563671e84ef99c",
+      "original_bytes": 6840,
+      "original_sha256": "cb59c9e0adff4d5ab9d698e3516727c8e849bf317bda5020778db6cd80748afe"
+    },
+    "receiver-performance-final-graph-single-worker.py": {
+      "bytes": 2244,
+      "sha256": "940e9519758509a3e49576c5e2b871b5422c852e388691df5757f5e93cfd1e10",
+      "original_bytes": 2240,
+      "original_sha256": "45e925b8e55bc926b12e0a189caf80e03c606ed1812495e64720e296213b5795"
+    },
+    "receiver-no-writes-recheck.py": {
+      "bytes": 1587,
+      "sha256": "ce71211efab9cb24569568ac091bc0338d09f065cb430966f46844d93dea1fb1",
+      "original_bytes": 1586,
+      "original_sha256": "89207edda2b6dd5769e74a431e94ad633e52316d0fa290fe28c74a6cd7a485c4"
+    },
+    "followups-perf-harness.rs": {
+      "bytes": 934,
+      "sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "original_bytes": 934,
+      "original_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33"
+    },
+    "followups-graph-perf.rs": {
+      "bytes": 1028,
+      "sha256": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135",
+      "original_bytes": 1028,
+      "original_sha256": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135"
+    }
+  },
+  "checksum_scope": "bytes and sha256 verify the shipped public files; original_bytes and original_sha256 identify immutable originals retained locally. Public paths are normalized."
+}

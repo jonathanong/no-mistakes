@@ -1,0 +1,4 @@
+# Preserve verbatim tool output, including its original whitespace.
+*.stderr -whitespace
+*.annotated.txt -whitespace
+*-elf-compiler.txt -whitespace

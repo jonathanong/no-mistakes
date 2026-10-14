@@ -1,0 +1,56 @@
+[
+  {
+    "case": "origin_small",
+    "kind": "graph",
+    "iterations": 10,
+    "samples_per_binary": 8,
+    "baseline": {
+      "wall_s": 0.4502917174977483,
+      "cpu_s": 0.4478675,
+      "rss_kib": 71802.0,
+      "report": "272:8:e02354ff54d6c9df"
+    },
+    "candidate": {
+      "wall_s": 0.4552035429987882,
+      "cpu_s": 0.451747,
+      "rss_kib": 72850.0,
+      "report": "272:8:e02354ff54d6c9df"
+    }
+  },
+  {
+    "case": "origin_large",
+    "kind": "graph",
+    "iterations": 10,
+    "samples_per_binary": 8,
+    "baseline": {
+      "wall_s": 0.6227305180000258,
+      "cpu_s": 0.6205944999999999,
+      "rss_kib": 73106.0,
+      "report": "512:128:dcdee149a9182c3f"
+    },
+    "candidate": {
+      "wall_s": 0.6422618854994653,
+      "cpu_s": 0.6411385000000001,
+      "rss_kib": 74094.0,
+      "report": "512:128:dcdee149a9182c3f"
+    }
+  },
+  {
+    "case": "lazy_imported",
+    "kind": "graph",
+    "iterations": 10,
+    "samples_per_binary": 8,
+    "baseline": {
+      "wall_s": 0.17047770300268894,
+      "cpu_s": 0.1684,
+      "rss_kib": 68374.0,
+      "report": "129:0:d9057da60fd8945d"
+    },
+    "candidate": {
+      "wall_s": 0.1987183900018863,
+      "cpu_s": 0.1960695,
+      "rss_kib": 69608.0,
+      "report": "129:128:cb2c30c2aea3db37"
+    }
+  }
+]

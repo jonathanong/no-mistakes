@@ -1,0 +1,25 @@
+{
+  "revision": "8d81aa148eb2e62773919a290dd21439a1616f42",
+  "source_artifact": "<WORKSPACE>/no-mistakes/target/debug/libno_mistakes.rlib",
+  "frozen_artifact": "<WORKSPACE>/receiver-7799-library/libno_mistakes.rlib",
+  "rlib_sha256": "75af6bd7447682de544547904a5e7861111d8ccdf207ec85b0349de4d5efa89e",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "profile": {
+    "opt_level": "0",
+    "debuginfo": 0,
+    "debug_assertions": true,
+    "overflow_checks": true,
+    "test": false
+  },
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "analyzer_source_tree": "e9e30f71cf4efbded15d813953c3629787ab5624",
+  "harness_hashes": {
+    "followups-perf-harness.rs": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+    "followups-graph-perf.rs": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135"
+  },
+  "built_checkout_revision": "7799daf908022ad3d93af09479606e74c25bd00c",
+  "validated_tree": "0a768383587495ce34a587073758dbee0e747604"
+}
