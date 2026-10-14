@@ -14,7 +14,6 @@ pub(super) struct OriginNode {
     pub(super) has_receivers: bool,
     pub(super) has_receiver_reads: bool,
     pub(super) has_defaults: bool,
-    pub(super) has_invocation_receivers: bool,
     pub(super) has_unsealed_owned_contexts: bool,
 }
 pub(super) enum OriginKind {
@@ -96,17 +95,7 @@ impl ValueFlowResolution<'_, '_> {
         self.default_origins
             .as_ref()
             .is_some_and(|origins| origins.has_defaults)
-            && self.origins_invalidated(
-                file,
-                offset,
-                context,
-                false,
-                projection.filter(|_| {
-                    self.default_origins
-                        .as_ref()
-                        .is_some_and(|origins| origins.has_invocation_receivers)
-                }),
-            )
+            && self.origins_invalidated(file, offset, context, false, projection)
     }
     pub(super) fn receiver_origin_invalidated(&self) -> bool {
         if !self
