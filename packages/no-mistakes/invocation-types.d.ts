@@ -1,7 +1,9 @@
-/** Controls shared by every analysis invocation. Durations are in seconds. */
+/** Controls shared by every analysis invocation. timeout/lockTimeout use seconds; invocationTimeoutMs uses milliseconds. */
 export interface InvocationOptions {
   /** Command execution timeout in whole non-negative seconds. Omit, `0`, or `null` disables it. CLI default remains 30. */
   timeout?: number | null;
+  /** Positive safe-integer native invocation budget in milliseconds, shared by lock acquisition and execution. Never extends timeout or lockTimeout; profile ci disables it. Omit to preserve existing timeout semantics; null is invalid. */
+  invocationTimeoutMs?: number;
   /** Maximum time to wait for the current user's invocation lock (shared across project roots), in whole non-negative seconds. Omit, `0`, or `null` waits indefinitely. CLI default remains 30. */
   lockTimeout?: number | null;
   /** Fail immediately instead of waiting when another invocation holds the lock. */

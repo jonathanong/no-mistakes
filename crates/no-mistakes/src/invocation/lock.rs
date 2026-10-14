@@ -4,7 +4,7 @@ use directories::ProjectDirs;
 use std::fs::{File, OpenOptions, TryLockError};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
@@ -45,6 +45,17 @@ pub(super) fn acquire_lock(
     timeout: Option<Duration>,
     fail_on_lock: bool,
 ) -> Result<File> {
+    acquire_lock_from(path, timeout, fail_on_lock, None)
+}
+
+// Shared-budget callers anchor acquisition before opening the file. Ordinary
+// callers retain their existing wait-only clock and first-attempt semantics.
+pub(super) fn acquire_lock_from(
+    path: &Path,
+    timeout: Option<Duration>,
+    fail_on_lock: bool,
+    acquisition_started: Option<Instant>,
+) -> Result<File> {
     let file = OpenOptions::new()
         .read(true)
         .write(true)
@@ -52,11 +63,11 @@ pub(super) fn acquire_lock(
         .truncate(false)
         .open(path)
         .with_context(|| format!("opening invocation lock {}", path.display()))?;
-    let started = clock::now();
+    let started = acquisition_started.unwrap_or_else(clock::now);
     let mut first_attempt = true;
     let mut last_reported_secs = None;
     loop {
-        if !first_attempt {
+        if !first_attempt || acquisition_started.is_some() {
             if let Some(timeout) = timeout.filter(|timeout| started.elapsed() >= *timeout) {
                 return Err(lock_timeout_error(timeout));
             }

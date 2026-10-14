@@ -15,6 +15,7 @@ fn active_progress_signal_subprocess_helper() {
     // the shared signal listener so a killed hosted step can emit a snapshot.
     let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
         timeout: None,
+        invocation_timeout: None,
         ..InvocationOptions::default()
     })
     .unwrap();
@@ -132,6 +133,7 @@ fn blocked_progress_stderr_subprocess_helper() {
         ProgressGuard::install(std::sync::Arc::clone(&observer), Duration::from_secs(3600));
     let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
         timeout: (mode == "timeout").then(|| Duration::from_millis(150)),
+        invocation_timeout: None,
         ..InvocationOptions::default()
     })
     .unwrap();
@@ -226,6 +228,7 @@ fn progress_waiting_for_lock_subprocess_helper() {
         let _execution = InvocationGuard::acquire_at_path(
             InvocationOptions {
                 timeout: None,
+                invocation_timeout: None,
                 ..InvocationOptions::default()
             },
             Path::new(&path),
@@ -307,6 +310,7 @@ fn readable_stderr_deadline_subprocess_helper() {
     if mode == "plain" {
         let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
             timeout: Some(Duration::from_millis(150)),
+            invocation_timeout: None,
             ..InvocationOptions::default()
         })
         .unwrap();
@@ -321,6 +325,7 @@ fn readable_stderr_deadline_subprocess_helper() {
     });
     let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
         timeout: Some(Duration::from_millis(150)),
+        invocation_timeout: None,
         ..InvocationOptions::default()
     })
     .unwrap();

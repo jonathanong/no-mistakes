@@ -1,12 +1,18 @@
 #[cfg(unix)]
 use super::child::process_tree::signals;
 use super::deadline::{active_deadline, Deadline};
+use super::lock::acquire_lock;
 use super::*;
+use anyhow::Result;
 use serde_json::Value;
+use std::path::Path;
 use std::process::Command;
 use std::time::Instant;
 #[cfg(unix)]
 use wait_timeout::ChildExt;
+
+#[path = "tests/shared_budget.rs"]
+mod shared_budget;
 
 #[path = "tests/napi_options.rs"]
 mod napi_options;
@@ -50,6 +56,7 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
     assert_eq!(
         InvocationArgs {
             timeout: 0,
+            invocation_timeout_ms: None,
             lock_timeout: 0,
             fail_on_lock: true,
             profile: None,
@@ -57,6 +64,7 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
         .options(),
         InvocationOptions {
             timeout: None,
+            invocation_timeout: None,
             lock_timeout: None,
             fail_on_lock: true,
             jobs: None,
@@ -69,6 +77,7 @@ fn ci_profile_disables_timeouts() {
     assert_eq!(
         InvocationArgs {
             timeout: DEFAULT_TIMEOUT_SECONDS,
+            invocation_timeout_ms: None,
             lock_timeout: DEFAULT_TIMEOUT_SECONDS,
             fail_on_lock: false,
             profile: Some(InvocationProfile::Ci),
@@ -76,6 +85,7 @@ fn ci_profile_disables_timeouts() {
         .options(),
         InvocationOptions {
             timeout: None,
+            invocation_timeout: None,
             lock_timeout: None,
             fail_on_lock: false,
             jobs: None,
@@ -153,6 +163,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
     let guard = InvocationGuard::acquire_at_path(
         InvocationOptions {
             timeout: Some(Duration::from_secs(5)),
+            invocation_timeout: None,
             lock_timeout: Some(Duration::from_secs(1)),
             fail_on_lock: false,
             jobs: None,
@@ -513,4 +524,14 @@ fn production_test_planning_subprocesses_use_deadline_aware_output() {
     ];
 
     assert!(sources.iter().all(|source| !source.contains(".output()")));
+}
+
+impl InvocationGuard {
+    fn acquire_at_path(
+        options: InvocationOptions,
+        path: &Path,
+        forward_parent_signals: bool,
+    ) -> Result<Self> {
+        Self::acquire_resolving_path(options, forward_parent_signals, || Ok(path.to_path_buf()))
+    }
 }

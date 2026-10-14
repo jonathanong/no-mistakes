@@ -99,6 +99,7 @@ test("writes the compatible four-report contract from one prepared analysis", as
         changedFilesManifest: manifest,
         outputDirectory: directory,
         timeout: 3,
+        invocationTimeoutMs: 3500,
         lockTimeout: null,
         failOnLock: true,
         jobs: 2,
@@ -115,6 +116,7 @@ test("writes the compatible four-report contract from one prepared analysis", as
       {
         root: "/repo",
         timeout: 3,
+        invocationTimeoutMs: 3500,
         lockTimeout: null,
         failOnLock: true,
         jobs: 2,

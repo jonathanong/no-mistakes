@@ -130,3 +130,22 @@ fn queue_and_server_graph_flags_keep_global_placement_and_format_conflicts() {
         assert!(Cli::try_parse_from(["no-mistakes", "--json", command, leaf]).is_err());
     }
 }
+
+#[test]
+fn every_cli_leaf_accepts_the_millisecond_invocation_budget() {
+    for leaf in leaf_paths(&Cli::command()) {
+        for insertion in 0..=leaf.len() {
+            let mut argv = vec!["no-mistakes".to_string()];
+            argv.extend(leaf.iter().cloned());
+            argv.splice(
+                insertion + 1..insertion + 1,
+                ["--invocation-timeout-ms".to_string(), "3500".to_string()],
+            );
+            argv.push("--help".to_string());
+            let Err(error) = Cli::try_parse_from(&argv) else {
+                panic!("help must stop parsing {argv:?}")
+            };
+            assert_eq!(error.kind(), ErrorKind::DisplayHelp, "{argv:?}: {error}");
+        }
+    }
+}
