@@ -35,6 +35,10 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
         ("static-computed", "client.get", Some("primary.get")),
         ("default-object", "options.client.get", Some("primary.get")),
         ("default-object-matching", "options.client.get", None),
+        // Transparent aliases retain their pre-existing conservative result.
+        ("alias-named", "alias.get", None),
+        ("alias-inline", "alias.get", None),
+        ("snapshot-named", "get", Some("primary.get")),
         ("captured", "client.get", None),
         ("async", "client.get", None),
     ] {
@@ -59,34 +63,41 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
 }
 
 #[test]
-fn mixed_member_reads_share_one_parameter_agreement() {
-    let (root, graph) = graph("inline-member-precision-cache");
-    let sites = graph.call_sites_in_file(&root.join("src/mixed.mts"));
-    for (callee, expected) in [("client.get", Some("primary.get")), ("client.set", None)] {
-        let reads = sites
-            .iter()
-            .filter(|site| site.source_callee == callee)
-            .collect::<Vec<_>>();
-        assert_eq!(reads.len(), 64);
-        for site in reads {
-            assert_eq!(
-                match &site.target {
-                    ResolvedCallTarget::ModuleExport { export_path, .. } =>
-                        Some(export_path.as_str()),
-                    _ => None,
-                },
-                expected,
-                "{callee}: {site:?}"
+fn mixed_member_reads_share_the_same_two_bootstrap_agreements() {
+    for (fixture, count) in [
+        ("inline-member-precision-cache-small", 1),
+        ("inline-member-precision-cache", 64),
+    ] {
+        let (root, graph) = graph(fixture);
+        let sites = graph.call_sites_in_file(&root.join("src/mixed.mts"));
+        for (callee, expected) in [("client.get", Some("primary.get")), ("client.set", None)] {
+            let reads = sites
+                .iter()
+                .filter(|site| site.source_callee == callee)
+                .collect::<Vec<_>>();
+            assert_eq!(reads.len(), count);
+            for site in reads {
+                assert_eq!(
+                    match &site.target {
+                        ResolvedCallTarget::ModuleExport { export_path, .. } =>
+                            Some(export_path.as_str()),
+                        _ => None,
+                    },
+                    expected,
+                    "{callee}: {site:?}"
+                );
+            }
+        }
+        #[cfg(feature = "test-instrumentation")]
+        {
+            // Baseline already constructs two generations while the anonymous
+            // callee becomes known. More member reads must not add computations.
+            assert_eq!(benchmark_probe_parameter_agreements(), 2);
+            assert!(
+                benchmark_probe_origin_nodes() <= 128 * 8 + 8,
+                "member uses must share their agreement/origin DAG: {} nodes",
+                benchmark_probe_origin_nodes()
             );
         }
-    }
-    #[cfg(feature = "test-instrumentation")]
-    {
-        assert_eq!(benchmark_probe_parameter_agreements(), 1);
-        assert!(
-            benchmark_probe_origin_nodes() <= 128 * 8 + 8,
-            "member uses must share their agreement/origin DAG: {} nodes",
-            benchmark_probe_origin_nodes()
-        );
     }
 }
