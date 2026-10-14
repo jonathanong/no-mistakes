@@ -6,6 +6,8 @@ pub(super) type DefaultOriginIndex =
 pub type ValueMutationPath = Vec<Option<String>>;
 pub(super) type PriorMemberMutations =
     FxHashMap<usize, FxHashMap<String, mutation_history::ValueMutationHistory>>;
+pub type ValueReceiverMutations =
+    FxHashMap<usize, FxHashMap<String, std::sync::Arc<mutation_history::ValueMutationHistory>>>;
 pub type ValueDefaultMutations = FxHashMap<usize, Vec<ValueDefaultMutationSource>>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueDefaultMutationSource {
@@ -25,6 +27,7 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
+    pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
@@ -131,3 +134,6 @@ pub(super) mod write_targets;
 
 #[path = "extract_value_flow/object_values.rs"]
 mod object_values;
+
+#[path = "extract_value_flow/mutation_assignments.rs"]
+mod mutation_assignments;

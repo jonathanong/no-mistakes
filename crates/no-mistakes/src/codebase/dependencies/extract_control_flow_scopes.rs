@@ -88,7 +88,7 @@ fn visit_for_in_statement_with_scope<'a>(
 ) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-in");
     let pushed = collector.push_lexical_scope();
-    invalidate_for_statement_assignment_target(collector, &statement.left);
+    invalidate_for_statement_assignment_target(collector, &statement.left, statement.right.span().end);
     // In sloppy scripts Annex B evaluates `var key = init` before enumerating
     // keys. Keep the target and any destructuring defaults per iteration.
     let initializer = if collector.sloppy_script {
@@ -120,7 +120,7 @@ fn visit_for_of_statement_with_scope<'a>(
 ) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for-of");
     let pushed = collector.push_lexical_scope();
-    invalidate_for_statement_assignment_target(collector, &statement.left);
+    invalidate_for_statement_assignment_target(collector, &statement.left, statement.right.span().end);
     with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.visit_expression(&statement.right);
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
@@ -130,12 +130,13 @@ fn visit_for_of_statement_with_scope<'a>(
 fn invalidate_for_statement_assignment_target(
     collector: &mut ImportCollector,
     left: &ForStatementLeft<'_>,
+    completed_at: u32,
 ) {
     let Some(target) = left.as_assignment_target() else {
         return;
     };
     for (name, path) in extract_value_flow::write_targets::targets(target) {
-        collector.record_reassigned_callable_alias_path(&name, target.span().start, Some(&path));
+        collector.record_reassigned_callable_alias_path(&name, target.span().start, Some(&path), completed_at);
     }
 }
 

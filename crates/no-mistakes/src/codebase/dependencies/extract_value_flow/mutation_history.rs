@@ -5,8 +5,26 @@ use super::*;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueMutationHistory {
     pub summary: Option<ValueMutationInfo>,
+    pub assigned: Option<Box<ValueAssignedMutations>>,
+    pub has_assignments: bool,
     pub members: FxHashMap<String, Self>,
     pub dynamic: Option<Box<Self>>,
+}
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ValueAssignedMutations {
+    pub members: FxHashMap<String, ValueAssignedMutation>,
+    pub dynamic: Option<ValueAssignedMutation>,
+    #[cfg(feature = "test-instrumentation")]
+    pub merge_reinsertions: usize,
+}
+/// Exact writes need only one context, or the fact that writers differ.
+/// With two distinct writers, at least one differs from every reader.
+/// Copy keeps each property summary inline instead of allocating a context set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ValueAssignedMutation {
+    pub offset: u32,
+    pub context: Option<CallableId>,
+    pub multiple_contexts: bool,
 }
 impl ValueMutationHistory {
     pub(super) fn record(
@@ -32,6 +50,14 @@ impl ValueMutationHistory {
         }
     }
     pub(super) fn merge(&mut self, source: Self) {
+        self.has_assignments |= source.has_assignments;
+        if let Some(assigned) = source.assigned {
+            if let Some(target) = &mut self.assigned {
+                target.merge(*assigned);
+            } else {
+                self.assigned = Some(assigned);
+            }
+        }
         if let Some(source) = source.summary {
             let target = self.summary.get_or_insert_with(|| ValueMutationInfo {
                 offset: source.offset,

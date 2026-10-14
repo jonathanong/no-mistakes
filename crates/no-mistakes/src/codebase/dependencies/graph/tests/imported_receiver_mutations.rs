@@ -1,0 +1,176 @@
+use super::*;
+
+#[test]
+fn callee_owned_receiver_defaults_keep_their_execution_context() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "value-flow-default-receiver-context",
+    ));
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+    for (caller, export) in [
+        ("beforeWrite", Some("primary.get")),
+        ("afterWrite", None),
+        ("externalWrite", None),
+        ("objectDefault", Some("scoped.get")),
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| {
+                site.caller.as_deref() == Some(caller) && site.source_callee == "client.get"
+            })
+            .unwrap();
+        assert_eq!(
+            match &site.target {
+                ResolvedCallTarget::ModuleExport { export_path, .. } => Some(export_path.as_str()),
+                _ => None,
+            },
+            export,
+            "{caller}: {site:?}"
+        );
+    }
+    let factory = graph.call_sites_in_file(&root.join("src/source.mts"));
+    let factory = factory
+        .iter()
+        .find(|site| site.source_callee == "primary.info")
+        .unwrap();
+    let caller = graph.call_sites_in_file(&root.join("src/cross-file.mts"));
+    let caller = caller
+        .iter()
+        .find(|site| site.source_callee == "client.get")
+        .unwrap();
+    // Equal file-local IDs must not turn another module's acquisition into a
+    // callee-owned default read. The factory mutates before returning its object.
+    assert_eq!(factory.caller_id, caller.caller_id);
+    assert!(factory.caller_id.is_some());
+    assert!(
+        matches!(&factory.target, ResolvedCallTarget::ModuleExport { export_path, .. }
+        if export_path == "primary.info")
+    );
+    assert!(
+        matches!(caller.target, ResolvedCallTarget::Unknown),
+        "{caller:?}"
+    );
+}
+
+#[test]
+fn imported_receivers_preserve_member_snapshots_and_live_nested_inputs() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/query-reached-per-item/provenance-fixture"),
+    );
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/imported-receiver-mutations.mts"));
+    for (caller, callee, export) in [
+        (Some("beforeWrite"), "client.get", "primary.get"),
+        (Some("untouchedMethod"), "client.info", "primary.info"),
+        (None, "copiedInfoAfter", "primary.info"),
+        (None, "primary.info", "primary.info"),
+        (None, "nestedCopied", "primary.nested.get"),
+        (
+            Some("untouchedNested"),
+            "client.other.get",
+            "primary.other.get",
+        ),
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.caller.as_deref() == caller && site.source_callee == callee)
+            .unwrap();
+        assert!(
+            matches!(&site.target, ResolvedCallTarget::ModuleExport { export_path, .. }
+            if export_path == export),
+            "{caller:?} {callee}: {site:?}"
+        );
+    }
+    for (caller, callee) in [
+        ("lateDefault", "client.get"),
+        ("earlyObject", "client.get"),
+        ("suppliedObject", "client.get"),
+        ("suppliedIdentifier", "client.get"),
+        ("lateIdentifier", "client.get"),
+        ("copiedAfter", "get"),
+        ("identifierObject", "options.client.get"),
+        ("nestedSupplied", "client.get"),
+        ("captured", "client.get"),
+        ("identifierBefore", "options.client.get"),
+        ("nestedIdentifier", "options.box.client.get"),
+        ("nestedReceiver", "client.get"),
+        ("dynamicReceiver", "client.bucket.get"),
+        ("mergedReceiver", "client.get"),
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.caller.as_deref() == Some(caller) && site.source_callee == callee)
+            .unwrap();
+        assert!(
+            matches!(site.target, ResolvedCallTarget::Unknown),
+            "{caller} {callee}: {site:?}"
+        );
+    }
+}
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "value-flow-imported-receiver-cache",
+    ));
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/projected.mts"));
+    let receivers = sites
+        .iter()
+        .filter(|site| site.source_callee == "options.client.get")
+        .collect::<Vec<_>>();
+    assert_eq!(receivers.len(), 128);
+    assert!(receivers
+        .iter()
+        .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
+    assert_eq!(benchmark_probe_parameter_agreements(), 1);
+    assert!(
+        benchmark_probe_origin_nodes() <= 128 * 8 + 8,
+        "receiver sites must reuse the agreement/context instead of copying history per projection: {} nodes",
+        benchmark_probe_origin_nodes()
+    );
+}

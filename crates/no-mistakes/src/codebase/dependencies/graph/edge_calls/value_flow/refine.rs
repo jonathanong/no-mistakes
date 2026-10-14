@@ -61,6 +61,7 @@ fn refine_iteration(
         visiting: fx_set(),
         calls_visiting: fx_set(),
         default_origins: None,
+        acquisition_context: None,
     };
     let mut sites = base.to_vec();
     let mut edges = Vec::new();

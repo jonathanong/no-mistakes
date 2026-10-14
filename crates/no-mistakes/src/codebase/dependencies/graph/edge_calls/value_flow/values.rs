@@ -77,7 +77,14 @@ impl ValueFlowResolution<'_, '_> {
     }
     pub(super) fn member(&mut self, base: FlowValue, member: &str) -> FlowValue {
         self.project_default_origins(member);
-        self.member_value(base, member)
+        let value = self.member_value(base, member);
+        let value = if self.receiver_origin_invalidated() {
+            FlowValue::Unknown
+        } else {
+            value
+        };
+        self.snapshot_receiver_origins();
+        value
     }
     fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
@@ -85,9 +92,11 @@ impl ValueFlowResolution<'_, '_> {
                 receiver: Some(receiver),
                 ..
             } => self.member_value(FlowValue::Target(receiver), member),
-            FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => fields
-                .get(member)
-                .map_or(FlowValue::Undefined, |value| self.value(&file, value)),
+            FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => {
+                fields.get(member).map_or(FlowValue::Undefined, |value| {
+                    self.receiver_field_value(&file, value)
+                })
+            }
             FlowValue::Object {
                 file,
                 fields,
@@ -100,7 +109,7 @@ impl ValueFlowResolution<'_, '_> {
                         FlowValue::Undefined
                     }
                 },
-                |value| self.value(&file, value),
+                |value| self.receiver_field_value(&file, value),
             ),
             FlowValue::Target(ResolvedCallTarget::ModuleExport {
                 specifier,

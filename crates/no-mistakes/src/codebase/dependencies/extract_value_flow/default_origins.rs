@@ -25,15 +25,20 @@ impl ImportCollector {
         &mut self,
         key: &(usize, String),
         path: &[Option<String>],
+        assigned: Option<(Option<String>, u32)>,
         offset: u32,
     ) {
         let context = self.current_function_id();
-        self.prior_member_mutations
+        let history = self
+            .prior_member_mutations
             .entry(key.0)
             .or_default()
             .entry(key.1.clone())
-            .or_default()
-            .record(path, offset, context);
+            .or_default();
+        history.record(path, offset, context);
+        if let Some((assigned, completed_at)) = assigned {
+            history.record_assignment(path, assigned, completed_at, context);
+        }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {
         let Some(index) = self.parameter_default_origins.take() else {
@@ -45,6 +50,7 @@ impl ImportCollector {
             .flat_map(|(scope, names)| names.keys().map(move |name| (*scope, name.clone())))
             .collect::<Vec<_>>();
         let mut visited = fx_set();
+        let mut receivers: ValueReceiverMutations = fx_map();
         for seed in seeds {
             let mut pending = vec![seed];
             let mut component = Vec::new();
@@ -74,6 +80,12 @@ impl ImportCollector {
             }
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {
+                if scope == 0 && self.imported_bindings.contains(&name) && history.has_assignments {
+                    receivers
+                        .entry(scope)
+                        .or_default()
+                        .insert(name.clone(), std::sync::Arc::clone(&history));
+                }
                 // A late alias captures the already mutated receiver, including
                 // a synthetic default export. Apply the shared cutoff once.
                 if let Some(summary) = &history.summary {
@@ -115,6 +127,9 @@ impl ImportCollector {
                     );
                 }
             }
+        }
+        if !receivers.is_empty() {
+            self.value_flow.receiver_mutations = Some(std::sync::Arc::new(receivers));
         }
     }
 }

@@ -113,6 +113,9 @@ impl ValueFlowResolution<'_, '_> {
             FlowValue::Unknown
         };
         self.visiting.remove(&key);
+        if scope == 0 && file.imported.contains_key(base) {
+            self.record_receiver_origin(path, scope, base, offset, context);
+        }
         let value = if self.default_origin_invalidated(path, offset, context) {
             FlowValue::Unknown
         } else {

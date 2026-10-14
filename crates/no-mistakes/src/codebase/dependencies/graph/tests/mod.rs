@@ -131,3 +131,9 @@ include!("call_site_index.rs");
 
 #[path = "value_flow_worklist.rs"]
 mod value_flow_worklist;
+
+#[path = "imported_receiver_mutations.rs"]
+mod imported_receiver_mutations;
+
+#[path = "receiver_evaluation_order.rs"]
+mod receiver_evaluation_order;

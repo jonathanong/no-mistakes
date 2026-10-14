@@ -5,6 +5,8 @@ use crate::codebase::dependencies::extract::{
 
 #[derive(Clone, Default)]
 pub(super) struct FlowFileIndex {
+    receiver_mutations:
+        Option<std::sync::Arc<crate::codebase::dependencies::extract::ValueReceiverMutations>>,
     bindings: ScopedNameMap<ValueBinding>,
     parameters: ScopedNameMap<ValueParameter>,
     returns: FxHashMap<CallableId, Vec<ValueExpression>>,
@@ -14,46 +16,7 @@ pub(super) struct FlowFileIndex {
     async_callables: FxHashSet<CallableId>,
     generator_callables: FxHashSet<CallableId>,
 }
-impl FlowFileIndex {
-    pub(super) fn new(
-        flow: &crate::codebase::dependencies::extract::ValueFlowFacts,
-        scopes: &[(CallableId, String)],
-    ) -> Self {
-        let mut returns: FxHashMap<_, Vec<_>> = fx_map();
-        for (owner, value) in &flow.returns {
-            returns.entry(*owner).or_default().push(value.clone());
-        }
-        let mut sites: FxHashMap<_, FxHashMap<_, _>> = fx_map();
-        for call in &flow.calls {
-            sites
-                .entry(call.offset)
-                .or_default()
-                .insert(call.source_callee.clone(), (call.offset, call.end));
-        }
-        Self {
-            async_callables: flow.async_callables.clone(),
-            generator_callables: flow.generator_callables.clone(),
-            sites,
-            scopes: scopes.iter().cloned().collect(),
-            bindings: index_scoped_names(
-                flow.bindings
-                    .iter()
-                    .map(|value| ((value.scope, value.name.clone()), value.clone())),
-            ),
-            parameters: index_scoped_names(
-                flow.parameters
-                    .iter()
-                    .map(|value| ((value.scope, value.name.clone()), value.clone())),
-            ),
-            returns,
-            calls: flow
-                .calls
-                .iter()
-                .map(|call| ((call.offset, call.end), call.clone()))
-                .collect(),
-        }
-    }
-}
+
 #[derive(Clone, PartialEq, Eq)]
 enum FlowValue {
     Uncallable,
@@ -114,6 +77,7 @@ struct ValueFlowResolution<'a, 'b> {
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
+    acquisition_context: default_origins::Origins,
 }
 
 #[path = "value_flow/named.rs"]
@@ -202,3 +166,23 @@ use default_origins::{OriginKind, OriginNode};
 mod origin_tree;
 #[path = "value_flow/parameter_projection.rs"]
 mod parameter_projection;
+
+#[path = "value_flow/receiver_origins.rs"]
+mod receiver_origins;
+
+#[path = "value_flow/origin_sources.rs"]
+mod origin_sources;
+
+#[path = "value_flow/receiver_contexts.rs"]
+mod receiver_contexts;
+
+#[path = "value_flow/origin_walk.rs"]
+mod origin_walk;
+#[path = "value_flow/receiver_reads.rs"]
+mod receiver_reads;
+
+#[path = "value_flow/receiver_owned_contexts.rs"]
+mod receiver_owned_contexts;
+
+#[path = "value_flow/file_index.rs"]
+mod file_index;

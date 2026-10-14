@@ -7,6 +7,7 @@ impl ValueFlowResolution<'_, '_> {
         parameter: &ValueParameter,
         mut value: FlowValue,
         from_default: bool,
+        acquisition: default_origins::Origins,
     ) -> FlowValue {
         let mut origin_order = from_default.then_some(parameter.default_order);
         let mut origin = from_default.then_some(0);
@@ -29,6 +30,7 @@ impl ValueFlowResolution<'_, '_> {
                 ValueProjection::Default(fallback, order) if value == FlowValue::Undefined => {
                     self.initializing
                         .push((path.to_path_buf(), parameter.owner, *order));
+                    self.acquisition_context = acquisition.clone();
                     let value = self.value(path, fallback);
                     self.initializing.pop();
                     origin_order = Some(*order);

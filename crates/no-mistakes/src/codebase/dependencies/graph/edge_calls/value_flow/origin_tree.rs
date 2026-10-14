@@ -65,3 +65,70 @@ fn balance(
     }
     branch(left, right, cache)
 }
+
+impl OriginNode {
+    pub(super) fn new(kind: OriginKind, height: usize) -> Self {
+        let has_receivers = match &kind {
+            OriginKind::Receiver(..) => true,
+            OriginKind::Source(_) | OriginKind::ReceiverOwnedContexts(..) => false,
+            OriginKind::Union(left, right) => left.has_receivers || right.has_receivers,
+            OriginKind::ReceiverUse(source, _) => {
+                source.as_ref().is_some_and(|source| source.has_receivers)
+            }
+            OriginKind::Project(source, _)
+            | OriginKind::ReceiverSnapshot(source)
+            | OriginKind::ReceiverAcquisition(source)
+            | OriginKind::ReceiverContexts(source, _) => source.has_receivers,
+        };
+        let has_receiver_reads = match &kind {
+            OriginKind::Receiver(..) | OriginKind::Source(_) => false,
+            OriginKind::ReceiverOwnedContexts(root, ..) => root.has_receiver_reads,
+            OriginKind::Union(left, right) => left.has_receiver_reads || right.has_receiver_reads,
+            OriginKind::ReceiverUse(source, read) => {
+                read.invocation
+                    || source
+                        .as_ref()
+                        .is_some_and(|source| source.has_receiver_reads)
+            }
+            OriginKind::Project(source, _)
+            | OriginKind::ReceiverSnapshot(source)
+            | OriginKind::ReceiverAcquisition(source)
+            | OriginKind::ReceiverContexts(source, _) => source.has_receiver_reads,
+        };
+        let has_defaults = match &kind {
+            OriginKind::Source(_) => true,
+            OriginKind::Receiver(..) | OriginKind::ReceiverOwnedContexts(..) => false,
+            OriginKind::Union(left, right) => left.has_defaults || right.has_defaults,
+            OriginKind::ReceiverUse(source, _) => {
+                source.as_ref().is_some_and(|source| source.has_defaults)
+            }
+            OriginKind::Project(source, _)
+            | OriginKind::ReceiverSnapshot(source)
+            | OriginKind::ReceiverAcquisition(source)
+            | OriginKind::ReceiverContexts(source, _) => source.has_defaults,
+        };
+        let has_unsealed_owned_contexts = match &kind {
+            OriginKind::ReceiverOwnedContexts(..) => true,
+            OriginKind::Source(_)
+            | OriginKind::Receiver(..)
+            | OriginKind::ReceiverAcquisition(_) => false,
+            OriginKind::Union(left, right) | OriginKind::ReceiverContexts(left, right) => {
+                left.has_unsealed_owned_contexts || right.has_unsealed_owned_contexts
+            }
+            OriginKind::ReceiverUse(source, _) => source
+                .as_ref()
+                .is_some_and(|source| source.has_unsealed_owned_contexts),
+            OriginKind::Project(source, _) | OriginKind::ReceiverSnapshot(source) => {
+                source.has_unsealed_owned_contexts
+            }
+        };
+        Self {
+            has_defaults,
+            has_unsealed_owned_contexts,
+            kind,
+            height,
+            has_receivers,
+            has_receiver_reads,
+        }
+    }
+}

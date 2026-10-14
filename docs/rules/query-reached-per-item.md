@@ -25,6 +25,12 @@ A finding identifies the construct, callee, effect kind, and deterministic
 shortest resolved call path to its sink. Transaction sinks are marked separately
 and recommend merging statements rather than parallelizing one client.
 Unresolved dynamic targets cannot prove sink reachability and are not reported.
+Imported receiver mutations remain visible through later object literals,
+identifier parameters, and destructured helper arguments or defaults. Replacing
+an imported method makes that method unresolved through those receivers; a
+method copied before replacement and an untouched method remain proven. Static
+nested receiver paths retain the same distinction, while dynamic member writes
+invalidate every matching path conservatively.
 
 ## Options and defaults
 
