@@ -11,6 +11,7 @@ pub(super) mod modules;
 mod prune;
 mod reachable;
 mod run;
+mod updates;
 mod values;
 
 #[cfg(test)]

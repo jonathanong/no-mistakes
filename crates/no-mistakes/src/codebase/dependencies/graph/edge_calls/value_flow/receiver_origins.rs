@@ -118,7 +118,7 @@ impl ValueFlowResolution<'_, '_> {
         value: &FlowValue,
         owned_context: Option<(&std::path::Path, CallableId, bool)>,
     ) {
-        let lazy = match value {
+        let lazy = match value.executor() {
             FlowValue::Object { file, .. } | FlowValue::Array { file, .. } => self
                 .indexes
                 .file(self.facts, file)

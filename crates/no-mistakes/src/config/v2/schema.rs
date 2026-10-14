@@ -18,7 +18,7 @@ mod string_or_list;
 mod tests_config;
 
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
-pub use effects::{EffectKindConfig, EffectTargetConfig};
+pub use effects::{EffectKindConfig, EffectReturnedMemberConfig, EffectTargetConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
     DartConfig, DotnetConfig, DotnetProjectConfig, ElixirConfig, GoConfig, ImpactConfig,

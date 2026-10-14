@@ -31,5 +31,7 @@ void catalog;
 
 result.then((queries) => {
   const kind: ExecutedPostgresSqlKind = queries[0]!.kind;
+  const reason: string | null = queries[0]!.incompleteReason;
   void kind;
+  void reason;
 });

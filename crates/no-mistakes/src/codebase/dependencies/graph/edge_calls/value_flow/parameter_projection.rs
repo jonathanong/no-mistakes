@@ -13,7 +13,9 @@ impl ValueFlowResolution<'_, '_> {
         let mut origin = from_default.then_some(0);
         for (position, step) in parameter.projection.iter().enumerate() {
             value = match step {
-                ValueProjection::Element(_) if !matches!(&value, FlowValue::Array { .. }) => {
+                ValueProjection::Element(_)
+                    if !matches!(value.executor(), FlowValue::Array { .. }) =>
+                {
                     FlowValue::Unknown
                 }
                 ValueProjection::Member(member) | ValueProjection::Element(member) => {
@@ -27,7 +29,7 @@ impl ValueFlowResolution<'_, '_> {
                     }
                     value
                 }
-                ValueProjection::Default(fallback, order) if value == FlowValue::Undefined => {
+                ValueProjection::Default(fallback, order) if value.is_undefined() => {
                     self.initializing
                         .push((path.to_path_buf(), parameter.owner, *order));
                     self.acquisition_context = acquisition.clone();
@@ -39,7 +41,7 @@ impl ValueFlowResolution<'_, '_> {
                 }
                 ValueProjection::Default(_, _) => value,
             };
-            if value == FlowValue::Undefined {
+            if value.is_undefined() {
                 self.default_origins = None;
             }
         }

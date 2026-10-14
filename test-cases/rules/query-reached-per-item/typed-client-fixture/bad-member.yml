@@ -1,0 +1,7 @@
+effects:
+  postgres:
+    returnedMembers: [{ module: database-client, export: writePool.connect, member: '' }]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options: { effects: [postgres] }

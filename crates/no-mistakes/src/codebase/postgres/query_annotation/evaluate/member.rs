@@ -4,6 +4,45 @@ use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn member_expr(
+        &mut self,
+        object: &Expr,
+        name: &str,
+        path: &Path,
+        env: &super::Environment,
+        context: (u8, bool),
+    ) -> Value {
+        let (depth, generic) = context;
+        if let Some(value) = self.namespace_member(object, name, path, *env, depth, generic) {
+            value
+        } else {
+            let value = self.expr(object, path, env, depth, generic).exposed();
+            self.member(value, name, path)
+        }
+    }
+
+    pub(super) fn static_namespace_read(
+        &self,
+        object: &Expr,
+        path: &Path,
+        env: super::Environment,
+    ) -> bool {
+        if let Expr::Sequence(parts) = object {
+            return parts
+                .last()
+                .is_some_and(|part| self.static_namespace_read(part, path, env));
+        }
+        let Expr::Name(local) = object else {
+            return false;
+        };
+        let file = &self.files[path];
+        !self.scopes[env].contains_key(local)
+            && self.mapped_parameter_value(env, local).is_none()
+            && file.module.imports.get(local).is_some_and(|index| {
+                file.module.ts.imported_bindings[*index].kind == ImportedBindingKind::Namespace
+            })
+    }
+
     pub(super) fn namespace_member(
         &mut self,
         object: &Expr,
@@ -40,11 +79,28 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         match object {
             // The intrinsic length is a primitive; passing it cannot expose
             // an argument slot or a callback captured by the container.
-            Value::Arguments(id) if name == "length" => {
-                if self.invalidated_builders.contains(&id) {
+            Value::Array(id)
+                if name == "length"
+                    && self.files[path].facts.precise_records
+                    && (self.invalidated_builders.contains(&id)
+                        || self
+                            .argument_extra_slots
+                            .get(&id)
+                            .is_some_and(|slots| !slots.is_empty())) =>
+            {
+                Value::Failure("sparse-or-opaque-collection-shape")
+            }
+            Value::Arguments(id) | Value::Array(id) if name == "length" => {
+                if self.conditional_collection_shape(id) {
+                    Value::Failure("conditional-collection-shape")
+                } else if self.invalidated_builders.contains(&id) {
                     Value::Unknown
                 } else {
-                    Value::Primitive
+                    if self.files[path].facts.precise_records {
+                        Value::Number(self.argument_objects[&id].len() as i64)
+                    } else {
+                        Value::Primitive
+                    }
                 }
             }
             Value::Record(values, keys)
@@ -54,6 +110,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .rposition(|key| key == name)
                     .and_then(|index| values.get(index).cloned())
                     .unwrap_or(Value::Unknown)
+            }
+            Value::Failure(reason) => Value::Failure(reason),
+            Value::Unknown if self.files[path].facts.precise_records => {
+                Value::Failure("opaque-member-or-getter")
             }
             // Preserve conservative member effects for other object shapes.
             value => member_candidates(value),

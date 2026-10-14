@@ -44,6 +44,9 @@ pub struct ExecutedPostgresSql {
     /// must still parse the statement and reject writes or unsupported syntax.
     pub only_value_placeholders: bool,
     pub kind: EmbeddedSqlKind,
+    /// Why the evaluator could not recover the whole statement. Generated
+    /// value binds have their own provenance and do not use a failure reason.
+    pub incomplete_reason: Option<String>,
 }
 
 /// Reuse the embedded-SQL executor analysis for supplied source texts.
@@ -159,7 +162,7 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
                 );
                 if let Some(projected) = projected_calls.get(&key) {
                     if let Some(alternatives) =
-                        projected.as_ref().filter(|values| !values.is_empty())
+                        projected.as_ref().ok().filter(|values| !values.is_empty())
                     {
                         statements_for_call = alternatives
                             .iter()
@@ -185,6 +188,14 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
                             false,
                             EmbeddedSqlKind::Dynamic,
                         )];
+                        statements_for_call[0].incomplete_reason = Some(
+                            projected
+                                .as_ref()
+                                .err()
+                                .copied()
+                                .unwrap_or("unresolved-value-or-effect")
+                                .into(),
+                        );
                     }
                 }
             }

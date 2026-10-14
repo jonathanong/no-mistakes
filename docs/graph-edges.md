@@ -329,7 +329,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   inventing graph edges. Synthetic transitions are excluded from ordinary
   source-call APIs. These call facts are independent of whether
   [`query-reached-per-item`](rules/query-reached-per-item.md) is requested;
-  its per-item position metadata is collected only on demand.
+  its per-item position metadata is collected only on demand. Configured effects
+  can also select call sites by imported callable parameter type or by a member
+  of a receiver returned from an exact imported factory path. These selectors
+  use call-site provenance and do not add separate graph edge kinds.
 - `extends` edges are opt-in like `call`, but no `--relationship` value selects
   them: only a rule that reads class hierarchy asks the graph for them, through
   the build plan. The `dependencies` graph never builds them, so unfiltered

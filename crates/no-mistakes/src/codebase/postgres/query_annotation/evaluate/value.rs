@@ -76,7 +76,7 @@ impl Values {
         *self.0.contains_reference.get_or_init(|| {
             fn references(value: &Value) -> bool {
                 match value {
-                    Value::Prefix(_, _, Some(_)) | Value::Arguments(_) => true,
+                    Value::Prefix(_, _, Some(_)) | Value::Arguments(_) | Value::Array(_) => true,
                     Value::Promise(value) | Value::Evaluated(value, _) => references(value),
                     Value::Aggregate(values)
                     | Value::References(values)
@@ -160,7 +160,11 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     // Candidate runtime values with an implicit unknown alternative.
     Possible(Values),
     Arguments(u64),
+    Array(u64),
     Function(Arc<Function>, PathBuf, Environment),
+    Number(i64),
+    Boolean(bool),
+    Failure(&'static str),
     Unknown,
     Primitive,
     Unsupported,

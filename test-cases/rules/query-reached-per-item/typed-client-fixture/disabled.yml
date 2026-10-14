@@ -1,0 +1,6 @@
+effects:
+  postgres: {}
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options: { effects: [postgres] }

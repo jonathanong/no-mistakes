@@ -46,6 +46,10 @@ effects:
       - { module: '@data-stores/psql', export: write, category: query }
     returnedExecutors:
       - { module: "@vendor/database", export: "beginTransaction" }
+    typedExecutors:
+      - { module: "@vendor/database", export: "TransactionQuery" }
+    returnedMembers:
+      - { module: "@vendor/database", export: "writePool.connect", member: "query" }
     transactionFunctions: [tx.query]
     batchFunctions: [readMany]
   valkey:
@@ -76,6 +80,16 @@ named-client command lists. Unknown or conflicting
 client arguments stay unresolved. A configured cursor runner is an effect sink
 per invocation; its internal batch size does not exempt an outer loop.
 
+`typedExecutors` selects calls through parameters whose explicit callable type
+resolves to the configured imported type export. `returnedMembers` selects an
+exact member call on the receiver returned by the configured imported factory
+path. Both use binding provenance, so aliases and local variable names do not
+change the match and same-spelled unrelated local methods do not match. These
+selectors mark findings as transaction-client-only. They are also available to
+the `effects` query, with the configured category. Its callee display uses the
+configured type export for typed executors and the factory path plus returned
+member for returned members (for example, `writePool.connect().query`).
+
 Effect `functions` and `categories` retain the spelling matching documented for
 [`effects`](../cli/effects.md), including unrelated bindings with matching names.
 Use targets instead of broad spelling lists to avoid those collisions. Adding
@@ -87,6 +101,9 @@ configured batch/pipeline builders; another path to a sink remains reportable. E
 arguments, such as `batch(items.map(item => lookup(item)))`, still report
 because they execute before the builder receives their results.
 See [effect configuration](../configuration/effects.md).
+
+No type, factory method, or returned member name is inferred from a database
+library convention; configure exact exported type and factory/member paths.
 
 Use exact `{file, callee, line}` entries as a reviewed rollout baseline. Omit
 `line` to allow that callee throughout one file; omit `callee` to allow the file.

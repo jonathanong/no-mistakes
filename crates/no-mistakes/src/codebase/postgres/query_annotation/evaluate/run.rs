@@ -26,11 +26,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let recreated = self.recreated_argument_slots.clone();
         let disconnected = self.disconnected_argument_slots.clone();
         let builder_updates = self.builder_updates.clone();
+        let untrusted_array_intrinsics = self.untrusted_array_intrinsics;
         let captured_bindings = self.captured_bindings.clone();
         let captured_binding_readers = self.captured_binding_readers.clone();
         let mapped_argument_owners = self.mapped_argument_owners.clone();
         let mapped_parameter_indices = self.mapped_parameter_indices.clone();
         for call in unmodeled {
+            if file.facts.precise_records
+                && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end)))
+            {
+                continue;
+            }
             if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
             {
                 self.scopes.clone_from(&scopes);
@@ -46,6 +52,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.recreated_argument_slots.clone_from(&recreated);
                 self.disconnected_argument_slots.clone_from(&disconnected);
                 self.builder_updates.clone_from(&builder_updates);
+                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
                 self.captured_bindings.clone_from(&captured_bindings);
                 self.captured_binding_readers
                     .clone_from(&captured_binding_readers);
@@ -100,6 +107,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.recreated_argument_slots.clone_from(&recreated);
                 self.disconnected_argument_slots.clone_from(&disconnected);
                 self.builder_updates.clone_from(&builder_updates);
+                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
                 self.captured_bindings.clone_from(&captured_bindings);
                 self.captured_binding_readers
                     .clone_from(&captured_binding_readers);
@@ -162,7 +170,8 @@ fn value_reaches(
                 || value_reaches(globals, key, target, visiting),
         Expr::Record(values, _)
         | Expr::Object(values)
-        | Expr::Container(values)
+        | Expr::Array(values)
+            | Expr::Container(values)
         | Expr::Sequence(values)
         | Expr::Alternatives(values) => values
             .iter()

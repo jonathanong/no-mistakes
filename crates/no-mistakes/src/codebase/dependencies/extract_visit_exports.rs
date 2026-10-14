@@ -12,6 +12,15 @@ impl ImportCollector {
 
     fn collect_local_export_specifiers(&mut self, export: &ExportNamedDeclaration<'_>) {
         self.mark_export_clause_locals(export);
+        if self.collect_value_flow {
+            for specifier in &export.specifiers {
+                self.value_flow.type_exports.push(ExportedBinding {
+                    specifier: None,
+                    local: specifier.local.name().to_string(),
+                    exported: specifier.exported.name().to_string(),
+                });
+            }
+        }
         if !export.export_kind.is_type() {
             for specifier in &export.specifiers {
                 if !specifier.export_kind.is_type() {
@@ -39,6 +48,15 @@ impl ImportCollector {
     }
 
     fn walk_sourced_export_declaration(&mut self, export: &ExportFromDeclaration<'_>) {
+        if self.collect_value_flow {
+            for specifier in &export.specifiers {
+                self.value_flow.type_exports.push(ExportedBinding {
+                    specifier: Some(export.source.value.to_string()),
+                    local: specifier.local.name().to_string(),
+                    exported: specifier.exported.name().to_string(),
+                });
+            }
+        }
         self.push_reexport(
             export.source.value.as_str(),
             export_named_declaration_kind(export),

@@ -23,11 +23,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
+        let trusted_tag = self.tag_trusted(tag, path, *env);
         let values = effects
             .iter()
-            .map(|effect| self.expr(effect, path, env, depth, generic))
+            .enumerate()
+            .map(|(index, effect)| {
+                if index == 0 && trusted_tag {
+                    self.expr(effect, path, env, depth, generic)
+                } else {
+                    self.operand(effect, path, env, context)
+                }
+            })
             .collect::<Vec<_>>();
-        let trusted_raw = tag == "String.raw" && self.tag_trusted(tag, path, *env);
+        let trusted_raw = tag == "String.raw" && trusted_tag;
         let interpolation_mutates = effects
             .iter()
             .skip(usize::from(trusted_raw))
@@ -42,8 +50,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .iter()
                 .flat_map(|scope| scope.values().cloned())
                 .collect::<Vec<_>>();
-            self.invalidate_builders(&builders);
-            return Value::Unknown;
+            self.invalidate_opaque_builders(&builders);
+            return Value::Failure("opaque-tag-interpolation-effect");
         }
         let mut prefix = Value::Prefix(String::new(), true, None);
         for (index, part) in parts.iter().enumerate() {
@@ -60,6 +68,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             } else {
                 self.expr(part, path, env, depth, generic)
             };
+            if trusted_raw
+                && self.files[path].facts.precise_records
+                && !super::collections::string_element(&value)
+                && !matches!(value, Value::Primitive)
+            {
+                self.invalidate_opaque_builders(&values);
+                return Value::Failure("opaque-tag-interpolation-effect");
+            }
             prefix = concat(prefix, value);
         }
         let trusted = self.tag_trusted(tag, path, *env);
@@ -69,7 +85,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
         });
         if !trusted && !legacy {
-            self.invalidate_builders(&values);
+            self.invalidate_opaque_builders(&values);
             self.opaque_callbacks(&values, depth);
         }
         if trusted || legacy {

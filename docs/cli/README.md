@@ -28,6 +28,16 @@ or after the command name:
   and writes `command timed out after <seconds> seconds during <phase>` to
   stderr. `check` reports `check.prepare`, `check.discovery`, `check.parse`,
   or `check.analysis`. Lock timeout stays a separate wait.
+- `--invocation-timeout-ms <MILLISECONDS>` opts into one positive millisecond
+  budget shared by native lock acquisition and execution. It never extends an
+  independently configured command or lock timeout.
+  It is opt-in: ordinary command and lock deadlines retain their existing meaning
+  when omitted. With this budget enabled, the independent lock timeout starts
+  before opening the lock file. Its deadline is compared with the original
+  invocation deadline, which already includes lock-path resolution; the earlier
+  deadline determines the reported timeout. Without this option,
+  the existing lock-wait timing is unchanged.
+  `--profile ci` disables this budget along with the ordinary timeouts.
 - `--lock-timeout <SECONDS>` limits how long acquisition may wait. The default
   is `30`; `0` waits indefinitely.
 - `--fail-on-lock` fails immediately when another invocation holds the lock,

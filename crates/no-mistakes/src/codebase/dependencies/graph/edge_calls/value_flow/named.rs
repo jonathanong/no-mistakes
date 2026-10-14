@@ -55,7 +55,7 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                self.parameter(path, parameter)
+                self.parameter(path, parameter, &file)
             }
         } else if let Some(id) = file.resolve_local_callable_id(Some(scope), base) {
             self.callable(path, id)
@@ -87,7 +87,7 @@ impl ValueFlowResolution<'_, '_> {
             match imported_value {
                 Some(ExportedCallableResolution::Value(target, local)) => {
                     let value = self.named(&target, &local, Some(0), u32::MAX, None);
-                    match value {
+                    value.map_executor(|value| match value {
                         FlowValue::Callable {
                             file: target,
                             scope,
@@ -102,7 +102,7 @@ impl ValueFlowResolution<'_, '_> {
                         },
                         value @ (FlowValue::Promise(_) | FlowValue::Bound { .. } | FlowValue::Uncallable) => value,
                         _ => self.imported_value(&file, base),
-                    }
+                    })
                 }
                 Some(ExportedCallableResolution::Callable(target, scope, id)) => FlowValue::Target(module_export_target(&file, base, Some((target, scope)), id).expect("import binding")),
                 Some(ExportedCallableResolution::ExternalModuleExport(specifier, export_path)) => FlowValue::Target(ResolvedCallTarget::ModuleExport { specifier, export_path, repository_target: None, callable_id: None }),

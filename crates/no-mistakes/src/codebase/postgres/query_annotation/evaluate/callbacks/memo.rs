@@ -122,6 +122,7 @@ impl Classification<'_> {
                 args.iter().any(|expr| self.expression(expr))
             }
             Expr::Children(parts)
+            | Expr::Array(parts)
             | Expr::Container(parts)
             | Expr::Object(parts)
             | Expr::Record(parts, _)

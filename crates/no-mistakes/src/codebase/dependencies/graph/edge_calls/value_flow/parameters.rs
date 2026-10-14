@@ -5,6 +5,7 @@ impl ValueFlowResolution<'_, '_> {
         &mut self,
         path: &std::path::Path,
         parameter: &ValueParameter,
+        index: &CallableFileIndex,
     ) -> FlowValue {
         self.used_parameters
             .insert((path.to_path_buf(), parameter.owner));
@@ -55,7 +56,7 @@ impl ValueFlowResolution<'_, '_> {
             }
         };
         self.extend_default_origins(cached.origins.as_ref());
-        cached.value.clone()
+        self.typed_parameter(path, parameter, index, cached.value.clone())
     }
     fn compute_parameter(
         &mut self,
@@ -85,7 +86,7 @@ impl ValueFlowResolution<'_, '_> {
             };
             self.default_origins = None;
             let argument = self.invocation_argument(&caller, call, parameter.index);
-            let from_default = matches!(argument, None | Some(FlowValue::Undefined));
+            let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
             let acquisition = self
                 .indexes
                 .file(self.facts, path)
@@ -104,9 +105,10 @@ impl ValueFlowResolution<'_, '_> {
             if from_default {
                 self.acquisition_context = acquisition.clone();
             }
-            let value = match argument {
-                None | Some(FlowValue::Undefined) => self.parameter_default(path, parameter),
-                Some(value) => value,
+            let value = if from_default {
+                self.parameter_default(path, parameter)
+            } else {
+                argument.expect("supplied non-undefined argument")
             };
             values.push(self.project_parameter(path, parameter, value, from_default, acquisition));
             if self.acquisition_context.is_some() {
@@ -149,8 +151,16 @@ impl ValueFlowResolution<'_, '_> {
         let origins = self.default_origins.take();
         let mut callee = self.value(caller, &call.callee);
         self.default_origins = origins;
-        while let FlowValue::Returned { executor, .. } = callee {
-            callee = *executor;
+        loop {
+            callee = match callee {
+                FlowValue::Returned { executor, .. } | FlowValue::Provenance { executor, .. } => {
+                    *executor
+                }
+                other => {
+                    callee = other;
+                    break;
+                }
+            };
         }
         if let FlowValue::Bound { arguments, .. } = callee {
             for bound in arguments {

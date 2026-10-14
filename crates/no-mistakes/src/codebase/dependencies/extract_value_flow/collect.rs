@@ -88,6 +88,7 @@ impl ImportCollector {
             return;
         };
         for (index, param) in params.items.iter().enumerate() {
+            let first = self.value_flow.parameters.len();
             let (pattern, default) = match &param.pattern {
                 BindingPattern::AssignmentPattern(assignment) => {
                     (&assignment.left, self.value_expression(&assignment.right))
@@ -109,6 +110,12 @@ impl ImportCollector {
                 self.value_flow.parameters.len(),
                 Vec::new(),
             );
+            if matches!(pattern, BindingPattern::BindingIdentifier(_)) {
+                let reference = self.parameter_type_reference(param);
+                for parameter in &mut self.value_flow.parameters[first..] {
+                    parameter.type_reference.clone_from(&reference);
+                }
+            }
         }
     }
     pub(in super::super) fn record_value_call(&mut self, call: &CallExpression<'_>) {
@@ -126,6 +133,22 @@ impl ImportCollector {
             bound,
             spread_at,
         });
+    }
+}
+
+impl ImportCollector {
+    fn parameter_type_reference(
+        &self,
+        param: &oxc_ast::ast::FormalParameter<'_>,
+    ) -> Option<String> {
+        let oxc_ast::ast::TSType::TSTypeReference(reference) =
+            &param.type_annotation.as_ref()?.type_annotation
+        else {
+            return None;
+        };
+        let name = type_reference_name(reference)?;
+        let root = name.split('.').next()?;
+        (!self.type_parameter_shadows(root) && !self.type_binding_shadows(root)).then_some(name)
     }
 }
 

@@ -53,7 +53,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if facts.precise_records
             && facts.roots.iter().any(|step| match step {
                 Step::Bind(_, expr) | Step::Effect(expr) => self.effect_can_mutate(expr, path, env),
-                Step::Append(_, _) | Step::Unsupported | Step::PotentialCalls(_) => true,
+                Step::Branch(_, _, _)
+                | Step::Append(_, _)
+                | Step::Unsupported
+                | Step::PotentialCalls(_) => true,
                 Step::Reserve(_) | Step::Hoisted(_, _) | Step::Var(_) | Step::Return(_) => false,
             })
         {

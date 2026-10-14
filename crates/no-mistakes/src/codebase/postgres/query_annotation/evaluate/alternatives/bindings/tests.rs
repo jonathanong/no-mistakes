@@ -1,5 +1,5 @@
 use super::super::super::Value;
-use super::{binding_or_unproven, join};
+use super::binding_or_unproven;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::fx_map;
 
@@ -131,4 +131,8 @@ fn unchanged_binding_joins_keep_the_shared_scope_snapshot() {
     let mut joined = original.clone();
     join(&mut joined, &original, &original);
     assert!(std::ptr::eq(&*joined[0], &*original[0]));
+}
+
+fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) {
+    super::join_with_sql(joined, current, original, false)
 }

@@ -172,6 +172,8 @@ fn function_and_terminal_selectors_use_canonical_repository_targets() {
     );
     let repository_site = ResolvedCallSite {
         returned_from: Vec::new(),
+        typed_from: Vec::new(),
+        returned_member_from: Vec::new(),
         target_node: None,
         file: root.join("src/selectors.mts"),
         caller: Some("selectorCalls".to_string()),

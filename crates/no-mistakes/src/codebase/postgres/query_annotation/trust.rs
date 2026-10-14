@@ -1,4 +1,5 @@
 //! Import trust and writes to module bindings, extracted from the shared AST.
+mod array_intrinsics;
 mod assigned;
 mod bindings;
 mod conventional;
@@ -87,4 +88,8 @@ pub(super) fn bound_names(pattern: &oxc_ast::ast::BindingPattern<'_>) -> Vec<Str
     let mut names: Vec<_> = names.into_iter().collect();
     names.sort();
     names
+}
+
+pub(super) fn array_prototype_exposed(program: &Program<'_>) -> bool {
+    array_intrinsics::exposed(program)
 }

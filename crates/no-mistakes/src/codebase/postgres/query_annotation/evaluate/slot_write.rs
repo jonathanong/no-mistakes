@@ -14,22 +14,29 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let receiver = self.expr(receiver, path, env, depth, generic).exposed();
+        let raw_receiver = self.expr(receiver, path, env, depth, generic);
+        let handled_receiver = self.preserve_operand_effect(receiver, &raw_receiver, path, *env);
+        let receiver = raw_receiver.exposed();
         let value = self.expr(expression, path, env, depth, generic);
-        let handled_value = self.handled_deletion_effect(expression, &value, path, *env);
+        let handled_value =
+            self.preserve_operand_effect(expression, &value, path, *env) && handled_receiver;
         let stored = match value.clone().exposed() {
             Value::SlotDeletion => Value::Unknown,
             value => value,
         };
 
         let id = match receiver {
-            Value::Arguments(id) => id,
+            Value::Arguments(id) | Value::Array(id) => id,
             receiver => {
-                self.invalidate_builders(&[receiver.clone(), stored.clone()]);
+                self.invalidate_opaque_builders(&[receiver.clone(), stored.clone()]);
                 self.opaque_callbacks(&[receiver, stored.clone()], depth);
                 return Value::Evaluated(Box::new(stored), false);
             }
         };
+        if self.conditional_collection_shape(id) {
+            // A known slot write cannot recover a divergent array cardinality.
+            self.invalidate_builders(&[Value::Array(id)]);
+        }
         let previously_invalidated = self.invalidated_builders.contains(&id);
         let disconnected = self.disconnected_argument_slots.contains(&(id, index));
         let possibly_disconnected = self.deleted_argument_slots.contains(&(id, None))

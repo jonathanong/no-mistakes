@@ -43,6 +43,8 @@ export interface ExecutedPostgresSql {
   /** True only when all incompleteness is from generated value binds. Parse before classifying reads. */
   onlyValuePlaceholders: boolean;
   kind: ExecutedPostgresSqlKind;
+  /** Evaluator blocker; null for complete SQL or proven generated value binds. */
+  incompleteReason: string | null;
 }
 
 /** Extract configured PostgreSQL executor calls from supplied TS/JS source. */

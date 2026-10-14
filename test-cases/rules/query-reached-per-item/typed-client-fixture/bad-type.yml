@@ -1,0 +1,7 @@
+effects:
+  postgres:
+    typedExecutors: [{ module: '', export: TransactionQuery }]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options: { effects: [postgres] }

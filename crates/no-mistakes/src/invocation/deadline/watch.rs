@@ -19,7 +19,7 @@ pub(super) fn watch_deadline(
             if cancel.load(Ordering::Acquire) || !deadline_still_active(expires_at) {
                 return;
             }
-            let message = timeout_diagnostic(timeout.as_secs(), current_phase());
+            let message = timeout_diagnostic(timeout, current_phase());
             if !observer.as_ref().is_some_and(|observer| {
                 observer.progress_enabled()
                     && observer.emit_progress_output(format!("error: {message}\n"))

@@ -30,6 +30,7 @@ struct State {
 pub(in super::super) struct ParameterCache {
     state: Mutex<State>,
     ready: Condvar,
+    type_origins: Mutex<FxHashMap<(std::path::PathBuf, String), (String, String)>>,
     #[cfg(feature = "test-instrumentation")]
     origin_nodes: std::sync::atomic::AtomicUsize,
 }
@@ -43,6 +44,17 @@ pub(super) struct Lease<'a> {
     key: Option<ParameterKey>,
 }
 impl ParameterCache {
+    pub(super) fn type_origin(
+        &self,
+        key: (std::path::PathBuf, String),
+        resolve: impl FnOnce() -> (String, String),
+    ) -> (String, String) {
+        let mut origins = self
+            .type_origins
+            .lock()
+            .expect("type origin cache lock poisoned");
+        origins.entry(key).or_insert_with(resolve).clone()
+    }
     pub(super) fn origin_node(&self, kind: OriginKind, height: usize) -> Arc<OriginNode> {
         #[cfg(feature = "test-instrumentation")]
         self.origin_nodes

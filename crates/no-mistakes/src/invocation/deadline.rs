@@ -1,3 +1,8 @@
+#[path = "deadline/phase.rs"]
+mod phase;
+use phase::current_phase;
+pub use phase::set_timeout_phase;
+pub(super) use phase::timeout_diagnostic;
 #[path = "deadline/watch.rs"]
 mod watch;
 use super::{clock, InvocationError, InvocationErrorKind};
@@ -29,9 +34,18 @@ impl DeadlineGuard {
         timeout: Option<Duration>,
         owner: Option<std::thread::ThreadId>,
     ) -> Result<Self> {
+        Self::install_for_invocation_with_deadline(timeout, owner, None)
+    }
+
+    pub(super) fn install_for_invocation_with_deadline(
+        timeout: Option<Duration>,
+        owner: Option<std::thread::ThreadId>,
+        limit: Option<Deadline>,
+    ) -> Result<Self> {
+        let started = clock::now();
         let deadline = timeout
             .map(|timeout| {
-                clock::now()
+                started
                     .checked_add(timeout)
                     .map(|expires_at| Deadline {
                         expires_at,
@@ -42,6 +56,24 @@ impl DeadlineGuard {
                     .context("command timeout is too large")
             })
             .transpose()?;
+        // Acquisition expiry belongs to the original invocation limit at entry,
+        // not a shorter command deadline that expires while this guard is built.
+        if limit.is_some_and(|limit| limit.expires_at <= started) {
+            return Err(InvocationError::new(
+                InvocationErrorKind::CommandTimeout,
+                "invocation deadline elapsed during lock acquisition".to_string(),
+            )
+            .into());
+        }
+        let deadline = match (deadline, limit) {
+            (Some(command), Some(limit)) => Some(if command.expires_at <= limit.expires_at {
+                command
+            } else {
+                limit
+            }),
+            (None, limit) => limit,
+            (command, None) => command,
+        };
         let mut active = active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -55,16 +87,24 @@ impl DeadlineGuard {
     /// CLI invocations enforce the deadline even when native analysis is inside
     /// a CPU-bound rayon section that has not reached the next `check_timeout`.
     pub(super) fn install_for_cli(timeout: Option<Duration>) -> Result<Self> {
-        let mut guard = Self::install_for_invocation(timeout, None)?;
-        let Some(timeout) = timeout else {
-            return Ok(guard);
-        };
-        let expires_at = active_deadline()
+        Self::install_for_cli_with_deadline(timeout, None)
+    }
+
+    pub(super) fn install_for_cli_with_deadline(
+        timeout: Option<Duration>,
+        limit: Option<Deadline>,
+    ) -> Result<Self> {
+        let mut guard = Self::install_for_invocation_with_deadline(timeout, None, limit)?;
+        let active = active_deadline()
             .read()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .as_ref()
-            .context("cli timeout installs a deadline")?
-            .expires_at;
+            .copied();
+        let Some(deadline) = active else {
+            return Ok(guard);
+        };
+        let expires_at = deadline.expires_at;
+        let timeout = deadline.timeout;
         let cancel = Arc::new(AtomicBool::new(false));
         let watcher = Arc::clone(&cancel);
         let observer = crate::diagnostics::current();
@@ -86,28 +126,6 @@ impl Drop for DeadlineGuard {
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = self.previous;
     }
-}
-
-fn phase_slot() -> &'static RwLock<&'static str> {
-    static PHASE: OnceLock<RwLock<&'static str>> = OnceLock::new();
-    PHASE.get_or_init(|| RwLock::new("command"))
-}
-
-/// Record the command phase included in a timeout diagnostic.
-pub fn set_timeout_phase(phase: &'static str) {
-    *phase_slot()
-        .write()
-        .unwrap_or_else(std::sync::PoisonError::into_inner) = phase;
-}
-
-fn current_phase() -> &'static str {
-    *phase_slot()
-        .read()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-}
-
-pub(super) fn timeout_diagnostic(seconds: u64, phase: &str) -> String {
-    format!("command timed out after {seconds} seconds during {phase}")
 }
 
 /// Return an error once the active invocation deadline has elapsed.
@@ -132,7 +150,7 @@ pub fn check_timeout() -> Result<()> {
     }
     Err(InvocationError::new(
         InvocationErrorKind::CommandTimeout,
-        timeout_diagnostic(deadline.timeout.as_secs(), current_phase()),
+        timeout_diagnostic(deadline.timeout, current_phase()),
     )
     .into())
 }
@@ -155,7 +173,7 @@ pub fn commit_timeout() -> Result<()> {
     if clock::now() >= deadline.expires_at {
         return Err(InvocationError::new(
             InvocationErrorKind::CommandTimeout,
-            timeout_diagnostic(deadline.timeout.as_secs(), current_phase()),
+            timeout_diagnostic(deadline.timeout, current_phase()),
         )
         .into());
     }

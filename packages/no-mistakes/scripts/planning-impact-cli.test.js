@@ -176,6 +176,32 @@ test("runs the CLI entry only when the module is executed directly", () => {
   assert.equal(started, true);
 });
 
+test("forwards a positive millisecond invocation budget without mistaking it for a command", () => {
+  const args = [
+    "--changed-files",
+    "changed.txt",
+    "--output-dir",
+    "output",
+    "--invocation-timeout-ms",
+    "3500",
+  ];
+  assert.equal(parsePlanningImpactArgs(args, "/repo").invocationTimeoutMs, 3500);
+  assert.equal(
+    firstSubcommand(["--invocation-timeout-ms", "3500", "planning-impact"]),
+    "planning-impact",
+  );
+  assert.equal(
+    firstSubcommand(["--invocation-timeout-ms=3500", "planning-impact"]),
+    "planning-impact",
+  );
+  for (const value of ["0", "-1", "1.5", "Infinity", "9007199254740992"]) {
+    assert.throws(
+      () => parsePlanningImpactArgs([...args.slice(0, -1), value], "/repo"),
+      /invocation-timeout-ms/,
+    );
+  }
+});
+
 test("recognizes planning-impact only as the first actual subcommand", () => {
   assert.equal(firstSubcommand(["--timeout", "5", "planning-impact"]), "planning-impact");
   assert.equal(firstSubcommand(["--jobs=2", "planning-impact"]), "planning-impact");

@@ -118,6 +118,36 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             Some("local.get"),
         ),
         ("method-defaults", Some("fallbackAfter"), "get", None),
+        (
+            "provenance-receivers",
+            Some("objectBefore"),
+            "value.client.get",
+            Some("primary.get"),
+        ),
+        (
+            "provenance-receivers",
+            Some("arrayBefore"),
+            "value.0.get",
+            Some("replica.get"),
+        ),
+        (
+            "provenance-receivers",
+            Some("objectAfter"),
+            "value.client.get",
+            None,
+        ),
+        (
+            "provenance-receivers",
+            Some("arrayAfter"),
+            "value.0.get",
+            None,
+        ),
+        (
+            "provenance-receivers",
+            Some("copiedAfter"),
+            "value.get",
+            Some("primary.get"),
+        ),
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));
         let line = match callee {

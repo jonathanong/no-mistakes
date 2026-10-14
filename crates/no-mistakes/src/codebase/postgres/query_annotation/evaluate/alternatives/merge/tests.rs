@@ -32,3 +32,25 @@ fn dense_join_copies_only_new_and_changed_slots() {
     assert!(matches!(&joined[&7][4], Value::Prefix(text, true, None)
         if text == "SELECT 4"));
 }
+
+#[test]
+fn divergent_shape_remains_unknown_after_later_single_slot_arms() {
+    let mut joined = FxHashMap::from_iter([(7, vec![Value::Primitive])]);
+    objects(
+        &mut joined,
+        &FxHashMap::from_iter([(7, vec![Value::Primitive, Value::Primitive])]),
+    );
+    objects(
+        &mut joined,
+        &FxHashMap::from_iter([(7, vec![Value::Primitive])]),
+    );
+    assert!(matches!(
+        joined[&7].as_slice(),
+        [Value::Failure("conditional-collection-shape")]
+    ));
+
+    // Joining a previously failed arm into a fresh one must preserve its shape.
+    let mut fresh = FxHashMap::from_iter([(7, vec![Value::Primitive])]);
+    objects(&mut fresh, &joined);
+    assert!(fresh[&7] == joined[&7]);
+}

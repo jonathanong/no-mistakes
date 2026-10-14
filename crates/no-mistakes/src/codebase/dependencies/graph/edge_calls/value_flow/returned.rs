@@ -15,20 +15,31 @@ impl ValueFlowResolution<'_, '_> {
             .map(|call| {
                 let target = self.value(path, &call.callee);
                 if call.bound {
-                    let (target, mut arguments) = match target {
-                        FlowValue::Bound { target, arguments } => (target, arguments),
-                        target => (Box::new(target), Vec::new()),
-                    };
-                    arguments.push(BoundArguments {
-                        file: path.to_path_buf(),
-                        arguments: std::sync::Arc::clone(&call.arguments),
-                        spread_at: call.spread_at,
+                    return target.map_executor(|target| {
+                        let (target, mut arguments) = match target {
+                            FlowValue::Bound { target, arguments } => (target, arguments),
+                            target => (Box::new(target), Vec::new()),
+                        };
+                        arguments.push(BoundArguments {
+                            file: path.to_path_buf(),
+                            arguments: std::sync::Arc::clone(&call.arguments),
+                            spread_at: call.spread_at,
+                        });
+                        FlowValue::Bound { target, arguments }
                     });
-                    return FlowValue::Bound { target, arguments };
                 }
                 let mut target = target;
-                while let FlowValue::Bound { target: inner, .. } = target {
-                    target = *inner;
+                loop {
+                    target = match target {
+                        FlowValue::Bound { target, .. }
+                        | FlowValue::Provenance {
+                            executor: target, ..
+                        } => *target,
+                        value => {
+                            target = value;
+                            break;
+                        }
+                    };
                 }
 
                 if let FlowValue::Target(ResolvedCallTarget::ModuleExport {
@@ -111,9 +122,7 @@ impl ValueFlowResolution<'_, '_> {
         self.calls_visiting.remove(&key);
         let mut result = result;
         if is_async {
-            while let FlowValue::Promise(inner) = result {
-                result = *inner;
-            }
+            result = result.awaited();
         }
         let result = with_factory_origin(factory, result);
         if is_async {
@@ -123,19 +132,9 @@ impl ValueFlowResolution<'_, '_> {
         }
     }
 }
-pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
-    let Some(first) = values.first() else {
-        return FlowValue::Unknown;
-    };
-    if values.iter().all(|value| value == first) {
-        first.clone()
-    } else {
-        FlowValue::Unknown
-    }
-}
 
 fn with_factory_origin(factory: Option<(String, String)>, result: FlowValue) -> FlowValue {
-    match (factory, result) {
+    result.map_executor(|result| match (factory, result) {
         (Some(origin), FlowValue::Promise(inner)) => {
             FlowValue::Promise(Box::new(with_factory_origin(Some(origin), *inner)))
         }
@@ -166,6 +165,14 @@ fn with_factory_origin(factory: Option<(String, String)>, result: FlowValue) -> 
             executor: Box::new(executor),
             receiver: None,
         },
+        (Some(factory), executor @ (FlowValue::Object { .. } | FlowValue::Array { .. })) => {
+            FlowValue::Provenance {
+                executor: Box::new(executor),
+                typed: Vec::new(),
+                members: Vec::new(),
+                receiver_factories: vec![factory],
+            }
+        }
         (_, result) => result,
-    }
+    })
 }

@@ -1,5 +1,7 @@
 //! Process-wide invocation coordination shared by the CLI and N-API entrypoints.
 
+#[path = "invocation/acquisition.rs"]
+mod acquisition;
 #[path = "invocation/child.rs"]
 mod child;
 #[path = "invocation/clock.rs"]
@@ -16,20 +18,18 @@ pub(crate) use child::stream::stream_command_lines;
 pub use deadline::{check_timeout, commit_timeout, set_timeout_phase};
 pub use napi_options::{extract_napi_options, extract_napi_options_value, InvocationOptions};
 
-use anyhow::Result;
 use deadline::DeadlineGuard;
-use lock::{acquire_lock, lock_path};
 use std::fs::File;
-use std::path::Path;
 use std::time::Duration;
 
 const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
+const MAX_INVOCATION_TIMEOUT_MS: u64 = (1_u64 << 53) - 1;
 
 // Windows native CI compiles this helper into the ordinary rlib so the Job
 // Object integration test can install a deadline without `--cfg test`.
 #[cfg(any(test, feature = "test-instrumentation", windows))]
 #[doc(hidden)]
-pub fn install_test_deadline(timeout: Duration) -> Result<impl Drop> {
+pub fn install_test_deadline(timeout: Duration) -> anyhow::Result<impl Drop> {
     let serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -69,6 +69,9 @@ pub struct InvocationArgs {
     /// Maximum command execution time in seconds; 0 disables the deadline.
     #[arg(long, value_name = "SECONDS", default_value_t = DEFAULT_TIMEOUT_SECONDS, global = true)]
     timeout: u64,
+    /// Opt-in shared acquisition and execution budget in positive milliseconds.
+    #[arg(long, value_name = "MILLISECONDS", value_parser = clap::value_parser!(u64).range(1..=MAX_INVOCATION_TIMEOUT_MS), global = true)]
+    invocation_timeout_ms: Option<u64>,
     /// Maximum time to wait for another invocation in seconds; 0 waits indefinitely.
     #[arg(
         long = "lock-timeout",
@@ -89,6 +92,7 @@ impl Default for InvocationArgs {
     fn default() -> Self {
         Self {
             timeout: DEFAULT_TIMEOUT_SECONDS,
+            invocation_timeout_ms: None,
             lock_timeout: DEFAULT_TIMEOUT_SECONDS,
             fail_on_lock: false,
             profile: None,
@@ -104,6 +108,12 @@ impl InvocationArgs {
         };
         InvocationOptions {
             timeout: nonzero_seconds(timeout),
+            invocation_timeout: self
+                .profile
+                .is_none()
+                .then_some(self.invocation_timeout_ms)
+                .flatten()
+                .map(Duration::from_millis),
             lock_timeout: nonzero_seconds(lock_timeout),
             fail_on_lock: self.fail_on_lock,
             jobs: None,
@@ -149,57 +159,6 @@ pub struct InvocationGuard {
     _deadline: DeadlineGuard,
     _parent_signals: child::ParentSignalForwardingGuard,
     _lock: File,
-}
-
-impl InvocationGuard {
-    pub fn acquire(options: InvocationOptions) -> Result<Self> {
-        Self::acquire_with_parent_signal_forwarding(options, false)
-    }
-
-    pub fn acquire_for_cli(options: InvocationOptions) -> Result<Self> {
-        Self::acquire_with_parent_signal_forwarding(options, true)
-    }
-
-    fn acquire_with_parent_signal_forwarding(
-        options: InvocationOptions,
-        forward_parent_signals: bool,
-    ) -> Result<Self> {
-        let path = lock_path()?;
-        Self::acquire_at_path(options, &path, forward_parent_signals)
-    }
-
-    fn acquire_at_path(
-        options: InvocationOptions,
-        path: &Path,
-        forward_parent_signals: bool,
-    ) -> Result<Self> {
-        // Progress must capture termination during lock waiting, before the
-        // first heartbeat. Retaining this guard also cleans up acquisition errors.
-        let early_signals = if forward_parent_signals
-            && crate::diagnostics::current().is_some_and(|observer| observer.progress_enabled())
-        {
-            Some(child::ParentSignalForwardingGuard::install(true)?)
-        } else {
-            None
-        };
-        let lock = acquire_lock(path, options.lock_timeout, options.fail_on_lock)?;
-        let deadline = if forward_parent_signals {
-            DeadlineGuard::install_for_cli(options.timeout)?
-        } else {
-            DeadlineGuard::install_for_invocation(options.timeout, None)?
-        };
-        let parent_signals = match early_signals {
-            Some(guard) => guard,
-            None => child::ParentSignalForwardingGuard::install(
-                forward_parent_signals && options.timeout.is_some(),
-            )?,
-        };
-        Ok(Self {
-            _deadline: deadline,
-            _parent_signals: parent_signals,
-            _lock: lock,
-        })
-    }
 }
 
 pub fn timeout_exit_code(error: &anyhow::Error) -> Option<u8> {

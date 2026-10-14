@@ -16,45 +16,9 @@ pub(super) struct FlowFileIndex {
     async_callables: FxHashSet<CallableId>,
     generator_callables: FxHashSet<CallableId>,
 }
-
-#[derive(Clone, PartialEq, Eq)]
-enum FlowValue {
-    Uncallable,
-    Promise(Box<FlowValue>),
-    Bound {
-        target: Box<FlowValue>,
-        arguments: Vec<BoundArguments>,
-    },
-    Target(ResolvedCallTarget),
-    Returned {
-        factory: Vec<(String, String)>,
-        executor: Box<FlowValue>,
-        receiver: Option<ResolvedCallTarget>,
-    },
-    Callable {
-        file: std::path::PathBuf,
-        scope: String,
-        id: CallableId,
-    },
-    Object {
-        null_prototype: bool,
-        file: std::path::PathBuf,
-        fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
-    },
-    Array {
-        file: std::path::PathBuf,
-        fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
-    },
-    Undefined,
-    Unknown,
-}
-
-#[derive(Clone, PartialEq, Eq)]
-struct BoundArguments {
-    file: std::path::PathBuf,
-    arguments: std::sync::Arc<Vec<ValueExpression>>,
-    spread_at: Option<usize>,
-}
+#[path = "value_flow/types.rs"]
+mod types;
+use types::{BoundArguments, FlowValue};
 
 type ParameterInputs =
     FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>;
@@ -89,8 +53,6 @@ mod returned;
 #[path = "value_flow/values.rs"]
 mod values;
 pub(super) use refine::refine_value_calls;
-
-use returned::agreed_value;
 
 impl FlowFileIndex {
     pub(super) fn factory_binding(&self, scope: usize, name: &str) -> bool {
@@ -184,5 +146,10 @@ mod receiver_reads;
 #[path = "value_flow/receiver_owned_contexts.rs"]
 mod receiver_owned_contexts;
 
+#[path = "value_flow/agreement.rs"]
+mod agreement;
 #[path = "value_flow/file_index.rs"]
 mod file_index;
+#[path = "value_flow/provenance.rs"]
+mod provenance;
+use agreement::agreed_value;

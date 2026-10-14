@@ -9,12 +9,14 @@ pub(super) fn collect(
 ) -> QueryAnnotationFileFacts {
     let mut facts = QueryAnnotationFileFacts {
         trusted_tags: super::trust::collect(program, options),
+        array_prototype_exposed: super::trust::array_prototype_exposed(program),
         legacy_tag_spans: super::trust::legacy_local_tags(program),
         roots: steps(&program.body, source),
         mapped_arguments: super::mapped_arguments::collect(program),
         ..QueryAnnotationFileFacts::default()
     };
-    facts.unmodeled_calls = super::coverage::collect(program, source, &facts.roots);
+    (facts.unmodeled_calls, facts.branch_calls) =
+        super::coverage::collect(program, source, &facts.roots);
     for step in &facts.roots {
         if let Step::Bind(name, value) | Step::Hoisted(name, value) = step {
             facts.globals.insert(name.clone(), value.clone());
@@ -81,11 +83,22 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
                     steps.push(Step::Effect(expr));
                 }
             }
+            Statement::IfStatement(value) => {
+                steps.push(Step::PotentialCalls(unsupported::calls(statement)));
+                steps.push(Step::Branch(
+                    expression(&value.test, source),
+                    branch(&value.consequent, source),
+                    value
+                        .alternate
+                        .as_ref()
+                        .map_or_else(Vec::new, |alternate| branch(alternate, source)),
+                ));
+            }
             Statement::ReturnStatement(value) => steps.push(Step::Return(
                 value
                     .argument
                     .as_ref()
-                    .map_or(Expr::Unknown, |value| expression(value, source)),
+                    .map_or(Expr::Primitive, |value| expression(value, source)),
             )),
             Statement::EmptyStatement(_)
             | Statement::ImportDeclaration(_)
@@ -145,5 +158,13 @@ fn bind_variables(
         // Mutable declaration initializers still execute. Later assignments
         // make the containing helper unsupported instead of hiding these calls.
         steps.push(Step::Bind(id.name.to_string(), init));
+    }
+}
+
+fn branch(statement: &Statement<'_>, source: &str) -> Vec<Step> {
+    if let Statement::BlockStatement(block) = statement {
+        steps(&block.body, source)
+    } else {
+        steps(std::slice::from_ref(statement), source)
     }
 }

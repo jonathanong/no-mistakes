@@ -15,6 +15,7 @@ pub mod config;
 pub mod data_pw_query;
 pub mod diagnostics;
 pub(crate) mod edge_index;
+mod effect_provenance;
 pub mod effects_query;
 pub mod fetch;
 mod fetches;

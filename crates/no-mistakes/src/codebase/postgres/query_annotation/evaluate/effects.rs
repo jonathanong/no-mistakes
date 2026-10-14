@@ -5,7 +5,13 @@ use std::path::PathBuf;
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_live_builders(&mut self) {
         let values = self.live_builder_values();
-        self.invalidate_builders(&values);
+        self.invalidate_opaque_builders(&values);
+    }
+
+    pub(super) fn invalidate_opaque_builders(&mut self, values: &[Value]) {
+        // Opaque hooks can patch intrinsics even when no builder exists yet.
+        self.untrusted_array_intrinsics = true;
+        self.invalidate_builders(values);
     }
 
     pub(super) fn live_builder_values(&self) -> Vec<Value> {
@@ -55,7 +61,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.builder_ids(value, ids);
                 }
             }
-            Value::Arguments(id) if ids.insert(*id) => {
+            Value::Arguments(id) | Value::Array(id) if ids.insert(*id) => {
                 // Container escape can replace live slots. Definite deletion
                 // disconnects the former value; possible deletion does not.
                 for (index, value) in self.argument_slots(*id) {
@@ -99,10 +105,23 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
     pub(super) fn replace_builder(&mut self, replacement: &Value) {
-        let Value::Prefix(_, _, Some(id)) = replacement else {
+        fn identity(value: &Value) -> Option<u64> {
+            match value {
+                Value::Prefix(_, _, Some(id)) => Some(*id),
+                Value::Joined(values) if !values.is_empty() => {
+                    let id = identity(&values[0])?;
+                    values
+                        .iter()
+                        .all(|value| identity(value) == Some(id))
+                        .then_some(id)
+                }
+                _ => None,
+            }
+        }
+        let Some(id) = identity(replacement) else {
             return;
         };
-        self.builder_updates.insert(*id, replacement.clone());
+        self.builder_updates.insert(id, replacement.clone());
         fn replace(value: &mut Value, id: u64, replacement: &Value) {
             if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
                 *value = replacement.clone();
@@ -125,24 +144,24 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
         }
-        let ids = FxHashSet::from_iter([*id]);
+        let ids = FxHashSet::from_iter([id]);
         for scope in &mut self.scopes {
             if !scope.contains_builders(&ids) {
                 continue;
             }
             for value in scope.values_mut() {
-                replace(value, *id, replacement);
+                replace(value, id, replacement);
             }
         }
         // Argument references are identity-only; update each arena slot once.
         for values in self.argument_objects.values_mut() {
             for value in values {
-                replace(value, *id, replacement);
+                replace(value, id, replacement);
             }
         }
         for values in self.argument_extra_slots.values_mut() {
             for value in values.values_mut() {
-                replace(value, *id, replacement);
+                replace(value, id, replacement);
             }
         }
     }

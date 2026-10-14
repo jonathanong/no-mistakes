@@ -84,4 +84,20 @@ function completeResult(result, requestedReports) {
   return { reports: [...omitted, ...result.reports] };
 }
 
-module.exports = { buildRequest, completeResult, isReservedArtifactPath };
+function invocationOptions(options) {
+  return Object.fromEntries(
+    [
+      "timeout",
+      "invocationTimeoutMs",
+      "lockTimeout",
+      "failOnLock",
+      "jobs",
+      "profile",
+      "diagnosticsId",
+    ]
+      .filter((name) => Object.hasOwn(options, name))
+      .map((name) => [name, options[name]]),
+  );
+}
+
+module.exports = { buildRequest, completeResult, isReservedArtifactPath, invocationOptions };

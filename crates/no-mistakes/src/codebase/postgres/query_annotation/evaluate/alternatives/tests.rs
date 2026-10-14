@@ -34,6 +34,7 @@ fn sequential_alternatives_discard_noncallback_frames() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -93,6 +94,7 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -147,6 +149,7 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -204,6 +207,7 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -258,6 +262,7 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -316,6 +321,7 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -374,6 +380,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
@@ -409,7 +416,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         let mut joined = original.clone();
         let current =
             vec![FxHashMap::from_iter([("value".into(), super::super::Value::Unknown)]).into()];
-        super::bindings::join(&mut joined, &current, &original);
+        super::bindings::join_with_sql(&mut joined, &current, &original, false);
         if references {
             assert!(matches!(joined[0]["value"], super::super::Value::Joined(_)));
         } else {
@@ -447,6 +454,7 @@ fn nested_capture_restoration_keeps_reverse_readers_exact() {
         active_module_initials: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
         next_builder: 0,
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),

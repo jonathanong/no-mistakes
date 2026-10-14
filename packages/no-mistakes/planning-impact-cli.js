@@ -26,6 +26,7 @@ function parsePlanningImpactArgs(argv, root) {
       timeout: { type: "string" },
       "lock-timeout": { type: "string" },
       "fail-on-lock": { type: "boolean" },
+      "invocation-timeout-ms": { type: "string" },
       jobs: { type: "string", short: "j" },
       profile: { type: "string" },
       help: { type: "boolean", short: "h" },
@@ -51,6 +52,14 @@ function parsePlanningImpactArgs(argv, root) {
     if (values[flag] !== undefined) options[key] = parseNonNegativeInteger(flag, values[flag]);
   }
   if (values["fail-on-lock"]) options.failOnLock = true;
+  if (values["invocation-timeout-ms"] !== undefined) {
+    options.invocationTimeoutMs = parseNonNegativeInteger(
+      "invocation-timeout-ms",
+      values["invocation-timeout-ms"],
+    );
+    if (options.invocationTimeoutMs === 0)
+      throw new Error("invocation-timeout-ms must be positive");
+  }
   if (values.profile) options.profile = values.profile;
   return options;
 }

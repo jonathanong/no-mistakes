@@ -120,7 +120,7 @@ impl CallSiteResolution<'_, '_> {
             .iter()
             .filter(|call| !recorded.contains(&(call.caller_id, call.offset, call.invocation)))
             .map(|call| ResolvedCallSite {
-        returned_from: Vec::new(), target_node: None,
+        returned_from: Vec::new(), typed_from: Vec::new(), returned_member_from: Vec::new(), target_node: None,
                 file: self.path.to_path_buf(),
                 caller: call.caller.clone(),
                 caller_id: call.caller_id,

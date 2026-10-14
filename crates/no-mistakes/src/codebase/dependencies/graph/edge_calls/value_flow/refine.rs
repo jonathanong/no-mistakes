@@ -103,6 +103,16 @@ fn refine_iteration(
         let mut value = value;
         loop {
             value = match value {
+                FlowValue::Provenance {
+                    executor,
+                    typed,
+                    members,
+                    ..
+                } => {
+                    site.typed_from.extend(typed);
+                    site.returned_member_from.extend(members);
+                    *executor
+                }
                 FlowValue::Returned {
                     factory, executor, ..
                 } => {
@@ -115,6 +125,17 @@ fn refine_iteration(
                     break;
                 }
             };
+        }
+        if matches!(
+            value,
+            FlowValue::Promise(_)
+                | FlowValue::Uncallable
+                | FlowValue::Object { .. }
+                | FlowValue::Array { .. }
+                | FlowValue::Undefined
+        ) {
+            site.typed_from.clear();
+            site.returned_member_from.clear();
         }
         if matches!(value, FlowValue::Promise(_) | FlowValue::Uncallable) {
             site.target = ResolvedCallTarget::Unknown;

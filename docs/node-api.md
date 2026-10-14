@@ -124,6 +124,46 @@ SQL construction; consumers must inspect the statement before classifying a
 `WITH` body as a read. Supplied static dependencies execute before their importer;
 opaque top-level effects and unscheduled async helper work make affected shared
 builders unproven. Use `check()` for project-wide annotation enforcement.
+
+Import-aware evaluation follows helper `if`/early-return paths and finite array
+`map`, `join`, `push`, and `forEach` operations, including conditional CTE assembly
+and append helpers. It recovers whole statements, with the same 16-alternative
+limit as embedded SQL extraction. One unknown structural alternative or a limit
+overflow makes the entire executor site incomplete; a favorable read alternative
+cannot certify the others. Group alternatives by `fileName` and `line`, parse
+every statement, and inspect nested effects (including DML inside `WITH`) before
+classifying the site as read-only. SQL construction alone never proves a read.
+Conditional array cardinality stays unknown across slot writes; collection
+projection cannot use internal shape metadata to skip possible callback effects.
+Array intrinsic projections remain incomplete when a supplied source exposes
+`Array.prototype`, an `Array` constructor reference, instance `constructor`,
+`__proto__`, or `getPrototypeOf`, including computed access, aliases, and read-only
+exposure;
+this conservative guard cannot prove that an exposed prototype stays pristine.
+Any static or literal computed member named `Array` counts as exposure, including
+local namespaces, so aliases of standard global objects cannot bypass the guard.
+Opaque effects also make later intrinsic projections incomplete, including
+unmodeled calls, accessors, constructors, tags, setters, and deletion/coercion
+hooks. This uncertainty stays within each execution;
+independent entrypoints and immutable strings computed before the effect retain
+their existing results.
+Opaque executor receiver or callee effects also make the site incomplete,
+including optional calls. Ordinary optional calls retain their existing literal
+SQL results, and annotation-only analysis retains its existing behavior.
+Opaque operand effects remain authoritative across indexed writes and binary or
+returned failures; discarding a failed value cannot restore an earlier SQL proof.
+An append observes supported mutations to its captured builder receiver while
+evaluating the tail, preserving the receiver's identity rather than an old prefix.
+Operand effects apply from left to right before later nested executor calls.
+An earlier read retains its result when an opaque effect occurs afterward.
+
+`incompleteReason` is additive evaluator metadata: `null` for complete statements
+or proven generated value binds, otherwise a blocker such as `variant-limit`,
+`unbounded-collection-shape`, `opaque-spread`, `unknown-collection-callback`, or
+`opaque-builder-effect`. Unbounded runtime collections are not sampled as empty
+or one element, and unknown callbacks, getters, spread shapes, unsupported block
+bindings, and unscheduled helper effects remain unclassified. This analysis
+requires no trusted fragment declarations and does not rewrite application SQL.
 Literal CommonJS `require` calls and awaited dynamic imports evaluate supplied
 targets at their expression position; a target that cannot be resolved leaves
 shared builder SQL unproven. Getter-capable member reads likewise prevent a
@@ -328,7 +368,7 @@ await writePlanningImpactArtifacts({
 
 The npm package also exposes this integration as `no-mistakes planning-impact
 --changed-files <manifest> --output-dir <directory>`. Its current working
-directory is `root`; `--broad`, `--timeout`, `--lock-timeout`,
+directory is `root`; `--broad`, `--timeout`, `--invocation-timeout-ms`, `--lock-timeout`,
 `--fail-on-lock`, `--jobs`, and `--profile ci` map to the matching API options.
 The command is silent on success. Argument and analysis failures write a
 UTF-8-safe diagnostic of at most 4 KiB to stderr and exit `1`. It is
@@ -630,6 +670,17 @@ argument/default bindings, including qualified named-client command lists,
 without matching unrelated same-named bindings.
 `effects.<kind>.returnedExecutors` selects callable results of imported factories
 whose implementation is opaque; both APIs honor these selectors.
+`effects.<kind>.typedExecutors` selects calls through parameters with explicit
+callable types imported from the configured module/export, including aliases,
+namespace imports, and explicit type re-exports. `effects.<kind>.returnedMembers`
+selects exact member calls on receivers returned by configured imported factory
+paths. Both selectors share prepared call provenance across asynchronous
+`effects()`, `check()`, and `analyzeProject()` reports; categories and selector
+paths are reflected in effects query results. Returned-member callees display
+as the factory path plus `().member` (for example,
+`writePool.connect().query`); typed executor callees display the configured type
+export. These are configuration additions to existing exports and introduce no
+new Node functions or option types.
 `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
@@ -722,14 +773,28 @@ Every async analysis function except `version()` accepts these common options:
 interface InvocationOptions {
   diagnosticsId?: string;
   timeout?: number | null;
+  // Opt-in positive native lock-acquisition plus execution budget; never extends timeout or lockTimeout.
+  invocationTimeoutMs?: number;
   lockTimeout?: number | null;
   failOnLock?: boolean;
   jobs?: number | null;
 }
 ```
 
-Durations are non-negative integer seconds. `timeout` limits command execution
-after the lock is acquired, while `lockTimeout` limits only the lock wait. The
+`timeout` and `lockTimeout` use non-negative integer seconds. `timeout` limits
+command execution after the lock is acquired. Without an invocation budget,
+`lockTimeout` limits only the lock wait. Optional `invocationTimeoutMs` is a
+positive safe integer in milliseconds when present; unlike the older options, null is invalid. It is
+measured once when native invocation coordination starts, before
+lock-path resolution. The lock and execution phases share this absolute budget;
+it never extends either ordinary phase deadline. With this budget enabled,
+`lockTimeout` starts before opening the lock file. Its deadline is compared
+with the original invocation deadline, which already includes lock-path
+resolution; the earlier deadline determines the timeout classification. Ordinary
+lock-wait timing is unchanged when the invocation budget is omitted.
+Library/Node queueing before native coordination is outside that budget. A waiting N-API request does not
+change the active holder's watchdog or actor registry. `profile: "ci"` disables
+this optional budget as well as the ordinary deadlines. The
 Node/N-API defaults disable both deadlines (`timeout`/`lockTimeout` omitted,
 `0`, or `null`). The CLI still defaults to 30 seconds; pass `0` there to
 disable. `failOnLock: true` fails immediately on contention and overrides
