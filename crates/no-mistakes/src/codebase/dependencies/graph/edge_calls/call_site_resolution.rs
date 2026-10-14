@@ -116,9 +116,14 @@ impl CallSiteResolution<'_, '_> {
             .filter(|call| is_traversable_call(self.index, call))
             .map(|call| (call.caller_id, call.offset, call.invocation))
             .collect::<FxHashSet<_>>();
+        // An outer returned-callable invocation can start at the same byte as
+        // its named factory call. Their source callees still distinguish them.
+        let unnamed_values: FxHashSet<_> = file.value_flow.calls.iter()
+            .filter(|call| call.source_callee == "<unknown>")
+            .map(|call| call.offset).collect();
         file.unknown_calls
             .iter()
-            .filter(|call| !recorded.contains(&(call.caller_id, call.offset, call.invocation)))
+            .filter(|call| !recorded.contains(&(call.caller_id, call.offset, call.invocation)) || unnamed_values.contains(&call.offset))
             .map(|call| ResolvedCallSite {
         returned_from: Vec::new(), typed_from: Vec::new(), returned_member_from: Vec::new(), target_node: None,
                 file: self.path.to_path_buf(),

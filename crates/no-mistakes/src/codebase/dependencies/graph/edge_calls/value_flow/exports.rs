@@ -8,7 +8,7 @@ pub(in super::super) fn resolve_value_exports(
     pass: &CallPass,
     exports: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) {
-    let incoming = refine::incoming_inputs(&pass.sites, &pass.constructor_routes);
+    let incoming = refine::incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
     let resolved: Vec<_> = exports
         .par_iter()
         .filter_map(|(key, export)| {
@@ -29,6 +29,7 @@ pub(in super::super) fn resolve_value_exports(
                 visiting: fx_set(),
                 calls_visiting: fx_set(),
                 default_origins: None,
+                    invocation_read: None,
             };
             let mut value = flow.named(file, local, Some(0), u32::MAX, None);
             loop {

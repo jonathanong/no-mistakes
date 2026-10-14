@@ -509,3 +509,13 @@ Literal dynamic workspace imports retain `dynamic-import` or
 wildcard package `exports` and package `#imports`. Their workspace target also
 has a `workspace` edge. Import-only forward walks and canonical reverse
 queries use the same prepared visible target; computed specifiers emit no edge.
+
+Synchronous inline arrows, function expressions, and returned helpers retain their enclosing
+invocation context when resolving supplied receiver arguments and defaults. A
+later receiver write in that same context does not invalidate an earlier direct
+helper call. Calls after a write and captured closures with uncertain execution
+order remain unresolved; synthetic reachability edges do not add a second
+unknown argument set to a proven invocation. Returned helpers require every
+known factory invocation to call its result immediately; a stored result or
+opaque escape keeps receiver arguments unresolved. Async and generator helpers
+remain conservative because their receiver reads may occur after suspension.

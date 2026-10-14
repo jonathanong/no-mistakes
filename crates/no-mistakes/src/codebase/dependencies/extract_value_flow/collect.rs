@@ -124,6 +124,7 @@ impl ImportCollector {
         }
         let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
         self.value_flow.calls.push(ValueCall {
+            context: self.current_function_id(),
             offset: call.span.start,
             end: call.span.end,
             source_callee: recorded_call_callee(self, call)

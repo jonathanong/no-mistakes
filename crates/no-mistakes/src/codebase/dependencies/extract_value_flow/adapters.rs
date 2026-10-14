@@ -117,6 +117,7 @@ impl ImportCollector {
         }
         let (arguments, spread_at) = self.value_arguments(&new.arguments);
         self.value_flow.calls.push(ValueCall {
+            context: self.current_function_id(),
             offset: new.span.start,
             end: new.span.end,
             source_callee: simple_callee_name(&new.callee)
