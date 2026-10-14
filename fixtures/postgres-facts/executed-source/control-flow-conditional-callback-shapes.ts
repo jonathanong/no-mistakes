@@ -68,3 +68,24 @@ export function conditionalOverwrite(flag: boolean) {
   });
   read(query);
 }
+
+function pushBranch(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  if (parts.push('c') === 2) return 'SELECT 1';
+  return 'DELETE FROM records';
+}
+export function conditionalPushBranch(flag: boolean) {
+  read(pushBranch(flag));
+}
+
+function overwriteLength(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  parts[0] = 'c';
+  if (parts.length === 1) return 'SELECT 1';
+  return 'DELETE FROM records';
+}
+export function conditionalOverwriteLength(flag: boolean) {
+  read(overwriteLength(flag));
+}

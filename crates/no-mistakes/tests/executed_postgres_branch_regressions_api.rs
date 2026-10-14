@@ -68,7 +68,7 @@ fn branch_returned_private_functions_remain_safely_incomplete() {
 #[test]
 fn conditional_shapes_cannot_skip_later_callback_mutations() {
     let rows = extract("control-flow-conditional-callback-shapes.ts");
-    assert_eq!(rows.len(), 8, "{rows:?}");
+    assert_eq!(rows.len(), 10, "{rows:?}");
     for row in rows {
         if matches!(row.line, 35 | 44) {
             assert!(row.complete, "{row:?}");
