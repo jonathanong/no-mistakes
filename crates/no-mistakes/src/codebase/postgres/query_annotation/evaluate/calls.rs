@@ -60,9 +60,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         let handled_projection = matches!(callee, Expr::Name(_))
             && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
-        let executor_operands_opaque = raw_arguments
-            .iter()
-            .any(|value| matches!(value, Value::Evaluated(_, false)));
+        let executor_operands_opaque =
+            args.iter()
+                .zip(&raw_arguments)
+                .enumerate()
+                .any(|(index, (arg, value))| {
+                    matches!(value, Value::Evaluated(_, false))
+                        || (index > 0 && !self.handled_deletion_effect(arg, value, path, *env))
+                });
         let operands_handled = callee_handled
             && args
                 .iter()

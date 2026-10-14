@@ -333,3 +333,17 @@ fn opaque_array_callbacks_remain_safely_incomplete() {
         "{rows:?}"
     );
 }
+
+#[test]
+fn direct_unresolved_executor_operands_cannot_certify_earlier_builders() {
+    let rows = extract("control-flow-executor-direct-operand.ts");
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert!(
+        !rows[0].complete && !rows[0].only_value_placeholders,
+        "{rows:?}"
+    );
+    assert_eq!(
+        rows[0].incomplete_reason.as_deref(),
+        Some("opaque-executor-operand-effect")
+    );
+}
