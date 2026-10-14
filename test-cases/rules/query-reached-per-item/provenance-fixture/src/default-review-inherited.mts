@@ -15,3 +15,6 @@ for (const item of items) { absentConstructor(); }
 const ownProto = { ['__proto__']: null };
 function computedProto({ constructor: client = primary } = ownProto) { client.get('key'); }
 for (const item of items) { computedProto(); }
+const wrappedNull = { __proto__: (null as null) };
+function wrappedConstructor({ constructor: client = primary } = wrappedNull) { client.get('key'); }
+for (const item of items) { wrappedConstructor(); }

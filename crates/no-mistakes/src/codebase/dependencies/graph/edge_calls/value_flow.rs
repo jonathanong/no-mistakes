@@ -113,7 +113,7 @@ struct ValueFlowResolution<'a, 'b> {
     cache: &'a ParameterCache,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
-    default_origins: Option<FxHashSet<DefaultOriginUse>>,
+    default_origins: default_origins::Origins,
 }
 
 #[path = "value_flow/named.rs"]
@@ -196,6 +196,9 @@ use parameter_cache::{CacheAccess, CachedParameter, ParameterKey};
 
 #[path = "value_flow/default_origins.rs"]
 mod default_origins;
-use default_origins::DefaultOriginUse;
+use default_origins::{OriginKind, OriginNode};
+
+#[path = "value_flow/origin_tree.rs"]
+mod origin_tree;
 #[path = "value_flow/parameter_projection.rs"]
 mod parameter_projection;

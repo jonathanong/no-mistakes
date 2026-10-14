@@ -11,7 +11,7 @@ impl ValueFlowResolution<'_, '_> {
         if value == FlowValue::Undefined {
             self.default_origins = None;
         }
-        default_origins::merge(&mut self.default_origins, outer);
+        default_origins::merge(&mut self.default_origins, outer, self.cache);
         value
     }
     fn expression_value(

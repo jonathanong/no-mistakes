@@ -66,11 +66,42 @@ impl ValueMutationHistory {
         context: Option<CallableId>,
         external: bool,
     ) -> bool {
-        let (member, receiver, projection) = if let Some((head, tail)) = receiver.split_first() {
-            (head.as_deref(), tail, projection)
-        } else if let Some((head, tail)) = projection.split_first() {
-            (Some(head.as_str()), receiver, tail)
-        } else {
+        self.invalidated_path(
+            receiver
+                .iter()
+                .map(Option::as_deref)
+                .chain(projection.iter().map(|member| Some(member.as_str()))),
+            offset,
+            context,
+            external,
+        )
+    }
+    pub fn invalidated_projected(
+        &self,
+        receiver: &[Option<String>],
+        projection: &[&str],
+        offset: u32,
+        context: Option<CallableId>,
+        external: bool,
+    ) -> bool {
+        self.invalidated_path(
+            receiver
+                .iter()
+                .map(Option::as_deref)
+                .chain(projection.iter().rev().map(|member| Some(*member))),
+            offset,
+            context,
+            external,
+        )
+    }
+    fn invalidated_path<'a>(
+        &self,
+        mut path: impl Iterator<Item = Option<&'a str>> + Clone,
+        offset: u32,
+        context: Option<CallableId>,
+        external: bool,
+    ) -> bool {
+        let Some(member) = path.next() else {
             return self.summary.as_ref().is_some_and(|mutation| {
                 external
                     || mutation.offset <= offset
@@ -78,7 +109,7 @@ impl ValueMutationHistory {
             });
         };
         let matches =
-            |child: &Self| child.invalidated(receiver, projection, offset, context, external);
+            |child: &Self| child.invalidated_path(path.clone(), offset, context, external);
         if self.dynamic.as_deref().is_some_and(matches) {
             return true;
         }

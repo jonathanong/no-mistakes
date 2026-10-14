@@ -12,23 +12,26 @@ pub(super) struct ParameterKey {
 #[derive(Clone)]
 pub(super) struct CachedParameter {
     pub(super) value: FlowValue,
-    pub(super) origins: Option<Arc<FxHashSet<DefaultOriginUse>>>,
-    pub(super) dependencies: FxHashSet<(std::path::PathBuf, CallableId)>,
+    pub(super) origins: default_origins::Origins,
 }
 enum Entry {
     Computing(ThreadId),
     Ready(Arc<CachedParameter>),
 }
+type Owner = (std::path::PathBuf, CallableId);
 #[derive(Default)]
 struct State {
     entries: FxHashMap<ParameterKey, Entry>,
     waiting: FxHashMap<ThreadId, ThreadId>,
     computations: usize,
+    reverse_dependencies: FxHashMap<Owner, FxHashSet<Owner>>,
 }
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
     state: Mutex<State>,
     ready: Condvar,
+    #[cfg(feature = "test-instrumentation")]
+    origin_nodes: std::sync::atomic::AtomicUsize,
 }
 pub(super) enum CacheAccess<'a> {
     Ready(Arc<CachedParameter>),
@@ -40,6 +43,17 @@ pub(super) struct Lease<'a> {
     key: Option<ParameterKey>,
 }
 impl ParameterCache {
+    pub(super) fn origin_node(&self, kind: OriginKind, height: usize) -> Arc<OriginNode> {
+        #[cfg(feature = "test-instrumentation")]
+        self.origin_nodes
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        Arc::new(OriginNode { kind, height })
+    }
+    #[cfg(feature = "test-instrumentation")]
+    pub(in super::super) fn origin_nodes(&self) -> usize {
+        self.origin_nodes.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     pub(super) fn acquire(&self, key: ParameterKey) -> CacheAccess<'_> {
         let thread = std::thread::current().id();
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -83,12 +97,19 @@ impl ParameterCache {
             .unwrap_or_else(|error| error.into_inner())
             .computations
     }
-    fn publish(&self, key: ParameterKey, value: Arc<CachedParameter>) {
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .entries
-            .insert(key, Entry::Ready(value));
+    fn publish(
+        &self,
+        key: ParameterKey,
+        value: Arc<CachedParameter>,
+        owner: Option<Owner>,
+        dependencies: FxHashSet<Owner>,
+    ) {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(owner) = owner {
+            state.record_dependencies(owner, dependencies);
+        }
+        state.entries.insert(key, Entry::Ready(value));
+        drop(state);
         self.ready.notify_all();
     }
 }
@@ -110,9 +131,18 @@ fn waits_for(
     false
 }
 impl Lease<'_> {
-    pub(super) fn publish(mut self, value: Arc<CachedParameter>) {
-        self.cache
-            .publish(self.key.take().expect("cache lease"), value);
+    pub(super) fn publish(
+        mut self,
+        value: Arc<CachedParameter>,
+        owner: Owner,
+        dependencies: FxHashSet<Owner>,
+    ) {
+        self.cache.publish(
+            self.key.take().expect("cache lease"),
+            value,
+            Some(owner),
+            dependencies,
+        );
     }
 }
 impl Drop for Lease<'_> {
@@ -123,9 +153,13 @@ impl Drop for Lease<'_> {
                 Arc::new(CachedParameter {
                     value: FlowValue::Unknown,
                     origins: None,
-                    dependencies: fx_set(),
                 }),
+                None,
+                fx_set(),
             );
         }
     }
 }
+
+#[path = "parameter_dependencies.rs"]
+mod dependencies;

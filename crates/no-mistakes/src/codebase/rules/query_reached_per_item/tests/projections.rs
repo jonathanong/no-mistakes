@@ -145,7 +145,7 @@ fn destructured_parameters_project_before_caller_agreement() {
             .filter(|finding| finding.file == "src/destructured-parameters.mts")
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [4, 6, 8, 17, 21, 31, 43, 45, 52],
+        [4, 6, 8, 17, 21, 31, 43, 45, 52, 57],
         "{findings:#?}"
     );
 }
@@ -172,7 +172,7 @@ fn default_mutation_paths_late_declarations_and_inherited_fields_are_conservativ
     for (file, expected) in [
         ("src/default-review-stars.mts", vec![6]),
         ("src/default-review-late.mts", vec![12]),
-        ("src/default-review-inherited.mts", vec![7, 9, 14]),
+        ("src/default-review-inherited.mts", vec![7, 9, 14, 20]),
     ] {
         assert_eq!(
             findings

@@ -43,16 +43,17 @@ impl ValueFlowResolution<'_, '_> {
                 let value = flow.compute_parameter(path, parameter);
                 let cached = std::sync::Arc::new(CachedParameter {
                     value,
-                    origins: flow.default_origins.map(std::sync::Arc::new),
-                    dependencies: flow.used_parameters,
+                    origins: flow.default_origins,
                 });
-                lease.publish(std::sync::Arc::clone(&cached));
+                lease.publish(
+                    std::sync::Arc::clone(&cached),
+                    (path.to_path_buf(), parameter.owner),
+                    flow.used_parameters,
+                );
                 cached
             }
         };
-        self.used_parameters
-            .extend(cached.dependencies.iter().cloned());
-        self.extend_default_origins(cached.origins.as_deref());
+        self.extend_default_origins(cached.origins.as_ref());
         cached.value.clone()
     }
     fn compute_parameter(
@@ -89,13 +90,13 @@ impl ValueFlowResolution<'_, '_> {
                 Some(value) => value,
             };
             values.push(self.project_parameter(path, parameter, value, from_default));
-            default_origins::merge(&mut origins, self.default_origins.take());
+            default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         }
         if values.is_empty() {
             let value = self.parameter_default(path, parameter);
             values.push(self.project_parameter(path, parameter, value, true));
         }
-        default_origins::merge(&mut origins, self.default_origins.take());
+        default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         self.default_origins = origins;
         agreed_value(values)
     }

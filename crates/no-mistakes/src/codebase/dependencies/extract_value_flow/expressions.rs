@@ -78,32 +78,7 @@ impl ImportCollector {
                 }
                 ValueExpression::Array(std::sync::Arc::new(fields))
             }
-            Expression::ObjectExpression(object) => {
-                let mut fields = fx_map();
-                let mut null_prototype = false;
-                for property in &object.properties {
-                    let ObjectPropertyKind::ObjectProperty(property) = property else {
-                        return ValueExpression::Unknown;
-                    };
-                    if property.computed || property.method || property.kind != PropertyKind::Init {
-                        return ValueExpression::Unknown;
-                    }
-                    let Some(key) =
-                        crate::codebase::ts_source::static_property_key_name(&property.key)
-                    else {
-                        return ValueExpression::Unknown;
-                    };
-                    if key == "__proto__" && !property.shorthand {
-                        if matches!(property.value, Expression::NullLiteral(_)) {
-                            null_prototype = true;
-                            continue;
-                        }
-                        return ValueExpression::Unknown;
-                    }
-                    fields.insert(key.to_string(), self.value_expression(&property.value));
-                }
-                ValueExpression::Object(std::sync::Arc::new(fields), null_prototype)
-            }
+            Expression::ObjectExpression(object) => self.object_value(object),
             _ => simple_callee_name(expression).map_or(ValueExpression::Unknown, |name| {
                 ValueExpression::Named {
                     scope: self.callee_binding_scope(&name),

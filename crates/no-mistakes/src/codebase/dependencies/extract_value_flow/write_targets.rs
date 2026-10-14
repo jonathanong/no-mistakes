@@ -81,3 +81,11 @@ pub(super) fn static_key(expression: &Expression<'_>) -> Option<String> {
         _ => None,
     }
 }
+
+pub(super) fn property_key(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<String> {
+    if let oxc_ast::ast::PropertyKey::NumericLiteral(literal) = key {
+        Some(literal.value.to_string())
+    } else {
+        crate::codebase::ts_source::static_property_key_name(key).map(str::to_string)
+    }
+}

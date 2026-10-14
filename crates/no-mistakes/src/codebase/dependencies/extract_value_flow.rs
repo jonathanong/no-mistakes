@@ -128,3 +128,6 @@ mod mutation_history;
 
 #[path = "extract_value_flow/write_targets.rs"]
 pub(super) mod write_targets;
+
+#[path = "extract_value_flow/object_values.rs"]
+mod object_values;

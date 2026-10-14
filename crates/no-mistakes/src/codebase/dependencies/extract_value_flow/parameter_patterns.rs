@@ -39,11 +39,9 @@ impl ImportCollector {
             BindingPattern::ObjectPattern(object) => {
                 for property in &object.properties {
                     if !property.computed {
-                        if let Some(key) =
-                            crate::codebase::ts_source::static_property_key_name(&property.key)
-                        {
+                        if let Some(key) = write_targets::property_key(&property.key) {
                             let mut steps = projection.clone();
-                            steps.push(ValueProjection::Member(key.to_string()));
+                            steps.push(ValueProjection::Member(key));
                             self.record_parameter_pattern(
                                 &property.value,
                                 slot,

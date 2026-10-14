@@ -122,3 +122,58 @@ fn nested_mutation_alias_cycles_terminate() {
     )
     .unwrap();
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn fan_in_origins_remain_shared_across_receiver_fan_out() {
+    let mut counts = Vec::new();
+    let mut dependencies = Vec::new();
+    for (name, receivers) in [
+        ("value-flow-origin-small", 8),
+        ("value-flow-origin-large", 128),
+    ] {
+        let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
+        let tsconfig = TsConfig {
+            dir: root.clone(),
+            paths: vec![],
+            paths_dir: root.clone(),
+            base_url: None,
+        };
+        let graph = DepGraph::build_with_plan(
+            &root,
+            &tsconfig,
+            GraphBuildPlan {
+                calls: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let calls = graph.call_sites_in_file(&root.join("src/entry.mts"));
+        let sinks = calls
+            .iter()
+            .filter(|call| call.source_callee == "client.get")
+            .collect::<Vec<_>>();
+        assert_eq!(sinks.len(), receivers);
+        assert!(sinks
+            .iter()
+            .all(|call| matches!(call.target, ResolvedCallTarget::Unknown)));
+        counts.push(benchmark_probe_origin_nodes());
+        dependencies.push(benchmark_probe_parameter_dependency_links());
+    }
+    assert!(
+        dependencies[0] >= 128,
+        "the fan-in must register its direct dependency edges: {dependencies:?}"
+    );
+    assert!(
+        dependencies[1] <= dependencies[0] + 4 * (128 - 8),
+        "fan-out must not retain transitive dependency sets per helper: {dependencies:?}"
+    );
+    assert!(
+        counts[0] >= 128,
+        "the fixture must collect its fan-in origins: {counts:?}"
+    );
+    assert!(
+        counts[1] <= counts[0] + 4 * (128 - 8),
+        "fan-out must add shared links, not clone 128 origins per receiver: {counts:?}"
+    );
+}
