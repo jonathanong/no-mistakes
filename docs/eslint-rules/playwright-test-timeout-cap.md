@@ -168,3 +168,16 @@ project budgets, including CLI overrides, before test execution, with required C
 controls that fail when that owner is absent. A clean baseline snapshot, alternate
 config bypass, filename exclusion or general unknown-value ignore is not a
 substitute. The option does not establish repository-wide timeout closure.
+
+## Fixture tuple positions
+
+Fixture tuples follow Playwright's runtime predicate: an array whose actual
+second slot is an object. Extra tail elements do not hide timeout options, and
+array holes retain their runtime positions. A spread with unknown length before
+that slot remains an unknown carrier; an unknown tail after a proved second slot
+does not move its options. Mutated array identities lose their positional proof.
+
+Proved primitive or function second slots are ordinary fixture data, including a
+function whose projected return value is an object. Null and unresolved
+object-like options remain findings under `unknownValues: "finding"`; this rule
+does not claim that an SDK-invalid null options value is a valid fixture.

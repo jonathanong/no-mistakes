@@ -53,10 +53,17 @@ function createCarriers(option, check) {
     if (test.kind !== "object") return;
     const projects = test.properties.get("projects");
     if (projects) {
-      if (projects.value.kind === "array")
+      if (projects.value.kind === "array") {
+        if (!projects.value.lengthKnown)
+          configCheck(
+            { value: { kind: "unknown" }, origin: projects.origin },
+            "projects carrier",
+            max,
+            projects.origin,
+          );
         for (const entry of projects.value.entries)
           defaults(entry.value, entry.origin, entry.origin);
-      else
+      } else
         configCheck(
           { value: { kind: "unknown" }, origin: projects.origin },
           "projects carrier",

@@ -5,6 +5,7 @@ const { createPrimitiveMemberRead } = require("./vitest-timeout-primitive-reads"
 const { createValueStability } = require("./vitest-timeout-value-stability");
 const { createScalarCopyWrite } = require("./vitest-timeout-copy-scalars");
 const { configCall, staticPropertyName } = require("./vitest-timeout-bindings");
+const { arrayValue, concatenateArrays } = require("./vitest-timeout-array-values");
 const UNKNOWN = { kind: "unknown" };
 function taint(value) {
   if (value.kind === "object")
@@ -22,6 +23,8 @@ function taint(value) {
     return {
       ...value,
       entries: value.entries.map((entry) => ({ ...entry, value: taint(entry.value) })),
+      knownPrefixLength: 0,
+      lengthKnown: false,
     };
   return UNKNOWN;
 }
@@ -38,7 +41,7 @@ function merge(left, right) {
     if (previous?.value.kind === "object" && value.kind === "object")
       value = merge(previous.value, value);
     if (previous?.value.kind === "array" && value.kind === "array")
-      value = { kind: "array", entries: [...previous.value.entries, ...value.entries] };
+      value = concatenateArrays(previous.value, value);
     properties.set(name, { ...entry, value });
   }
   return { kind: "object", properties, unknown: Boolean(left.unknown || right.unknown) };
@@ -64,8 +67,14 @@ function createEvaluator(context, consumed) {
   }
   function resolve(node) {
     if (node.type === "Literal" && node.value === null) return { kind: "null" };
-    if (node.type === "Literal")
-      return typeof node.value === "number" ? { kind: "number", value: node.value } : UNKNOWN;
+    if (node.type === "Literal") {
+      if (typeof node.value === "number") return { kind: "number", value: node.value };
+      return ["string", "boolean", "bigint"].includes(typeof node.value)
+        ? { kind: "unknown", runtimeType: typeof node.value }
+        : UNKNOWN;
+    }
+    if (node.type === "UnaryExpression" && node.operator === "void")
+      return { kind: "unknown", runtimeType: "undefined" };
     if (node.type === "UnaryExpression" && (node.operator === "-" || node.operator === "+")) {
       const value = evaluate(node.argument);
       return value.kind === "number"
@@ -154,20 +163,7 @@ function createEvaluator(context, consumed) {
       }
       return { kind: "object", properties, unknown };
     }
-    if (node.type === "ArrayExpression")
-      return {
-        kind: "array",
-        entries: node.elements.flatMap((origin) => {
-          if (!origin) return [];
-          if (origin.type === "SpreadElement") {
-            const value = evaluate(origin.argument);
-            return value.kind === "array"
-              ? value.entries.map((entry) => ({ ...entry, origin }))
-              : [{ value: UNKNOWN, origin }];
-          }
-          return [{ value: evaluate(origin), origin }];
-        }),
-      };
+    if (node.type === "ArrayExpression") return arrayValue(node, evaluate);
     if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression") {
       const statements = node.body.type === "BlockStatement" ? node.body.body : null;
       const value = statements

@@ -28,7 +28,11 @@ function createCarriers(context, evaluate, check, max, fixtureMax) {
     if (projects) {
       if (projects.value.kind !== "array")
         configCheck({ kind: "unknown" }, projects.origin, "projects carrier");
-      else for (const entry of projects.value.entries) config(entry.value, entry.origin);
+      else {
+        if (!projects.value.lengthKnown)
+          configCheck({ kind: "unknown" }, projects.origin, "projects carrier");
+        for (const entry of projects.value.entries) config(entry.value, entry.origin);
+      }
     } else if (value.unknown) configCheck({ kind: "unknown" }, node, "projects carrier");
   }
   function fixtures(node) {
@@ -39,15 +43,26 @@ function createCarriers(context, evaluate, check, max, fixtureMax) {
     }
     if (value.unknown) check({ kind: "unknown" }, node, "fixture carrier", fixtureMax);
     for (const entry of value.properties.values()) {
-      // Only SDK fixture tuples carry a separate deadline. Ordinary fixture data is not options.
-      if (entry.value.kind === "array" && entry.value.entries.length === 2)
-        field(
-          entry.value.entries[1].value,
-          entry.value.entries[1].origin,
-          "fixture timeout",
-          fixtureMax,
-        );
-      else if (entry.value.kind === "unknown" && !isFunction(unwrapExpression(entry.origin.value)))
+      // Playwright inspects runtime index 1, irrespective of extra tail elements.
+      if (entry.value.kind === "array" && !entry.value.runtimeFunction) {
+        const tuple = entry.value;
+        if (tuple.knownPrefixLength < 2) {
+          if (tuple.entries.length >= 2 || !tuple.lengthKnown)
+            check({ kind: "unknown" }, entry.origin, "fixture tuple position", fixtureMax);
+          continue;
+        }
+        const options = tuple.entries[1];
+        if (options.value.runtimeFunction) continue;
+        if (
+          options.value.kind === "number" ||
+          ["string", "boolean", "bigint", "undefined"].includes(options.value.runtimeType)
+        )
+          continue;
+        field(options.value, options.origin, "fixture timeout", fixtureMax);
+      } else if (
+        entry.value.kind === "unknown" &&
+        !isFunction(unwrapExpression(entry.origin.value))
+      )
         check({ kind: "unknown" }, entry.origin, "fixture entry carrier", fixtureMax);
     }
   }

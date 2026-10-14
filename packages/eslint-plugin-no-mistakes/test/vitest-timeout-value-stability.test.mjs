@@ -318,9 +318,10 @@ describe("vitest-timeout-cap value stability", () => {
     const actual = findings("shallow-copy-alias-mutations", { unknownValues: "finding" });
     assert.deepEqual(
       [...new Set(actual.map(({ line }) => line))],
-      [4, 8, 13, 18, 26, 30, 35, 36, 40, 47, 52, 57],
+      [4, 8, 13, 18, 21, 26, 30, 35, 36, 40, 47, 52, 57],
     );
     assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
+    assert.ok(actual.some((item) => item.line === 21 && item.message.includes("projects carrier")));
     assert.deepEqual(findings("shallow-copy-alias-mutations"), []);
   });
   it("keeps independent copy deletions separate from shared receiver deletions", () => {
