@@ -1,3 +1,8 @@
+#[path = "deadline/phase.rs"]
+mod phase;
+use phase::current_phase;
+pub use phase::set_timeout_phase;
+pub(super) use phase::timeout_diagnostic;
 #[path = "deadline/watch.rs"]
 mod watch;
 use super::{clock, InvocationError, InvocationErrorKind};
@@ -117,38 +122,6 @@ impl Drop for DeadlineGuard {
         *active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = self.previous;
-    }
-}
-
-fn phase_slot() -> &'static RwLock<&'static str> {
-    static PHASE: OnceLock<RwLock<&'static str>> = OnceLock::new();
-    PHASE.get_or_init(|| RwLock::new("command"))
-}
-
-/// Record the command phase included in a timeout diagnostic.
-pub fn set_timeout_phase(phase: &'static str) {
-    *phase_slot()
-        .write()
-        .unwrap_or_else(std::sync::PoisonError::into_inner) = phase;
-}
-
-fn current_phase() -> &'static str {
-    *phase_slot()
-        .read()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-}
-
-pub(super) fn timeout_diagnostic(timeout: Duration, phase: &str) -> String {
-    if timeout.subsec_nanos() == 0 {
-        format!(
-            "command timed out after {} seconds during {phase}",
-            timeout.as_secs()
-        )
-    } else {
-        format!(
-            "command timed out after {} milliseconds during {phase}",
-            timeout.as_millis()
-        )
     }
 }
 
