@@ -328,7 +328,7 @@ await writePlanningImpactArtifacts({
 
 The npm package also exposes this integration as `no-mistakes planning-impact
 --changed-files <manifest> --output-dir <directory>`. Its current working
-directory is `root`; `--broad`, `--timeout`, `--lock-timeout`,
+directory is `root`; `--broad`, `--timeout`, `--invocation-timeout-ms`, `--lock-timeout`,
 `--fail-on-lock`, `--jobs`, and `--profile ci` map to the matching API options.
 The command is silent on success. Argument and analysis failures write a
 UTF-8-safe diagnostic of at most 4 KiB to stderr and exit `1`. It is
@@ -722,14 +722,24 @@ Every async analysis function except `version()` accepts these common options:
 interface InvocationOptions {
   diagnosticsId?: string;
   timeout?: number | null;
+  // Opt-in positive native lock-acquisition plus execution budget; never extends timeout or lockTimeout.
+  invocationTimeoutMs?: number;
   lockTimeout?: number | null;
   failOnLock?: boolean;
   jobs?: number | null;
 }
 ```
 
-Durations are non-negative integer seconds. `timeout` limits command execution
-after the lock is acquired, while `lockTimeout` limits only the lock wait. The
+`timeout` and `lockTimeout` use non-negative integer seconds. `timeout` limits
+command execution after the lock is acquired, while `lockTimeout` limits only
+the lock wait. Optional `invocationTimeoutMs` is a positive safe integer in
+milliseconds when present; unlike the older options, null is invalid. It is
+measured once when native invocation coordination starts, before
+lock-path resolution. The lock and execution phases share this absolute budget;
+it never extends either ordinary phase deadline. Library/Node queueing before
+native coordination is outside that budget. A waiting N-API request does not
+change the active holder's watchdog or actor registry. `profile: "ci"` disables
+this optional budget as well as the ordinary deadlines. The
 Node/N-API defaults disable both deadlines (`timeout`/`lockTimeout` omitted,
 `0`, or `null`). The CLI still defaults to 30 seconds; pass `0` there to
 disable. `failOnLock: true` fails immediately on contention and overrides

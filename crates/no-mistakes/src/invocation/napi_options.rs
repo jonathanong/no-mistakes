@@ -1,4 +1,4 @@
-use super::{nonzero_seconds, InvocationArgs};
+use super::{nonzero_seconds, InvocationArgs, MAX_INVOCATION_TIMEOUT_MS};
 use anyhow::{anyhow, Context, Result};
 use serde_json::{Map, Value};
 use std::time::Duration;
@@ -6,6 +6,8 @@ use std::time::Duration;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InvocationOptions {
     pub timeout: Option<Duration>,
+    /// One additional budget shared by native lock acquisition and execution.
+    pub invocation_timeout: Option<Duration>,
     /// Maximum wait for the current user's invocation lock, shared across project roots.
     pub lock_timeout: Option<Duration>,
     pub fail_on_lock: bool,
@@ -46,6 +48,22 @@ pub fn extract_napi_options_value(
         .context("invalid options JSON: expected an object")?;
     let timeout = take_timeout(object, "timeout")?;
     let lock_timeout = take_timeout(object, "lockTimeout")?;
+    let invocation_timeout = match object.remove("invocationTimeoutMs") {
+        None => None,
+        Some(Value::Number(value)) => Some(Duration::from_millis(
+            value
+                .as_u64()
+                .filter(|milliseconds| (1..=MAX_INVOCATION_TIMEOUT_MS).contains(milliseconds))
+                .context(
+                    "invalid options JSON: invocationTimeoutMs must be a positive safe integer",
+                )?,
+        )),
+        Some(_) => {
+            return Err(anyhow!(
+                "invalid options JSON: invocationTimeoutMs must be a positive safe integer"
+            ))
+        }
+    };
     let fail_on_lock = match object.remove("failOnLock") {
         None => false,
         Some(Value::Bool(value)) => value,
@@ -69,6 +87,7 @@ pub fn extract_napi_options_value(
         value,
         InvocationOptions {
             timeout: if profile_ci { None } else { timeout },
+            invocation_timeout: if profile_ci { None } else { invocation_timeout },
             lock_timeout: if profile_ci { None } else { lock_timeout },
             fail_on_lock,
             jobs,

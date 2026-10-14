@@ -39,7 +39,7 @@ fn expired_deadline_cannot_be_committed() {
 
     assert!(commit_timeout().is_err());
     assert_eq!(
-        super::timeout_diagnostic(1, "check.parse"),
+        super::timeout_diagnostic(Duration::from_secs(1), "check.parse"),
         "command timed out after 1 seconds during check.parse"
     );
 
@@ -70,5 +70,41 @@ fn replaced_deadline_lets_the_watchdog_return() {
         expires_at,
         Duration::from_secs(1),
         None,
+    );
+}
+
+#[test]
+fn invocation_deadline_limits_command_without_extending_a_shorter_phase_timeout() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let limit = super::Deadline {
+        expires_at: super::clock::now() + Duration::from_secs(5),
+        timeout: Duration::from_secs(5),
+        owner: None,
+        committed: false,
+    };
+    let guard = super::DeadlineGuard::install_for_invocation_with_deadline(
+        Some(Duration::from_secs(20)),
+        None,
+        Some(limit),
+    )
+    .unwrap();
+    assert_eq!(
+        super::active_deadline().read().unwrap().unwrap().expires_at,
+        limit.expires_at
+    );
+    drop(guard);
+    let guard = super::DeadlineGuard::install_for_invocation_with_deadline(
+        Some(Duration::from_secs(1)),
+        None,
+        Some(limit),
+    )
+    .unwrap();
+    assert!(super::active_deadline().read().unwrap().unwrap().expires_at < limit.expires_at);
+    drop(guard);
+    assert_eq!(
+        super::timeout_diagnostic(Duration::from_millis(3500), "invocation.lock"),
+        "command timed out after 3500 milliseconds during invocation.lock"
     );
 }

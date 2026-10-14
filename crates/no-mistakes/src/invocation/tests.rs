@@ -8,6 +8,9 @@ use std::time::Instant;
 #[cfg(unix)]
 use wait_timeout::ChildExt;
 
+#[path = "tests/shared_budget.rs"]
+mod shared_budget;
+
 #[path = "tests/napi_options.rs"]
 mod napi_options;
 #[cfg(unix)]
@@ -50,6 +53,7 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
     assert_eq!(
         InvocationArgs {
             timeout: 0,
+            invocation_timeout_ms: None,
             lock_timeout: 0,
             fail_on_lock: true,
             profile: None,
@@ -57,6 +61,7 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
         .options(),
         InvocationOptions {
             timeout: None,
+            invocation_timeout: None,
             lock_timeout: None,
             fail_on_lock: true,
             jobs: None,
@@ -69,6 +74,7 @@ fn ci_profile_disables_timeouts() {
     assert_eq!(
         InvocationArgs {
             timeout: DEFAULT_TIMEOUT_SECONDS,
+            invocation_timeout_ms: None,
             lock_timeout: DEFAULT_TIMEOUT_SECONDS,
             fail_on_lock: false,
             profile: Some(InvocationProfile::Ci),
@@ -76,6 +82,7 @@ fn ci_profile_disables_timeouts() {
         .options(),
         InvocationOptions {
             timeout: None,
+            invocation_timeout: None,
             lock_timeout: None,
             fail_on_lock: false,
             jobs: None,
@@ -153,6 +160,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
     let guard = InvocationGuard::acquire_at_path(
         InvocationOptions {
             timeout: Some(Duration::from_secs(5)),
+            invocation_timeout: None,
             lock_timeout: Some(Duration::from_secs(1)),
             fail_on_lock: false,
             jobs: None,
@@ -513,4 +521,143 @@ fn production_test_planning_subprocesses_use_deadline_aware_output() {
     ];
 
     assert!(sources.iter().all(|source| !source.contains(".output()")));
+}
+
+#[test]
+fn shared_invocation_budget_expires_while_waiting_without_changing_active_napi_holder() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _active =
+        DeadlineGuard::install_for_invocation(Some(Duration::from_secs(30)), None).unwrap();
+    let before = active_deadline().read().unwrap().unwrap();
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("invocation.lock");
+    let _holder = acquire_lock(&path, None, false).unwrap();
+    let result = InvocationGuard::acquire_at_path(
+        InvocationOptions {
+            timeout: Some(Duration::from_secs(30)),
+            invocation_timeout: Some(Duration::from_secs(1)),
+            lock_timeout: Some(Duration::from_secs(2)),
+            ..InvocationOptions::default()
+        },
+        &path,
+        false,
+    );
+    let error = result
+        .err()
+        .expect("waiter must not acquire the held native lock");
+    assert_eq!(timeout_exit_code(&error), Some(124));
+    assert_eq!(
+        error.downcast_ref::<InvocationError>().unwrap().kind(),
+        InvocationErrorKind::CommandTimeout
+    );
+    let earlier_lock = InvocationGuard::acquire_at_path(
+        InvocationOptions {
+            timeout: Some(Duration::from_secs(30)),
+            invocation_timeout: Some(Duration::from_secs(1)),
+            lock_timeout: Some(Duration::from_millis(1)),
+            ..InvocationOptions::default()
+        },
+        &path,
+        false,
+    )
+    .err()
+    .expect("explicit shorter lock deadline must still apply");
+    assert_eq!(
+        earlier_lock
+            .downcast_ref::<InvocationError>()
+            .unwrap()
+            .kind(),
+        InvocationErrorKind::LockTimeout
+    );
+    let after = active_deadline().read().unwrap().unwrap();
+    assert_eq!(before.expires_at, after.expires_at);
+    assert_eq!(before.timeout, after.timeout);
+    assert_eq!(before.owner, after.owner);
+    assert!(!after.committed);
+    check_timeout().unwrap();
+}
+
+#[test]
+fn expired_invocation_budget_cannot_get_a_fresh_command_deadline_after_acquiring_lock() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let directory = tempfile::tempdir().unwrap();
+    let result = InvocationGuard::acquire_at_path(
+        InvocationOptions {
+            timeout: Some(Duration::from_secs(30)),
+            invocation_timeout: Some(Duration::ZERO),
+            ..InvocationOptions::default()
+        },
+        &directory.path().join("invocation.lock"),
+        false,
+    );
+    let error = result
+        .err()
+        .expect("expired total budget must fail before work");
+    assert_eq!(timeout_exit_code(&error), Some(124));
+    assert!(
+        error.to_string().contains("invocation deadline elapsed"),
+        "{error}"
+    );
+    assert!(active_deadline().read().unwrap().is_none());
+}
+
+#[test]
+fn invocation_milliseconds_are_validated_and_removed_before_command_options() {
+    let (value, options) =
+        extract_napi_options_value(r#"{"root":"owned","timeout":2,"invocationTimeoutMs":3500}"#)
+            .unwrap();
+    assert_eq!(value, serde_json::json!({"root":"owned"}));
+    assert_eq!(options.timeout, Some(Duration::from_secs(2)));
+    assert_eq!(
+        options.invocation_timeout,
+        Some(Duration::from_millis(3500))
+    );
+    for value in [
+        "0",
+        "-1",
+        "1.5",
+        "true",
+        "\"1\"",
+        "9007199254740992",
+        "null",
+    ] {
+        let error =
+            extract_napi_options_value(format!("{{\"invocationTimeoutMs\":{value}}}")).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("invocationTimeoutMs must be a positive safe integer"),
+            "{error}"
+        );
+    }
+    let (_, options) =
+        extract_napi_options_value(r#"{"invocationTimeoutMs":3500,"profile":"ci"}"#).unwrap();
+    assert_eq!(options.invocation_timeout, None);
+}
+
+#[test]
+fn oversized_shared_deadline_fails_before_lock_path_side_effects() {
+    let touched = std::cell::Cell::new(false);
+    let result = InvocationGuard::acquire_resolving_path(
+        InvocationOptions {
+            invocation_timeout: Some(Duration::MAX),
+            ..InvocationOptions::default()
+        },
+        false,
+        || {
+            touched.set(true);
+            panic!("invalid duration must fail before path effects");
+        },
+    );
+    let error = result
+        .err()
+        .expect("unrepresentable deadline must be rejected");
+    assert!(error
+        .to_string()
+        .contains("invocation timeout is too large"));
+    assert!(!touched.get());
 }

@@ -202,6 +202,7 @@ test("programmatic API proxies object options through async native addon calls",
       await api.dependencies({
         files: ["a.mts"],
         timeout: 12,
+        invocationTimeoutMs: 3500,
         lockTimeout: null,
         failOnLock: true,
       }),
@@ -210,6 +211,7 @@ test("programmatic API proxies object options through async native addon calls",
         options: {
           files: ["a.mts"],
           timeout: 12,
+          invocationTimeoutMs: 3500,
           lockTimeout: null,
           failOnLock: true,
         },
@@ -1192,6 +1194,7 @@ test("declarations expose invocation controls on every analysis", () => {
   const invocationDeclarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
 
   assert.match(invocationDeclarations, /timeout\?: number \| null;/);
+  assert.match(invocationDeclarations, /invocationTimeoutMs\?: number;/);
   assert.match(invocationDeclarations, /lockTimeout\?: number \| null;/);
   assert.match(invocationDeclarations, /failOnLock\?: boolean;/);
   assert.match(invocationDeclarations, /jobs\?: number \| null;/);

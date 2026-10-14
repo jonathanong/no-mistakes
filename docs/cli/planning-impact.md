@@ -20,7 +20,7 @@ Options:
 
 - `--changed-files <manifest>` and `--output-dir <directory>` are required.
 - `--broad` opts into broader test-plan behavior.
-- `--timeout <seconds>`, `--lock-timeout <seconds>`, `--fail-on-lock`,
+- `--timeout <seconds>`, `--invocation-timeout-ms <milliseconds>`, `--lock-timeout <seconds>`, `--fail-on-lock`,
   `--jobs <count>`, and `--profile ci` use the matching Node API controls.
 
 Successful execution is silent. Argument or analysis errors write a

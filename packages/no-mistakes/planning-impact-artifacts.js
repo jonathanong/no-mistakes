@@ -14,6 +14,7 @@ const {
   buildRequest,
   completeResult,
   isReservedArtifactPath,
+  invocationOptions,
 } = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
 const { TextDecoder } = require("node:util");
@@ -114,13 +115,6 @@ function decodeManifest(contents) {
   } catch {
     throw new Error("changed-files manifest must be valid UTF-8");
   }
-}
-function invocationOptions(options) {
-  return Object.fromEntries(
-    ["timeout", "lockTimeout", "failOnLock", "jobs", "profile", "diagnosticsId"]
-      .filter((name) => Object.hasOwn(options, name))
-      .map((name) => [name, options[name]]),
-  );
 }
 function parseChangedFiles(source) {
   const files = [...new Set(source.split(/\r\n|[\r\n]/u).filter((line) => line.length > 0))];

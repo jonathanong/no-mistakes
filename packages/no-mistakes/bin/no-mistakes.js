@@ -5,9 +5,17 @@ const { spawn } = require("node:child_process");
 const { boundedDiagnostic } = require("../planning-impact-cli");
 const { resolveNativePackage } = require("../scripts/native-package");
 
-const VALUE_OPTIONS = new Set(["--timeout", "--lock-timeout", "--jobs", "--profile", "-j"]);
+const VALUE_OPTIONS = new Set([
+  "--timeout",
+  "--invocation-timeout-ms",
+  "--lock-timeout",
+  "--jobs",
+  "--profile",
+  "-j",
+]);
 const FLAG_OPTIONS = new Set(["--fail-on-lock"]);
-const INLINE_VALUE_OPTION = /^(?:--(?:timeout|lock-timeout|jobs|profile)=|-j)/u;
+const INLINE_VALUE_OPTION =
+  /^(?:--(?:timeout|invocation-timeout-ms|lock-timeout|jobs|profile)=|-j)/u;
 
 function firstSubcommand(argv) {
   const index = firstSubcommandIndex(argv);

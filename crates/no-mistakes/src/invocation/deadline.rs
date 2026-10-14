@@ -29,6 +29,14 @@ impl DeadlineGuard {
         timeout: Option<Duration>,
         owner: Option<std::thread::ThreadId>,
     ) -> Result<Self> {
+        Self::install_for_invocation_with_deadline(timeout, owner, None)
+    }
+
+    pub(super) fn install_for_invocation_with_deadline(
+        timeout: Option<Duration>,
+        owner: Option<std::thread::ThreadId>,
+        limit: Option<Deadline>,
+    ) -> Result<Self> {
         let deadline = timeout
             .map(|timeout| {
                 clock::now()
@@ -42,6 +50,22 @@ impl DeadlineGuard {
                     .context("command timeout is too large")
             })
             .transpose()?;
+        let deadline = match (deadline, limit) {
+            (Some(command), Some(limit)) => Some(if command.expires_at <= limit.expires_at {
+                command
+            } else {
+                limit
+            }),
+            (None, limit) => limit,
+            (command, None) => command,
+        };
+        if limit.is_some() && deadline.is_some_and(|deadline| deadline.expires_at <= clock::now()) {
+            return Err(InvocationError::new(
+                InvocationErrorKind::CommandTimeout,
+                "invocation deadline elapsed during lock acquisition".to_string(),
+            )
+            .into());
+        }
         let mut active = active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -55,16 +79,24 @@ impl DeadlineGuard {
     /// CLI invocations enforce the deadline even when native analysis is inside
     /// a CPU-bound rayon section that has not reached the next `check_timeout`.
     pub(super) fn install_for_cli(timeout: Option<Duration>) -> Result<Self> {
-        let mut guard = Self::install_for_invocation(timeout, None)?;
-        let Some(timeout) = timeout else {
-            return Ok(guard);
-        };
-        let expires_at = active_deadline()
+        Self::install_for_cli_with_deadline(timeout, None)
+    }
+
+    pub(super) fn install_for_cli_with_deadline(
+        timeout: Option<Duration>,
+        limit: Option<Deadline>,
+    ) -> Result<Self> {
+        let mut guard = Self::install_for_invocation_with_deadline(timeout, None, limit)?;
+        let active = active_deadline()
             .read()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .as_ref()
-            .context("cli timeout installs a deadline")?
-            .expires_at;
+            .copied();
+        let Some(deadline) = active else {
+            return Ok(guard);
+        };
+        let expires_at = deadline.expires_at;
+        let timeout = deadline.timeout;
         let cancel = Arc::new(AtomicBool::new(false));
         let watcher = Arc::clone(&cancel);
         let observer = crate::diagnostics::current();
@@ -106,8 +138,18 @@ fn current_phase() -> &'static str {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-pub(super) fn timeout_diagnostic(seconds: u64, phase: &str) -> String {
-    format!("command timed out after {seconds} seconds during {phase}")
+pub(super) fn timeout_diagnostic(timeout: Duration, phase: &str) -> String {
+    if timeout.subsec_nanos() == 0 {
+        format!(
+            "command timed out after {} seconds during {phase}",
+            timeout.as_secs()
+        )
+    } else {
+        format!(
+            "command timed out after {} milliseconds during {phase}",
+            timeout.as_millis()
+        )
+    }
 }
 
 /// Return an error once the active invocation deadline has elapsed.
@@ -132,7 +174,7 @@ pub fn check_timeout() -> Result<()> {
     }
     Err(InvocationError::new(
         InvocationErrorKind::CommandTimeout,
-        timeout_diagnostic(deadline.timeout.as_secs(), current_phase()),
+        timeout_diagnostic(deadline.timeout, current_phase()),
     )
     .into())
 }
@@ -155,7 +197,7 @@ pub fn commit_timeout() -> Result<()> {
     if clock::now() >= deadline.expires_at {
         return Err(InvocationError::new(
             InvocationErrorKind::CommandTimeout,
-            timeout_diagnostic(deadline.timeout.as_secs(), current_phase()),
+            timeout_diagnostic(deadline.timeout, current_phase()),
         )
         .into());
     }

@@ -16,14 +16,16 @@ pub(crate) use child::stream::stream_command_lines;
 pub use deadline::{check_timeout, commit_timeout, set_timeout_phase};
 pub use napi_options::{extract_napi_options, extract_napi_options_value, InvocationOptions};
 
-use anyhow::Result;
-use deadline::DeadlineGuard;
+use anyhow::{Context, Result};
+use deadline::{Deadline, DeadlineGuard};
 use lock::{acquire_lock, lock_path};
 use std::fs::File;
+#[cfg(test)]
 use std::path::Path;
 use std::time::Duration;
 
 const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
+const MAX_INVOCATION_TIMEOUT_MS: u64 = (1_u64 << 53) - 1;
 
 // Windows native CI compiles this helper into the ordinary rlib so the Job
 // Object integration test can install a deadline without `--cfg test`.
@@ -69,6 +71,9 @@ pub struct InvocationArgs {
     /// Maximum command execution time in seconds; 0 disables the deadline.
     #[arg(long, value_name = "SECONDS", default_value_t = DEFAULT_TIMEOUT_SECONDS, global = true)]
     timeout: u64,
+    /// Opt-in shared acquisition and execution budget in positive milliseconds.
+    #[arg(long, value_name = "MILLISECONDS", value_parser = clap::value_parser!(u64).range(1..=MAX_INVOCATION_TIMEOUT_MS), global = true)]
+    invocation_timeout_ms: Option<u64>,
     /// Maximum time to wait for another invocation in seconds; 0 waits indefinitely.
     #[arg(
         long = "lock-timeout",
@@ -89,6 +94,7 @@ impl Default for InvocationArgs {
     fn default() -> Self {
         Self {
             timeout: DEFAULT_TIMEOUT_SECONDS,
+            invocation_timeout_ms: None,
             lock_timeout: DEFAULT_TIMEOUT_SECONDS,
             fail_on_lock: false,
             profile: None,
@@ -104,6 +110,12 @@ impl InvocationArgs {
         };
         InvocationOptions {
             timeout: nonzero_seconds(timeout),
+            invocation_timeout: self
+                .profile
+                .is_none()
+                .then_some(self.invocation_timeout_ms)
+                .flatten()
+                .map(Duration::from_millis),
             lock_timeout: nonzero_seconds(lock_timeout),
             fail_on_lock: self.fail_on_lock,
             jobs: None,
@@ -164,15 +176,48 @@ impl InvocationGuard {
         options: InvocationOptions,
         forward_parent_signals: bool,
     ) -> Result<Self> {
-        let path = lock_path()?;
-        Self::acquire_at_path(options, &path, forward_parent_signals)
+        Self::acquire_resolving_path(options, forward_parent_signals, lock_path)
     }
 
+    #[cfg(test)]
     fn acquire_at_path(
         options: InvocationOptions,
         path: &Path,
         forward_parent_signals: bool,
     ) -> Result<Self> {
+        Self::acquire_resolving_path(options, forward_parent_signals, || Ok(path.to_path_buf()))
+    }
+
+    fn acquire_resolving_path(
+        options: InvocationOptions,
+        forward_parent_signals: bool,
+        resolve_path: impl FnOnce() -> Result<std::path::PathBuf>,
+    ) -> Result<Self> {
+        let invocation_deadline = options
+            .invocation_timeout
+            .map(|timeout| {
+                clock::now()
+                    .checked_add(timeout)
+                    .map(|expires_at| Deadline {
+                        expires_at,
+                        timeout,
+                        owner: None,
+                        committed: false,
+                    })
+                    .context("invocation timeout is too large")
+            })
+            .transpose()?;
+        // CLI owns its process. N-API waiters must never replace the active
+        // request's process-global deadline, cancellation, or child registry.
+        let early_deadline = if forward_parent_signals && invocation_deadline.is_some() {
+            set_timeout_phase("invocation.lock");
+            Some(DeadlineGuard::install_for_cli_with_deadline(
+                None,
+                invocation_deadline,
+            )?)
+        } else {
+            None
+        };
         // Progress must capture termination during lock waiting, before the
         // first heartbeat. Retaining this guard also cleans up acquisition errors.
         let early_signals = if forward_parent_signals
@@ -182,16 +227,57 @@ impl InvocationGuard {
         } else {
             None
         };
-        let lock = acquire_lock(path, options.lock_timeout, options.fail_on_lock)?;
-        let deadline = if forward_parent_signals {
-            DeadlineGuard::install_for_cli(options.timeout)?
-        } else {
-            DeadlineGuard::install_for_invocation(options.timeout, None)?
+        let path = resolve_path()?;
+        let lock_timeout = match (invocation_deadline, options.lock_timeout) {
+            (Some(deadline), Some(lock)) => Some(
+                deadline
+                    .expires_at
+                    .saturating_duration_since(clock::now())
+                    .min(lock),
+            ),
+            (Some(deadline), None) => {
+                Some(deadline.expires_at.saturating_duration_since(clock::now()))
+            }
+            (None, lock) => lock,
+        };
+        let lock = match acquire_lock(&path, lock_timeout, options.fail_on_lock) {
+            Err(error)
+                if invocation_deadline
+                    .is_some_and(|deadline| deadline.expires_at <= clock::now())
+                    && error
+                        .downcast_ref::<InvocationError>()
+                        .is_some_and(|error| error.kind() == InvocationErrorKind::LockTimeout) =>
+            {
+                let timeout = invocation_deadline
+                    .expect("expired invocation deadline")
+                    .timeout;
+                return Err(InvocationError::new(
+                    InvocationErrorKind::CommandTimeout,
+                    deadline::timeout_diagnostic(timeout, "invocation.lock"),
+                )
+                .into());
+            }
+            result => result?,
+        };
+        // Keep the original absolute invocation deadline. Cancel the acquisition
+        // watcher before arming the earlier of that deadline and command timeout.
+        drop(early_deadline);
+        if forward_parent_signals && invocation_deadline.is_some() {
+            set_timeout_phase("command");
+        }
+        let deadline = match (forward_parent_signals, invocation_deadline) {
+            (true, None) => DeadlineGuard::install_for_cli(options.timeout)?,
+            (false, None) => DeadlineGuard::install_for_invocation(options.timeout, None)?,
+            (true, limit) => DeadlineGuard::install_for_cli_with_deadline(options.timeout, limit)?,
+            (false, limit) => {
+                DeadlineGuard::install_for_invocation_with_deadline(options.timeout, None, limit)?
+            }
         };
         let parent_signals = match early_signals {
             Some(guard) => guard,
             None => child::ParentSignalForwardingGuard::install(
-                forward_parent_signals && options.timeout.is_some(),
+                forward_parent_signals
+                    && (options.timeout.is_some() || options.invocation_timeout.is_some()),
             )?,
         };
         Ok(Self {

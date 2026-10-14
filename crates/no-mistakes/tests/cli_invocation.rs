@@ -75,6 +75,7 @@ fn invocation_help_documents_independent_timeouts_and_lock_failure() {
     assert!(output.status.success());
     let help = stdout(&output);
     assert!(help.contains("--timeout <SECONDS>"));
+    assert!(help.contains("--invocation-timeout-ms <MILLISECONDS>"));
     assert!(help.contains("--lock-timeout <SECONDS>"));
     assert!(help.contains("--fail-on-lock"));
     assert!(help.contains("--profile"));
@@ -202,7 +203,7 @@ fn ordinary_check_still_finishes_inside_its_timeout() {
 
 #[test]
 fn invocation_timeouts_reject_non_integer_cli_values() {
-    for option in ["--timeout", "--lock-timeout"] {
+    for option in ["--timeout", "--lock-timeout", "--invocation-timeout-ms"] {
         let output = run(&["dependencies", option, "1.5", "--help"]);
 
         assert_eq!(output.status.code(), Some(2));
@@ -210,4 +211,68 @@ fn invocation_timeouts_reject_non_integer_cli_values() {
         assert!(error.contains("invalid value '1.5'"), "{error}");
         assert!(error.contains(option), "{error}");
     }
+}
+
+#[test]
+fn invocation_milliseconds_reject_zero_without_starting_a_command() {
+    let output = run(&["--invocation-timeout-ms", "0", "check"]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(stderr(&output).contains("--invocation-timeout-ms"));
+}
+
+#[test]
+fn ordinary_check_accepts_the_shared_millisecond_budget() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+    let output = run(&[
+        "--invocation-timeout-ms",
+        "3500",
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+    ]);
+    assert!(output.status.success(), "{}", stderr(&output));
+}
+
+#[cfg(unix)]
+#[test]
+fn millisecond_invocation_budget_stops_blocked_config_loading() {
+    let root = tempfile::tempdir().unwrap();
+    let config = root.path().join("blocked.yml");
+    assert!(Command::new("mkfifo")
+        .arg(&config)
+        .status()
+        .unwrap()
+        .success());
+    let mut child = Command::new(bin())
+        .args([
+            "--invocation-timeout-ms",
+            "350",
+            "--timeout",
+            "5",
+            "check",
+            "--root",
+            root.path().to_str().unwrap(),
+            "--config",
+            config.to_str().unwrap(),
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let status = child
+        .wait_timeout(Duration::from_secs(3))
+        .unwrap()
+        .unwrap_or_else(|| {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("forced backstop: shared native budget did not stop config loading");
+        });
+    let output = child.wait_with_output().unwrap();
+    assert_eq!(status.code(), Some(124));
+    assert!(output.stdout.is_empty());
+    assert!(
+        stderr(&output).contains("350 milliseconds"),
+        "{}",
+        stderr(&output)
+    );
 }
