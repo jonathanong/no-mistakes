@@ -16,7 +16,9 @@ impl ValueAssignedMutation {
 impl ValueAssignedMutations {
     pub(super) fn merge(&mut self, mut source: Self) {
         if let Some(early) = source.early.take() {
-            self.early.get_or_insert_with(Default::default).merge(*early);
+            self.early
+                .get_or_insert_with(Default::default)
+                .merge(*early);
         }
         if source.members.len() > self.members.len() {
             std::mem::swap(&mut self.members, &mut source.members);
@@ -87,9 +89,10 @@ impl ValueMutationHistory {
                     .into_iter()
                     .flatten()
                     .any(|write| write.invalidated(reader))
-                    || members.early.as_ref().is_some_and(|early| {
-                        early.invalidated(member, reader, members)
-                    })
+                    || members
+                        .early
+                        .as_ref()
+                        .is_some_and(|early| early.invalidated(member, reader, members))
             });
         }
         let (next, _) = prefix.split_last().expect("nonempty prefix");

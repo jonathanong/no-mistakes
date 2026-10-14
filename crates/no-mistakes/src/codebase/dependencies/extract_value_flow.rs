@@ -144,6 +144,7 @@ pub(super) mod write_targets;
 #[path = "extract_value_flow/object_values.rs"]
 mod object_values;
 
+#[path = "extract_value_flow/destructuring_order.rs"]
+mod destructuring_order;
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
-mod destructuring_order;
