@@ -30,7 +30,9 @@ identifier parameters, and destructured helper arguments or defaults. Replacing
 an imported method makes that method unresolved through those receivers; a
 method copied before replacement and an untouched method remain proven. Static
 nested receiver paths retain the same distinction, while dynamic member writes
-invalidate every matching path conservatively.
+invalidate every matching path conservatively. Destructuring acquires a method
+at the helper invocation, even when its receiver object was created earlier;
+copying the method into that earlier object preserves the original snapshot.
 
 ## Options and defaults
 
