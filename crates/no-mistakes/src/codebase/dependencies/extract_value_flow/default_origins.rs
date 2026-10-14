@@ -78,6 +78,12 @@ impl ImportCollector {
             if component.is_empty() {
                 continue;
             }
+            history.finish_early_assignments();
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.early_assignment_normalization_visits +=
+                    history.early_phase_entries();
+            }
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {
                 retained

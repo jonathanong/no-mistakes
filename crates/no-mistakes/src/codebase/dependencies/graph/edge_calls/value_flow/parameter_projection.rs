@@ -1,6 +1,18 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
+    pub(super) fn parameter_default(
+        &mut self,
+        path: &std::path::Path,
+        parameter: &ValueParameter,
+    ) -> FlowValue {
+        self.initializing
+            .push((path.to_path_buf(), parameter.owner, parameter.default_order));
+        let value = self.value(path, &parameter.default);
+        self.initializing.pop();
+        value
+    }
+
     pub(super) fn project_parameter(
         &mut self,
         path: &std::path::Path,

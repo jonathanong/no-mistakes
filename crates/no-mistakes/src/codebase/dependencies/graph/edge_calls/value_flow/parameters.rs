@@ -40,6 +40,7 @@ impl ValueFlowResolution<'_, '_> {
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
                     executing_read: None,
+                    member_read: None,
                 };
                 flow.visiting
                     .insert((path.to_path_buf(), parameter.scope, parameter.name.clone()));
@@ -184,16 +185,5 @@ impl ValueFlowResolution<'_, '_> {
         default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         self.default_origins = origins;
         agreed_value(values)
-    }
-    fn parameter_default(
-        &mut self,
-        path: &std::path::Path,
-        parameter: &ValueParameter,
-    ) -> FlowValue {
-        self.initializing
-            .push((path.to_path_buf(), parameter.owner, parameter.default_order));
-        let value = self.value(path, &parameter.default);
-        self.initializing.pop();
-        value
     }
 }

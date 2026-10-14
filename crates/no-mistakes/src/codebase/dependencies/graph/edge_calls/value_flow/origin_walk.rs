@@ -161,7 +161,8 @@ impl ValueFlowResolution<'_, '_> {
         // file-qualified, while member writes follow the receiver projection.
         read.file != *history_file
             || if receivers_only {
-                receivers && history.assignment_invalidated(projection, read.offset, read.context, false)
+                receivers
+                    && history.assignment_invalidated(projection, read.offset, read.context, false)
             } else {
                 read.owner.0 != file || context != Some(read.owner.1)
             }
