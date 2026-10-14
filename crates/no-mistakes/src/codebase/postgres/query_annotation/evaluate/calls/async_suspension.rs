@@ -75,3 +75,6 @@ fn contains_await(expr: &Expr) -> bool {
 fn any_await<'a>(expressions: impl IntoIterator<Item = &'a Expr>) -> bool {
     expressions.into_iter().any(contains_await)
 }
+
+#[cfg(test)]
+mod tests;

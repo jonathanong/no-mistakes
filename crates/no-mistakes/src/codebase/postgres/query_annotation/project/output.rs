@@ -65,3 +65,6 @@ fn could_be_transaction(prefix: &str) -> bool {
         .iter()
         .any(|statement| statement.starts_with(&prefix))
 }
+
+#[cfg(test)]
+mod tests;
